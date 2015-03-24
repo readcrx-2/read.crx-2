@@ -44,13 +44,21 @@ task :pack do
 
     puts "秘密鍵のパスを入力して下さい"
     pem_path = STDIN.gets
-    sh "google-chrome --pack-extension=#{tmpdir}/debug --pack-extension-key=#{pem_path}"
+    if RUBY_PLATFORM.match(/darwin/)
+      sh "\"/Applications/Google Chrome.app/Contents/MacOS/Google Chrome\" --pack-extension=#{tmpdir}/debug --pack-extension-key=#{pem_path}"
+    else
+      sh "google-chrome --pack-extension=#{tmpdir}/debug --pack-extension-key=#{pem_path}"
+    end
     mv "#{tmpdir}/debug.crx", "read.crx_2.#{MANIFEST["version"]}.crx"
   end
 end
 
 task :scan do
-  sh "clamscan -ir debug"
+  if RUBY_PLATFORM.match(/darwin/)
+    # no virus scan software...
+  else
+    sh "clamscan -ir debug"
+  end
 end
 
 def debug_id
@@ -327,7 +335,11 @@ namespace :test do
       tmp = CGI.escape(args[:filter]).gsub("\+", "%20")
       url += "?filter=#{tmp}&spec=#{tmp}"
     end
-    sh "google-chrome '#{url}'"
+    if RUBY_PLATFORM.match(/darwin/)
+      # sh "\"/Applications/Google Chrome.app/Contents/MacOS/Google Chrome\" '#{url}'"
+    else
+      sh "google-chrome '#{url}'"
+    end
   end
 
   directory "debug/test"

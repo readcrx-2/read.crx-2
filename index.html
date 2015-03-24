@@ -34,21 +34,22 @@
 <p>read.crx 2は<a href="https://www.google.com/chrome">Google Chrome</a>アプリとして作られた2chブラウザです。
 <a href="http://www.2ch.net/">2ch</a>及びその互換BBS、<a href="http://www.machi.to/">まちBBS</a>、<a href="http://rentalbbs.livedoor.com/">したらば</a>の閲覧に対応しています。</p>
 
-<p>一般の利用者向けの配布は<a href="http://idawef.com/read.crx-2/">こちら</a></p>
+<p>一般の利用者向けの配布は<a href="http://eru.github.io/read.crx-2/">こちら</a></p>
 
 <h1>
 <a id="ビルド手順" class="anchor" href="#%E3%83%93%E3%83%AB%E3%83%89%E6%89%8B%E9%A0%86" aria-hidden="true"><span class="octicon octicon-link"></span></a>ビルド手順</h1>
 
 <p><a href="https://npmjs.org/">npm</a>, <a href="http://gembundler.com/">Bundler</a>, <a href="http://www.imagemagick.org/">ImageMagick</a>が予め導入されている必要が有ります。</p>
 
-<pre><code>git clone --recursive git://github.com/awef/read.crx-2.git
+<pre><code>git clone --recursive git://github.com/eru/read.crx-2.git
 
 cd read.crx-2
 
 npm install
 bundle install
 
-bundle exec rake
+bundle exec rake pack
+bundle exec rake clean
 </code></pre>
 
 <h1>

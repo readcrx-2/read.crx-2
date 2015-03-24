@@ -1,6 +1,6 @@
 module "bbsmenu",
   setup: ->
-    bbsmenu_url = "http://menu.2ch.net/bbsmenu.html"
+    bbsmenu_url = "http://kita.jikkyo.org/cbm/cbm.cgi/20.p0.m0.jb.vs.op.sc.nb.bb/-all/bbsmenu.html"
 
     cache_clear = (callback) ->
       app.module null, ["cache"], (Cache) ->

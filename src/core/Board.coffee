@@ -183,6 +183,9 @@ class app.Board
       when "livedoor.jp", "shitaraba.net"
         path: "http://jbbs.shitaraba.net/#{tmp[3]}/#{tmp[4]}/subject.txt"
         charset: "EUC-JP"
+      when "open2ch.net"
+        path: "http://#{tmp[1]}/#{tmp[3]}/subback.html"
+        chatset: "UTF-8"
       else
         path: "http://#{tmp[1]}/#{tmp[3]}/subject.txt"
         charset: "Shift_JIS"
@@ -208,6 +211,8 @@ class app.Board
       else
         bbs_type = "2ch"
         reg = /^(\d+)\.dat<>(.+) \((\d+)\)$/gm
+        if tmp[2] is "open2ch.net"
+          reg = /^<a href="\/test\/read\.cgi\/\w+\/(\d+)\/.*">\d+: (.*) \((\d+)\)<\/a>$/gm
         base_url = "http://#{tmp[1]}/test/read.cgi/#{tmp[3]}/"
 
     board = []

@@ -260,7 +260,8 @@ module app {
       default_mail: "",
       popup_trigger: "click",
       theme_id: "default",
-      user_css: ""
+      user_css: "",
+      format_2chnet: "html"
     };
 
     private _cache:{[index:string]:string;} = {};

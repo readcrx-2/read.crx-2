@@ -254,6 +254,16 @@ class app.Thread
         path: "http://jbbs.shitaraba.net/" +
             "bbs/rawmode.cgi/#{tmp[3]}/#{tmp[4]}/#{tmp[5]}/",
         charset: "EUC-JP"
+      when "2ch.net"
+        if app.config.get("format_2chnet") is "dat"
+          path: "http://#{tmp[1]}/#{tmp[3]}/dat/#{tmp[4]}.dat",
+          charset: "Shift_JIS"
+        else
+          path: tmp[0],
+          charset: "Shift_JIS"
+      when "bbspink.com"
+        path: tmp[0],
+        charset: "Shift_JIS"
       else
         path: "http://#{tmp[1]}/#{tmp[3]}/dat/#{tmp[4]}.dat",
         charset: "Shift_JIS"
@@ -273,8 +283,55 @@ class app.Thread
         Thread._parseMachi(text)
       when "shitaraba.net"
         Thread._parseJbbs(text)
+      when "2ch.net"
+        if app.config.get("format_2chnet") is "dat"
+          Thread._parseCh(text)
+        else
+          Thread._parseNet(text)
+      when "bbspink.com"
+        Thread._parseNet(text)
       else
         Thread._parseCh(text)
+
+  ###*
+  @method _parseNet
+  @static
+  @private
+  @param {String} text
+  @return {null|Object}
+  ###
+  @_parseNet = (text) ->
+    # name, mail, other, message, thread_title
+    reg = /^<dt>\d+.*：(?:<a href="mailto:([^<>]*)">|<font [^>]*>)?<b>(.*)<\/b>.*：(.*)<dd> ?(.*)<br><br>$/
+    numberOfBroken = 0
+    thread = res: []
+    first = true
+
+    for line, key in text.split("\n")
+      regRes = reg.exec(line)
+      (titleReg = /<h1 .*>(.*)<\/h1>/.exec(line)) && (thread.title = titleReg[1])
+      if regRes
+        if key is 0
+          thread.title = app.util.decode_char_reference(regRes[5])
+
+        thread.res.push
+          name: regRes[2]
+          mail: regRes[1] or ""
+          message: regRes[4]
+          other: regRes[3]
+      else
+        continue if true or line is ""
+        numberOfBroken++
+        thread.res.push
+          name: "</b>データ破損<b>"
+          mail: ""
+          message: "データが破損しています"
+          other: ""
+
+    if thread.res.length > 0 and thread.res.length > numberOfBroken
+      thread
+    else
+      null
 
   ###*
   @method _parseCh

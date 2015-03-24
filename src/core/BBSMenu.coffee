@@ -25,7 +25,7 @@ class app.BBSMenu
   @parse: (html) ->
     reg_category = ///<b>(.+?)</b>(?:.*[\r\n]+<a\s.*?>.+?</a>)+///gi
     reg_board = ///<a\shref=(http://(?!info\.2ch\.net/)
-      \w+\.(?:2ch\.net|machi\.to)/\w+/)(?:\s.*?)?>(.+?)</a>///gi
+      \w+\.(?:2ch\.net|machi\.to|open2ch\.net|2ch\.sc)/\w+/)(?:\s.*?)?>(.+?)</a>///gi
 
     menu = []
 
@@ -49,7 +49,7 @@ class app.BBSMenu
   @_update: (force_reload) ->
     BBSMenu._updating = true
 
-    url = "http://menu.2ch.net/bbsmenu.html"
+    url = "http://kita.jikkyo.org/cbm/cbm.cgi/20.p0.m0.jb.vs.op.sc.nb.bb/-all/bbsmenu.html"
     #キャッシュ取得
     cache = new app.Cache(url)
     cache.get()

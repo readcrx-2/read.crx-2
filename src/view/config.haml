@@ -170,6 +170,17 @@
           %label
             %input.theme_none(type="checkbox")
             テーマなし
+
+      %section
+        %h2 2ch.netのスレッド読み込み形式
+        %div
+          %label
+            %input.direct(name="format_2chnet" type="radio" value="html" checked)
+            html形式
+          %br
+          %label
+            %input.direct(name="format_2chnet" type="radio" value="dat" checked)
+            dat形式(要Proxy)
     %template#template_ninja_item
       .ninja_item
         %span.site_name

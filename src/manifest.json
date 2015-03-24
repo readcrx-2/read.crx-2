@@ -35,7 +35,9 @@
       "matches" : [
         "http://*.2ch.net/*",
         "http://jbbs.shitaraba.net/*",
-        "http://*.machi.to/*"
+        "http://*.machi.to/*",
+        "http://*.open2ch.net/*",
+        "http://*.2ch.sc/*"
       ],
       "js" : ["/cs_addlink.js"]
     },

@@ -1,6 +1,6 @@
 regs = [
-  ///^http://(?!find|info|p2)\w+\.2ch\.net/\w+/(?:index\.html)?(?:#\d+)?$///
-  ///^http://\w+\.2ch\.net/test/read\.cgi/\w+/\d+///
+  ///^http://(?!find|info|p2)\w+(?:\.2ch\.net|\.2ch\.sc|\.open2ch\.net)/\w+/(?:index\.html)?(?:#\d+)?$///
+  ///^http://\w+(?:\.2ch\.net|\.2ch\.sc|\.open2ch\.net)/test/read\.cgi/\w+/\d+///
   ///^http://jbbs\.shitaraba\.net/\w+/\d+/(?:index\.html)?(?:#\d+)?$///
   ///^http://jbbs\.shitaraba\.net/bbs/read\.cgi/\w+/\d+/\d+///
   ///^http://\w+\.machi\.to/\w+/(?:index\.html)?(?:#\d+)?$///

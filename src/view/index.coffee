@@ -465,7 +465,7 @@ app.main = ->
           html: """
             #{app.manifest.name} が #{last_version} から
              #{app.manifest.version} にアップデートされました。
-             <a href="http://idawef.com/read.crx-2/changelog.html" target="_blank">更新履歴</a>
+             <a href="https://github.com/eru/read.crx-2/commits/mod" target="_blank">更新履歴</a>
           """
           background_color: "green"
         }

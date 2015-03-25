@@ -7,6 +7,7 @@
 
     <link rel="stylesheet" href="stylesheets/styles.css">
     <link rel="stylesheet" href="stylesheets/pygment_trac.css">
+    <script src="javascripts/scale.fix.js"></script>
     <meta name="viewport" content="width=device-width, initial-scale=1, user-scalable=no">
     <!--[if lt IE 9]>
     <script src="//html5shiv.googlecode.com/svn/trunk/html5.js"></script>
@@ -15,17 +16,18 @@
   <body>
     <div class="wrapper">
       <header>
-        <h1>read.crx 2</h1>
-        <p>Chromeアプリな2chブラウザ</p>
-
-        <p class="view"><a href="https://github.com/eru/read.crx-2">View the Project on GitHub <small>eru/read.crx-2</small></a></p>
-
+        <h1 class="header">read.crx 2</h1>
+        <p class="header">Chromeアプリな2chブラウザ</p>
 
         <ul>
-          <li><a href="https://github.com/eru/read.crx-2/zipball/master">Download <strong>ZIP File</strong></a></li>
-          <li><a href="https://github.com/eru/read.crx-2/tarball/master">Download <strong>TAR Ball</strong></a></li>
-          <li><a href="https://github.com/eru/read.crx-2">View On <strong>GitHub</strong></a></li>
+          <li class="download"><a class="buttons" href="https://github.com/eru/read.crx-2/zipball/master">Download ZIP</a></li>
+          <li class="download"><a class="buttons" href="https://github.com/eru/read.crx-2/tarball/master">Download TAR</a></li>
+          <li><a class="buttons github" href="https://github.com/eru/read.crx-2">View On GitHub</a></li>
         </ul>
+
+        <p class="header">This project is maintained by <a class="header name" href="https://github.com/eru">eru</a></p>
+
+
       </header>
       <section>
         <h1>
@@ -34,25 +36,57 @@
 <p>read.crx 2は<a href="https://www.google.com/chrome">Google Chrome</a>アプリとして作られた2chブラウザです。
 <a href="http://www.2ch.net/">2ch.net</a>、<a href="http://2ch.sc/">2ch.sc</a>、<a href="http://open2ch.net/">open2ch.net</a>及びその互換BBS、<a href="http://www.machi.to/">まちBBS</a>、<a href="http://rentalbbs.livedoor.com/">したらば</a>の閲覧に対応しています。</p>
 
-<p>一般の利用者向けの配布は<a href="http://eru.github.io/read.crx-2/read.crx_2.0.91.2.crx">こちら</a><br>
-（右クリックよりダウンロードし、下記のインストールについてを読んで下さい。）<br>
-<a href="https://support.google.com/chrome_webstore/answer/2664769?hl=ja">インストールについて</a></p>
+<h1>
+<a id="ダウンロード" class="anchor" href="#%E3%83%80%E3%82%A6%E3%83%B3%E3%83%AD%E3%83%BC%E3%83%89" aria-hidden="true"><span class="octicon octicon-link"></span></a>ダウンロード</h1>
+
+<p><a href="./read.crx_2.0.91.2.crx">read.crx_2.0.91.2.crx</a></p>
 
 <h1>
-<a id="ビルド手順" class="anchor" href="#%E3%83%93%E3%83%AB%E3%83%89%E6%89%8B%E9%A0%86" aria-hidden="true"><span class="octicon octicon-link"></span></a>ビルド手順</h1>
+<a id="インストール手順" class="anchor" href="#%E3%82%A4%E3%83%B3%E3%82%B9%E3%83%88%E3%83%BC%E3%83%AB%E6%89%8B%E9%A0%86" aria-hidden="true"><span class="octicon octicon-link"></span></a>インストール手順</h1>
 
-<p><a href="https://npmjs.org/">npm</a>, <a href="http://gembundler.com/">Bundler</a>, <a href="http://www.imagemagick.org/">ImageMagick</a>が予め導入されている必要が有ります。</p>
+<h2>
+<a id="windows" class="anchor" href="#windows" aria-hidden="true"><span class="octicon octicon-link"></span></a>Windows</h2>
 
-<pre><code>git clone --recursive git://github.com/eru/read.crx-2.git
+<p>Windowsでは、<a href="https://support.google.com/chrome_webstore/answer/2664769?hl=ja">制限</a>があるため、下記のいずれかの方法で、制限を回避してインストールする必要があります。</p>
 
-cd read.crx-2
+<h3>
+<a id="デベロッパーモードを使用する方法" class="anchor" href="#%E3%83%87%E3%83%99%E3%83%AD%E3%83%83%E3%83%91%E3%83%BC%E3%83%A2%E3%83%BC%E3%83%89%E3%82%92%E4%BD%BF%E7%94%A8%E3%81%99%E3%82%8B%E6%96%B9%E6%B3%95" aria-hidden="true"><span class="octicon octicon-link"></span></a>デベロッパーモードを使用する方法</h3>
 
-npm install
-bundle install
+<ol>
+<li>上記ダウンロードのリンクより、crxファイルをダウンロードします。</li>
+<li>ダウンロードしたcrxファイルの拡張子を「zip」に変更し展開します。（標準のアーカイバでは正常に展開できないため、7zipなどを使用して下さい）</li>
+<li>必要があれば、展開されたディレクトリを邪魔にならない場所に移動します。</li>
+<li>拡張機能の管理画面で、「デベロッパーモード」にチェックを入れます。</li>
+<li>拡張機能の管理画面で、「パッケージ化されてない拡張機能を読み込む…」ボタンをクリックし、3のディレクトリを選択します。</li>
+</ol>
 
-bundle exec rake pack
-bundle exec rake clean
-</code></pre>
+<h3>
+<a id="ポリシーエディタを使用する方法" class="anchor" href="#%E3%83%9D%E3%83%AA%E3%82%B7%E3%83%BC%E3%82%A8%E3%83%87%E3%82%A3%E3%82%BF%E3%82%92%E4%BD%BF%E7%94%A8%E3%81%99%E3%82%8B%E6%96%B9%E6%B3%95" aria-hidden="true"><span class="octicon octicon-link"></span></a>ポリシーエディタを使用する方法</h3>
+
+<ol>
+<li>
+<a href="https://support.google.com/chrome/a/answer/187202?hl=ja">デバイス用の Chrome ポリシーを設定する</a>ページより、<a href="http://dl.google.com/dl/edgedl/chrome/policy/policy_templates.zip">Google Chrome テンプレートの zip ファイルとドキュメント</a>をダウンロードします。</li>
+<li>ダウンロードしたzipファイルを展開します。</li>
+<li>エクスプローラーで「C:\Windows\PolicyDefinitions」を開きます。</li>
+<li>展開したzipファイルの中身の「windows\admx」ディレクトリにある、「chrome.admx」ファイルと「ja」ディレクトリを3のディレクトリにコピーします。</li>
+<li>「gpedit.msc（ローカルグループポリシーエディター）」を実行します。</li>
+<li>左のサイドバーの「コンピュータの構成-&gt;管理用テンプレート-&gt;Google-&gt;Google Chrome-&gt;拡張機能」をクリックします。</li>
+<li>右側に表示された「拡張機能インストールのホワイトリストを設定する」をダブルクリックします。</li>
+<li>表示されたウィンドウの「有効」ラジオボタンを選択の上、オプションの「表示」ボタンをクリックします。</li>
+<li>表示されたウィンドウの値に「eaibgccboimjelecbmgfjhakekfdcpeh」を入力し、「OK」ボタンをクリックします。</li>
+<li>「適用」ボタンをクリックします。</li>
+<li>「gpedit.msc（ローカルグループポリシーエディター）」を終了します。</li>
+<li>上記ダウンロードのリンクより、crxファイルをダウンロードします。</li>
+<li>拡張機能の管理画面へ、ダウンロードしたcrxファイルをドラッグ&amp;ドロップします。</li>
+</ol>
+
+<h2>
+<a id="mac-os-x-linux" class="anchor" href="#mac-os-x-linux" aria-hidden="true"><span class="octicon octicon-link"></span></a>Mac OS X, Linux</h2>
+
+<ol>
+<li>上記ダウンロードのリンクより、crxファイルをダウンロードします。</li>
+<li>拡張機能の管理画面へ、ダウンロードしたcrxファイルをドラッグ&amp;ドロップします。</li>
+</ol>
 
 <h1>
 <a id="商用利用時の注意" class="anchor" href="#%E5%95%86%E7%94%A8%E5%88%A9%E7%94%A8%E6%99%82%E3%81%AE%E6%B3%A8%E6%84%8F" aria-hidden="true"><span class="octicon octicon-link"></span></a>商用利用時の注意</h1>
@@ -60,20 +94,18 @@ bundle exec rake clean
 <p>read.crx 2のソースコードはMITライセンスですが、read.crx 2がアクセスするサービスの中には商用利用に制限が存在する場合が有ります。ご注意下さい。</p>
 
 <h1>
-  <a id="謝辞" class="anchor" href="#%E8%AC%9D%E8%BE%9E" aria-hidden="true"><span class="octicon octicon-link"></span></a>謝辞</h1>
+<a id="謝辞" class="anchor" href="#%E8%AC%9D%E8%BE%9E" aria-hidden="true"><span class="octicon octicon-link"></span></a>謝辞</h1>
 
 <p>「<a href="http://jbbs.shitaraba.net/bbs/read.cgi/computer/42710/1418134797/">read.crx総合 part6</a>」スレの507さん、663さん、663さん、698さん、708さん、773さん、780さん、835さんの変更を反映させていただきました。ありがとうございます。</p>
 
 <p>また、作者である<a href="https://github.com/awef">awef</a>さんにも感謝の意を表します。</p>
-
       </section>
       <footer>
-        <p>This project is maintained by <a href="https://github.com/eru">eru</a></p>
-        <p><small>Hosted on GitHub Pages &mdash; Theme by <a href="https://github.com/orderedlist">orderedlist</a></small></p>
+        <p><small>Hosted on <a href="https://pages.github.com">GitHub Pages</a> using the Dinky theme</small></p>
       </footer>
     </div>
-    <script src="javascripts/scale.fix.js"></script>
-              <script type="text/javascript">
+    <!--[if !IE]><script>fixScale(document);</script><![endif]-->
+		          <script type="text/javascript">
             var gaJsHost = (("https:" == document.location.protocol) ? "https://ssl." : "http://www.");
             document.write(unescape("%3Cscript src='" + gaJsHost + "google-analytics.com/ga.js' type='text/javascript'%3E%3C/script%3E"));
           </script>

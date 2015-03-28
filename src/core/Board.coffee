@@ -185,7 +185,7 @@ class app.Board
         charset: "EUC-JP"
       when "open2ch.net"
         path: "http://#{tmp[1]}/#{tmp[3]}/subback.html"
-        chatset: "UTF-8"
+        charset: "UTF-8"
       else
         path: "http://#{tmp[1]}/#{tmp[3]}/subject.txt"
         charset: "Shift_JIS"

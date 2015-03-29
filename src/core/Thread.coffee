@@ -303,17 +303,18 @@ class app.Thread
   @_parseNet = (text) ->
     # name, mail, other, message, thread_title
     reg = /^<dt>\d+.*：(?:<a href="mailto:([^<>]*)">|<font [^>]*>)?<b>(.*)<\/b>.*：(.*)<dd> ?(.*)<br><br>$/
+    titleReg = /<h1 .*>(.*)<\/h1>/;
     numberOfBroken = 0
     thread = res: []
     first = true
 
     for line, key in text.split("\n")
+      title = titleReg.exec(line)
       regRes = reg.exec(line)
-      (titleReg = /<h1 .*>(.*)<\/h1>/.exec(line)) && (thread.title = titleReg[1])
-      if regRes
-        if key is 0
-          thread.title = app.util.decode_char_reference(regRes[5])
 
+      if title
+        thread.title = app.util.decode_char_reference(title[1])
+      else if regRes
         thread.res.push
           name: regRes[2]
           mail: regRes[1] or ""

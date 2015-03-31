@@ -49,7 +49,7 @@ class app.BBSMenu
   @_update: (force_reload) ->
     BBSMenu._updating = true
 
-    url = "http://kita.jikkyo.org/cbm/cbm.cgi/20.p0.m0.jb.vs.op.sc.nb.bb/-all/bbsmenu.html"
+    url = app.config.get("bbsmenu")
     #キャッシュ取得
     cache = new app.Cache(url)
     cache.get()

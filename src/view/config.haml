@@ -33,7 +33,7 @@
             %li
               %a(href="http://eru.github.io/read.crx-2/" target="_blank") 非公式サイト
             %li
-              %a(href="https://github.com/eru/read.crx-2/commits/mod" target="_blank") 更新履歴
+              %a(href="http://eru.github.io/read.crx-2/changelog.html" target="_blank") 更新履歴
             %li
               %a(href="http://jbbs.livedoor.jp/computer/42710/" target="_blank") 公式サポートBBS
             %li
@@ -67,6 +67,9 @@
         %div
           %label
             %input.direct(type="checkbox" name="always_new_tab") 常に新しいタブで開く
+          %br
+          %label
+            %input.direct(type="checkbox" name="button_change_netsc_newtab") 2ch netとscの切り替え時に新しいタブで開く
 
       %section
         %h2 サムネイル表示
@@ -172,6 +175,12 @@
           %label
             %input.theme_none(type="checkbox")
             テーマなし
+          %br
+          %label
+            bbsmenu(
+            %a(href="http://kita.jikkyo.org/cbm/" target="_blank") 詳細
+            )
+            %input.direct.bbsmenu(type="text" name="bbsmenu")
 
       %section
         %h2 2ch.netのスレッド読み込み形式

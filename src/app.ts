@@ -261,7 +261,8 @@ module app {
       popup_trigger: "click",
       theme_id: "default",
       user_css: "",
-      format_2chnet: "html"
+      format_2chnet: "html",
+      button_change_netsc_newtab: "off"
     };
 
     private _cache:{[index:string]:string;} = {};

@@ -21,7 +21,7 @@ read.crx 2は[Google Chrome][chrome]アプリとして作られた2chブラウ�
 read.crx 2のソースコードはMITライセンスですが、read.crx 2がアクセスするサービスの中には商用利用に制限が存在する場合が有ります。ご注意下さい。
 
 # 謝辞
-「[read.crx総合 part6](http://jbbs.shitaraba.net/bbs/read.cgi/computer/42710/1418134797/)」スレの507さん、663さん、663さん、698さん、708さん、773さん、780さん、835さんの変更を反映させていただきました。ありがとうございます。
+「[read.crx総合 part6](http://jbbs.shitaraba.net/bbs/read.cgi/computer/42710/1418134797/)」スレの507さん、663さん、663さん、698さん、708さん、773さん、780さん、835さん、897さんの変更を反映させていただきました。ありがとうございます。
 
 また、作者である[awef](https://github.com/awef)さんにも感謝の意を表します。
 

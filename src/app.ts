@@ -262,7 +262,8 @@ module app {
       theme_id: "default",
       user_css: "",
       format_2chnet: "html",
-      button_change_netsc_newtab: "off"
+      button_change_netsc_newtab: "off",
+      bbsmenu: "http://kita.jikkyo.org/cbm/cbm.cgi/20.p0.m0.jb.vs.op.sc.nb.bb/-all/bbsmenu.html"
     };
 
     private _cache:{[index:string]:string;} = {};

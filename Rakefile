@@ -68,7 +68,7 @@ def debug_id
 end
 
 def haml(src, output)
-  sh "bundle exec haml -r ./haml_requirement.rb -q #{src} #{output}"
+  sh "bundle exec haml -E UTF-8 -r ./haml_requirement.rb -q #{src} #{output}"
 end
 
 def scss(src, output)

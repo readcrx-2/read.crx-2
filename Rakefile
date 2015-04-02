@@ -155,7 +155,7 @@ rule ".png" => "src/image/svg/%{_\\d+x\\d+(?:_[a-fA-F0-9]+)?(?:_r\\-?\\d+)?$,}n.
   command = "convert -background transparent"
 
   if $3
-    if RUBY_PLATFORM.match(/(darwin|linux)/)
+    if RUBY_PLATFORM.match(/darwin|linux/)
       command += " -fill '##{$3}' -opaque '#333'"
     else
       command += " -fill ##{$3} -opaque #333"
@@ -163,7 +163,7 @@ rule ".png" => "src/image/svg/%{_\\d+x\\d+(?:_[a-fA-F0-9]+)?(?:_r\\-?\\d+)?$,}n.
   end
 
   if $4
-    if RUBY_PLATFORM.match(/(darwin|linux)/)
+    if RUBY_PLATFORM.match(/darwin|linux/)
       command += " -rotate '#{$4}'"
     else
       command += " -rotate #{$4}"
@@ -385,7 +385,12 @@ namespace :jquery do
     cd "lib/jquery" do
       sh "npm install"
       sh "git apply ../jquery_delegate_middle_click.patch"
-      sh "env PATH=$PATH:../../node_modules/.bin/ grunt"
+      if RUBY_PLATFORM.match(/darwin|linux/)
+        sh "env PATH=$PATH:../../node_modules/.bin/ grunt"
+      else
+        zpath = File.expand_path('../lib/jquery/node_modules/.bin', __FILE__)
+        sh "#{zpath}/grunt.cmd"
+      end
       sh "sed -i -e \"3a /* このファイルはread.crx 2用にawefが改造した物です */\" dist/jquery.min.js"
     end
 

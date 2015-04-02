@@ -152,7 +152,7 @@ end
 rule ".png" => "src/image/svg/%{_\\d+x\\d+(?:_[a-fA-F0-9]+)?(?:_r\\-?\\d+)?$,}n.svg" do |t|
   /_(\d+)x(\d+)(?:_([a-fA-F0-9]*))?(?:_r(\-?\d+))?\.png$/ =~ t.name
 
-    command = "convert -background transparent"
+  command = "convert -background transparent"
 
   if $3
     if RUBY_PLATFORM.match(/(darwin|linux)/)

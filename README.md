@@ -16,6 +16,8 @@ read.crx 2は[Google Chrome][chrome]アプリとして作られた2chブラウ�
 
     bundle exec rake pack
     bundle exec rake clean
+    
+Windowsの場合は[WinREADME][winr]
 
 # 商用利用時の注意
 read.crx 2のソースコードはMITライセンスですが、read.crx 2がアクセスするサービスの中には商用利用に制限が存在する場合が有ります。ご注意下さい。
@@ -34,3 +36,4 @@ read.crx 2のソースコードはMITライセンスですが、read.crx 2がア
 [jbbs]: http://rentalbbs.livedoor.com/
 [machi]: http://www.machi.to/
 [npm]: https://npmjs.org/
+[winr]: /WinREADME.md

@@ -152,14 +152,26 @@ end
 rule ".png" => "src/image/svg/%{_\\d+x\\d+(?:_[a-fA-F0-9]+)?(?:_r\\-?\\d+)?$,}n.svg" do |t|
   /_(\d+)x(\d+)(?:_([a-fA-F0-9]*))?(?:_r(\-?\d+))?\.png$/ =~ t.name
 
-  command = "convert -background transparent"
+  if RUBY_PLATFORM.match(/(darwin|linux)/)
+    command = "convert -background transparent"
+  else
+    command = "convert.bat -background transparent"
+  end
 
   if $3
-    command += " -fill '##{$3}' -opaque '#333'"
+    if RUBY_PLATFORM.match(/(darwin|linux)/)
+      command += " -fill '##{$3}' -opaque '#333'"
+    else
+      command += " -fill ##{$3} -opaque #333"
+    end
   end
 
   if $4
-    command += " -rotate '#{$4}'"
+    if RUBY_PLATFORM.match(/(darwin|linux)/)
+      command += " -rotate '#{$4}'"
+    else
+      command += " -rotate #{$4}"
+    end
   end
 
   command += " -resize #{$1}x#{$2} #{t.prerequisites[0]} #{t.name}"
@@ -210,19 +222,35 @@ namespace :img do
   directory "debug/img"
 
   file "debug/img/favicon.ico" => "src/image/svg/read.crx.svg"do |t|
-    sh "convert #{t.prerequisites[0]}\
-        \\( -clone 0 -resize 16x16 \\)\
-        \\( -clone 0 -resize 32x32 \\)\
-        -delete 0\
-        #{t.name}"
+    if RUBY_PLATFORM.match(/(darwin|linux)/)
+      sh "convert #{t.prerequisites[0]}\
+          \\( -clone 0 -resize 16x16 \\)\
+          \\( -clone 0 -resize 32x32 \\)\
+          -delete 0\
+          #{t.name}"
+    else
+      sh "convert.bat #{t.prerequisites[0]} \
+          \\( -clone 0 -resize 16x16 \\) \
+          \\( -clone 0 -resize 32x32 \\) \
+          -delete 0 \
+          #{t.name}"
+    end
   end
 
   file "debug/img/read.crx_128x128.png" => "src/image/svg/read.crx.svg" do |t|
-    sh "convert\
-      -background transparent\
-      -resize 96x96\
-      -extent 128x128-16-16\
-      src/image/svg/read.crx.svg #{t.name}"
+    if RUBY_PLATFORM.match(/(darwin|linux)/)
+      sh "convert\
+        -background transparent\
+        -resize 96x96\
+        -extent 128x128-16-16\
+        src/image/svg/read.crx.svg #{t.name}"
+    else
+      sh "convert.bat \
+        -background transparent \
+        -resize 96x96 \
+        -extent 128x128-16-16 \
+        src/image/svg/read.crx.svg #{t.name}"
+    end
   end
 
   file_copy "debug/img/loading.svg", "src/image/svg/loading.svg"

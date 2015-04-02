@@ -218,18 +218,18 @@ namespace :img do
   directory "debug/img"
 
   file "debug/img/favicon.ico" => "src/image/svg/read.crx.svg"do |t|
-    sh "convert #{t.prerequisites[0]}\
-        \\( -clone 0 -resize 16x16 \\)\
-        \\( -clone 0 -resize 32x32 \\)\
-        -delete 0\
+    sh "convert #{t.prerequisites[0]} \
+        \\( -clone 0 -resize 16x16 \\) \
+        \\( -clone 0 -resize 32x32 \\) \
+        -delete 0 \
         #{t.name}"
   end
 
   file "debug/img/read.crx_128x128.png" => "src/image/svg/read.crx.svg" do |t|
     sh "convert\
-      -background transparent\
-      -resize 96x96\
-      -extent 128x128-16-16\
+      -background transparent \
+      -resize 96x96 \
+      -extent 128x128-16-16 \
       src/image/svg/read.crx.svg #{t.name}"
   end
 

@@ -13,4 +13,7 @@
     setx ImageMagicP {ImageMagicが入っているパス}
     
     bundle exec rake
-    
+
+[bundler]: http://gembundler.com/
+[imagemagick]: http://www.imagemagick.org/
+[npm]: https://npmjs.org/

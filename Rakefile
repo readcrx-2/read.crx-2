@@ -384,7 +384,7 @@ namespace :jquery do
     Rake::Task["jquery:clean"].invoke
     cd "lib/jquery" do
       sh "npm install"
-      sh "git apply ../jquery_delegate_middle_click.patch"
+      sh "git apply ../jquery_delegate_middle_click.patch --whitespace=fix"
       if RUBY_PLATFORM.match(/darwin|linux/)
         sh "env PATH=$PATH:../../node_modules/.bin/ grunt"
       else

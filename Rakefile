@@ -80,7 +80,7 @@ def coffee(src, output)
     src = src.join(" ")
   end
 
-  sh "node_modules/.bin/coffee -cbj #{output} #{src}"
+  sh "cat #{src} | node_modules/.bin/coffee -cbs > #{output}"
 end
 
 def typescript(src, output)

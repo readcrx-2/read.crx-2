@@ -155,11 +155,19 @@ rule ".png" => "src/image/svg/%{_\\d+x\\d+(?:_[a-fA-F0-9]+)?(?:_r\\-?\\d+)?$,}n.
   command = "convert -background transparent"
 
   if $3
-    command += " -fill '##{$3}' -opaque '#333'"
+    if RUBY_PLATFORM.match(/darwin|linux/)
+      command += " -fill '##{$3}' -opaque '#333'"
+    else
+      command += " -fill ##{$3} -opaque #333"
+    end
   end
 
   if $4
-    command += " -rotate '#{$4}'"
+    if RUBY_PLATFORM.match(/darwin|linux/)
+      command += " -rotate '#{$4}'"
+    else
+      command += " -rotate #{$4}"
+    end
   end
 
   command += " -resize #{$1}x#{$2} #{t.prerequisites[0]} #{t.name}"
@@ -210,18 +218,18 @@ namespace :img do
   directory "debug/img"
 
   file "debug/img/favicon.ico" => "src/image/svg/read.crx.svg"do |t|
-    sh "convert #{t.prerequisites[0]}\
-        \\( -clone 0 -resize 16x16 \\)\
-        \\( -clone 0 -resize 32x32 \\)\
-        -delete 0\
+    sh "convert #{t.prerequisites[0]} \
+        \\( -clone 0 -resize 16x16 \\) \
+        \\( -clone 0 -resize 32x32 \\) \
+        -delete 0 \
         #{t.name}"
   end
 
   file "debug/img/read.crx_128x128.png" => "src/image/svg/read.crx.svg" do |t|
-    sh "convert\
-      -background transparent\
-      -resize 96x96\
-      -extent 128x128-16-16\
+    sh "convert \
+      -background transparent \
+      -resize 96x96 \
+      -extent 128x128-16-16 \
       src/image/svg/read.crx.svg #{t.name}"
   end
 
@@ -377,7 +385,12 @@ namespace :jquery do
     cd "lib/jquery" do
       sh "npm install"
       sh "git apply ../jquery_delegate_middle_click.patch"
-      sh "env PATH=$PATH:../../node_modules/.bin/ grunt"
+      if RUBY_PLATFORM.match(/darwin|linux/)
+        sh "env PATH=$PATH:../../node_modules/.bin/ grunt"
+      else
+        zpath = File.expand_path('../lib/jquery/node_modules/.bin', __FILE__)
+        sh "#{zpath}/grunt.cmd"
+      end
       sh "sed -i -e \"3a /* このファイルはread.crx 2用にawefが改造した物です */\" dist/jquery.min.js"
     end
 

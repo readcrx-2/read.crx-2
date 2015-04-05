@@ -267,4 +267,21 @@ app.boot "/view/config.html", ["cache", "bbsmenu"], (Cache, BBSMenu) ->
     app.config.set("theme_id", if @checked then "none" else "default")
     return
 
+  #bbsmenu設定
+  resetBBSMenu = ->
+    app.config.del("bbsmenu").then ->
+      $view.find(".direct.bbsmenu").val(app.config.get("bbsmenu"))
+
+  if $view.find(".direct.bbsmenu").val() is ""
+    resetBBSMenu()
+
+  $view.find(".direct.bbsmenu").bind "change", ->
+    if $view.find(".direct.bbsmenu").val() isnt ""
+      $(".bbsmenu_reload").trigger("click")
+    return
+
+  $view.find(".bbsmenu_reset").on "click", ->
+    resetBBSMenu()
+    return
+
   return

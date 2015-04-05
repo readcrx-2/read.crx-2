@@ -68,7 +68,7 @@ def debug_id
 end
 
 def haml(src, output)
-  sh "bundle exec haml -r ./haml_requirement.rb -q #{src} #{output}"
+  sh "bundle exec haml -E UTF-8 -r ./haml_requirement.rb -q #{src} #{output}"
 end
 
 def scss(src, output)
@@ -80,7 +80,11 @@ def coffee(src, output)
     src = src.join(" ")
   end
 
-  sh "node_modules/.bin/coffee -cbj #{output} #{src}"
+  if RUBY_PLATFORM.include?("darwin") || RUBY_PLATFORM.include?("linux")
+    sh "cat #{src} | node_modules/.bin/coffee -cbs > #{output}"
+  else
+    sh "cat #{src} | \"node_modules/.bin/coffee\" -cbs > #{output}"
+  end
 end
 
 def typescript(src, output)
@@ -155,11 +159,19 @@ rule ".png" => "src/image/svg/%{_\\d+x\\d+(?:_[a-fA-F0-9]+)?(?:_r\\-?\\d+)?$,}n.
   command = "convert -background transparent"
 
   if $3
-    command += " -fill '##{$3}' -opaque '#333'"
+    if RUBY_PLATFORM.include?("darwin") || RUBY_PLATFORM.include?("linux")
+      command += " -fill '##{$3}' -opaque '#333'"
+    else
+      command += " -fill ##{$3} -opaque #333"
+    end
   end
 
   if $4
-    command += " -rotate '#{$4}'"
+    if RUBY_PLATFORM.include?("darwin") || RUBY_PLATFORM.include?("linux")
+      command += " -rotate '#{$4}'"
+    else
+      command += " -rotate #{$4}"
+    end
   end
 
   command += " -resize #{$1}x#{$2} #{t.prerequisites[0]} #{t.name}"
@@ -210,11 +222,19 @@ namespace :img do
   directory "debug/img"
 
   file "debug/img/favicon.ico" => "src/image/svg/read.crx.svg"do |t|
-    sh "convert #{t.prerequisites[0]}\
-        \\( -clone 0 -resize 16x16 \\)\
-        \\( -clone 0 -resize 32x32 \\)\
-        -delete 0\
-        #{t.name}"
+    if RUBY_PLATFORM.include?("darwin") || RUBY_PLATFORM.include?("linux")
+      sh "convert #{t.prerequisites[0]}\
+          \\( -clone 0 -resize 16x16 \\)\
+          \\( -clone 0 -resize 32x32 \\)\
+          -delete 0\
+          #{t.name}"
+    else
+      sh "convert #{t.prerequisites[0]}\
+          \( -clone 0 -resize 16x16 \)\
+          \( -clone 0 -resize 32x32 \)\
+          -delete 0\
+          #{t.name}"
+    end
   end
 
   file "debug/img/read.crx_128x128.png" => "src/image/svg/read.crx.svg" do |t|
@@ -376,8 +396,13 @@ namespace :jquery do
     Rake::Task["jquery:clean"].invoke
     cd "lib/jquery" do
       sh "npm install"
-      sh "git apply ../jquery_delegate_middle_click.patch"
-      sh "env PATH=$PATH:../../node_modules/.bin/ grunt"
+      sh "git apply ../jquery_delegate_middle_click.patch --whitespace=fix"
+      if RUBY_PLATFORM.match(/darwin|linux/)
+        sh "env PATH=$PATH:../../node_modules/.bin/ grunt"
+      else
+        zpath = File.expand_path('../lib/jquery/node_modules/.bin', __FILE__)
+        sh "#{zpath}/grunt.cmd"
+      end
       sh "sed -i -e \"3a /* このファイルはread.crx 2用にawefが改造した物です */\" dist/jquery.min.js"
     end
 

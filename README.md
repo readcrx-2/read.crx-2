@@ -17,6 +17,8 @@ read.crx 2は[Google Chrome][chrome]アプリとして作られた2chブラウ�
     bundle exec rake pack
     bundle exec rake clean
 
+Windowsの場合はImageMagickのPATHが`%SystemRoot%\system32`より前に来るようにする必要があります。（convertコマンドが被っているため）
+
 # 商用利用時の注意
 read.crx 2のソースコードはMITライセンスですが、read.crx 2がアクセスするサービスの中には商用利用に制限が存在する場合が有ります。ご注意下さい。
 
@@ -24,6 +26,10 @@ read.crx 2のソースコードはMITライセンスですが、read.crx 2がア
 「[read.crx総合 part6](http://jbbs.shitaraba.net/bbs/read.cgi/computer/42710/1418134797/)」スレの507さん、663さん、663さん、698さん、708さん、773さん、780さん、835さん、897さんの変更を反映させていただきました。ありがとうございます。
 
 また、作者である[awef](https://github.com/awef)さんにも感謝の意を表します。
+
+# Contributors
+* [Kazuki Hashimoto](https://github.com/eru)
+* [S](https://github.com/S--Minecraft)
 
 [2ch.net]: http://www.2ch.net/
 [2ch.sc]: http://2ch.sc/

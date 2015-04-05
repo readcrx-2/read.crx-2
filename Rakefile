@@ -80,7 +80,11 @@ def coffee(src, output)
     src = src.join(" ")
   end
 
-  sh "cat #{src} | node_modules/.bin/coffee -cbs > #{output}"
+  if RUBY_PLATFORM.include?("darwin") || RUBY_PLATFORM.include?("linux")
+    sh "cat #{src} | node_modules/.bin/coffee -cbs > #{output}"
+  else
+    sh "cat #{src} | \"node_modules/.bin/coffee\" -cbs > #{output}"
+  end
 end
 
 def typescript(src, output)

@@ -3,7 +3,7 @@
   "version": "0.0.0",
   "devDependencies": {
     "grunt-cli": "*",
-    "coffee-script": "1.8.0",
-    "typescript": "1.1.0-1"
+    "coffee-script": "1.9.1",
+    "typescript": "1.5.0-alpha"
   }
 }

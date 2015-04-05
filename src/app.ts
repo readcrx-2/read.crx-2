@@ -296,7 +296,7 @@ module app {
       })();
 
       chrome.storage.local.get(null, (res) => {
-        var key:string, val:any;
+        var key:string, val:string;
         if (this._cache !== null) {
           for (key in res) {
             val = res[key];

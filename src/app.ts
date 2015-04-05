@@ -350,8 +350,9 @@ module app {
       }
     }
 
-    set (key:string, val:string):void {
-      var tmp = {};
+    set (key:string, val:string) {
+      var deferred = $.Deferred(),
+        tmp = {};
 
       if (
         typeof key !== "string" ||
@@ -359,20 +360,40 @@ module app {
       ) {
         log("error", "app.Config::setに不適切な値が渡されました",
           arguments);
-        return;
+        return deferred.reject();
       }
 
       tmp["config_" + key] = val;
-      chrome.storage.local.set(tmp);
+
+      chrome.storage.local.set(tmp, () => {
+        if (chrome.runtime.lasterror) {
+          deferred.reject(chrome.runtime.lasterror.message);
+        } else {
+          deferred.resolve();
+        }
+      });
+
+      return deferred.promise();
     }
 
-    del (key:string):void {
+    del (key:string) {
+      var deferred = $.Deferred();
+
       if (typeof key !== "string") {
         log("error", "app.Config::delにstring以外の値が渡されました",
           arguments);
+        return deferred.reject();
       }
 
-      chrome.storage.local.remove("config_" + key);
+      chrome.storage.local.remove("config_" + key, () => {
+        if (chrome.runtime.lasterror) {
+          deferred.reject(chrome.runtime.lasterror.message);
+        } else {
+          deferred.resolve();
+        }
+      });
+
+      return deferred.promise();
     }
 
     destroy ():void {

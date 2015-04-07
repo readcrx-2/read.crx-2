@@ -18,7 +18,7 @@ class UI.TableSorter
       th = e.target
       order = if th.classList.contains("table_sort_desc") then "asc" else "desc"
 
-      for tmp in table.querySelectorAll(".table_sort_asc, .table_sort_desc")
+      for tmp in @table.querySelectorAll(".table_sort_asc, .table_sort_desc")
         tmp.classList.remove("table_sort_asc")
         tmp.classList.remove("table_sort_desc")
 

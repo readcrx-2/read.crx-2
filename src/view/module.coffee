@@ -605,16 +605,17 @@ class app.view.TabContentView extends app.view.PaneContentView
       return
 
     # 2ch.net/2ch.scに切り替え
-    @$element.find(".button_change_netsc").on "click", =>
-      reg = /http:\/\/\w+\.2ch\.(net|sc)\/\w+\/(.*?)/
-      url = @$element.attr("data-url")
-      mode = reg.exec(url)
-
-      if mode
+    reg = /http:\/\/\w+\.2ch\.(net|sc)\/\w+\/(.*?)/
+    url = @$element.attr("data-url")
+    mode = reg.exec(url)
+    if mode
+      @$element.find(".button_change_netsc").on "click", =>
         from = ".2ch." + mode[1] + "/"
         to = ".2ch." + (if mode[1] is 'net' then 'sc' else 'net') + "/"
         app.message.send "open", {
           url: url.replace(from, to),
           new_tab: app.config.get("button_change_netsc_newtab") is "on"
         }
-    return
+      return
+    else
+      @$element.find(".button_change_netsc").remove()

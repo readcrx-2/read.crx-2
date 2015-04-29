@@ -447,6 +447,6 @@ class UI.ThreadContent
 
         #サムネイル表示(画像っぽいURL)
         if configThumbnailExt
-          if /\.(?:png|jpe?g|gif|bmp|webp)(?:[\?#].*)?$/i.test(a.href)
+          if /\.(?:png|jpe?g|gif|bmp|webp)(?:[\?#:].*)?$/i.test(a.href)
             addThumbnail(a, a.href)
     return

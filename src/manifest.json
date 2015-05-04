@@ -37,13 +37,15 @@
         "http://jbbs.shitaraba.net/*",
         "http://*.machi.to/*",
         "http://*.open2ch.net/*",
-        "http://*.2ch.sc/*"
+        "http://*.2ch.sc/*",
+        "http://*.bbspink.com/*"
       ],
       "js" : ["/cs_addlink.js"]
     },
     {
       "matches" : [
         "http://*.2ch.net/test/bbs.cgi*",
+        "http://*.bbspink.com/test/bbs.cgi*",
         "http://jbbs.shitaraba.net/bbs/write.cgi/*"
       ],
       "js" : ["/write/cs_write.js"],

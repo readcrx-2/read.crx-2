@@ -82,7 +82,7 @@ app.boot "/view/thread.html", ["board_title_solver"], (BoardTitleSolver) ->
       return
     $.popup($view, $popup, e.clientX, e.clientY, that)
 
-  if app.url.tsld(view_url) in ["2ch.net", "shitaraba.net"]
+  if app.url.tsld(view_url) in ["2ch.net", "shitaraba.net", "bbspink.com"]
     $view.find(".button_write").bind "click", ->
       write()
       return

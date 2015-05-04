@@ -121,7 +121,7 @@ describe "app.Config", ->
       return
     return
 
-  it "設定値のキャシュ更新時に、config_updatedメッセージを送出する", ->
+  it "設定値のキャッシュ更新時に、config_updatedメッセージを送出する", ->
     ready = false
     onMessage = jasmine.createSpy("onMessage")
     app.message.add_listener("config_updated", onMessage)

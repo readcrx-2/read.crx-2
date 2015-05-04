@@ -36,7 +36,7 @@ do ->
 
   main = ->
     #2ch投稿確認
-    if ///^http://\w+\.2ch\.net/test/bbs\.cgi///.test(location.href)
+    if ///^http://\w+\.(2ch\.net|bbspink\.com)/test/bbs\.cgi///.test(location.href)
       if /書きこみました/.test(document.title)
         send_message_success()
       else if /確認/.test(document.title)

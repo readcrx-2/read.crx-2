@@ -28,7 +28,7 @@ app.boot "/write/write.html", ->
         is_same_origin = req.requestHeaders.some((header) -> header.name is "Origin" and (header.value is origin or header.value is "null"))
         if req.method is "POST" and is_same_origin
           if (
-            ///^http://\w+\.2ch\.net/test/bbs\.cgi ///.test(req.url) or
+            ///^http://\w+\.(2ch\.net|bbspink\.com)/test/bbs\.cgi ///.test(req.url) or
             ///^http://jbbs\.shitaraba\.net/bbs/write\.cgi/ ///.test(req.url)
           )
             req.requestHeaders.push(name: "Referer", value: arg.url)
@@ -39,6 +39,7 @@ app.boot "/write/write.html", ->
         types: ["sub_frame"]
         urls: [
           "http://*.2ch.net/test/bbs.cgi*"
+          "http://*.bbspink.com/test/bbs.cgi*"
           "http://jbbs.shitaraba.net/bbs/write.cgi/*"
         ]
       }

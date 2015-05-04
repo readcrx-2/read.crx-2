@@ -112,19 +112,19 @@ class app.Board
             """
           .always =>
             if cache_get_promise.state() is "resolved" and thread_list?
-              @message += "キャシュに残っていたデータを表示します。"
+              @message += "キャッシュに残っていたデータを表示します。"
 
             if thread_list
               @thread = thread_list
       else
         if cache_get_promise.state() is "resolved" and thread_list?
-          @message += "キャシュに残っていたデータを表示します。"
+          @message += "キャッシュに残っていたデータを表示します。"
 
         if thread_list?
           @thread = thread_list
       res_deferred.reject()
       return
-    #キャシュ更新部
+    #キャッシュ更新部
     .done ($xhr, thread_list) ->
       if $xhr?.status is 200
         cache.data = $xhr.responseText

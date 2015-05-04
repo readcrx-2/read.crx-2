@@ -37,7 +37,8 @@
         "http://jbbs.shitaraba.net/*",
         "http://*.machi.to/*",
         "http://*.open2ch.net/*",
-        "http://*.2ch.sc/*"
+        "http://*.2ch.sc/*",
+        "http://*.bbspink.com/*"
       ],
       "js" : ["/cs_addlink.js"]
     },

@@ -314,6 +314,7 @@ class app.Thread
 
       if title
         thread.title = app.util.decode_char_reference(title[1])
+        thread.title = thread.title.replace(/ ?(?:\[転載禁止\]|(?:\(c\)|©|�|&copy;)2ch\.net) ?/g,"")
       else if regRes
         thread.res.push
           name: regRes[2]

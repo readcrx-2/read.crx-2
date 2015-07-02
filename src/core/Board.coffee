@@ -215,11 +215,22 @@ class app.Board
           reg = /^<a href="\/test\/read\.cgi\/\w+\/(\d+)\/.*">\d+: (.*) \((\d+)\)<\/a>$/gm
         base_url = "http://#{tmp[1]}/test/read.cgi/#{tmp[3]}/"
 
+    ngWords = app.util.normalize(app.config.get('ngwords') or "").split('\n')
+    ngWords = ngWords.filter (word) -> word
+
     board = []
     while (reg_res = reg.exec(text))
+      title = app.util.decode_char_reference(reg_res[2])
+
+      continue if not do (title, ngWords) ->
+        for ngWord in ngWords
+          if app.util.normalize(title).indexOf(ngWord) isnt -1
+            return false
+        return true
+
       board.push(
         url: base_url + reg_res[1] + "/"
-        title: app.util.decode_char_reference(reg_res[2])
+        title: title
         res_count: +reg_res[3]
         created_at: +reg_res[1] * 1000
       )

@@ -221,6 +221,8 @@ class app.Board
     board = []
     while (reg_res = reg.exec(text))
       title = app.util.decode_char_reference(reg_res[2])
+      if tmp[2] is "2ch.net"
+        title = title.replace(/ ?(?:\[転載禁止\]|(?:\(c\)|©|�|&copy;|&#169;)2ch\.net) ?/g,"")
 
       continue if not do (title, ngWords) ->
         for ngWord in ngWords

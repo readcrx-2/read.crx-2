@@ -4,10 +4,6 @@ interface Window {
   chrome: any;
 }
 
-interface Location {
-  origin: string;
-}
-
 declare var webkitNotifications: any;
 declare var chrome: any;
 

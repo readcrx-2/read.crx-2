@@ -616,6 +616,17 @@ class app.view.TabContentView extends app.view.PaneContentView
           url: url.replace(from, to),
           new_tab: app.config.get("button_change_netsc_newtab") is "on"
         }
-      return
+        return
     else
       @$element.find(".button_change_netsc").remove()
+    
+    #2ch.scでscの投稿だけ表示
+    if /http:\/\/\w+\.2ch\.sc\/\w+\/(.*?)/.exec(url)
+      @$element.find(".button_only_sc").on "click", =>
+        @$element.find("article").each ->
+          if $(this).attr("data-id").substr(-4,4) is ".net"
+            if $(this).css("display") isnt "none" then $(this).css("display", "none") else $(this).css("display", "")
+          return
+        return
+    else
+      @$element.find(".button_only_sc").remove()

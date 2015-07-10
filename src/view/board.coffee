@@ -107,4 +107,13 @@ app.boot "/view/board.html", ["board_title_solver"], (BoardTitleSolver) ->
     load()
     return
   load()
+  
+  if /http:\/\/\w+\.2ch\.sc\/\w+\/(.*?)/.exec(url)
+    $view.find(".button_only_sc").on "click", ->
+      $sc = $view.find(".sc")
+      if $sc.css("display") isnt "none" then $sc.css("display", "none") else $sc.css("display", "")
+      return
+   else
+     $view.find(".button_only_sc").remove()
+  
   return

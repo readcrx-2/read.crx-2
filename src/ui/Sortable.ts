@@ -1,9 +1,5 @@
 ///<reference path="../../lib/DefinitelyTyped/jquery/jquery.d.ts" />
 
-interface HTMLElement {
-  webkitMatchesSelector: Function;
-}
-
 module UI {
   "use strict";
 
@@ -105,7 +101,7 @@ module UI {
       this.container.addEventListener("mousedown", function (e) {
         if (e.target === container) return;
         if (e.which !== 1) return;
-        if (option.exclude && (<HTMLElement>e.target).webkitMatchesSelector(option.exclude)) return;
+        if (option.exclude && (<Element>e.target).webkitMatchesSelector(option.exclude)) return;
 
         target = e.target;
         while (target.parentNode !== container) {

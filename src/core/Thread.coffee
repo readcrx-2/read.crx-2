@@ -35,6 +35,7 @@ class app.Thread
 
     cache = new app.Cache(xhrPath)
     deltaFlg = false
+    onlyOneFlg = false
 
     #キャッシュ取得
     promiseCacheGet = cache.get()
@@ -60,6 +61,11 @@ class app.Thread
           if promiseCacheGet.state() is "resolved"
             deltaFlg = true
             xhrPath += (+cache.res_length + 1) + "-"
+        # 2ch.netは差分をn-で取得
+        else if app.url.tsld(@url) in ["2ch.net"]
+          if promiseCacheGet.state() is "resolved"
+            deltaFlg = true
+            xhrPath += (+cache.res_length) + "n-"
 
         request = new app.HTTP.Request("GET", xhrPath, {
           preventCache: false
@@ -89,7 +95,20 @@ class app.Thread
 
         if response?.status is 200
           if deltaFlg
-            thread = Thread.parse(@url, cache.data + response.body)
+            # 2ch.netならn-を使って前回取得したレスの後のレスからのものを取得する
+            if app.url.tsld(@url) in ["2ch.net"]
+              threadResponse = Thread.parse(@url, response.body)
+              threadCache = Thread.parse(@url, cache.data)
+              # 新しいレスがない場合は最後のレスのみ表示されるのでその場合はキャッシュを送る
+              if threadResponse.res.length is 1
+                onlyOneFlg = true
+                thread = threadCache
+              else
+                threadResponse.res.splice(0, 1)
+                thread = threadResponse
+                thread.res = threadCache.res.concat(threadResponse.res)
+            else
+              thread = Thread.parse(@url, cache.data + response.body)
           else
             thread = Thread.parse(@url, response.body)
         #2ch系BBSのdat落ち
@@ -196,11 +215,21 @@ class app.Thread
       #通信に成功した場合
       if response?.status is 200
         cache.last_updated = Date.now()
-        cache.res_length = thread.res.length
 
         if deltaFlg
-          cache.data += response.body
+          if app.url.tsld(@url) is "2ch.net" and onlyOneFlg is false
+            reg1 = ///<dt>#{cache.res_length}\ ：<a\ href=".*?\n<\/dl>///
+            reg2 = ///<dt>#{cache.res_length}\ ：<a\ href="(.|\n)*<\/dl>///
+            responseText = reg2.exec(response.body)[0]
+            cache.data = cache.data.replace(reg1,responseText)
+            cache.res_length = thread.res.length
+          else if onlyOneFlg is true
+            cache.res_length = thread.res.length
+          else
+            cache.res_length = thread.res.length
+            cache.data += response.body
         else
+          cache.res_length = thread.res.length
           cache.data = response.body
 
         lastModified = new Date(

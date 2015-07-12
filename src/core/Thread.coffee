@@ -60,6 +60,11 @@ class app.Thread
           if promiseCacheGet.state() is "resolved"
             deltaFlg = true
             xhrPath += (+cache.res_length + 1) + "-"
+        # 2ch.netは差分をn-で取得
+        else if app.url.tsld(@url) in ["2ch.net"]
+          if promiseCacheGet.state() is "resolved"
+            deltaFlg = true
+            xhrPath += (+cache.res_length) + "n-"
 
         request = new app.HTTP.Request("GET", xhrPath, {
           preventCache: false
@@ -89,7 +94,20 @@ class app.Thread
 
         if response?.status is 200
           if deltaFlg
-            thread = Thread.parse(@url, cache.data + response.body)
+            # 2ch.netならn-を使って前回取得したレスの後のレスからのものを取得する
+            if app.url.tsld(@url) in ["2ch.net"]
+              threadResponse = Thread.parse(@url, response.body)
+              threadCache = Thread.parse(@url, cache.data)
+              # 新しいレスがない場合は最後のレスのみ表示されるのでその場合はキャッシュを送る
+              if threadResponse.res.length is 1
+                deltaFlg = false
+                thread = threadCache
+              else
+                threadCache.res.splice(-1, 1)
+                thread.res = threadCache.res.concat(threadResponse.res)
+                thread.title = threadResponse.title
+            else
+              thread = Thread.parse(@url, cache.data + response.body)
           else
             thread = Thread.parse(@url, response.body)
         #2ch系BBSのdat落ち
@@ -196,11 +214,19 @@ class app.Thread
       #通信に成功した場合
       if response?.status is 200
         cache.last_updated = Date.now()
-        cache.res_length = thread.res.length
 
         if deltaFlg
-          cache.data += response.body
+          if app.url.tsld(@url) is "2ch.net"
+            reg1 = ///<dt class="bbs_res_header" id="#{cache.res_length}">.*?<\/dt>.*\n.*<\/dl>///
+            reg2 = ///<dt class="bbs_res_header" id="#{cache.res_length}">.*?<\/dt>.*\n<\/dd><dt.*\n.*<\/dl>///
+            responseText = reg2.exec(response.body)
+            cache.data.replace(reg1,responseText[0])
+            cache.res_length = thread.res.length
+          else
+            cache.res_length = thread.res.length
+            cache.data += response.body
         else
+          cache.res_length = thread.res.length
           cache.data = response.body
 
         lastModified = new Date(

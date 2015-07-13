@@ -35,6 +35,7 @@ class app.Thread
 
     cache = new app.Cache(xhrPath)
     deltaFlg = false
+    onlyOneFlg = false
 
     #キャッシュ取得
     promiseCacheGet = cache.get()
@@ -100,12 +101,12 @@ class app.Thread
               threadCache = Thread.parse(@url, cache.data)
               # 新しいレスがない場合は最後のレスのみ表示されるのでその場合はキャッシュを送る
               if threadResponse.res.length is 1
-                deltaFlg = false
+                onlyOneFlg = true
                 thread = threadCache
               else
-                threadCache.res.splice(-1, 1)
+                threadResponse.res.splice(0, 1)
+                thread = threadResponse
                 thread.res = threadCache.res.concat(threadResponse.res)
-                thread.title = threadResponse.title
             else
               thread = Thread.parse(@url, cache.data + response.body)
           else
@@ -216,11 +217,13 @@ class app.Thread
         cache.last_updated = Date.now()
 
         if deltaFlg
-          if app.url.tsld(@url) is "2ch.net"
-            reg1 = ///<dt class="bbs_res_header" id="#{cache.res_length}">.*?<\/dt>.*\n.*<\/dl>///
-            reg2 = ///<dt class="bbs_res_header" id="#{cache.res_length}">.*?<\/dt>.*\n<\/dd><dt.*\n.*<\/dl>///
+          if app.url.tsld(@url) is "2ch.net" && onlyOneFlg is false
+            reg1 = ///<dt>#{cache.res_length} ：<a href=".*<\/dt><dd>.*(\n|\r\n)<\/dd><\/dl>///
+            reg2 = ///<dt>#{cache.res_length} ：<a href="(.|\n|\r\n)*<\/dd><\/dl>///
             responseText = reg2.exec(response.body)
             cache.data.replace(reg1,responseText[0])
+            cache.res_length = thread.res.length
+          else if onlyOneFlg is true
             cache.res_length = thread.res.length
           else
             cache.res_length = thread.res.length

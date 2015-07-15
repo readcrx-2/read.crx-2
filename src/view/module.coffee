@@ -623,10 +623,8 @@ class app.view.TabContentView extends app.view.PaneContentView
     #2ch.scでscの投稿だけ表示
     if /http:\/\/\w+\.2ch\.sc\/\w+\/(.*?)/.exec(url)
       @$element.find(".button_only_sc").on "click", =>
-        @$element.find("article").each ->
-          if $(this).attr("data-id").substr(-4,4) is ".net"
-            if $(this).css("display") isnt "none" then $(this).css("display", "none") else $(this).css("display", "")
-          return
+        @$net = @$element.find(".net")
+        if @$net.css("display") isnt "none" then @$net.css("display", "none") else @$net.css("display", "")
         return
     else
       @$element.find(".button_only_sc").remove()

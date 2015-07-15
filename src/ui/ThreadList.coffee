@@ -300,7 +300,7 @@ class UI.ThreadList
         trClassName += " expired"
       
       if app.escape_html(item.title).substr(0,1) isnt "★"
-        trClassName += " sc"
+        trClassName += " net"
 
       tmpHTML = " data-href=\"#{app.escape_html(item.url)}\""
       tmpHTML += " data-title=\"#{app.escape_html(item.title)}\""

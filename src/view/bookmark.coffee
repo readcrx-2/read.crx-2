@@ -90,12 +90,6 @@ app.boot "/view/bookmark.html", ->
           app.board.get(current, fn.bind(prev: current))
           fn()
           break
-
-      #dat落ちを表示/非表示
-      if app.config.get("bookmark_show_dat") is "off"
-        $view.find(".expired").css("display", "none")
-      else
-        $view.find(".expired").css("display", "")
       
       #ステータス表示更新
       $loading_overlay.find(".success").text(count.success)
@@ -116,6 +110,12 @@ app.boot "/view/bookmark.html", ->
       created_at: /\/(\d+)\/$/.exec(a.url)[1] * 1000
       expired: a.expired
   )
+
+  #dat落ちを表示/非表示
+  if app.config.get("bookmark_show_dat") is "off"
+   $view.find(".expired").css("display", "none")
+  else
+   $view.find(".expired").css("display", "")
 
   app.message.send("request_update_read_state", {})
   $table.table_sort("update")

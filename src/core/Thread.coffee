@@ -217,11 +217,11 @@ class app.Thread
         cache.last_updated = Date.now()
 
         if deltaFlg
-          if app.url.tsld(@url) is "2ch.net" && onlyOneFlg is false
-            reg1 = ///<dt>#{cache.res_length} ：<a href=".*<\/dt><dd>.*(\n|\r\n)<\/dd><\/dl>///
-            reg2 = ///<dt>#{cache.res_length} ：<a href="(.|\n|\r\n)*<\/dd><\/dl>///
-            responseText = reg2.exec(response.body)
-            cache.data.replace(reg1,responseText[0])
+          if app.url.tsld(@url) is "2ch.net" and onlyOneFlg is false
+            reg1 = ///<dt>#{cache.res_length}\ ：<a\ href=".*?\n<\/dl>///
+            reg2 = ///<dt>#{cache.res_length}\ ：<a\ href="(.|\n)*<\/dl>///
+            responseText = reg2.exec(response.body)[0]
+            cache.data = cache.data.replace(reg1,responseText)
             cache.res_length = thread.res.length
           else if onlyOneFlg is true
             cache.res_length = thread.res.length

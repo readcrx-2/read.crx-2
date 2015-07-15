@@ -795,10 +795,19 @@ app.main = ->
           return
       $menu.remove()
       return
-
     app.defer ->
       $menu.appendTo(document.body)
       $.contextmenu($menu, e.clientX, e.clientY)
       return
+    
+    # タブダブルクリックで更新
+    $source.dblclick ->
+      $view.find("iframe[data-tabid=\"#{sourceTabId}\"]")[0]
+        .contentWindow.postMessage(
+          JSON.stringify(type: "request_reload")
+          location.origin
+        )
+      return
     return
   return
+  

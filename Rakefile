@@ -135,6 +135,12 @@ def file_copy(target, src)
   end
 end
 
+def file_delete(target)
+  file target do
+    rm target
+  end
+end
+
 def file_typescript(target, src)
   file target => src do
     typescript(src, target)
@@ -322,6 +328,8 @@ namespace :write do
     "src/core/URL.ts",
     "src/write/cs_write.coffee"
   ]
+  
+  file_delete "src/app.js"
 end
 
 namespace :test do

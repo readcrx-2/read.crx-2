@@ -86,7 +86,12 @@ class app.BoardTitleSolver
       (text) ->
         $.Deferred (d) ->
           if res = /^BBS_TITLE=(.+)$/m.exec(text)
-            d.resolve(res[1].replace("＠2ch掲示板", ""))
+            title = res[1].replace("＠2ch掲示板", "")
+            if app.url.tsld(url) is "2ch.sc"
+              title += "_sc"
+            if app.url.tsld(url) is "open2ch.net"
+              title += "_op"
+            d.resolve(title)
           else
             d.reject()
           return
@@ -128,7 +133,6 @@ class app.BoardTitleSolver
   @method ask
   @param {Object} prop
     @param {String} prop.url
-    @param {Boolean} [prop.offline]
   @return Promise
   ###
   @ask: (prop) ->
@@ -140,12 +144,12 @@ class app.BoardTitleSolver
       .pipe(null, => @searchFromBookmark(url))
       #SETTING.TXTからの取得を試みる
       .pipe(null, =>
-        if not prop.offline and app.url.guess_type(url).bbs_type is "2ch"
+        if app.url.guess_type(url).bbs_type is "2ch"
           @searchFromSettingTXT(url)
       )
       #したらばのAPIから取得を試みる
       .pipe(null, =>
-        if not prop.offline and app.url.guess_type(url).bbs_type is"jbbs"
+        if app.url.guess_type(url).bbs_type is"jbbs"
           @searchFromJbbsAPI(url)
       )
       .promise()

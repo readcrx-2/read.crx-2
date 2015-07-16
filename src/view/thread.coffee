@@ -596,7 +596,7 @@ app.boot "/view/thread.html", ["board_title_solver"], (BoardTitleSolver) ->
   #パンくずリスト表示
   do ->
     board_url = app.url.thread_to_board(view_url)
-    BoardTitleSolver.ask(url: board_url, offline: true).always (title) ->
+    BoardTitleSolver.ask(url: board_url).always (title) ->
       $view
         .find(".breadcrumb > li > a")
           .attr("href", board_url)

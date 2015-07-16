@@ -300,7 +300,7 @@ class UI.ThreadList
         trClassName += " expired"
       
       if app.escape_html(item.title).substr(0,1) isnt "★"
-        trClassName += " sc"
+        trClassName += " net"
 
       tmpHTML = " data-href=\"#{app.escape_html(item.url)}\""
       tmpHTML += " data-title=\"#{app.escape_html(item.title)}\""
@@ -320,6 +320,8 @@ class UI.ThreadList
       #タイトル
       if @_flg.title
         tmpHTML += "<td>#{app.escape_html(item.title)}</td>"
+        if /.+\.2ch\.netの人気スレ|【漫画あり】コンビニで浪人を購入する方法|★★ ２ちゃんねる\(sc\)のご案内 ★★★/.test(item.title)
+          trClassName += " needlessTitle"
 
       #板名
       if @_flg.boardTitle

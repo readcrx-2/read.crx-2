@@ -50,6 +50,11 @@ app.boot "/view/search.html", ["euc_jp_escape", "thread_search"], (euc_jp_escape
         $view.removeClass("loading")
         return
       .always ->
+        if app.config.get("hide_needless_thread") is "on"
+          $view.find(".needlessTitle").css("display", "none")
+        else
+          $view.find(".needlessTitle").css("display", "")
+        
         $view.find(".more").hide()
         setTimeout((-> $button_reload.removeClass("disabled"); return), 5000)
         return

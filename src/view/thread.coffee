@@ -181,8 +181,6 @@ app.boot "/view/thread.html", ["board_title_solver"], (BoardTitleSolver) ->
 
       unless $article.attr("data-id")?
         $menu.find(".copy_id").remove()
-
-      unless $article.attr("data-id")?
         $menu.find(".add_id_to_ngwords").remove()
 
       unless app.url.tsld(view_url) in ["2ch.net", "shitaraba.net"]

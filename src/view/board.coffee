@@ -85,6 +85,7 @@ app.boot "/view/board.html", ["board_title_solver"], (BoardTitleSolver) ->
             created_at: thread.created_at
             read_state: array_of_read_state[read_state_index[thread.url]]
             thread_number: thread_number
+            ng: thread.ng
         )
 
         $view.find("table").table_sort("update")
@@ -93,12 +94,12 @@ app.boot "/view/board.html", ["board_title_solver"], (BoardTitleSolver) ->
       .always ->
         $view.removeClass("loading")
         $view.trigger("view_loaded")
-        
+
         if app.config.get("hide_needless_thread") is "on"
           $view.find(".needlessTitle").css("display", "none")
         else
           $view.find(".needlessTitle").css("display", "")
-        
+
         $button = $view.find(".button_reload")
         $button.addClass("disabled")
         setTimeout((-> $button.removeClass("disabled")), 1000 * 5)
@@ -112,7 +113,7 @@ app.boot "/view/board.html", ["board_title_solver"], (BoardTitleSolver) ->
     load()
     return
   load()
-  
+
   # scでないものはnetクラスがついているので、それを表示/非表示切り替え
   if /http:\/\/\w+\.2ch\.sc\/\w+\/(.*?)/.exec(url)
     $view.find(".button_only_sc").on "click", ->
@@ -121,5 +122,5 @@ app.boot "/view/board.html", ["board_title_solver"], (BoardTitleSolver) ->
       return
   else
     $view.find(".button_only_sc").remove()
-  
+
   return

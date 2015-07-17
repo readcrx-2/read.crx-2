@@ -224,27 +224,26 @@ class app.Board
       if tmp[2] is "2ch.net"
         title = title.replace(/ ?(?:\[転載禁止\]|(?:\(c\)|©|�|&copy;|&#169;)2ch\.net) ?/g,"")
 
-      continue if not do (title, ngWords) ->
-        for ngWord in ngWords
-          if ngWord.indexOf("Comment:") is 0 or ngWord.indexOf("ID:") is 0
-            continue
-          else if ngWord.indexOf("RegExp:") is 0
-            try
-              # prefixを取り除いて正規表現オブジェクトを生成する
-              reg_ng = new RegExp ngWord.substr(7)
-              return not reg_ng.test(title)
-            catch e
-              continue
-          else
-            if app.util.normalize(title).indexOf(app.util.normalize(ngWord)) isnt -1
-              return false
-        return true
-
       board.push(
         url: base_url + reg_res[1] + "/"
         title: title
         res_count: +reg_res[3]
         created_at: +reg_res[1] * 1000
+        ng: do (title, ngWords) ->
+          for ngWord in ngWords
+            if ngWord.indexOf("Comment:") is 0 or ngWord.indexOf("ID:") is 0
+              continue
+            else if ngWord.indexOf("RegExp:") is 0
+              try
+                # prefixを取り除いて正規表現オブジェクトを生成する
+                reg_ng = new RegExp ngWord.substr(7)
+                return reg_ng.test(title)
+              catch e
+                continue
+            else
+              if app.util.normalize(title).indexOf(app.util.normalize(ngWord)) isnt -1
+                return true
+          return false
       )
 
     if bbs_type is "jbbs"

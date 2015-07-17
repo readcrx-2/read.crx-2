@@ -295,7 +295,6 @@ class UI.ThreadList
     html = ""
 
     for item in arg
-      console.log(item)
       trClassName = "open_in_rcrx"
       if item.expired
         trClassName += " expired"

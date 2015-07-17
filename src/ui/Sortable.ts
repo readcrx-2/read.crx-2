@@ -107,7 +107,7 @@ module UI {
         
         clearTimeout(timer);
         
-        // 1秒待ってダブルクリックかシングルクリックか判定する
+        // 0.5秒待ってダブルクリックかシングルクリックか判定する
         timer = setTimeout(function() {
           clicks = 1;
         },500);

@@ -799,15 +799,22 @@ app.main = ->
       $menu.appendTo(document.body)
       $.contextmenu($menu, e.clientX, e.clientY)
       return
+    return
     
-    # タブダブルクリックで更新
-    $source.dblclick ->
-      $view.find("iframe[data-tabid=\"#{sourceTabId}\"]")[0]
-        .contentWindow.postMessage(
-          JSON.stringify(type: "request_reload")
-          location.origin
-        )
-      return
+  # タブダブルクリックで更新
+  $view.find(".tab_tabbar").on "dblclick", "li", (e) ->
+    $source = $(e.target).closest(".tab_tabbar, li")
+
+    if $source.is("li")
+      sourceTabId = $source.attr("data-tabid")
+
+    tab = $source.closest(".tab").data("tab")
+
+    $view.find("iframe[data-tabid=\"#{sourceTabId}\"]")[0]
+      .contentWindow.postMessage(
+        JSON.stringify(type: "request_reload")
+        location.origin
+      )
     return
   return
-  
+

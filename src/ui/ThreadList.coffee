@@ -295,10 +295,13 @@ class UI.ThreadList
     html = ""
 
     for item in arg
+      console.log(item)
       trClassName = "open_in_rcrx"
       if item.expired
         trClassName += " expired"
-      
+      if item.ng
+        trClassName += " ng_thread"
+
       if app.escape_html(item.title).substr(0,1) isnt "★"
         trClassName += " net"
 

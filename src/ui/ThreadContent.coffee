@@ -236,7 +236,7 @@ class UI.ThreadContent
 
     resNum = @container.children.length
 
-    ngWords = app.util.normalize(app.config.get('ngwords') or "").split('\n')
+    ngWords = (app.config.get('ngwords') or "").split('\n')
     ngWords = ngWords.filter (word) -> word
 
     do =>
@@ -248,11 +248,28 @@ class UI.ThreadContent
         articleClass = []
         articleDataId = null
 
-        tmpTxt = app.util.normalize(res.name + " " + res.mail + " " + res.other + " " + res.message)
+        tmpTxt1 = res.name + " " + res.mail + " " + res.other + " " + res.message
+        tmpTxt2 = app.util.normalize(tmpTxt1)
         for ngWord in ngWords
-          if tmpTxt.indexOf(ngWord) isnt -1
-            articleClass.push("ng")
-            break
+          if ngWord.indexOf("Comment:") is 0
+            continue
+          else if ngWord.indexOf("RegExp:") is 0
+            try
+              # prefixを取り除いて正規表現オブジェクトを生成する
+              reg = new RegExp ngWord.substr(7)
+              if reg.test(tmpTxt1)
+                articleClass.push("ng")
+                break
+            catch e
+              continue
+          else if ngWord.indexOf("ID:") is 0
+            if res.other.indexOf(ngWord) isnt -1
+              articleClass.push("ng")
+              break
+          else
+            if tmpTxt2.indexOf(app.util.normalize(ngWord)) isnt -1
+              articleClass.push("ng")
+              break
 
         if /(?:\u3000{5}|\u3000\u0020|[^>]\u0020\u3000)(?!<br>|$)/i.test(res.message)
           articleClass.push("aa")
@@ -293,7 +310,7 @@ class UI.ThreadContent
 
               if fixedId is @oneId
                 articleClass.push("one")
-              
+
               if fixedId.substr(-4,4) is ".net"
                 articleClass.push("net")
 

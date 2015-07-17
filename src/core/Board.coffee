@@ -215,7 +215,7 @@ class app.Board
           reg = /^<a href="\/test\/read\.cgi\/\w+\/(\d+)\/.*">\d+: (.*) \((\d+)\)<\/a>$/gm
         base_url = "http://#{tmp[1]}/test/read.cgi/#{tmp[3]}/"
 
-    ngWords = app.util.normalize(app.config.get('ngwords') or "").split('\n')
+    ngWords = (app.config.get('ngwords') or "").split('\n')
     ngWords = ngWords.filter (word) -> word
 
     board = []
@@ -226,8 +226,18 @@ class app.Board
 
       continue if not do (title, ngWords) ->
         for ngWord in ngWords
-          if app.util.normalize(title).indexOf(ngWord) isnt -1
-            return false
+          if ngWord.indexOf("Comment:") is 0 or ngWord.indexOf("ID:") is 0
+            continue
+          else if ngWord.indexOf("RegExp:") is 0
+            try
+              # prefixを取り除いて正規表現オブジェクトを生成する
+              reg_ng = new RegExp ngWord.substr(7)
+              return not reg_ng.test(title)
+            catch e
+              continue
+          else
+            if app.util.normalize(title).indexOf(app.util.normalize(ngWord)) isnt -1
+              return false
         return true
 
       board.push(

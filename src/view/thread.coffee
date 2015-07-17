@@ -182,6 +182,9 @@ app.boot "/view/thread.html", ["board_title_solver"], (BoardTitleSolver) ->
       unless $article.attr("data-id")?
         $menu.find(".copy_id").remove()
 
+      unless $article.attr("data-id")?
+        $menu.find(".add_id_to_ngwords").remove()
+
       unless app.url.tsld(view_url) in ["2ch.net", "shitaraba.net"]
         $menu.find(".res_to_this, .res_to_this2").remove()
 
@@ -206,6 +209,9 @@ app.boot "/view/thread.html", ["board_title_solver"], (BoardTitleSolver) ->
 
       else if $this.hasClass("copy_id")
         app.clipboardWrite($res.attr("data-id"))
+
+      else if $this.hasClass("add_id_to_ngwords")
+        app.config.set("ngwords", $res.attr("data-id") + "\n" + (app.config.get("ngwords") or ""))
 
       else if $this.hasClass("jump_to_this")
         threadContent.scrollTo(+$res.find(".num").text(), true)

@@ -215,7 +215,7 @@ class app.Board
           reg = /^<a href="\/test\/read\.cgi\/\w+\/(\d+)\/.*">\d+: (.*) \((\d+)\)<\/a>$/gm
         base_url = "http://#{tmp[1]}/test/read.cgi/#{tmp[3]}/"
 
-    ngWords = app.util.normalize(app.config.get('ngwords') or "").split('\n')
+    ngWords = (app.config.get('ngwords') or "").split('\n')
     ngWords = ngWords.filter (word) -> word
 
     board = []
@@ -223,18 +223,43 @@ class app.Board
       title = app.util.decode_char_reference(reg_res[2])
       if tmp[2] is "2ch.net"
         title = title.replace(/ ?(?:\[転載禁止\]|(?:\(c\)|©|�|&copy;|&#169;)2ch\.net) ?/g,"")
-
-      continue if not do (title, ngWords) ->
-        for ngWord in ngWords
-          if app.util.normalize(title).indexOf(ngWord) isnt -1
-            return false
-        return true
+      tmpTitle = app.util.normalize(title)
 
       board.push(
         url: base_url + reg_res[1] + "/"
         title: title
         res_count: +reg_res[3]
         created_at: +reg_res[1] * 1000
+        ng: do (title, ngWords) ->
+          for ngWord in ngWords
+            # 関係ないプレフィックスは飛ばす
+            continue if do (ngWord, prefixes = ["Comment:", "Name:", "Mail:", "ID:", "Body:", "RegExpName:", "RegExpMail:", "RegExpID:", "RegExpBody:"]) ->
+              for prefix in prefixes
+                if ngWord.indexOf(prefix) is 0
+                  return true
+              return false
+
+            if ngWord.indexOf("RegExp:") is 0
+              try
+                reg_ng = new RegExp ngWord.substr(7)
+                if reg_ng.test(title)
+                  return true
+              catch e
+                continue
+            else if ngWord.indexOf("RegExpTitle:") is 0
+              try
+                reg_ng = new RegExp ngWord.substr(12)
+                if reg_ng.test(title)
+                  return true
+              catch e
+                continue
+            else if ngWord.indexOf("Title:") is 0
+              if tmpTitle.indexOf(app.util.normalize(ngWord.substr(6))) isnt -1
+                return true
+            else
+              if tmpTitle.indexOf(app.util.normalize(ngWord)) isnt -1
+                return true
+          return false
       )
 
     if bbs_type is "jbbs"

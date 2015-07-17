@@ -104,14 +104,14 @@ module UI {
         if (e.target === container) return;
         if (e.which !== 1) return;
         if (option.exclude && (<Element>e.target).webkitMatchesSelector(option.exclude)) return;
-        
+
         clearTimeout(timer);
-        
+
         // 0.5秒待ってダブルクリックかシングルクリックか判定する
         timer = setTimeout(function() {
           clicks = 1;
         },500);
-        
+
         if(clicks === 1) {
           target = e.target;
           while (target.parentNode !== container) {
@@ -120,7 +120,7 @@ module UI {
 
           target.classList.add("sortable_dragging");
           document.body.appendChild(overlay);
-          
+
           clicks = 1;
         }else if(clicks === 2) {
           clicks = 1;
@@ -130,9 +130,7 @@ module UI {
     }
   }
 }
-/*
 
-*/
 (function ($) {
   $.fn.sortable = function (option) {
     $(this).each(function () {

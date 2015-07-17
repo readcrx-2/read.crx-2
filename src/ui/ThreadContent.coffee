@@ -251,19 +251,67 @@ class UI.ThreadContent
         tmpTxt1 = res.name + " " + res.mail + " " + res.other + " " + res.message
         tmpTxt2 = app.util.normalize(tmpTxt1)
         for ngWord in ngWords
-          if ngWord.indexOf("Comment:") is 0
-            continue
-          else if ngWord.indexOf("RegExp:") is 0
+          # 関係ないプレフィックスは飛ばす
+          continue if do (ngWord, prefixes = ["Comment:", "Title:", "RegExpTitle:"]) ->
+            for prefix in prefixes
+              if ngWord.indexOf(prefix) is 0
+                return true
+            return false
+
+          if ngWord.indexOf("RegExp:") is 0
             try
-              # prefixを取り除いて正規表現オブジェクトを生成する
               reg = new RegExp ngWord.substr(7)
               if reg.test(tmpTxt1)
                 articleClass.push("ng")
                 break
             catch e
               continue
+          else if ngWord.indexOf("RegExpName:") is 0
+            try
+              reg = new RegExp ngWord.substr(11)
+              if reg.test(res.name)
+                articleClass.push("ng")
+                break
+            catch e
+              continue
+          else if ngWord.indexOf("RegExpMail:") is 0
+            try
+              reg = new RegExp ngWord.substr(11)
+              if reg.test(res.mail)
+                articleClass.push("ng")
+                break
+            catch e
+              continue
+          else if ngWord.indexOf("RegExpID:") is 0
+            try
+              reg = new RegExp ngWord.substr(9)
+              if reg.test(res.other.substr(res.other.indexOf("ID:")))
+                articleClass.push("ng")
+                break
+            catch e
+              continue
+          else if ngWord.indexOf("RegExpBody:") is 0
+            try
+              reg = new RegExp ngWord.substr(11)
+              if reg.test(res.message)
+                articleClass.push("ng")
+                break
+            catch e
+              continue
+          else if ngWord.indexOf("Name:") is 0
+            if app.util.normalize(res.name).indexOf(app.util.normalize(ngWord.substr(5))) isnt -1
+              articleClass.push("ng")
+              break
+          else if ngWord.indexOf("Mail:") is 0
+            if app.util.normalize(res.mail).indexOf(app.util.normalize(ngWord.substr(5))) isnt -1
+              articleClass.push("ng")
+              break
           else if ngWord.indexOf("ID:") is 0
             if res.other.indexOf(ngWord) isnt -1
+              articleClass.push("ng")
+              break
+          else if ngWord.indexOf("Body:") is 0
+            if app.util.normalize(res.message).indexOf(app.util.normalize(ngWord.substr(5))) isnt -1
               articleClass.push("ng")
               break
           else

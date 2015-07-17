@@ -223,6 +223,7 @@ class app.Board
       title = app.util.decode_char_reference(reg_res[2])
       if tmp[2] is "2ch.net"
         title = title.replace(/ ?(?:\[転載禁止\]|(?:\(c\)|©|�|&copy;|&#169;)2ch\.net) ?/g,"")
+      tmpTitle = app.util.normalize(title)
 
       board.push(
         url: base_url + reg_res[1] + "/"
@@ -231,17 +232,32 @@ class app.Board
         created_at: +reg_res[1] * 1000
         ng: do (title, ngWords) ->
           for ngWord in ngWords
-            if ngWord.indexOf("Comment:") is 0 or ngWord.indexOf("ID:") is 0
-              continue
-            else if ngWord.indexOf("RegExp:") is 0
+            # 関係ないプレフィックスは飛ばす
+            continue if do (ngWord, prefixes = ["Comment:", "Name:", "Mail:", "ID:", "Body:", "RegExpName:", "RegExpMail:", "RegExpID:", "RegExpBody:"]) ->
+              for prefix in prefixes
+                if ngWord.indexOf(prefix) is 0
+                  return true
+              return false
+
+            if ngWord.indexOf("RegExp:") is 0
               try
-                # prefixを取り除いて正規表現オブジェクトを生成する
                 reg_ng = new RegExp ngWord.substr(7)
-                return reg_ng.test(title)
+                if reg_ng.test(title)
+                  return true
               catch e
                 continue
+            else if ngWord.indexOf("RegExpTitle:") is 0
+              try
+                reg_ng = new RegExp ngWord.substr(12)
+                if reg_ng.test(title)
+                  return true
+              catch e
+                continue
+            else if ngWord.indexOf("Title:") is 0
+              if tmpTitle.indexOf(app.util.normalize(ngWord.substr(6))) isnt -1
+                return true
             else
-              if app.util.normalize(title).indexOf(app.util.normalize(ngWord)) isnt -1
+              if tmpTitle.indexOf(app.util.normalize(ngWord)) isnt -1
                 return true
           return false
       )

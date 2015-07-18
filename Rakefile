@@ -19,7 +19,8 @@ task :default => [
   "zombie:build",
   "write:build",
   "test:build",
-  "jquery:build"
+  "jquery:build",
+  "rmappjs"
 ]
 
 task :clean do
@@ -135,12 +136,6 @@ def file_copy(target, src)
   end
 end
 
-def file_delete(target)
-  file target do
-    rm target
-  end
-end
-
 def file_typescript(target, src)
   file target => src do
     typescript(src, target)
@@ -194,6 +189,17 @@ file_typescript "debug/app.js", "src/app.ts"
 
 file_ct "debug/app_core.js", FileList["src/core/*.coffee", "src/core/*.ts"]
 
+##app.js削除処理 - 開始
+#常にapp.jsが存在するようにする(app.jsが存在しないときの判定ができない…)
+file "src/app.js" => "README.md" do
+  sh "touch src/app.js"
+end
+
+task "rmappjs" => "src/app.js" do
+  rm "src/app.js"
+end
+##app.js削除処理 - 終了
+
 #img
 namespace :img do
   task :build => [
@@ -235,20 +241,12 @@ namespace :img do
           -delete 0\
           #{t.name}"
     else
-      sh "convert #{t.prerequisites[0]}\
-          \( -clone 0 -resize 16x16 \)\
-          \( -clone 0 -resize 32x32 \)\
-          -delete 0\
-          #{t.name}"
+      sh "convert #{t.prerequisites[0]} ( -clone 0 -resize 16x16 \) ( -clone 0 -resize 32x32 \) -delete 0 #{t.name}"
     end
   end
 
   file "debug/img/read.crx_128x128.png" => "src/image/svg/read.crx.svg" do |t|
-    sh "convert\
-      -background transparent\
-      -resize 96x96\
-      -extent 128x128-16-16\
-      src/image/svg/read.crx.svg #{t.name}"
+    sh "convert -background transparent -resize 96x96 -extent 128x128-16-16 src/image/svg/read.crx.svg #{t.name}"
   end
 
   file_copy "debug/img/loading.svg", "src/image/svg/loading.svg"
@@ -328,8 +326,6 @@ namespace :write do
     "src/core/URL.ts",
     "src/write/cs_write.coffee"
   ]
-  
-  file_delete "src/app.js"
 end
 
 namespace :test do

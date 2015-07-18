@@ -61,10 +61,10 @@ task :pack do
 end
 
 task :scan do
-  if RUBY_PLATFORM.include?("linux")
-    sh "clamscan -ir debug"
+  if RUBY_PLATFORM.include?("darwin")
+    # not installed clamscan software...
   else
-    # no virus scan software...
+    sh "clamscan -ir debug"
   end
 end
 

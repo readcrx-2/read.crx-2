@@ -5,7 +5,7 @@ read.crx 2は[Google Chrome][chrome]アプリとして作られた2chブラウ�
 一般の利用者向けの配布は[こちら](http://eru.github.io/read.crx-2/)
 
 # ビルド手順
-[npm][npm], [Bundler][bundler], [ImageMagick][imagemagick]が予め導入されている必要が有ります。
+[npm][npm], [Bundler][bundler], [ImageMagick][imagemagick], [ClamAV][clamav]が予め導入されている必要が有ります。
 
     git clone --recursive git://github.com/eru/read.crx-2.git
 
@@ -36,6 +36,7 @@ read.crx 2のソースコードはMITライセンスですが、read.crx 2がア
 [open2ch.net]: http://open2ch.net/
 [bundler]: http://gembundler.com/
 [chrome]: https://www.google.com/chrome
+[clamav]: http://www.clamav.net/
 [imagemagick]: http://www.imagemagick.org/
 [jbbs]: http://rentalbbs.livedoor.com/
 [machi]: http://www.machi.to/

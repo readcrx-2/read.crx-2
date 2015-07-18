@@ -1,11 +1,11 @@
 # read.crx 2
-read.crx 2は[Google Chrome][chrome]アプリとして作られた2chブラウザです。
-[2ch.net][2ch.net]、[2ch.sc][2ch.sc]、[open2ch.net][open2ch.net]及びその互換BBS、[まちBBS][machi]、[したらば][jbbs]の閲覧に対応しています。
-
-一般の利用者向けの配布は[こちら](http://eru.github.io/read.crx-2/)
-
+read.crx 2は[Google Chrome][chrome]アプリとして作られた2chブラウザです。  
+[2ch.net][2ch.net]、[2ch.sc][2ch.sc]、[open2ch.net][open2ch.net]及びその互換BBS、[まちBBS][machi]、[したらば][jbbs]の閲覧に対応しています。  
+  
+一般の利用者向けの配布は[こちら](http://eru.github.io/read.crx-2/)  
+  
 # ビルド手順
-[npm][npm], [Bundler][bundler], [ImageMagick][imagemagick], [ClamAV][clamav]が予め導入されている必要が有ります。
+[npm][npm], [Bundler][bundler], [ImageMagick][imagemagick], [ClamAV][clamav]が予め導入されている必要が有ります。  
 
     git clone --recursive git://github.com/eru/read.crx-2.git
 
@@ -17,16 +17,16 @@ read.crx 2は[Google Chrome][chrome]アプリとして作られた2chブラウ�
     bundle exec rake pack
     bundle exec rake clean
 
-Windowsの場合はImageMagickのPATHが`%SystemRoot%\system32`より前に来るようにする必要があります。（convertコマンドが被っているため）
+詳細 : [Windows][winbuild]  [OSX][osxbuild]  [Linux][linuxbuild]  
 
 # 商用利用時の注意
-read.crx 2のソースコードはMITライセンスですが、read.crx 2がアクセスするサービスの中には商用利用に制限が存在する場合が有ります。ご注意下さい。
-
+read.crx 2のソースコードはMITライセンスですが、read.crx 2がアクセスするサービスの中には商用利用に制限が存在する場合が有ります。ご注意下さい。  
+  
 # 謝辞
-「[read.crx総合 part6](http://jbbs.shitaraba.net/bbs/read.cgi/computer/42710/1418134797/)」スレの507さん、663さん、663さん、698さん、708さん、773さん、780さん、835さん、897さんの変更を反映させていただきました。ありがとうございます。
-
-また、作者である[awef](https://github.com/awef)さんにも感謝の意を表します。
-
+「[read.crx総合 part6](http://jbbs.shitaraba.net/bbs/read.cgi/computer/42710/1418134797/)」スレの507さん、663さん、663さん、698さん、708さん、773さん、780さん、835さん、897さんの変更を反映させていただきました。ありがとうございます。  
+  
+また、作者である[awef](https://github.com/awef)さんにも感謝の意を表します。  
+  
 # Contributors
 * [Kazuki Hashimoto](https://github.com/eru)
 * [S](https://github.com/S--Minecraft)
@@ -41,3 +41,6 @@ read.crx 2のソースコードはMITライセンスですが、read.crx 2がア
 [jbbs]: http://rentalbbs.livedoor.com/
 [machi]: http://www.machi.to/
 [npm]: https://npmjs.org/
+[winbuild]: https://github.com/eru/read.crx-2/wiki/Windows%E3%81%A7%E3%81%AE%E3%83%93%E3%83%AB%E3%83%89%E6%96%B9%E6%B3%95
+[osxbuild]: https://github.com/eru/read.crx-2/wiki/OSX%E3%81%A7%E3%81%AE%E3%83%93%E3%83%AB%E3%83%89%E6%96%B9%E6%B3%95
+[linuxbuild]: https://github.com/eru/read.crx-2/wiki/Linux%E3%81%A7%E3%81%AE%E3%83%93%E3%83%AB%E3%83%89%E6%96%B9%E6%B3%95

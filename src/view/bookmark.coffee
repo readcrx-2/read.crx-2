@@ -90,7 +90,7 @@ app.boot "/view/bookmark.html", ->
           app.board.get(current, fn.bind(prev: current))
           fn()
           break
-      
+
       #ステータス表示更新
       $loading_overlay.find(".success").text(count.success)
       $loading_overlay.find(".error").text(count.error)
@@ -99,6 +99,13 @@ app.boot "/view/bookmark.html", ->
       return
 
     fn()
+
+    #dat落ちを表示/非表示
+    $expired = $view.find(".expired")
+    if app.config.get("bookmark_show_dat") is "off"
+      $expired.addClass("expired_hide")
+    else
+      $expired.removeClass("expired_hide")
     return
 
   threadList.addItem(
@@ -112,20 +119,17 @@ app.boot "/view/bookmark.html", ->
   )
 
   #dat落ちを表示/非表示
+  $expired = $view.find(".expired")
   if app.config.get("bookmark_show_dat") is "off"
-   $view.find(".expired").css("display", "none")
+    $expired.addClass("expired_hide")
   else
-   $view.find(".expired").css("display", "")
+    $expired.removeClass("expired_hide")
 
   app.message.send("request_update_read_state", {})
   $table.table_sort("update")
 
   $view.find(".button_toggle_dat").on "click", ->
-    $expired = $view.find(".expired")
-    if $expired.css("display") isnt "none"
-      $expired.css("display", "none")
-    else
-      $expired.css("display", "")
+    $view.find(".expired").toggleClass("expired_hide")
     return
 
   $view.trigger("view_loaded")

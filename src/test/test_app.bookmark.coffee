@@ -5,7 +5,7 @@ do ->
   app.bookmark = new app.Bookmark.CompatibilityLayer(cbel)
 
   chrome.bookmarks.create(
-    {title: "test forlder for Bookmark.CompatibilityLayer"}
+    {title: "test folder for Bookmark.CompatibilityLayer"}
     (node) ->
       cbel.setRootNodeId(node.id)
       return

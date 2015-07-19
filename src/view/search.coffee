@@ -30,7 +30,7 @@ app.boot "/view/search.html", ["euc_jp_escape", "thread_search"], (euc_jp_escape
   $table.prependTo(".content")
 
   thread_search = new ThreadSearch(query)
-  tbody = $view.find("tbody")[0]
+  $tbody = $view.find("tbody")
 
   load = ->
     return if $view.hasClass("loading")
@@ -48,6 +48,11 @@ app.boot "/view/search.html", ["euc_jp_escape", "thread_search"], (euc_jp_escape
           $needlessThread.addClass("needless_thread_hide")
         else
           $needlessThread.removeClass("needless_thread_hide")
+
+        if $tbody.children().size() is 0 || $tbody.children().css("display") is "none"
+          $tbody.addClass("body_empty")
+        else
+          $tbody.removeClass("body_empty")
 
         $view.removeClass("loading")
         return

@@ -16,7 +16,7 @@
   }
 }
 
-.view:not(.loading) tbody:empty {
+.body_empty {
   display: block;
   &:after {
     content: "表示可能項目無し";

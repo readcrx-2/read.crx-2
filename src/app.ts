@@ -276,7 +276,8 @@ module app {
         var found:{[index:string]:string;} = {}, index:number, key:string,
           val:string;
 
-        for (index = 0; index < localStorage.length; index++) {
+        var localStorage_length = localStorage.length
+        for (index = 0; index < localStorage_length; index++) {
           key = localStorage.key(index);
           if (/^config_/.test(key)) {
             val = localStorage.getItem(key);

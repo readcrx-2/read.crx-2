@@ -619,12 +619,11 @@ class app.view.TabContentView extends app.view.PaneContentView
         return
     else
       @$element.find(".button_change_netsc").remove()
-    
-    #2ch.scでscの投稿だけ表示
+
+    #2ch.scでscの投稿だけ表示(スレ&レス)
     if /http:\/\/\w+\.2ch\.sc\/\w+\/(.*?)/.exec(url)
       @$element.find(".button_only_sc").on "click", =>
-        @$net = @$element.find(".net")
-        if @$net.css("display") isnt "none" then @$net.css("display", "none") else @$net.css("display", "")
+        @$element.find(".net").toggleClass("net_hide")
         return
     else
       @$element.find(".button_only_sc").remove()

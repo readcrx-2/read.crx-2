@@ -19,7 +19,8 @@ task :default => [
   "zombie:build",
   "write:build",
   "test:build",
-  "jquery:build"
+  "jquery:build",
+  "rmappjs"
 ]
 
 task :clean do
@@ -42,20 +43,26 @@ task :pack do
     cp_r "debug", "#{tmpdir}/debug"
     rm_r "#{tmpdir}/debug/test"
 
-    puts "秘密鍵のパスを入力して下さい"
-    pem_path = STDIN.gets
-    if RUBY_PLATFORM.match(/darwin/)
+    if RUBY_PLATFORM.include?("darwin")||RUBY_PLATFORM.include?("linux")
+      puts "秘密鍵のパスを入力して下さい"
+      pem_path = STDIN.gets
+    end
+
+    if RUBY_PLATFORM.include?("darwin")
       sh "\"/Applications/Google Chrome.app/Contents/MacOS/Google Chrome\" --pack-extension=#{tmpdir}/debug --pack-extension-key=#{pem_path}"
-    else
+    elsif RUBY_PLATFORM.include?("linux")
       sh "google-chrome --pack-extension=#{tmpdir}/debug --pack-extension-key=#{pem_path}"
+    else
+      # Windowsの場合、Chromeの場所を環境変数から取得する(設定必)
+      sh "#{ENV["CHROME_LOCATION"]} --pack-extension=\"#{tmpdir}/debug\""
     end
     mv "#{tmpdir}/debug.crx", "read.crx_2.#{MANIFEST["version"]}.crx"
   end
 end
 
 task :scan do
-  if RUBY_PLATFORM.match(/darwin/)
-    # no virus scan software...
+  if RUBY_PLATFORM.include?("darwin")
+    # not installed clamscan software...
   else
     sh "clamscan -ir debug"
   end
@@ -135,12 +142,6 @@ def file_copy(target, src)
   end
 end
 
-def file_delete(target)
-  file target do
-    rm target
-  end
-end
-
 def file_typescript(target, src)
   file target => src do
     typescript(src, target)
@@ -194,6 +195,17 @@ file_typescript "debug/app.js", "src/app.ts"
 
 file_ct "debug/app_core.js", FileList["src/core/*.coffee", "src/core/*.ts"]
 
+##app.js削除処理 - 開始
+#常にapp.jsが存在するようにする(app.jsが存在しないときの判定ができない…)
+file "src/app.js" => "README.md" do
+  sh "touch src/app.js"
+end
+
+task "rmappjs" => "src/app.js" do
+  rm "src/app.js"
+end
+##app.js削除処理 - 終了
+
 #img
 namespace :img do
   task :build => [
@@ -235,20 +247,12 @@ namespace :img do
           -delete 0\
           #{t.name}"
     else
-      sh "convert #{t.prerequisites[0]}\
-          \( -clone 0 -resize 16x16 \)\
-          \( -clone 0 -resize 32x32 \)\
-          -delete 0\
-          #{t.name}"
+      sh "convert #{t.prerequisites[0]} ( -clone 0 -resize 16x16 \) ( -clone 0 -resize 32x32 \) -delete 0 #{t.name}"
     end
   end
 
   file "debug/img/read.crx_128x128.png" => "src/image/svg/read.crx.svg" do |t|
-    sh "convert\
-      -background transparent\
-      -resize 96x96\
-      -extent 128x128-16-16\
-      src/image/svg/read.crx.svg #{t.name}"
+    sh "convert -background transparent -resize 96x96 -extent 128x128-16-16 src/image/svg/read.crx.svg #{t.name}"
   end
 
   file_copy "debug/img/loading.svg", "src/image/svg/loading.svg"
@@ -328,8 +332,6 @@ namespace :write do
     "src/core/URL.ts",
     "src/write/cs_write.coffee"
   ]
-  
-  file_delete "src/app.js"
 end
 
 namespace :test do
@@ -358,15 +360,23 @@ namespace :test do
   task :run, :filter do |t, args|
     require "cgi"
 
-    url = "chrome-extension://#{debug_id}/test/test.html"
+    if defined?(ENV["read.crx-2-id"])
+      url = "chrome-extension://#{ENV["read.crx-2-id"]}/test/test.html"
+    else
+      url = "chrome-extension://#{debug_id}/test/test.html"
+    end
+
     if args[:filter]
       tmp = CGI.escape(args[:filter]).gsub("\+", "%20")
       url += "?filter=#{tmp}&spec=#{tmp}"
     end
-    if RUBY_PLATFORM.match(/darwin/)
+    if RUBY_PLATFORM.include?("darwin")
       # sh "\"/Applications/Google Chrome.app/Contents/MacOS/Google Chrome\" '#{url}'"
-    else
+    elsif RUBY_PLATFORM.include?("linux")
       sh "google-chrome '#{url}'"
+    else
+      # Windowsの場合、Chromeの場所を環境変数から取得する(設定必)
+      sh "#{ENV["CHROME_LOCATION"]} #{url}"
     end
   end
 

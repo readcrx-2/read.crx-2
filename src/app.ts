@@ -260,6 +260,7 @@ module app {
       bookmark_show_dat: "on",
       format_2chnet: "html",
       button_change_netsc_newtab: "off",
+      hide_needless_thread: "on",
       bbsmenu: "http://kita.jikkyo.org/cbm/cbm.cgi/20.p0.m0.jb.vs.op.sc.nb.bb/-all/bbsmenu.html"
     };
 

@@ -191,16 +191,11 @@ file_typescript "debug/app.js", "src/app.ts"
 
 file_ct "debug/app_core.js", FileList["src/core/*.coffee", "src/core/*.ts"]
 
-##app.js削除処理 - 開始
-#常にapp.jsが存在するようにする(app.jsが存在しないときの判定ができない…)
-file "src/app.js" => "README.md" do
-  sh "touch src/app.js"
+task "rmappjs" do
+  if File.exist?("src/app.js")
+    rm "src/app.js"
+  end
 end
-
-task "rmappjs" => "src/app.js" do
-  rm "src/app.js"
-end
-##app.js削除処理 - 終了
 
 #img
 namespace :img do

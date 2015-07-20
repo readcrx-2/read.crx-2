@@ -323,7 +323,7 @@ class UI.ThreadList
       if @_flg.title
         tmpHTML += "<td>#{app.escape_html(item.title)}</td>"
         if /.+\.2ch\.netの人気スレ|【漫画あり】コンビニで浪人を購入する方法|★★ ２ちゃんねる\(sc\)のご案内 ★★★/.test(item.title)
-          trClassName += " needlessTitle"
+          trClassName += " needlessThread"
 
       #板名
       if @_flg.boardTitle

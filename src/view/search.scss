@@ -16,7 +16,7 @@
   }
 }
 
-.view:not(.loading) tbody:empty {
+.body_empty {
   display: block;
   &:after {
     content: "表示可能項目無し";
@@ -56,4 +56,8 @@ td {
 
 .view.loading .content {
   display: block !important;
+}
+
+.needless_thread_hide {
+  display: none;
 }

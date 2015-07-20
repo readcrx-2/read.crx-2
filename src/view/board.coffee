@@ -95,10 +95,11 @@ app.boot "/view/board.html", ["board_title_solver"], (BoardTitleSolver) ->
         $view.removeClass("loading")
         $view.trigger("view_loaded")
 
+        $needlessThread = $view.find(".needlessThread")
         if app.config.get("hide_needless_thread") is "on"
-          $view.find(".needlessTitle").css("display", "none")
+          $needlessThread.addClass("needless_thread_hide")
         else
-          $view.find(".needlessTitle").css("display", "")
+          $needlessThread.removeClass("needless_thread_hide")
 
         $button = $view.find(".button_reload")
         $button.addClass("disabled")
@@ -113,14 +114,4 @@ app.boot "/view/board.html", ["board_title_solver"], (BoardTitleSolver) ->
     load()
     return
   load()
-
-  # scでないものはnetクラスがついているので、それを表示/非表示切り替え
-  if /http:\/\/\w+\.2ch\.sc\/\w+\/(.*?)/.exec(url)
-    $view.find(".button_only_sc").on "click", ->
-      $net = $view.find(".net")
-      if $net.css("display") isnt "none" then $net.css("display", "none") else $net.css("display", "")
-      return
-  else
-    $view.find(".button_only_sc").remove()
-
   return

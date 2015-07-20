@@ -765,7 +765,7 @@ describe "app.Bookmark.ChromeBookmarkEntryList", ->
 
       chrome.bookmarks.create({
         parentId: TEST_FOLDER_NODE_ID
-        title: "folder"
+        title: "test folder"
       }, (node) ->
         onCreated = createBookmark(dummyEntry.board0, node.id).onCreated
         return
@@ -900,7 +900,7 @@ describe "app.Bookmark.ChromeBookmarkEntryList", ->
 
       chrome.bookmarks.create({
         parentId: TEST_FOLDER_NODE_ID
-        title: "folder"
+        title: "test folder"
       }, (node) ->
         chrome.bookmarks.create({
           parentId: node.id
@@ -982,7 +982,7 @@ describe "app.Bookmark.ChromeBookmarkEntryList", ->
 
       chrome.bookmarks.create({
         parentId: TEST_FOLDER_NODE_ID
-        title: "folder"
+        title: "test folder"
       }, (node) ->
         chrome.bookmarks.create({
           parentId: node.id

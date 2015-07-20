@@ -61,11 +61,7 @@ task :pack do
 end
 
 task :scan do
-  if RUBY_PLATFORM.include?("darwin")
-    # not installed clamscan software...
-  else
-    sh "clamscan -ir debug"
-  end
+  sh "clamscan -ir debug"
 end
 
 def debug_id

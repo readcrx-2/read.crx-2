@@ -62,7 +62,7 @@ class app.Thread
             deltaFlg = true
             xhrPath += (+cache.res_length + 1) + "-"
         # 2ch.netは差分をn-で取得
-        else if app.url.tsld(@url) in ["2ch.net"]
+        else if app.config.get("format_2chnet") isnt "dat" and app.url.tsld(@url) in ["2ch.net"]
           if promiseCacheGet.state() is "resolved"
             deltaFlg = true
             xhrPath += (+cache.res_length) + "n-"

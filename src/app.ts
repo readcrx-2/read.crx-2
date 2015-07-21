@@ -257,9 +257,12 @@ module app {
       popup_trigger: "click",
       theme_id: "default",
       user_css: "",
+      dblclick_reload: "on",
+      auto_load_second: "0",
       bookmark_show_dat: "on",
       format_2chnet: "html",
       button_change_netsc_newtab: "off",
+      hide_needless_thread: "on",
       bbsmenu: "http://kita.jikkyo.org/cbm/cbm.cgi/20.p0.m0.jb.vs.op.sc.nb.bb/-all/bbsmenu.html"
     };
 

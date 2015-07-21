@@ -257,6 +257,7 @@ module app {
       popup_trigger: "click",
       theme_id: "default",
       user_css: "",
+      dblclick_reload: "on",
       auto_load_second: "0",
       bookmark_show_dat: "on",
       format_2chnet: "html",

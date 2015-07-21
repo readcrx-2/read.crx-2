@@ -400,6 +400,12 @@ app.boot "/view/thread.html", ["board_title_solver"], (BoardTitleSolver) ->
         $popup = $("<div>").append(frag)
       return
 
+    #何もないところをダブルクリックすると更新する
+    .on "dblclick",".message", (e) ->
+      if app.config.get("dblclick_reload") is "on" or !$(e.target).is("a, .thumbnail")
+        $view.trigger "request_reload"
+      return
+
   #クイックジャンプパネル
   do ->
     jump_hoge =

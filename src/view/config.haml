@@ -70,6 +70,17 @@
           %br
           %label
             %input.direct(type="checkbox" name="button_change_netsc_newtab") 2ch netとscの切り替え時に新しいタブで開く
+          %br
+          %table
+            %tbody
+              %tr
+                %td
+                  スレの自動更新間隔ミリ秒数 (最小5000ms、0にセットすると無効になります)
+                %td(rowspan="2" valign="bottom")
+                  %input.direct(type="text" name="auto_load_second" pattern="[0-9]+")ms
+              %tr
+                %td
+                  (設定後にread.crxを起動し直してください)
 
       %section
         %h2 サムネイル表示

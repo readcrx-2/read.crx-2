@@ -142,6 +142,17 @@ app.boot "/view/thread.html", ["board_title_solver"], (BoardTitleSolver) ->
       app.History.add(view_url, document.title, opened_at)
       return
 
+  #自動ロード
+  if app.config.get("auto_load_second") isnt "0"
+    auto_second = parseInt(app.config.get("auto_load_second"))
+    if auto_second < 5000
+      auto_second = 5000
+      app.config.set("auto_load_second","5000")
+    setInterval ->
+      $view.trigger "request_reload"
+      return
+    , auto_second
+
   $view
     #レスメニュー表示
     .on "click contextmenu", "article > header", (e) ->
@@ -387,6 +398,12 @@ app.boot "/view/thread.html", ["board_title_solver"], (BoardTitleSolver) ->
           frag.appendChild(tmp[target_res_num - 1].cloneNode(true))
 
         $popup = $("<div>").append(frag)
+      return
+
+    #何もないところをダブルクリックすると更新する
+    .on "dblclick",".message", (e) ->
+      if app.config.get("dblclick_reload") is "on" or !$(e.target).is("a, .thumbnail")
+        $view.trigger "request_reload"
       return
 
   #クイックジャンプパネル

@@ -143,13 +143,15 @@ app.boot "/view/thread.html", ["board_title_solver"], (BoardTitleSolver) ->
       return
 
   #自動ロード
+
   if app.config.get("auto_load_second") isnt "0"
     auto_second = parseInt(app.config.get("auto_load_second"))
     if auto_second < 5000
       auto_second = 5000
       app.config.set("auto_load_second","5000")
     setInterval ->
-      $view.trigger "request_reload"
+      if app.config.get("auto_load_all") or $("iframe[data-url=\"#{view_url}\"]", parent.document).hasClass("tab_selected")
+        $view.trigger "request_reload"
       return
     , auto_second
 
@@ -402,7 +404,7 @@ app.boot "/view/thread.html", ["board_title_solver"], (BoardTitleSolver) ->
 
     #何もないところをダブルクリックすると更新する
     .on "dblclick",".message", (e) ->
-      if app.config.get("dblclick_reload") is "on" or !$(e.target).is("a, .thumbnail")
+      if app.config.get("dblclick_reload") is "on" and !$(e.target).is("a, .thumbnail")
         $view.trigger "request_reload"
       return
 

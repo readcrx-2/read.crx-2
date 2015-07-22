@@ -86,7 +86,11 @@
                   %input.direct(type="text" name="auto_load_second" pattern="[0-9]+")ms
               %tr
                 %td
-                  (設定後にread.crxを起動し直してください)
+                  (設定後read.crxの再起動が必要です)
+              %tr
+                %td(colspan="2")
+                  %label
+                    %input.direct(type="checkbox" name="auto_load_all") 開いていないタブも自動更新する(read.crx起動後、一度は開かないと更新されません)(設定後read.crxの再起動が必要です)
 
       %section
         %h2 サムネイル表示

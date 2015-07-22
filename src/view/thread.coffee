@@ -143,7 +143,6 @@ app.boot "/view/thread.html", ["board_title_solver"], (BoardTitleSolver) ->
       return
 
   #自動ロード
-
   if app.config.get("auto_load_second") isnt "0"
     auto_second = parseInt(app.config.get("auto_load_second"))
     if auto_second < 5000

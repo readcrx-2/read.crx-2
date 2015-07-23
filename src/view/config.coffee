@@ -307,38 +307,53 @@ app.boot "/view/config.html", ["cache", "bbsmenu"], (Cache, BBSMenu) ->
 
   #設定インポート
   $view.find(".config_import_button").on "click", ->
-    $status
-      .removeClass("done fail select")
-      .addClass("loading")
-      .text("更新中")
     if configFile isnt ""
-      json = $.parseJSON(configFile)
-      for key, value of json
-        key_before = key
-        key = key.slice(7)
-        if key isnt "theme_id"
-          $key = $view.find("input[name=\"#{key}\"]")
-          switch $key.attr("type")
-            when "text" then $key.val(value).trigger("input")
-            when "checkbox"then $key.prop("checked", value is "on").trigger("change")
-            when "radio" then $key.val([value]).trigger("change")
-            else
-              $keyTextArea = $view.find("textarea[name=\"#{key}\"]")
-              if $keyTextArea[0] then $keyTextArea.val(value).trigger("input")
-         #config_theme_idは「テーマなし」の場合があるので特例化
-         else
-           if value is "none"
-             $theme_none = $view.find(".theme_none")
-             if not $theme_none.prop("checked") then $theme_none.trigger("click")
-           else $view.find("input[name=\"theme_id\"]").val([value]).trigger("change")
       $status
-        .addClass("done")
-        .text("インポート完了")
+        .removeClass("done fail select")
+        .addClass("loading")
+        .text("更新中")
+      $.Deferred (d) ->
+        jsonConfig = $.parseJSON(configFile)
+        keySet(jsonConfig)
+        d.resolve()
+      .done ->
+        $status
+          .addClass("done")
+          .text("インポート完了")
+        return
+      .fail ->
+        $status
+          .addClass("fail")
+          .text("インポート失敗")
+        return
     else
       $status
         .addClass("fail")
         .text("インポート失敗")
     return
+
+  #設定を実際にインポートする
+  keySet = (json) ->
+    for key, value of json
+      key_before = key
+      key = key.slice(7)
+      if key isnt "theme_id"
+        $key = $view.find("input[name=\"#{key}\"]")
+        switch $key.attr("type")
+          when "text" then $key.val(value).trigger("input")
+          when "checkbox"then $key.prop("checked", value is "on").trigger("change")
+          when "radio" then $key.val([value]).trigger("change")
+          else
+            $keyTextArea = $view.find("textarea[name=\"#{key}\"]")
+            if $keyTextArea[0] then $keyTextArea.val(value).trigger("input")
+       #config_theme_idは「テーマなし」の場合があるので特例化
+       else
+         if value is "none"
+           $theme_none = $view.find(".theme_none")
+           if not $theme_none.prop("checked") then $theme_none.trigger("click")
+         else $view.find("input[name=\"theme_id\"]").val([value]).trigger("change")
+     return
+
 
   #設定エクスポート
   $view.find(".config_export_button").on "click", ->

@@ -1,6 +1,6 @@
 <?xml version='1.0' encoding='UTF-8'?>
 <gupdate xmlns='http://www.google.com/update2/response' protocol='2.0'>
   <app appid='eaibgccboimjelecbmgfjhakekfdcpeh'>
-    <updatecheck codebase='http://eru.github.io/read.crx-2/read.crx_2.0.94.4.crx' version='2.0.94.4' />
+    <updatecheck codebase='http://eru.github.io/read.crx-2/read.crx_2.0.94.5.crx' version='2.0.94.5' />
   </app>
 </gupdate>

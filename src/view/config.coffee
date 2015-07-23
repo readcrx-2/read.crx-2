@@ -330,7 +330,8 @@ app.boot "/view/config.html", ["cache", "bbsmenu"], (Cache, BBSMenu) ->
            $theme_id = $view.find("input[name=\"theme_id\"]")
            switch value
              when "none"
-               $view.find(".theme_none").trigger("click")
+               $theme_none = $view.find(".theme_none")
+               if $theme_none.val() is "off" then $theme_none.trigger("click")
              else $theme_id.val([value]).trigger("change")
       $status
         .addClass("done")

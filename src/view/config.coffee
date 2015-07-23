@@ -284,4 +284,76 @@ app.boot "/view/config.html", ["cache", "bbsmenu"], (Cache, BBSMenu) ->
     resetBBSMenu()
     return
 
+  #設定ファイルインポート
+  $(".config_file_show").on "click", ->
+    $status.removeClass("done fail select")
+    $(".config_file_hide").click()
+    return
+
+  configFile = "";
+  $status = $view.find(".config_import_status")
+  $(".config_file_hide").change((e) ->
+    file = e.target.files
+    reader = new FileReader()
+    reader.readAsText(file[0])
+    reader.onload = ->
+        configFile = reader.result
+        $status
+          .addClass("select")
+          .text("ファイル選択完了")
+      return
+    return
+  )
+
+  #設定インポート
+  $view.find(".config_import_button").on "click", ->
+    $status
+      .removeClass("done fail select")
+      .addClass("loading")
+      .text("更新中")
+    if configFile isnt ""
+      json = $.parseJSON(configFile)
+      for key, value of json
+        key_before = key
+        key = key.slice(7)
+        if key isnt "theme_id"
+          $key = $view.find("input[name=\"#{key}\"]")
+          switch $key.attr("type")
+            when "text" then $key.val(value).trigger("input")
+            when "checkbox"then $key.prop("checked", value is "on").trigger("change")
+            when "radio" then $key.val([value]).trigger("change")
+            else
+              $keyTextArea = $view.find("textarea[name=\"#{key}\"]")
+              if $keyTextArea[0] then $keyTextArea.val(value)
+         #config_theme_idは「テーマなし」の場合があるので特例化
+         else
+           $theme_id = $view.find("input[name=\"theme_id\"]")
+           switch value
+             when "none"
+               $view.find(".theme_none").trigger("click")
+             else $theme_id.val([value]).trigger("change")
+      $status
+        .addClass("done")
+        .text("インポート完了")
+    else
+      $status
+        .addClass("fail")
+        .text("インポート失敗")
+    return
+
+  #設定エクスポート
+  $view.find(".config_export_button").on "click", ->
+    content = app.config.getAll()
+    content = content.replace(/"config_last_board_sort_config":".*?","/,"\"")
+    content = content.replace(/"config_last_version":".*?","/,"\"")
+    blob = new Blob([content],{type:"text/plain"})
+    $a = $("<a>")
+    $a.attr({
+      href: window.URL.createObjectURL(blob),
+      target: "_blank",
+      download: "read.crx-2_config.json"
+    })
+    $a[0].click()
+    return
+
   return

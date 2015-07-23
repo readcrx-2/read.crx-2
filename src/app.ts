@@ -248,22 +248,25 @@ module app {
 
   export class Config {
     private static _default = {
-      aa_font: "aa",
-      thumbnail_supported: "on",
-      always_new_tab: "on",
       layout: "pane-3",
-      default_name: "",
-      default_mail: "",
-      popup_trigger: "click",
       theme_id: "default",
-      user_css: "",
+      always_new_tab: "on",
+      button_change_netsc_newtab: "off",
       dblclick_reload: "on",
       auto_load_second: "0",
+      auto_load_all: "off",
+      thumbnail_supported: "on",
+      thumbnail_ext: "off",
+      aa_font: "aa",
+      popup_trigger: "click",
+      ngwords: "",
       bookmark_show_dat: "on",
-      format_2chnet: "html",
-      button_change_netsc_newtab: "off",
       hide_needless_thread: "on",
-      bbsmenu: "http://kita.jikkyo.org/cbm/cbm.cgi/20.p0.m0.jb.vs.op.sc.nb.bb/-all/bbsmenu.html"
+      default_name: "",
+      default_mail: "",
+      user_css: "",
+      bbsmenu: "http://kita.jikkyo.org/cbm/cbm.cgi/20.p0.m0.jb.vs.op.sc.nb.bb/-all/bbsmenu.html",
+      format_2chnet: "html"
     };
 
     private _cache:{[index:string]:string;} = {};
@@ -349,6 +352,16 @@ module app {
       else {
         return undefined;
       }
+    }
+
+    //設定の連想配列をjson文字列で渡す
+    getAll ():string {
+      var json = new Object();
+      for(var key in Config._default) {
+        json["config_" + key] = Config._default[key];
+      }
+      $.extend(json, this._cache);
+      return JSON.stringify(json);
     }
 
     set (key:string, val:string) {

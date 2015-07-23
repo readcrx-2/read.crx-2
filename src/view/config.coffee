@@ -324,15 +324,13 @@ app.boot "/view/config.html", ["cache", "bbsmenu"], (Cache, BBSMenu) ->
             when "radio" then $key.val([value]).trigger("change")
             else
               $keyTextArea = $view.find("textarea[name=\"#{key}\"]")
-              if $keyTextArea[0] then $keyTextArea.val(value)
+              if $keyTextArea[0] then $keyTextArea.val(value).trigger("input")
          #config_theme_idは「テーマなし」の場合があるので特例化
          else
-           $theme_id = $view.find("input[name=\"theme_id\"]")
-           switch value
-             when "none"
-               $theme_none = $view.find(".theme_none")
-               if $theme_none.val() is "off" then $theme_none.trigger("click")
-             else $theme_id.val([value]).trigger("change")
+           if value is "none"
+             $theme_none = $view.find(".theme_none")
+             if not $theme_none.prop("checked") then $theme_none.trigger("click")
+           else $view.find("input[name=\"theme_id\"]").val([value]).trigger("change")
       $status
         .addClass("done")
         .text("インポート完了")

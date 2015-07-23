@@ -465,7 +465,7 @@ app.main = ->
           html: """
             #{app.manifest.name} が #{last_version} から
              #{app.manifest.version} にアップデートされました。
-             <a href="http://eru.github.io/read.crx-2/changelog.html" target="_blank">更新履歴</a>
+             <a href="http://readcrx-2.github.io/read.crx-2/changelog.html" target="_blank">更新履歴</a>
           """
           background_color: "green"
         }
@@ -800,7 +800,7 @@ app.main = ->
       $.contextmenu($menu, e.clientX, e.clientY)
       return
     return
-    
+
   # タブダブルクリックで更新
   $view.find(".tab_tabbar").on "dblclick", "li", (e) ->
     $source = $(e.target).closest(".tab_tabbar, li")

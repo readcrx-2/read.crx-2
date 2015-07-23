@@ -40,6 +40,15 @@ app.boot "/view/config.html", ["cache", "bbsmenu"], (Cache, BBSMenu) ->
         app.config.set(this.name, val)
         return
 
+  $view
+    .find("input.direct[type=\"password\"]")
+      .each ->
+        this.value = app.config.get(this.name) or ""
+        null
+      .bind "input", ->
+        app.config.set(this.name, this.value)
+        return
+
   #バージョン情報表示
   $view.find(".version_text")
     .text("#{app.manifest.name} v#{app.manifest.version} + #{navigator.userAgent}")

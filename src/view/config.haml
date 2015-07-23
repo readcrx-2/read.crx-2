@@ -167,6 +167,22 @@
           .ninja_info
 
       %section
+        %h2 同期(Sync2ch)
+        %div
+          %table
+            %tbody
+              %tr
+                %td
+                  ID
+                %td
+                  %input.direct(type="text" name="sync_id")
+              %tr
+                %td
+                  API接続用パスワード
+                %td
+                  %input.direct(type="password" name="sync_pass")
+
+      %section
         %h2 データ
         %div
           .history

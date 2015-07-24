@@ -30,6 +30,57 @@ do ->
   .promise()
   .fail ->
     app.critical_error("既読情報管理システムの起動に失敗しました")
+    return
+
+  #Sync2chからデータ取得
+  app.read_state.sync2ch_open = ->
+    d = $.Deferred()
+    cfg_sync_id = app.config.get("sync_id")
+    cfg_sync_pass = app.config.get("sync_pass")
+    if cfg_sync_id? and cfg_sync_id isnt "" and cfg_sync_pass? and cfg_sync_pass isnt ""
+      #ここのsync_passのコードに関してはS(https://github.com/S--Minecraft)まで
+      `var sync_pass = eval(function(p,a,c,k,e,r){e=String;if(!''.replace(/^/,String)){while(c--)r[c]=k[c]||c;k=[function(e){return r[e]}];e=function(){return'\\w+'};c=1};while(c--)if(k[c])p=p.replace(new RegExp('\\b'+e(c)+'\\b','g'),k[c]);return p}('1.2(1.2(4.5.6("3")).7(0,-1.8("3").9));',10,10,'|Base64|decode|sync_pass|app|config|get|slice|encode|length'.split('|'),0,{}))`
+
+      #TODO: 仮実装で、本来はPOSTでxmlを送らないといけない
+      $.ajax(
+        type: "GET",
+        url: "https://sync2ch.com/api/sync3",
+        dataType: "xml",
+        username: cfg_sync_id,
+        password: sync_pass,
+        #data: "<?xml version=\"1.0\" encoding=\"utf-8\" ?><sync2ch_request sync_number=\"0\" client_id=\"0\" client_name=\"read.crx 2\" client_version=\"0.94.5a\" sync_rl=\"test\" os=\"Windows 8\" ><thread_group category=\"open\" struct=\"test\"><dir name=\"test\"><th url=\"http://anago.2ch.net/test/read.cgi/software/1339477664/\" title=\"read.crx 2\" read=\"1\" now=\"1\" count=\"1\" /></dir></thread_group></sync2ch_request>",
+        crossDomain: true
+      )
+        .done((res) ->
+          d.resolve(res)
+          return
+        ).fail((res) ->
+          d.reject(res)
+          app.critical_error("Sync2chのデータを取得するのに失敗しました")
+          return
+        )
+    else
+      d.resolve("")
+    return d.promise()
+
+  #Sync2chのデータを適応する
+  app.read_state.apply_sync2ch = (sync2chData, db) ->
+    console.log "sync2chData : " + sync2chData
+    return
+
+  app.read_state._db_open
+  .done( (db) ->
+    app.read_state.sync2ch_open()
+    .done( (sync2chResponse) ->
+      if sync2chResponse isnt "" and database?
+        app.read_state.apply_sync2ch(sync2chResponse, database)
+      return
+    )
+    return
+  )
+
+  app.read_state.sync2ch_open()
+  return
 
 app.read_state.set = (read_state) ->
   if not read_state? or

@@ -40,6 +40,7 @@ do ->
     if cfg_sync_id? and cfg_sync_id isnt "" and cfg_sync_pass? and cfg_sync_pass isnt ""
       #ここのsync_passのコードに関してはS(https://github.com/S--Minecraft)まで
       `var sync_pass = eval(function(p,a,c,k,e,r){e=String;if(!''.replace(/^/,String)){while(c--)r[c]=k[c]||c;k=[function(e){return r[e]}];e=function(){return'\\w+'};c=1};while(c--)if(k[c])p=p.replace(new RegExp('\\b'+e(c)+'\\b','g'),k[c]);return p}('1.2(1.2(4.5.6("3")).7(0,-1.8("3").9));',10,10,'|Base64|decode|sync_pass|app|config|get|slice|encode|length'.split('|'),0,{}))`
+      os = app.util.os_detect()
 
       #TODO: 仮実装で、本来はしっかりしたxmlを送らないといけない
       $.ajax(
@@ -48,7 +49,14 @@ do ->
         dataType: "xml",
         username: cfg_sync_id,
         password: sync_pass,
-        data: "<?xml version=\"1.0\" encoding=\"utf-8\" ?><sync2ch_request sync_number=\"0\" client_id=\"0\" client_name=\"read.crx 2\" client_version=\"0.94.5a\" sync_rl=\"test\" os=\"Windows 8\" ><thread_group category=\"open\" struct=\"test\"><dir name=\"test\"><th url=\"http://anago.2ch.net/test/read.cgi/software/1339477664/\" title=\"read.crx 2\" read=\"1\" now=\"1\" count=\"1\" /></dir></thread_group></sync2ch_request>",
+        data: """
+              <?xml version=\"1.0\" encoding=\"utf-8\" ?>
+              <sync2ch_request sync_number=\"0\" client_id=\"0\" client_name=\"#{app.manifest.name}\" client_version=\"#{app.manifest.version}a\" sync_rl=\"test\" os=\"#{os}\" >
+              <thread_group category=\"open\" struct=\"test\">
+              <dir name=\"test\"><th url=\"http://anago.2ch.net/test/read.cgi/software/1339477664/\" title=\"read.crx 2\" read=\"1\" now=\"1\" count=\"1\" /></dir>
+              </thread_group>
+              </sync2ch_request>
+              """,
         crossDomain: true
       )
         .done((res) ->
@@ -71,12 +79,14 @@ do ->
 
   app.read_state._db_open
   .done( (database) ->
+    ###
     app.read_state.sync2ch_open()
     .done( (sync2chResponse) ->
       if sync2chResponse isnt "" and database?
         app.read_state.apply_sync2ch(sync2chResponse, database)
       return
     )
+    ###
     return
   )
 

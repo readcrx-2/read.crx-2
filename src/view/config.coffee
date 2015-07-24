@@ -58,8 +58,9 @@ app.boot "/view/config.html", ["cache", "bbsmenu"], (Cache, BBSMenu) ->
         return
 
   #バージョン情報表示
+  os = app.util.os_detect()
   $view.find(".version_text")
-    .text("#{app.manifest.name} v#{app.manifest.version} + #{navigator.userAgent}")
+    .text("#{app.manifest.name} v#{app.manifest.version} + #{os} + #{navigator.userAgent}")
 
   $view.find(".version_copy").on "click", ->
     app.clipboardWrite($(".version_text").text())
@@ -363,13 +364,13 @@ app.boot "/view/config.html", ["cache", "bbsmenu"], (Cache, BBSMenu) ->
           else
             $keyTextArea = $view.find("textarea[name=\"#{key}\"]")
             if $keyTextArea[0] then $keyTextArea.val(value).trigger("input")
-       #config_theme_idは「テーマなし」の場合があるので特例化
-       else
-         if value is "none"
-           $theme_none = $view.find(".theme_none")
-           if not $theme_none.prop("checked") then $theme_none.trigger("click")
-         else $view.find("input[name=\"theme_id\"]").val([value]).trigger("change")
-     return
+      #config_theme_idは「テーマなし」の場合があるので特例化
+      else
+        if value is "none"
+          $theme_none = $view.find(".theme_none")
+          if not $theme_none.prop("checked") then $theme_none.trigger("click")
+        else $view.find("input[name=\"theme_id\"]").val([value]).trigger("change")
+    return
 
 
   #設定エクスポート

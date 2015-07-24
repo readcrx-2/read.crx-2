@@ -245,3 +245,40 @@ app.util.normalize = (str) ->
     .replace(/[\u0020\u3000]/g, "")
     #大文字を小文字に変換
     .toLowerCase()
+
+app.util.os_detect = ->
+  ua = navigator.userAgent
+  switch true
+    when /Win(dows )?NT 10\.0/.test(ua) then os = "Windows 10"
+    when /Win(dows )?NT 6\.3/.test(ua) then os = "Windows 8.1"
+    when /Win(dows )?NT 6\.2/.test(ua) then os = "Windows 8"
+    when /Win(dows )?NT 6\.1/.test(ua) then os = "Windows 7"
+    when /Win(dows )?NT (?:5\.2|6\.0)/.test(ua) then os = "Windows Vista"
+    when /Win(dows )?(NT 5\.1|XP)/.test(ua) then os = "Windows XP"
+    when /Win(dows)? (9x 4\.90|ME)/.test(ua) then os = "Windows ME"
+    when /Win(dows )?(NT 5\.0|2000)/.test(ua) then os = "Windows 2000"
+    when /Win(dows )?98/.test(ua) then os = "Windows 98"
+    when /Win(dows )?NT( 4\.0)?/.test(ua) then os = "Windows NT"
+    when /Win(dows )?95/.test(ua) then os = "Windows 95"
+    when /Mac OS X 10[_|\.]10[\d_\.]*/.test(ua) then os = "Mac OS X Yosemite"
+    when /Mac OS X 10[_|\.]9[\d_\.]*/.test(ua) then os = "Mac OS X Mavericks"
+    when /Mac OS X 10[_|\.]8[\d_\.]*/.test(ua) then os = "Mac OS X Mountain Lion"
+    when /Mac OS X 10[_|\.]7[\d_\.]*/.test(ua) then os = "Mac OS X Lion"
+    when /Mac OS X 10[_|\.]6[\d_\.]*/.test(ua) then os = "Mac OS X Snow Leopard"
+    when /Mac OS X 10[_|\.]5[\d_\.]*/.test(ua) then os = "Mac OS X Leopard"
+    when /Mac OS X 10[_|\.]4[\d_\.]*/.test(ua) then os = "Mac OS X Tiger"
+    when /Mac OS X 10[_|\.]3[\d_\.]*/.test(ua) then os = "Mac OS X Panther"
+    when /Mac OS X 10[_|\.]2[\d_\.]*/.test(ua) then os = "Mac OS X Jaguar"
+    when /Mac OS X 10[_|\.]1[\d_\.]*/.test(ua) then os = "Mac OS X Puma"
+    when /Mac OS X 10[_|\.]0[\d_\.]*/.test(ua) then os = "Mac OS X Cheetah"
+    when /CrOS/.test(ua) then os = "Chrome OS"
+    when /Ubuntu/.test(ua) then os = "Ubuntu"
+    when /Debian/.test(ua) then os = "Debian"
+    when /Gentoo/.test(ua) then os = "Gentoo"
+    when /^.*\s([A-Za-z]+BSD)/.test(ua) then os = RegExp.$1 # BSD 系
+    when /SunOS/.test(ua) then os = "Solaris"
+    when /Win(dows)/.test(ua) then os="Windows" # その他 Windows
+    when /Mac|PPC/.test(ua) then os = "Mac OS" #その他 Mac
+    when /Linux/.test(ua) then os = "Linux" #その他 Linux
+    else os = "N/A" # その他
+  return os

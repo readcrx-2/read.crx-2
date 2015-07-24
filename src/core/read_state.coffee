@@ -90,6 +90,7 @@ do ->
     return
   )
 
+  # Sync2chを実行
   app.read_state.sync2ch_open()
   return
 

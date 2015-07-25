@@ -183,8 +183,15 @@
                 %td
                   %input.direct(type="password" name="sync_pass")
               %tr
+                %td
+                  端末名
+                %td
+                  %input.direct(type="text" name="sync_device")
+              %tr
                 %td(colspan="2")
-                  IDとパスワードを両方空欄にすると同期されません
+                  IDとパスワードを両方空欄にすると同期されません(端末名の有無は無関係です)
+                  %br
+                  端末名の例: PC-1, 私のパソコン, 個人用PC, 1
 
       %section
         %h2 データ

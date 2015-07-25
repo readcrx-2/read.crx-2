@@ -42,7 +42,7 @@ do ->
                    """,true)
     .done( (sync2chResponse) ->
       if sync2chResponse isnt "" and database?
-        app.sync2ch.read_state_apply(sync2chResponse, database)
+        app.sync2ch.apply(sync2chResponse, database, true)
       return
     )
     ###
@@ -54,7 +54,7 @@ do ->
                    """
     domP = new DOMParser()
     responseXML = domP.parseFromString(responseText, "text/xml")
-    app.sync2ch.read_state_apply(responseXML, database)
+    app.sync2ch.apply(responseXML, database, true)
     #
     return
   )

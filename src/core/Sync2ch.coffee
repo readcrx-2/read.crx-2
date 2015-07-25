@@ -97,8 +97,7 @@ date_to_config_date = (date) ->
   return "#{year}#{month}#{date}"
 
 # Sync2chのデータを適応する
-app.sync2ch.read_state_apply = (sync2chData, db) ->
-  d = $.Deferred()
+app.sync2ch.apply = (sync2chData, db, apply_read_state) ->
   $xml = $(sync2chData)
   $response = $xml.find("sync2ch_response")
   if $response.attr("result") is "ok"
@@ -108,16 +107,38 @@ app.sync2ch.read_state_apply = (sync2chData, db) ->
     sync_number = $response.attr("sync_number")   # 同期番号
     client_id = $response.attr("client_id")       # クライアントID
 
-    apply_sync2ch_data = ->
-      ###
-      TODO: データ適応処理
-      ###
-      return d.promise()
+    if apply_read_state
+      apply_sync2ch_data = ->
+        d = $.Deferred()
+        apply ->
+          ###
+          TODO: データ適応処理
+          ###
+          return
+        return d.promise()
 
     # 設定に保存
     app.config.set("sync_client_id", client_id)
     app.config.set("sync_number", sync_number)
     app.config.set("sync_remain", remain)
     app.config.set("sync_remain_time", date_to_config_date(new Date))
+  else
+    app.critical_error("2chSync : データを取得するのに失敗しました")
   console.log "sync2chData(stringed) : " + (new XMLSerializer()).serializeToString(sync2chData)
   return
+
+# XMLを構築する（中間）
+app.sync2ch.makeXML = (read_state) ->
+  url = read_state.url
+  last = read_state.last
+  read = read_state.read
+  count = read_state.received
+  # xmlのファイルを継ぎ足して書いていく TODO: スレ名に直す
+  xml = """
+         <th url="#{url}"
+         title="#{url}"
+         read="#{last}"
+         now="#{read}"
+         count="#{count}" />
+         """
+  return xml

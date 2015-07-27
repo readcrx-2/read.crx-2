@@ -53,7 +53,7 @@ app.sync2ch.open = (xml, notify_error) ->
         password: sync_pass,
         data: """
               <?xml version="1.0" encoding="utf-8" ?>
-              <sync2ch_request sync_number="#{sync_number}" client_id="#{client_id}" client_name="#{app.manifest.name}" client_version="#{app.manifest.version}-developing" os="#{os}"#{deviceText} sync_rl="test">
+              <sync2ch_request sync_number="#{sync_number}" client_id="#{client_id}" client_name="#{app.manifest.name}" client_version="#{app.manifest.version}-developing" os="#{os}"#{deviceText} sync_rl="read.crx 2">
               #{xml}
               </sync2ch_request>
               """,
@@ -108,14 +108,7 @@ app.sync2ch.apply = (sync2chData, db, apply_read_state) ->
     client_id = $response.attr("client_id")       # クライアントID
 
     if apply_read_state
-      apply_sync2ch_data = ->
-        d = $.Deferred()
-        apply ->
-          ###
-          TODO: データ適応処理
-          ###
-          return
-        return d.promise()
+      apply_sync2ch_data($xml)
 
     # 設定に保存
     app.config.set("sync_client_id", client_id)
@@ -127,15 +120,59 @@ app.sync2ch.apply = (sync2chData, db, apply_read_state) ->
   console.log "sync2chData(stringed) : " + (new XMLSerializer()).serializeToString(sync2chData)
   return
 
-# XMLを構築する（中間）
-app.sync2ch.makeXML = (read_state) ->
+# 実際に適応する
+apply_sync2ch_data = ($xml) ->
+  d = $.Deferred()
+  ###
+  返ってくるデータ
+  <?xml version="1.0" encoding="utf-8"?>
+  <sync2ch_response result="ok" account_type="無料アカウント" remain="28" sync_number="18" client_id="38974">
+  <entities>
+    <th id="0" url="http://peace.2ch.net/test/read.cgi/aasaloon/1351310358/" s="n"/>
+    <th id="1" url="http://peace.2ch.net/test/read.cgi/aasaloon/1437471489/" title="http://peace.2ch.net/test/read.cgi/aasaloon/1437471489/" s="a" read="126" now="126" count="227"/>
+  </entities>
+  <thread_group category="history" s="u">
+    <th id="0"/>
+    <th id="1"/>
+  </thread_group>
+  </sync2ch_response>
+  ###
+  ###
+  TODO: データ適応処理
+  現在はhistoryのみ同期するため、他のも対応する
+  ###
+  $history_group = $xml.find("thread_group[category=\"history\"]")
+  if $history_group.attr("s") isnt "n"
+    $entities = $xml.find("entities")            # 板・スレすべての一覧
+    $history_threads = $history_group.children() # 読み込みスレッド履歴
+    $history_threads.each ->
+      id = $(this).attr("id")
+      $thread = $entities.find("th[id=\"#{id}\"]")
+      if $thread.attr("s") isnt "n"
+        read_state =
+          url: $thread.attr("url")
+          last: $thread.attr("read") - 1 # Sync2chではレス数を0から開始するため
+          read: $thread.attr("now") - 1
+          received: $thread.attr("count") - 1
+        app.read_state.set(read_state, false)
+        # 履歴ページにもデータを送る
+      return
+      ###
+      $thread.attr("rl_post")
+      書き込み履歴
+      ###
+  return d.promise()
+
+# Entitiesを構築する（中間）
+app.sync2ch.makeEntities = (i, read_state) ->
   url = read_state.url
-  last = read_state.last
-  read = read_state.read
-  count = read_state.received
+  last = read_state.last + 1
+  read = read_state.read + 1
+  count = read_state.received + 1
   # xmlのファイルを継ぎ足して書いていく TODO: スレ名に直す
   xml = """
-         <th url="#{url}"
+         <th id="#{i}"
+         url="#{url}"
          title="#{url}"
          read="#{last}"
          now="#{read}"

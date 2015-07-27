@@ -35,10 +35,11 @@ do ->
   app.read_state._db_open
   .done( (database) ->
     # Sync2chからデータ取得
+    # 取得するカテゴリの数だけ書く
+    # <thread_group category=" -----カテゴリ---- " struct="test" />
     ###
     app.sync2ch.open("""
-                   <thread_group category="open" struct="test">
-                   </thread_group>
+                   <thread_group category="history" struct="test" />
                    """,true)
     .done( (sync2chResponse) ->
       if sync2chResponse isnt "" and database?
@@ -47,8 +48,15 @@ do ->
     )
     ###
     responseText = """
-                   <?xml version="1.0" encoding="utf-8"?><sync2ch_response result="ok" account_type="無料アカウント" remain="22" sync_number="16" client_id="38974">
-                   <thread_group category="open" s="u">
+                   <?xml version="1.0" encoding="utf-8"?>
+                   <sync2ch_response result="ok" account_type="無料アカウント" remain="28" sync_number="18" client_id="38974">
+                   <entities>
+                     <th id="0" url="http://peace.2ch.net/test/read.cgi/aasaloon/1351310358/" s="n"/>
+                     <th id="1" url="http://peace.2ch.net/test/read.cgi/aasaloon/1437471489/" title="http://peace.2ch.net/test/read.cgi/aasaloon/1437471489/" s="a" read="126" now="126" count="227"/>
+                   </entities>
+                   <thread_group category="history" s="u">
+                     <th id="0"/>
+                     <th id="1"/>
                    </thread_group>
                    </sync2ch_response>
                    """
@@ -60,7 +68,7 @@ do ->
   )
   return
 
-app.read_state.set = (read_state) ->
+app.read_state.set = (read_state, send_sync = true) ->
   if not read_state? or
       typeof read_state isnt "object" or
       typeof read_state.url isnt "string" or
@@ -79,6 +87,12 @@ app.read_state.set = (read_state) ->
   read_state.url = url.replaced
   board_url = app.url.thread_to_board(url.original)
   read_state.board_url = app.read_state._url_filter(board_url).replaced
+
+  # Sync2chへ送信するデータとして蓄積
+  if send_sync is false
+    ###
+    蓄積処理
+    ###
 
   app.read_state._db_open
 

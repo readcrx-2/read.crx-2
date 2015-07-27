@@ -1,5 +1,5 @@
 ###*
-@class app.Hisapp.tory
+@class app.History
 @static
 ###
 class app.History

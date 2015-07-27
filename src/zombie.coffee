@@ -25,10 +25,10 @@ app.boot "/zombie.html", ->
         history_ids = "0"
         for i in [1...history_last_id]
           history_ids += "," + i
-        xml += "<thread_group category=\"history\" id_list=\"#{history_ids}\" />"
+        xml += "<thread_group category=\"history\" id_list=\"#{history_ids}\" struct=\"read.crx 2\" />"
         console.log "xml : " + xml
         # 他のカテゴリのThread_group
-        #xml += "<thread_group category=\"test\" id_list=\"#{test_ids.toString()}\" /> "
+        #xml += "<thread_group category=\"test\" id_list=\"#{test_ids.toString()}\" struct=\"read.crx 2\" /> "
         # 通信する
         #app.sync2ch.open(xml,false)
         #  .done( (sync2chResponse) ->
@@ -51,7 +51,7 @@ app.boot "/zombie.html", ->
         app.read_state.set(read_state).always(countdown)
         app.bookmark.update_read_state(read_state).always(countdown)
         if sync
-          # XMLの構築
+          # Entitiesの構築
           xml += app.sync2ch.makeEntities(i, read_state)
           history_last_id = i
       return

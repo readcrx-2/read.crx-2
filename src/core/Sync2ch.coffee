@@ -53,7 +53,7 @@ app.sync2ch.open = (xml, notify_error) ->
         password: sync_pass,
         data: """
               <?xml version="1.0" encoding="utf-8" ?>
-              <sync2ch_request sync_number="#{sync_number}" client_id="#{client_id}" client_name="#{app.manifest.name}" client_version="#{app.manifest.version}-developing" os="#{os}"#{deviceText} sync_rl="read.crx 2">
+              <sync2ch_request sync_number="#{sync_number}" client_id="#{client_id}" client_name="#{app.manifest.name}" client_version="#{app.manifest.version}-developing" os="#{os}"#{deviceText}>
               #{xml}
               </sync2ch_request>
               """,
@@ -97,7 +97,7 @@ date_to_config_date = (date) ->
   return "#{year}#{month}#{date}"
 
 # Sync2chのデータを適応する
-app.sync2ch.apply = (sync2chData, db, apply_read_state) ->
+app.sync2ch.apply = (sync2chData, apply_read_state) ->
   $xml = $(sync2chData)
   $response = $xml.find("sync2ch_response")
   if $response.attr("result") is "ok"
@@ -106,15 +106,15 @@ app.sync2ch.apply = (sync2chData, db, apply_read_state) ->
     remain = $response.attr("remain")             # 同期可能残数 (一日ごとリセット)
     sync_number = $response.attr("sync_number")   # 同期番号
     client_id = $response.attr("client_id")       # クライアントID
-
-    if apply_read_state
-      apply_sync2ch_data($xml)
-
     # 設定に保存
     app.config.set("sync_client_id", client_id)
     app.config.set("sync_number", sync_number)
     app.config.set("sync_remain", remain)
     app.config.set("sync_remain_time", date_to_config_date(new Date))
+
+    # 既読情報管理システムに適応
+    if apply_read_state
+      apply_sync2ch_data($xml)
   else
     app.critical_error("2chSync : データを取得するのに失敗しました")
   console.log "sync2chData(stringed) : " + (new XMLSerializer()).serializeToString(sync2chData)

@@ -148,11 +148,12 @@ app.boot "/view/thread.html", ["board_title_solver"], (BoardTitleSolver) ->
     if auto_second < 5000
       auto_second = 5000
       app.config.set("auto_load_second","5000")
-    setInterval ->
-      if app.config.get("auto_load_all") or $("iframe[data-url=\"#{view_url}\"]", parent.document).hasClass("iframe_focused")
+
+    auto_load = ->
+      if app.config.get("auto_load_all") is "on" or $(".tab_container", parent.document).find("iframe[data-url=\"#{view_url}\"]").hasClass("tab_selected")
         $view.trigger "request_reload"
       return
-    , auto_second
+    auto_load_interval = setInterval(auto_load, auto_second)
 
   $view
     #レスメニュー表示

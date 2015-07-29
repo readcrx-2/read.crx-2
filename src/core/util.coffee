@@ -282,26 +282,3 @@ app.util.os_detect = ->
     when /Linux/.test(ua) then os = "Linux" #その他 Linux
     else os = "N/A" # その他
   return os
-
-# urlからタイトルを取得する
-app.util.url_to_title = (url) ->
-  dfd = new $.Deferred
-  app.History.get_title(url)
-    .done((got_title) ->
-      history_title = got_title
-      dfd.resolve(history_title)
-      return
-    )
-    .fail((error) ->
-      $.get(url)
-        .done((res) ->
-          console.log $(res).find("head > title")
-          dfd.resolve($(res).find("head > title").attr("title"))
-          return
-        )
-        .fail((res)->
-          dfd.reject()
-          return
-        )
-    )
-  return dfd.promise()

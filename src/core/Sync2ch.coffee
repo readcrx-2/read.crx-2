@@ -79,7 +79,7 @@ app.sync2ch.open = (xml, notify_error) ->
     d.resolve("")
   return d.promise()
 
-#設定で日付を保存するための変換
+# 設定で日付を保存するための変換
 config_date_to_date = (configDate) ->
   if configDate?
     dateYear = configDate.substr(0, 4)
@@ -145,20 +145,31 @@ app.sync2ch.apply_data = ($xml) ->
   if $history_group.attr("s") isnt "n"
     $entities = $xml.find("entities")            # 板・スレすべての一覧
     $history_threads = $history_group.children() # 読み込みスレッド履歴
-    for i in [0..$history_threads.length - 1]
+    for i in [$history_threads.length - 1..0]
       id = $history_threads.eq(i).attr("id")
       $thread = $entities.find("th[id=\"#{id}\"]")
-      console.log $thread
       if $thread.attr("s") isnt "n"
+        thread_url = $thread.attr("url")
+        readtime = $thread.attr("rt")
+        if readtime?
+          unix_time = new Date(readtime * 1000)
+          thread_time = unix_time.getTime()
+        else
+          thread_time = Date.now()
+
         # 既読情報管理システムへ送る
         read_state =
-          url: $thread.attr("url")
+          url: thread_url
           last: $thread.attr("read") - 1 # Sync2chではレス数を0から開始するため
           read: $thread.attr("now") - 1
           received: $thread.attr("count") - 1
-        console.log read_state
         app.read_state.set(read_state, false)
         # 履歴ページにもデータを送る
+        app.sync2ch.url_to_title(thread_url)
+          .done((title_from_url) ->
+            thread_title = title_from_url
+            app.History.add(thread_url, thread_title, thread_time)
+          )
     ###
     $thread.attr("rl_post")
     書き込み履歴
@@ -181,3 +192,30 @@ app.sync2ch.makeEntities = (i, read_state) ->
          count="#{count}" />
          """
   return xml
+
+# urlからタイトルを取得する
+app.sync2ch.url_to_title = (url) ->
+  dfd = new $.Deferred
+  app.History.get_title(url)
+    .done((got_title) ->
+      history_title = got_title
+      dfd.resolve(history_title)
+      return
+    )
+    .fail((error) ->
+      $.ajax(url)
+        .done((res, status, xhr) ->
+          parser = new DOMParser()
+          dom = parser.parseFromString(res,"text/html")
+          title = dom.getElementsByTagName("title")[0].text
+          title = title.replace(/ ?(?:\[転載禁止\]|(?:\(c\)|©|�|&copy;)2ch\.net) ?/g,"")
+          dfd.resolve(title)
+          return
+        )
+        .fail((res, status, xhr)->
+          dfd.reject()
+          return
+        )
+      return
+    )
+  return dfd.promise()

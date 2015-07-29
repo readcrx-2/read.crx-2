@@ -160,3 +160,35 @@ class app.History
       return
     )
     .promise()
+
+  ###*
+  @method get_title
+  @param {String} url
+  @return {Promise}
+  ###
+  @get_title: (url) ->
+    if app.assert_arg("History.get_title", ["string"], arguments)
+      return $.Deferred().reject().promise()
+
+    @_openDB().pipe((db) -> $.Deferred (d) ->
+      db.readTransaction(
+        (transaction) ->
+          transaction.executeSql(
+            "SELECT url, title FROM History WHERE url = ?"
+            [url]
+            (transaction, result) ->
+              if result.rows.length isnt 0
+                got_title = result.rows[0].title
+                d.resolve(got_title)
+              else
+                d.reject("")
+              return
+          )
+          return
+        ->
+          app.log("error", "History.get_title: トランザクション中断")
+          d.reject()
+          return
+      )
+    )
+    .promise()

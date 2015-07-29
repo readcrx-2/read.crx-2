@@ -112,16 +112,16 @@ app.sync2ch.apply = (sync2chData, apply_read_state) ->
     app.config.set("sync_remain", remain)
     app.config.set("sync_remain_time", date_to_config_date(new Date))
 
-    # 既読情報管理システムに適応
+    # 既読情報管理システム/履歴管理システムに適応
     if apply_read_state
-      apply_sync2ch_data($xml)
+      app.sync2ch.apply_data($xml)
   else
     app.critical_error("2chSync : データを取得するのに失敗しました")
   console.log "sync2chData(stringed) : " + (new XMLSerializer()).serializeToString(sync2chData)
   return
 
 # 実際に適応する
-apply_sync2ch_data = ($xml) ->
+app.sync2ch.apply_data = ($xml) ->
   d = $.Deferred()
   ###
   返ってくるデータ
@@ -145,22 +145,24 @@ apply_sync2ch_data = ($xml) ->
   if $history_group.attr("s") isnt "n"
     $entities = $xml.find("entities")            # 板・スレすべての一覧
     $history_threads = $history_group.children() # 読み込みスレッド履歴
-    $history_threads.each ->
-      id = $(this).attr("id")
+    for i in [0..$history_threads.length - 1]
+      id = $history_threads.eq(i).attr("id")
       $thread = $entities.find("th[id=\"#{id}\"]")
+      console.log $thread
       if $thread.attr("s") isnt "n"
+        # 既読情報管理システムへ送る
         read_state =
           url: $thread.attr("url")
           last: $thread.attr("read") - 1 # Sync2chではレス数を0から開始するため
           read: $thread.attr("now") - 1
           received: $thread.attr("count") - 1
+        console.log read_state
         app.read_state.set(read_state, false)
         # 履歴ページにもデータを送る
-      return
-      ###
-      $thread.attr("rl_post")
-      書き込み履歴
-      ###
+    ###
+    $thread.attr("rl_post")
+    書き込み履歴
+    ###
   return d.promise()
 
 # Entitiesを構築する（中間）

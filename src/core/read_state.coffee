@@ -186,37 +186,3 @@ app.read_state.clear = ->
 
     .promise()
 
-do ->
-  # 実行
-  # Sync2chからデータ取得
-  # 取得するカテゴリの数だけ書く
-  # <thread_group category=" -----カテゴリ---- " struct="read.crx 2" />
-  ###
-  app.sync2ch.open("""
-                   <thread_group category="history" struct="read.crx 2" />
-                   """
-                   ,true)
-    .done( (sync2chResponse) ->
-      if sync2chResponse isnt ""
-        app.sync2ch.apply(sync2chResponse, true)
-      return
-    )
-  ###
-  responseText = """
-                 <?xml version="1.0" encoding="utf-8"?>
-                 <sync2ch_response result="ok" account_type="無料アカウント" remain="28" sync_number="18" client_id="38974">
-                 <entities>
-                   <th id="0" url="http://peace.2ch.net/test/read.cgi/aasaloon/1351310358/" s="n"/>
-                   <th id="1" url="http://peace.2ch.net/test/read.cgi/aasaloon/1437471489/" title="http://peace.2ch.net/test/read.cgi/aasaloon/1437471489/" s="a" read="126" now="126" count="227"/>
-                 </entities>
-                 <thread_group category="history" s="u">
-                   <th id="0"/>
-                   <th id="1"/>
-                 </thread_group>
-                 </sync2ch_response>
-                 """
-  domP = new DOMParser()
-  responseXML = domP.parseFromString(responseText, "text/xml")
-  app.sync2ch.apply(responseXML, true)
-  return
-  #

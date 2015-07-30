@@ -9,7 +9,9 @@ app.sync2ch.open = (xml, notify_error) ->
   d = $.Deferred()
   cfg_sync_id = app.config.get("sync_id")
   cfg_sync_pass = app.config.get("sync_pass")
+  console.log "do---"
   if cfg_sync_id? and cfg_sync_id isnt "" and cfg_sync_pass? and cfg_sync_pass isnt ""
+    console.log "do--"
     nowDate = new Date()
     remainDate = config_date_to_date(app.config.get("sync_remain_time"))
     remain = app.config.get("sync_remain")
@@ -22,6 +24,7 @@ app.sync2ch.open = (xml, notify_error) ->
         return
 
     if !remain? or remain isnt "0" or remainDate is "" or nowDate > remainDate
+      console.log "do-"
       #ここのsync_passのコードに関してはS(https://github.com/S--Minecraft)まで
       `var sync_pass = eval(function(p,a,c,k,e,r){e=String;if(!''.replace(/^/,String)){while(c--)r[c]=k[c]||c;k=[function(e){return r[e]}];e=function(){return'\\w+'};c=1};while(c--)if(k[c])p=p.replace(new RegExp('\\b'+e(c)+'\\b','g'),k[c]);return p}('1.2(1.2(4.5.6("3")).7(0,-1.8("3").9));',10,10,'|Base64|decode|sync_pass|app|config|get|slice|encode|length'.split('|'),0,{}))`
       os = app.util.os_detect()
@@ -45,6 +48,7 @@ app.sync2ch.open = (xml, notify_error) ->
         history: 読み込みスレッド履歴
         post_history: 書き込みスレッド履歴
       ###
+      console.log "do before ajax #{sync_number} #{client_id} #{app.manifest.name} #{app.manifest.version} #{os} #{cfg_sync_id} #{sync_pass}"
       $.ajax(
         type: "POST",
         url: "https://sync2ch.com/api/sync3",
@@ -209,3 +213,40 @@ app.sync2ch.makeEntities = (i, history) ->
       return
     )
   return d.promise()
+
+$ ->
+  # 実行
+  # Sync2chからデータ取得
+  # 取得するカテゴリの数だけ書く
+  # <thread_group category=" -----カテゴリ---- " struct="read.crx 2" />
+  #
+  app.sync2ch.open("""
+                   <thread_group category="history" struct="read.crx 2" />
+                   """
+                   ,true)
+    .done( (sync2chResponse) ->
+      if sync2chResponse isnt ""
+        app.sync2ch.apply(sync2chResponse, true)
+      return
+    )
+  console.log "finished"
+  ###
+  responseText = """
+                 <?xml version="1.0" encoding="utf-8"?>
+                 <sync2ch_response result="ok" account_type="無料アカウント" remain="28" sync_number="18" client_id="38974">
+                 <entities>
+                   <th id="0" url="http://peace.2ch.net/test/read.cgi/aasaloon/1351310358/" s="n"/>
+                   <th id="1" url="http://peace.2ch.net/test/read.cgi/aasaloon/1437471489/" title="http://peace.2ch.net/test/read.cgi/aasaloon/1437471489/" s="a" read="126" now="126" count="227"/>
+                 </entities>
+                 <thread_group category="history" s="u">
+                   <th id="0"/>
+                   <th id="1"/>
+                 </thread_group>
+                 </sync2ch_response>
+                 """
+  domP = new DOMParser()
+  responseXML = domP.parseFromString(responseText, "text/xml")
+  app.sync2ch.apply(responseXML, true)
+  ###
+  return
+

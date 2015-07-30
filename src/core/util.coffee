@@ -282,3 +282,30 @@ app.util.os_detect = ->
     when /Linux/.test(ua) then os = "Linux" #その他 Linux
     else os = "N/A" # その他
   return os
+
+# urlからタイトルを取得する
+app.util.url_to_title = (url) ->
+  d = new $.Deferred
+  app.History.get_title(url)
+    .done((got_title) ->
+      history_title = got_title
+      d.resolve(history_title)
+      return
+    )
+    .fail((error) ->
+      $.ajax(url)
+        .done((res, status, xhr) ->
+          parser = new DOMParser()
+          dom = parser.parseFromString(res,"text/html")
+          title = dom.getElementsByTagName("title")[0].text
+          title = title.replace(/ ?(?:\[転載禁止\]|(?:\(c\)|©|�|&copy;)2ch\.net) ?/g,"")
+          d.resolve(title)
+          return
+        )
+        .fail((res, status, xhr)->
+          d.reject()
+          return
+        )
+      return
+    )
+  return d.promise()

@@ -18,7 +18,7 @@ app.sync2ch.open = (xml, notify_error) ->
       notify_it = notify
     else
       notify_it = (beforeText, afterText, color) ->
-        app.critical_error("Sync2ch : #{beforeHtml} データを取得するのに失敗しました #{afterHtml}")
+        app.log("error","Sync2ch : #{beforeHtml} データを取得するのに失敗しました #{afterHtml}")
         return
 
     if !remain? or remain isnt "0" or remainDate is "" or nowDate > remainDate
@@ -60,16 +60,17 @@ app.sync2ch.open = (xml, notify_error) ->
         crossDomain: true
       )
         .done((res) ->
+          console.log res
           d.resolve(res)
           return
         ).fail((res) ->
           d.reject(res)
           switch res.status
-            when 400 then app.critical_error("2chSync : 不正なリクエストです データを取得するのに失敗しました")
+            when 400 then app.log("error","2chSync : 不正なリクエストです データを取得するのに失敗しました")
             when 401 then notify_it("認証エラーです" ,"<a href=\"https://sync2ch.com/user?show=on\">ここ</a>でIDとパスワードを確認して設定しなおしてください", "red")
             when 403 then notify_it("アクセスが拒否されました/同期可能残数がありません"," ", "orange")
             when 503 then notify_it("メンテナンス中です"," ", "orange")
-            else app.critical_error("2chSync : データを取得するのに失敗しました")
+            else app.log("error","2chSync : データを取得するのに失敗しました")
           return
         )
     else
@@ -165,7 +166,7 @@ app.sync2ch.apply_data = ($xml) ->
           received: $thread.attr("count") - 1
         app.read_state.set(read_state, false)
         # 履歴ページにもデータを送る
-        app.sync2ch.url_to_title(thread_url)
+        app.util.url_to_title(thread_url)
           .done((title_from_url) ->
             thread_title = title_from_url
             app.History.add(thread_url, thread_title, thread_time)
@@ -195,7 +196,7 @@ app.sync2ch.makeEntities = (i, history) ->
       last = read_state.last + 1
       read = read_state.read + 1
       count = read_state.received + 1
-      # xmlのファイルを継ぎ足して書いていく TODO: スレ名に直す
+      # xmlのファイルを継ぎ足して書いていく
       xml = """
             <th id="#{i}"
             url="#{url}"
@@ -208,30 +209,3 @@ app.sync2ch.makeEntities = (i, history) ->
       return
     )
   return d.promise()
-
-# urlからタイトルを取得する
-app.sync2ch.url_to_title = (url) ->
-  dfd = new $.Deferred
-  app.History.get_title(url)
-    .done((got_title) ->
-      history_title = got_title
-      dfd.resolve(history_title)
-      return
-    )
-    .fail((error) ->
-      $.ajax(url)
-        .done((res, status, xhr) ->
-          parser = new DOMParser()
-          dom = parser.parseFromString(res,"text/html")
-          title = dom.getElementsByTagName("title")[0].text
-          title = title.replace(/ ?(?:\[転載禁止\]|(?:\(c\)|©|�|&copy;)2ch\.net) ?/g,"")
-          dfd.resolve(title)
-          return
-        )
-        .fail((res, status, xhr)->
-          dfd.reject()
-          return
-        )
-      return
-    )
-  return dfd.promise()

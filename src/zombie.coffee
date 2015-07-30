@@ -62,7 +62,7 @@ app.boot "/zombie.html", ->
         #  #close()
         return
 
-      for read_state, i in array_of_read_state
+      for read_state in array_of_read_state
         count += 2
         app.read_state.set(read_state).always(countdown)
         app.bookmark.update_read_state(read_state).always(countdown)

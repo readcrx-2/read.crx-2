@@ -53,12 +53,6 @@ app.read_state.set = (read_state, send_sync = true) ->
   board_url = app.url.thread_to_board(url.original)
   read_state.board_url = app.read_state._url_filter(board_url).replaced
 
-  # Sync2chへ送信するデータとして蓄積
-  #if send_sync is false
-  #  ###
-  #  蓄積処理
-  #  ###
-
   app.read_state._db_open
 
     .pipe (db) ->
@@ -192,20 +186,21 @@ app.read_state.clear = ->
 
     .promise()
 
-# app.read_state.set定義後に記述する必要がある
 do ->
+  # 実行
   # Sync2chからデータ取得
   # 取得するカテゴリの数だけ書く
   # <thread_group category=" -----カテゴリ---- " struct="read.crx 2" />
   ###
   app.sync2ch.open("""
-                 <thread_group category="history" struct="read.crx 2" />
-                 """,true)
-  .done( (sync2chResponse) ->
-    if sync2chResponse isnt ""
-      app.sync2ch.apply(sync2chResponse, true)
-    return
-  )
+                   <thread_group category="history" struct="read.crx 2" />
+                   """
+                   ,true)
+    .done( (sync2chResponse) ->
+      if sync2chResponse isnt ""
+        app.sync2ch.apply(sync2chResponse, true)
+      return
+    )
   ###
   responseText = """
                  <?xml version="1.0" encoding="utf-8"?>
@@ -223,4 +218,5 @@ do ->
   domP = new DOMParser()
   responseXML = domP.parseFromString(responseText, "text/xml")
   app.sync2ch.apply(responseXML, true)
+  return
   #

@@ -170,6 +170,15 @@ app.sync2ch.apply_data = ($xml) ->
             thread_title = title_from_url
             app.History.add(thread_url, thread_title, thread_time)
           )
+          .fail( ->
+            thread_title = url
+            app.History.add(thread_url, thread_title, thread_time)
+          )
+        if i is $history_threads.length - 1
+          app.History.get_newest_id(thread_url)
+            .done((id)->
+              app.sync2ch.last_history_id = id
+            )
     ###
     $thread.attr("rl_post")
     書き込み履歴
@@ -177,21 +186,28 @@ app.sync2ch.apply_data = ($xml) ->
   return d.promise()
 
 # Entitiesを構築する（中間）
-app.sync2ch.makeEntities = (i, read_state) ->
-  url = read_state.url
-  last = read_state.last + 1
-  read = read_state.read + 1
-  count = read_state.received + 1
-  # xmlのファイルを継ぎ足して書いていく TODO: スレ名に直す
-  xml = """
-         <th id="#{i}"
-         url="#{url}"
-         title="#{url}"
-         read="#{last}"
-         now="#{read}"
-         count="#{count}" />
-         """
-  return xml
+app.sync2ch.makeEntities = (i, history) ->
+  d = new $.Deferred
+  url = history.url
+  title = history.title
+  app.read_state.get(url)
+    .done( (read_state) ->
+      last = read_state.last + 1
+      read = read_state.read + 1
+      count = read_state.received + 1
+      # xmlのファイルを継ぎ足して書いていく TODO: スレ名に直す
+      xml = """
+            <th id="#{i}"
+            url="#{url}"
+            title="#{title}"
+            read="#{last}"
+            now="#{read}"
+            count="#{count}" />
+            """
+      d.resolve(xml, i, history.rowid)
+      return
+    )
+  return d.promise()
 
 # urlからタイトルを取得する
 app.sync2ch.url_to_title = (url) ->

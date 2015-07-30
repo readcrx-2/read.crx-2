@@ -15,17 +15,34 @@ app.boot "/zombie.html", ->
       # Entitiesの構築開始
       xml = "<entities>"
 
-    history_last_id = 0 # Sync2chへ送られるhistoryの最後のid
-    #test_ids = ["1","2"] # 他のカテゴリはここで配列をつくる
+    # historyの構築
+    makeHistory = ->
+      d = new $.Deferred
+      app.History.get_with_id(undefined, 40)
+        .done((data) ->
+          synced_last_id = app.sync2ch.last_history_id
+          for history, i in data
+            if !synced_last_id? or history.rowid > synced_last_id
+              history_ids.push(i)
+              app.sync2ch.makeEntities(i, history)
+                .done( (made, j, id) ->
+                  xml += made
+                  if j is data.length - 1 or id is synced_last_id + 1
+                    d.resolve()
+                    console.log j + ":" + id + ":resolve"
+                  return
+                )
+        )
+      return d.promise()
+
+    history_ids = [] # Sync2chへ送られるhistoryに入っているentityのid
+    #test_ids = [] # 他のカテゴリはここで配列をつくる
     finishXML = ->
       if sync
         # Entitiesの構築を終了する
         xml += "</entities>"
-        # historyのThread_group
-        history_ids = "0"
-        for i in [1...history_last_id]
-          history_ids += "," + i
-        xml += "<thread_group category=\"history\" id_list=\"#{history_ids}\" struct=\"read.crx 2\" />"
+        # Thread_group history
+        xml += "<thread_group category=\"history\" id_list=\"#{history_ids.toString()}\" struct=\"read.crx 2\" />"
         console.log "xml : " + xml
         # 他のカテゴリのThread_group
         #xml += "<thread_group category=\"test\" id_list=\"#{test_ids.toString()}\" struct=\"read.crx 2\" /> "
@@ -41,22 +58,26 @@ app.boot "/zombie.html", ->
     app.bookmark.promise_first_scan.done ->
       count = 0
       countdown = ->
-        if --count is 0
-          finishXML()
-          #close()
+        #if --count is 0
+        #  #close()
         return
 
       for read_state, i in array_of_read_state
         count += 2
         app.read_state.set(read_state).always(countdown)
         app.bookmark.update_read_state(read_state).always(countdown)
-        if sync
-          # Entitiesの構築
-          xml += app.sync2ch.makeEntities(i, read_state)
-          history_last_id = i
       return
 
     delete localStorage.zombie_read_state
+
+    # sync2ch
+    if sync
+      makeHistory()
+        .done( ->
+           finishXML()
+           return
+        )
+
     return
 
   if localStorage.zombie_read_state?

@@ -228,6 +228,7 @@ class app.History
 
   ###*
   @method get_with_id
+  urlが重複しているものは1つしか取得しない
   @param {Number} offset
   @param {Number} limit
   @return {Promise}
@@ -240,7 +241,12 @@ class app.History
       db.readTransaction(
         (transaction) ->
           transaction.executeSql(
-            "SELECT rowid, date, title, url FROM History ORDER BY date DESC LIMIT ? OFFSET ?"
+            """
+            SELECT rowid, date, title, url FROM History
+            WHERE rowid IN(SELECT MAX(rowid) FROM History GROUP BY url)
+            ORDER BY date
+            DESC LIMIT ? OFFSET ?
+            """
             [limit, offset]
             (transaction, result) ->
               data = []

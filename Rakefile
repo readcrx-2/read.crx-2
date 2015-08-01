@@ -404,6 +404,9 @@ namespace :base64 do
 
   file "debug/lib/js-base64/base64.min.js" => "lib/js-base64/base64.min.js" do
     Rake::Task["base64:clean"].invoke
+    cd "lib/js-base64" do
+      sh "git apply ../js-base64_license.patch --whitespace=fix"
+    end
     mkdir_p "debug/lib/js-base64"
     cp "lib/js-base64/base64.min.js", "debug/lib/js-base64/base64.min.js"
   end

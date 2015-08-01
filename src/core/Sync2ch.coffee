@@ -261,15 +261,16 @@ app.sync2ch.finishXML = (xml, history_ids) ->
 #
 console.log "do----"
 app.config.ready( ->
-  # 起動時の同期
-  if getFileName() is "index.html"
-    # Sync2chからデータ取得
-    # 取得するカテゴリの数だけ書く
-    # <thread_group category=" -----カテゴリ---- " struct="read.crx 2" />
-    console.log "do--- config ready"
-    cfg_sync_id = app.config.get("sync_id") || ""
-    cfg_sync_pass = app.config.get("sync_pass") || ""
-    if cfg_sync_id isnt "" and cfg_sync_pass isnt ""
+  # 同期するかどうか
+  cfg_sync_id = app.config.get("sync_id") || ""
+  cfg_sync_pass = app.config.get("sync_pass") || ""
+  if cfg_sync_id isnt "" and cfg_sync_pass isnt ""
+    # 起動時の同期
+    if getFileName() is "index.html"
+      # Sync2chからデータ取得
+      # 取得するカテゴリの数だけ書く
+      # <thread_group category=" -----カテゴリ---- " struct="read.crx 2" />
+      console.log "do--- config ready"
       app.sync2ch.open("""
                        <thread_group category="history" struct="read.crx 2" />
                        """
@@ -279,31 +280,27 @@ app.config.ready( ->
             app.sync2ch.apply(sync2chResponse, true)
           return
         )
-    ###
-    responseText = """
-                   <?xml version="1.0" encoding="utf-8"?>
-                   <sync2ch_response result="ok" account_type="無料アカウント" remain="28" sync_number="18" client_id="38974">
-                   <entities>
-                     <th id="0" url="http://peace.2ch.net/test/read.cgi/aasaloon/1351310358/" s="n"/>
-                     <th id="1" url="http://peace.2ch.net/test/read.cgi/aasaloon/1437471489/" title="http://peace.2ch.net/test/read.cgi/aasaloon/1437471489/" s="a" read="126" now="126" count="227"/>
-                   </entities>
-                   <thread_group category="history" s="u">
-                     <th id="0"/>
-                     <th id="1"/>
-                   </thread_group>
-                   </sync2ch_response>
-                   """
-    domP = new DOMParser()
-    responseXML = domP.parseFromString(responseText, "text/xml")
-    app.sync2ch.apply(responseXML, true)
-    ###
-    console.log "finished"
-  # 終了時同期
-  else if getFileName() is "zombie.html"
-    # 同期するかどうか
-    cfg_sync_id = app.config.get("sync_id") || ""
-    cfg_sync_pass = app.config.get("sync_pass") || ""
-    if cfg_sync_id isnt "" and cfg_sync_pass isnt ""
+      ###
+      responseText = """
+                     <?xml version="1.0" encoding="utf-8"?>
+                     <sync2ch_response result="ok" account_type="無料アカウント" remain="28" sync_number="18" client_id="38974">
+                     <entities>
+                       <th id="0" url="http://peace.2ch.net/test/read.cgi/aasaloon/1351310358/" s="n"/>
+                       <th id="1" url="http://peace.2ch.net/test/read.cgi/aasaloon/1437471489/" title="http://peace.2ch.net/test/read.cgi/aasaloon/1437471489/" s="a" read="126" now="126" count="227"/>
+                     </entities>
+                     <thread_group category="history" s="u">
+                       <th id="0"/>
+                       <th id="1"/>
+                     </thread_group>
+                     </sync2ch_response>
+                     """
+      domP = new DOMParser()
+      responseXML = domP.parseFromString(responseText, "text/xml")
+      app.sync2ch.apply(responseXML, true)
+      ###
+      console.log "finished"
+    # 終了時同期
+    else if getFileName() is "zombie.html"
       # Entitiesの構築開始
       xml = "<entities>"
       app.sync2ch.makeHistory(xml)

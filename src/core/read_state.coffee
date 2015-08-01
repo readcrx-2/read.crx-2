@@ -33,7 +33,7 @@ do ->
     return
   return
 
-app.read_state.set = (read_state, send_sync = true) ->
+app.read_state.set = (read_state) ->
   if not read_state? or
       typeof read_state isnt "object" or
       typeof read_state.url isnt "string" or

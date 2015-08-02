@@ -332,7 +332,7 @@ class app.Thread
   @_parseNet = (text) ->
     # name, mail, other, message, thread_title
     reg = /^<dt>\d+.*：(?:<a href="mailto:([^<>]*)">|<font [^>]*>)?<b>(.*)<\/b>.*：(.*)<dd> ?(.*)<br><br>$/
-    titleReg = /<h1 .*>(.*)<\/h1>/;
+    titleReg = /<h1 .*?>(.*)<\/h1>/;
     numberOfBroken = 0
     thread = res: []
     first = true

@@ -128,9 +128,5 @@ app.boot "/view/bookmark.html", ->
   app.message.send("request_update_read_state", {})
   $table.table_sort("update")
 
-  $view.find(".button_toggle_dat").on "click", ->
-    $view.find(".expired").toggleClass("expired_hide")
-    return
-
   $view.trigger("view_loaded")
   return

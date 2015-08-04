@@ -164,6 +164,8 @@ app.sync2ch.apply_data = ($xml) ->
             thread_time = unix_time.getTime()
           else
             thread_time = Date.now()
+          #書き込み履歴
+          #$thread.attr("pt")
 
           # 既読情報管理システムへ送る
           read_state =
@@ -203,6 +205,8 @@ app.sync2ch.makeHistoryEntities = (i, history) ->
   guessRes = app.URL.guessType(url)
   if guessRes.type is thread
     title = history.title
+    date = new Date(history.date)
+    rt = Math.round(date.getTime() / 1000)
     app.read_state.get(url)
       .done( (read_state) ->
         last = read_state.last + 1
@@ -220,7 +224,7 @@ app.sync2ch.makeHistoryEntities = (i, history) ->
           xml += "now=\"#{read}\""
         if count?
           xml += "count=\"#{count}\""
-        xml += " />"
+        xml += " rt=\"#{rt}\" />"
         d.resolve(xml, i, history.rowid)
         return
       )

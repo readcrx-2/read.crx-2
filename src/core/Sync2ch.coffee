@@ -274,7 +274,7 @@ app.config.ready( ->
   # 同期するかどうか
   cfg_sync_id = app.config.get("sync_id") || ""
   cfg_sync_pass = app.config.get("sync_pass") || ""
-  if cfg_sync_id isnt "" and cfg_sync_pass isnt ""
+  if cfg_sync_id isnt "" or cfg_sync_pass isnt ""
     # 起動時の同期
     if getFileName() is "index.html"
       # Sync2chからデータ取得

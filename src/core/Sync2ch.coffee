@@ -213,10 +213,14 @@ app.sync2ch.makeHistoryEntities = (i, history) ->
               <th id="#{i}"
               url="#{url}"
               title="#{title}"
-              read="#{last}"
-              now="#{read}"
-              count="#{count}" />
               """
+        if last?
+          xml += "read=\"#{last}\""
+        if read?
+          xml += "now=\"#{read}\""
+        if count?
+          xml += "count=\"#{count}\""
+        xml += " />"
         d.resolve(xml, i, history.rowid)
         return
       )

@@ -63,7 +63,7 @@ app.sync2ch.open = (xml, notify_error) ->
       history: 読み込みスレッド履歴
       post_history: 書き込みスレッド履歴
     ###
-    console.log "do before ajax #{sync_number} #{client_id} #{app.manifest.name} #{app.manifest.version} #{os} #{cfg_sync_id} #{sync_pass}"
+    console.log "do before ajax"
     console.log """
                 <?xml version="1.0" encoding="utf-8" ?>
                 <sync2ch_request sync_number="#{sync_number}" client_id="#{client_id}" client_name="#{app.manifest.name}" client_version="#{app.manifest.version}-developing" os="#{os}"#{deviceText}>
@@ -147,9 +147,10 @@ app.sync2ch.apply_data = ($xml) ->
   TODO: データ適応処理
   現在はhistoryのみ同期するため、他のも対応する
   ###
+  # history
+  $entities = $xml.find("entities")            # 板・スレすべての一覧
   $history_group = $xml.find("thread_group[category=\"history\"]")
   if $history_group.attr("s") isnt "n"
-    $entities = $xml.find("entities")            # 板・スレすべての一覧
     $history_threads = $history_group.children() # 読み込みスレッド履歴
     history_threads_length = $history_threads.length
     if history_threads_length > 0
@@ -189,6 +190,50 @@ app.sync2ch.apply_data = ($xml) ->
               .done((id)->
                 app.sync2ch.last_history_id = id
               )
+  # open
+  data = []
+  $open_group = $xml.find("thread_group[category=\"open\"]")
+  th_select = false
+  bd_select = false
+  if $open_group.attr("s") isnt "n"
+    $open_tabs = $open_group.children()
+    open_tabs_length = $open_tabs.length
+    if open_tabs_length > 0
+      if app.config.get("layout") is "pane-2"
+        layout = 2
+      else
+        layout = 3
+      for i in [open_tabs_length - 1..0]
+        id = $open_tabs.eq(i).attr("id")
+        $tab = $entities.find("[id=\"#{id}\"]")
+        if $tab.attr("s") isnt "n"
+          tab_url = $tab.attr("url")
+          tab_title = $tab.attr("title")
+          if layout = 2
+            tab_selected = (i is 1)
+          else
+            if $tab.prop("tagName") is "th" and th_select is false
+              th_select = true
+              tab_selected = true
+            else if $tab.prop("tagName") is "bd" and bd_select is false
+              bd_select = true
+              tab_selected = true
+            else
+              tab_selected = false
+          data.push({
+            url: tab_url,
+            title: tab_title,
+            selected: tab_selected
+          })
+      # タブを置き換え
+      for tab in data
+        is_restored = true
+        app.message.send("open", {
+          url: tab.url
+          title: tab.title
+          lazy: not tab.selected
+          new_tab: true
+        })
     ###
     $post_threads
     else if
@@ -287,6 +332,7 @@ app.config.ready( ->
       console.log "do--- config ready"
       app.sync2ch.open("""
                        <thread_group category="history" struct="read.crx 2" />
+                       <thread_group category="open" struct="read.crx 2" />
                        """
                        ,true)
         .done( (sync2chResponse) ->

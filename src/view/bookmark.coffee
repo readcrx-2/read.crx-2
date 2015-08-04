@@ -78,9 +78,9 @@ app.boot "/view/bookmark.html", ->
           , 1000 * 10)
           return
         , 500)
-      # 合計最大同時接続数: 2
+      # 合計最大同時接続数: 4
       # 同一サーバーへの最大接続数: 1
-      else if count.loading < 2
+      else if count.loading < 4
         for current, key in board_list
           server = current.split("/")[2]
           continue if loadingServer[server]

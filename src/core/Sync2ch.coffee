@@ -196,28 +196,32 @@ app.sync2ch.apply_data = ($xml) ->
 
 
 # XML作成
-# Entitiesを構築する（中間）
-app.sync2ch.makeEntities = (i, history) ->
+# History用のEntitiesを構築する（中間）
+app.sync2ch.makeHistoryEntities = (i, history) ->
   d = new $.Deferred
   url = history.url
-  title = history.title
-  app.read_state.get(url)
-    .done( (read_state) ->
-      last = read_state.last + 1
-      read = read_state.read + 1
-      count = read_state.received + 1
-      # xmlのファイルを継ぎ足して書いていく
-      xml = """
-            <th id="#{i}"
-            url="#{url}"
-            title="#{title}"
-            read="#{last}"
-            now="#{read}"
-            count="#{count}" />
-            """
-      d.resolve(xml, i, history.rowid)
-      return
-    )
+  guessRes = app.URL.guessType(url)
+  if guessRes.type is thread
+    title = history.title
+    app.read_state.get(url)
+      .done( (read_state) ->
+        last = read_state.last + 1
+        read = read_state.read + 1
+        count = read_state.received + 1
+        # xmlのファイルを継ぎ足して書いていく
+        xml = """
+              <th id="#{i}"
+              url="#{url}"
+              title="#{title}"
+              read="#{last}"
+              now="#{read}"
+              count="#{count}" />
+              """
+        d.resolve(xml, i, history.rowid)
+        return
+      )
+  else
+    d.reject("", i, history.rowid)
   return d.promise()
 
 # historyの構築
@@ -229,13 +233,15 @@ app.sync2ch.makeHistory = (xml) ->
       synced_last_id = app.sync2ch.last_history_id
       for history, i in data
         if !synced_last_id? or history.rowid > synced_last_id
-          history_ids.push(i)
-          app.sync2ch.makeEntities(i, history)
+          app.sync2ch.makeHistoryEntities(i, history)
             .done((made, j, id) ->
+              history_ids.push(i)
               xml += made
+            )
+            .always((made, j, id) ->
               if j is data.length - 1 or id is synced_last_id + 1
                 d.resolve(xml, history_ids)
-                console.log j + ":" + id + ":resolve"
+                console.log j + ":" + id + ":always"
               return
             )
     )

@@ -248,7 +248,7 @@ app.sync2ch.makeHistoryEntities = (i, history) ->
   d = new $.Deferred
   url = history.url
   guessRes = app.URL.guessType(url)
-  if guessRes.type is thread
+  if guessRes.type is "thread"
     title = history.title
     date = new Date(history.date)
     rt = Math.round(date.getTime() / 1000)
@@ -260,15 +260,15 @@ app.sync2ch.makeHistoryEntities = (i, history) ->
         # xmlのファイルを継ぎ足して書いていく
         xml = """
               <th id="#{i}"
-              url="#{url}"
-              title="#{title}"
+               url="#{url}"
+               title="#{title}"
               """
         if last?
-          xml += "read=\"#{last}\""
+          xml += " read=\"#{last}\""
         if read?
-          xml += "now=\"#{read}\""
+          xml += " now=\"#{read}\""
         if count?
-          xml += "count=\"#{count}\""
+          xml += " count=\"#{count}\""
         xml += " rt=\"#{rt}\" />"
         d.resolve(xml, i, history.rowid)
         return
@@ -288,7 +288,7 @@ app.sync2ch.makeHistory = (xml) ->
         if !synced_last_id? or history.rowid > synced_last_id
           app.sync2ch.makeHistoryEntities(i, history)
             .done((made, j, id) ->
-              history_ids.push(i)
+              history_ids.push(j)
               xml += made
             )
             .always((made, j, id) ->
@@ -363,6 +363,18 @@ app.config.ready( ->
     else if getFileName() is "zombie.html"
       # Entitiesの構築開始
       xml = "<entities>"
+      ###
+      app.sync2ch.makeHistory(xml)
+      .done( (xml, history_ids) ->
+        xml = app.sync2ch.finishXML(xml, history_ids)
+        # 通信
+        app.sync2ch.open(xml,false)
+      ).then( (sync2chResponse) ->
+        # 同期可能残数などを取得して保存
+        if sync2chResponse isnt ""
+          app.sync2ch.apply(sync2chResponse,"",false)
+      )
+      ###
       app.sync2ch.makeHistory(xml)
         .done((xml, history_ids) ->
            xml = app.sync2ch.finishXML(xml, history_ids)
@@ -376,5 +388,6 @@ app.config.ready( ->
              )
            return
         )
+      #
   return
 )

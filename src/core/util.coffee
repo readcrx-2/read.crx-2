@@ -318,6 +318,8 @@ app.util.remove_duplicates = (array) ->
   return array
 
 # 配列を重複しないよう結合して、重複していたものの(元の配列の)要素番号とともに返す
+# ※array1、array2内のみだけで重複している場合は想定していません
+# duplicate[重複した値, array1内の値, array2内の値]
 app.util.concat_without_duplicates = (array1, array2) ->
   result = []
   arrayRes = array1.concat(array2)
@@ -326,7 +328,7 @@ app.util.concat_without_duplicates = (array1, array2) ->
     if self.indexOf(x) is i
       return true
     else
-      duplicate = [self.indexOf(x), i]
+      duplicate = [x, self.indexOf(x), i - array1.length]
       duplicates.push(duplicate)
       return false
   )

@@ -244,7 +244,7 @@ app.sync2ch.apply_data = ($xml) ->
 
 # XML作成
 # History用に履歴をentityオブジェクトに変換
-app.sync2ch.convertHistoryToEntity = (history) ->
+app.sync2ch.historyToEntity = (history) ->
   d = new $.Deferred
   url = history.url
   guessRes = app.URL.guessType(url)
@@ -280,14 +280,13 @@ app.sync2ch.historyToEntities = ->
       deferredConvertFuncArray = []
       for history in data
         if !synced_last_id? or history.rowid > synced_last_id
-          deferredConvertFuncArray.push(app.sync2ch.convertHistoryToEntity(history))
+          deferredConvertFuncArray.push(app.sync2ch.historyToEntity(history))
       historyEntities = []
       $.when.apply(null, deferredConvertFuncArray)
         .then(  ->
           # arguments[i][j]がi個目の関数のresolve内のj番目の引数
-          for i in [0..arguments.length]
+          for i in [0..arguments.length - 1]
             historyEntities.push(arguments[i][0])
-          historyEntities = app.util.remove_duplicates(historyEntities)
           return d.resolve(historyEntities)
         )
     )
@@ -312,87 +311,127 @@ app.sync2ch.openToTempEntities = ->
   d.resolve(openTempEntities)
   return d.promise()
 
-# entities生成
-app.sync2ch.makeEntities = (historyEntities, openTempEntities) ->
+# openTempEntityをopenEntityへ変換
+app.sync2ch.openTempEntityToOpenEntity = (openTempEntity) ->
   d = new $.Deferred
-
-  return d.promise()
-
-
-###
-# History用のEntitiesを構築する（中間）
-app.sync2ch.makeHistoryEntities = (i, history) ->
-  d = new $.Deferred
-  url = history.url
-  guessRes = app.URL.guessType(url)
-  if guessRes.type is "thread"
-    title = history.title
-    date = new Date(history.date)
-    rt = Math.round(date.getTime() / 1000)
-    app.read_state.get(url)
-      .done( (read_state) ->
-        last = read_state.last + 1
-        read = read_state.read + 1
-        count = read_state.received + 1
-        # xmlのファイルを継ぎ足して書いていく
-        xml = """
-              <th id="#{i}"
-               url="#{url}"
-               title="#{title}"
-              """
-        if last?
-          xml += " read=\"#{last}\""
-        if read?
-          xml += " now=\"#{read}\""
-        if count?
-          xml += " count=\"#{count}\""
-        xml += " rt=\"#{rt}\" />"
-        d.resolve(xml, i, history.rowid)
-        return
-      )
-  else
-    d.reject("", i, history.rowid)
-  return d.promise()
-
-# historyの構築
-app.sync2ch.makeHistory = (xml) ->
-  history_ids = [] # Sync2chへ送られるhistoryに入っているentityのid
-  d = new $.Deferred
-  app.History.get_with_id(undefined, 40)
-    .done((data) ->
-      synced_last_id = app.sync2ch.last_history_id
-      for history, i in data
-        if !synced_last_id? or history.rowid > synced_last_id
-          app.sync2ch.makeHistoryEntities(i, history)
-            .done((made, j, id) ->
-              history_ids.push(j)
-              xml += made
-            )
-            .always((made, j, id) ->
-              if j is data.length - 1 or id is synced_last_id + 1
-                d.resolve(xml, history_ids)
-                console.log j + ":" + id + ":always"
-              return
-            )
+  url = openTempEntity.url
+  title = openTempEntity.title
+  $.when(app.History.get_from_url(url), app.read_state.get(url))
+    .done( (history, read_state)
+      history = history[0]
+      read_state = read_state[0]
+      rt = Math.round((new Date(history.date)).getTime() / 1000)
+      last = read_state.last + 1
+      read = read_state.read + 1
+      count = read_state.received + 1
+      entity = {
+        url: url
+        title: title
+        last: last
+        read: read
+        count: count
+        rt: rt
+      }
+      d.resolve(entity)
+      return
     )
   return d.promise()
 
-# 他カテゴリの構築
-#test_ids = []
+# openTempEntitiesをopenEntitiesへ変換
+app.sync2ch.openTempEntitiesToOpenEntities = (openTempEntities) ->
+  d = new $.Deferred
+  deferredConvertFuncArray = []
+  for openTempEntity in openTempEntities
+    deferredConvertFuncArray.push(app.sync2ch.openTempEntityToOpenEntity(openTempEntity))
+  openEntities = []
+  $.when.apply(null, deferredConvertFuncArray)
+    .then(  ->
+      # arguments[i][j]がi個目の関数のresolve内のj番目の引数
+      for i in [0..arguments.length - 1]
+        openEntities.push(arguments[i][0])
+      return d.resolve(openEntities)
+    )
+  return d.promise()
 
-# XMLの構築を終了する
-app.sync2ch.finishXML = (xml, history_ids) ->
-  # Entitiesの構築を終了する
-  xml += "</entities>"
-  # Thread_group history
-  xml += """
-         <thread_group category="history" id_list="#{history_ids.toString()}" struct="read.crx 2" />
-         """
-  # 他のカテゴリのThread_group
-  #xml += "<thread_group category=\"test\" id_list=\"#{test_ids.toString()}\" struct=\"read.crx 2\" /> "
+# entities生成
+app.sync2ch.makeEntities = (historyEntities, openTempEntities) ->
+  d = new $.Deferred
+  # entities内のhistoryのもののid
+  historyIds = [0..historyEntities - 1]
+  # openをhistoryと比較してentitiesを出力
+  duplicates = app.sync2ch.compareEntity(historyEntities, openTempEntities)
+  duplicates = app.sync2ch.sortDuplicates(duplicates)
+  # entities内のopenのもののid
+  openIds = [hisotryEntities..openEntities - 1]
+  for duplicate, i in duplicates
+    openTempEntities = openTempEntities.splice(duplicate[2] - i)
+    openIds.push(duplicate[1])
+  app.sync2ch.openTempEntitiesToOpenEntities(openTempEntities)
+  .done( (openEntities) ->
+    entities = historyEntities.concat(openEntities)
+    d.resolve(entities, historyIds, openIds)
+    return
+  )
+  return d.promise()
+
+# entityオブジェクトの配列の重複比較
+app.sync2ch.compareEntity = (entities1, entities2) ->
+  entityUrls1 = []
+  entityUrls2 = []
+  for entity in entities1
+    entityUrls1.push(entity.url)
+  for entity in entities2
+    entityUrls2.push(entity.url)
+  res = app.util.concat_without_duplicates(entityUrls1, entityUrls2)
+  duplicates = res[1]
+  return duplicates
+
+# 重複結果の配列を第二引数の配列の配列番号基準として並び替え
+app.sync2ch.sortDuplicates = (duplicates) ->
+  duplicates.sort( (a, b) ->
+    x = a[2]
+    y = b[2]
+    if x > y return 1
+    if x < y return -1
+    return 0
+  )
+  return duplicates
+
+# entityオブジェクトの配列からentitiesのXMLを生成
+app.sync2ch.makeEntitiesXML = (entities) ->
+  xml = ""
+  for entity, i in entities
+    last = entity.last + 1
+    read = entity.read + 1
+    count = entity.received + 1
+    rt = entity.rt
+    xml += """
+           <th id="#{i}"
+            url="#{entity.url}"
+            title="#{title}"
+           """
+    if last?
+      xml += " read=\"#{last}\""
+    if read?
+      xml += " now=\"#{read}\""
+    if count?
+      xml += " count=\"#{count}\""
+    if rt?
+      xml += " rt=\"#{rt}\""
+    xml += " />"
   return xml
 
-###
+# XMLの終端部を生成
+app.sync2ch.finishXML = (historyIds, openIds) ->
+  # Entitiesの構築を終了する
+  xml = "</entities>"
+  # Thread_group
+  xml += """
+         <thread_group category="history" id_list="#{historyIds.toString()}" struct="read.crx 2" />
+         <thread_group category="open" id_list="#{openIds.toString()}" struct="read.crx 2" />
+         """
+  return xml
+
 
 # 実行
 #
@@ -439,49 +478,41 @@ app.config.ready( ->
       console.log "finished"
     # 終了時同期
     else if getFileName() is "zombie.html"
-      # Entitiesの構築開始
-      xml = "<entities>"
       app.sync2ch.historyToEntities
         .done( (historyEntities) ->
+          # historyからのentitiesとの被りのために
+          # まずは処理が少ない分だけ取得
           $.when(app.sync2ch.openToTempEntities)
-          ###
-          when内が複数のとき
-            .done( (openToTempEntities, postToTempEntities)->
-              openToTempEntities = openToTempEntities[]
-              postToTempEntities = postToTempEntities[]
-            )
-          ###
-            .done( (openTempEntities) ->
-
-            )
+          return
         )
-      ###
-      app.sync2ch.makeHistory(xml)
-      .done( (xml, history_ids) ->
-        xml = app.sync2ch.finishXML(xml, history_ids)
-        # 通信
-        app.sync2ch.open(xml,false)
-      ).then( (sync2chResponse) ->
-        # 同期可能残数などを取得して保存
-        if sync2chResponse isnt ""
-          app.sync2ch.apply(sync2chResponse,"",false)
-      )
-      ###
-      ###
-      app.sync2ch.makeHistory(xml)
-        .done((xml, history_ids) ->
-           xml = app.sync2ch.finishXML(xml, history_ids)
-           # 通信
-           app.sync2ch.open(xml,false)
-             .done( (sync2chResponse) ->
-               # 同期可能残数などを取得して保存
-               if sync2chResponse isnt ""
-                 app.sync2ch.apply(sync2chResponse,"",false)
-               return
-             )
-           return
+        .then( (openTempEntities) ->
+        ###
+        when内が複数のとき
+        .then( (openToTempEntities, postToTempEntities)->
+          openToTempEntities = openToTempEntities[]
+          postToTempEntities = postToTempEntities[]
         )
-      ###
-
+        ###
+          # entities構築
+          app.sync2ch.makeEntities(historyEntities, openTempEntities)
+          return
+        )
+        .then( (entities, historyIds, openIds) ->
+          # XML生成
+          startXML = "<entities>"
+          entitiesXML = app.sync2ch.makeEntitiesXML(entities)
+          finishXML = app.sync2ch.finishXML(historyIds, openIds)
+          XML = startXML + entitiesXML + finishXML
+        ###
+          # 通信
+          app.sync2ch.open(XML, false)
+        ).then( (sync2chRes) ->
+          # 同期可能残数などを取得して保存
+          if sync2chRes isnt ""
+            app.sync2ch.apply(sync2chRes,"",false)
+        )
+        ###
+        )
+        #
   return
 )

@@ -194,6 +194,38 @@ class app.History
     .promise()
 
   ###*
+  @method get_from_url
+  @param {String} url
+  @return {Promise}
+  ###
+  @get_title: (url) ->
+    if app.assert_arg("History.get_from_url", ["string"], arguments)
+      return $.Deferred().reject().promise()
+
+    @_openDB().pipe((db) -> $.Deferred (d) ->
+      db.readTransaction(
+        (transaction) ->
+          transaction.executeSql(
+            "SELECT * FROM History WHERE url = ?"
+            [url]
+            (transaction, result) ->
+              if result.rows.length isnt 0
+                res = result.rows[0]
+                d.resolve(res)
+              else
+                d.reject("")
+              return
+          )
+          return
+        ->
+          app.log("error", "History.get_title: トランザクション中断")
+          d.reject()
+          return
+      )
+    )
+    .promise()
+
+  ###*
   @method get_newest_id
   @param {String} url
   @return {Promise}

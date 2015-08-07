@@ -309,3 +309,26 @@ app.util.url_to_title = (url) ->
       return
     )
   return d.promise()
+
+# 配列を重複を重複しないよう変換
+app.util.remove_duplicates = (array) ->
+  array = array.filter( (x, i, self) ->
+    return self.indexOf(x) is i
+  )
+  return array
+
+# 配列を重複しないよう結合して、重複していたものの(元の配列の)要素番号とともに返す
+app.util.concat_without_duplicates = (array1, array2) ->
+  result = []
+  arrayRes = array1.concat(array2)
+  duplicates = []
+  arrayRes = arrayRes.filter( (x, i, self) ->
+    if self.indexOf(x) is i
+      return true
+    else
+      duplicate = [self.indexOf(x), i]
+      duplicates.push(duplicate)
+      return false
+  )
+  result.push(arrayRes, duplicates)
+  return result

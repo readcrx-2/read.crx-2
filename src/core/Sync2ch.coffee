@@ -243,6 +243,83 @@ app.sync2ch.apply_data = ($xml) ->
 
 
 # XML作成
+# History用に履歴をentityオブジェクトに変換
+app.sync2ch.convertHistoryToEntity = (history) ->
+  d = new $.Deferred
+  url = history.url
+  guessRes = app.URL.guessType(url)
+  if guessRes.type is "thread"
+    title = history.title
+    rt = Math.round((new Date(history.date)).getTime() / 1000)
+    app.read_state.get(url)
+      .done( (read_state) ->
+        last = read_state.last + 1
+        read = read_state.read + 1
+        count = read_state.received + 1
+        history = {
+          url: url
+          title: title
+          last: last
+          read: read
+          count: count
+          rt: rt
+        }
+        d.resolve(history)
+        return
+      )
+  else
+    d.reject()
+  return d.promise()
+
+# History用にentityオブジェクトの配列を生成する
+app.sync2ch.historyToEntities = ->
+  d = new $.Deferred
+  app.History.get_with_id(undefined, 40)
+    .done( (data) ->
+      synced_last_id = app.sync2ch.last_history_id
+      deferredConvertFuncArray = []
+      for history in data
+        if !synced_last_id? or history.rowid > synced_last_id
+          deferredConvertFuncArray.push(app.sync2ch.convertHistoryToEntity(history))
+      historyEntities = []
+      $.when.apply(null, deferredConvertFuncArray)
+        .then(  ->
+          # arguments[i][j]がi個目の関数のresolve内のj番目の引数
+          for i in [0..arguments.length]
+            historyEntities.push(arguments[i][0])
+          historyEntities = app.util.remove_duplicates(historyEntities)
+          return d.resolve(historyEntities)
+        )
+    )
+    .fail( ->
+      d.reject()
+      return
+    )
+  return d.promise()
+
+# open用の開いているタブをtempEntityオブジェクトに変換
+app.sync2ch.openToTempEntities = ->
+  d = new $.Deferred
+  openTempEntities = []
+  if localStorage.tab_state?
+    for tab in JSON.parse(localStorage.tab_state)
+      openTempEntity = {
+        tab: tab.url
+        title: tab.title
+        selected: tab.selected
+      }
+      openTempEntities.push(openTempEntity)
+  d.resolve(openTempEntities)
+  return d.promise()
+
+# entities生成
+app.sync2ch.makeEntities = (historyEntities, openTempEntities) ->
+  d = new $.Deferred
+
+  return d.promise()
+
+
+###
 # History用のEntitiesを構築する（中間）
 app.sync2ch.makeHistoryEntities = (i, history) ->
   d = new $.Deferred
@@ -315,6 +392,7 @@ app.sync2ch.finishXML = (xml, history_ids) ->
   #xml += "<thread_group category=\"test\" id_list=\"#{test_ids.toString()}\" struct=\"read.crx 2\" /> "
   return xml
 
+###
 
 # 実行
 #
@@ -363,6 +441,20 @@ app.config.ready( ->
     else if getFileName() is "zombie.html"
       # Entitiesの構築開始
       xml = "<entities>"
+      app.sync2ch.historyToEntities
+        .done( (historyEntities) ->
+          $.when(app.sync2ch.openToTempEntities)
+          ###
+          when内が複数のとき
+            .done( (openToTempEntities, postToTempEntities)->
+              openToTempEntities = openToTempEntities[]
+              postToTempEntities = postToTempEntities[]
+            )
+          ###
+            .done( (openTempEntities) ->
+
+            )
+        )
       ###
       app.sync2ch.makeHistory(xml)
       .done( (xml, history_ids) ->
@@ -374,6 +466,7 @@ app.config.ready( ->
         if sync2chResponse isnt ""
           app.sync2ch.apply(sync2chResponse,"",false)
       )
+      ###
       ###
       app.sync2ch.makeHistory(xml)
         .done((xml, history_ids) ->
@@ -388,6 +481,7 @@ app.config.ready( ->
              )
            return
         )
-      #
+      ###
+
   return
 )

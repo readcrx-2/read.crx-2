@@ -310,13 +310,6 @@ app.util.url_to_title = (url) ->
     )
   return d.promise()
 
-# 配列を重複を重複しないよう変換
-app.util.remove_duplicates = (array) ->
-  array = array.filter( (x, i, self) ->
-    return self.indexOf(x) is i
-  )
-  return array
-
 # 配列を重複しないよう結合して、重複していたものの(元の配列の)要素番号とともに返す
 # ※array1、array2内のみだけで重複している場合は想定していません
 # duplicate[重複した値, array1内の値, array2内の値]

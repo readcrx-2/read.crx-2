@@ -293,7 +293,7 @@ app.sync2ch.historyToEntity = (history) ->
         return
       )
   else
-    d.reject()
+    d.resolve()
   return d.promise()
 
 # History用にentityオブジェクトの配列を生成する
@@ -308,11 +308,15 @@ app.sync2ch.historyToEntities = ->
           deferredConvertFuncArray.push(app.sync2ch.historyToEntity(history))
       historyEntities = []
       $.when.apply(null, deferredConvertFuncArray)
-        .then(  ->
-          # arguments[i][j]がi個目の関数のresolve内のj番目の引数
+        .done( ->
+          console.log "apply"
+          # arguments[i][j]がi個目の関数のresolve内のj番目の引数(引数1のときは[j]がない)
           for i in [0..arguments.length - 1]
-            historyEntities.push(arguments[i][0])
-          return d.resolve(historyEntities)
+            if arguments[i]?
+              historyEntities.push(arguments[i])
+          console.log historyEntities
+          d.resolve(historyEntities)
+          return
         )
     )
     .fail( ->
@@ -370,7 +374,7 @@ app.sync2ch.openTempEntityToOpenEntity = (openTempEntity) ->
     }
     d.resolve(entity)
   else
-    d.reject()
+    d.resolve()
   return d.promise()
 
 # openTempEntitiesをopenEntitiesへ変換
@@ -382,10 +386,12 @@ app.sync2ch.openTempEntitiesToOpenEntities = (openTempEntities) ->
   openEntities = []
   $.when.apply(null, deferredConvertFuncArray)
     .then(  ->
-      # arguments[i][j]がi個目の関数のresolve内のj番目の引数
+      # arguments[i][j]がi個目の関数のresolve内のj番目の引数(引数1のときは[j]がない)
       for i in [0..arguments.length - 1]
-        openEntities.push(arguments[i][0])
-      return d.resolve(openEntities)
+        if arguments[i]
+          openEntities.push(arguments[i][0])
+      d.resolve(openEntities)
+      return
     )
   return d.promise()
 
@@ -453,13 +459,14 @@ app.config.ready( ->
   # 同期するかどうか
   cfg_sync_id = app.config.get("sync_id") || ""
   cfg_sync_pass = app.config.get("sync_pass") || ""
-  if cfg_sync_id isnt "" or cfg_sync_pass isnt ""
+  if cfg_sync_id isnt "" and cfg_sync_pass isnt ""
     # 起動時の同期
     if getFileName() is "index.html"
       # Sync2chからデータ取得
       # 取得するカテゴリの数だけ書く
       # <thread_group category=" -----カテゴリ---- " struct="read.crx 2" />
       console.log "do--- config ready"
+      ###
       app.sync2ch.open("""
                        <thread_group category="history" struct="read.crx 2" />
                        <thread_group category="open" struct="read.crx 2" />
@@ -487,14 +494,16 @@ app.config.ready( ->
       domP = new DOMParser()
       responseXML = domP.parseFromString(responseText, "text/xml")
       app.sync2ch.apply(responseXML, true)
-      ###
+      #
       console.log "finished"
     # 終了時同期
     else if getFileName() is "zombie.html"
-      app.sync2ch.historyToEntities
+      console.log "zombie"
+      app.sync2ch.historyToEntities()
         .done( (historyEntities) ->
           # historyからのentitiesとの被りのために
           # まずは処理が少ない分だけ取得
+          console.log "before openToTempEntities"
           $.when(app.sync2ch.openToTempEntities)
           return
         )
@@ -519,6 +528,7 @@ app.config.ready( ->
           console.log XML
         #
         )
+      console.log "finish"
       ###
           # 通信
           app.sync2ch.open(XML, false)

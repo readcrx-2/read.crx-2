@@ -287,8 +287,8 @@ app.util.os_detect = ->
 app.util.url_to_title = (url) ->
   d = new $.Deferred
   app.History.get_title(url)
-    .done((got_title) ->
-      history_title = got_title
+    .done((got) ->
+      history_title = got.title
       d.resolve(history_title)
       return
     )

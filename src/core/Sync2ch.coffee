@@ -309,21 +309,17 @@ app.sync2ch.historyToEntities = ->
       $.when.apply(null, deferredConvertFuncArray)
         .done( ->
           historyEntities = []
-          console.log "apply"
-          console.log arguments
           # arguments[i][j]がi個目の関数のresolve内のj番目の引数(引数1のときは[j]がない)
           for argument in arguments
             if argument?
               console.log argument
               historyEntities.push(argument)
-              console.log "hisE : " + historyEntities
           # なぜかこの処理をしないとうまく作動しない
-          fixedHistoryEntities = []
-          for historyEntity in historyEntities
-            fixedHistoryEntities.push(historyEntity)
-          d.resolve(fixedHistoryEntities)
+          historyEntitiesPacker = [historyEntities]
+          d.resolve(historyEntitiesPacker)
           return
         )
+      return
     )
     .fail( ->
       d.reject()
@@ -512,36 +508,38 @@ app.config.ready( ->
         .done( (historyEntities) ->
           # historyからのentitiesとの被りのために
           # まずは処理が少ない分だけ取得
-          historyE = historyEntities
+          console.log historyEntities[0]
+          historyE = historyEntities[0]
+          console.log historyE
           $.when(app.sync2ch.openToTempEntities)
+            .done( (openTempEntities) ->
+              ###
+              when内が複数のとき
+            .done( (openToTempEntities, postToTempEntities)->
+              #openToTempEntities = openToTempEntities[]
+              #postToTempEntities = postToTempEntities[]
+            )
+              ###
+              # entities構築
+              console.log openTempEntities
+              app.sync2ch.makeEntities(historyE, openTempEntities)
+              return
+              )
+            .then( (entities, historyIds, openIds) ->
+              console.log entities
+              console.log historyIds
+              console.log openIds
+              # XML生成
+              startXML = "<entities>"
+              entitiesXML = app.sync2ch.makeEntitiesXML(entities)
+              finishXML = app.sync2ch.finishXML(historyIds, openIds)
+              XML = startXML + entitiesXML + finishXML
+              console.log XML
+              return
+              #
+            )
           return
         )
-        .then( (openTempEntities) ->
-          ###
-        when内が複数のとき
-        .then( (openToTempEntities, postToTempEntities)->
-          #openToTempEntities = openToTempEntities[]
-          #postToTempEntities = postToTempEntities[]
-        )
-          ###
-          # entities構築
-          console.log openTempEntities
-          app.sync2ch.makeEntities(historyE, openTempEntities)
-          return
-        )
-        .then( (entities, historyIds, openIds) ->
-          console.log entities
-          console.log historyIds
-          console.log openIds
-          # XML生成
-          startXML = "<entities>"
-          entitiesXML = app.sync2ch.makeEntitiesXML(entities)
-          finishXML = app.sync2ch.finishXML(historyIds, openIds)
-          XML = startXML + entitiesXML + finishXML
-          console.log XML
-        #
-        )
-      console.log "finish"
       ###
           # 通信
           app.sync2ch.open(XML, false)
@@ -551,5 +549,6 @@ app.config.ready( ->
             app.sync2ch.apply(sync2chRes,"",false)
         )
       ###
+      console.log "finish"
   return
 )

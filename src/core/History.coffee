@@ -198,7 +198,7 @@ class app.History
   @param {String} url
   @return {Promise}
   ###
-  @get_title: (url) ->
+  @get_from_url: (url) ->
     if app.assert_arg("History.get_from_url", ["string"], arguments)
       return $.Deferred().reject().promise()
 

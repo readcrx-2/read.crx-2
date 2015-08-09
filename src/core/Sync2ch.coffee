@@ -292,6 +292,15 @@ app.sync2ch.historyToEntity = (history) ->
         d.resolve(entity)
         return
       )
+      .fail( ->
+        entity = {
+          type: "tr"
+          url: url
+          title: title
+        }
+        d.resolve(entity)
+        return
+      )
   else
     d.resolve(null)
   return d.promise()
@@ -307,15 +316,13 @@ app.sync2ch.historyToEntities = ->
         if !synced_last_id? or history.rowid > synced_last_id
           deferredConvertFuncArray.push(app.sync2ch.historyToEntity(history))
       $.when.apply(null, deferredConvertFuncArray)
-        .done( ->
+        .then( ->
           historyEntities = []
           # arguments[i][j]がi個目の関数のresolve内のj番目の引数(引数1のときは[j]がない)
           for argument in arguments
             if argument?
               historyEntities.push(argument)
-          # なぜかこの処理をしないとうまく作動しない
-          historyEntitiesPacker = [historyEntities]
-          d.resolve(historyEntitiesPacker)
+          d.resolve(historyEntities)
           return
         )
       return
@@ -329,8 +336,8 @@ app.sync2ch.historyToEntities = ->
 # open用の開いているタブをtempEntityオブジェクトに変換
 app.sync2ch.openToTempEntities = ->
   d = new $.Deferred
-  openTempEntities = []
   if localStorage.tab_state?
+    openTempEntities = []
     for tab in JSON.parse(localStorage.tab_state)
       if app.URL.guessType(tab.url).type is ("thread" or "board")
         openTempEntity = {
@@ -338,7 +345,11 @@ app.sync2ch.openToTempEntities = ->
           title: tab.title
         }
         openTempEntities.push(openTempEntity)
+        console.log openTempEntity
+    console.log openTempEntities
     d.resolve(openTempEntities)
+  else
+    d.resolve()
   return d.promise()
 
 # openTempEntityをopenEntityへ変換
@@ -364,6 +375,15 @@ app.sync2ch.openTempEntityToOpenEntity = (openTempEntity) ->
           read: read
           count: count
           rt: rt
+        }
+        d.resolve(entity)
+        return
+      )
+      .fail( ->
+        entity = {
+          type: "tr"
+          url: url
+          title: title
         }
         d.resolve(entity)
         return
@@ -399,6 +419,9 @@ app.sync2ch.openTempEntitiesToOpenEntities = (openTempEntities) ->
 
 # entities生成
 app.sync2ch.makeEntities = (historyEntities, openTempEntities) ->
+  console.log "makeEntities"
+  console.log historyEntities
+  console.log openTempEntities
   d = new $.Deferred
   hisELength = historyEntities.length
   # entities内のhistoryのもののid
@@ -407,9 +430,9 @@ app.sync2ch.makeEntities = (historyEntities, openTempEntities) ->
   duplicates = app.sync2ch.compareEntity(historyEntities, openTempEntities)
   duplicates = app.sync2ch.sortDuplicates(duplicates)
   # entities内のopenのもののid
-  openLastId = hisELength + openTempEntities.length - 1
+  openLastId = hisELength + openTempEntities.length - 1 - duplicates.length
   if hisELength > openLastId
-    openIds = null
+    openIds = []
   else
     openIds = [hisELength..openLastId]
   for duplicate, i in duplicates
@@ -417,6 +440,7 @@ app.sync2ch.makeEntities = (historyEntities, openTempEntities) ->
     openIds.push(duplicate[1])
   app.sync2ch.openTempEntitiesToOpenEntities(openTempEntities)
     .done( (openEntities) ->
+      console.log openEntities
       entities = historyEntities.concat(openEntities)
       d.resolve(entities, historyIds, openIds)
       return
@@ -430,7 +454,6 @@ app.sync2ch.makeEntitiesXML = (entities) ->
     last = entity.last + 1
     read = entity.read + 1
     count = entity.count + 1
-    rt = entity.rt
     xml += """
            <#{entity.type} id="#{i}"
             url="#{entity.url}"
@@ -442,8 +465,8 @@ app.sync2ch.makeEntitiesXML = (entities) ->
       xml += " now=\"#{read}\""
     if count?
       xml += " count=\"#{count}\""
-    if rt?
-      xml += " rt=\"#{rt}\""
+    if entity.rt?
+      xml += " rt=\"#{entity.rt}\""
     xml += " />"
   return xml
 
@@ -452,9 +475,9 @@ app.sync2ch.finishXML = (historyIds, openIds) ->
   # Entitiesの構築を終了する
   xml = "</entities>"
   # Thread_group
-  if historyIds isnt null
+  if historyIds.length > 0
     xml += "<thread_group category=\"history\" id_list=\"#{historyIds.toString()}\" struct=\"read.crx 2\" />"
-  if openIds isnt null
+  if openIds.length > 0
     xml += "<thread_group category=\"open\" id_list=\"#{openIds.toString()}\" struct=\"read.crx 2\" />"
   return xml
 
@@ -511,7 +534,7 @@ app.config.ready( ->
         .then( (historyEntities) ->
           # historyからのentitiesとの被りのために
           # まずは処理が少ない分だけ取得
-          historyE = historyEntities[0]
+          historyE = historyEntities
           console.log "history entities"
           console.log historyE
           return $.when(app.sync2ch.openToTempEntities())
@@ -540,6 +563,7 @@ app.config.ready( ->
           finishXML = app.sync2ch.finishXML(historyIds, openIds)
           XML = startXML + entitiesXML + finishXML
           console.log XML
+          return
         #
         )
       console.log "finish"

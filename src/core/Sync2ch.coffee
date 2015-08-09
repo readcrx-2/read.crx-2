@@ -404,7 +404,8 @@ app.sync2ch.makeEntities = (historyEntities, openTempEntities) ->
   duplicates = app.sync2ch.compareEntity(historyEntities, openTempEntities)
   duplicates = app.sync2ch.sortDuplicates(duplicates)
   # entities内のopenのもののid
-  openIds = [hisotryEntities..openEntities - 1]
+  hisELength = historyEntities.length
+  openIds = [hisELength..hisELength + openTempEntities.length - 1]
   for duplicate, i in duplicates
     openTempEntities = openTempEntities.splice(duplicate[2] - i)
     openIds.push(duplicate[1])
@@ -499,11 +500,13 @@ app.config.ready( ->
     # 終了時同期
     else if getFileName() is "zombie.html"
       console.log "zombie"
+      historyE = []
       app.sync2ch.historyToEntities()
         .done( (historyEntities) ->
           # historyからのentitiesとの被りのために
           # まずは処理が少ない分だけ取得
           console.log "before openToTempEntities"
+          historyE = historyEntities
           $.when(app.sync2ch.openToTempEntities)
           return
         )
@@ -511,12 +514,12 @@ app.config.ready( ->
           ###
         when内が複数のとき
         .then( (openToTempEntities, postToTempEntities)->
-          openToTempEntities = openToTempEntities[]
-          postToTempEntities = postToTempEntities[]
+          #openToTempEntities = openToTempEntities[]
+          #postToTempEntities = postToTempEntities[]
         )
           ###
           # entities構築
-          app.sync2ch.makeEntities(historyEntities, openTempEntities)
+          app.sync2ch.makeEntities(historyE, openTempEntities)
           return
         )
         .then( (entities, historyIds, openIds) ->

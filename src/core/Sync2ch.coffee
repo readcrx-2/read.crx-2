@@ -429,7 +429,7 @@ app.sync2ch.makeEntitiesXML = (entities) ->
   for entity, i in entities
     last = entity.last + 1
     read = entity.read + 1
-    count = entity.received + 1
+    count = entity.count + 1
     rt = entity.rt
     xml += """
            <#{entity.type} id="#{i}"

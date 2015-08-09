@@ -26,6 +26,28 @@ date_to_config_date = (date) ->
 getFileName = ->
   return window.location.href.split('/').pop()
 
+# entityオブジェクトの配列の重複比較
+app.sync2ch.compareEntity = (entities1, entities2) ->
+  entityUrls1 = []
+  entityUrls2 = []
+  for entity in entities1
+    entityUrls1.push(entity.url)
+  for entity in entities2
+    entityUrls2.push(entity.url)
+  res = app.util.concat_without_duplicates(entityUrls1, entityUrls2)
+  duplicates = res[1]
+  return duplicates
+
+# 重複結果の配列を第二引数の配列の配列番号基準として並び替え
+app.sync2ch.sortDuplicates = (duplicates) ->
+  duplicates.sort( (a, b) ->
+    x = a[2]
+    y = b[2]
+    if x > y then return 1
+    if x < y then return -1
+    return 0
+  )
+  return duplicates
 
 # Sync2ch
 # Sync2chにアクセスして取得する
@@ -226,7 +248,9 @@ app.sync2ch.apply_data = ($xml) ->
             selected: tab_selected
           })
       # タブを置き換え
+      console.log tabs
       for tab in data
+        console.log tab
         is_restored = true
         app.message.send("open", {
           url: tab.url
@@ -247,16 +271,17 @@ app.sync2ch.apply_data = ($xml) ->
 app.sync2ch.historyToEntity = (history) ->
   d = new $.Deferred
   url = history.url
-  guessRes = app.URL.guessType(url)
-  if guessRes.type is "thread"
-    title = history.title
+  title = history.title
+  type = app.URL.guessType(url).type
+  if type is "thread"
     rt = Math.round((new Date(history.date)).getTime() / 1000)
     app.read_state.get(url)
       .done( (read_state) ->
         last = read_state.last + 1
         read = read_state.read + 1
         count = read_state.received + 1
-        history = {
+        entity = {
+          type: "tr"
           url: url
           title: title
           last: last
@@ -264,7 +289,7 @@ app.sync2ch.historyToEntity = (history) ->
           count: count
           rt: rt
         }
-        d.resolve(history)
+        d.resolve(entity)
         return
       )
   else
@@ -303,9 +328,8 @@ app.sync2ch.openToTempEntities = ->
   if localStorage.tab_state?
     for tab in JSON.parse(localStorage.tab_state)
       openTempEntity = {
-        tab: tab.url
+        url: tab.url
         title: tab.title
-        selected: tab.selected
       }
       openTempEntities.push(openTempEntity)
   d.resolve(openTempEntities)
@@ -316,25 +340,37 @@ app.sync2ch.openTempEntityToOpenEntity = (openTempEntity) ->
   d = new $.Deferred
   url = openTempEntity.url
   title = openTempEntity.title
-  $.when(app.History.get_from_url(url), app.read_state.get(url))
-    .done( (history, read_state)
-      history = history[0]
-      read_state = read_state[0]
-      rt = Math.round((new Date(history.date)).getTime() / 1000)
-      last = read_state.last + 1
-      read = read_state.read + 1
-      count = read_state.received + 1
-      entity = {
-        url: url
-        title: title
-        last: last
-        read: read
-        count: count
-        rt: rt
-      }
-      d.resolve(entity)
-      return
-    )
+  type = app.URL.guessType(url).type
+  if type is "thread"
+    $.when(app.History.get_from_url(url), app.read_state.get(url))
+      .done( (history, read_state) ->
+        history = history[0]
+        read_state = read_state[0]
+        rt = Math.round((new Date(history.date)).getTime() / 1000)
+        last = read_state.last + 1
+        read = read_state.read + 1
+        count = read_state.received + 1
+        entity = {
+          type: "tr"
+          url: url
+          title: title
+          last: last
+          read: read
+          count: count
+          rt: rt
+        }
+        d.resolve(entity)
+        return
+      )
+  else if type is "board"
+    entity = {
+      type: "bd"
+      url: url
+      title: title
+    }
+    d.resolve(entity)
+  else
+    d.reject()
   return d.promise()
 
 # openTempEntitiesをopenEntitiesへ変換
@@ -374,29 +410,6 @@ app.sync2ch.makeEntities = (historyEntities, openTempEntities) ->
   )
   return d.promise()
 
-# entityオブジェクトの配列の重複比較
-app.sync2ch.compareEntity = (entities1, entities2) ->
-  entityUrls1 = []
-  entityUrls2 = []
-  for entity in entities1
-    entityUrls1.push(entity.url)
-  for entity in entities2
-    entityUrls2.push(entity.url)
-  res = app.util.concat_without_duplicates(entityUrls1, entityUrls2)
-  duplicates = res[1]
-  return duplicates
-
-# 重複結果の配列を第二引数の配列の配列番号基準として並び替え
-app.sync2ch.sortDuplicates = (duplicates) ->
-  duplicates.sort( (a, b) ->
-    x = a[2]
-    y = b[2]
-    if x > y return 1
-    if x < y return -1
-    return 0
-  )
-  return duplicates
-
 # entityオブジェクトの配列からentitiesのXMLを生成
 app.sync2ch.makeEntitiesXML = (entities) ->
   xml = ""
@@ -406,7 +419,7 @@ app.sync2ch.makeEntitiesXML = (entities) ->
     count = entity.received + 1
     rt = entity.rt
     xml += """
-           <th id="#{i}"
+           <#{entity.type} id="#{i}"
             url="#{entity.url}"
             title="#{title}"
            """
@@ -486,13 +499,13 @@ app.config.ready( ->
           return
         )
         .then( (openTempEntities) ->
-        ###
+          ###
         when内が複数のとき
         .then( (openToTempEntities, postToTempEntities)->
           openToTempEntities = openToTempEntities[]
           postToTempEntities = postToTempEntities[]
         )
-        ###
+          ###
           # entities構築
           app.sync2ch.makeEntities(historyEntities, openTempEntities)
           return
@@ -503,7 +516,10 @@ app.config.ready( ->
           entitiesXML = app.sync2ch.makeEntitiesXML(entities)
           finishXML = app.sync2ch.finishXML(historyIds, openIds)
           XML = startXML + entitiesXML + finishXML
-        ###
+          console.log XML
+        #
+        )
+      ###
           # 通信
           app.sync2ch.open(XML, false)
         ).then( (sync2chRes) ->
@@ -511,8 +527,6 @@ app.config.ready( ->
           if sync2chRes isnt ""
             app.sync2ch.apply(sync2chRes,"",false)
         )
-        ###
-        )
-        #
+      ###
   return
 )

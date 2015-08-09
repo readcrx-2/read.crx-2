@@ -293,7 +293,7 @@ app.sync2ch.historyToEntity = (history) ->
         return
       )
   else
-    d.resolve()
+    d.resolve(null)
   return d.promise()
 
 # History用にentityオブジェクトの配列を生成する
@@ -306,16 +306,22 @@ app.sync2ch.historyToEntities = ->
       for history in data
         if !synced_last_id? or history.rowid > synced_last_id
           deferredConvertFuncArray.push(app.sync2ch.historyToEntity(history))
-      historyEntities = []
       $.when.apply(null, deferredConvertFuncArray)
         .done( ->
+          historyEntities = []
           console.log "apply"
+          console.log arguments
           # arguments[i][j]がi個目の関数のresolve内のj番目の引数(引数1のときは[j]がない)
-          for i in [0..arguments.length - 1]
-            if arguments[i]?
-              historyEntities.push(arguments[i])
-          console.log historyEntities
-          d.resolve(historyEntities)
+          for argument in arguments
+            if argument?
+              console.log argument
+              historyEntities.push(argument)
+              console.log "hisE : " + historyEntities
+          # なぜかこの処理をしないとうまく作動しない
+          fixedHistoryEntities = []
+          for historyEntity in historyEntities
+            fixedHistoryEntities.push(historyEntity)
+          d.resolve(fixedHistoryEntities)
           return
         )
     )
@@ -336,6 +342,7 @@ app.sync2ch.openToTempEntities = ->
         title: tab.title
       }
       openTempEntities.push(openTempEntity)
+  console.log opemTempEntities
   d.resolve(openTempEntities)
   return d.promise()
 
@@ -374,7 +381,7 @@ app.sync2ch.openTempEntityToOpenEntity = (openTempEntity) ->
     }
     d.resolve(entity)
   else
-    d.resolve()
+    d.resolve(null)
   return d.promise()
 
 # openTempEntitiesをopenEntitiesへ変換
@@ -388,7 +395,7 @@ app.sync2ch.openTempEntitiesToOpenEntities = (openTempEntities) ->
     .then(  ->
       # arguments[i][j]がi個目の関数のresolve内のj番目の引数(引数1のときは[j]がない)
       for i in [0..arguments.length - 1]
-        if arguments[i]
+        if arguments[i]?
           openEntities.push(arguments[i][0])
       d.resolve(openEntities)
       return
@@ -505,7 +512,6 @@ app.config.ready( ->
         .done( (historyEntities) ->
           # historyからのentitiesとの被りのために
           # まずは処理が少ない分だけ取得
-          console.log "before openToTempEntities"
           historyE = historyEntities
           $.when(app.sync2ch.openToTempEntities)
           return
@@ -519,10 +525,14 @@ app.config.ready( ->
         )
           ###
           # entities構築
+          console.log openTempEntities
           app.sync2ch.makeEntities(historyE, openTempEntities)
           return
         )
         .then( (entities, historyIds, openIds) ->
+          console.log entities
+          console.log historyIds
+          console.log openIds
           # XML生成
           startXML = "<entities>"
           entitiesXML = app.sync2ch.makeEntitiesXML(entities)

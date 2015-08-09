@@ -332,13 +332,13 @@ app.sync2ch.openToTempEntities = ->
   openTempEntities = []
   if localStorage.tab_state?
     for tab in JSON.parse(localStorage.tab_state)
-      openTempEntity = {
-        url: tab.url
-        title: tab.title
-      }
-      openTempEntities.push(openTempEntity)
-  console.log openTempEntities
-  d.resolve(openTempEntities)
+      if app.URL.guessType(tab.url).type is ("thread" or "board")
+        openTempEntity = {
+          url: tab.url
+          title: tab.title
+        }
+        openTempEntities.push(openTempEntity)
+    d.resolve(openTempEntities)
   return d.promise()
 
 # openTempEntityをopenEntityへ変換
@@ -400,23 +400,27 @@ app.sync2ch.openTempEntitiesToOpenEntities = (openTempEntities) ->
 # entities生成
 app.sync2ch.makeEntities = (historyEntities, openTempEntities) ->
   d = new $.Deferred
+  hisELength = historyEntities.length
   # entities内のhistoryのもののid
-  historyIds = [0..historyEntities - 1]
+  historyIds = [0..hisELength - 1]
   # openをhistoryと比較してentitiesを出力
   duplicates = app.sync2ch.compareEntity(historyEntities, openTempEntities)
   duplicates = app.sync2ch.sortDuplicates(duplicates)
   # entities内のopenのもののid
-  hisELength = historyEntities.length
-  openIds = [hisELength..hisELength + openTempEntities.length - 1]
+  openLastId = hisELength + openTempEntities.length - 1
+  if hisELength > openLastId
+    openIds = null
+  else
+    openIds = [hisELength..openLastId]
   for duplicate, i in duplicates
     openTempEntities = openTempEntities.splice(duplicate[2] - i)
     openIds.push(duplicate[1])
   app.sync2ch.openTempEntitiesToOpenEntities(openTempEntities)
-  .done( (openEntities) ->
-    entities = historyEntities.concat(openEntities)
-    d.resolve(entities, historyIds, openIds)
-    return
-  )
+    .done( (openEntities) ->
+      entities = historyEntities.concat(openEntities)
+      d.resolve(entities, historyIds, openIds)
+      return
+    )
   return d.promise()
 
 # entityオブジェクトの配列からentitiesのXMLを生成
@@ -430,7 +434,7 @@ app.sync2ch.makeEntitiesXML = (entities) ->
     xml += """
            <#{entity.type} id="#{i}"
             url="#{entity.url}"
-            title="#{title}"
+            title="#{entity.title}"
            """
     if last?
       xml += " read=\"#{last}\""
@@ -448,10 +452,10 @@ app.sync2ch.finishXML = (historyIds, openIds) ->
   # Entitiesの構築を終了する
   xml = "</entities>"
   # Thread_group
-  xml += """
-         <thread_group category="history" id_list="#{historyIds.toString()}" struct="read.crx 2" />
-         <thread_group category="open" id_list="#{openIds.toString()}" struct="read.crx 2" />
-         """
+  if historyIds isnt null
+    xml += "<thread_group category=\"history\" id_list=\"#{historyIds.toString()}\" struct=\"read.crx 2\" />"
+  if openIds isnt null
+    xml += "<thread_group category=\"open\" id_list=\"#{openIds.toString()}\" struct=\"read.crx 2\" />"
   return xml
 
 
@@ -504,7 +508,7 @@ app.config.ready( ->
       console.log "zombie"
       historyE = []
       app.sync2ch.historyToEntities()
-        .done( (historyEntities) ->
+        .then( (historyEntities) ->
           # historyからのentitiesとの被りのために
           # まずは処理が少ない分だけ取得
           historyE = historyEntities[0]
@@ -516,8 +520,8 @@ app.config.ready( ->
           ###
         when内が複数のとき
         .then( (openToTempEntities(), postToTempEntities())->
-          #openToTempEntities = openToTempEntities[]
-          #postToTempEntities = postToTempEntities[]
+          #openToTempEntities = openToTempEntities[0]
+          #postToTempEntities = postToTempEntities[0]
         )
           ###
           # entities構築

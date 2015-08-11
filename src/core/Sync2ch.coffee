@@ -313,6 +313,7 @@ app.sync2ch.historyToEntity = (history) ->
           type: "tr"
           url: url
           title: title
+          rt: rt
         }
         d.resolve(entity)
         return
@@ -470,22 +471,15 @@ app.sync2ch.makeEntities = (historyEntities, openTempEntities) ->
 app.sync2ch.makeEntitiesXML = (entities) ->
   xml = ""
   for entity, i in entities
-    if entity.last? then last = entity.last + 1
-    if entity.read? then read = entity.read + 1
-    if entity.count? then count = entity.count + 1
     xml += """
            <#{entity.type} id="#{i}"
             url="#{entity.url}"
             title="#{entity.title}"
            """
-    if last?
-      xml += " read=\"#{last}\""
-    if read?
-      xml += " now=\"#{read}\""
-    if count?
-      xml += " count=\"#{count}\""
-    if entity.rt?
-      xml += " rt=\"#{entity.rt}\""
+    if entity.last? then xml += " read=\"#{entity.last}\""
+    if entity.read? then xml += " now=\"#{entity.read}\""
+    if entity.count? then xml += " count=\"#{entity.count}\""
+    if entity.rt? then xml += " rt=\"#{entity.rt}\""
     xml += " />"
   return xml
 
@@ -559,13 +553,6 @@ app.config.ready( ->
           return $.when(app.sync2ch.openToTempEntities())
         )
         .then( (openTempEntities) ->
-          ###
-        when内が複数のとき
-        .then( (openToTempEntities(), postToTempEntities())->
-          #openToTempEntities = openToTempEntities[0]
-          #postToTempEntities = postToTempEntities[0]
-        )
-          ###
           # entities構築
           console.log "open temp entities"
           console.log openTempEntities
@@ -583,10 +570,7 @@ app.config.ready( ->
           XML = startXML + entitiesXML + finishXML
           console.log XML
           return
-        #
-        )
-      console.log "finish"
-      ###
+          ###
           # 通信
           return app.sync2ch.open(XML, false)
         ).then( (sync2chRes) ->
@@ -594,6 +578,8 @@ app.config.ready( ->
           if sync2chRes isnt ""
             app.sync2ch.apply(sync2chRes,"",false)
         )
-      ###
+          ###
+        )
+      console.log "finish"
   return
 )

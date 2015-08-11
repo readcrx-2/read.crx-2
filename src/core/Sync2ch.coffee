@@ -208,9 +208,9 @@ app.sync2ch.apply_history = ($xml, $entities) ->
           # 既読情報管理システムへ送る
           read_state =
             url: thread_url
-            last: $thread.attr("read") - 1 # Sync2chではレス数を0から開始するため
-            read: $thread.attr("now") - 1
-            received: $thread.attr("count") - 1
+            last: $thread.attr("read") + 1 # Sync2chではレス数を0から開始するため
+            read: $thread.attr("now") + 1
+            received: $thread.attr("count") + 1
           app.read_state.set(read_state, false)
           # 履歴ページにもデータを送る
           app.util.url_to_title(thread_url)
@@ -293,9 +293,10 @@ app.sync2ch.historyToEntity = (history) ->
     rt = Math.round((new Date(history.date)).getTime() / 1000)
     app.read_state.get(url)
       .done( (read_state) ->
-        last = read_state.last + 1
-        read = read_state.read + 1
-        count = read_state.received + 1
+        # Sync2chではレス番号が0からのため
+        last = read_state.last - 1
+        read = read_state.read - 1
+        count = read_state.received - 1
         entity = {
           type: "tr"
           url: url
@@ -379,9 +380,10 @@ app.sync2ch.openTempEntityToOpenEntity = (openTempEntity) ->
       )
       .done( (history, read_state) ->
         rt = Math.round((new Date(history.date)).getTime() / 1000)
-        last = read_state.last + 1
-        read = read_state.read + 1
-        count = read_state.received + 1
+        # Sync2chではレス番号が0からのため
+        last = read_state.last - 1
+        read = read_state.read - 1
+        count = read_state.received - 1
         entity = {
           type: "tr"
           url: url

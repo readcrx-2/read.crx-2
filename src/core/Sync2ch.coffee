@@ -454,9 +454,9 @@ app.sync2ch.makeEntities = (historyEntities, openTempEntities) ->
 app.sync2ch.makeEntitiesXML = (entities) ->
   xml = ""
   for entity, i in entities
-    last = entity.last + 1
-    read = entity.read + 1
-    count = entity.count + 1
+    if entity.last? then last = entity.last + 1
+    if entity.read? then read = entity.read + 1
+    if entity.count? then count = entity.count + 1
     xml += """
            <#{entity.type} id="#{i}"
             url="#{entity.url}"

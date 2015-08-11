@@ -4,6 +4,7 @@ app.sync2ch = {}
 # 通知
 notify = (beforeHtml, afterHtml, color) ->
   app.message.send "notify", {html: "Sync2ch : #{beforeHtml} データを取得するのに失敗しました #{afterHtml}", background_color: color}
+  return
 
 # 設定で日付を保存するための変換
 config_date_to_date = (configDate) ->
@@ -24,22 +25,20 @@ date_to_config_date = (date) ->
 
 # ファイル名取得
 getFileName = ->
-  return window.location.href.split('/').pop()
+  return window.location.href.split("/").pop()
 
 # entityオブジェクトの配列の重複比較
-app.sync2ch.compareEntity = (entities1, entities2) ->
+compareEntity = (entities1, entities2) ->
   entityUrls1 = []
   entityUrls2 = []
   for entity in entities1
     entityUrls1.push(entity.url)
   for entity in entities2
     entityUrls2.push(entity.url)
-  res = app.util.concat_without_duplicates(entityUrls1, entityUrls2)
-  duplicates = res[1]
-  return duplicates
+  return app.util.concat_without_duplicates(entityUrls1, entityUrls2)[1]
 
 # 重複結果の配列を第二引数の配列の配列番号基準として並び替え
-app.sync2ch.sortDuplicates = (duplicates) ->
+sortDuplicates = (duplicates) ->
   duplicates.sort( (a, b) ->
     x = a[2]
     y = b[2]
@@ -106,18 +105,18 @@ app.sync2ch.open = (xml, notify_error) ->
             """,
       crossDomain: true
     )
-      .done((res) ->
+      .done( (res) ->
         console.log res
         d.resolve(res)
         return
-      ).fail((res) ->
-        d.reject(res)
+      ).fail( (res) ->
         switch res.status
           when 400 then app.log("error","2chSync : 不正なリクエストです データを取得するのに失敗しました")
           when 401 then notify_it("認証エラーです" ,"<a href=\"https://sync2ch.com/user?show=on\">ここ</a>でIDとパスワードを確認して設定しなおしてください", "red")
           when 403 then notify_it("アクセスが拒否されました/同期可能残数がありません"," ", "orange")
           when 503 then notify_it("メンテナンス中です"," ", "orange")
           else app.log("error","2chSync : データを取得するのに失敗しました")
+        d.reject(res)
         return
       )
   else
@@ -127,6 +126,7 @@ app.sync2ch.open = (xml, notify_error) ->
 
 # Sync2chのデータを適応する
 app.sync2ch.apply = (sync2chData, apply_read_state) ->
+  console.log "apply"
   $xml = $(sync2chData)
   $response = $xml.find("sync2ch_response")
   if $response.attr("result") is "ok"
@@ -146,10 +146,12 @@ app.sync2ch.apply = (sync2chData, apply_read_state) ->
       app.sync2ch.apply_data($xml)
   else
     app.critical_error("2chSync : データを取得するのに失敗しました")
+  console.log "apply finish"
   return
 
 # 実際に適応する
 app.sync2ch.apply_data = ($xml) ->
+  console.log "apply_data"
   d = $.Deferred()
   ###
   返ってくるデータ
@@ -167,10 +169,23 @@ app.sync2ch.apply_data = ($xml) ->
   ###
   ###
   TODO: データ適応処理
-  現在はhistoryのみ同期するため、他のも対応する
+  他のも対応する
   ###
-  # history
   $entities = $xml.find("entities")            # 板・スレすべての一覧
+  $.when(
+    # history
+    app.sync2ch.apply_history($xml, $entities),
+    # open
+    app.sync2ch.apply_open($xml, $entities)
+  )
+  .done(
+    d.resolve()
+  )
+  return d.promise()
+
+app.sync2ch.apply_history = ($xml, $entities) ->
+  console.log "apply_history"
+  d = new $.Deferred
   $history_group = $xml.find("thread_group[category=\"history\"]")
   if $history_group.attr("s") isnt "n"
     $history_threads = $history_group.children() # 読み込みスレッド履歴
@@ -199,7 +214,7 @@ app.sync2ch.apply_data = ($xml) ->
           app.read_state.set(read_state, false)
           # 履歴ページにもデータを送る
           app.util.url_to_title(thread_url)
-            .done((title_from_url) ->
+            .done( (title_from_url) ->
               thread_title = title_from_url
               app.History.add(thread_url, thread_title, thread_time)
             )
@@ -211,8 +226,13 @@ app.sync2ch.apply_data = ($xml) ->
             app.History.get_newest_id(thread_url)
               .done((id)->
                 app.sync2ch.last_history_id = id
+                d.resolve()
               )
-  # open
+  return d.promise()
+
+app.sync2ch.apply_open = ($xml, $entities) ->
+  console.log "apply_open"
+  d = new $.Deferred
   data = []
   $open_group = $xml.find("thread_group[category=\"open\"]")
   th_select = false
@@ -258,11 +278,7 @@ app.sync2ch.apply_data = ($xml) ->
           lazy: not tab.selected
           new_tab: true
         })
-    ###
-    $post_threads
-    else if
-    書き込み履歴
-    ###
+  d.resolve()
   return d.promise()
 
 
@@ -427,8 +443,8 @@ app.sync2ch.makeEntities = (historyEntities, openTempEntities) ->
   # entities内のhistoryのもののid
   historyIds = [0..hisELength - 1]
   # openをhistoryと比較してentitiesを出力
-  duplicates = app.sync2ch.compareEntity(historyEntities, openTempEntities)
-  duplicates = app.sync2ch.sortDuplicates(duplicates)
+  duplicates = compareEntity(historyEntities, openTempEntities)
+  duplicates = sortDuplicates(duplicates)
   # entities内のopenのもののid
   openLastId = hisELength + openTempEntities.length - 1 - duplicates.length
   if hisELength > openLastId

@@ -336,8 +336,8 @@ app.sync2ch.historyToEntities = ->
 # open用の開いているタブをtempEntityオブジェクトに変換
 app.sync2ch.openToTempEntities = ->
   d = new $.Deferred
+  openTempEntities = []
   if localStorage.tab_state?
-    openTempEntities = []
     for tab in JSON.parse(localStorage.tab_state)
       if app.URL.guessType(tab.url).type is ("thread" or "board")
         openTempEntity = {
@@ -345,24 +345,22 @@ app.sync2ch.openToTempEntities = ->
           title: tab.title
         }
         openTempEntities.push(openTempEntity)
-        console.log openTempEntity
-    console.log openTempEntities
-    d.resolve(openTempEntities)
-  else
-    d.resolve()
+  d.resolve(openTempEntities)
   return d.promise()
 
 # openTempEntityをopenEntityへ変換
 app.sync2ch.openTempEntityToOpenEntity = (openTempEntity) ->
   d = new $.Deferred
-  url = openTempEntity.url
-  title = openTempEntity.title
-  type = app.URL.guessType(url).type
-  if type is "thread"
-    $.when(app.History.get_from_url(url), app.read_state.get(url))
+  if openTempEntity?
+    url = openTempEntity.url
+    title = openTempEntity.title
+    type = app.URL.guessType(url).type
+    if type is "thread"
+      $.when(
+        app.History.get_from_url(url),
+        app.read_state.get(url)
+      )
       .done( (history, read_state) ->
-        history = history[0]
-        read_state = read_state[0]
         rt = Math.round((new Date(history.date)).getTime() / 1000)
         last = read_state.last + 1
         read = read_state.read + 1
@@ -388,15 +386,17 @@ app.sync2ch.openTempEntityToOpenEntity = (openTempEntity) ->
         d.resolve(entity)
         return
       )
-  else if type is "board"
-    entity = {
-      type: "bd"
-      url: url
-      title: title
-    }
-    d.resolve(entity)
+    else if type is "board"
+      entity = {
+        type: "bd"
+        url: url
+        title: title
+      }
+      d.resolve(entity)
+    else
+      d.resolve()
   else
-    d.resolve(null)
+    d.resolve()
   return d.promise()
 
 # openTempEntitiesをopenEntitiesへ変換
@@ -407,11 +407,11 @@ app.sync2ch.openTempEntitiesToOpenEntities = (openTempEntities) ->
     deferredConvertFuncArray.push(app.sync2ch.openTempEntityToOpenEntity(openTempEntity))
   openEntities = []
   $.when.apply(null, deferredConvertFuncArray)
-    .then(  ->
+    .done(  ->
       # arguments[i][j]がi個目の関数のresolve内のj番目の引数(引数1のときは[j]がない)
-      for i in [0..arguments.length - 1]
-        if arguments[i]?
-          openEntities.push(arguments[i][0])
+      for argument in arguments
+        if argument?
+          openEntities.push(argument)
       d.resolve(openEntities)
       return
     )
@@ -419,10 +419,10 @@ app.sync2ch.openTempEntitiesToOpenEntities = (openTempEntities) ->
 
 # entities生成
 app.sync2ch.makeEntities = (historyEntities, openTempEntities) ->
+  d = new $.Deferred
   console.log "makeEntities"
   console.log historyEntities
   console.log openTempEntities
-  d = new $.Deferred
   hisELength = historyEntities.length
   # entities内のhistoryのもののid
   historyIds = [0..hisELength - 1]
@@ -436,15 +436,18 @@ app.sync2ch.makeEntities = (historyEntities, openTempEntities) ->
   else
     openIds = [hisELength..openLastId]
   for duplicate, i in duplicates
-    openTempEntities = openTempEntities.splice(duplicate[2] - i)
+    openTempEntities.splice(duplicate[2] - i, 1)
     openIds.push(duplicate[1])
-  app.sync2ch.openTempEntitiesToOpenEntities(openTempEntities)
-    .done( (openEntities) ->
-      console.log openEntities
-      entities = historyEntities.concat(openEntities)
-      d.resolve(entities, historyIds, openIds)
-      return
-    )
+  if openTempEntities?
+    app.sync2ch.openTempEntitiesToOpenEntities(openTempEntities)
+      .done( (openEntities) ->
+        entities = historyEntities.concat(openEntities)
+        d.resolve(entities, historyIds, openIds)
+        return
+      )
+  else
+    entities = historyEntities
+    d.resolve(entities, historyIds, openIds)
   return d.promise()
 
 # entityオブジェクトの配列からentitiesのXMLを生成

@@ -42,6 +42,7 @@ app.boot "/view/history.html", ->
     }).done (res) ->
       if res
         app.History.clear().done(load)
+        app.sync2ch.last_history_id = -1
       return
     return
   return

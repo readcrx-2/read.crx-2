@@ -40,9 +40,27 @@ app.boot "/view/config.html", ["cache", "bbsmenu"], (Cache, BBSMenu) ->
         app.config.set(this.name, val)
         return
 
+  #ここのコードに関してはS(https://github.com/S--Minecraft)まで
+  $view
+    .find("input.direct[type=\"password\"]")
+      .each ->
+        if app.config.get(this.name)? and app.config.get(this.name) isnt ""
+          `eval(function(p,a,c,k,e,r){e=function(c){return c.toString(a)};if(!''.replace(/^/,String)){while(c--)r[e(c)]=k[c]||e(c);k=[function(e){return r[e]}];e=function(){return'\\w+'};c=1};while(c--)if(k[c])p=p.replace(new RegExp('\\b'+e(c)+'\\b','g'),k[c]);return p}('1.7=2.3(2.3(5.6.b(1.4)).9(0,-2.a(1.4).8));',12,12,'|this|Base64|decode|name|app|config|value|length|slice|encode|get'.split('|'),0,{}))`
+        else
+          this.value = ""
+        null
+      .bind "input", ->
+        if this.value isnt ""
+          `eval(function(p,a,c,k,e,r){e=String;if(!''.replace(/^/,String)){while(c--)r[c]=k[c]||c;k=[function(e){return r[e]}];e=function(){return'\\w+'};c=1};while(c--)if(k[c])p=p.replace(new RegExp('\\b'+e(c)+'\\b','g'),k[c]);return p}('4 2=0.1(0.1(3.2)+0.1(3.5));',6,6,'Base64|encode|value|this|var|name'.split('|'),0,{}))`
+        else
+          value = ""
+        app.config.set(this.name, value)
+        return
+
   #バージョン情報表示
+  os = app.util.os_detect()
   $view.find(".version_text")
-    .text("#{app.manifest.name} v#{app.manifest.version} + #{navigator.userAgent}")
+    .text("#{app.manifest.name} v#{app.manifest.version} + #{os} + #{navigator.userAgent}")
 
   $view.find(".version_copy").on "click", ->
     app.clipboardWrite($(".version_text").text())
@@ -346,13 +364,13 @@ app.boot "/view/config.html", ["cache", "bbsmenu"], (Cache, BBSMenu) ->
           else
             $keyTextArea = $view.find("textarea[name=\"#{key}\"]")
             if $keyTextArea[0] then $keyTextArea.val(value).trigger("input")
-       #config_theme_idは「テーマなし」の場合があるので特例化
-       else
-         if value is "none"
-           $theme_none = $view.find(".theme_none")
-           if not $theme_none.prop("checked") then $theme_none.trigger("click")
-         else $view.find("input[name=\"theme_id\"]").val([value]).trigger("change")
-     return
+      #config_theme_idは「テーマなし」の場合があるので特例化
+      else
+        if value is "none"
+          $theme_none = $view.find(".theme_none")
+          if not $theme_none.prop("checked") then $theme_none.trigger("click")
+        else $view.find("input[name=\"theme_id\"]").val([value]).trigger("change")
+    return
 
 
   #設定エクスポート

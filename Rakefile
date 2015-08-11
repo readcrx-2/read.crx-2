@@ -19,6 +19,7 @@ task :default => [
   "zombie:build",
   "write:build",
   "test:build",
+  "base64:build",
   "jquery:build",
   "rmappjs"
 ]
@@ -26,6 +27,7 @@ task :default => [
 task :clean do
   rm_f "./read.crx_2.zip"
   rm_rf "debug"
+  Rake::Task["base64:clean"].invoke
   Rake::Task["jquery:clean"].invoke
 end
 
@@ -388,6 +390,26 @@ namespace :test do
   file_copy "debug/test/qunit/qunit-step.js", "lib/qunit/addons/step/qunit-step.js"
 
   file_coffee "debug/test/test.js", FileList["src/test/test_*.coffee"]
+end
+
+namespace :base64 do
+  task :build => "debug/lib/js-base64/base64.min.js"
+
+  task :clean do
+    rm_rf "debug/lib/js-base64"
+    cd "lib/js-base64" do
+      sh "git checkout -f"
+    end
+  end
+
+  file "debug/lib/js-base64/base64.min.js" => "lib/js-base64/base64.min.js" do
+    Rake::Task["base64:clean"].invoke
+    cd "lib/js-base64" do
+      sh "git apply ../js-base64_license.patch --whitespace=fix"
+    end
+    mkdir_p "debug/lib/js-base64"
+    cp "lib/js-base64/base64.min.js", "debug/lib/js-base64/base64.min.js"
+  end
 end
 
 namespace :jquery do

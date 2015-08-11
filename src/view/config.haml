@@ -8,6 +8,7 @@
     %link(rel="stylesheet" href="/ui.css?v=#{MANIFEST["version"]}")
     %link(rel="stylesheet" href="config.css?v=#{MANIFEST["version"]}")
     %script(src="/lib/jquery/jquery.min.js?v=#{MANIFEST["version"]}")
+    %script(src="/lib/js-base64/base64.min.js?v=#{MANIFEST["version"]}")
     %script(src="/ui.js?v=#{MANIFEST["version"]}")
     %script(src="/app.js?v=#{MANIFEST["version"]}")
     %script(src="module.js?v=#{MANIFEST["version"]}")
@@ -165,6 +166,32 @@
         %h2 忍法帖
         %div
           .ninja_info
+
+      %section
+        %h2 同期(Sync2ch)
+        %div
+          %table
+            %tbody
+              %tr
+                %td
+                  ID
+                %td
+                  %input.direct(type="text" name="sync_id")
+              %tr
+                %td
+                  API接続用パスワード
+                %td
+                  %input.direct(type="password" name="sync_pass")
+              %tr
+                %td
+                  端末名
+                %td
+                  %input.direct(type="text" name="sync_device")
+              %tr
+                %td(colspan="2")
+                  IDとパスワードを両方空欄にすると同期されません(端末名の有無は無関係です)
+                  %br
+                  端末名の例: PC-1, 私のパソコン, 個人用PC, 1
 
       %section
         %h2 データ

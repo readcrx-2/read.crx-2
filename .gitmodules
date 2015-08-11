@@ -16,3 +16,6 @@
 [submodule "lib/DefinitelyTyped"]
 	path = lib/DefinitelyTyped
 	url = https://github.com/borisyankov/DefinitelyTyped.git
+[submodule "lib/js-base64"]
+	path = lib/js-base64
+	url = https://github.com/dankogai/js-base64.git

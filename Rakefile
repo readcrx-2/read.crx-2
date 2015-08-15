@@ -43,7 +43,9 @@ task :pack do
     cp_r "debug", "#{tmpdir}/debug"
     rm_r "#{tmpdir}/debug/test"
 
-    if RUBY_PLATFORM.include?("darwin")||RUBY_PLATFORM.include?("linux")
+    if defined?(ENV["read.crx-2-pem-path"]) and ENV["read.crx-2-pem-path"] != " "
+      pem_path = ENV["read.crx-2-pem-path"]
+    else
       puts "秘密鍵のパスを入力して下さい"
       pem_path = STDIN.gets
     end

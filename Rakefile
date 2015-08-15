@@ -63,6 +63,7 @@ task :pack do
 end
 
 task :scan do
+  sh "freshclam"
   sh "clamscan -ir debug"
 end
 

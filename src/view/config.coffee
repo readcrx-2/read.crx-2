@@ -176,7 +176,7 @@ app.boot "/view/config.html", ["cache", "bbsmenu"], (Cache, BBSMenu) ->
 
     #履歴削除ボタン
     $clear_button.on "click", ->
-      $clear_button.remove()
+      $clear_button.hide()
       $status.text("削除中")
 
       $.when(app.History.clear(), app.read_state.clear())
@@ -216,15 +216,13 @@ app.boot "/view/config.html", ["cache", "bbsmenu"], (Cache, BBSMenu) ->
         .removeClass("done fail select")
         .addClass("loading")
         .text("更新中")
-      $.Deferred (d) ->
-        historySet(historyFile)#適応処理
-        .done( ->
-          d.resolve()
-        )
+      historySet(historyFile)#適応処理
       .done ->
-        $his_status
-          .addClass("done")
-          .text("インポート完了")
+        app.History.count().done (count) ->
+          $his_status
+            .addClass("done")
+            .text("#{count}件 インポート完了")
+          $view.find(".history_clear").show()
         return
       .fail ->
         $his_status
@@ -239,7 +237,6 @@ app.boot "/view/config.html", ["cache", "bbsmenu"], (Cache, BBSMenu) ->
 
   #履歴を実際にインポートする
   historySet = (text) ->
-    d = new $.Deferred
     inputObj = JSON.parse(text)
     history_array  = inputObj.history
     read_state_array  = inputObj.read_state
@@ -248,12 +245,7 @@ app.boot "/view/config.html", ["cache", "bbsmenu"], (Cache, BBSMenu) ->
       deferred_add_func_array.push(app.History.add(his.url, his.title, his.date))
     for rs in read_state_array
       deferred_add_func_array.push(app.read_state.set(rs))
-    $.when.apply(null, deferred_add_func_array)
-      .then( ->
-        d.resolve()
-        return
-      )
-    return d.promise()
+    return $.when.apply(null, deferred_add_func_array)
 
   #履歴エクスポート
   $view.find(".history_export").on "click", ->

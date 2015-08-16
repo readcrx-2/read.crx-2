@@ -211,7 +211,7 @@ app.sync2ch.apply_history = ($xml, $entities) ->
             last: $thread.attr("read") + 1 # Sync2chではレス数を0から開始するため
             read: $thread.attr("now") + 1
             received: $thread.attr("count") + 1
-          app.read_state.set(read_state, false)
+          app.read_state.set(read_state)
           # 履歴ページにもデータを送る
           app.util.url_to_title(thread_url)
             .done( (title_from_url) ->
@@ -511,7 +511,7 @@ app.config.ready( ->
       # 取得するカテゴリの数だけ書く
       # <thread_group category=" -----カテゴリ---- " struct="read.crx 2" />
       console.log "do--- config ready"
-      #
+      ###
       app.sync2ch.open("""
                        <thread_group category="history" struct="read.crx 2" />
                        <thread_group category="open" struct="read.crx 2" />
@@ -539,7 +539,7 @@ app.config.ready( ->
       domP = new DOMParser()
       responseXML = domP.parseFromString(responseText, "text/xml")
       app.sync2ch.apply(responseXML, true)
-      ###
+      #
       console.log "finished"
     # 終了時同期
     else if getFileName() is "zombie.html"
@@ -571,15 +571,16 @@ app.config.ready( ->
           finishXML = app.sync2ch.finishXML(historyIds, openIds)
           XML = startXML + entitiesXML + finishXML
           console.log XML
-          #return
           #
+          return
+          ###
           # 通信
           return app.sync2ch.open(XML, false)
         ).then( (sync2chRes) ->
           # 同期可能残数などを取得して保存
           if sync2chRes isnt ""
             app.sync2ch.apply(sync2chRes,"",false)
-          #
+          ###
         )
       console.log "finish"
   return

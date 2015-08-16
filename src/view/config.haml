@@ -173,6 +173,11 @@
             閲覧履歴:
             %span.history_status
             %button.history_clear(type="button") 削除
+            %button.history_export(type="button") エクスポート
+            %button.history_file_show(type="button") ファイル読み込み
+            %input(type="file" class="history_file_hide hide" accept=".json")
+            %button.history_import(type="button") インポート
+            インポートすると履歴に追加されます(大量にインポートすると時間がかかります)
           .cache
             キャッシュ:
             %span.cache_status

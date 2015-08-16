@@ -109,6 +109,32 @@ class app.History
     .promise()
 
   ###*
+  @method get_all
+  @param {Number} offset
+  @param {Number} limit
+  @return {Promise}
+  ###
+  @get_all: () ->
+    @_openDB().pipe((db) -> $.Deferred (d) ->
+      db.readTransaction(
+        (transaction) ->
+          transaction.executeSql(
+            "SELECT * FROM History"
+            []
+            (transaction, result) ->
+              d.resolve(result.rows)
+              return
+          )
+          return
+        ->
+          app.log("error", "History.get_all: トランザクション中断")
+          d.reject()
+          return
+      )
+    )
+    .promise()
+
+  ###*
   @method count
   @return {Promise}
   ###

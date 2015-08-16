@@ -587,6 +587,12 @@ class app.view.TabContentView extends app.view.PaneContentView
 
             chrome.tabs.create url: url
             return
+
+      return
+
+    # dat落ちを表示/非表示
+    @$element.find(".button_toggle_dat").on "click", =>
+      @$element.find(".expired").toggleClass("expired_hide")
       return
 
     # タイトルをコピー

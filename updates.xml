@@ -3,4 +3,7 @@
   <app appid='eaibgccboimjelecbmgfjhakekfdcpeh'>
     <updatecheck codebase='http://readcrx-2.github.io/read.crx-2/read.crx_2.0.94.8.crx' version='2.0.94.8' />
   </app>
+  <app appid='mglmonflpdcckjdpjnpenfdmkbmggmgm'>
+    <updatecheck codebase='http://readcrx-2.github.io/read.crx-2/read.crx_2.0.94.8.1.crx' version='2.0.94.8.1' />
+  </app>
 </gupdate>

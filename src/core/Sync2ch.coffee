@@ -208,9 +208,9 @@ app.sync2ch.apply_history = ($xml, $entities) ->
           # 既読情報管理システムへ送る
           read_state =
             url: thread_url
-            last: $thread.attr("read") + 1 # Sync2chではレス数を0から開始するため
-            read: $thread.attr("now") + 1
-            received: $thread.attr("count") + 1
+            last: parseInt($thread.attr("read"), 10) + 1 # Sync2chではレス数を0から開始するため
+            read: parseInt($thread.attr("now"), 10) + 1
+            received: parseInt($thread.attr("count"), 10) + 1
           app.read_state.set(read_state)
           # 履歴ページにもデータを送る
           app.util.url_to_title(thread_url)
@@ -572,6 +572,8 @@ app.config.ready( ->
           XML = startXML + entitiesXML + finishXML
           console.log XML
           #
+          # zombie.coffeeへ処理終了を送信
+          chrome.runtime.sendMessage({done: "sync2ch"})
           return
           ###
           # 通信
@@ -580,6 +582,9 @@ app.config.ready( ->
           # 同期可能残数などを取得して保存
           if sync2chRes isnt ""
             app.sync2ch.apply(sync2chRes,"",false)
+          # zombie.coffeeへ処理終了を送信
+          chrome.runtime.sendMessage({done: "sync2ch"})
+          return
           ###
         )
       console.log "finish"

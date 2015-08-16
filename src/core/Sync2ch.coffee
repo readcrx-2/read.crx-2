@@ -298,7 +298,7 @@ app.sync2ch.historyToEntity = (history) ->
         read = read_state.read - 1
         count = read_state.received - 1
         entity = {
-          type: "tr"
+          type: "th"
           url: url
           title: title
           last: last
@@ -311,7 +311,7 @@ app.sync2ch.historyToEntity = (history) ->
       )
       .fail( ->
         entity = {
-          type: "tr"
+          type: "th"
           url: url
           title: title
           rt: rt
@@ -385,7 +385,7 @@ app.sync2ch.openTempEntityToOpenEntity = (openTempEntity) ->
         read = read_state.read - 1
         count = read_state.received - 1
         entity = {
-          type: "tr"
+          type: "th"
           url: url
           title: title
           last: last
@@ -398,7 +398,7 @@ app.sync2ch.openTempEntityToOpenEntity = (openTempEntity) ->
       )
       .fail( ->
         entity = {
-          type: "tr"
+          type: "th"
           url: url
           title: title
         }
@@ -444,7 +444,7 @@ app.sync2ch.makeEntities = (historyEntities, openTempEntities) ->
   console.log openTempEntities
   hisELength = historyEntities.length
   # entities内のhistoryのもののid
-  historyIds = [0..hisELength - 1]
+  historyIds = [0...hisELength]
   # openをhistoryと比較してentitiesを出力
   duplicates = compareEntity(historyEntities, openTempEntities)
   duplicates = sortDuplicates(duplicates)
@@ -511,7 +511,7 @@ app.config.ready( ->
       # 取得するカテゴリの数だけ書く
       # <thread_group category=" -----カテゴリ---- " struct="read.crx 2" />
       console.log "do--- config ready"
-      ###
+      #
       app.sync2ch.open("""
                        <thread_group category="history" struct="read.crx 2" />
                        <thread_group category="open" struct="read.crx 2" />
@@ -539,7 +539,7 @@ app.config.ready( ->
       domP = new DOMParser()
       responseXML = domP.parseFromString(responseText, "text/xml")
       app.sync2ch.apply(responseXML, true)
-      #
+      ###
       console.log "finished"
     # 終了時同期
     else if getFileName() is "zombie.html"
@@ -571,16 +571,15 @@ app.config.ready( ->
           finishXML = app.sync2ch.finishXML(historyIds, openIds)
           XML = startXML + entitiesXML + finishXML
           console.log XML
-          return
-          ###
+          #return
+          #
           # 通信
           return app.sync2ch.open(XML, false)
         ).then( (sync2chRes) ->
           # 同期可能残数などを取得して保存
           if sync2chRes isnt ""
             app.sync2ch.apply(sync2chRes,"",false)
-        )
-          ###
+          #
         )
       console.log "finish"
   return

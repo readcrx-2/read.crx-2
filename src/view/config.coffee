@@ -217,12 +217,13 @@ app.boot "/view/config.html", ["cache", "bbsmenu"], (Cache, BBSMenu) ->
         .addClass("loading")
         .text("更新中")
       historySet(historyFile)#適応処理
-      .done ->
-        app.History.count().done (count) ->
-          $his_status
-            .addClass("done")
-            .text("#{count}件 インポート完了")
-          $view.find(".history_clear").show()
+      .then () ->
+        app.History.count()
+      .done (count) ->
+        $his_status
+          .addClass("done")
+          .text("#{count}件 インポート完了")
+        $view.find(".history_clear").show()
         return
       .fail ->
         $his_status

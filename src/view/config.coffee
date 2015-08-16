@@ -218,7 +218,9 @@ app.boot "/view/config.html", ["cache", "bbsmenu"], (Cache, BBSMenu) ->
         .text("更新中")
       $.Deferred (d) ->
         historySet(historyFile)#適応処理
-        d.resolve()
+        .done( ->
+          d.resolve()
+        )
       .done ->
         $his_status
           .addClass("done")
@@ -237,14 +239,21 @@ app.boot "/view/config.html", ["cache", "bbsmenu"], (Cache, BBSMenu) ->
 
   #履歴を実際にインポートする
   historySet = (text) ->
+    d = new $.Deferred
     inputObj = JSON.parse(text)
     history_array  = inputObj.history
     read_state_array  = inputObj.read_state
+    deferred_add_func_array = []
     for his in history_array
-      app.History.add(his.url, his.title, his.date)
+      deferred_add_func_array.push(app.History.add(his.url, his.title, his.date))
     for rs in read_state_array
-      app.read_state.set(rs)
-    return
+      deferred_add_func_array.push(app.read_state.set(rs))
+    $.when.apply(null, deferred_add_func_array)
+      .then( ->
+        d.resolve()
+        return
+      )
+    return d.promise()
 
   #履歴エクスポート
   $view.find(".history_export").on "click", ->

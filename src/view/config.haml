@@ -252,6 +252,8 @@
             )
             %input.direct.bbsmenu(type="text" name="bbsmenu")
             %button.bbsmenu_reset(type="button") リセット
+          %br
+          %button.console_show コンソールを表示
 
       %section
         %h2 2ch.netのスレッド読み込み形式
@@ -282,3 +284,9 @@
             あり
             %button バックアップを削除
           %span.ninja_item_backup_unavailable 無し
+    #console.hide
+      %h2 コンソール
+      %button.console_close 閉じる
+      %button.console_delete 削除
+      %br
+      %textarea.direct(name="console" rows="10" cols="80" readonly)

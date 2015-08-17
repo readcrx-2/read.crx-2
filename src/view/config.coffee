@@ -458,7 +458,6 @@ app.boot "/view/config.html", ["cache", "bbsmenu"], (Cache, BBSMenu) ->
         else $view.find("input[name=\"theme_id\"]").val([value]).trigger("change")
     return
 
-
   #設定エクスポート
   $view.find(".config_export_button").on "click", ->
     content = app.config.getAll()
@@ -472,6 +471,15 @@ app.boot "/view/config.html", ["cache", "bbsmenu"], (Cache, BBSMenu) ->
       download: "read.crx-2_config.json"
     })
     $a[0].click()
+    return
+
+  #コンソール
+  $view.find(".console_show").on "click", ->
+    $view.find("#console").removeClass("hide")
+    return
+
+  $view.find(".console_close").on "click", ->
+    $view.find("#console").addClass("hide")
     return
 
   return

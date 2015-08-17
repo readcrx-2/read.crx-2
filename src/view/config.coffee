@@ -194,7 +194,7 @@ app.boot "/view/config.html", ["cache", "bbsmenu"], (Cache, BBSMenu) ->
 
     #履歴削除ボタン
     $clear_button.on "click", ->
-      $clear_button.remove()
+      $clear_button.hide()
       $status.text("削除中")
 
       $.when(app.History.clear(), app.read_state.clear())
@@ -205,6 +205,92 @@ app.boot "/view/config.html", ["cache", "bbsmenu"], (Cache, BBSMenu) ->
         .fail ->
           $status.text("削除失敗")
       return
+
+  #履歴ファイルインポート
+  $(".history_file_show").on "click", ->
+    $his_status.removeClass("done fail select")
+    $(".history_file_hide").click()
+    return
+
+  historyFile = "";
+  $his_status = $view.find(".history_status")
+  $(".history_file_hide").change((e) ->
+    file = e.target.files
+    reader = new FileReader()
+    reader.readAsText(file[0])
+    reader.onload = ->
+        historyFile = reader.result
+        $his_status
+          .addClass("select")
+          .text("ファイル選択完了")
+      return
+    return
+  )
+
+  #履歴インポート
+  $view.find(".history_import").on "click", ->
+    if historyFile isnt ""
+      $his_status
+        .removeClass("done fail select")
+        .addClass("loading")
+        .text("更新中")
+      historySet(historyFile)#適応処理
+      .then () ->
+        app.History.count()
+      .done (count) ->
+        $his_status
+          .addClass("done")
+          .text("#{count}件 インポート完了")
+        $view.find(".history_clear").show()
+        return
+      .fail ->
+        $his_status
+          .addClass("fail")
+          .text("インポート失敗")
+        return
+    else
+      $his_status
+        .addClass("fail")
+        .text("インポート失敗")
+    return
+
+  #履歴を実際にインポートする
+  historySet = (text) ->
+    inputObj = JSON.parse(text)
+    history_array  = inputObj.history
+    read_state_array  = inputObj.read_state
+    deferred_add_func_array = []
+    for his in history_array
+      deferred_add_func_array.push(app.History.add(his.url, his.title, his.date))
+    for rs in read_state_array
+      deferred_add_func_array.push(app.read_state.set(rs))
+    return $.when.apply(null, deferred_add_func_array)
+
+  #履歴エクスポート
+  $view.find(".history_export").on "click", ->
+    $.when(
+      app.read_state.get_all(),
+      app.History.get_all()
+    ).done( (read_state_res, history_res) ->
+      read_state_array = []
+      for rs in read_state_res
+        read_state_array.push(rs)
+      history_array = []
+      for his in history_res
+        history_array.push(his)
+      outputObj = {"read_state": read_state_array, "history": history_array}
+      outputText = JSON.stringify(outputObj)
+      blob = new Blob([outputText],{type:"text/plain"})
+      $a = $("<a>")
+      $a.attr({
+        href: window.URL.createObjectURL(blob),
+        target: "_blank",
+        download: "read.crx-2_history.json"
+      })
+      $a[0].click()
+      return
+    )
+    return
 
   #キャッシュ削除ボタン
   do ->
@@ -304,19 +390,19 @@ app.boot "/view/config.html", ["cache", "bbsmenu"], (Cache, BBSMenu) ->
 
   #設定ファイルインポート
   $(".config_file_show").on "click", ->
-    $status.removeClass("done fail select")
+    $cfg_status.removeClass("done fail select")
     $(".config_file_hide").click()
     return
 
   configFile = "";
-  $status = $view.find(".config_import_status")
+  $cfg_status = $view.find(".config_import_status")
   $(".config_file_hide").change((e) ->
     file = e.target.files
     reader = new FileReader()
     reader.readAsText(file[0])
     reader.onload = ->
         configFile = reader.result
-        $status
+        $cfg_status
           .addClass("select")
           .text("ファイル選択完了")
       return
@@ -326,7 +412,7 @@ app.boot "/view/config.html", ["cache", "bbsmenu"], (Cache, BBSMenu) ->
   #設定インポート
   $view.find(".config_import_button").on "click", ->
     if configFile isnt ""
-      $status
+      $cfg_status
         .removeClass("done fail select")
         .addClass("loading")
         .text("更新中")
@@ -335,17 +421,17 @@ app.boot "/view/config.html", ["cache", "bbsmenu"], (Cache, BBSMenu) ->
         keySet(jsonConfig)
         d.resolve()
       .done ->
-        $status
+        $cfg_status
           .addClass("done")
           .text("インポート完了")
         return
       .fail ->
-        $status
+        $cfg_status
           .addClass("fail")
           .text("インポート失敗")
         return
     else
-      $status
+      $cfg_status
         .addClass("fail")
         .text("インポート失敗")
     return

@@ -110,6 +110,24 @@ app.read_state.get = (url) ->
 
     .promise()
 
+app.read_state.get_all = ->
+  app.read_state._db_open
+
+    .pipe (db) ->
+      $.Deferred (deferred) ->
+        db.transaction (transaction) ->
+          transaction.executeSql(
+            "SELECT * FROM ReadState"
+            []
+            (transaction, result) ->
+              deferred.resolve(result.rows)
+          )
+        , ->
+          app.log("error", "app.read_state.get_all: トランザクション中断")
+          deferred.reject()
+
+    .promise()
+
 app.read_state.get_by_board = (url) ->
   if app.assert_arg("app.read_state.get_by_board", ["string"], arguments)
     return $.Deferred().reject().promise()

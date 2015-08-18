@@ -521,7 +521,7 @@ app.config.ready( ->
       # 取得するカテゴリの数だけ書く
       # <thread_group category=" -----カテゴリ---- " struct="read.crx 2" />
       console.log "do--- config ready"
-      ###
+      #
       app.sync2ch.open("""
                        <thread_group category="history" struct="read.crx 2" />
                        <thread_group category="open" struct="read.crx 2" />
@@ -549,7 +549,7 @@ app.config.ready( ->
       domP = new DOMParser()
       responseXML = domP.parseFromString(responseText, "text/xml")
       app.sync2ch.apply(responseXML, true)
-      #
+      ###
       console.log "finished"
     # 終了時同期
     else if getFileName() is "zombie.html"
@@ -583,7 +583,7 @@ app.config.ready( ->
           finishXML = app.sync2ch.finishXML(historyIds, openIds)
           XML = startXML + entitiesXML + finishXML
           console.log XML
-          #
+          ###
           # zombie.coffeeへ処理終了を送信
           chrome.runtime.sendMessage({type: "done", done: "sync2ch"})
           return
@@ -597,7 +597,7 @@ app.config.ready( ->
           # zombie.coffeeへ処理終了を送信
           chrome.runtime.sendMessage({done: "sync2ch"})
           return
-          ###
+          #
         )
       console.log "finish"
   return

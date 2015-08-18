@@ -327,3 +327,30 @@ app.util.concat_without_duplicates = (array1, array2) ->
   )
   result.push(arrayRes, duplicates)
   return result
+
+# コンソール出力用書き換え
+old_log = console.log.bind(console)
+console.log = (a) ->
+  old_log(a)
+  chrome.runtime.sendMessage({type: "console", level: "log", data: a})
+  return
+old_debug = console.debug.bind(console)
+console.debug = (a) ->
+  old_debug(a)
+  chrome.runtime.sendMessage({type: "console", level: "debug", data: a})
+  return
+old_info = console.info.bind(console)
+console.info = (a) ->
+  old_info(a)
+  chrome.runtime.sendMessage({type: "console", level: "infog", data: a})
+  return
+old_warn = console.warn.bind(console)
+console.warn = (a) ->
+  old_warn(a)
+  chrome.runtime.sendMessage({type: "console", level: "warn", data: a})
+  return
+old_error = console.error.bind(console)
+console.error = (a) ->
+  old_error(a)
+  chrome.runtime.sendMessage({type: "console", level: "error", data: a})
+  return

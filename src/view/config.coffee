@@ -474,12 +474,10 @@ app.boot "/view/config.html", ["cache", "bbsmenu"], (Cache, BBSMenu) ->
     return
 
   #コンソール
-  $view.find(".console_show").on "click", ->
-    $view.find("#console").removeClass("hide")
-    return
+  $view.find(".console_show").on "click", (e) ->
+    e.preventDefault()
 
-  $view.find(".console_close").on "click", ->
-    $view.find("#console").addClass("hide")
+    app.message.send("showConsole", null, parent)
     return
 
   return

@@ -595,7 +595,7 @@ app.config.ready( ->
           if sync2chRes isnt ""
             app.sync2ch.apply(sync2chRes,"",false)
           # zombie.coffeeへ処理終了を送信
-          chrome.runtime.sendMessage({done: "sync2ch"})
+          chrome.runtime.sendMessage({type: "done", done: "sync2ch"})
           return
           #
         )

@@ -492,7 +492,7 @@ app.main = ->
           html: """
             #{app.manifest.name} が #{last_version} から
              #{app.manifest.version} にアップデートされました。
-             <a href="http://readcrx-2.github.io/read.crx-2/changelog.html" target="_blank">更新履歴</a>
+             <a href="http://readcrx-2.github.io/read.crx-2/beta.html#%E6%9B%B4%E6%96%B0%E5%B1%A5%E6%AD%B4" target="_blank">更新履歴</a>
           """
           background_color: "green"
         }

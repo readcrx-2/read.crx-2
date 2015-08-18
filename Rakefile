@@ -19,6 +19,7 @@ task :default => [
   "zombie:build",
   "write:build",
   "test:build",
+  "base64:build",
   "jquery:build",
   "rmappjs"
 ]
@@ -26,6 +27,7 @@ task :default => [
 task :clean do
   rm_f "./read.crx_2.zip"
   rm_rf "debug"
+  Rake::Task["base64:clean"].invoke
   Rake::Task["jquery:clean"].invoke
 end
 
@@ -43,7 +45,9 @@ task :pack do
     cp_r "debug", "#{tmpdir}/debug"
     rm_r "#{tmpdir}/debug/test"
 
-    if RUBY_PLATFORM.include?("darwin")||RUBY_PLATFORM.include?("linux")
+    if defined?(ENV["read.crx-2-pem-path"])
+      pem_path = ENV["read.crx-2-pem-path"]
+    else
       puts "秘密鍵のパスを入力して下さい"
       pem_path = STDIN.gets
     end
@@ -54,13 +58,18 @@ task :pack do
       sh "google-chrome --pack-extension=#{tmpdir}/debug --pack-extension-key=#{pem_path}"
     else
       # Windowsの場合、Chromeの場所を環境変数から取得する(設定必)
-      sh "#{ENV["CHROME_LOCATION"]} --pack-extension=\"#{tmpdir}/debug\""
+      if pem_path == " "
+        sh "#{ENV["CHROME_LOCATION"]} --pack-extension=\"#{tmpdir}/debug\""
+      else
+        sh "#{ENV["CHROME_LOCATION"]} --pack-extension=\"#{tmpdir}/debug\" --pack-extension-key=\"#{pem_path}\""
+      end
     end
     mv "#{tmpdir}/debug.crx", "read.crx_2.#{MANIFEST["version"]}.crx"
   end
 end
 
 task :scan do
+  sh "freshclam"
   sh "clamscan -ir debug"
 end
 
@@ -388,6 +397,26 @@ namespace :test do
   file_copy "debug/test/qunit/qunit-step.js", "lib/qunit/addons/step/qunit-step.js"
 
   file_coffee "debug/test/test.js", FileList["src/test/test_*.coffee"]
+end
+
+namespace :base64 do
+  task :build => "debug/lib/js-base64/base64.min.js"
+
+  task :clean do
+    rm_rf "debug/lib/js-base64"
+    cd "lib/js-base64" do
+      sh "git checkout -f"
+    end
+  end
+
+  file "debug/lib/js-base64/base64.min.js" => "lib/js-base64/base64.min.js" do
+    Rake::Task["base64:clean"].invoke
+    cd "lib/js-base64" do
+      sh "git apply ../js-base64_license.patch --whitespace=fix"
+    end
+    mkdir_p "debug/lib/js-base64"
+    cp "lib/js-base64/base64.min.js", "debug/lib/js-base64/base64.min.js"
+  end
 end
 
 namespace :jquery do

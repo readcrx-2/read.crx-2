@@ -72,7 +72,7 @@ label {
   cursor: pointer;
 }
 
-input[type="text"], textarea {
+input[type="text"], input[type="password"], textarea {
   @include input-text;
 }
 
@@ -136,7 +136,7 @@ section button {
   }
 }
 
-input[type="text"]:invalid {
+input[type="text"]:invalid, input[type="password"]:invalid {
   background-color: #fcc;
 }
 

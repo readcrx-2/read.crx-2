@@ -200,3 +200,45 @@ iframe {
     font: inherit;
   }
 }
+
+#console {
+  display: none;
+  z-index: $z-index-console;
+  background: hsla(0, 0%, 0%, 0.9);
+  color: hsl(0, 0%, 80%);
+  position: fixed;
+  left: 0;
+  top: 0;
+  bottom: 0;
+  right: 0;
+  overflow: auto;
+  padding: 1rem;
+  h2 {
+    font-size: 1rem;
+    margin: 0;
+  }
+  button {
+    background-color: transparent;
+    color: #fff;
+    border: 1px solid #bbb;
+    border-radius: 2px;
+    margin-left: 5px;
+    float: right;
+    padding: 5px;
+    cursor: pointer;
+    &:hover {
+      border-color: #aaa;
+    }
+  }
+  #output {
+    width: 80%;
+    height: 80%;
+    margin: 5px;
+    overflow-y: scroll;
+    background-color: #ccc;
+  }
+  p {
+    margin: 0;
+    padding: 0 5px;
+  }
+}

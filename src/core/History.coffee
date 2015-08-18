@@ -1,5 +1,5 @@
 ###*
-@class app.Hisapp.tory
+@class app.History
 @static
 ###
 class app.History
@@ -184,5 +184,143 @@ class app.History
           return
       )
       return
+    )
+    .promise()
+
+  ###*
+  @method get_title
+  @param {String} url
+  @return {Promise}
+  ###
+  @get_title: (url) ->
+    if app.assert_arg("History.get_title", ["string"], arguments)
+      return $.Deferred().reject().promise()
+
+    @_openDB().pipe((db) -> $.Deferred (d) ->
+      db.readTransaction(
+        (transaction) ->
+          transaction.executeSql(
+            "SELECT url, title FROM History WHERE url = ?"
+            [url]
+            (transaction, result) ->
+              if result.rows.length isnt 0
+                got_title = result.rows[0].title
+                d.resolve(got_title)
+              else
+                d.reject("")
+              return
+          )
+          return
+        ->
+          app.log("error", "History.get_title: トランザクション中断")
+          d.reject()
+          return
+      )
+    )
+    .promise()
+
+  ###*
+  @method get_from_url
+  @param {String} url
+  @return {Promise}
+  ###
+  @get_from_url: (url) ->
+    if app.assert_arg("History.get_from_url", ["string"], arguments)
+      return $.Deferred().reject().promise()
+
+    @_openDB().pipe((db) -> $.Deferred (d) ->
+      db.readTransaction(
+        (transaction) ->
+          transaction.executeSql(
+            "SELECT * FROM History WHERE url = ?"
+            [url]
+            (transaction, result) ->
+              if result.rows.length isnt 0
+                res = result.rows[0]
+                d.resolve(res)
+              else
+                d.reject("")
+              return
+          )
+          return
+        ->
+          app.log("error", "History.get_title: トランザクション中断")
+          d.reject()
+          return
+      )
+    )
+    .promise()
+
+  ###*
+  @method get_newest_id
+  @param {String} url
+  @return {Promise}
+  ###
+  @get_newest_id: (url) ->
+    if app.assert_arg("History.get_newest_id", ["string"], arguments)
+      return $.Deferred().reject().promise()
+
+    @_openDB().pipe((db) -> $.Deferred (d) ->
+      db.readTransaction(
+        (transaction) ->
+          transaction.executeSql(
+            "SELECT url, rowid FROM History WHERE url = ?"
+            [url]
+            (transaction, result) ->
+              length = result.rows.length
+              if length isnt 0
+                rowid = result.rows[length-1].rowid
+                d.resolve(rowid)
+              else
+                d.reject("")
+              return
+          )
+          return
+        ->
+          app.log("error", "History.get_title: トランザクション中断")
+          d.reject()
+          return
+      )
+    )
+    .promise()
+
+  ###*
+  @method get_with_id
+  urlが重複しているものは1つしか取得しない
+  @param {Number} offset
+  @param {Number} limit
+  @return {Promise}
+  ###
+  @get_with_id: (offset = -1, limit = -1) ->
+    if app.assert_arg("History.get_with_id", ["number", "number"], [offset, limit])
+      return $.Deferred().reject().promise()
+
+    @_openDB().pipe((db) -> $.Deferred (d) ->
+      db.readTransaction(
+        (transaction) ->
+          transaction.executeSql(
+            """
+            SELECT rowid, date, title, url FROM History
+            WHERE rowid IN(SELECT MAX(rowid) FROM History GROUP BY url)
+            ORDER BY date
+            DESC LIMIT ? OFFSET ?
+            """
+            [limit, offset]
+            (transaction, result) ->
+              data = []
+              key = 0
+              length = result.rows.length
+              while key < length
+                data.push(result.rows.item(key))
+                key++
+              d.resolve(data)
+              return
+          )
+          return
+        ->
+          app.log("error", "History.get: トランザクション中断")
+          d.reject()
+          return
+      )
     )
     .promise()

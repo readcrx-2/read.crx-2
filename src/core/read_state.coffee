@@ -30,6 +30,8 @@ do ->
   .promise()
   .fail ->
     app.critical_error("既読情報管理システムの起動に失敗しました")
+    return
+  return
 
 app.read_state.set = (read_state) ->
   if not read_state? or
@@ -201,3 +203,4 @@ app.read_state.clear = ->
           deferred.resolve()
 
     .promise()
+

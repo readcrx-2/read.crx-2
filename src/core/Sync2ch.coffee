@@ -61,7 +61,13 @@ app.sync2ch.open = (xml, notify_error) ->
     notify_it = notify
   else
     notify_it = (beforeText, afterText, color) ->
-      app.log("error","Sync2ch : #{beforeHtml} データを取得するのに失敗しました #{afterHtml}")
+      if color is "orange"
+        type = "warn"
+      else if color is "red"
+        type = "error"
+      else
+        type = "info"
+      app.log(type,"Sync2ch : #{beforeHtml} データを取得するのに失敗しました #{afterHtml}")
       return
 
   if !remain? or remain isnt "0" or remainDate is "" or nowDate > remainDate
@@ -145,7 +151,7 @@ app.sync2ch.apply = (sync2chData, apply_read_state) ->
     if apply_read_state
       app.sync2ch.apply_data($xml)
   else
-    app.critical_error("2chSync : データを取得するのに失敗しました")
+    app.log("error","2chSync : データを取得するのに失敗しました")
   console.log "apply finish"
   return
 
@@ -269,6 +275,7 @@ app.sync2ch.apply_open = ($xml, $entities) ->
           })
       # タブを置き換え
       console.log tabs
+      console.group()
       for tab in data
         console.log tab
         is_restored = true
@@ -278,6 +285,7 @@ app.sync2ch.apply_open = ($xml, $entities) ->
           lazy: not tab.selected
           new_tab: true
         })
+      console.groupEnd()
   d.resolve()
   return d.promise()
 
@@ -439,9 +447,11 @@ app.sync2ch.openTempEntitiesToOpenEntities = (openTempEntities) ->
 # entities生成
 app.sync2ch.makeEntities = (historyEntities, openTempEntities) ->
   d = new $.Deferred
+  console.group()
   console.log "makeEntities"
   console.log historyEntities
   console.log openTempEntities
+  console.groupEnd()
   hisELength = historyEntities.length
   # entities内のhistoryのもののid
   historyIds = [0...hisELength]
@@ -562,9 +572,11 @@ app.config.ready( ->
         )
         .then( (entities, historyIds, openIds) ->
           console.log "entities"
+          console.group()
           console.log entities
           console.log historyIds
           console.log openIds
+          console.groupEnd()
           # XML生成
           startXML = "<entities>"
           entitiesXML = app.sync2ch.makeEntitiesXML(entities)
@@ -573,7 +585,7 @@ app.config.ready( ->
           console.log XML
           #
           # zombie.coffeeへ処理終了を送信
-          chrome.runtime.sendMessage({done: "sync2ch"})
+          chrome.runtime.sendMessage({type: "done", done: "sync2ch"})
           return
           ###
           # 通信

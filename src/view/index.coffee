@@ -76,6 +76,10 @@ class app.view.Index extends app.view.View
     app.message.addListener "showKeyboardHelp", =>
       @showKeyboardHelp()
       return
+
+    app.message.addListener "showConsole", =>
+      @showConsole()
+      return
     return
 
   ###*
@@ -269,6 +273,29 @@ class app.view.Index extends app.view.View
   ###
   hideKeyboardHelp: ->
     @$element.find(".keyboard_help").fadeOut("fast")
+    iframe = document.querySelector(".iframe_focused")
+    iframe?.contentDocument.querySelector(".content").focus()
+    return
+
+  ###*
+  @method showConsole
+  ###
+  showConsole: ->
+    @$element
+      .find("#console")
+        .fadeIn("fast")
+        .focus()
+      .find(".console_close")
+        .on "click", =>
+          @hideConsole()
+          return
+    return
+
+  ###*
+  @method hideConsole
+  ###
+  hideConsole: ->
+    @$element.find("#console").fadeOut("fast")
     iframe = document.querySelector(".iframe_focused")
     iframe?.contentDocument.querySelector(".content").focus()
     return
@@ -818,5 +845,43 @@ app.main = ->
         location.origin
       )
     return
+
+  $view.find(".console_html").on "click", =>
+    html = """
+           <html>
+           <head>
+             <title>read.crxログ</title>
+             <style type="text/css">p {margin: 0;padding: 0 5px;}</style>
+           </head>
+           <body>
+           """
+    html += $view.find("#output").html()
+    html += "</body></html>"
+    blob = new Blob([html],{type:"text/plain"})
+    $a = $("<a>")
+    $a.attr({
+      href: window.URL.createObjectURL(blob),
+      target: "_blank",
+      download: "read.crx-2_log.html"
+    })
+    $a[0].click()
+    return
+  $view.find(".console_delete").on "click", =>
+    html = $view.find("#output").html("")
+    return
+
   return
 
+#コンソール
+chrome.runtime.onMessage.addListener( (req, sender, sendRes) ->
+  if req.type is "console"
+    switch req.level
+      when "log" then color = "black"
+      when "debug" then color = "skyblue"
+      when "info" then color = "blue"
+      when "warn" then color = "orange"
+      when "error" then color = "red"
+      else color = "black"
+    $("#output").append("<p><span style=\"color:#{color}\">#{req.data}</span></p>")
+  return
+)

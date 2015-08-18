@@ -41,7 +41,7 @@ app.boot "/zombie.html", ->
 
   # Sync2ch.coffeeから処理終了を受け取る
   chrome.runtime.onMessage.addListener( (req, sender, sendRes) ->
-    if req.done is "sync2ch"
+    if req.type is "done" and req.done is "sync2ch"
       closeStack("sync2ch")
     return
   )

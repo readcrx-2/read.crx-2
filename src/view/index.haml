@@ -83,6 +83,13 @@
         %dd 更新（Shift+rと同じ）
         %dt 任意の数値
         %dd 該当するレス番号の位置にジャンプする（スレッド表示内限定）
+    #console.hide
+      %h2 コンソール
+      %button.console_close 閉じる
+      %button.console_delete 削除
+      %button.console_html html出力
+      %br
+      #output
     %template#template_tab_contextmenu
       %ul.tab_contextmenu
         %li.restore 閉じたタブを開く

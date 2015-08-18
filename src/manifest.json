@@ -1,7 +1,7 @@
 {
   "name" : "read.crx 2",
-  "version" : "0.94.9.1",
-  "version_name" : "0.94.9.1 Sync2chβ1",
+  "version" : "0.94.9.2",
+  "version_name" : "0.94.9.2 Sync2chβ2",
   "update_url": "http://readcrx-2.github.io/read.crx-2/updates.xml",
   "homepage_url": "http://readcrx-2.github.io/read.crx-2/",
   "description" : "2chブラウザ",

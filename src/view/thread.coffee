@@ -139,7 +139,8 @@ app.boot "/view/thread.html", ["board_title_solver"], (BoardTitleSolver) ->
         return
 
     app.view_thread._draw($view).always ->
-      app.History.add(view_url, document.title, opened_at)
+      if app.config.get("no_history") is "off"
+        app.History.add(view_url, document.title, opened_at)
       return
 
   #自動ロード

@@ -16,7 +16,8 @@ app.boot "/view/search.html", ["euc_jp_escape", "thread_search"], (euc_jp_escape
   new app.view.TabContentView(document.documentElement)
 
   document.title = "検索:#{query}"
-  app.History.add($view.attr("data-url"), document.title, opened_at)
+  if app.config.get("no_history") is "off"
+    app.History.add($view.attr("data-url"), document.title, opened_at)
 
   $view.find(".button_link > a").attr("href", "http://search.2ch.net/search?q=" + encodeURIComponent(query))
 

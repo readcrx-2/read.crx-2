@@ -330,9 +330,24 @@ class app.Thread
   @return {null|Object}
   ###
   @_parseNet = (text) ->
+    if not text.indexOf("<dt>")+1
+      text=text.replace(/^[\s\S\n\r]+<h1 /,"<h1 ")
+        .replace(/\s*<\/h1>/,"</h1>")
+        .replace(/<div class="number">/g,"<br><br>\n<dt>")
+        .replace(/\: <\/div><div class="name"><b>(<a href="mailto:[^"]*?">)?/g,"：$1<b>")
+        .replace(/(<\/a>)?<\/b><\/div><div class="date">/g,"</b>$1：")
+        .replace(/<div class="message">/g,"<dd>")
+        .replace(/<div class="cLength">[\s\S\n\r]+$/,"\n")
+        .replace(/<\/?div[^>]*>/g,"")
     # name, mail, other, message, thread_title
+    #if text.indexOf("<br><br>\n")
+    #  text = text.replace(/(<div class="thread">)/i,"$1\n")
+    #  text = text.replace(/(<div class="post".*?<\/div><\/div>)/gi,"$1\n")
+    #  reg = /^<div class="post".*><div class="number">\d+.* : <\/div><div class="name"><b>(?:<a href="mailto:([^<>]*)">|<font [^>]*>)?(.*)(?:<\/a>|<\/font>)?<\/b><\/div><div class="date">(.*)<\/div><div class="message"> ?.*<\/div><\/div>$/
+    #else
+    #  reg = /^<dt>\d+.*：(?:<a href="mailto:([^<>]*)">|<font [^>]*>)?<b>(.*)<\/b>.*：(.*)<dd> ?(.*)<br><br>$/
     reg = /^<dt>\d+.*：(?:<a href="mailto:([^<>]*)">|<font [^>]*>)?<b>(.*)<\/b>.*：(.*)<dd> ?(.*)<br><br>$/
-    titleReg = /<h1 .*?>(.*)<\/h1>/;
+    titleReg = /<h1 .*?>(.*)\n?<\/h1>/;
     numberOfBroken = 0
     thread = res: []
     first = true

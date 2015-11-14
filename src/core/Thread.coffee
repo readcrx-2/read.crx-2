@@ -218,6 +218,15 @@ class app.Thread
 
         if deltaFlg
           if app.url.tsld(@url) is "2ch.net" and onlyOneFlg is false
+            if not response.body.indexOf("<dt>")+1
+              response.body=response.body.replace(/^[\s\S\n\r]+<h1 /,"<h1 ")
+                .replace(/\s*<\/h1>/,"</h1>")
+                .replace(/<div class="number">/g,"<br><br>\n<dt>")
+                .replace(/\: <\/div><div class="name"><b>(<a href="mailto:[^"]*?">)?/g,"：$1<b>")
+                .replace(/(<\/a>)?<\/b><\/div><div class="date">/g,"</b>$1：")
+                .replace(/<div class="message">/g,"<dd>")
+                .replace(/<div class="cLength">[\s\S\n\r]+$/,"\n")
+                .replace(/<\/?div[^>]*>/g,"")
             reg1 = ///<dt>#{cache.res_length}\ ：.*?\n<\/dl>///
             reg2 = ///<dt>#{cache.res_length}\ ：(.|\n)*<\/dl>///
             responseText = reg2.exec(response.body)[0]
@@ -346,7 +355,7 @@ class app.Thread
     #  reg = /^<div class="post".*><div class="number">\d+.* : <\/div><div class="name"><b>(?:<a href="mailto:([^<>]*)">|<font [^>]*>)?(.*)(?:<\/a>|<\/font>)?<\/b><\/div><div class="date">(.*)<\/div><div class="message"> ?.*<\/div><\/div>$/
     #else
     #  reg = /^<dt>\d+.*：(?:<a href="mailto:([^<>]*)">|<font [^>]*>)?<b>(.*)<\/b>.*：(.*)<dd> ?(.*)<br><br>$/
-    reg = /^<dt>\d+.*：(?:<a href="mailto:([^<>]*)">|<font [^>]*>)?<b>(.*)<\/b>.*：(.*)<dd> ?(.*)<br><br>$/
+    reg = /^<dt>\d+.*：(?:<a href="mailto:([^<>]*)">|<font [^>]*>)?<b>(.*)<\/b>.*：(.*)<dd> ?(.*)(<br><br>)?$/
     titleReg = /<h1 .*?>(.*)\n?<\/h1>/;
     numberOfBroken = 0
     thread = res: []

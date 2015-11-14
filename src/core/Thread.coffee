@@ -224,7 +224,6 @@ class app.Thread
             else
               reg1 = ///<dt>#{cache.res_length}\ ：.*?\n<\/dl>///
               reg2 = ///<dt>#{cache.res_length}\ ：(.|\n)*<\/dl>///
-            console.log response.body
             responseText = reg2.exec(response.body)[0]
             cache.data = cache.data.replace(reg1,responseText)
             cache.res_length = thread.res.length

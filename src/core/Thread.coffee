@@ -218,17 +218,12 @@ class app.Thread
 
         if deltaFlg
           if app.url.tsld(@url) is "2ch.net" and onlyOneFlg is false
-            if not response.body.indexOf("<dt>")+1
-              response.body=response.body.replace(/^[\s\S\n\r]+<h1 /,"<h1 ")
-                .replace(/\s*<\/h1>/,"</h1>")
-                .replace(/<div class="number">/g,"<br><br>\n<dt>")
-                .replace(/\: <\/div><div class="name"><b>(<a href="mailto:[^"]*?">)?/g,"：$1<b>")
-                .replace(/(<\/a>)?<\/b><\/div><div class="date">/g,"</b>$1：")
-                .replace(/<div class="message">/g,"<dd>")
-                .replace(/<div class="cLength">[\s\S\n\r]+$/,"\n")
-                .replace(/<\/?div[^>]*>/g,"")
-            reg1 = ///<dt>#{cache.res_length}\ ：.*?\n<\/dl>///
-            reg2 = ///<dt>#{cache.res_length}\ ：(.|\n)*<\/dl>///
+            if text.indexOf("<div class=\"footer push\">read.cgi ver 06")+1
+              reg1 = ///<div class="post" id="#{cache.res_length}".*?>.*?</div></div>///
+              reg2 = ///<div class="post" id="#{cache.res_length}".*?>(.|\n)*</div></div>///
+            else
+              reg1 = ///<dt>#{cache.res_length}\ ：.*?\n<\/dl>///
+              reg2 = ///<dt>#{cache.res_length}\ ：(.|\n)*<\/dl>///
             responseText = reg2.exec(response.body)[0]
             cache.data = cache.data.replace(reg1,responseText)
             cache.res_length = thread.res.length
@@ -339,23 +334,14 @@ class app.Thread
   @return {null|Object}
   ###
   @_parseNet = (text) ->
-    if not text.indexOf("<dt>")+1
-      text=text.replace(/^[\s\S\n\r]+<h1 /,"<h1 ")
-        .replace(/\s*<\/h1>/,"</h1>")
-        .replace(/<div class="number">/g,"<br><br>\n<dt>")
-        .replace(/\: <\/div><div class="name"><b>(<a href="mailto:[^"]*?">)?/g,"：$1<b>")
-        .replace(/(<\/a>)?<\/b><\/div><div class="date">/g,"</b>$1：")
-        .replace(/<div class="message">/g,"<dd>")
-        .replace(/<div class="cLength">[\s\S\n\r]+$/,"\n")
-        .replace(/<\/?div[^>]*>/g,"")
     # name, mail, other, message, thread_title
-    #if text.indexOf("<br><br>\n")
-    #  text = text.replace(/(<div class="thread">)/i,"$1\n")
-    #  text = text.replace(/(<div class="post".*?<\/div><\/div>)/gi,"$1\n")
-    #  reg = /^<div class="post".*><div class="number">\d+.* : <\/div><div class="name"><b>(?:<a href="mailto:([^<>]*)">|<font [^>]*>)?(.*)(?:<\/a>|<\/font>)?<\/b><\/div><div class="date">(.*)<\/div><div class="message"> ?.*<\/div><\/div>$/
-    #else
-    #  reg = /^<dt>\d+.*：(?:<a href="mailto:([^<>]*)">|<font [^>]*>)?<b>(.*)<\/b>.*：(.*)<dd> ?(.*)<br><br>$/
-    reg = /^<dt>\d+.*：(?:<a href="mailto:([^<>]*)">|<font [^>]*>)?<b>(.*)<\/b>.*：(.*)<dd> ?(.*)(<br><br>)?$/
+    if text.indexOf("<div class=\"footer push\">read.cgi ver 06")+1
+      text = text.replace(/(<div class="thread">)/i,"$1\n")
+      text = text.replace(/(<div class="post".*?<\/div><\/div>)/gi,"$1\n")
+      text = text.replace(/\n<\/h1>/, "</h1>\n")
+      reg = /^<div class="post".*><div class="number">\d+.* : <\/div><div class="name"><b>(?:<a href="mailto:([^<>]*)">|<font [^>]*>)?(.*)(?:<\/a>|<\/font>)?<\/b><\/div><div class="date">(.*)<\/div><div class="message"> ?(.*)<\/div><\/div>$/
+    else
+      reg = /^<dt>\d+.*：(?:<a href="mailto:([^<>]*)">|<font [^>]*>)?<b>(.*)<\/b>.*：(.*)<dd> ?(.*)<br><br>$/
     titleReg = /<h1 .*?>(.*)\n?<\/h1>/;
     numberOfBroken = 0
     thread = res: []

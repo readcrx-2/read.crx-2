@@ -5,5 +5,10 @@
     "grunt-cli": "*",
     "coffee-script": "1.9.3",
     "typescript": "1.5.0-beta"
-  }
+  },
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/readcrx-2/read.crx-2.git"
+  },
+  "license": "MIT"
 }

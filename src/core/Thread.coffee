@@ -219,8 +219,8 @@ class app.Thread
         if deltaFlg
           if app.url.tsld(@url) is "2ch.net" and onlyOneFlg is false
             if response.body.indexOf("<div class=\"footer push\">read.cgi ver 06")+1
-              reg1 = ///<div class="post" id="#{cache.res_length}".*?>.*?</div></div>///
-              reg2 = ///<div class="post" id="#{cache.res_length}".*?>(.|\n)*</div></div>///
+              reg1 = ///<div\ class="post"\ id="#{cache.res_length}".*?>.*?</div></div>///
+              reg2 = ///<div\ class="post"\ id="#{cache.res_length}".*?>(.|\n)*</div></div>///
             else
               reg1 = ///<dt>#{cache.res_length}\ ：.*?\n<\/dl>///
               reg2 = ///<dt>#{cache.res_length}\ ：(.|\n)*<\/dl>///

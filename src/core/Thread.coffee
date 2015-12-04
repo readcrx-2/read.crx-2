@@ -353,7 +353,7 @@ class app.Thread
 
       if title
         thread.title = app.util.decode_char_reference(title[1])
-        title2 = thread.title.replace(/ ?(?:\[転載禁止\]|(?:\(c\)|©|�|&copy;|&#169;)2ch\.net) ?/g,"")
+        title2 = thread.title.replace(/ ?(?:\[(?:無断)?転載禁止\]|(?:\(c\)|©|�|&copy;|&#169;)2ch\.net) ?/g,"")
         if title2 isnt ""
           thread.title = title2
       else if regRes

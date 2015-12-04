@@ -341,7 +341,7 @@ class app.Thread
       text = text.replace(/\n<\/h1>/, "</h1>\n")
       reg = /^<div class="post".*><div class="number">\d+.* : <\/div><div class="name"><b>(?:<a href="mailto:([^<>]*)">|<font [^>]*>)?(.*?)(?:<\/a>|<\/font>)?<\/b><\/div><div class="date">(.*)<\/div><div class="message"> ?(.*)<\/div><\/div>$/
     else
-      reg = /^<dt>\d+.*：(?:<a href="mailto:([^<>]*)">|<font [^>]*>)?<b>(.*)<\/b>.*：(.*)<dd> ?(.*)<br><br>$/
+      reg = /^(?:<div.*?<br><br>)?<dt>\d+.*：(?:<a href="mailto:([^<>]*)">|<font [^>]*>)?<b>(.*)<\/b>.*：(.*)<dd> ?(.*)<br><br>$/
     titleReg = /<h1 .*?>(.*)\n?<\/h1>/;
     numberOfBroken = 0
     thread = res: []

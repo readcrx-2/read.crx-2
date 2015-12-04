@@ -415,7 +415,7 @@ namespace :jquery do
       sh "git apply ../jquery_delegate_middle_click.patch --whitespace=fix"
       sh "git apply ../jquery_delete_map.patch --whitespace=fix"
       if RUBY_PLATFORM.match(/darwin|linux/)
-        sh "env PATH=$PATH:../../node_modules/.bin/ grunt"
+        sh "env PATH=../../node_modules/.bin/:\"$PATH\" grunt"
       else
         zpath = File.expand_path('../lib/jquery/node_modules/.bin', __FILE__)
         sh "#{zpath}/grunt.cmd"

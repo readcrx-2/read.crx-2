@@ -222,7 +222,7 @@ class app.Board
     while (reg_res = reg.exec(text))
       title = app.util.decode_char_reference(reg_res[2])
       if tmp[2] is "2ch.net"
-        title = title.replace(/ ?(?:\[転載禁止\]|(?:\(c\)|©|�|&copy;|&#169;)2ch\.net) ?/g,"")
+        title = title.replace(/ ?(?:\[(?:無断)?転載禁止\]|(?:\(c\)|©|�|&copy;|&#169;)2ch\.net) ?/g,"")
       tmpTitle = app.util.normalize(title)
 
       board.push(

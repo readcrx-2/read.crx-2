@@ -219,8 +219,8 @@ class app.Thread
         if deltaFlg
           if app.url.tsld(@url) is "2ch.net" and onlyOneFlg is false
             if response.body.indexOf("<div class=\"footer push\">read.cgi ver 06")+1
-              reg1 = ///<div class="post" id="#{cache.res_length}".*?>.*?</div></div>///
-              reg2 = ///<div class="post" id="#{cache.res_length}".*?>(.|\n)*</div></div>///
+              reg1 = ///<div\ class="post"\ id="#{cache.res_length}".*?>.*?</div></div>///
+              reg2 = ///<div\ class="post"\ id="#{cache.res_length}".*?>(.|\n)*</div></div>///
             else
               reg1 = ///<dt>#{cache.res_length}\ ：.*?\n<\/dl>///
               reg2 = ///<dt>#{cache.res_length}\ ：(.|\n)*<\/dl>///
@@ -341,7 +341,7 @@ class app.Thread
       text = text.replace(/\n<\/h1>/, "</h1>\n")
       reg = /^<div class="post".*><div class="number">\d+.* : <\/div><div class="name"><b>(?:<a href="mailto:([^<>]*)">|<font [^>]*>)?(.*?)(?:<\/a>|<\/font>)?<\/b><\/div><div class="date">(.*)<\/div><div class="message"> ?(.*)<\/div><\/div>$/
     else
-      reg = /^<dt>\d+.*：(?:<a href="mailto:([^<>]*)">|<font [^>]*>)?<b>(.*)<\/b>.*：(.*)<dd> ?(.*)<br><br>$/
+      reg = /^(?:<div.*?<br><br>)?<dt>\d+.*：(?:<a href="mailto:([^<>]*)">|<font [^>]*>)?<b>(.*)<\/b>.*：(.*)<dd> ?(.*)<br><br>$/
     titleReg = /<h1 .*?>(.*)\n?<\/h1>/;
     numberOfBroken = 0
     thread = res: []
@@ -353,7 +353,7 @@ class app.Thread
 
       if title
         thread.title = app.util.decode_char_reference(title[1])
-        title2 = thread.title.replace(/ ?(?:\[転載禁止\]|(?:\(c\)|©|�|&copy;|&#169;)2ch\.net) ?/g,"")
+        title2 = thread.title.replace(/ ?(?:\[(?:無断)?転載禁止\]|(?:\(c\)|©|�|&copy;|&#169;)2ch\.net) ?/g,"")
         if title2 isnt ""
           thread.title = title2
       else if regRes

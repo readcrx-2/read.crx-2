@@ -353,9 +353,8 @@ class app.Thread
 
       if title
         thread.title = app.util.decode_char_reference(title[1])
-        title2 = thread.title.replace(/ ?(?:\[(?:無断)?転載禁止\]|(?:\(c\)|©|�|&copy;|&#169;)2ch\.net) ?/g,"")
-        if title2 isnt ""
-          thread.title = title2
+        title2 = thread.title.replace(/ ?(?:\[(?:無断)?転載禁止\]|(?:\(c\)|©|�|&copy;|&#169;)(?:2ch\.net|@bbspink\.com)) ?/g,"")
+        thread.title = if title2 isnt "" then title2 else title
       else if regRes
         thread.res.push
           name: regRes[2]

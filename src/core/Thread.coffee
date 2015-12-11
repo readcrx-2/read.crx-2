@@ -336,18 +336,18 @@ class app.Thread
   @_parseNet = (text) ->
     # name, mail, other, message, thread_title
     if text.indexOf("<div class=\"footer push\">read.cgi ver 06")+1
-      text = text.replace(/(<div class="thread">)/i,"$1\n")
-      text = text.replace(/(<div class="post".*?<\/div><\/div>)/gi,"$1\n")
-      text = text.replace(/\n<\/h1>/, "</h1>\n")
-      reg = /^<div class="post".*><div class="number">\d+.* : <\/div><div class="name"><b>(?:<a href="mailto:([^<>]*)">|<font [^>]*>)?(.*?)(?:<\/a>|<\/font>)?<\/b><\/div><div class="date">(.*)<\/div><div class="message"> ?(.*)<\/div><\/div>$/
+      text = text.replace(/<\/h1>/, "</h1></div></div>")
+      reg = /^.*?<div class="post".*><div class="number">\d+.* : <\/div><div class="name"><b>(?:<a href="mailto:([^<>]*)">|<font [^>]*>)?(.*?)(?:<\/a>|<\/font>)?<\/b><\/div><div class="date">(.*)<\/div><div class="message"> ?(.*)$/
+      separator = "</div></div>"
     else
       reg = /^(?:<\/?div.*?<br><br>)?<dt>\d+.*：(?:<a href="mailto:([^<>]*)">|<font [^>]*>)?<b>(.*)<\/b>.*：(.*)<dd> ?(.*)<br><br>$/
+      separator = "\n"
     titleReg = /<h1 .*?>(.*)\n?<\/h1>/;
     numberOfBroken = 0
     thread = res: []
     first = true
 
-    for line, key in text.split("\n")
+    for line, key in text.split(separator)
       title = titleReg.exec(line)
       regRes = reg.exec(line)
 

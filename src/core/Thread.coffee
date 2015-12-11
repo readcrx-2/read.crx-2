@@ -341,7 +341,7 @@ class app.Thread
       text = text.replace(/\n<\/h1>/, "</h1>\n")
       reg = /^<div class="post".*><div class="number">\d+.* : <\/div><div class="name"><b>(?:<a href="mailto:([^<>]*)">|<font [^>]*>)?(.*?)(?:<\/a>|<\/font>)?<\/b><\/div><div class="date">(.*)<\/div><div class="message"> ?(.*)<\/div><\/div>$/
     else
-      reg = /^(?:<div.*?<br><br>)?<dt>\d+.*：(?:<a href="mailto:([^<>]*)">|<font [^>]*>)?<b>(.*)<\/b>.*：(.*)<dd> ?(.*)<br><br>$/
+      reg = /^(?:<\/?div.*?<br><br>)?<dt>\d+.*：(?:<a href="mailto:([^<>]*)">|<font [^>]*>)?<b>(.*)<\/b>.*：(.*)<dd> ?(.*)<br><br>$/
     titleReg = /<h1 .*?>(.*)\n?<\/h1>/;
     numberOfBroken = 0
     thread = res: []
@@ -353,9 +353,8 @@ class app.Thread
 
       if title
         thread.title = app.util.decode_char_reference(title[1])
-        title2 = thread.title.replace(/ ?(?:\[(?:無断)?転載禁止\]|(?:\(c\)|©|�|&copy;|&#169;)2ch\.net) ?/g,"")
-        if title2 isnt ""
-          thread.title = title2
+        title2 = thread.title.replace(/ ?(?:\[(?:無断)?転載禁止\]|(?:\(c\)|©|�|&copy;|&#169;)(?:2ch\.net|@bbspink\.com)) ?/g,"")
+        thread.title = if title2 isnt "" then title2 else title
       else if regRes
         thread.res.push
           name: regRes[2]

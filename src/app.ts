@@ -441,10 +441,7 @@ module app {
     var xhr:XMLHttpRequest;
 
     if (/^chrome-extension:\/\//.test(location.origin)) {
-      xhr = new XMLHttpRequest();
-      xhr.open("GET", "/manifest.json", false);
-      xhr.send();
-      manifest = JSON.parse(xhr.responseText);
+      manifest = chrome.runtime.getManifest();
     }
   })();
 

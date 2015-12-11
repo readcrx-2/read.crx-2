@@ -43,7 +43,7 @@ module UI {
 
       newImg.src = img.getAttribute("data-src");
       img.removeAttribute("data-src");
-      img.src = "/img/loading.svg";
+      img.src = "/img/loading.png";
     }
 
     private watch (): void {

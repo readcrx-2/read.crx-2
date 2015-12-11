@@ -214,7 +214,7 @@ namespace :img do
     "debug/img/read.crx_16x16.png",
     "debug/img/close_16x16.png",
     "debug/img/dummy_1x1.png",
-    "debug/img/loading.svg",
+    "debug/img/loading.png",
 
     "debug/img/arrow_19x19_333_r90.png",
     "debug/img/arrow_19x19_333_r-90.png",
@@ -253,7 +253,9 @@ namespace :img do
     sh "convert -background transparent -resize 96x96 -extent 128x128-16-16 src/image/svg/read.crx.svg #{t.name}"
   end
 
-  file_copy "debug/img/loading.svg", "src/image/svg/loading.svg"
+  file "debug/img/loading.png" => "src/image/svg/loading.svg" do |t|
+    sh "convert -background transparent -resize 100x100 src/image/svg/loading.svg #{t.name}"
+  end
 end
 
 #ui

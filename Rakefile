@@ -59,7 +59,7 @@ task :pack do
       if pem_path == " "
         sh "#{ENV["CHROME_LOCATION"]} --pack-extension=\"#{tmpdir}/debug\""
       else
-        sh "#{ENV["CHROME_LOCATION"]} --pack-extension=\"#{tmpdir}/debug\" --pack-extension-key=\"#{pem_path}\""
+        sh "#{ENV["CHROME_LOCATION"]} --pack-extension=\"#{tmpdir}/debug\" --pack-extension-key=#{pem_path}"
       end
     end
     mv "#{tmpdir}/debug.crx", "read.crx_2.#{MANIFEST["version"]}.crx"

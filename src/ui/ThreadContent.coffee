@@ -51,7 +51,7 @@ class UI.ThreadContent
 
     # もしターゲットがNGだった場合、その直前の非NGレスをターゲットに変更する
     if target and target.classList.contains("ng")
-      target = $(target).prev(":not(.ng)")[0]
+      target = $(target).prevAll(":not(.ng)")[0]
 
     if target
       if animate

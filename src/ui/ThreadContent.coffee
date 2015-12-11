@@ -51,7 +51,7 @@ class UI.ThreadContent
 
     # もしターゲットがNGだった場合、その直前の非NGレスをターゲットに変更する
     if target and target.classList.contains("ng")
-      target = $(target).prev(":not(.ng)")[0]
+      target = $(target).prevAll(":not(.ng)")[0]
 
     if target
       if animate
@@ -250,6 +250,7 @@ class UI.ThreadContent
 
         tmpTxt1 = res.name + " " + res.mail + " " + res.other + " " + res.message
         tmpTxt2 = app.util.normalize(tmpTxt1)
+        ignoreResRegNumber = /^ignoreResNumber:(\d+)(-?(\d+))?,(.*)$/
         for ngWord in ngWords
           # 関係ないプレフィックスは飛ばす
           continue if do (ngWord, prefixes = ["Comment:", "Title:", "RegExpTitle:"]) ->
@@ -258,6 +259,15 @@ class UI.ThreadContent
                 return true
             return false
 
+          # 指定したレス番号はNG除外する
+          if ignoreResRegNumber.test(ngWord)
+            m = ngWord.match(ignoreResRegNumber)
+            if (m[3] and m[1] <= resNum and resNum <= m[3]) or (Number(m[1]) is resNum)
+              continue
+            else
+              ngWord = m[4]
+
+          # キーワードごとのNG処理
           if ngWord.indexOf("RegExp:") is 0
             try
               reg = new RegExp ngWord.substr(7)

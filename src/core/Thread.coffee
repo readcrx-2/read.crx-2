@@ -61,11 +61,11 @@ class app.Thread
           if promiseCacheGet.state() is "resolved"
             deltaFlg = true
             xhrPath += (+cache.res_length + 1) + "-"
-        # 2ch.netは差分をn-で取得
+        # 2ch.netは差分を-nで取得
         else if app.config.get("format_2chnet") isnt "dat" and app.url.tsld(@url) in ["2ch.net"]
           if promiseCacheGet.state() is "resolved"
             deltaFlg = true
-            xhrPath += (+cache.res_length) + "n-"
+            xhrPath += (+cache.res_length) + "-n"
 
         request = new app.HTTP.Request("GET", xhrPath, {
           preventCache: false
@@ -95,7 +95,7 @@ class app.Thread
 
         if response?.status is 200
           if deltaFlg
-            # 2ch.netならn-を使って前回取得したレスの後のレスからのものを取得する
+            # 2ch.netなら-nを使って前回取得したレスの後のレスからのものを取得する
             if app.url.tsld(@url) in ["2ch.net"]
               threadResponse = Thread.parse(@url, response.body)
               threadCache = Thread.parse(@url, cache.data)
@@ -218,8 +218,12 @@ class app.Thread
 
         if deltaFlg
           if app.url.tsld(@url) is "2ch.net" and onlyOneFlg is false
-            reg1 = ///<dt>#{cache.res_length}\ ：.*?\n<\/dl>///
-            reg2 = ///<dt>#{cache.res_length}\ ：(.|\n)*<\/dl>///
+            if response.body.indexOf("<div class=\"footer push\">read.cgi ver 06")+1
+              reg1 = ///<div\ class="post"\ id="#{cache.res_length}".*?>.*?</div></div>///
+              reg2 = ///<div\ class="post"\ id="#{cache.res_length}".*?>(.|\n)*</div></div>///
+            else
+              reg1 = ///<dt>#{cache.res_length}\ ：.*?\n<\/dl>///
+              reg2 = ///<dt>#{cache.res_length}\ ：(.|\n)*<\/dl>///
             responseText = reg2.exec(response.body)[0]
             cache.data = cache.data.replace(reg1,responseText)
             cache.res_length = thread.res.length
@@ -331,21 +335,26 @@ class app.Thread
   ###
   @_parseNet = (text) ->
     # name, mail, other, message, thread_title
-    reg = /^<dt>\d+.*：(?:<a href="mailto:([^<>]*)">|<font [^>]*>)?<b>(.*)<\/b>.*：(.*)<dd> ?(.*)<br><br>$/
-    titleReg = /<h1 .*?>(.*)<\/h1>/;
+    if text.indexOf("<div class=\"footer push\">read.cgi ver 06")+1
+      text = text.replace(/<\/h1>/, "</h1></div></div>")
+      reg = /^.*?<div class="post".*><div class="number">\d+.* : <\/div><div class="name"><b>(?:<a href="mailto:([^<>]*)">|<font [^>]*>)?(.*?)(?:<\/a>|<\/font>)?<\/b><\/div><div class="date">(.*)<\/div><div class="message"> ?(.*)$/
+      separator = "</div></div>"
+    else
+      reg = /^(?:<\/?div.*?<br><br>)?<dt>\d+.*：(?:<a href="mailto:([^<>]*)">|<font [^>]*>)?<b>(.*)<\/b>.*：(.*)<dd> ?(.*)<br><br>$/
+      separator = "\n"
+    titleReg = /<h1 .*?>(.*)\n?<\/h1>/;
     numberOfBroken = 0
     thread = res: []
     first = true
 
-    for line, key in text.split("\n")
+    for line, key in text.split(separator)
       title = titleReg.exec(line)
       regRes = reg.exec(line)
 
       if title
         thread.title = app.util.decode_char_reference(title[1])
-        title2 = thread.title.replace(/ ?(?:\[転載禁止\]|(?:\(c\)|©|�|&copy;|&#169;)2ch\.net) ?/g,"")
-        if title2 isnt ""
-          thread.title = title2
+        title2 = thread.title.replace(/ ?(?:\[(?:無断)?転載禁止\]|(?:\(c\)|©|�|&copy;|&#169;)(?:2ch\.net|@?bbspink\.com)) ?/g,"")
+        thread.title = if title2 isnt "" then title2 else title
       else if regRes
         thread.res.push
           name: regRes[2]

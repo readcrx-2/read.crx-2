@@ -92,10 +92,10 @@ do ->
     str.replace /\&(?:#(\d+)|#x([\dA-Fa-f]+)|([\da-zA-Z]+));/g, ($0, $1, $2, $3) ->
       #数値文字参照 - 10進数
       if $1?
-        String.fromCharCode($1)
+        String.fromCodePoint($1)
       #数値文字参照 - 16進数
       else if $2?
-        String.fromCharCode(parseInt($2, 16))
+        String.fromCodePoint(parseInt($2, 16))
       #文字実体参照
       else if $3?
         span.innerHTML = $0

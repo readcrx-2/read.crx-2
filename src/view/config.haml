@@ -205,6 +205,8 @@
             %input(type="file" class="history_file_hide hide" accept=".json")
             %button.history_import(type="button") インポート
             インポートすると履歴に追加されます(大量にインポートすると時間がかかります)
+            %br
+            %input.direct(type="checkbox" name="no_history") 履歴を保存しない(チェックボックスをつけているときのみ有効です)
           .cache
             キャッシュ:
             %span.cache_status

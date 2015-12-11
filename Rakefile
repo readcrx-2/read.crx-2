@@ -216,7 +216,7 @@ namespace :img do
     "debug/img/read.crx_16x16.png",
     "debug/img/close_16x16.png",
     "debug/img/dummy_1x1.png",
-    "debug/img/loading.svg",
+    "debug/img/loading.png",
 
     "debug/img/arrow_19x19_333_r90.png",
     "debug/img/arrow_19x19_333_r-90.png",
@@ -255,7 +255,9 @@ namespace :img do
     sh "convert -background transparent -resize 96x96 -extent 128x128-16-16 src/image/svg/read.crx.svg #{t.name}"
   end
 
-  file_copy "debug/img/loading.svg", "src/image/svg/loading.svg"
+  file "debug/img/loading.png" => "src/image/svg/loading.svg" do |t|
+    sh "convert -background transparent -resize 100x100 src/image/svg/loading.svg #{t.name}"
+  end
 end
 
 #ui
@@ -437,7 +439,7 @@ namespace :jquery do
       sh "git apply ../jquery_delegate_middle_click.patch --whitespace=fix"
       sh "git apply ../jquery_delete_map.patch --whitespace=fix"
       if RUBY_PLATFORM.match(/darwin|linux/)
-        sh "env PATH=$PATH:../../node_modules/.bin/ grunt"
+        sh "env PATH=../../node_modules/.bin/:\"$PATH\" grunt"
       else
         zpath = File.expand_path('../lib/jquery/node_modules/.bin', __FILE__)
         sh "#{zpath}/grunt.cmd"

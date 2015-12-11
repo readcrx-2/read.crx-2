@@ -139,7 +139,8 @@ app.boot "/view/thread.html", ["board_title_solver"], (BoardTitleSolver) ->
         return
 
     app.view_thread._draw($view).always ->
-      app.History.add(view_url, document.title, opened_at)
+      if app.config.get("no_history") is "off"
+        app.History.add(view_url, document.title, opened_at)
       return
 
   #自動ロード
@@ -196,7 +197,7 @@ app.boot "/view/thread.html", ["board_title_solver"], (BoardTitleSolver) ->
         $menu.find(".copy_id").remove()
         $menu.find(".add_id_to_ngwords").remove()
 
-      unless app.url.tsld(view_url) in ["2ch.net", "shitaraba.net"]
+      unless app.url.tsld(view_url) in ["2ch.net", "bbspink.com", "shitaraba.net"]
         $menu.find(".res_to_this, .res_to_this2").remove()
 
       unless $article.is(".popup > article")

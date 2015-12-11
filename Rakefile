@@ -43,7 +43,7 @@ task :pack do
     cp_r "debug", "#{tmpdir}/debug"
     rm_r "#{tmpdir}/debug/test"
 
-    if defined?(ENV["read.crx-2-pem-path"])
+    if ENV["read.crx-2-pem-path"]
       pem_path = ENV["read.crx-2-pem-path"]
     else
       puts "秘密鍵のパスを入力して下さい"
@@ -360,7 +360,7 @@ namespace :test do
   task :run, :filter do |t, args|
     require "cgi"
 
-    if defined?(ENV["read.crx-2-id"])
+    if ENV["read.crx-2-id"]
       url = "chrome-extension://#{ENV["read.crx-2-id"]}/test/test.html"
     else
       url = "chrome-extension://#{debug_id}/test/test.html"

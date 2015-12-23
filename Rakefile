@@ -370,14 +370,16 @@ namespace :test do
       tmp = CGI.escape(args[:filter]).gsub("\+", "%20")
       url += "?filter=#{tmp}&spec=#{tmp}"
     end
-    if RUBY_PLATFORM.include?("darwin")
-      # sh "\"/Applications/Google Chrome.app/Contents/MacOS/Google Chrome\" '#{url}'"
-    elsif RUBY_PLATFORM.include?("linux")
-      sh "google-chrome '#{url}'"
-    else
-      # Windowsの場合、Chromeの場所を環境変数から取得する(設定必)
-      sh "#{ENV["CHROME_LOCATION"]} #{url}"
-    end
+
+    # if RUBY_PLATFORM.include?("darwin")
+    #    sh "\"/Applications/Google Chrome.app/Contents/MacOS/Google Chrome\" '#{url}'"
+    # elsif RUBY_PLATFORM.include?("linux")
+    #   sh "google-chrome '#{url}'"
+    # else
+    #   # Windowsの場合、Chromeの場所を環境変数から取得する(設定必)
+    #   sh "#{ENV["CHROME_LOCATION"]} #{url}"
+    # end
+
   end
 
   directory "debug/test"

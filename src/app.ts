@@ -438,8 +438,6 @@ module app {
   export var manifest: any;
 
   (function () {
-    var xhr:XMLHttpRequest;
-
     if (/^chrome-extension:\/\//.test(location.origin)) {
       manifest = chrome.runtime.getManifest();
     }

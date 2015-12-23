@@ -386,6 +386,8 @@ class UI.ThreadContent
 
         tmp = (
           res.message
+            #imgタグ変換
+            .replace(/<img src="(.*?)".*?>/, "$1")
             #タグ除去
             .replace(/<(?!(?:br|hr|\/?b)>).*?(?:>|$)/ig, "")
             #URLリンク

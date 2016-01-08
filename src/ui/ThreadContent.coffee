@@ -388,14 +388,14 @@ class UI.ThreadContent
         tmp = (
           res.message
             #imgタグ変換
-            .replace(/<img src="(.*?)".*?>/, "$1")
+            .replace(/<img src="(.*?)".*?>/ig, "$1")
             #タグ除去
             .replace(/<(?!(?:br|hr|\/?b)>).*?(?:>|$)/ig, "")
             #URLリンク
-            .replace(/(h)?(ttps?:\/\/(?:[a-hj-zA-HJ-Z\d_\-.!~*'();\/?:@=+$,%#]|\&(?!gt;)|[iI](?![dD]:)+)+)/g,
+            .replace(/(h)?(ttps?:\/\/(?!img\.2ch\.net\/ico\/[\w\-_]+\.gif)(?:[a-hj-zA-HJ-Z\d_\-.!~*'();\/?:@=+$,%#]|\&(?!gt;)|[iI](?![dD]:)+)+)/g,
               '<a href="h$2" target="_blank">$1$2</a>')
             #Beアイコン埋め込み表示
-            .replace ///^\s*sssp://(img\.2ch\.net/ico/[\w\-_]+\.gif)\s*<br>///, ($0, $1) =>
+            .replace ///^(?:\s*sssp|https?)://(img\.2ch\.net/ico/[\w\-_]+\.gif)\s*<br>///, ($0, $1) =>
               if app.url.tsld(@url) is "2ch.net"
                 """<img class="beicon" src="/img/dummy_1x1.png" data-src="http://#{$1}" /><br />"""
               else

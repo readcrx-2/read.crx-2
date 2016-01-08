@@ -436,12 +436,9 @@ module app {
   }
 
   export var manifest: any;
-
-  (function () {
-    if (/^chrome-extension:\/\//.test(location.origin)) {
-      manifest = chrome.runtime.getManifest();
-    }
-  })();
+  if (/^chrome-extension:\/\//.test(location.origin)) {
+    manifest = chrome.runtime.getManifest();
+  }
 
   export function clipboardWrite (str:string):void {
     var textarea:HTMLTextAreaElement;

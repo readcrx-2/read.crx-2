@@ -63,7 +63,7 @@ class app.Thread
             deltaFlg = true
             xhrPath += (+cache.res_length + 1) + "-"
         # 2ch.netは差分を-nで取得
-        else if app.config.get("format_2chnet") isnt "dat" and @tsld is "2ch.net"
+        else if (app.config.get("format_2chnet") isnt "dat" and @tsld is "2ch.net") or @tsld is "bbspink.com"
           if promiseCacheGet.state() is "resolved"
             deltaFlg = true
             xhrPath += (+cache.res_length) + "-n"
@@ -97,7 +97,7 @@ class app.Thread
         if response?.status is 200
           if deltaFlg
             # 2ch.netなら-nを使って前回取得したレスの後のレスからのものを取得する
-            if @tsld is "2ch.net"
+            if @tsld in ["2ch.net", "bbspink.com"]
               threadResponse = Thread.parse(@url, response.body)
               threadCache = Thread.parse(@url, cache.data)
               # 新しいレスがない場合は最後のレスのみ表示されるのでその場合はキャッシュを送る
@@ -218,7 +218,7 @@ class app.Thread
         cache.last_updated = Date.now()
 
         if deltaFlg
-          if @tsld is "2ch.net" and onlyOneFlg is false
+          if @tsld in ["2ch.net", "bbspink.com"] and onlyOneFlg is false
             if response.body.indexOf("<div class=\"footer push\">read.cgi ver 06")+1
               reg1 = ///<div\ class="post"\ id="#{cache.res_length}".*?>.*?</div></div>///
               reg2 = ///<div\ class="post"\ id="#{cache.res_length}".*?>(.|\n)*</div></div>///

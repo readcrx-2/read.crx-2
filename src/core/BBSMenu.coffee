@@ -11,10 +11,10 @@ class app.BBSMenu
   @param {Function} Callback
   @param {Boolean} [ForceReload=false]
   ###
-  @get: (callback, forceReload = false) ->
+  @get: (callback, forceReload = false, forceCache = false) ->
     BBSMenu._callbacks.add(callback)
     unless BBSMenu._updating
-      BBSMenu._update(forceReload)
+      BBSMenu._update(forceReload, forceCache)
     return
 
   ###*
@@ -46,7 +46,7 @@ class app.BBSMenu
 
   @_callbacks: $.Callbacks()
   @_updating: false
-  @_update: (force_reload) ->
+  @_update: (force_reload, force_cache) ->
     BBSMenu._updating = true
 
     url = app.config.get("bbsmenu")
@@ -56,7 +56,7 @@ class app.BBSMenu
       .pipe(-> $.Deferred (d) ->
         if force_reload
           d.reject()
-        else if Date.now() - cache.last_updated < 1000 * 60 * 60 * 12
+        else if Date.now() - cache.last_updated < 1000 * 60 * 60 * 12 or force_cache
           d.resolve()
         else
           d.reject()

@@ -21,6 +21,35 @@ app.boot "/view/sidemenu.html", ["bbsmenu"], (BBSMenu) ->
     li.classList.add("bookmark")
     li
 
+  parsed = {}
+  parse = (res) ->
+    parsed = res
+    $view.find("h3:not(:first-of-type), ul:not(:first-of-type)").remove()
+
+    if res.message?
+      app.message.send("notify", {
+        message: res.message
+        background_color: "red"
+     })
+
+    if res.data?
+      frag = document.createDocumentFragment()
+      for category in res.data
+        h3 = document.createElement("h3")
+        h3.textContent = category.title
+        frag.appendChild(h3)
+
+        ul = document.createElement("ul")
+        for board in category.board
+          ul.appendChild(board_to_li(board))
+        frag.appendChild(ul)
+
+      $view.find("body").append(frag)
+      accordion.update()
+      accordion.open($view[0].querySelector("h3"), 0)
+      $view.removeClass("loading")
+
+
   #スレタイ検索ボックス
   $view
     .find(".search")
@@ -71,33 +100,16 @@ app.boot "/view/sidemenu.html", ["bbsmenu"], (BBSMenu) ->
 
   #板覧関連
   do ->
-    load = ->
+    firstload = ->
       $view.addClass("loading")
+      BBSMenu.get(parse, false, true)
+      load()
+      return
+    load = ->
       BBSMenu.get (res) ->
-        $view.find("h3:not(:first-of-type), ul:not(:first-of-type)").remove()
-
-        if res.message?
-          app.message.send("notify", {
-            message: res.message
-            background_color: "red"
-          })
-
-        if res.data?
-          frag = document.createDocumentFragment()
-          for category in res.data
-            h3 = document.createElement("h3")
-            h3.textContent = category.title
-            frag.appendChild(h3)
-
-            ul = document.createElement("ul")
-            for board in category.board
-              ul.appendChild(board_to_li(board))
-            frag.appendChild(ul)
-
-        $view.find("body").append(frag)
-        accordion.update()
-        accordion.open($view[0].querySelector("h3"), 0)
-        $view.removeClass("loading")
+        if parsed isnt res
+          $view.addClass("loading")
+          parse(res)
         return
       return
 
@@ -105,6 +117,6 @@ app.boot "/view/sidemenu.html", ["bbsmenu"], (BBSMenu) ->
       load()
       return
 
-    load()
+    firstload()
     return
   return

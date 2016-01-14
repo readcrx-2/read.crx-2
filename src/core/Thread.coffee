@@ -10,6 +10,7 @@ class app.Thread
     @title = null
     @res = null
     @message = null
+    @tsld = app.url.tsld(@url)
     return
 
   get: (forceUpdate) ->
@@ -21,7 +22,7 @@ class app.Thread
     xhrCharset = xhrInfo.charset
 
     getCachedInfo = $.Deferred (d) =>
-      if app.url.tsld(@url) in ["shitaraba.net", "machi.to"]
+      if @tsld in ["shitaraba.net", "machi.to"]
         app.Board.get_cached_res_count(@url)
           .done (res) ->
             d.resolve(res)
@@ -57,12 +58,12 @@ class app.Thread
     #通信
     .pipe null, =>
       $.Deferred (d) =>
-        if app.url.tsld(@url) in ["shitaraba.net", "machi.to"]
+        if @tsld in ["shitaraba.net", "machi.to"]
           if promiseCacheGet.state() is "resolved"
             deltaFlg = true
             xhrPath += (+cache.res_length + 1) + "-"
         # 2ch.netは差分を-nで取得
-        else if app.config.get("format_2chnet") isnt "dat" and app.url.tsld(@url) is "2ch.net"
+        else if (app.config.get("format_2chnet") isnt "dat" and @tsld is "2ch.net") or @tsld is "bbspink.com"
           if promiseCacheGet.state() is "resolved"
             deltaFlg = true
             xhrPath += (+cache.res_length) + "-n"
@@ -96,7 +97,7 @@ class app.Thread
         if response?.status is 200
           if deltaFlg
             # 2ch.netなら-nを使って前回取得したレスの後のレスからのものを取得する
-            if app.url.tsld(@url) is "2ch.net"
+            if @tsld in ["2ch.net", "bbspink.com"]
               threadResponse = Thread.parse(@url, response.body)
               threadCache = Thread.parse(@url, cache.data)
               # 新しいレスがない場合は最後のレスのみ表示されるのでその場合はキャッシュを送る
@@ -172,7 +173,7 @@ class app.Thread
       @message = ""
 
       #2chでrejectされてる場合は移転を疑う
-      if app.url.tsld(@url) is "2ch.net" and response
+      if @tsld is "2ch.net" and response
         app.util.ch_server_move_detect(app.url.thread_to_board(@url))
           #移転検出時
           .done (newBoardURL) =>
@@ -217,7 +218,7 @@ class app.Thread
         cache.last_updated = Date.now()
 
         if deltaFlg
-          if app.url.tsld(@url) is "2ch.net" and onlyOneFlg is false
+          if @tsld in ["2ch.net", "bbspink.com"] and onlyOneFlg is false
             if response.body.indexOf("<div class=\"footer push\">read.cgi ver 06")+1
               reg1 = ///<div\ class="post"\ id="#{cache.res_length}".*?>.*?</div></div>///
               reg2 = ///<div\ class="post"\ id="#{cache.res_length}".*?>(.|\n)*</div></div>///

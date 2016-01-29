@@ -261,6 +261,8 @@ class UI.ThreadList
   @return {String}
   ###
   @_calcHeat: (now, created, resCount) ->
+    if not /^\d+$/.test(created)
+      created = (new Date(created)).getTime()
     if created > now
       return "0.0"
     elapsed = Math.max((now - created) / 1000, 1) / (24 * 60 * 60)
@@ -322,7 +324,7 @@ class UI.ThreadList
       #タイトル
       if @_flg.title
         tmpHTML += "<td>#{app.escape_html(item.title)}</td>"
-        if /.+\.2ch\.netの人気スレ|【漫画あり】コンビニで浪人を購入する方法|★★ ２ちゃんねる\(sc\)のご案内 ★★★/.test(item.title)
+        if /.+\.2ch\.netの人気スレ|【漫画あり】コンビニで浪人を購入する方法|★★ ２ちゃんねる\(sc\)のご案内 ★★★|浪人はこんなに便利/.test(item.title)
           trClassName += " needlessThread"
 
       #板名

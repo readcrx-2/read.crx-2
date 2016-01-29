@@ -261,6 +261,8 @@ class UI.ThreadList
   @return {String}
   ###
   @_calcHeat: (now, created, resCount) ->
+    if not /^\d+$/.test(created)
+      created = (new Date(created)).getTime()
     if created > now
       return "0.0"
     elapsed = Math.max((now - created) / 1000, 1) / (24 * 60 * 60)

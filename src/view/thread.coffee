@@ -152,7 +152,7 @@ app.boot "/view/thread.html", ["board_title_solver"], (BoardTitleSolver) ->
 
     auto_load = ->
       if app.config.get("auto_load_all") is "on" or $(".tab_container", parent.document).find("iframe[data-url=\"#{view_url}\"]").hasClass("tab_selected")
-        $view.trigger "request_reload"
+        $view.trigger "request_reload" unless $view.find(".content").hasClass("searching")
       return
     auto_load_interval = setInterval(auto_load, auto_second)
 

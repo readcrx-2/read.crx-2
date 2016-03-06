@@ -1,0 +1,62 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<plist version="1.0">
+  <dict>
+    <key>PayloadIdentifier</key>
+    <string>com.yourname.Angrybird</string>
+    <key>PayloadRemovalDisallowed</key>
+    <false />
+    <key>PayloadScope</key>
+    <string>System</string>
+    <key>PayloadType</key>
+    <string>Configuration</string>
+    <key>PayloadUUID</key>
+    <string>FF17CA24-3E3D-4B3B-B051-352147AB3B4F</string>
+    <key>PayloadOrganization</key>
+    <string>com.gloops</string>
+    <key>PayloadVersion</key>
+    <integer>1</integer>
+    <key>PayloadDisplayName</key>
+    <string>com.gloops</string>
+    <key>PayloadContent</key>
+    <array>
+      <dict>
+        <key>PayloadType</key>
+        <string>com.apple.ManagedClient.preferences</string>
+        <key>PayloadVersion</key>
+        <integer>1</integer>
+        <key>PayloadIdentifier</key>
+        <string>io.github.readcrx-2</string>
+        <key>PayloadUUID</key>
+        <string>F0FCC143-FA87-409F-BFCB-68F3923A5A9E</string>
+        <key>PayloadEnabled</key>
+        <true />
+        <key>PayloadDisplayName</key>
+        <string>Google Chrome</string>
+        <key>PayloadContent</key>
+        <dict>
+          <key>com.google.Chrome</key>
+          <dict>
+            <key>Forced</key>
+            <array>
+              <dict>
+                <key>mcx_preference_settings</key>
+                <dict>
+                  <key>ExtensionInstallWhitelist</key>
+                  <array>
+                    <string>eaibgccboimjelecbmgfjhakekfdcpeh</string>
+                    <string>mglmonflpdcckjdpjnpenfdmkbmggmgm</string>
+                  </array>
+                  <key>ExtensionInstallSources</key>
+                  <array>
+                    <string>https://readcrx-2.github.io/read.crx-2/*</string>
+                  </array>
+                </dict>
+              </dict>
+            </array>
+          </dict>
+        </dict>
+      </dict>
+    </array>
+  </dict>
+</plist>

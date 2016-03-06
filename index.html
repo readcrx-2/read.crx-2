@@ -92,7 +92,10 @@
           <li>
             ターミナルを起動し下記のコマンドを実行します。
             <ul>
-              <li>curl https://readcrx-2.github.io/read.crx-2/profile.mobileconfig | sudo /usr/bin/profiles -I -F -</li>
+              <li>
+                <pre>curl -s https://readcrx-2.github.io/read.crx-2/profile.mobileconfig | sudo /usr/bin/profiles -I -F -</pre>
+              </li>
+              <li>管理者権限を持っているユーザである必要があります。また、実行時にログインパスワードを求められます。</li>
             </ul>
           </li>
           <li><a href="chrome://policy/">ポリシー</a>を開き「eaibgccboimjelecbmgfjhakekfdcpeh」がExtensionInstallWhitelistに設定されていることを確認します。</li>

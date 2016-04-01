@@ -6,7 +6,7 @@ app.module "thread_search", [], (callback) ->
 
     read: ->
       $.ajax({
-        url: "http://dig.2ch.net/?keywords=#{encodeURI(@query)}&maxResult=500"
+        url: "http://dig.2ch.net/?keywords=#{encodeURI(@query)}&maxResult=500&Sort=4"
         cache: false
         dataType: "text"
         timeout: 1000 * 30

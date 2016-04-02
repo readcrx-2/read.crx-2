@@ -19,7 +19,7 @@ app.boot "/view/search.html", ["euc_jp_escape", "thread_search"], (euc_jp_escape
   if app.config.get("no_history") is "off"
     app.History.add($view.attr("data-url"), document.title, opened_at)
 
-  $view.find(".button_link > a").attr("href", "http://search.2ch.net/search?q=" + encodeURIComponent(query))
+  $view.find(".button_link > a").attr("href", "http://dig.2ch.net/search?maxResult=500&keywords=" + encodeURIComponent(query))
 
   $table = $("<table>")
   threadList = new UI.ThreadList($table[0], {

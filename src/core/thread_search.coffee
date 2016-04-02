@@ -1,33 +1,32 @@
 app.module "thread_search", [], (callback) ->
   class ThreadSearch
     constructor: (@query) ->
-      @offset = 0
       return
 
     read: ->
       $.ajax({
-        url: "http://dig.2ch.net/?keywords=#{encodeURI(@query)}&maxResult=500&Sort=4"
+        url: "http://dig.2ch.net/?keywords=#{encodeURI(@query)}&maxResult=500&json=1"
         cache: false
         dataType: "text"
         timeout: 1000 * 30
       })
       .pipe(((responseText) => $.Deferred (d) =>
-        # UA次第で別サイトのURLが返される場合が有るため対策
-        responseText = responseText.replace(/http:\/\/bintan\.ula\.cc\/test\/read\.cgi\/([\w\.]+)\/(\w+)\/(\d+)\/\w*/g, "http://$1/test/read.cgi/$2/$3/")
-        responseText = responseText.replace(/http:\/\/bintan\.ula\.cc\/test\/2chview\.php\/([\w\.]+)\/(\w+)\/\w*(?:\?guid=ON)?/g, "http://$1/$2/")
+        try
+          result = JSON.parse(responseText)
+        catch
+          d.reject(message: "通信エラー（JSONパースエラー）")
+          return
 
-        reg = /<span id="title".*?><a href="(http:\/\/\w+\.\w+\.\w+\/test\/read\.cgi\/\w*\/\d+\/)\w*">(.+?) ? ?\((\d+)\)<\/a><\/span>(?:.|\n)*?<span class="itashibori"><a href="(http:\/\/\w+\.\w+\.\w+\/\w*\/)">(.+?)<\/a><\/span>(?:\n|.)*?<span class="time">(.+?)\(立\)<\/span>/g
         data = []
-        while x = reg.exec(responseText)
+        for x in result.result
           data.push
-            url: x[1]
-            created_at: x[6]
-            title: x[2]
-            res_count: +x[3]
-            board_url: x[4]
-            board_title: x[5]
+            url: x.url
+            created_at: new Date x.key * 1000
+            title: x.subject
+            res_count: +x.resno
+            board_url: x.url
+            board_title: x.ita
 
-        @offset += data.length
         d.resolve(data)
         return
       ), (=> $.Deferred (d) => d.reject(message: "通信エラー"); return))

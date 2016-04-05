@@ -66,6 +66,11 @@ app.boot "/write/write.html", ->
       .appendTo(document.body)
     return
 
+  $view.find(".message").on "keyup", (e) ->
+    line = this.value.split(/\n/).length
+    $view.find(".notice").text("#{this.value.length}文字 #{line}行")
+    return
+
   on_error = (message) ->
     $view.find("form input, form textarea").removeAttr("disabled")
 

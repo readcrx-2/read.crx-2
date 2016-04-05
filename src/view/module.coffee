@@ -595,6 +595,11 @@ class app.view.TabContentView extends app.view.PaneContentView
       @$element.find(".expired").toggleClass("expired_hide")
       return
 
+    # 未読スレッドを全て開く
+    @$element.find(".button_open_updated").on "click", =>
+      @$element.find(".updated").click()
+      return
+
     # タイトルをコピー
     @$element.find(".button_copy_title").on "click", =>
       app.clipboardWrite(@$element.find("title").text())

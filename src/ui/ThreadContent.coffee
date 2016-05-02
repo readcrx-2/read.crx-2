@@ -30,6 +30,18 @@ class UI.ThreadContent
     @repIndex = {}
 
     ###*
+    @property writtenRes
+    @type Array
+    ###
+    @getWrittenRes = =>
+      d = $.Deferred()
+      app.WriteHistory.getByUrl(@url).done( (data) ->
+        d.resolve(data)
+        return
+      )
+      return d.promise()
+
+    ###*
     @property oneId
     @type null | String
     ###
@@ -231,6 +243,7 @@ class UI.ThreadContent
   @param {Object | Array}
   ###
   addItem: (items) ->
+    d = $.Deferred()
     unless Array.isArray(items)
       items = [items]
 
@@ -239,7 +252,7 @@ class UI.ThreadContent
     ngWords = (app.config.get('ngwords') or "").split('\n')
     ngWords = ngWords.filter (word) -> word
 
-    do =>
+    @getWrittenRes().done((writtenRes) =>
       html = ""
 
       for res in items
@@ -331,6 +344,11 @@ class UI.ThreadContent
 
         if /(?:\u3000{5}|\u3000\u0020|[^>]\u0020\u3000)(?!<br>|$)/i.test(res.message)
           articleClass.push("aa")
+
+        for writtenHistory in writtenRes
+          if writtenHistory.res is resNum
+            articleClass.push("written")
+            break
 
         articleHtml = "<header>"
 
@@ -446,95 +464,96 @@ class UI.ThreadContent
         html += articleHtml
 
       @container.insertAdjacentHTML("BeforeEnd", html)
-      return
 
-    #idカウント, .freq/.link更新
-    do =>
-      for id, index of @idIndex
-        idCount = index.length
-        for resNum in index
-          elm = @container.childNodes[resNum - 1].getElementsByClassName("id")[0]
-          elm.firstChild.nodeValue = elm.firstChild.nodeValue.replace(/(?:\(\d+\))?$/, "(#{idCount})")
-          if idCount >= 5
-            elm.classList.remove("link")
-            elm.classList.add("freq")
-          else if idCount >= 2
-            elm.classList.add("link")
-      return
+      #idカウント, .freq/.link更新
+      do =>
+        for id, index of @idIndex
+          idCount = index.length
+          for resNum in index
+            elm = @container.childNodes[resNum - 1].getElementsByClassName("id")[0]
+            elm.firstChild.nodeValue = elm.firstChild.nodeValue.replace(/(?:\(\d+\))?$/, "(#{idCount})")
+            if idCount >= 5
+              elm.classList.remove("link")
+              elm.classList.add("freq")
+            else if idCount >= 2
+              elm.classList.add("link")
+        return
 
-    #参照関係再構築
-    do =>
-      for resKey, index of @repIndex
-        res = @container.childNodes[resKey - 1]
-        if res
-          resCount = index.length
-          if elm = res.getElementsByClassName("rep")[0]
-            newFlg = false
-          else
-            newFlg = true
-            elm = document.createElement("span")
-          elm.textContent = "返信 (#{resCount})"
-          elm.className = if resCount >= 5 then "rep freq" else "rep link"
-          res.setAttribute("data-rescount", app.util.makeList(1, resCount, " "))
-          if newFlg
-            res.getElementsByClassName("other")[0].appendChild(
-              document.createTextNode(" ")
-            )
-            res.getElementsByClassName("other")[0].appendChild(elm)
-      return
+      #参照関係再構築
+      do =>
+        for resKey, index of @repIndex
+          res = @container.childNodes[resKey - 1]
+          if res
+            resCount = index.length
+            if elm = res.getElementsByClassName("rep")[0]
+              newFlg = false
+            else
+              newFlg = true
+              elm = document.createElement("span")
+            elm.textContent = "返信 (#{resCount})"
+            elm.className = if resCount >= 5 then "rep freq" else "rep link"
+            res.setAttribute("data-rescount", app.util.makeList(1, resCount, " "))
+            if newFlg
+              res.getElementsByClassName("other")[0].appendChild(
+                document.createTextNode(" ")
+              )
+              res.getElementsByClassName("other")[0].appendChild(elm)
+        return
 
-    #サムネイル追加処理
-    do =>
-      addThumbnail = (sourceA, thumbnailPath) ->
-        sourceA.classList.add("has_thumbnail")
+      #サムネイル追加処理
+      do =>
+        addThumbnail = (sourceA, thumbnailPath) ->
+          sourceA.classList.add("has_thumbnail")
 
-        thumbnail = document.createElement("div")
-        thumbnail.className = "thumbnail"
+          thumbnail = document.createElement("div")
+          thumbnail.className = "thumbnail"
 
-        thumbnailLink = document.createElement("a")
-        thumbnailLink.href = app.safe_href(sourceA.href)
-        thumbnailLink.target = "_blank"
-        thumbnail.appendChild(thumbnailLink)
+          thumbnailLink = document.createElement("a")
+          thumbnailLink.href = app.safe_href(sourceA.href)
+          thumbnailLink.target = "_blank"
+          thumbnail.appendChild(thumbnailLink)
 
-        thumbnailImg = document.createElement("img")
-        thumbnailImg.src = "/img/dummy_1x1.png"
-        thumbnailImg.setAttribute("data-src", thumbnailPath)
-        thumbnailLink.appendChild(thumbnailImg)
+          thumbnailImg = document.createElement("img")
+          thumbnailImg.src = "/img/dummy_1x1.png"
+          thumbnailImg.setAttribute("data-src", thumbnailPath)
+          thumbnailLink.appendChild(thumbnailImg)
 
-        sib = sourceA
-        while true
-          pre = sib
-          sib = pre.nextSibling
-          if sib is null or sib.nodeName is "BR"
-            if sib?.nextSibling?.classList?.contains("thumbnail")
-              continue
-            if not pre.classList?.contains("thumbnail")
-              sourceA.parentNode.insertBefore(document.createElement("br"), sib)
-            sourceA.parentNode.insertBefore(thumbnail, sib)
-            break
-        null
+          sib = sourceA
+          while true
+            pre = sib
+            sib = pre.nextSibling
+            if sib is null or sib.nodeName is "BR"
+              if sib?.nextSibling?.classList?.contains("thumbnail")
+                continue
+              if not pre.classList?.contains("thumbnail")
+                sourceA.parentNode.insertBefore(document.createElement("br"), sib)
+              sourceA.parentNode.insertBefore(thumbnail, sib)
+              break
+          null
 
-      configThumbnailSupported = app.config.get("thumbnail_supported") is "on"
-      configThumbnailExt = app.config.get("thumbnail_ext") is "on"
+        configThumbnailSupported = app.config.get("thumbnail_supported") is "on"
+        configThumbnailExt = app.config.get("thumbnail_ext") is "on"
 
-      for a in @container.querySelectorAll(".message > a:not(.thumbnail):not(.has_thumbnail)")
-        #サムネイル表示(対応サイト)
-        if configThumbnailSupported
-          #YouTube
-          if res = /// ^https?://
-              (?:www\.youtube\.com/watch\?(?:.+&)?v=|youtu\.be/)
-              ([\w\-]+).*
-            ///.exec(a.href)
-            addThumbnail(a, "https://img.youtube.com/vi/#{res[1]}/default.jpg")
-          #ニコニコ動画
-          else if res = /// ^http://(?:www\.nicovideo\.jp/watch/|nico\.ms/)
-              (?:sm|nm)(\d+) ///.exec(a.href)
-            tmp = "http://tn-skr#{parseInt(res[1], 10) % 4 + 1}.smilevideo.jp"
-            tmp += "/smile?i=#{res[1]}"
-            addThumbnail(a, tmp)
+        for a in @container.querySelectorAll(".message > a:not(.thumbnail):not(.has_thumbnail)")
+          #サムネイル表示(対応サイト)
+          if configThumbnailSupported
+            #YouTube
+            if res = /// ^https?://
+                (?:www\.youtube\.com/watch\?(?:.+&)?v=|youtu\.be/)
+                ([\w\-]+).*
+              ///.exec(a.href)
+              addThumbnail(a, "https://img.youtube.com/vi/#{res[1]}/default.jpg")
+            #ニコニコ動画
+            else if res = /// ^http://(?:www\.nicovideo\.jp/watch/|nico\.ms/)
+                (?:sm|nm)(\d+) ///.exec(a.href)
+              tmp = "http://tn-skr#{parseInt(res[1], 10) % 4 + 1}.smilevideo.jp"
+              tmp += "/smile?i=#{res[1]}"
+              addThumbnail(a, tmp)
 
-        #サムネイル表示(画像っぽいURL)
-        if configThumbnailExt
-          if /\.(?:png|jpe?g|gif|bmp|webp)(?:[\?#:].*)?$/i.test(a.href)
-            addThumbnail(a, a.href)
-    return
+          #サムネイル表示(画像っぽいURL)
+          if configThumbnailExt
+            if /\.(?:png|jpe?g|gif|bmp|webp)(?:[\?#:].*)?$/i.test(a.href)
+              addThumbnail(a, a.href)
+      return d.resolve()
+    )
+    return d.promise()

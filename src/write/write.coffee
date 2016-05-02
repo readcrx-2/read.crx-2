@@ -89,7 +89,7 @@ app.boot "/write/write.html", ->
       $view.find(".notice").text("")
       $view.find(".iframe_container").fadeIn("fast")
 
-    chrome.extension.sendRequest(type: "written?", url: arg.url)
+    chrome.extension.sendRequest(type: "written?", url: arg.url, mes: arg.message)
 
   write_timer =
     wake: ->
@@ -109,7 +109,8 @@ app.boot "/write/write.html", ->
     else if message.type is "success"
       $view.find(".notice").text("書き込み成功")
       setTimeout ->
-        chrome.extension.sendRequest(type: "written", url: arg.url)
+        message = $view.find(".message").val()
+        chrome.extension.sendRequest(type: "written", url: arg.url, mes: message)
         chrome.tabs.getCurrent (tab) ->
           chrome.tabs.remove(tab.id)
       , 2000

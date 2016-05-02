@@ -379,6 +379,9 @@ app.main = ->
     else if url is "history"
       src: "/view/history.html"
       url: "history"
+    else if url is "writehistory"
+      src: "/view/writehistory.html"
+      url: "writehistory"
     else if url is "bookmark"
       src: "/view/bookmark.html"
       url: "bookmark"
@@ -665,7 +668,7 @@ app.main = ->
     if request.type in ["written", "written?"]
       iframe = document.querySelector("iframe[data-url=\"#{request.url}\"]")
       if iframe
-        tmp = JSON.stringify(type: "request_reload", force_update: true)
+        tmp = JSON.stringify(type: "request_reload", force_update: true, mes: request.mes)
         iframe.contentWindow.postMessage(tmp, location.origin)
 
   #viewからのメッセージを監視

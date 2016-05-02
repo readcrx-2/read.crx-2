@@ -32,10 +32,15 @@ class UI.ThreadList
       title: false
       boardTitle: false
       res: false
+      writtenRes: false
       unread: false
       heat: false
+      name: false
+      mail: false
+      message: false
       createdDate: false
       viewedDate: false
+      writtenDate: false
 
       bookmarkAddRm: !!option.bookmarkAddRm
       searchbox: undefined
@@ -45,10 +50,15 @@ class UI.ThreadList
       title: "タイトル"
       boardTitle: "板名"
       res: "レス数"
+      writtenRes: "レス番号"
       unread: "未読数"
       heat: "勢い"
+      name: "名前"
+      mail: "メール"
+      message: "本文"
       createdDate: "作成日時"
       viewedDate: "閲覧日時"
+      writtenDate: "書込日時"
 
     that = @
 
@@ -338,6 +348,13 @@ class UI.ThreadList
           tmpHTML += app.escape_html(""+item.res_count)
         tmpHTML += "</td>"
 
+      #レス番号
+      if @_flg.writtenRes
+        tmpHTML += "<td>"
+        if item.res > 0
+          tmpHTML += app.escape_html(""+item.res)
+        tmpHTML += "</td>"
+
       #未読数
       if @_flg.unread
         tmpHTML += "<td>"
@@ -352,6 +369,24 @@ class UI.ThreadList
         tmpHTML += app.escape_html(ThreadList._calcHeat(now, item.created_at, item.res_count))
         tmpHTML += "</td>"
 
+      #名前
+      if @_flg.name
+        tmpHTML += "<td>"
+        tmpHTML += app.escape_html(item.name)
+        tmpHTML += "</td>"
+
+      #メール
+      if @_flg.mail
+        tmpHTML += "<td>"
+        tmpHTML += app.escape_html(item.mail)
+        tmpHTML += "</td>"
+
+      #本文
+      if @_flg.message
+        tmpHTML += "<td>"
+        tmpHTML += app.escape_html(item.message)
+        tmpHTML += "</td>"
+
       #作成日時
       if @_flg.createdDate
         tmpHTML += "<td>"
@@ -360,6 +395,12 @@ class UI.ThreadList
 
       #閲覧日時
       if @_flg.viewedDate
+        tmpHTML += "<td>"
+        tmpHTML += app.escape_html(ThreadList._dateToString(new Date(item.date)))
+        tmpHTML += "</td>"
+
+      #書込日時
+      if @_flg.writtenDate
         tmpHTML += "<td>"
         tmpHTML += app.escape_html(ThreadList._dateToString(new Date(item.date)))
         tmpHTML += "</td>"

@@ -61,6 +61,7 @@
     "/view/config.html",
     "/view/empty.html",
     "/view/history.html",
+    "/view/writehistory.html",
     "/view/inputurl.html",
     "/view/search.html",
     "/view/sidemenu.html",

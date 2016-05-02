@@ -1,5 +1,5 @@
 ###*
-@class app.Hisapp.tory
+@class app.History
 @static
 ###
 class app.History
@@ -110,8 +110,6 @@ class app.History
 
   ###*
   @method get_all
-  @param {Number} offset
-  @param {Number} limit
   @return {Promise}
   ###
   @get_all: () ->

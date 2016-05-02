@@ -475,6 +475,7 @@ class UI.ThreadContent
             elm = document.createElement("span")
           elm.textContent = "返信 (#{resCount})"
           elm.className = if resCount >= 5 then "rep freq" else "rep link"
+          res.setAttribute("data-rescount", app.util.makeList(1, resCount, " "))
           if newFlg
             res.getElementsByClassName("other")[0].appendChild(
               document.createTextNode(" ")

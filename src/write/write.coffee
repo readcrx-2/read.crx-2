@@ -34,12 +34,12 @@ app.boot "/write/write.html", ->
             req.requestHeaders.push(name: "Referer", value: arg.url)
 
             # UA変更処理
-            for i in [0..req.requestHeaders.length-1]
-              if req.requestHeaders[i].name is "User-Agent"
-                ua = app.config.get("useragent")
-                if ua.replace(/\s+/g, "") isnt ""
-                  req.requestHeaders[i].value = ua.trim()
-                break
+            ua = app.config.get("useragent").trim()
+            if ua.length > 0
+              for i in [0..req.requestHeaders.length-1]
+                if req.requestHeaders[i].name is "User-Agent"
+                  req.requestHeaders[i].value = ua
+                  break
 
             return requestHeaders: req.requestHeaders
         return

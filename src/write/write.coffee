@@ -32,6 +32,15 @@ app.boot "/write/write.html", ->
             ///^http://jbbs\.shitaraba\.net/bbs/write\.cgi/ ///.test(req.url)
           )
             req.requestHeaders.push(name: "Referer", value: arg.url)
+
+            # UA変更処理
+            for i in [0..req.requestHeaders.length-1]
+              if req.requestHeaders[i].name is "User-Agent"
+                ua = app.config.get("useragent")
+                if ua.replace(/\s+/g, "") isnt ""
+                  req.requestHeaders[i].value = ua.trim()
+                break
+
             return requestHeaders: req.requestHeaders
         return
       {

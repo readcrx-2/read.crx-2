@@ -255,6 +255,7 @@ module app {
       dblclick_reload: "on",
       auto_load_second: "0",
       auto_load_all: "off",
+      auto_load_move: "off",
       thumbnail_supported: "on",
       thumbnail_ext: "off",
       aa_font: "aa",

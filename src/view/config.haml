@@ -78,21 +78,27 @@
         %div
           %label
             %input.direct(type="checkbox" name="dblclick_reload") スレで何もないところをダブルクリックして更新できるようにする
+
+      %section
+        %h2 自動更新
+        %div
+          %strong
+            反映にはread.crxの再起動が必要です
           %br
-          %table
-            %tbody
-              %tr
-                %td
-                  スレの自動更新間隔ミリ秒数 (最小5000ms、0にセットすると無効になります)
-                %td(rowspan="2" valign="bottom")
-                  %input.direct(type="text" name="auto_load_second" pattern="[0-9]+")ms
-              %tr
-                %td
-                  (設定後read.crxの再起動が必要です)
-              %tr
-                %td(colspan="2")
-                  %label
-                    %input.direct(type="checkbox" name="auto_load_all") 開いていないタブも自動更新する(read.crx起動後、一度は開かないと更新されません)(設定後read.crxの再起動が必要です)
+          %label
+            スレの自動更新間隔ミリ秒数 (最小5000ms、0にセットすると無効になります)
+            %input.direct(type="text" name="auto_load_second" pattern="[0-9]+")ms
+          %br
+          %label
+            %input.direct(type="checkbox" name="auto_load_all") 開いていないタブも自動更新する(read.crx起動後、一度は開かないと更新されません)
+          %br
+          自動更新後の移動
+          %label
+            %input.direct(name="auto_load_move" type="radio" value="off" checked) しない
+          %label
+            %input.direct(name="auto_load_move" type="radio" value="new") 新着レス
+          %label
+            %input.direct(name="auto_load_move" type="radio" value="newest") 最終レス
 
       %section
         %h2 サムネイル表示
@@ -212,7 +218,9 @@
       %section
         %h2 上級者向け機能
         %div
-          %p 上級者向け機能です。何が起きるのかを十分に理解して使用して下さい。
+          %strong
+            上級者向け機能です。何が起きるのかを十分に理解して使用して下さい。
+          %br
           %label.label_textarea
             ユーザーCSS(
             %a(href="http://idawef.com/read.crx-2/user-css.html" target="_blank") 詳細
@@ -229,6 +237,10 @@
             )
             %input.direct.bbsmenu(type="text" name="bbsmenu")
             %button.bbsmenu_reset(type="button") リセット
+          %br
+          %label
+            UserAgent
+            %input.direct.useragent(type="text" name="useragent")
 
       %section
         %h2 2ch.netのスレッド読み込み形式

@@ -255,6 +255,7 @@ module app {
       dblclick_reload: "on",
       auto_load_second: "0",
       auto_load_all: "off",
+      auto_load_move: "off",
       thumbnail_supported: "on",
       thumbnail_ext: "off",
       aa_font: "aa",
@@ -267,6 +268,7 @@ module app {
       no_history: "off",
       user_css: "",
       bbsmenu: "http://kita.jikkyo.org/cbm/cbm.cgi/20.p0.m0.jb.vs.op.sc.nb.bb/-all/bbsmenu.html",
+      useragent: "",
       format_2chnet: "html"
     };
 

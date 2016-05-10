@@ -148,7 +148,13 @@ app.boot "/view/thread.html", ["board_title_solver"], (BoardTitleSolver) ->
     auto_second = parseInt(app.config.get("auto_load_second"))
     if auto_second < 5000
       auto_second = 5000
-      app.config.set("auto_load_second","5000")
+      app.config.set("auto_load_second", "5000")
+
+    #設定により自動スクロールを行う
+    auto_load_move = app.config.get("auto_load_move")
+    if auto_load_move isnt "off"
+      $view.on "read_state_attached", ->
+        $view.find('.jump_'+auto_load_move).click()
 
     auto_load = ->
       if app.config.get("auto_load_all") is "on" or $(".tab_container", parent.document).find("iframe[data-url=\"#{view_url}\"]").hasClass("tab_selected")

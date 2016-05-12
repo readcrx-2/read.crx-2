@@ -131,12 +131,20 @@ app.boot "/view/thread.html", ["board_title_solver"], (BoardTitleSolver) ->
       unless on_scroll
         $content.triggerHandler("scroll")
 
-      #二度目以降のread_state_attached時に、最後に見ていたスレが当時最新のレスだった場合、新着を強調表示するためにスクロールを行う
+      #二度目以降のread_state_attached時
       $view.on "read_state_attached", ->
-        $tmp = $content.children(".last.received + article")
-        return if $tmp.length isnt 1
-        threadContent.scrollTo(+$tmp.find(".num").text(), true, -100)
-        return
+        #通常時と自動更新有効時で、更新後のスクロールの動作を変更する
+        move_mode = if app.config.get("auto_load_second") is "0" then "new" else app.config.get("auto_load_move")
+        switch move_mode
+          when "new"
+            $tmp = $content.children(".last.received + article")
+            threadContent.scrollTo(+$tmp.find(".num").text(), true, -100) if $tmp.length is 1
+          when "surely_new"
+            res_num = $view.find("article.received + article").index() + 1
+            threadContent.scrollTo(res_num, true) if typeof res_num is "number"
+          when "newest"
+            res_num = $view.find("article:last-child").index() + 1
+            threadContent.scrollTo(res_num, true) if typeof res_num is "number"
 
     app.view_thread._draw($view).always ->
       if app.config.get("no_history") is "off"
@@ -149,12 +157,6 @@ app.boot "/view/thread.html", ["board_title_solver"], (BoardTitleSolver) ->
     if auto_second < 5000
       auto_second = 5000
       app.config.set("auto_load_second", "5000")
-
-    #設定により自動スクロールを行う
-    auto_load_move = app.config.get("auto_load_move")
-    if auto_load_move isnt "off"
-      $view.on "read_state_attached", ->
-        $view.find('.jump_'+auto_load_move).click()
 
     auto_load = ->
       if app.config.get("auto_load_all") is "on" or $(".tab_container", parent.document).find("iframe[data-url=\"#{view_url}\"]").hasClass("tab_selected")

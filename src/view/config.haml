@@ -92,11 +92,13 @@
           %label
             %input.direct(type="checkbox" name="auto_load_all") 開いていないタブも自動更新する(read.crx起動後、一度は開かないと更新されません)
           %br
-          自動更新後の移動
+          自動更新後の移動:
           %label
             %input.direct(name="auto_load_move" type="radio" value="off" checked) しない
           %label
-            %input.direct(name="auto_load_move" type="radio" value="new") 新着レス
+            %input.direct(name="auto_load_move" type="radio" value="new") 未読がない場合新着レス
+          %label
+            %input.direct(name="auto_load_move" type="radio" value="surely_new") 新着レス
           %label
             %input.direct(name="auto_load_move" type="radio" value="newest") 最終レス
 

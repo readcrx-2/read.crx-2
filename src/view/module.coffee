@@ -600,8 +600,9 @@ class app.view.TabContentView extends app.view.PaneContentView
       @$element.find(".updated").each ->
         url = @getAttribute("data-href")
         title = @getAttribute("data-title")
+        lazy = app.config.get("open_all_unread_lazy") is "on"
 
-        app.message.send("open", {url, title, new_tab: true, lazy: true})
+        app.message.send("open", {url, title, new_tab: true, lazy})
       return
 
     # タイトルをコピー

@@ -252,6 +252,7 @@ module app {
       theme_id: "default",
       always_new_tab: "on",
       button_change_netsc_newtab: "off",
+      open_all_unread_lazy: "on",
       dblclick_reload: "on",
       auto_load_second: "0",
       auto_load_all: "off",

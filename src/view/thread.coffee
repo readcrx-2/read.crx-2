@@ -157,7 +157,6 @@ app.boot "/view/thread.html", ["board_title_solver"], (BoardTitleSolver) ->
       if parseInt(app.config.get("auto_load_second")) >= 5000
         return setInterval ->
           if app.config.get("auto_load_all") is "on" or $(".tab_container", parent.document).find("iframe[data-url=\"#{view_url}\"]").hasClass("tab_selected")
-            console.log(view_url)
             $view.trigger "request_reload" unless $view.find(".content").hasClass("searching")
           return
         , parseInt(app.config.get("auto_load_second"))

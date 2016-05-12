@@ -597,7 +597,11 @@ class app.view.TabContentView extends app.view.PaneContentView
 
     # 未読スレッドを全て開く
     @$element.find(".button_open_updated").on "click", =>
-      @$element.find(".updated").click()
+      @$element.find(".updated").each ->
+        url = @getAttribute("data-href")
+        title = @getAttribute("data-title")
+
+        app.message.send("open", {url, title, new_tab: true, lazy: true})
       return
 
     # タイトルをコピー

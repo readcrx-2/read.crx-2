@@ -151,14 +151,29 @@ app.boot "/view/thread.html", ["board_title_solver"], (BoardTitleSolver) ->
         app.History.add(view_url, document.title, opened_at)
       return
 
-  #自動ロード
-  if parseInt(app.config.get("auto_load_second")) >= 5000
-    auto_second = parseInt(app.config.get("auto_load_second"))
+  #自動更新
+  do ->
     auto_load = ->
-      if app.config.get("auto_load_all") is "on" or $(".tab_container", parent.document).find("iframe[data-url=\"#{view_url}\"]").hasClass("tab_selected")
-        $view.trigger "request_reload" unless $view.find(".content").hasClass("searching")
+      if parseInt(app.config.get("auto_load_second")) >= 5000
+        return setInterval ->
+          if app.config.get("auto_load_all") is "on" or $(".tab_container", parent.document).find("iframe[data-url=\"#{view_url}\"]").hasClass("tab_selected")
+            console.log(view_url)
+            $view.trigger "request_reload" unless $view.find(".content").hasClass("searching")
+          return
+        , parseInt(app.config.get("auto_load_second"))
       return
-    auto_load_interval = setInterval(auto_load, auto_second)
+
+    auto_load_interval = auto_load()
+
+    app.message.add_listener "config_updated", (message) ->
+      if message.key is "auto_load_second"
+        clearInterval auto_load_interval
+        auto_load_interval = auto_load()
+      return
+
+    window.addEventListener "view_unload", ->
+      clearInterval(auto_load_interval)
+      return
 
   $view
     #レスメニュー表示

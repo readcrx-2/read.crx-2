@@ -89,8 +89,8 @@
             反映にはread.crxの再起動が必要です
           %br
           %label
-            スレの自動更新間隔ミリ秒数 (最小5000ms、0にセットすると無効になります)
-            %input.direct(type="text" name="auto_load_second" pattern="[0-9]+")ms
+            スレの自動更新間隔ミリ秒数 (最小5000ms、最小値以下をセットすると無効になります)
+            %input.direct(type="number" name="auto_load_second" min="0")ms
           %br
           %label
             %input.direct(type="checkbox" name="auto_load_all") 開いていないタブも自動更新する(read.crx起動後、一度は開かないと更新されません)

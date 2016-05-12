@@ -21,6 +21,15 @@ app.boot "/view/config.html", ["cache", "bbsmenu"], (Cache, BBSMenu) ->
         return
 
   $view
+    .find("input.direct[type=\"number\"]")
+      .each ->
+        this.value = app.config.get(this.name) or "0"
+        null
+      .bind "input", ->
+        app.config.set(this.name, if not isNaN +this.value then this.value else "0")
+        return
+
+  $view
     .find("input.direct[type=\"checkbox\"]")
       .each ->
         this.checked = app.config.get(this.name) is "on"

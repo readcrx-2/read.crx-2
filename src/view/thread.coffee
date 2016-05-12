@@ -134,7 +134,7 @@ app.boot "/view/thread.html", ["board_title_solver"], (BoardTitleSolver) ->
       #二度目以降のread_state_attached時
       $view.on "read_state_attached", ->
         #通常時と自動更新有効時で、更新後のスクロールの動作を変更する
-        move_mode = if app.config.get("auto_load_second") is "0" then "new" else app.config.get("auto_load_move")
+        move_mode = if parseInt(app.config.get("auto_load_second")) >= 5000 then app.config.get("auto_load_move") else "new"
         switch move_mode
           when "new"
             $tmp = $content.children(".last.received + article")
@@ -152,12 +152,8 @@ app.boot "/view/thread.html", ["board_title_solver"], (BoardTitleSolver) ->
       return
 
   #自動ロード
-  if app.config.get("auto_load_second") isnt "0"
+  if parseInt(app.config.get("auto_load_second")) >= 5000
     auto_second = parseInt(app.config.get("auto_load_second"))
-    if auto_second < 5000
-      auto_second = 5000
-      app.config.set("auto_load_second", "5000")
-
     auto_load = ->
       if app.config.get("auto_load_all") is "on" or $(".tab_container", parent.document).find("iframe[data-url=\"#{view_url}\"]").hasClass("tab_selected")
         $view.trigger "request_reload" unless $view.find(".content").hasClass("searching")

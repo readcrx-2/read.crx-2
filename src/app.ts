@@ -270,7 +270,8 @@ module app {
       user_css: "",
       bbsmenu: "http://kita.jikkyo.org/cbm/cbm.cgi/20.p0.m0.jb.vs.op.sc.nb.bb/-all/bbsmenu.html",
       useragent: "",
-      format_2chnet: "html"
+      format_2chnet: "html",
+      sage_flag: "on"
     };
 
     private _cache:{[index:string]:string;} = {};

@@ -80,6 +80,18 @@ app.boot "/write/write.html", ->
     $view.find(".notice").text("#{this.value.length}文字 #{line}行")
     return
 
+  if app.config.get("sage_flag") is "on"
+    $view.find(".sage").prop("checked", true)
+    $view.find(".mail").prop("disabled", true)
+  $view.find(".sage").on "change", ->
+    if $(@).prop("checked")
+      app.config.set("sage_flag", "on")
+      $view.find(".mail").prop("disabled", true)
+    else
+      app.config.set("sage_flag", "off")
+      $view.find(".mail").prop("disabled", false)
+    return
+
   on_error = (message) ->
     $view.find("form input, form textarea").removeAttr("disabled")
 
@@ -150,7 +162,7 @@ app.boot "/write/write.html", ->
 
     iframe_arg =
       rcrx_name: $view.find(".name").val()
-      rcrx_mail: $view.find(".mail").val()
+      rcrx_mail: if $view.find(".sage").prop("checked") then "sage" else $view.find(".mail").val()
       rcrx_message: $view.find(".message").val()
 
     $iframe = $("<iframe>", src: "/view/empty.html")

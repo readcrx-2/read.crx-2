@@ -72,6 +72,9 @@
           %br
           %label
             %input.direct(type="checkbox" name="button_change_netsc_newtab") 2ch netとscの切り替え時に新しいタブで開く
+          %br
+          %label
+            %input.direct(type="checkbox" name="open_all_unread_lazy") 未読スレッドを全て開く際遅延ロードする
 
       %section
         %h2 更新
@@ -82,21 +85,20 @@
       %section
         %h2 自動更新
         %div
-          %strong
-            反映にはread.crxの再起動が必要です
-          %br
           %label
-            スレの自動更新間隔ミリ秒数 (最小5000ms、0にセットすると無効になります)
-            %input.direct(type="text" name="auto_load_second" pattern="[0-9]+")ms
+            スレの自動更新間隔ミリ秒数 (最小5000ms、最小値以下をセットすると無効になります)
+            %input.direct(type="number" name="auto_load_second" min="0")ms
           %br
           %label
             %input.direct(type="checkbox" name="auto_load_all") 開いていないタブも自動更新する(read.crx起動後、一度は開かないと更新されません)
           %br
-          自動更新後の移動
+          自動更新後の移動:
           %label
             %input.direct(name="auto_load_move" type="radio" value="off" checked) しない
           %label
-            %input.direct(name="auto_load_move" type="radio" value="new") 新着レス
+            %input.direct(name="auto_load_move" type="radio" value="new") 未読がない場合新着レス
+          %label
+            %input.direct(name="auto_load_move" type="radio" value="surely_new") 新着レス
           %label
             %input.direct(name="auto_load_move" type="radio" value="newest") 最終レス
 
@@ -223,7 +225,7 @@
           %br
           %label.label_textarea
             ユーザーCSS(
-            %a(href="http://idawef.com/read.crx-2/user-css.html" target="_blank") 詳細
+            %a(href="https://github.com/readcrx-2/read.crx-2/wiki/%E3%83%A6%E3%83%BC%E3%82%B6%E3%83%BCCSS" target="_blank") 詳細
             )
             %textarea.direct(name="user_css" rows="6" cols="80")
           %br

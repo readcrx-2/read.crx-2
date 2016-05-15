@@ -1,18 +1,22 @@
 ###*
-@class app.History
+@class app.WriteHistory
 @static
 ###
-class app.History
+class app.WriteHistory
   @_openDB: ->
     unless @_openDBPromise?
       @_openDBPromise = $.Deferred((d) ->
-        db = openDatabase("History", "", "History", 0)
+        db = openDatabase("WriteHistory", "", "WriteHistory", 0)
         db.transaction(
           (transaction) ->
             transaction.executeSql """
-              CREATE TABLE IF NOT EXISTS History(
+              CREATE TABLE IF NOT EXISTS WriteHistory(
                 url TEXT NOT NULL,
+                res INTEGER NOT NULL,
                 title TEXT NOT NULL,
+                name TEXT,
+                mail TEXT,
+                message TEXT,
                 date INTEGER NOT NULL
               )
             """
@@ -26,48 +30,31 @@ class app.History
   ###*
   @method add
   @param {String} url
+  @param {Number} res
   @param {String} title
+  @param {String} name
+  @param {String} mail
+  @param {String} message
   @param {Number} date
   @return {Promise}
   ###
-  @add: (url, title, date) ->
-    if app.assert_arg("History.add", ["string", "string", "number"], arguments)
+  @add: (url, res, title, name, mail, message, date) ->
+    if app.assert_arg("WriteHistory.add", ["string", "number", "string", "string", "string", "string", "number"], arguments)
       return $.Deferred().reject().promise()
 
     @_openDB().pipe((db) -> $.Deferred (d) ->
       db.transaction(
         (transaction) ->
           transaction.executeSql(
-            "INSERT INTO History values(?, ?, ?)"
-            [url, title, date]
+            "INSERT INTO WriteHistory values(?, ?, ?, ?, ?, ?, ?)"
+            [url, res, title, name, mail, message, date]
           )
           return
         ->
-          app.log("error", "History.add: データの格納に失敗しました")
+          app.log("error", "WriteHistory.add: データの格納に失敗しました")
           d.reject()
           return
         -> d.resolve(); return
-      )
-      return
-    )
-    .promise()
-
-  @remove: (url) ->
-    if app.assert_arg("History.remove", ["string"], arguments)
-      return $.Deferred().reject().promise()
-
-    @_openDB().pipe((db) -> $.Deferred (d) ->
-      db.transaction(
-        (transaction) ->
-          transaction.executeSql("DELETE FROM History WHERE url = ?", [url])
-          return
-        ->
-          app.log("error", "app.history.remove: トランザクション中断")
-          d.reject()
-          return
-        ->
-          d.resolve()
-          return
       )
       return
     )
@@ -80,14 +67,14 @@ class app.History
   @return {Promise}
   ###
   @get: (offset = -1, limit = -1) ->
-    if app.assert_arg("History.get", ["number", "number"], [offset, limit])
+    if app.assert_arg("WriteHistory.get", ["number", "number"], [offset, limit])
       return $.Deferred().reject().promise()
 
     @_openDB().pipe((db) -> $.Deferred (d) ->
       db.readTransaction(
         (transaction) ->
           transaction.executeSql(
-            "SELECT * FROM History ORDER BY date DESC LIMIT ? OFFSET ?"
+            "SELECT * FROM WriteHistory ORDER BY date DESC LIMIT ? OFFSET ?"
             [limit, offset]
             (transaction, result) ->
               data = []
@@ -101,7 +88,41 @@ class app.History
           )
           return
         ->
-          app.log("error", "History.get: トランザクション中断")
+          app.log("error", "WriteHistory.get: トランザクション中断")
+          d.reject()
+          return
+      )
+    )
+    .promise()
+
+  ###*
+  @method getByUrl
+  @param {String} url
+  @return {Promise}
+  ###
+  @getByUrl: (url) ->
+    if app.assert_arg("WriteHistory.getByUrl", ["string"], arguments)
+      return $.Deferred().reject().promise()
+
+    @_openDB().pipe((db) -> $.Deferred (d) ->
+      db.readTransaction(
+        (transaction) ->
+          transaction.executeSql(
+            "SELECT * FROM WriteHistory WHERE url = ?"
+            [url]
+            (transaction, result) ->
+              data = []
+              key = 0
+              length = result.rows.length
+              while key < length
+                data.push(result.rows.item(key))
+                key++
+              d.resolve(data)
+              return
+          )
+          return
+        ->
+          app.log("error", "WriteHistory.getByUrl: トランザクション中断")
           d.reject()
           return
       )
@@ -117,7 +138,7 @@ class app.History
       db.readTransaction(
         (transaction) ->
           transaction.executeSql(
-            "SELECT * FROM History"
+            "SELECT * FROM WriteHistory"
             []
             (transaction, result) ->
               d.resolve(result.rows)
@@ -125,7 +146,7 @@ class app.History
           )
           return
         ->
-          app.log("error", "History.get_all: トランザクション中断")
+          app.log("error", "WriteHistory.get_all: トランザクション中断")
           d.reject()
           return
       )
@@ -141,7 +162,7 @@ class app.History
       db.readTransaction(
         (transaction) ->
           transaction.executeSql(
-            "SELECT count() FROM History"
+            "SELECT count() FROM WriteHistory"
             []
             (transaction, result) ->
               d.resolve(result.rows.item(0)["count()"])
@@ -149,7 +170,7 @@ class app.History
           )
           return
         ->
-          app.log("error", "History.count: トランザクション中断")
+          app.log("error", "WriteHistory.count: トランザクション中断")
           d.reject()
           return
       )
@@ -162,19 +183,19 @@ class app.History
   @return {Promise}
   ###
   @clear = (offset) ->
-    if offset? and app.assert_arg("History.clear", ["number"], arguments)
+    if offset? and app.assert_arg("WriteHistory.clear", ["number"], arguments)
       return $.Deferred().reject().promise()
 
     @_openDB().pipe((db) -> $.Deferred (d) ->
       db.transaction(
         (transaction) ->
           if typeof offset is "number"
-            transaction.executeSql("DELETE FROM History WHERE rowid < (SELECT rowid FROM History ORDER BY date DESC LIMIT 1 OFFSET ?)", [offset - 1])
+            transaction.executeSql("DELETE FROM WriteHistory WHERE rowid < (SELECT rowid FROM WriteHistory ORDER BY date DESC LIMIT 1 OFFSET ?)", [offset - 1])
           else
-            transaction.executeSql("DELETE FROM History")
+            transaction.executeSql("DELETE FROM WriteHistory")
           return
         ->
-          app.log("error", "app.history.clear: トランザクション中断")
+          app.log("error", "app.WriteHistory.clear: トランザクション中断")
           d.reject()
           return
         ->

@@ -1,0 +1,27 @@
+!!! 5
+%html.view.view_history(data-app-version="#{MANIFEST["version"]}" tabindex="-1")
+  %head
+    %meta(charset="utf-8")
+    %meta(name="referrer" content="never")
+    %meta(http-equiv="X-Frame-Options" content="SAMEORIGIN")
+    %title 書込履歴
+    %link(rel="stylesheet" href="/ui.css?v=#{MANIFEST["version"]}")
+    %link(rel="stylesheet" href="writehistory.css?v=#{MANIFEST["version"]}")
+    %script(src="/lib/jquery/jquery.min.js?v=#{MANIFEST["version"]}")
+    %script(src="/ui.js?v=#{MANIFEST["version"]}")
+    %script(src="/app.js?v=#{MANIFEST["version"]}")
+    %script(src="module.js?v=#{MANIFEST["version"]}")
+    %script(src="writehistory.js?v=#{MANIFEST["version"]}")
+  %body
+    %nav.nav_bar
+      %label
+        %input.searchbox
+        %span.hit_count
+      .button.button_back.disabled
+      .button.button_forward.disabled
+      .button.button_reload
+      .button.button_tool
+        %ul
+          %li.button_history_clear 書込履歴を消去
+    .content(tabindex="0")
+    .loading_overlay Loading...

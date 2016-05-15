@@ -245,3 +245,11 @@ app.util.normalize = (str) ->
     .replace(/[\u0020\u3000]/g, "")
     #大文字を小文字に変換
     .toLowerCase()
+
+# nからmをaで区切った文字列を出力
+app.util.makeList = (n, m, a) ->
+  s = ""
+  for i in [n...m]
+    s += i + a
+  s += m
+  return s

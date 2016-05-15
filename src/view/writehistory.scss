@@ -1,0 +1,20 @@
+@import "../common.scss";
+
+@include common;
+@include tab-content;
+@include content-table;
+
+@media (max-width: 500px) {
+  th.viewed_date {
+    width: 0;
+  }
+}
+
+.content {
+  tbody:empty {
+    display: block;
+    &:after {
+      content: "書込履歴は空です";
+    }
+  }
+}

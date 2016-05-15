@@ -412,11 +412,10 @@ namespace :jquery do
     end
   end
 
-  file "debug/lib/jquery/jquery.min.js" => "lib/jquery_delegate_middle_click.patch" do
+  file "debug/lib/jquery/jquery.min.js" => "lib/jquery_delete_map.patch" do
     Rake::Task["jquery:clean"].invoke
     cd "lib/jquery" do
       sh "npm install"
-      sh "git apply ../jquery_delegate_middle_click.patch --whitespace=fix"
       sh "git apply ../jquery_delete_map.patch --whitespace=fix"
       if RUBY_PLATFORM.match(/darwin|linux/)
         sh "env PATH=../../node_modules/.bin/:\"$PATH\" grunt"
@@ -424,7 +423,6 @@ namespace :jquery do
         zpath = File.expand_path('../lib/jquery/node_modules/.bin', __FILE__)
         sh "#{zpath}/grunt.cmd"
       end
-      sh "sed -i -e \"3a /* このファイルはread.crx 2用にawefが改造した物です */\" dist/jquery.min.js"
     end
 
     mkdir_p "debug/lib/jquery"

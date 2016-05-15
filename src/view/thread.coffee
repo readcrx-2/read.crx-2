@@ -108,8 +108,22 @@ app.boot "/view/thread.html", ["board_title_solver"], (BoardTitleSolver) ->
           .hide()
           .text("")
 
-      app.view_thread._draw($view, ex?.force_update)
-
+      app.view_thread._draw($view, ex?.force_update, (thread) ->
+        if ex?.mes?
+          i = thread.res.length - 1
+          while i >= 0
+            message = app.util.decode_char_reference(thread.res[i].message)
+            if ex.mes is message
+              date_ = /(\d\d\d\d)\/(\d\d)\/(\d\d)... (\d\d):(\d\d):(\d\d)/.exec(thread.res[i].other)
+              if date_?
+                date = new Date(date_[1], date_[2], date_[3], date_[4], date_[5], date_[6]).valueOf()
+                name = app.util.decode_char_reference(thread.res[i].name)
+                mail = app.util.decode_char_reference(thread.res[i].mail)
+                app.WriteHistory.add(view_url, i+1, document.title, name, mail, message, date) unless isNaN(date)
+              break
+            i--
+        return
+      )
     return
 
   #初回ロード処理
@@ -653,7 +667,7 @@ app.boot "/view/thread.html", ["board_title_solver"], (BoardTitleSolver) ->
 
   return
 
-app.view_thread._draw = ($view, force_update) ->
+app.view_thread._draw = ($view, force_update, beforeAdd) ->
   deferred = $.Deferred()
 
   $view.addClass("loading")
@@ -671,13 +685,14 @@ app.view_thread._draw = ($view, force_update) ->
 
     document.title = thread.title
 
-    $view.data("threadContent").addItem(thread.res.slice(content.children.length))
+    $view.data("threadContent").addItem(thread.res.slice(content.children.length)).done( ->
+      $view.data("lazyload").scan()
 
-    $view.data("lazyload").scan()
+      $view.trigger("view_loaded")
 
-    $view.trigger("view_loaded")
-
-    deferred.resolve()
+      deferred.resolve(thread)
+    )
+    return
 
   thread = new app.Thread($view.attr("data-url"))
   thread.get(force_update)
@@ -685,6 +700,7 @@ app.view_thread._draw = ($view, force_update) ->
       fn(thread, false)
       return
     .done ->
+      beforeAdd?(thread)
       fn(thread, false)
       return
     .fail ->
@@ -695,7 +711,7 @@ app.view_thread._draw = ($view, force_update) ->
       setTimeout((-> $reload_button.removeClass("disabled")), 1000 * 5)
       return
 
-  deferred.promise()
+  return deferred.promise()
 
 app.view_thread._read_state_manager = ($view) ->
   view_url = $view.attr("data-url")

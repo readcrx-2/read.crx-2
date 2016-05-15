@@ -1,6 +1,6 @@
 {
   "name" : "read.crx 2",
-  "version" : "1.1.0",
+  "version" : "1.2.0",
   "update_url": "http://readcrx-2.github.io/read.crx-2/updates.xml",
   "homepage_url": "http://readcrx-2.github.io/read.crx-2/",
   "description" : "2chブラウザ",
@@ -61,6 +61,7 @@
     "/view/config.html",
     "/view/empty.html",
     "/view/history.html",
+    "/view/writehistory.html",
     "/view/inputurl.html",
     "/view/search.html",
     "/view/sidemenu.html",

@@ -2,6 +2,7 @@ do ->
   if frameElement
     modules = [
       "History"
+      "WriteHistory"
       "Thread"
       "board"
       "bookmark"
@@ -345,7 +346,10 @@ class app.view.PaneContentView extends app.view.IframeView
         # request_reload(postMessage) -> request_reload(event) 翻訳処理
         if message.type is "request_reload"
           if message.force_update is true
-            @$element.trigger("request_reload", force_update: true)
+            if message.mes?
+              @$element.trigger("request_reload", force_update: true, mes: message.mes)
+            else
+              @$element.trigger("request_reload", force_update: true)
           else
             @$element.trigger("request_reload")
 

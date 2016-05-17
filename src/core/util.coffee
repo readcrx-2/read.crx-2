@@ -253,3 +253,7 @@ app.util.makeList = (n, m, a) ->
     s += i + a
   s += m
   return s
+
+# striptags
+app.util.stripTags = (str) ->
+  return str.replace(/(<([^>]+)>)/ig, "")

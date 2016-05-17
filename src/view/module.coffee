@@ -345,13 +345,11 @@ class app.view.PaneContentView extends app.view.IframeView
 
         # request_reload(postMessage) -> request_reload(event) 翻訳処理
         if message.type is "request_reload"
-          if message.force_update is true
-            if message.mes?
-              @$element.trigger("request_reload", force_update: true, mes: message.mes)
-            else
-              @$element.trigger("request_reload", force_update: true)
-          else
-            @$element.trigger("request_reload")
+          @$element.trigger(
+            "request_reload",
+            force_update: message.force_update is true,
+            mes: if message.mes? then message.mes else null
+          )
 
         # tab_selected(postMessage) -> tab_selected(event) 翻訳処理
         else if message.type is "tab_selected"

@@ -676,12 +676,13 @@ app.view_thread._draw = ($view, force_update, beforeAdd) ->
   content = $view.find(".content")[0]
 
   fn = (thread, error) ->
+    d = $.Deferred()
     if error
       $view.find(".message_bar").addClass("error").html(thread.message)
     else
       $view.find(".message_bar").removeClass("error").empty()
 
-    (deferred.reject(); return) unless thread.res?
+    (d.reject(); return) unless thread.res?
 
     document.title = thread.title
 
@@ -690,25 +691,28 @@ app.view_thread._draw = ($view, force_update, beforeAdd) ->
 
       $view.trigger("view_loaded")
 
-      deferred.resolve(thread)
+      d.resolve(thread)
     )
-    return
+    return d.promise()
 
   thread = new app.Thread($view.attr("data-url"))
-  thread.get(force_update)
+  threadGetDeferred = null
+  promiseThreadGet = thread.get(force_update)
     .progress ->
-      fn(thread, false)
-      return
-    .done ->
-      beforeAdd?(thread)
-      fn(thread, false)
-      return
-    .fail ->
-      fn(thread, true)
+      threadGetDeferred = fn(thread, false)
       return
     .always ->
-      $view.removeClass("loading")
-      setTimeout((-> $reload_button.removeClass("disabled")), 1000 * 5)
+      threadGetDeferred = $.Deferred().resolve() unless threadGetDeferred
+      threadGetDeferred.always ->
+        promiseThreadGetState = promiseThreadGet.state() is "resolved"
+        beforeAdd?(thread) if promiseThreadGetState
+        threadGetDeferred = fn(thread, not promiseThreadGetState)
+        .always ->
+          $view.removeClass("loading")
+          setTimeout((-> $reload_button.removeClass("disabled")), 1000 * 5)
+          if threadGetDeferred.state() is "resolved" then deferred.resolve() else deferred.reject()
+          return
+        return
       return
 
   return deferred.promise()

@@ -1,4 +1,4 @@
-///<reference path="../lib/DefinitelyTyped/jquery/jquery.d.ts" />
+///<reference path="../typings/globals/jquery/index.d.ts" />
 
 interface Window {
   chrome: any;

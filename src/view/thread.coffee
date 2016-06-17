@@ -116,7 +116,7 @@ app.boot "/view/thread.html", ["board_title_solver"], (BoardTitleSolver) ->
             if message is app.util.decode_char_reference(app.util.stripTags(thread.res[i].message)).replace(/\s/g, "")
               date_ = /(\d{4})\/(\d\d)\/(\d\d)... (\d\d):(\d\d):(\d\d)(\.(\d+))?/.exec(thread.res[i].other)
               if date_?
-                date = new Date(date_[1], date_[2], date_[3], date_[4], date_[5], date_[6], if date_[8]? then date_[8] else null).valueOf()
+                date = new Date(date_[1], date_[2]-1, date_[3], date_[4], date_[5], date_[6], if date_[8]? then date_[8] else null).valueOf()
                 name = app.util.decode_char_reference(thread.res[i].name)
                 mail = app.util.decode_char_reference(thread.res[i].mail)
                 app.WriteHistory.add(view_url, i+1, document.title, name, mail, ex.mes, date) unless isNaN(date)

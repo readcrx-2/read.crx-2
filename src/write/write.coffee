@@ -13,6 +13,18 @@ do ->
       return
   return
 
+###
+# Util
+###
+IsExists = (array, v) ->
+  for obj in array
+    if v == obj
+      return true
+  return false
+PushArray = (array, v) ->
+  array.push(v) unless IsExists(array, v)
+  return true
+
 app.boot "/write/write.html", ->
   arg = app.url.parse_query(location.href)
   arg.url = app.url.fix(arg.url)
@@ -91,6 +103,28 @@ app.boot "/write/write.html", ->
       app.config.set("sage_flag", "off")
       $view.find(".mail").prop("disabled", false)
     return
+
+  app.WriteHistory.getByUrl(arg.url).done( (data) ->
+    names = []
+    mails = []
+    for d in data
+      if names.length<=5
+        PushArray(names, d.name)
+      if mails.length<=5
+        PushArray(mails, d.mail)
+      if names.length+mails.length>=10
+        break
+    html = "<datalist id=\"names\">"
+    for n in names
+      html += "<option value=\"#{n}\">"
+    html += "</datalist>"
+    html += "<datalist id=\"mails\">"
+    for m in mails
+      html += "<option value=\"#{m}\">"
+    html += "</datalist>"
+    $("#main").append($(html))
+    return
+  )
 
   on_error = (message) ->
     $view.find("form input, form textarea").removeAttr("disabled")

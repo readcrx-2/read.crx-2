@@ -106,6 +106,7 @@ Session.vim
 *~
 
 ### My Project
-debug/
-src/app.js
+/debug/
+/src/app.js
 *.crx
+/typings/

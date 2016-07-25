@@ -19,14 +19,13 @@ task :default => [
   "zombie:build",
   "write:build",
   "test:build",
-  "jquery:build",
+  "jquery",
   "rmappjs"
 ]
 
 task :clean do
   rm_f "./read.crx_2.zip"
   rm_rf "debug"
-  Rake::Task["jquery:clean"].invoke
 end
 
 task :pack do
@@ -324,6 +323,7 @@ namespace :write do
   file_ct "debug/write/write.js", [
     "src/core/URL.ts",
     "src/core/Ninja.coffee",
+    "src/core/WriteHistory.coffee",
     "src/write/write.coffee"
   ]
 
@@ -384,48 +384,24 @@ namespace :test do
 
   directory "debug/test"
 
-  file_copy "debug/test/jquery.mockjax.js", "lib/jquery-mockjax/jquery.mockjax.js"
+  file_copy "debug/test/jquery.mockjax.js", "node_modules/jquery-mockjax/dist/jquery.mockjax.js"
 
   directory "debug/test/jasmine"
-  file_copy "debug/test/jasmine/jasmine.js", "lib/jasmine/lib/jasmine-core/jasmine.js"
-  file_copy "debug/test/jasmine/jasmine-html.js", "lib/jasmine/lib/jasmine-core/jasmine-html.js"
-  file_copy "debug/test/jasmine/jasmine.css", "lib/jasmine/lib/jasmine-core/jasmine.css"
+  file_copy "debug/test/jasmine/jasmine.js", "node_modules/jasmine-core/lib/jasmine-core/jasmine.js"
+  file_copy "debug/test/jasmine/jasmine-html.js", "node_modules/jasmine-core/lib/jasmine-core/jasmine-html.js"
+  file_copy "debug/test/jasmine/jasmine.css", "node_modules/jasmine-core/lib/jasmine-core/jasmine.css"
 
   file_coffee "debug/test/spec.js", FileList["src/test/*.spec.coffee"]
 
   directory "debug/test/qunit"
-  file_copy "debug/test/qunit/qunit.js", "lib/qunit/qunit/qunit.js"
-  file_copy "debug/test/qunit/qunit.css", "lib/qunit/qunit/qunit.css"
-  file_copy "debug/test/qunit/qunit-step.js", "lib/qunit/addons/step/qunit-step.js"
+  file_copy "debug/test/qunit/qunit.js", "node_modules/qunitjs/qunit/qunit.js"
+  file_copy "debug/test/qunit/qunit.css", "node_modules/qunitjs/qunit/qunit.css"
+  file_copy "debug/test/qunit/qunit-step.js", "node_modules/qunit-assert-step/qunit-assert-step.js"
 
   file_coffee "debug/test/test.js", FileList["src/test/test_*.coffee"]
 end
 
-namespace :jquery do
-  task :build => "debug/lib/jquery/jquery.min.js"
-
-  task :clean do
-    rm_rf "debug/lib/jquery"
-    cd "lib/jquery" do
-      sh "git checkout -f"
-      sh "git clean -fdx -e node_modules/"
-    end
-  end
-
-  file "debug/lib/jquery/jquery.min.js" => "lib/jquery_delete_map.patch" do
-    Rake::Task["jquery:clean"].invoke
-    cd "lib/jquery" do
-      sh "npm install"
-      sh "git apply ../jquery_delete_map.patch --whitespace=fix"
-      if RUBY_PLATFORM.match(/darwin|linux/)
-        sh "env PATH=../../node_modules/.bin/:\"$PATH\" grunt"
-      else
-        zpath = File.expand_path('../lib/jquery/node_modules/.bin', __FILE__)
-        sh "#{zpath}/grunt.cmd"
-      end
-    end
-
-    mkdir_p "debug/lib/jquery"
-    cp "lib/jquery/dist/jquery.min.js", "debug/lib/jquery/jquery.min.js"
-  end
+task :jquery do
+  mkdir_p "debug/lib/jquery"
+  cp "node_modules/jquery/dist/jquery.min.js", "debug/lib/jquery/jquery.min.js"
 end

@@ -7,11 +7,12 @@ read.crx 2は[Google Chrome][chrome]アプリとして作られた2chブラウ�
 # ビルド手順
 [npm][npm], [Bundler][bundler], [ImageMagick][imagemagick], [ClamAV][clamav]が予め導入されている必要が有ります。
 
-    git clone --recursive git://github.com/readcrx-2/read.crx-2.git
+    git clone git://github.com/readcrx-2/read.crx-2.git
 
     cd read.crx-2
 
     npm install
+    node_modules/.bin/typings install
     bundle install
 
     bundle exec rake pack

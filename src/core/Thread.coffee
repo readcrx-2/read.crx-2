@@ -101,7 +101,8 @@ class app.Thread
               threadResponse = Thread.parse(@url, response.body)
               threadCache = Thread.parse(@url, cache.data)
               # 新しいレスがない場合は最後のレスのみ表示されるのでその場合はキャッシュを送る
-              if threadResponse.res.length is 1
+              # 立てたばかりで元々レスが1つしかない場合は除外する
+              if threadResponse.res.length is 1 and threadCache > 0
                 onlyOneFlg = true
                 thread = threadCache
               else

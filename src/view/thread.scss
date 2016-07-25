@@ -359,6 +359,7 @@ header {
   $res-name-color,
   $res-name-ob-color,
   $res-name-own-color,
+  $res-name-own-ob-color,
   $link-color,
   $freq-color,
   $anchor-color,
@@ -396,8 +397,13 @@ header {
     color: $res-name-color;
   }
 
-  .written .name {
-    color: $res-name-own-color;
+  .written {
+    .name {
+      color: $res-name-own-color;
+    }
+    .ob {
+      color: $res-name-own-ob-color;
+    }
   }
 
   .ob {
@@ -458,6 +464,7 @@ header {
     $res-name-color: #008000,
     $res-name-ob-color: #036,
     $res-name-own-color: #ff4500,
+    $res-name-own-ob-color: #ff7b00,
     $link-color: #00a,
     $freq-color: #a00,
     $anchor-color: #00e,
@@ -482,6 +489,7 @@ header {
     $res-name-color: #9d9,
     $res-name-ob-color: #69d,
     $res-name-own-color: #ff4500,
+    $res-name-own-ob-color: #ff7b00,
     $link-color: #69d,
     $freq-color: #d99,
     $anchor-color: #6af,

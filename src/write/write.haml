@@ -14,14 +14,14 @@
       %header
         %h1
         %button.preview_button(tabindex="1") AA表示確認
-      %div
+      %div#main
         %input(type="submit" value="書き込む" tabindex="5")
         %label
           名前:
-          %input.name(size="19" tabindex="2")
+          %input.name(size="19" tabindex="2" list="names")
         %label
           E-mail:
-          %input.mail(size="19" tabindex="3")
+          %input.mail(size="19" tabindex="3" list="mails")
         %label
           %input.sage(type="checkbox") sage
       %textarea.message(wrap="off" tabindex="4" autofocus required)

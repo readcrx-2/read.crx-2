@@ -323,6 +323,7 @@ namespace :write do
   file_ct "debug/write/write.js", [
     "src/core/URL.ts",
     "src/core/Ninja.coffee",
+    "src/core/WriteHistory.coffee",
     "src/write/write.coffee"
   ]
 

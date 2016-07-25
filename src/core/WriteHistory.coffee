@@ -108,7 +108,7 @@ class app.WriteHistory
       db.readTransaction(
         (transaction) ->
           transaction.executeSql(
-            "SELECT * FROM WriteHistory WHERE url = ?"
+            "SELECT * FROM WriteHistory WHERE url = ? ORDER BY date"
             [url]
             (transaction, result) ->
               data = []

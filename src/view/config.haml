@@ -199,6 +199,10 @@
             %input(type="file" class="writehistory_file_hide hide" accept=".json")
             %button.writehistory_import(type="button") インポート
             インポートすると書込履歴に追加されます(大量にインポートすると時間がかかります)
+            %br
+            %button.writehistory_delete_table(type="button") テーブル削除
+            (1.2.0～1.3.0から1.3.1以降へ移行時に一度だけ実行してください、実行後に再起動してください)
+            %br
           .cache
             キャッシュ:
             %span.cache_status

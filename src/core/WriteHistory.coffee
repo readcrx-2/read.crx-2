@@ -16,6 +16,8 @@ class app.WriteHistory
                 title TEXT NOT NULL,
                 name TEXT,
                 mail TEXT,
+                input_name TEXT,
+                input_mail TEXT,
                 message TEXT,
                 date INTEGER NOT NULL
               )
@@ -38,16 +40,16 @@ class app.WriteHistory
   @param {Number} date
   @return {Promise}
   ###
-  @add: (url, res, title, name, mail, message, date) ->
-    if app.assert_arg("WriteHistory.add", ["string", "number", "string", "string", "string", "string", "number"], arguments)
+  @add: (url, res, title, name, mail, input_name, input_mail, message, date) ->
+    if app.assert_arg("WriteHistory.add", ["string", "number", "string", "string", "string", "string", "string", "string", "number"], arguments)
       return $.Deferred().reject().promise()
 
     @_openDB().pipe((db) -> $.Deferred (d) ->
       db.transaction(
         (transaction) ->
           transaction.executeSql(
-            "INSERT INTO WriteHistory values(?, ?, ?, ?, ?, ?, ?)"
-            [url, res, title, name, mail, message, date]
+            "INSERT INTO WriteHistory values(?, ?, ?, ?, ?, ?, ?, ?, ?)"
+            [url, res, title, name, mail, input_name, input_mail, message, date]
           )
           return
         ->

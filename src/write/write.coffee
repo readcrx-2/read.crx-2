@@ -109,10 +109,10 @@ app.boot "/write/write.html", ->
     mails = []
     for d in data
       if names.length<=5
-        PushArray(names, d.name)
+        PushArray(names, d.input_name)
       if mails.length<=5
-        PushArray(mails, d.mail)
-      if names.length+mails.length>=10
+        PushArray(mails, d.input_mail)
+      if names.length+mails.length>10
         break
     html = "<datalist id=\"names\">"
     for n in names
@@ -135,7 +135,7 @@ app.boot "/write/write.html", ->
       $view.find(".notice").text("")
       $view.find(".iframe_container").fadeIn("fast")
 
-    chrome.extension.sendRequest(type: "written?", url: arg.url, mes: arg.message)
+    chrome.extension.sendRequest(type: "written?", url: arg.url, mes: arg.message, name: arg.name, mail: arg.mail)
 
   write_timer =
     wake: ->
@@ -156,7 +156,9 @@ app.boot "/write/write.html", ->
       $view.find(".notice").text("書き込み成功")
       setTimeout ->
         message = $view.find(".message").val()
-        chrome.extension.sendRequest(type: "written", url: arg.url, mes: message)
+        name = $view.find(".name").val()
+        mail = $view.find(".mail").val()
+        chrome.extension.sendRequest(type: "written", url: arg.url, mes: message, name: name, mail: mail)
         chrome.tabs.getCurrent (tab) ->
           chrome.tabs.remove(tab.id)
       , 2000

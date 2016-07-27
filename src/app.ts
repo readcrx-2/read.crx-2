@@ -440,9 +440,16 @@ module app {
   }
 
   export var manifest: any;
-  if (/^chrome-extension:\/\//.test(location.origin)) {
-    manifest = chrome.runtime.getManifest();
-  }
+
+  (function() {
+    var xhr:XMLHttpRequest;
+    if (/^chrome-extension:\/\//.test(location.origin)) {
+      xhr = new XMLHttpRequest();
+      xhr.open("GET", "/manifest.json", false);
+      xhr.send();
+      manifest = JSON.parse(xhr.responseText);
+    }
+  })();
 
   export function clipboardWrite (str:string):void {
     var textarea:HTMLTextAreaElement;

@@ -36,7 +36,8 @@ class app.Thread
 
     cache = new app.Cache(xhrPath)
     deltaFlg = false
-    onlyOneFlg = false
+    readcgisixFlg = false
+    noChangeFlg = false
 
     #キャッシュ取得
     promiseCacheGet = cache.get()
@@ -66,7 +67,11 @@ class app.Thread
         else if (app.config.get("format_2chnet") isnt "dat" and @tsld is "2ch.net") or @tsld is "bbspink.com"
           if promiseCacheGet.state() is "resolved"
             deltaFlg = true
-            xhrPath += (+cache.res_length) + "-n"
+            if cache.data.indexOf("<div class=\"footer push\">read.cgi ver 06")+1
+              readcgisixFlg = true
+              xhrPath += (+cache.res_length + 1) + "-n"
+            else
+              xhrPath += (+cache.res_length) + "-n"
 
         request = new app.HTTP.Request("GET", xhrPath, {
           preventCache: false
@@ -84,6 +89,8 @@ class app.Thread
         request.send (response) ->
           if response.status is 200
             d.resolve(response)
+          else if response.status is 500 and readcgisixFlg
+            d.resolve(response)
           else if promiseCacheGet.state() is "resolved" and response.status is 304
             d.resolve(response)
           else
@@ -94,23 +101,26 @@ class app.Thread
       $.Deferred (d) =>
         guessRes = app.url.guess_type(@url)
 
-        if response?.status is 200
+        if response?.status is 200 or (readcgisixFlg and response?.status is 500)
           if deltaFlg
             # 2ch.netなら-nを使って前回取得したレスの後のレスからのものを取得する
             if @tsld in ["2ch.net", "bbspink.com"]
-              threadResponse = Thread.parse(@url, response.body)
               threadCache = Thread.parse(@url, cache.data)
-              console.log threadResponse
-              console.log threadCache
-              # 新しいレスがない場合は最後のレスのみ表示されるのでその場合はキャッシュを送る
-              # 立てたばかりで元々レスが1つしかない場合は除外する
-              if threadResponse.res.length is 1 and threadCache.res.length <= 1
-                onlyOneFlg = true
+              # readcgi ver6だと変更がないと500が帰ってくる
+              if readcgisixFlg and response.status is 500
+                noChangeFlg = true
                 thread = threadCache
               else
-                threadResponse.res.splice(0, 1)
-                thread = threadResponse
-                thread.res = threadCache.res.concat(threadResponse.res)
+                threadResponse = Thread.parse(@url, response.body)
+                # 新しいレスがない場合は最後のレスのみ表示されるのでその場合はキャッシュを送る
+                if !readcgisixFlg and threadResponse.res.length is 1
+                  noChangeFlg = true
+                  thread = threadCache
+                else
+                  unless readcgisixFlg
+                    threadResponse.res.splice(0, 1)
+                  thread = threadResponse
+                  thread.res = threadCache.res.concat(threadResponse.res)
             else
               thread = Thread.parse(@url, cache.data + response.body)
           else
@@ -130,6 +140,8 @@ class app.Thread
           if response?.status is 200 or
               #通信成功（更新なし）
               response?.status is 304 or
+              #通信成功（2ch read.cgi ver6の差分更新なし）
+              (readcgisixFlg and response?.status is 500) or
               #キャッシュが期限内だった場合
               (not response and promiseCacheGet.state() is "resolved")
             d.resolve(response, thread)
@@ -217,23 +229,27 @@ class app.Thread
     #キャッシュ更新部
     .done (response, thread) =>
       #通信に成功した場合
-      if response?.status is 200
+      if response?.status is 200 or (readcgisixFlg and response?.status is 500)
         cache.last_updated = Date.now()
 
         if deltaFlg
-          if @tsld in ["2ch.net", "bbspink.com"] and onlyOneFlg is false
-            if response.body.indexOf("<div class=\"footer push\">read.cgi ver 06")+1
-              reg1 = ///<div\ class="post"\ id="#{cache.res_length}".*?>.*?</div></div>///
-              reg2 = ///<div\ class="post"\ id="#{cache.res_length}".*?>(.|\n)*</div></div>///
+          if @tsld in ["2ch.net", "bbspink.com"] and noChangeFlg is false
+            if readcgisixFlg
+              before = response.body.indexOf("<div class=\"thread\">")+20
+              after = response.body.indexOf("</div></div></div>")+12
+              place = cache.data.indexOf("</div></div></div>")+12
+              cache.data = cache.data.slice(0, place) + response.body.slice(before, after) + cache.data.slice(place, cache.data.length)
             else
-              reg1 = ///<dt>#{cache.res_length}\ ：.*?\n<\/dl>///
-              reg2 = ///<dt>#{cache.res_length}\ ：(.|\n)*<\/dl>///
-            responseText = reg2.exec(response.body)[0]
-            cache.data = cache.data.replace(reg1,responseText)
+              # 1つのときは</dl>がなぜか存在しないので別処理
+              if cache.res_length is 1
+                cache.data = response.body
+              else
+                reg1 = ///<dt>#{cache.res_length}\ ：.*?\n<\/dl>///
+                reg2 = ///<dt>#{cache.res_length}\ ：(.|\n)*<\/dl>///
+                responseText = reg2.exec(response.body)[0]
+                cache.data = cache.data.replace(reg1,responseText)
             cache.res_length = thread.res.length
-          else if onlyOneFlg is true
-            cache.res_length = thread.res.length
-          else
+          else if noChangeFlg is false
             cache.res_length = thread.res.length
             cache.data += response.body
         else

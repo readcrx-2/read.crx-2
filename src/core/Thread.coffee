@@ -100,8 +100,6 @@ class app.Thread
             if @tsld in ["2ch.net", "bbspink.com"]
               threadResponse = Thread.parse(@url, response.body)
               threadCache = Thread.parse(@url, cache.data)
-              console.log threadResponse
-              console.log threadCache
               # 新しいレスがない場合は最後のレスのみ表示されるのでその場合はキャッシュを送る
               # 立てたばかりで元々レスが1つしかない場合は除外する
               if threadResponse.res.length is 1 and threadCache.res.length <= 1

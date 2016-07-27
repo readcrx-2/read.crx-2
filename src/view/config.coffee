@@ -491,4 +491,13 @@ app.boot "/view/config.html", ["cache", "bbsmenu"], (Cache, BBSMenu) ->
     $a[0].click()
     return
 
+  #書込履歴テーブル削除
+  $view.find(".writehistory_delete_table").on "click", ->
+    openDatabase("WriteHistory", "", "WriteHistory", 0).transaction( (tx) ->
+      tx.executeSql("drop table WriteHistory", [])
+      $view.find(".writehistory_delete_table").text("テーブル削除(完了)")
+      return
+    )
+    return
+
   return

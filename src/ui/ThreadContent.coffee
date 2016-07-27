@@ -364,6 +364,7 @@ class UI.ThreadContent
             .replace(/<(?!(?:\/?b|\/?font(?: color="?[#a-zA-Z0-9]+"?)?)>)/g, "&lt;")
             .replace(/<\/b>(.*?)<b>/g, """<span class="ob">$1</span>""")
             .replace(/&lt;span.*?>(.*?)&lt;\/span>/g, "<span class=\"ob\">$1</span>")
+            .replace(/&lt;small.*?>(.*?)&lt;\/small>/g, "<small>$1</small>")
         )
         articleHtml += """">#{tmp}</span>"""
 

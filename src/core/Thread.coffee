@@ -244,10 +244,11 @@ class app.Thread
               if cache.res_length is 1
                 cache.data = response.body
               else
-                reg1 = ///<dt>#{cache.res_length}\ ：.*?\n<\/dl>///
-                reg2 = ///<dt>#{cache.res_length}\ ：(.|\n)*<\/dl>///
-                responseText = reg2.exec(response.body)[0]
-                cache.data = cache.data.replace(reg1,responseText)
+                beforeCacheFinalRes = cache.data.indexOf("<dt>#{cache.res_length} ：")
+                afterCacheFinalRes = cache.data.indexOf("</dl>")
+                beforeResponseFirstRes = response.body.indexOf("<dt>#{cache.res_length} ：")
+                afterResponseFinalRes = response.body.indexOf("</dl>")
+                cache.data = cache.data.slice(0, beforeCacheFinalRes) + response.body.slice(beforeResponseFirstRes, afterResponseFinalRes) + cache.data.slice(afterCacheFinalRes, cache.data.length)
             cache.res_length = thread.res.length
           else if noChangeFlg is false
             cache.res_length = thread.res.length

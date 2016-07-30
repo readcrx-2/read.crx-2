@@ -48,8 +48,6 @@ class app.Board
     .pipe null, =>
       $.Deferred (d) ->
         request = new app.HTTP.Request("GET", xhr_path, {
-          preventCache: false
-          timeout: 30 * 1000
           mimeType: "text/plain; charset=#{xhr_charset}"
         })
 

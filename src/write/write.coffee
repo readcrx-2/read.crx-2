@@ -40,7 +40,7 @@ app.boot "/write/write.html", ->
         is_same_origin = req.requestHeaders.some((header) -> header.name is "Origin" and (header.value is origin or header.value is "null"))
         if req.method is "POST" and is_same_origin
           if (
-            ///^http://\w+\.(2ch\.net|bbspink\.com)/test/bbs\.cgi ///.test(req.url) or
+            ///^http://\w+\.(2ch\.net|bbspink\.com|2ch\.sc|open2ch\.net)/test/bbs\.cgi ///.test(req.url) or
             ///^http://jbbs\.shitaraba\.net/bbs/write\.cgi/ ///.test(req.url)
           )
             req.requestHeaders.push(name: "Referer", value: arg.url)
@@ -61,6 +61,8 @@ app.boot "/write/write.html", ->
         urls: [
           "http://*.2ch.net/test/bbs.cgi*"
           "http://*.bbspink.com/test/bbs.cgi*"
+          "http://*.2ch.sc/test/bbs.cgi*"
+          "http://*.open2ch.net/test/bbs.cgi*"
           "http://jbbs.shitaraba.net/bbs/write.cgi/*"
         ]
       }
@@ -205,19 +207,34 @@ app.boot "/write/write.html", ->
     $iframe.one "load", ->
       #2ch
       if guess_res.bbs_type is "2ch"
-        tmp = arg.url.split("/")
-        form_data =
-          action: "http://#{tmp[2]}/test/bbs.cgi"
-          charset: "Shift_JIS"
-          input:
-            submit: "書きこむ"
-            time: Math.floor(Date.now() / 1000) - 60
-            bbs: tmp[5]
-            key: tmp[6]
-            FROM: iframe_arg.rcrx_name
-            mail: iframe_arg.rcrx_mail
-          textarea:
-            MESSAGE: iframe_arg.rcrx_message
+        #open2ch
+        if app.url.tsld(arg.url) is "open2ch.net"
+          tmp = arg.url.split("/")
+          form_data =
+            action: "http://#{tmp[2]}/test/bbs.cgi"
+            charset: "UTF-8"
+            input:
+              submit: "書"
+              bbs: tmp[5]
+              key: tmp[6]
+              FROM: iframe_arg.rcrx_name
+              mail: iframe_arg.rcrx_mail
+            textarea:
+              MESSAGE: iframe_arg.rcrx_message
+        else
+          tmp = arg.url.split("/")
+          form_data =
+            action: "http://#{tmp[2]}/test/bbs.cgi"
+            charset: "Shift_JIS"
+            input:
+              submit: "書きこむ"
+              time: Math.floor(Date.now() / 1000) - 60
+              bbs: tmp[5]
+              key: tmp[6]
+              FROM: iframe_arg.rcrx_name
+              mail: iframe_arg.rcrx_mail
+            textarea:
+              MESSAGE: iframe_arg.rcrx_message
       #したらば
       else if guess_res.bbs_type is "jbbs"
         tmp = arg.url.split("/")

@@ -25,10 +25,9 @@ PushArray = (array, v) ->
   array.push(v) unless IsExists(array, v)
   return true
 
-app.boot "/write/write.html", ->
+app.boot "/write/submit_thread.html", ->
   arg = app.url.parse_query(location.href)
   arg.url = app.url.fix(arg.url)
-  arg.title or= arg.url
   arg.name or= app.config.get("default_name")
   arg.mail or= app.config.get("default_mail")
   arg.message or= ""
@@ -40,8 +39,7 @@ app.boot "/write/write.html", ->
         is_same_origin = req.requestHeaders.some((header) -> header.name is "Origin" and (header.value is origin or header.value is "null"))
         if req.method is "POST" and is_same_origin
           if (
-            ///^http://\w+\.(2ch\.net|bbspink\.com|2ch\.sc|open2ch\.net)/test/bbs\.cgi ///.test(req.url) or
-            ///^http://jbbs\.shitaraba\.net/bbs/write\.cgi/ ///.test(req.url)
+            ///^http://\w+\.2ch\.net/test/bbs\.cgi ///.test(req.url)
           )
             req.requestHeaders.push(name: "Referer", value: arg.url)
 
@@ -60,10 +58,6 @@ app.boot "/write/write.html", ->
         types: ["sub_frame"]
         urls: [
           "http://*.2ch.net/test/bbs.cgi*"
-          "http://*.bbspink.com/test/bbs.cgi*"
-          "http://*.2ch.sc/test/bbs.cgi*"
-          "http://*.open2ch.net/test/bbs.cgi*"
-          "http://jbbs.shitaraba.net/bbs/write.cgi/*"
         ]
       }
       ["requestHeaders", "blocking"]
@@ -106,28 +100,6 @@ app.boot "/write/write.html", ->
       $view.find(".mail").prop("disabled", false)
     return
 
-  app.WriteHistory.getByUrl(arg.url).done( (data) ->
-    names = []
-    mails = []
-    for d in data
-      if names.length<=5
-        PushArray(names, d.input_name)
-      if mails.length<=5
-        PushArray(mails, d.input_mail)
-      if names.length+mails.length>10
-        break
-    html = "<datalist id=\"names\">"
-    for n in names
-      html += "<option value=\"#{n}\">"
-    html += "</datalist>"
-    html += "<datalist id=\"mails\">"
-    for m in mails
-      html += "<option value=\"#{m}\">"
-    html += "</datalist>"
-    $("#main").append($(html))
-    return
-  )
-
   on_error = (message) ->
     $view.find("form input, form textarea").removeAttr("disabled")
 
@@ -136,8 +108,6 @@ app.boot "/write/write.html", ->
     else
       $view.find(".notice").text("")
       $view.find(".iframe_container").fadeIn("fast")
-
-    chrome.extension.sendRequest(type: "written?", url: arg.url, mes: arg.message, name: arg.name, mail: arg.mail)
 
   write_timer =
     wake: ->
@@ -152,18 +122,27 @@ app.boot "/write/write.html", ->
   window.addEventListener "message", (e) ->
     message = JSON.parse(e.data)
     if message.type is "ping"
-      e.source.postMessage("write_iframe_pong", "*")
+      e.source.postMessage("write_iframe_pong:thread", "*")
       write_timer.wake()
     else if message.type is "success"
       $view.find(".notice").text("書き込み成功")
-      console.log message.key
       setTimeout ->
-        message = $view.find(".message").val()
+        mes = $view.find(".message").val()
         name = $view.find(".name").val()
         mail = $view.find(".mail").val()
-        chrome.extension.sendRequest(type: "written", url: arg.url, mes: message, name: name, mail: mail)
-        chrome.tabs.getCurrent (tab) ->
-          chrome.tabs.remove(tab.id)
+        title = $view.find(".title").val()
+        keys = message.key.match(/.*\/test\/read.cgi\/(\w+?)\/(\d+)\/l50/)
+        if !keys?
+          console.log message
+          console.log message.key
+          $view.find(".notice").text("書き込み失敗だった…")
+        else
+          server = arg.url.match(/^http:\/\/(\w+\.2ch\.net).*/)[1]
+          url = "http://#{server}/test/read.cgi/#{keys[1]}/#{keys[2]}"
+          app.WriteHistory.add(url, 1, title, name, mail, name, mail, mes, Date.now().valueOf())
+          app.message.send("open", {url, title, new_tab: true, lazy: false})
+          chrome.tabs.getCurrent (tab) ->
+            chrome.tabs.remove(tab.id)
       , 2000
       write_timer.kill()
     else if message.type is "confirm"
@@ -186,8 +165,6 @@ app.boot "/write/write.html", ->
     $view.find(".notice").text("")
     return
 
-  document.title = arg.title
-  $view.find("h1").text(arg.title)
   $view.find(".name").val(arg.name)
   $view.find(".mail").val(arg.mail)
   $view.find(".message").val(arg.message)
@@ -202,41 +179,28 @@ app.boot "/write/write.html", ->
     iframe_arg =
       rcrx_name: $view.find(".name").val()
       rcrx_mail: if $view.find(".sage").prop("checked") then "sage" else $view.find(".mail").val()
+      rcrx_title: $view.find(".title").val()
       rcrx_message: $view.find(".message").val()
 
     $iframe = $("<iframe>", src: "/view/empty.html")
     $iframe.one "load", ->
       #2ch
       if guess_res.bbs_type is "2ch"
-        #open2ch
-        if app.url.tsld(arg.url) is "open2ch.net"
-          tmp = arg.url.split("/")
-          form_data =
-            action: "http://#{tmp[2]}/test/bbs.cgi"
-            charset: "UTF-8"
-            input:
-              submit: "書"
-              bbs: tmp[5]
-              key: tmp[6]
-              FROM: iframe_arg.rcrx_name
-              mail: iframe_arg.rcrx_mail
-            textarea:
-              MESSAGE: iframe_arg.rcrx_message
-        else
-          tmp = arg.url.split("/")
-          form_data =
-            action: "http://#{tmp[2]}/test/bbs.cgi"
-            charset: "Shift_JIS"
-            input:
-              submit: "書きこむ"
-              time: Math.floor(Date.now() / 1000) - 60
-              bbs: tmp[5]
-              key: tmp[6]
-              FROM: iframe_arg.rcrx_name
-              mail: iframe_arg.rcrx_mail
-            textarea:
-              MESSAGE: iframe_arg.rcrx_message
+        tmp = arg.url.split("/")
+        form_data =
+          action: "http://#{tmp[2]}/test/bbs.cgi"
+          charset: "Shift_JIS"
+          input:
+            submit: "新規スレッド作成"
+            time: Math.floor(Date.now() / 1000) - 60
+            bbs: tmp[3]
+            subject: iframe_arg.rcrx_title
+            FROM: iframe_arg.rcrx_name
+            mail: iframe_arg.rcrx_mail
+          textarea:
+            MESSAGE: iframe_arg.rcrx_message
       #したらば
+      ###
       else if guess_res.bbs_type is "jbbs"
         tmp = arg.url.split("/")
         form_data =
@@ -251,6 +215,7 @@ app.boot "/write/write.html", ->
             MAIL: iframe_arg.rcrx_mail
           textarea:
             MESSAGE: iframe_arg.rcrx_message
+      ###
       #フォーム生成
       form = @contentWindow.document.createElement("form")
       form.setAttribute("accept-charset", form_data.charset)
@@ -300,3 +265,4 @@ app.boot "/write/write.html", ->
       return
     return
   return
+

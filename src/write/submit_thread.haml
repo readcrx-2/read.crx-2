@@ -1,0 +1,33 @@
+!!! 5
+%html(data-app-version="#{MANIFEST["version"]}")
+  %head
+    %meta(charset="utf-8")
+    %meta(name="referrer" content="never")
+    %title 新規スレッド作成
+    %link(rel="stylesheet" href="/write/submit_thread.css?v=#{MANIFEST["version"]}")
+    %script(src="/lib/jquery/jquery.min.js?v=#{MANIFEST["version"]}")
+    %script(src="/app.js?v=#{MANIFEST["version"]}")
+    %script(src="/write/submit_thread.js?v=#{MANIFEST["version"]}")
+  %body.view_write
+    %form
+      %header
+        %h1 新規スレッド作成
+        %button.preview_button(tabindex="1") AA表示確認
+      %div#main
+        %input(type="submit" value="書き込む" tabindex="6")
+        %label
+          名前:
+          %input.name(size="19" tabindex="2")
+        %label
+          E-mail:
+          %input.mail(size="19" tabindex="3")
+        %label
+          %input.sage(type="checkbox") sage
+        %br
+        %label.outtitle
+          タイトル:
+          %input.title(size="19" tabindex="4")
+      %textarea.message(wrap="off" tabindex="5" autofocus required)
+      .notice
+    .iframe_container
+      .hide_iframe

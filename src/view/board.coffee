@@ -18,6 +18,22 @@ app.boot "/view/board.html", ["board_title_solver"], (BoardTitleSolver) ->
   $table.find("th.res, th.unread, th.heat").attr("data-table_sort_type", "num")
   $table.appendTo(".content")
 
+  write = (param) ->
+    param or= {}
+    param.url = url
+    open(
+      "/write/submit_thread.html?#{app.url.build_param(param)}"
+      undefined
+      'width=600,height=400'
+    )
+
+  if app.url.tsld(url) in ["2ch.net"]
+    $view.find(".button_write").bind "click", ->
+      write()
+      return
+  else
+    $view.find(".button_write").remove()
+
   $view
     .find("table")
       .each ->

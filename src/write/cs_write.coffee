@@ -1,6 +1,8 @@
 do ->
   origin = chrome.extension.getURL("").slice(0, -1)
 
+  submitThreadFlag = false
+
   exec = (javascript) ->
     script = document.createElement("script")
     script.innerHTML = javascript
@@ -12,9 +14,24 @@ do ->
     """
 
   send_message_success = ->
-    exec """
-      parent.postMessage(JSON.stringify({type : "success"}), "#{origin}");
-    """
+    if submitThreadFlag
+      exec """
+        metas = document.getElementsByTagName("meta");
+        for(var i = 0; i < metas.length; i++) {
+          if(metas[i].getAttribute("http-equiv") === "refresh") {
+            jumpurl = metas[i].getAttribute("content");
+            break;
+          }
+        }
+        parent.postMessage(JSON.stringify({
+          type : "success",
+          key: jumpurl
+        }), "#{origin}");
+      """
+    else
+      exec """
+        parent.postMessage(JSON.stringify({type : "success"}), "#{origin}");
+      """
 
   send_message_confirm = ->
     exec """
@@ -53,8 +70,12 @@ do ->
 
   boot = ->
     window.addEventListener "message", (e) ->
-      if e.origin is origin and e.data is "write_iframe_pong"
-        main()
+      if e.origin is origin
+        if e.data is "write_iframe_pong"
+          main()
+        else if e.data is "write_iframe_pong:thread"
+          submitThreadFlag = true
+          main()
       return
 
     send_message_ping()

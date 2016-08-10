@@ -146,7 +146,7 @@ app.boot "/write/submit_thread.html", ->
             server = arg.url.match(/^http:\/\/(\w+\.(?:2ch\.net|2ch\.sc|bbspink\.com|open2ch\.net)).*/)[1]
             url = "http://#{server}/test/read.cgi/#{keys[1]}/#{keys[2]}"
             app.WriteHistory.add(url, 1, title, name, mail, name, mail, mes, Date.now().valueOf())
-            app.message.send("open", {url, title, new_tab: true, lazy: false})
+            chrome.extension.sendRequest(type: "open", query: url)
         else if app.url.tsld(arg.url) is "shitaraba.net"
           chrome.extension.sendRequest(type: "written", url: arg.url, mes: mes, name: name, mail: mail, title: title)
         chrome.tabs.getCurrent (tab) ->

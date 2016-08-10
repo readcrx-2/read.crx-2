@@ -1,6 +1,8 @@
 do ->
   origin = chrome.extension.getURL("").slice(0, -1)
 
+  submitThreadFlag = false
+
   exec = (javascript) ->
     script = document.createElement("script")
     script.innerHTML = javascript
@@ -12,9 +14,31 @@ do ->
     """
 
   send_message_success = ->
-    exec """
-      parent.postMessage(JSON.stringify({type : "success"}), "#{origin}");
-    """
+    if submitThreadFlag
+      exec """
+        if((location.href.indexOf("2ch.net") !== -1) || (location.href.indexOf("bbspink.com") !== -1) || (location.href.indexOf("open2ch.net") !== -1)) {
+          metas = document.getElementsByTagName("meta");
+          for(var i = 0; i < metas.length; i++) {
+            if(metas[i].getAttribute("http-equiv") === "refresh") {
+              jumpurl = metas[i].getAttribute("content");
+              break;
+            }
+          }
+        } else if (location.href.indexOf("2ch.sc") !== -1) {
+          as = document.getElementsByTagName("a");
+          jumpurl = as[0].href;
+        } else {
+          jumpurl = ""
+        }
+        parent.postMessage(JSON.stringify({
+          type : "success",
+          key: jumpurl
+        }), "#{origin}");
+      """
+    else
+      exec """
+        parent.postMessage(JSON.stringify({type : "success"}), "#{origin}");
+      """
 
   send_message_confirm = ->
     exec """
@@ -45,16 +69,20 @@ do ->
         send_message_error()
 
     #したらば投稿確認
-    else if ///^http://jbbs\.shitaraba\.net/bbs/write.cgi/\w+/\d+/\d+/$///.test(location.href)
+    else if ///^http://jbbs\.shitaraba\.net/bbs/write.cgi/\w+/\d+/(?:\d+|new)/$///.test(location.href)
       if /書きこみました/.test(document.title)
         send_message_success()
-      else if /ERROR/.test(document.title)
+      else if /ERROR|スレッド作成規制中/.test(document.title)
         send_message_error()
 
   boot = ->
     window.addEventListener "message", (e) ->
-      if e.origin is origin and e.data is "write_iframe_pong"
-        main()
+      if e.origin is origin
+        if e.data is "write_iframe_pong"
+          main()
+        else if e.data is "write_iframe_pong:thread"
+          submitThreadFlag = true
+          main()
       return
 
     send_message_ping()

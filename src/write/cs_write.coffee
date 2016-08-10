@@ -16,7 +16,7 @@ do ->
   send_message_success = ->
     if submitThreadFlag
       exec """
-        if(location.href.indexOf("2ch.net") !== -1) {
+        if((location.href.indexOf("2ch.net") !== -1) || (location.href.indexOf("bbspink.com") !== -1)) {
           metas = document.getElementsByTagName("meta");
           for(var i = 0; i < metas.length; i++) {
             if(metas[i].getAttribute("http-equiv") === "refresh") {

@@ -16,12 +16,17 @@ do ->
   send_message_success = ->
     if submitThreadFlag
       exec """
-        metas = document.getElementsByTagName("meta");
-        for(var i = 0; i < metas.length; i++) {
-          if(metas[i].getAttribute("http-equiv") === "refresh") {
-            jumpurl = metas[i].getAttribute("content");
-            break;
+        if(location.href.indexOf("2ch.net") !== -1) {
+          metas = document.getElementsByTagName("meta");
+          for(var i = 0; i < metas.length; i++) {
+            if(metas[i].getAttribute("http-equiv") === "refresh") {
+              jumpurl = metas[i].getAttribute("content");
+              break;
+            }
           }
+        } else if (location.href.indexOf("2ch.sc") !== -1) {
+          as = document.getElementsByTagName("a");
+          jumpurl = as[0].href;
         }
         parent.postMessage(JSON.stringify({
           type : "success",

@@ -39,7 +39,7 @@ app.boot "/write/submit_thread.html", ->
         is_same_origin = req.requestHeaders.some((header) -> header.name is "Origin" and (header.value is origin or header.value is "null"))
         if req.method is "POST" and is_same_origin
           if (
-            ///^http://\w+\.2ch\.net/test/bbs\.cgi ///.test(req.url)
+            ///^http://\w+\.2ch\.(?:net|sc)/test/bbs\.cgi ///.test(req.url)
           )
             req.requestHeaders.push(name: "Referer", value: arg.url)
 
@@ -58,6 +58,7 @@ app.boot "/write/submit_thread.html", ->
         types: ["sub_frame"]
         urls: [
           "http://*.2ch.net/test/bbs.cgi*"
+          "http://*.2ch.sc/test/bbs.cgi*"
         ]
       }
       ["requestHeaders", "blocking"]
@@ -131,14 +132,16 @@ app.boot "/write/submit_thread.html", ->
         name = $view.find(".name").val()
         mail = $view.find(".mail").val()
         title = $view.find(".title").val()
-        keys = message.key.match(/.*\/test\/read.cgi\/(\w+?)\/(\d+)\/l50/)
+        if app.url.tsld(arg.url) in ["2ch.net", "2ch.sc"]
+          keys = message.key.match(/.*\/test\/read\.cgi\/(\w+?)\/(\d+)\/l\d+/)
         if !keys?
           console.log message
           console.log message.key
           $view.find(".notice").text("書き込み失敗だった…")
         else
-          server = arg.url.match(/^http:\/\/(\w+\.2ch\.net).*/)[1]
-          url = "http://#{server}/test/read.cgi/#{keys[1]}/#{keys[2]}"
+          if app.url.tsld(arg.url) in ["2ch.net", "2ch.sc"]
+            server = arg.url.match(/^http:\/\/(\w+\.2ch\.(?:net|sc)).*/)[1]
+            url = "http://#{server}/test/read.cgi/#{keys[1]}/#{keys[2]}"
           app.WriteHistory.add(url, 1, title, name, mail, name, mail, mes, Date.now().valueOf())
           app.message.send("open", {url, title, new_tab: true, lazy: false})
           chrome.tabs.getCurrent (tab) ->

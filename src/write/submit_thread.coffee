@@ -39,7 +39,7 @@ app.boot "/write/submit_thread.html", ->
         is_same_origin = req.requestHeaders.some((header) -> header.name is "Origin" and (header.value is origin or header.value is "null"))
         if req.method is "POST" and is_same_origin
           if (
-            ///^http://\w+\.(2ch\.net|bbspink\.com|2ch\.sc)/test/bbs\.cgi ///.test(req.url) or
+            ///^http://\w+\.(2ch\.net|bbspink\.com|2ch\.sc|open2ch\.net)/test/bbs\.cgi ///.test(req.url) or
             ///^http://jbbs\.shitaraba\.net/bbs/write\.cgi/ ///.test(req.url)
           )
             req.requestHeaders.push(name: "Referer", value: arg.url)
@@ -61,6 +61,7 @@ app.boot "/write/submit_thread.html", ->
           "http://*.2ch.net/test/bbs.cgi*"
           "http://*.bbspink.com/test/bbs.cgi*"
           "http://*.2ch.sc/test/bbs.cgi*"
+          "http://*.open2ch.net/test/bbs.cgi*"
           "http://jbbs.shitaraba.net/bbs/write.cgi/*"
         ]
       }
@@ -135,14 +136,14 @@ app.boot "/write/submit_thread.html", ->
         name = $view.find(".name").val()
         mail = $view.find(".mail").val()
         title = $view.find(".title").val()
-        if app.url.tsld(arg.url) in ["2ch.net", "2ch.sc", "bbspink.com"]
+        if app.url.tsld(arg.url) in ["2ch.net", "2ch.sc", "bbspink.com", "open2ch.net"]
           keys = message.key.match(/.*\/test\/read\.cgi\/(\w+?)\/(\d+)\/l\d+/)
           if !keys?
             console.log message
             console.log message.key
             $view.find(".notice").text("書き込み失敗だった…")
           else
-            server = arg.url.match(/^http:\/\/(\w+\.(?:2ch\.net|2ch\.sc|bbspink\.com)).*/)[1]
+            server = arg.url.match(/^http:\/\/(\w+\.(?:2ch\.net|2ch\.sc|bbspink\.com|open2ch\.net)).*/)[1]
             url = "http://#{server}/test/read.cgi/#{keys[1]}/#{keys[2]}"
             app.WriteHistory.add(url, 1, title, name, mail, name, mail, mes, Date.now().valueOf())
             app.message.send("open", {url, title, new_tab: true, lazy: false})
@@ -193,19 +194,34 @@ app.boot "/write/submit_thread.html", ->
     $iframe.one "load", ->
       #2ch
       if guess_res.bbs_type is "2ch"
-        tmp = arg.url.split("/")
-        form_data =
-          action: "http://#{tmp[2]}/test/bbs.cgi"
-          charset: "Shift_JIS"
-          input:
-            submit: "新規スレッド作成"
-            time: Math.floor(Date.now() / 1000) - 60
-            bbs: tmp[3]
-            subject: iframe_arg.rcrx_title
-            FROM: iframe_arg.rcrx_name
-            mail: iframe_arg.rcrx_mail
-          textarea:
-            MESSAGE: iframe_arg.rcrx_message
+        #open2ch
+        if app.url.tsld(arg.url) is "open2ch.net"
+          tmp = arg.url.split("/")
+          form_data =
+            action: "http://#{tmp[2]}/test/bbs.cgi"
+            charset: "UTF-8"
+            input:
+              submit: "新規スレッド作成"
+              bbs: tmp[3]
+              subject: iframe_arg.rcrx_title
+              FROM: iframe_arg.rcrx_name
+              mail: iframe_arg.rcrx_mail
+            textarea:
+              MESSAGE: iframe_arg.rcrx_message
+        else
+          tmp = arg.url.split("/")
+          form_data =
+            action: "http://#{tmp[2]}/test/bbs.cgi"
+            charset: "Shift_JIS"
+            input:
+              submit: "新規スレッド作成"
+              time: Math.floor(Date.now() / 1000) - 60
+              bbs: tmp[3]
+              subject: iframe_arg.rcrx_title
+              FROM: iframe_arg.rcrx_name
+              mail: iframe_arg.rcrx_mail
+            textarea:
+              MESSAGE: iframe_arg.rcrx_message
       #したらば
       else if guess_res.bbs_type is "jbbs"
         tmp = arg.url.split("/")

@@ -27,7 +27,7 @@ app.boot "/view/board.html", ["board_title_solver"], (BoardTitleSolver) ->
       'width=600,height=400'
     )
 
-  if app.url.tsld(url) in ["2ch.net", "shitaraba.net", "bbspink.com", "2ch.sc"]
+  if app.url.tsld(url) in ["2ch.net", "shitaraba.net", "bbspink.com", "2ch.sc", "open2ch.net"]
     $view.find(".button_write").bind "click", ->
       write()
       return

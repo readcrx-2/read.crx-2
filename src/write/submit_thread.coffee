@@ -39,7 +39,8 @@ app.boot "/write/submit_thread.html", ->
         is_same_origin = req.requestHeaders.some((header) -> header.name is "Origin" and (header.value is origin or header.value is "null"))
         if req.method is "POST" and is_same_origin
           if (
-            ///^http://\w+\.(2ch\.net|bbspink\.com|2ch\.sc)/test/bbs\.cgi ///.test(req.url)
+            ///^http://\w+\.(2ch\.net|bbspink\.com|2ch\.sc)/test/bbs\.cgi ///.test(req.url) or
+            ///^http://jbbs\.shitaraba\.net/bbs/write\.cgi/ ///.test(req.url)
           )
             req.requestHeaders.push(name: "Referer", value: arg.url)
 
@@ -60,6 +61,7 @@ app.boot "/write/submit_thread.html", ->
           "http://*.2ch.net/test/bbs.cgi*"
           "http://*.bbspink.com/test/bbs.cgi*"
           "http://*.2ch.sc/test/bbs.cgi*"
+          "http://jbbs.shitaraba.net/bbs/write.cgi/*"
         ]
       }
       ["requestHeaders", "blocking"]
@@ -135,18 +137,19 @@ app.boot "/write/submit_thread.html", ->
         title = $view.find(".title").val()
         if app.url.tsld(arg.url) in ["2ch.net", "2ch.sc", "bbspink.com"]
           keys = message.key.match(/.*\/test\/read\.cgi\/(\w+?)\/(\d+)\/l\d+/)
-        if !keys?
-          console.log message
-          console.log message.key
-          $view.find(".notice").text("書き込み失敗だった…")
-        else
-          if app.url.tsld(arg.url) in ["2ch.net", "2ch.sc", "bbspink.com"]
+          if !keys?
+            console.log message
+            console.log message.key
+            $view.find(".notice").text("書き込み失敗だった…")
+          else
             server = arg.url.match(/^http:\/\/(\w+\.(?:2ch\.net|2ch\.sc|bbspink\.com)).*/)[1]
             url = "http://#{server}/test/read.cgi/#{keys[1]}/#{keys[2]}"
-          app.WriteHistory.add(url, 1, title, name, mail, name, mail, mes, Date.now().valueOf())
-          app.message.send("open", {url, title, new_tab: true, lazy: false})
-          chrome.tabs.getCurrent (tab) ->
-            chrome.tabs.remove(tab.id)
+            app.WriteHistory.add(url, 1, title, name, mail, name, mail, mes, Date.now().valueOf())
+            app.message.send("open", {url, title, new_tab: true, lazy: false})
+        else if app.url.tsld(arg.url) is "shitaraba.net"
+          chrome.extension.sendRequest(type: "written", url: arg.url, mes: mes, name: name, mail: mail, title: title)
+        chrome.tabs.getCurrent (tab) ->
+          chrome.tabs.remove(tab.id)
       , 2000
       write_timer.kill()
     else if message.type is "confirm"
@@ -204,22 +207,21 @@ app.boot "/write/submit_thread.html", ->
           textarea:
             MESSAGE: iframe_arg.rcrx_message
       #したらば
-      ###
       else if guess_res.bbs_type is "jbbs"
         tmp = arg.url.split("/")
         form_data =
-          action: "http://jbbs.shitaraba.net/bbs/write.cgi/#{tmp[5]}/#{tmp[6]}/#{tmp[7]}/"
+          action: "http://jbbs.shitaraba.net/bbs/write.cgi/#{tmp[3]}/#{tmp[4]}/new/"
           charset: "EUC-JP"
           input:
+            submit: "新規スレッド作成"
             TIME: Math.floor(Date.now() / 1000) - 60
-            DIR: tmp[5]
-            BBS: tmp[6]
-            KEY: tmp[7]
+            DIR: tmp[3]
+            BBS: tmp[4]
+            SUBJECT: iframe_arg.rcrx_title
             NAME: iframe_arg.rcrx_name
             MAIL: iframe_arg.rcrx_mail
           textarea:
             MESSAGE: iframe_arg.rcrx_message
-      ###
       #フォーム生成
       form = @contentWindow.document.createElement("form")
       form.setAttribute("accept-charset", form_data.charset)

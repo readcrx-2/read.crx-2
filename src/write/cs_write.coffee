@@ -27,6 +27,8 @@ do ->
         } else if (location.href.indexOf("2ch.sc") !== -1) {
           as = document.getElementsByTagName("a");
           jumpurl = as[0].href;
+        } else {
+          jumpurl = ""
         }
         parent.postMessage(JSON.stringify({
           type : "success",
@@ -67,10 +69,10 @@ do ->
         send_message_error()
 
     #したらば投稿確認
-    else if ///^http://jbbs\.shitaraba\.net/bbs/write.cgi/\w+/\d+/\d+/$///.test(location.href)
+    else if ///^http://jbbs\.shitaraba\.net/bbs/write.cgi/\w+/\d+/(?:\d+|new)/$///.test(location.href)
       if /書きこみました/.test(document.title)
         send_message_success()
-      else if /ERROR/.test(document.title)
+      else if /ERROR|スレッド作成規制中/.test(document.title)
         send_message_error()
 
   boot = ->

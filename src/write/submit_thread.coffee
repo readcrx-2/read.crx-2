@@ -141,7 +141,7 @@ app.boot "/write/submit_thread.html", ->
           if !keys?
             console.log message
             console.log message.key
-            $view.find(".notice").text("書き込み失敗だった…")
+            $view.find(".notice").text("書き込み失敗 - 不明な転送場所")
           else
             server = arg.url.match(/^http:\/\/(\w+\.(?:2ch\.net|2ch\.sc|bbspink\.com|open2ch\.net)).*/)[1]
             url = "http://#{server}/test/read.cgi/#{keys[1]}/#{keys[2]}"

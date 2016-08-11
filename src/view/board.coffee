@@ -18,6 +18,22 @@ app.boot "/view/board.html", ["board_title_solver"], (BoardTitleSolver) ->
   $table.find("th.res, th.unread, th.heat").attr("data-table_sort_type", "num")
   $table.appendTo(".content")
 
+  write = (param) ->
+    param or= {}
+    param.url = url
+    open(
+      "/write/submit_thread.html?#{app.url.build_param(param)}"
+      undefined
+      'width=600,height=400'
+    )
+
+  if app.url.tsld(url) in ["2ch.net", "shitaraba.net", "bbspink.com", "2ch.sc", "open2ch.net"]
+    $view.find(".button_write").bind "click", ->
+      write()
+      return
+  else
+    $view.find(".button_write").remove()
+
   $view
     .find("table")
       .each ->
@@ -51,7 +67,7 @@ app.boot "/view/board.html", ["board_title_solver"], (BoardTitleSolver) ->
       app.History.add(url, title or url, opened_at)
     return
 
-  load = ->
+  load = (ex) ->
     $view.addClass("loading")
 
     deferred_get_read_state = app.read_state.get_by_board(url)
@@ -89,6 +105,12 @@ app.boot "/view/board.html", ["board_title_solver"], (BoardTitleSolver) ->
             ng: thread.ng
         )
 
+        if ex?
+          for thread in board
+            if thread.title.indexOf(ex.title) isnt -1
+              app.WriteHistory.add(thread.url, 1, thread.title, ex.name, ex.mail, ex.name, ex.mail, ex.mes, thread.created_at)
+              break
+
         $view.find("table").table_sort("update")
         return
 
@@ -109,10 +131,10 @@ app.boot "/view/board.html", ["board_title_solver"], (BoardTitleSolver) ->
         return
     return
 
-  $view.on "request_reload", ->
+  $view.on "request_reload", (e, ex) ->
     return if $view.hasClass("loading")
     return if $view.find(".button_reload").hasClass("disabled")
-    load()
+    load(ex)
     return
   load()
   return

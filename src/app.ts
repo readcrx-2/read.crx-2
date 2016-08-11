@@ -271,7 +271,8 @@ module app {
       bbsmenu: "http://kita.jikkyo.org/cbm/cbm.cgi/20.p0.m0.jb.vs.op.sc.nb.bb/-all/bbsmenu.html",
       useragent: "",
       format_2chnet: "html",
-      sage_flag: "on"
+      sage_flag: "on",
+      mousewheel_change_tab: "on"
     };
 
     private _cache:{[index:string]:string;} = {};

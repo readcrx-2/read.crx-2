@@ -308,6 +308,9 @@ namespace :write do
     "debug/write/write.html",
     "debug/write/write.css",
     "debug/write/write.js",
+    "debug/write/submit_thread.html",
+    "debug/write/submit_thread.css",
+    "debug/write/submit_thread.js",
     "debug/write/cs_write.js"
   ]
 
@@ -331,6 +334,13 @@ namespace :write do
     "debug/app.js",
     "src/core/URL.ts",
     "src/write/cs_write.coffee"
+  ]
+
+  file_ct "debug/write/submit_thread.js", [
+    "src/core/URL.ts",
+    "src/core/Ninja.coffee",
+    "src/core/WriteHistory.coffee",
+    "src/write/submit_thread.coffee"
   ]
 end
 

@@ -25,10 +25,9 @@ PushArray = (array, v) ->
   array.push(v) unless IsExists(array, v)
   return true
 
-app.boot "/write/write.html", ->
+app.boot "/write/submit_thread.html", ->
   arg = app.url.parse_query(location.href)
   arg.url = app.url.fix(arg.url)
-  arg.title or= arg.url
   arg.name or= app.config.get("default_name")
   arg.mail or= app.config.get("default_mail")
   arg.message or= ""
@@ -106,28 +105,6 @@ app.boot "/write/write.html", ->
       $view.find(".mail").prop("disabled", false)
     return
 
-  app.WriteHistory.getByUrl(arg.url).done( (data) ->
-    names = []
-    mails = []
-    for d in data
-      if names.length<=5
-        PushArray(names, d.input_name)
-      if mails.length<=5
-        PushArray(mails, d.input_mail)
-      if names.length+mails.length>10
-        break
-    html = "<datalist id=\"names\">"
-    for n in names
-      html += "<option value=\"#{n}\">"
-    html += "</datalist>"
-    html += "<datalist id=\"mails\">"
-    for m in mails
-      html += "<option value=\"#{m}\">"
-    html += "</datalist>"
-    $("#main").append($(html))
-    return
-  )
-
   on_error = (message) ->
     $view.find("form input, form textarea").removeAttr("disabled")
 
@@ -136,8 +113,6 @@ app.boot "/write/write.html", ->
     else
       $view.find(".notice").text("")
       $view.find(".iframe_container").fadeIn("fast")
-
-    chrome.extension.sendRequest(type: "written?", url: arg.url, mes: arg.message, name: arg.name, mail: arg.mail)
 
   write_timer =
     wake: ->
@@ -152,16 +127,28 @@ app.boot "/write/write.html", ->
   window.addEventListener "message", (e) ->
     message = JSON.parse(e.data)
     if message.type is "ping"
-      e.source.postMessage("write_iframe_pong", "*")
+      e.source.postMessage("write_iframe_pong:thread", "*")
       write_timer.wake()
     else if message.type is "success"
       $view.find(".notice").text("書き込み成功")
-      console.log message.key
       setTimeout ->
-        message = $view.find(".message").val()
+        mes = $view.find(".message").val()
         name = $view.find(".name").val()
         mail = $view.find(".mail").val()
-        chrome.extension.sendRequest(type: "written", url: arg.url, mes: message, name: name, mail: mail)
+        title = $view.find(".title").val()
+        if app.url.tsld(arg.url) in ["2ch.net", "2ch.sc", "bbspink.com", "open2ch.net"]
+          keys = message.key.match(/.*\/test\/read\.cgi\/(\w+?)\/(\d+)\/l\d+/)
+          if !keys?
+            console.log message
+            console.log message.key
+            $view.find(".notice").text("書き込み失敗 - 不明な転送場所")
+          else
+            server = arg.url.match(/^http:\/\/(\w+\.(?:2ch\.net|2ch\.sc|bbspink\.com|open2ch\.net)).*/)[1]
+            url = "http://#{server}/test/read.cgi/#{keys[1]}/#{keys[2]}"
+            app.WriteHistory.add(url, 1, title, name, mail, name, mail, mes, Date.now().valueOf())
+            chrome.extension.sendRequest(type: "open", query: url)
+        else if app.url.tsld(arg.url) is "shitaraba.net"
+          chrome.extension.sendRequest(type: "written", url: arg.url, mes: mes, name: name, mail: mail, title: title)
         chrome.tabs.getCurrent (tab) ->
           chrome.tabs.remove(tab.id)
       , 2000
@@ -186,8 +173,6 @@ app.boot "/write/write.html", ->
     $view.find(".notice").text("")
     return
 
-  document.title = arg.title
-  $view.find("h1").text(arg.title)
   $view.find(".name").val(arg.name)
   $view.find(".mail").val(arg.mail)
   $view.find(".message").val(arg.message)
@@ -202,6 +187,7 @@ app.boot "/write/write.html", ->
     iframe_arg =
       rcrx_name: $view.find(".name").val()
       rcrx_mail: if $view.find(".sage").prop("checked") then "sage" else $view.find(".mail").val()
+      rcrx_title: $view.find(".title").val()
       rcrx_message: $view.find(".message").val()
 
     $iframe = $("<iframe>", src: "/view/empty.html")
@@ -215,9 +201,9 @@ app.boot "/write/write.html", ->
             action: "http://#{tmp[2]}/test/bbs.cgi"
             charset: "UTF-8"
             input:
-              submit: "書"
-              bbs: tmp[5]
-              key: tmp[6]
+              submit: "新規スレッド作成"
+              bbs: tmp[3]
+              subject: iframe_arg.rcrx_title
               FROM: iframe_arg.rcrx_name
               mail: iframe_arg.rcrx_mail
             textarea:
@@ -228,10 +214,10 @@ app.boot "/write/write.html", ->
             action: "http://#{tmp[2]}/test/bbs.cgi"
             charset: "Shift_JIS"
             input:
-              submit: "書きこむ"
+              submit: "新規スレッド作成"
               time: Math.floor(Date.now() / 1000) - 60
-              bbs: tmp[5]
-              key: tmp[6]
+              bbs: tmp[3]
+              subject: iframe_arg.rcrx_title
               FROM: iframe_arg.rcrx_name
               mail: iframe_arg.rcrx_mail
             textarea:
@@ -240,13 +226,14 @@ app.boot "/write/write.html", ->
       else if guess_res.bbs_type is "jbbs"
         tmp = arg.url.split("/")
         form_data =
-          action: "http://jbbs.shitaraba.net/bbs/write.cgi/#{tmp[5]}/#{tmp[6]}/#{tmp[7]}/"
+          action: "http://jbbs.shitaraba.net/bbs/write.cgi/#{tmp[3]}/#{tmp[4]}/new/"
           charset: "EUC-JP"
           input:
+            submit: "新規スレッド作成"
             TIME: Math.floor(Date.now() / 1000) - 60
-            DIR: tmp[5]
-            BBS: tmp[6]
-            KEY: tmp[7]
+            DIR: tmp[3]
+            BBS: tmp[4]
+            SUBJECT: iframe_arg.rcrx_title
             NAME: iframe_arg.rcrx_name
             MAIL: iframe_arg.rcrx_mail
           textarea:
@@ -300,3 +287,4 @@ app.boot "/write/write.html", ->
       return
     return
   return
+

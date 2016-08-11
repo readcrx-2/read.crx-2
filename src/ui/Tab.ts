@@ -25,21 +25,23 @@ module UI {
         )
         .find(".tab_tabbar")
           .on("notchedmousewheel", function (e) {
-            var tmp: string, next: Element;
+            if (app.config.get("mousewheel_change_tab") === "on") {
+              var tmp: string, next: Element;
 
-            e.preventDefault();
+              e.preventDefault();
 
-            if ((<any>e.originalEvent).wheelDelta > 0) {
-              tmp = "previousSibling";
-            }
-            else {
-              tmp = "nextSibling";
-            }
+              if ((<any>e.originalEvent).wheelDelta > 0) {
+                tmp = "previousSibling";
+              }
+              else {
+                tmp = "nextSibling";
+              }
 
-            next = (tab.element.querySelector("li.tab_selected") || {})[tmp];
+              next = (tab.element.querySelector("li.tab_selected") || {})[tmp];
 
-            if (next) {
-              tab.update(next.getAttribute("data-tabid"), {selected: true});
+              if (next) {
+                tab.update(next.getAttribute("data-tabid"), {selected: true});
+              }
             }
           })
           .on("mousedown", "li", function (e) {

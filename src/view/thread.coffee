@@ -82,7 +82,7 @@ app.boot "/view/thread.html", ["board_title_solver"], (BoardTitleSolver) ->
       return
     $.popup($view, $popup, e.clientX, e.clientY, that)
 
-  if app.url.tsld(view_url) in ["2ch.net", "shitaraba.net", "bbspink.com"]
+  if app.url.tsld(view_url) in ["2ch.net", "shitaraba.net", "bbspink.com", "2ch.sc", "open2ch.net"]
     $view.find(".button_write").bind "click", ->
       write()
       return
@@ -267,6 +267,15 @@ app.boot "/view/thread.html", ["board_title_solver"], (BoardTitleSolver) ->
         >>#{$res.find(".num").text()}
         #{$res.find(".message")[0].innerText.replace(/^/gm, '>')}\n
         """)
+
+      else if $this.hasClass("add_writehistory")
+        resnum = parseInt($res.find(".num").text())
+        name = $res.find(".name").text()
+        mail = $res.find(".mail").text()
+        message = $res.find(".message").text()
+        date1 = $res.find(".other").text().match(/(\d+)\/(\d+)\/(\d+)\(.\) (\d+):(\d+):(\d+).*/)
+        date2 = new Date(date1[1], date1[2], date1[3], date1[4], date1[5], date1[6]).valueOf()
+        app.WriteHistory.add(view_url, resnum, document.title, name, mail, name, mail, message, date2)
 
       else if $this.hasClass("toggle_aa_mode")
         $res.toggleClass("aa")

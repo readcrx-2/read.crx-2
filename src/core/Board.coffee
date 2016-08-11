@@ -47,60 +47,53 @@ class app.Board
     #通信
     .pipe null, =>
       $.Deferred (d) ->
-        ajax_data =
-          url: xhr_path
-          cache: false
-          dataType: "text"
-          headers: {}
-          mimeType: "text/plain; charset=" + xhr_charset
-          timeout: 1000 * 30
-          complete: ($xhr) ->
-            if $xhr.status is 200
-              d.resolve($xhr)
-            else if cache_get_promise.state() is "resolved" and $xhr.status is 304
-              d.resolve($xhr)
-            else
-              d.reject($xhr)
-            return
+        request = new app.HTTP.Request("GET", xhr_path, {
+          mimeType: "text/plain; charset=#{xhr_charset}"
+        })
 
         if cache_get_promise.state() is "resolved"
           if cache.last_modified?
-            ajax_data.headers["If-Modified-Since"] =
+            request.headers["If-Modified-Since"] =
               new Date(cache.last_modified).toUTCString()
-
           if cache.etag?
-            ajax_data.headers["If-None-Match"] = cache.etag
+            request.headers["If-None-Match"] = cache.etag
 
-        $.ajax(ajax_data)
+        request.send (response) ->
+          if response.status is 200
+            d.resolve(response)
+          else if cache_get_promise.state() is "resolved" and response.status is 304
+            d.resolve(response)
+          else
+            d.reject(response)
         return
     #パース
-    .pipe((fn = ($xhr) =>
+    .pipe((fn = (response) =>
       $.Deferred (d) =>
-        if $xhr?.status is 200
-          thread_list = Board.parse(@url, $xhr.responseText)
+        if response?.status is 200
+          thread_list = Board.parse(@url, response.body)
         else if cache_get_promise.state() is "resolved"
           thread_list = Board.parse(@url, cache.data)
 
         if thread_list?
-          if $xhr?.status is 200 or $xhr?.status is 304 or (not $xhr? and cache_get_promise.state() is "resolved")
-            d.resolve($xhr, thread_list)
+          if response?.status is 200 or response?.status is 304 or (not response? and cache_get_promise.state() is "resolved")
+            d.resolve(response, thread_list)
           else
-            d.reject($xhr, thread_list)
+            d.reject(response, thread_list)
         else
-          d.reject($xhr)
+          d.reject(response)
         return
     ), fn)
     #コールバック
-    .done ($xhr, thread_list) =>
+    .done (response, thread_list) =>
       @thread = thread_list
       res_deferred.resolve()
       return
 
-    .fail ($xhr, thread_list) =>
+    .fail (response, thread_list) =>
       @message = "板の読み込みに失敗しました。"
 
       #2chでrejectされている場合は移転を疑う
-      if app.url.tsld(@url) is "2ch.net" and $xhr?
+      if app.url.tsld(@url) is "2ch.net" and response?
         app.util.ch_server_move_detect(@url)
           #移転検出時
           .done (new_board_url) =>
@@ -125,19 +118,19 @@ class app.Board
       res_deferred.reject()
       return
     #キャッシュ更新部
-    .done ($xhr, thread_list) ->
-      if $xhr?.status is 200
-        cache.data = $xhr.responseText
+    .done (response, thread_list) ->
+      if response?.status is 200
+        cache.data = response.body
         cache.last_updated = Date.now()
 
         last_modified = new Date(
-          $xhr.getResponseHeader("Last-Modified") or "dummy"
+          response.headers["Last-Modified"] or "dummy"
         ).getTime()
 
         if not isNaN(last_modified)
           cache.last_modified = last_modified
 
-        if etag = $xhr.getResponseHeader("ETag")
+        if etag = response.headers["ETag"]
           cache.etag = etag
 
         cache.put()
@@ -145,12 +138,12 @@ class app.Board
         for thread in thread_list
           app.bookmark.update_res_count(thread.url, thread.res_count)
 
-      else if cache_get_promise.state() is "resolved" and $xhr?.status is 304
+      else if cache_get_promise.state() is "resolved" and response?.status is 304
         cache.last_updated = Date.now()
         cache.put()
       return
     #dat落ちスキャン
-    .done ($xhr, thread_list) =>
+    .done (response, thread_list) =>
       if thread_list
         dict = {}
         for bookmark in app.bookmark.get_by_board(@url) when bookmark.type is "thread"
@@ -183,9 +176,6 @@ class app.Board
       when "livedoor.jp", "shitaraba.net"
         path: "http://jbbs.shitaraba.net/#{tmp[3]}/#{tmp[4]}/subject.txt"
         charset: "EUC-JP"
-      when "open2ch.net"
-        path: "http://#{tmp[1]}/#{tmp[3]}/subback.html"
-        charset: "UTF-8"
       else
         path: "http://#{tmp[1]}/#{tmp[3]}/subject.txt"
         charset: "Shift_JIS"
@@ -211,8 +201,6 @@ class app.Board
       else
         bbs_type = "2ch"
         reg = /^(\d+)\.dat<>(.+) \((\d+)\)$/gm
-        if tmp[2] is "open2ch.net"
-          reg = /^<a href="\/test\/read\.cgi\/\w+\/(\d+)\/.*">\d+: (.*) \((\d+)\)<\/a>$/gm
         base_url = "http://#{tmp[1]}/test/read.cgi/#{tmp[3]}/"
 
     ngWords = (app.config.get('ngwords') or "").split('\n')

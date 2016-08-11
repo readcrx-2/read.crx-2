@@ -404,6 +404,8 @@ class UI.ThreadContent
 
         articleHtml += "</header>"
 
+        #文字色
+        color = res.message.match(/<font color="(.*?)">/i)
         tmp = (
           res.message
             #imgタグ変換
@@ -454,7 +456,9 @@ class UI.ThreadContent
             .replace /id:(?:[a-hj-z\d_\+\/\.\!]|i(?!d:))+/ig, ($0) ->
               "<a href=\"javascript:undefined;\" class=\"anchor_id\">#{$0}</a>"
         )
-        articleHtml += """<div class="message">#{tmp}</div>"""
+        articleHtml += "<div class=\"message\""
+        if color? then articleHtml += " style=\"color:##{color[1]};\""
+        articleHtml += ">#{tmp}</div>"
 
         tmp = ""
         tmp += " class=\"#{articleClass.join(" ")}\""

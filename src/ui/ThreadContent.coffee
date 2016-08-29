@@ -24,6 +24,12 @@ class UI.ThreadContent
     @idIndex = {}
 
     ###*
+    @property slipIndex
+    @type Object
+    ###
+    @slipIndex = {}
+
+    ###*
     @property repIndex
     @type Object
     ###
@@ -260,6 +266,7 @@ class UI.ThreadContent
 
         articleClass = []
         articleDataId = null
+        articleDataSlip = null
 
         tmpTxt1 = res.name + " " + res.mail + " " + res.other + " " + res.message
         tmpTxt2 = app.util.normalize(tmpTxt1)
@@ -362,6 +369,14 @@ class UI.ThreadContent
         tmp = (
           res.name
             .replace(/<(?!(?:\/?b|\/?font(?: color="?[#a-zA-Z0-9]+"?)?)>)/g, "&lt;")
+            .replace(/<\/b>\(([^<>]+? [^<>]+?)\)<b>$/, ($0, $1) =>
+              articleDataSlip = $1
+
+              @slipIndex[$1] = [] unless @slipIndex[$1]?
+              @slipIndex[$1].push(resNum)
+
+              return ""
+            )
             .replace(/<\/b>(.*?)<b>/g, """<span class="ob">$1</span>""")
             .replace(/&lt;span.*?>(.*?)&lt;\/span>/g, "<span class=\"ob\">$1</span>")
             .replace(/&lt;small.*?>(.*?)&lt;\/small>/g, "<small>$1</small>")
@@ -378,7 +393,7 @@ class UI.ThreadContent
             #タグ除去
             .replace(/<.*?(?:>|$)/g, "")
             #.id
-            .replace /(^| )(ID:(?!\?\?\?)[^ <>"']+)/, ($0, $1, $2) =>
+            .replace(/(^| )(ID:(?!\?\?\?)[^ <>"']+)/, ($0, $1, $2) =>
               fixedId = $2.replace(/\u25cf$/, "") #末尾●除去
 
               articleDataId = fixedId
@@ -395,7 +410,14 @@ class UI.ThreadContent
               @idIndex[fixedId] = [] unless @idIndex[fixedId]?
               @idIndex[fixedId].push(resNum)
 
-              """#{$1}<span class="id">#{$2}</span>"""
+              temp = $1
+
+              # slip追加
+              if articleDataSlip?
+                temp += """<span class="slip">SLIP:#{articleDataSlip}</span>"""
+              temp += """<span class="id">#{$2}</span>"""
+              return temp
+            )
             #.beid
             .replace /(^| )(BE:(\d+)\-[A-Z\d]+\(\d+\))/,
               """$1<a class="beid" href="http://be.2ch.net/test/p.php?i=$3" target="_blank">$2</a>"""
@@ -464,6 +486,8 @@ class UI.ThreadContent
         tmp += " class=\"#{articleClass.join(" ")}\""
         if articleDataId?
           tmp += " data-id=\"#{articleDataId}\""
+        if articleDataSlip?
+          tmp += " data-slip=\"#{articleDataSlip}\""
 
         articleHtml = """<article#{tmp}>#{articleHtml}</article>"""
         html += articleHtml
@@ -481,6 +505,20 @@ class UI.ThreadContent
               elm.classList.remove("link")
               elm.classList.add("freq")
             else if idCount >= 2
+              elm.classList.add("link")
+        return
+
+      #slipカウント, .freq/.link更新
+      do =>
+        for slip, index of @slipIndex
+          slipCount = index.length
+          for resNum in index
+            elm = @container.childNodes[resNum - 1].getElementsByClassName("slip")[0]
+            elm.firstChild.nodeValue = elm.firstChild.nodeValue.replace(/(?:\(\d+\))?$/, "(#{slipCount})")
+            if slipCount >= 5
+              elm.classList.remove("link")
+              elm.classList.add("freq")
+            else if slipCount >= 2
               elm.classList.add("link")
         return
 

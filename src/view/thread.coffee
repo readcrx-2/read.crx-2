@@ -401,25 +401,38 @@ app.boot "/view/thread.html", ["board_title_solver"], (BoardTitleSolver) ->
       return
 
     #IDポップアップ
-    .on app.config.get("popup_trigger"), ".id.link, .id.freq, .anchor_id", (e) ->
+    .on app.config.get("popup_trigger"), ".id.link, .id.freq, .anchor_id, .slip.link, .slip.freq", (e) ->
       e.preventDefault()
 
       popup_helper @, e, =>
-        id = @textContent
-          .replace(/^id:/i, "ID:")
-          .replace(/\(\d+\)$/, "")
-          .replace(/\u25cf$/, "") #末尾●除去
+        classList = Array.from(@.classList)
+        if classList.indexOf("id") isnt -1 or classList.indexOf("anchor_id") isnt -1
+          id = @textContent
+            .replace(/^id:/i, "ID:")
+            .replace(/\(\d+\)$/, "")
+            .replace(/\u25cf$/, "") #末尾●除去
+        else
+          id = ""
+        if classList.indexOf("slip") isnt -1
+          slip = @textContent
+            .replace(/^slip:/i, "")
+            .replace(/\(\d+\)$/i, "")
+        else
+          slip = ""
 
         $popup = $("<div>", class: "popup_id")
         $article = $(@).closest("article")
-        if $article.parent().is(".popup_id") and $article.attr("data-id") is id
+        if $article.parent().is(".popup_id") and ($article.attr("data-id") is id or $article.attr("data-slip") is slip)
           $("<div>", {
-              text: "現在ポップアップしているIDです"
+              text: "現在ポップアップしているID/SLIPです"
               class: "popup_disabled"
             })
             .appendTo($popup)
         else if threadContent.idIndex[id]
           for resNum in threadContent.idIndex[id]
+            $popup.append($content[0].childNodes[resNum - 1].cloneNode(true))
+        else if threadContent.slipIndex[slip]
+          for resNum in threadContent.slipIndex[slip]
             $popup.append($content[0].childNodes[resNum - 1].cloneNode(true))
         else
           $("<div>", {

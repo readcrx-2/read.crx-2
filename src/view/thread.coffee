@@ -424,7 +424,7 @@ app.boot "/view/thread.html", ["board_title_solver"], (BoardTitleSolver) ->
         $article = $(@).closest("article")
         if $article.parent().is(".popup_id") and ($article.attr("data-id") is id or $article.attr("data-slip") is slip)
           $("<div>", {
-              text: "現在ポップアップしているID/SLIPです"
+              text: "現在ポップアップしているIP/ID/SLIPです"
               class: "popup_disabled"
             })
             .appendTo($popup)

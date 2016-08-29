@@ -348,6 +348,7 @@ class app.view.PaneContentView extends app.view.IframeView
           @$element.trigger(
             "request_reload",
             force_update: message.force_update is true,
+            type: if message.type? then message.type else null,
             mes: if message.mes? then message.mes else null,
             name: if message.name? then message.name else null,
             mail: if message.mail? then message.mail else null,

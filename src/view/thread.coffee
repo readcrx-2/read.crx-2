@@ -109,7 +109,7 @@ app.boot "/view/thread.html", ["board_title_solver"], (BoardTitleSolver) ->
           .text("")
 
       app.view_thread._draw($view, ex?.force_update, (thread) ->
-        if ex?.mes?
+        if ex?.mes? and app.config.get("no_writehistory") is "off"
           i = thread.res.length - 1
           while i >= 0
             if ex.mes.replace(/\s/g, "") is app.util.decode_char_reference(app.util.stripTags(thread.res[i].message)).replace(/\s/g, "")

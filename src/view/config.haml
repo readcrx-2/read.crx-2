@@ -191,7 +191,7 @@
             %button.history_import(type="button") インポート
             %span.history_status
             %br
-            %input.direct(type="checkbox" name="no_history") 閲覧履歴を保存しない(チェックボックスをつけているときのみ有効です)
+            %input.direct(type="checkbox" name="no_history") 閲覧履歴を保存しない(チェック時のみ有効)
           .writehistory
             書込履歴:
             %button.writehistory_clear(type="button") 削除
@@ -200,6 +200,8 @@
             %input(type="file" class="writehistory_file_hide hide" accept=".json")
             %button.writehistory_import(type="button") インポート
             %span.writehistory_status
+            %br
+            %input.direct(type="checkbox" name="no_history") 書込履歴を保存しない(チェック時のみ有効)
             %br
             書込履歴テーブル:
             %button.writehistory_delete_table(type="button") 削除

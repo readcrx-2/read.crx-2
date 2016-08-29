@@ -295,7 +295,7 @@ app.boot "/view/config.html", ["cache", "bbsmenu"], (Cache, BBSMenu) ->
     deferred_add_func_array = []
     whistory_array = inputObj.writehistory
     for whis in whistory_array
-      deferred_add_func_array.push(app.WriteHistory.add(whis.url, whis.res, whis.title, whis.name, whis.mail, whis.message, whis.date))
+      deferred_add_func_array.push(app.WriteHistory.add(whis.url, whis.res, whis.title, whis.name, whis.mail, whis.input_name, whis.input_mail, whis.message, whis.date))
     return $.when.apply(null, deferred_add_func_array)
   , ->
     d = $.Deferred()

@@ -30,6 +30,12 @@ class UI.ThreadContent
     @slipIndex = {}
 
     ###*
+    @property tripIndex
+    @type Object
+    ###
+    @tripIndex = {}
+
+    ###*
     @property repIndex
     @type Object
     ###
@@ -267,6 +273,7 @@ class UI.ThreadContent
         articleClass = []
         articleDataId = null
         articleDataSlip = null
+        articleDataTrip = null
 
         tmpTxt1 = res.name + " " + res.mail + " " + res.other + " " + res.message
         tmpTxt2 = app.util.normalize(tmpTxt1)
@@ -377,6 +384,14 @@ class UI.ThreadContent
 
               return ""
             )
+            .replace(/<\/b>(◆[^<>]+?) <b>/, ($0, $1) =>
+              articleDataTrip = $1
+
+              @tripIndex[$1] = [] unless @tripIndex[$1]?
+              @tripIndex[$1].push(resNum)
+
+              return """<span class="trip">#{$1}</span>"""
+            )
             .replace(/<\/b>(.*?)<b>/g, """<span class="ob">$1</span>""")
             .replace(/&lt;span.*?>(.*?)&lt;\/span>/g, "<span class=\"ob\">$1</span>")
             .replace(/&lt;small.*?>(.*?)&lt;\/small>/g, "<small>$1</small>")
@@ -393,7 +408,7 @@ class UI.ThreadContent
             #タグ除去
             .replace(/<.*?(?:>|$)/g, "")
             #.id
-            .replace(/(^| )(ID:(?!\?\?\?)[^ <>"']+)/, ($0, $1, $2) =>
+            .replace(/(^| )(ID:(?!\?\?\?)[^ <>"']+|発信元:(\d+.\d+.\d+))/, ($0, $1, $2) =>
               fixedId = $2.replace(/\u25cf$/, "") #末尾●除去
 
               articleDataId = fixedId
@@ -411,7 +426,6 @@ class UI.ThreadContent
               @idIndex[fixedId].push(resNum)
 
               temp = $1
-
               # slip追加
               if articleDataSlip?
                 temp += """<span class="slip">SLIP:#{articleDataSlip}</span>"""
@@ -488,6 +502,8 @@ class UI.ThreadContent
           tmp += " data-id=\"#{articleDataId}\""
         if articleDataSlip?
           tmp += " data-slip=\"#{articleDataSlip}\""
+        if articleDataTrip?
+          tmp += " data-trip=\"#{articleDataTrip}\""
 
         articleHtml = """<article#{tmp}>#{articleHtml}</article>"""
         html += articleHtml
@@ -519,6 +535,20 @@ class UI.ThreadContent
               elm.classList.remove("link")
               elm.classList.add("freq")
             else if slipCount >= 2
+              elm.classList.add("link")
+        return
+
+      #tripカウント, .freq/.link更新
+      do =>
+        for trip, index of @tripIndex
+          tripCount = index.length
+          for resNum in index
+            elm = @container.childNodes[resNum - 1].getElementsByClassName("trip")[0]
+            elm.firstChild.nodeValue = elm.firstChild.nodeValue.replace(/(?:\(\d+\))?$/, "(#{tripCount})")
+            if tripCount >= 5
+              elm.classList.remove("link")
+              elm.classList.add("freq")
+            else if tripCount >= 2
               elm.classList.add("link")
         return
 

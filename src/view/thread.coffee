@@ -401,7 +401,7 @@ app.boot "/view/thread.html", ["board_title_solver"], (BoardTitleSolver) ->
       return
 
     #IDポップアップ
-    .on app.config.get("popup_trigger"), ".id.link, .id.freq, .anchor_id, .slip.link, .slip.freq", (e) ->
+    .on app.config.get("popup_trigger"), ".id.link, .id.freq, .anchor_id, .slip.link, .slip.freq, .trip.link, .trip.freq", (e) ->
       e.preventDefault()
 
       popup_helper @, e, =>
@@ -419,12 +419,18 @@ app.boot "/view/thread.html", ["board_title_solver"], (BoardTitleSolver) ->
             .replace(/\(\d+\)$/i, "")
         else
           slip = ""
+        if classList.indexOf("trip") isnt -1
+          trip = @textContent
+            .replace(/\(\d+\)$/i, "")
+        else
+          trip = ""
 
         $popup = $("<div>", class: "popup_id")
         $article = $(@).closest("article")
-        if $article.parent().is(".popup_id") and ($article.attr("data-id") is id or $article.attr("data-slip") is slip)
+
+        if $article.parent().is(".popup_id") and ($article.attr("data-id") is id or $article.attr("data-slip") is slip or $article.attr("data-trip") is trip)
           $("<div>", {
-              text: "現在ポップアップしているIP/ID/SLIPです"
+              text: "現在ポップアップしているIP/ID/SLIP/トリップです"
               class: "popup_disabled"
             })
             .appendTo($popup)
@@ -433,6 +439,9 @@ app.boot "/view/thread.html", ["board_title_solver"], (BoardTitleSolver) ->
             $popup.append($content[0].childNodes[resNum - 1].cloneNode(true))
         else if threadContent.slipIndex[slip]
           for resNum in threadContent.slipIndex[slip]
+            $popup.append($content[0].childNodes[resNum - 1].cloneNode(true))
+        else if threadContent.tripIndex[trip]
+          for resNum in threadContent.tripIndex[trip]
             $popup.append($content[0].childNodes[resNum - 1].cloneNode(true))
         else
           $("<div>", {

@@ -197,7 +197,7 @@ app.boot "/view/thread.html", ["board_title_solver"], (BoardTitleSolver) ->
       if (
         e.type is "click" and
         app.config.get("popup_trigger") is "click" and
-        $(e.target).is(".id.link, .id.freq, .rep.link, .rep.freq")
+        $(e.target).is(".id.link, .id.freq, .anchor_id, .slip.link, .slip.freq, .trip.link, .trip.freq")
       )
         return
 

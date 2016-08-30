@@ -722,7 +722,7 @@ app.view_thread._draw = ($view, force_update, beforeAdd) ->
     else
       $view.find(".message_bar").removeClass("error").empty()
 
-    (d.reject(); return) unless thread.res?
+    (d.reject(); return d.promise()) unless thread.res?
 
     document.title = thread.title
 

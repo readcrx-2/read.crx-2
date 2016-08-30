@@ -106,7 +106,7 @@ app.boot "/view/board.html", ["board_title_solver"], (BoardTitleSolver) ->
         )
 
         if ex? and app.config.get("no_writehistory") is "off"
-          if ex.type is "own"
+          if ex.kind is "own"
             app.WriteHistory.add(ex.url, 1, ex.title, ex.name, ex.mail, ex.name, ex.mail, ex.mes, Date.now().valueOf())
             app.message.send("open", url: ex.url, new_tab: true)
           else

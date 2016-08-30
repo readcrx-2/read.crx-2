@@ -408,8 +408,8 @@ class UI.ThreadContent
             #タグ除去
             .replace(/<.*?(?:>|$)/g, "")
             #.id
-            .replace(/(^| )(ID:(?!\?\?\?)[^ <>"']+|発信元:(\d+.\d+.\d+))/, ($0, $1, $2) =>
-              fixedId = $2.replace(/\u25cf$/, "") #末尾●除去
+            .replace(/(?:^| )(ID:(?!\?\?\?)[^ <>"']+|発信元:\d+.\d+.\d+)/, ($0, $1) =>
+              fixedId = $1.replace(/\u25cf$/, "") #末尾●除去
 
               articleDataId = fixedId
 
@@ -425,16 +425,16 @@ class UI.ThreadContent
               @idIndex[fixedId] = [] unless @idIndex[fixedId]?
               @idIndex[fixedId].push(resNum)
 
-              temp = $1
+              temp = ""
               # slip追加
               if articleDataSlip?
                 temp += """<span class="slip">SLIP:#{articleDataSlip}</span>"""
-              temp += """<span class="id">#{$2}</span>"""
+              temp += """<span class="id">#{$1}</span>"""
               return temp
             )
             #.beid
-            .replace /(^| )(BE:(\d+)\-[A-Z\d]+\(\d+\))/,
-              """$1<a class="beid" href="http://be.2ch.net/test/p.php?i=$3" target="_blank">$2</a>"""
+            .replace /(?:^| )(BE:(\d+)\-[A-Z\d]+\(\d+\))/,
+              """<a class="beid" href="http://be.2ch.net/test/p.php?i=$3" target="_blank">$1</a>"""
         )
         articleHtml += """<span class="other">#{tmp}</span>"""
 

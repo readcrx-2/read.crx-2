@@ -406,24 +406,21 @@ app.boot "/view/thread.html", ["board_title_solver"], (BoardTitleSolver) ->
 
       popup_helper @, e, =>
         classList = Array.from(@.classList)
+        id = ""
+        slip = ""
+        trip = ""
         if classList.indexOf("id") isnt -1 or classList.indexOf("anchor_id") isnt -1
           id = @textContent
             .replace(/^id:/i, "ID:")
             .replace(/\(\d+\)$/, "")
             .replace(/\u25cf$/, "") #末尾●除去
-        else
-          id = ""
         if classList.indexOf("slip") isnt -1
           slip = @textContent
             .replace(/^slip:/i, "")
             .replace(/\(\d+\)$/i, "")
-        else
-          slip = ""
         if classList.indexOf("trip") isnt -1
           trip = @textContent
             .replace(/\(\d+\)$/i, "")
-        else
-          trip = ""
 
         $popup = $("<div>", class: "popup_id")
         $article = $(@).closest("article")

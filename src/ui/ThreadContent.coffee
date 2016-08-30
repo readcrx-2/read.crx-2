@@ -425,17 +425,19 @@ class UI.ThreadContent
               @idIndex[fixedId] = [] unless @idIndex[fixedId]?
               @idIndex[fixedId].push(resNum)
 
-              temp = ""
-              # slip追加
-              if articleDataSlip?
-                temp += """<span class="slip">SLIP:#{articleDataSlip}</span>"""
-              temp += """<span class="id">#{$1}</span>"""
-              return temp
+              return """<span class="id">#{$1}</span>"""
             )
             #.beid
             .replace /(?:^| )(BE:(\d+)\-[A-Z\d]+\(\d+\))/,
               """<a class="beid" href="http://be.2ch.net/test/p.php?i=$3" target="_blank">$1</a>"""
         )
+        # slip追加
+        if articleDataSlip?
+          if (index = tmp.indexOf("<span class=\"id\">")) isnt -1
+            tmp = tmp.slice(0, index) + """<span class="slip">SLIP:#{articleDataSlip}</span>""" + tmp.slice(index, tmp.length)
+          else
+            tmp += """<span class="slip">SLIP:#{articleDataSlip}</span>"""
+
         articleHtml += """<span class="other">#{tmp}</span>"""
 
         articleHtml += "</header>"

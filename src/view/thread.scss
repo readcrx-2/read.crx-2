@@ -372,7 +372,9 @@ header {
   $jump-panel-background-color,
   $thread-footer-button-background-color,
   $thread-footer-button-color,
-  $thread-res-info-color
+  $thread-res-info-color,
+  $rock54-background-color,
+  $rock54-border-color
 ) {
   & {
     background-color: $background-color;
@@ -438,6 +440,12 @@ header {
     }
   }
 
+  .rock54 {
+    border: 1px solid $rock54-border-color;
+    border-radius: 3px;
+    background: $rock54-background-color;
+  }
+
   .content[data-res_search_hit_count="0"]:after {
     color: $no-hit-message-color;
   }
@@ -477,7 +485,9 @@ header {
     $jump-panel-color: #fff,
     $thread-footer-button-background-color: #eee,
     $thread-footer-button-color: #222,
-    $thread-res-info-color: #666
+    $thread-res-info-color: #666,
+    $rock54-background-color: #eee,
+    $rock54-border-color: #ccc
   );
 }
 
@@ -502,7 +512,9 @@ header {
     $jump-panel-color: #ccc,
     $thread-footer-button-background-color: #333,
     $thread-footer-button-color: #ddd,
-    $thread-res-info-color: silver
+    $thread-res-info-color: silver,
+    $rock54-background-color: #444,
+    $rock54-border-color: #666
   );
 }
 

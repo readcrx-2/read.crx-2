@@ -181,28 +181,30 @@
       %section
         %h2 データ
         %div
+          インポートは大量にすると時間がかかります
           .history
             閲覧履歴:
-            %span.history_status
             %button.history_clear(type="button") 削除
             %button.history_export(type="button") エクスポート
             %button.history_file_show(type="button") ファイル読み込み
             %input(type="file" class="history_file_hide hide" accept=".json")
             %button.history_import(type="button") インポート
-            インポートすると履歴に追加されます(大量にインポートすると時間がかかります)
+            %span.history_status
             %br
-            %input.direct(type="checkbox" name="no_history") 閲覧履歴を保存しない(チェックボックスをつけているときのみ有効です)
+            %input.direct(type="checkbox" name="no_history") 閲覧履歴を保存しない(チェック時のみ有効)
           .writehistory
             書込履歴:
-            %span.writehistory_status
             %button.writehistory_clear(type="button") 削除
             %button.writehistory_export(type="button") エクスポート
             %button.writehistory_file_show(type="button") ファイル読み込み
             %input(type="file" class="writehistory_file_hide hide" accept=".json")
             %button.writehistory_import(type="button") インポート
-            インポートすると書込履歴に追加されます(大量にインポートすると時間がかかります)
+            %span.writehistory_status
             %br
-            %button.writehistory_delete_table(type="button") テーブル削除
+            %input.direct(type="checkbox" name="no_history") 書込履歴を保存しない(チェック時のみ有効)
+            %br
+            書込履歴テーブル:
+            %button.writehistory_delete_table(type="button") 削除
             (1.2.0～1.3.0から1.3.1以降へ移行時に一度だけ実行してください、実行後に再起動してください)
             %br
           .cache

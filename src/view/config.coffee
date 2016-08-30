@@ -241,7 +241,7 @@ app.boot "/view/config.html", ["cache", "bbsmenu"], (Cache, BBSMenu) ->
       else
         $status
           .addClass("fail")
-          .text("インポート失敗")
+          .text("ファイルを選択してください")
       return
 
     #履歴エクスポート
@@ -265,12 +265,12 @@ app.boot "/view/config.html", ["cache", "bbsmenu"], (Cache, BBSMenu) ->
     return $.when(app.History.clear(), app.read_state.clear())
   , (inputObj) ->
     deferred_add_func_array = []
-    history_array = inputObj.history
-    read_state_array = inputObj.read_state
-    for his in history_array
-      deferred_add_func_array.push(app.History.add(his.url, his.title, his.date))
-    for rs in read_state_array
-      deferred_add_func_array.push(app.read_state.set(rs))
+    if inputObj.history
+      for his in inputObj.history
+        deferred_add_func_array.push(app.History.add(his.url, his.title, his.date))
+    if inputObj.read_state
+      for rs in inputObj.read_state
+        deferred_add_func_array.push(app.read_state.set(rs))
     return $.when.apply(null, deferred_add_func_array)
   , ->
     d = $.Deferred()
@@ -293,9 +293,9 @@ app.boot "/view/config.html", ["cache", "bbsmenu"], (Cache, BBSMenu) ->
     return app.WriteHistory.clear()
   , (inputObj) ->
     deferred_add_func_array = []
-    whistory_array = inputObj.writehistory
-    for whis in whistory_array
-      deferred_add_func_array.push(app.WriteHistory.add(whis.url, whis.res, whis.title, whis.name, whis.mail, whis.message, whis.date))
+    if inputObj.writehistory
+      for whis in inputObj.writehistory
+        deferred_add_func_array.push(app.WriteHistory.add(whis.url, whis.res, whis.title, whis.name, whis.mail, whis.input_name, whis.input_mail, whis.message, whis.date))
     return $.when.apply(null, deferred_add_func_array)
   , ->
     d = $.Deferred()
@@ -450,7 +450,7 @@ app.boot "/view/config.html", ["cache", "bbsmenu"], (Cache, BBSMenu) ->
     else
       $cfg_status
         .addClass("fail")
-        .text("インポート失敗")
+        .text("ファイルを選択してください")
     return
 
   #設定を実際にインポートする

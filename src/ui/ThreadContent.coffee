@@ -24,6 +24,18 @@ class UI.ThreadContent
     @idIndex = {}
 
     ###*
+    @property slipIndex
+    @type Object
+    ###
+    @slipIndex = {}
+
+    ###*
+    @property tripIndex
+    @type Object
+    ###
+    @tripIndex = {}
+
+    ###*
     @property repIndex
     @type Object
     ###
@@ -260,6 +272,8 @@ class UI.ThreadContent
 
         articleClass = []
         articleDataId = null
+        articleDataSlip = null
+        articleDataTrip = null
 
         tmpTxt1 = res.name + " " + res.mail + " " + res.other + " " + res.message
         tmpTxt2 = app.util.normalize(tmpTxt1)
@@ -362,6 +376,22 @@ class UI.ThreadContent
         tmp = (
           res.name
             .replace(/<(?!(?:\/?b|\/?font(?: color="?[#a-zA-Z0-9]+"?)?)>)/g, "&lt;")
+            .replace(/<\/b>\(([^<>]+? [^<>]+?)\)<b>$/, ($0, $1) =>
+              articleDataSlip = $1
+
+              @slipIndex[$1] = [] unless @slipIndex[$1]?
+              @slipIndex[$1].push(resNum)
+
+              return ""
+            )
+            .replace(/<\/b>(◆[^<>]+?) <b>/, ($0, $1) =>
+              articleDataTrip = $1
+
+              @tripIndex[$1] = [] unless @tripIndex[$1]?
+              @tripIndex[$1].push(resNum)
+
+              return """<span class="trip">#{$1}</span>"""
+            )
             .replace(/<\/b>(.*?)<b>/g, """<span class="ob">$1</span>""")
             .replace(/&lt;span.*?>(.*?)&lt;\/span>/g, "<span class=\"ob\">$1</span>")
             .replace(/&lt;small.*?>(.*?)&lt;\/small>/g, "<small>$1</small>")
@@ -378,8 +408,8 @@ class UI.ThreadContent
             #タグ除去
             .replace(/<.*?(?:>|$)/g, "")
             #.id
-            .replace /(^| )(ID:(?!\?\?\?)[^ <>"']+)/, ($0, $1, $2) =>
-              fixedId = $2.replace(/\u25cf$/, "") #末尾●除去
+            .replace(/(?:^| )(ID:(?!\?\?\?)[^ <>"']+|発信元:\d+.\d+.\d+)/, ($0, $1) =>
+              fixedId = $1.replace(/\u25cf$/, "") #末尾●除去
 
               articleDataId = fixedId
 
@@ -395,10 +425,16 @@ class UI.ThreadContent
               @idIndex[fixedId] = [] unless @idIndex[fixedId]?
               @idIndex[fixedId].push(resNum)
 
-              """#{$1}<span class="id">#{$2}</span>"""
+              temp = ""
+              # slip追加
+              if articleDataSlip?
+                temp += """<span class="slip">SLIP:#{articleDataSlip}</span>"""
+              temp += """<span class="id">#{$1}</span>"""
+              return temp
+            )
             #.beid
-            .replace /(^| )(BE:(\d+)\-[A-Z\d]+\(\d+\))/,
-              """$1<a class="beid" href="http://be.2ch.net/test/p.php?i=$3" target="_blank">$2</a>"""
+            .replace /(?:^| )(BE:(\d+)\-[A-Z\d]+\(\d+\))/,
+              """<a class="beid" href="http://be.2ch.net/test/p.php?i=$3" target="_blank">$1</a>"""
         )
         articleHtml += """<span class="other">#{tmp}</span>"""
 
@@ -410,8 +446,10 @@ class UI.ThreadContent
           res.message
             #imgタグ変換
             .replace(/<img src="(.*?)".*?>/ig, "$1")
+            #Rock54
+            .replace(/<small.*?Rock54: (Caution|Warning)\((.+?)\).*?<\/small>/ig, "<div class=\"rock54\">&#128064; Rock54: $1($2)</span>")
             #タグ除去
-            .replace(/<(?!(?:br|hr|\/?b)>).*?(?:>|$)/ig, "")
+            .replace(/<(?!(?:br|hr|div class="rock54"|\/?b)>).*?(?:>|$)/ig, "")
             #URLリンク
             .replace(/(h)?(ttps?:\/\/(?!img\.2ch\.net\/(?:ico|emoji)\/[\w\-_]+\.gif)(?:[a-hj-zA-HJ-Z\d_\-.!~*'();\/?:@=+$,%#]|\&(?!gt;)|[iI](?![dD]:)+)+)/g,
               '<a href="h$2" target="_blank">$1$2</a>')
@@ -464,6 +502,10 @@ class UI.ThreadContent
         tmp += " class=\"#{articleClass.join(" ")}\""
         if articleDataId?
           tmp += " data-id=\"#{articleDataId}\""
+        if articleDataSlip?
+          tmp += " data-slip=\"#{articleDataSlip}\""
+        if articleDataTrip?
+          tmp += " data-trip=\"#{articleDataTrip}\""
 
         articleHtml = """<article#{tmp}>#{articleHtml}</article>"""
         html += articleHtml
@@ -481,6 +523,34 @@ class UI.ThreadContent
               elm.classList.remove("link")
               elm.classList.add("freq")
             else if idCount >= 2
+              elm.classList.add("link")
+        return
+
+      #slipカウント, .freq/.link更新
+      do =>
+        for slip, index of @slipIndex
+          slipCount = index.length
+          for resNum in index
+            elm = @container.childNodes[resNum - 1].getElementsByClassName("slip")[0]
+            elm.firstChild.nodeValue = elm.firstChild.nodeValue.replace(/(?:\(\d+\))?$/, "(#{slipCount})")
+            if slipCount >= 5
+              elm.classList.remove("link")
+              elm.classList.add("freq")
+            else if slipCount >= 2
+              elm.classList.add("link")
+        return
+
+      #tripカウント, .freq/.link更新
+      do =>
+        for trip, index of @tripIndex
+          tripCount = index.length
+          for resNum in index
+            elm = @container.childNodes[resNum - 1].getElementsByClassName("trip")[0]
+            elm.firstChild.nodeValue = elm.firstChild.nodeValue.replace(/(?:\(\d+\))?$/, "(#{tripCount})")
+            if tripCount >= 5
+              elm.classList.remove("link")
+              elm.classList.add("freq")
+            else if tripCount >= 2
               elm.classList.add("link")
         return
 

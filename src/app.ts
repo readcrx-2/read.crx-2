@@ -267,6 +267,7 @@ module app {
       default_name: "",
       default_mail: "",
       no_history: "off",
+      no_writehistory: "off",
       user_css: "",
       bbsmenu: "http://kita.jikkyo.org/cbm/cbm.cgi/20.p0.m0.jb.vs.op.sc.nb.bb/-all/bbsmenu.html",
       useragent: "",

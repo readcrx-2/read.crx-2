@@ -109,7 +109,7 @@ app.boot "/view/thread.html", ["board_title_solver"], (BoardTitleSolver) ->
           .text("")
 
       app.view_thread._draw($view, ex?.force_update, (thread) ->
-        if ex?.mes?
+        if ex?.mes? and app.config.get("no_writehistory") is "off"
           i = thread.res.length - 1
           while i >= 0
             if ex.mes.replace(/\s/g, "") is app.util.decode_char_reference(app.util.stripTags(thread.res[i].message)).replace(/\s/g, "")
@@ -228,6 +228,12 @@ app.boot "/view/thread.html", ["board_title_solver"], (BoardTitleSolver) ->
         $menu.find(".copy_id").remove()
         $menu.find(".add_id_to_ngwords").remove()
 
+      unless $article.attr("data-slip")?
+        $menu.find(".copy_slip").remove()
+
+      unless $article.attr("data-trip")?
+        $menu.find(".copy_trip").remove()
+
       unless app.url.tsld(view_url) in ["2ch.net", "bbspink.com", "shitaraba.net"]
         $menu.find(".res_to_this, .res_to_this2").remove()
 
@@ -253,6 +259,12 @@ app.boot "/view/thread.html", ["board_title_solver"], (BoardTitleSolver) ->
       else if $this.hasClass("copy_id")
         app.clipboardWrite($res.attr("data-id"))
 
+      else if $this.hasClass("copy_slip")
+        app.clipboardWrite($res.attr("data-slip"))
+
+      else if $this.hasClass("copy_trip")
+        app.clipboardWrite($res.attr("data-trip"))
+
       else if $this.hasClass("add_id_to_ngwords")
         app.config.set("ngwords", $res.attr("data-id") + "\n" + (app.config.get("ngwords") or ""))
 
@@ -274,7 +286,7 @@ app.boot "/view/thread.html", ["board_title_solver"], (BoardTitleSolver) ->
         mail = $res.find(".mail").text()
         message = $res.find(".message").text()
         date1 = $res.find(".other").text().match(/(\d+)\/(\d+)\/(\d+)\(.\) (\d+):(\d+):(\d+).*/)
-        date2 = new Date(date1[1], date1[2], date1[3], date1[4], date1[5], date1[6]).valueOf()
+        date2 = new Date(date1[1], date1[2]-1, date1[3], date1[4], date1[5], date1[6]).valueOf()
         app.WriteHistory.add(view_url, resnum, document.title, name, mail, name, mail, message, date2)
 
       else if $this.hasClass("toggle_aa_mode")
@@ -401,25 +413,44 @@ app.boot "/view/thread.html", ["board_title_solver"], (BoardTitleSolver) ->
       return
 
     #IDポップアップ
-    .on app.config.get("popup_trigger"), ".id.link, .id.freq, .anchor_id", (e) ->
+    .on app.config.get("popup_trigger"), ".id.link, .id.freq, .anchor_id, .slip.link, .slip.freq, .trip.link, .trip.freq", (e) ->
       e.preventDefault()
 
       popup_helper @, e, =>
-        id = @textContent
-          .replace(/^id:/i, "ID:")
-          .replace(/\(\d+\)$/, "")
-          .replace(/\u25cf$/, "") #末尾●除去
+        classList = Array.from(@.classList)
+        id = ""
+        slip = ""
+        trip = ""
+        if classList.indexOf("id") isnt -1 or classList.indexOf("anchor_id") isnt -1
+          id = @textContent
+            .replace(/^id:/i, "ID:")
+            .replace(/\(\d+\)$/, "")
+            .replace(/\u25cf$/, "") #末尾●除去
+        if classList.indexOf("slip") isnt -1
+          slip = @textContent
+            .replace(/^slip:/i, "")
+            .replace(/\(\d+\)$/i, "")
+        if classList.indexOf("trip") isnt -1
+          trip = @textContent
+            .replace(/\(\d+\)$/i, "")
 
         $popup = $("<div>", class: "popup_id")
         $article = $(@).closest("article")
-        if $article.parent().is(".popup_id") and $article.attr("data-id") is id
+
+        if $article.parent().is(".popup_id") and ($article.attr("data-id") is id or $article.attr("data-slip") is slip or $article.attr("data-trip") is trip)
           $("<div>", {
-              text: "現在ポップアップしているIDです"
+              text: "現在ポップアップしているIP/ID/SLIP/トリップです"
               class: "popup_disabled"
             })
             .appendTo($popup)
         else if threadContent.idIndex[id]
           for resNum in threadContent.idIndex[id]
+            $popup.append($content[0].childNodes[resNum - 1].cloneNode(true))
+        else if threadContent.slipIndex[slip]
+          for resNum in threadContent.slipIndex[slip]
+            $popup.append($content[0].childNodes[resNum - 1].cloneNode(true))
+        else if threadContent.tripIndex[trip]
+          for resNum in threadContent.tripIndex[trip]
             $popup.append($content[0].childNodes[resNum - 1].cloneNode(true))
         else
           $("<div>", {

@@ -17,6 +17,7 @@ header {
   top: 0;
   left: 0;
   width: 100%;
+  z-index: 2;
 
   box-shadow: 0 2px 8px #333;
   background-image: linear-gradient(#666, #222);
@@ -72,7 +73,7 @@ label {
   cursor: pointer;
 }
 
-input[type="text"], textarea {
+input[type="text"], input[type="number"], textarea {
   @include input-text;
 }
 

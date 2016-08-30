@@ -105,11 +105,16 @@ app.boot "/view/board.html", ["board_title_solver"], (BoardTitleSolver) ->
             ng: thread.ng
         )
 
-        if ex?
-          for thread in board
-            if thread.title.indexOf(ex.title) isnt -1
-              app.WriteHistory.add(thread.url, 1, thread.title, ex.name, ex.mail, ex.name, ex.mail, ex.mes, thread.created_at)
-              break
+        if ex? and app.config.get("no_writehistory") is "off"
+          if ex.type is "own"
+            app.WriteHistory.add(ex.url, 1, ex.title, ex.name, ex.mail, ex.name, ex.mail, ex.mes, Date.now().valueOf())
+            app.message.send("open", url: ex.url, new_tab: true)
+          else
+            for thread in board
+              if thread.title.indexOf(ex.title) isnt -1
+                app.WriteHistory.add(thread.url, 1, ex.title, ex.name, ex.mail, ex.name, ex.mail, ex.mes, thread.created_at)
+                app.message.send("open", url: thread.url, new_tab: true)
+                break
 
         $view.find("table").table_sort("update")
         return

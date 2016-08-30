@@ -408,7 +408,7 @@ class UI.ThreadContent
             #タグ除去
             .replace(/<.*?(?:>|$)/g, "")
             #.id
-            .replace(/(?:^| )(ID:(?!\?\?\?)[^ <>"']+|発信元:\d+.\d+.\d+)/, ($0, $1) =>
+            .replace(/(?:^| )(ID:(?!\?\?\?)[^ <>"']+|発信元:\d+.\d+.\d+.\d+)/, ($0, $1) =>
               fixedId = $1.replace(/\u25cf$/, "") #末尾●除去
 
               articleDataId = fixedId

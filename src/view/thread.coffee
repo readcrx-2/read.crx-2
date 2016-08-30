@@ -288,6 +288,7 @@ app.boot "/view/thread.html", ["board_title_solver"], (BoardTitleSolver) ->
         date1 = $res.find(".other").text().match(/(\d+)\/(\d+)\/(\d+)\(.\) (\d+):(\d+):(\d+).*/)
         date2 = new Date(date1[1], date1[2]-1, date1[3], date1[4], date1[5], date1[6]).valueOf()
         app.WriteHistory.add(view_url, resnum, document.title, name, mail, name, mail, message, date2)
+        $res.addClass("written")
 
       else if $this.hasClass("toggle_aa_mode")
         $res.toggleClass("aa")
@@ -721,7 +722,7 @@ app.view_thread._draw = ($view, force_update, beforeAdd) ->
     else
       $view.find(".message_bar").removeClass("error").empty()
 
-    (d.reject(); return) unless thread.res?
+    (d.reject(); return d.promise()) unless thread.res?
 
     document.title = thread.title
 

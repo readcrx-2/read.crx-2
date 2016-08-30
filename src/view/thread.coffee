@@ -228,6 +228,12 @@ app.boot "/view/thread.html", ["board_title_solver"], (BoardTitleSolver) ->
         $menu.find(".copy_id").remove()
         $menu.find(".add_id_to_ngwords").remove()
 
+      unless $article.attr("data-slip")?
+        $menu.find(".copy_slip").remove()
+
+      unless $article.attr("data-trip")?
+        $menu.find(".copy_trip").remove()
+
       unless app.url.tsld(view_url) in ["2ch.net", "bbspink.com", "shitaraba.net"]
         $menu.find(".res_to_this, .res_to_this2").remove()
 
@@ -252,6 +258,12 @@ app.boot "/view/thread.html", ["board_title_solver"], (BoardTitleSolver) ->
 
       else if $this.hasClass("copy_id")
         app.clipboardWrite($res.attr("data-id"))
+
+      else if $this.hasClass("copy_slip")
+        app.clipboardWrite($res.attr("data-slip"))
+
+      else if $this.hasClass("copy_trip")
+        app.clipboardWrite($res.attr("data-trip"))
 
       else if $this.hasClass("add_id_to_ngwords")
         app.config.set("ngwords", $res.attr("data-id") + "\n" + (app.config.get("ngwords") or ""))

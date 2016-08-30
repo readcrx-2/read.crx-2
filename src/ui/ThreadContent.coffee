@@ -446,8 +446,10 @@ class UI.ThreadContent
           res.message
             #imgタグ変換
             .replace(/<img src="(.*?)".*?>/ig, "$1")
+            #Rock54
+            .replace(/<small.*?Rock54: (Caution|Warning)\((.+?)\).*?<\/small>/ig, "<div class=\"rock54\">&#128064; Rock54: $1($2)</span>")
             #タグ除去
-            .replace(/<(?!(?:br|hr|\/?b)>).*?(?:>|$)/ig, "")
+            .replace(/<(?!(?:br|hr|div class="rock54"|\/?b)>).*?(?:>|$)/ig, "")
             #URLリンク
             .replace(/(h)?(ttps?:\/\/(?!img\.2ch\.net\/(?:ico|emoji)\/[\w\-_]+\.gif)(?:[a-hj-zA-HJ-Z\d_\-.!~*'();\/?:@=+$,%#]|\&(?!gt;)|[iI](?![dD]:)+)+)/g,
               '<a href="h$2" target="_blank">$1$2</a>')

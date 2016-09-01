@@ -252,17 +252,17 @@ app.boot "/write/write.html", ->
           textarea:
             MESSAGE: iframe_arg.rcrx_message
       #フォーム生成
-      form = @contentWindow.document.createElement("form")
+      form = @contentDocument.createElement("form")
       form.setAttribute("accept-charset", form_data.charset)
       form.action = form_data.action
       form.method = "POST"
       for key, val of form_data.input
-        input = @contentWindow.document.createElement("input")
+        input = @contentDocument.createElement("input")
         input.name = key
         input.setAttribute("value", val)
         form.appendChild(input)
       for key, val of form_data.textarea
-        textarea = @contentWindow.document.createElement("textarea")
+        textarea = @contentDocument.createElement("textarea")
         textarea.name = key
         textarea.textContent = val
         form.appendChild(textarea)

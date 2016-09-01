@@ -156,7 +156,6 @@ app.boot "/write/write.html", ->
       write_timer.wake()
     else if message.type is "success"
       $view.find(".notice").text("書き込み成功")
-      console.log message.key
       setTimeout ->
         message = $view.find(".message").val()
         name = $view.find(".name").val()

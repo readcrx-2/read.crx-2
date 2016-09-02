@@ -53,7 +53,7 @@ app.util.ch_server_move_detect = (old_board_url, html) ->
       deferred.reject()
 
   #htmlが渡されなかった場合は通信する
-  .pipe null, ->
+  .then null, ->
     $.Deferred (deferred) ->
       $.ajax
         url: old_board_url
@@ -68,7 +68,7 @@ app.util.ch_server_move_detect = (old_board_url, html) ->
             deferred.reject()
 
   #htmlから移転を判定
-  .pipe (html) ->
+  .then (html) ->
     $.Deferred (deferred) ->
       res = ///location\.href="(http://\w+\.2ch\.net/\w*/)"///.exec(html)
 

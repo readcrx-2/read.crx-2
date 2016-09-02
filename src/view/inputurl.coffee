@@ -3,7 +3,7 @@ app.boot "/view/inputurl.html", ->
 
   $view = $(document.documentElement)
 
-  $view.find("form").bind "submit", (e) ->
+  $view.find("form").on "submit", (e) ->
     e.preventDefault()
 
     url = @url.value

@@ -713,7 +713,7 @@ app.main = ->
 
   $(window)
     #データ保存等の後片付けを行なってくれるzombie.html起動
-    .bind "unload", ->
+    .on "unload", ->
       if localStorage.zombie_read_state?
         open("/zombie.html", undefined, "left=1,top=1,width=250,height=50")
       return
@@ -726,7 +726,7 @@ app.main = ->
       return
 
     #tab_selected(event) -> tab_selected(postMessage) 翻訳処理
-    .delegate "iframe.tab_content", "tab_selected", ->
+    .on "tab_selected", "iframe.tab_content", ->
       tmp = JSON.stringify(type: "tab_selected")
       @contentWindow.postMessage(tmp, location.origin)
       return
@@ -783,7 +783,7 @@ app.main = ->
         tab.remove(sourceTabId)
       #タブを全て閉じる
       else if $this.is(".close_all")
-        $source.siblings().andSelf().each ->
+        $source.siblings().andBack().each ->
           tab.remove($(@).attr("data-tabid"))
           return
       #他のタブを全て閉じる

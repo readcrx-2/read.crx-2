@@ -4,7 +4,7 @@ app.boot "/view/bookmark_source_selector.html", ->
   $view = $(document.documentElement)
 
   $view
-    .delegate ".node", "click", ->
+    .on "click", ".node", ->
       $(this)
         .closest(".view_bookmark_source_selector")
           .find(".selected")
@@ -18,7 +18,7 @@ app.boot "/view/bookmark_source_selector.html", ->
       return
 
     .find(".submit")
-      .bind "click", ->
+      .on "click", ->
         bookmark_id = (
           $(this)
             .closest(".view_bookmark_source_selector")

@@ -44,7 +44,7 @@ class app.WriteHistory
     if app.assert_arg("WriteHistory.add", ["string", "number", "string", "string", "string", "string", "string", "string", "number"], arguments)
       return $.Deferred().reject().promise()
 
-    @_openDB().pipe((db) -> $.Deferred (d) ->
+    @_openDB().then((db) -> $.Deferred (d) ->
       db.transaction(
         (transaction) ->
           transaction.executeSql(
@@ -72,7 +72,7 @@ class app.WriteHistory
     if app.assert_arg("WriteHistory.get", ["number", "number"], [offset, limit])
       return $.Deferred().reject().promise()
 
-    @_openDB().pipe((db) -> $.Deferred (d) ->
+    @_openDB().then((db) -> $.Deferred (d) ->
       db.readTransaction(
         (transaction) ->
           transaction.executeSql(
@@ -106,7 +106,7 @@ class app.WriteHistory
     if app.assert_arg("WriteHistory.getByUrl", ["string"], arguments)
       return $.Deferred().reject().promise()
 
-    @_openDB().pipe((db) -> $.Deferred (d) ->
+    @_openDB().then((db) -> $.Deferred (d) ->
       db.readTransaction(
         (transaction) ->
           transaction.executeSql(
@@ -136,7 +136,7 @@ class app.WriteHistory
   @return {Promise}
   ###
   @get_all: () ->
-    @_openDB().pipe((db) -> $.Deferred (d) ->
+    @_openDB().then((db) -> $.Deferred (d) ->
       db.readTransaction(
         (transaction) ->
           transaction.executeSql(
@@ -160,7 +160,7 @@ class app.WriteHistory
   @return {Promise}
   ###
   @count: ->
-    @_openDB().pipe((db) -> $.Deferred (d) ->
+    @_openDB().then((db) -> $.Deferred (d) ->
       db.readTransaction(
         (transaction) ->
           transaction.executeSql(
@@ -188,7 +188,7 @@ class app.WriteHistory
     if offset? and app.assert_arg("WriteHistory.clear", ["number"], arguments)
       return $.Deferred().reject().promise()
 
-    @_openDB().pipe((db) -> $.Deferred (d) ->
+    @_openDB().then((db) -> $.Deferred (d) ->
       db.transaction(
         (transaction) ->
           if typeof offset is "number"

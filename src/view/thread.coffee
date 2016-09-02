@@ -6,7 +6,7 @@ do ->
     else
       d.reject()
     return
-  .pipe null, ->
+  .then null, ->
     $.Deferred (d) ->
       xhr = new XMLHttpRequest()
       xhr.open("GET", "http://readcrx-2.github.io/read.crx-2/textar-min.woff")
@@ -83,7 +83,7 @@ app.boot "/view/thread.html", ["board_title_solver"], (BoardTitleSolver) ->
     $.popup($view, $popup, e.clientX, e.clientY, that)
 
   if app.url.tsld(view_url) in ["2ch.net", "shitaraba.net", "bbspink.com", "2ch.sc", "open2ch.net"]
-    $view.find(".button_write").bind "click", ->
+    $view.find(".button_write").on "click", ->
       write()
       return
   else
@@ -347,7 +347,7 @@ app.boot "/view/thread.html", ["board_title_solver"], (BoardTitleSolver) ->
       return
 
     #アンカーリンク
-    .delegate ".anchor", "click", (e) ->
+    .on "click", ".anchor", (e) ->
       e.preventDefault()
       return if @classList.contains("disabled")
 
@@ -358,7 +358,7 @@ app.boot "/view/thread.html", ["board_title_solver"], (BoardTitleSolver) ->
       return
 
     #通常リンク
-    .delegate ".message a:not(.anchor)", "click", (e) ->
+    .on "click", ".message a:not(.anchor)", (e) ->
       target_url = this.href
 
       #http、httpsスキーム以外ならクリックを無効化する
@@ -395,7 +395,7 @@ app.boot "/view/thread.html", ["board_title_solver"], (BoardTitleSolver) ->
       return
 
     #リンク先情報ポップアップ
-    .delegate ".message a:not(.anchor)", "mouseenter", (e) ->
+    .on "mouseenter", ".message a:not(.anchor)", (e) ->
       tmp = app.url.guess_type(@href)
       if tmp.type is "board"
         board_url = app.url.fix(@href)
@@ -463,7 +463,7 @@ app.boot "/view/thread.html", ["board_title_solver"], (BoardTitleSolver) ->
       return
 
     #リプライポップアップ
-    .delegate ".rep", app.config.get("popup_trigger"), (e) ->
+    .on app.config.get("popup_trigger"), ".rep", (e) ->
       popup_helper this, e, =>
         tmp = $content[0].children
 

@@ -2,7 +2,7 @@ do ($ = jQuery) ->
   $root = null
 
   popup_destroy = ($popup) ->
-    $popup.find(".popup").andSelf().each ->
+    $popup.find(".popup").addBack().each ->
       $($(@).data("popup_source"))
         .off("mouseleave", on_mouseenter)
         .off("mouseenter", on_mouseleave)
@@ -12,7 +12,7 @@ do ($ = jQuery) ->
 
   remove = ->
     return unless $root
-    $root.find(".popup").andSelf().not(".active").each ->
+    $root.find(".popup").addBack().not(".active").each ->
       $this = $(@)
       if $this.has(".popup.active").length is 0
         $root = null if $this.is($root)

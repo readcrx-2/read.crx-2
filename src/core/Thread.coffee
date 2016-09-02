@@ -41,7 +41,7 @@ class app.Thread
 
     #キャッシュ取得
     promiseCacheGet = cache.get()
-    promiseCacheGet.pipe =>
+    promiseCacheGet.then =>
       $.Deferred (d) =>
         if forceUpdate or Date.now() - cache.last_updated > 1000 * 3
           #通信が生じる場合のみ、notifyでキャッシュを送出する
@@ -57,7 +57,7 @@ class app.Thread
           d.resolve()
         return
     #通信
-    .pipe null, =>
+    .then null, =>
       $.Deferred (d) =>
         if @tsld in ["shitaraba.net", "machi.to"]
           if promiseCacheGet.state() is "resolved"
@@ -95,7 +95,7 @@ class app.Thread
             d.reject(response)
 
     #パース
-    .pipe((fn = (response) =>
+    .then((fn = (response) =>
       $.Deferred (d) =>
         guessRes = app.url.guess_type(@url)
 
@@ -154,7 +154,7 @@ class app.Thread
     ), fn)
 
     #したらば/まちBBS最新レス削除対策
-    .pipe (response, thread) ->
+    .then (response, thread) ->
       $.Deferred (d) ->
         getCachedInfo
           .done (cachedInfo) ->

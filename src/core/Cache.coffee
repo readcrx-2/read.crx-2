@@ -75,7 +75,7 @@ class app.Cache
   @return {Promise}
   ###
   get: ->
-    Cache._db_open.pipe (db) => $.Deferred (d) =>
+    Cache._db_open.then (db) => $.Deferred (d) =>
       db.transaction(
         (tr) =>
           tr.executeSql(
@@ -109,7 +109,7 @@ class app.Cache
       app.log("error", "Cache::count 未実装")
       return $.Deferred().reject().promise()
 
-    Cache._db_open.pipe (db) => $.Deferred (d) ->
+    Cache._db_open.then (db) => $.Deferred (d) ->
       db.transaction(
         (tr) ->
           tr.executeSql(
@@ -143,7 +143,7 @@ class app.Cache
       app.log("error", "Cache::put データが不正です", @)
       return $.Deferred().reject().promise()
 
-    Cache._db_open.pipe (db) => $.Deferred (d) =>
+    Cache._db_open.then (db) => $.Deferred (d) =>
       db.transaction(
         (tr) =>
           @data = @data.replace(/\u0000/g, "\u0020")
@@ -177,7 +177,7 @@ class app.Cache
   @return {Promise}
   ###
   delete: ->
-    Cache._db_open.pipe (db) => $.Deferred (d) =>
+    Cache._db_open.then (db) => $.Deferred (d) =>
       db.transaction(
         (tr) =>
           if @key is "*"

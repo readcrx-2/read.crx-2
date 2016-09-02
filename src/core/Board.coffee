@@ -37,7 +37,7 @@ class app.Board
     #キャッシュ取得
     cache = new app.Cache(xhr_path)
     cache_get_promise = cache.get()
-    cache_get_promise.pipe ->
+    cache_get_promise.then ->
       $.Deferred (d) ->
         if Date.now() - cache.last_updated < 1000 * 3
           d.resolve()
@@ -45,7 +45,7 @@ class app.Board
           d.reject()
         return
     #通信
-    .pipe null, =>
+    .then null, =>
       $.Deferred (d) ->
         request = new app.HTTP.Request("GET", xhr_path, {
           mimeType: "text/plain; charset=#{xhr_charset}"
@@ -67,7 +67,7 @@ class app.Board
             d.reject(response)
         return
     #パース
-    .pipe((fn = (response) =>
+    .then((fn = (response) =>
       $.Deferred (d) =>
         if response?.status is 200
           thread_list = Board.parse(@url, response.body)
@@ -268,7 +268,7 @@ class app.Board
       return $.Deferred().reject().promise()
 
     cache = new app.Cache(xhr_path)
-    cache.get().pipe =>
+    cache.get().then =>
       $.Deferred (d) =>
         last_modified = cache.last_modified
         for thread in Board.parse(board_url, cache.data)

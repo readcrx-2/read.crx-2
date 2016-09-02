@@ -50,7 +50,7 @@ app.boot "/view/search.html", ["thread_search"], (ThreadSearch) ->
         else
           $needlessThread.removeClass("needless_thread_hide")
 
-        if $tbody.children().size() is 0 || $tbody.children().css("display") is "none"
+        if $tbody.children().length is 0 || $tbody.children().css("display") is "none"
           $tbody.addClass("body_empty")
         else
           $tbody.removeClass("body_empty")

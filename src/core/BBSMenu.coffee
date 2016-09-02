@@ -53,7 +53,7 @@ class app.BBSMenu
     #キャッシュ取得
     cache = new app.Cache(url)
     cache.get()
-      .pipe(-> $.Deferred (d) ->
+      .then(-> $.Deferred (d) ->
         if force_reload
           d.reject()
         else if Date.now() - cache.last_updated < 1000 * 60 * 60 * 12
@@ -63,7 +63,7 @@ class app.BBSMenu
         return
       )
       #通信
-      .pipe(null, -> $.Deferred (d) ->
+      .then(null, -> $.Deferred (d) ->
         ajax_data =
           url: url
           cache: false
@@ -90,7 +90,7 @@ class app.BBSMenu
         return
       )
       #パース
-      .pipe((fn = ($xhr) -> $.Deferred (d) ->
+      .then((fn = ($xhr) -> $.Deferred (d) ->
         if $xhr?.status is 200
           menu = BBSMenu.parse($xhr.responseText)
         else if cache.data?

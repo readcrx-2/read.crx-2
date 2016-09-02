@@ -591,7 +591,7 @@ class app.view.TabContentView extends app.view.PaneContentView
           .on "click", (e) ->
             e.preventDefault()
 
-            chrome.tabs.create url: url
+            window.open(url, "_blank")
             return
 
       return

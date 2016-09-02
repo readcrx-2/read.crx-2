@@ -10,6 +10,11 @@ app.boot "/view/config.html", ["cache", "bbsmenu"], (Cache, BBSMenu) ->
       parent.postMessage(JSON.stringify(tmp), location.origin)
     return
 
+  #掲示板を開いたときに閉じる
+  $view.find(".open_in_rcrx").on "click", ->
+    $view.find(".button_close").click()
+    return
+
   #汎用設定項目
   $view
     .find("input.direct[type=\"text\"], textarea.direct")

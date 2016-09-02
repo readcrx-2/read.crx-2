@@ -257,3 +257,8 @@ app.util.makeList = (n, m, a) ->
 # striptags
 app.util.stripTags = (str) ->
   return str.replace(/(<([^>]+)>)/ig, "")
+
+# タイトルから無断転載禁止などを取り除く
+app.util.removeNeedlessFromTitle = (title) ->
+  title2 = title.replace(/ ?(?:\[(?:無断)?転載禁止\]|(?:\(c\)|©|�|&copy;|&#169;)(?:2ch\.net|@?bbspink\.com)) ?/g,"")
+  return if title2 is "" then title else title2

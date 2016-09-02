@@ -1,4 +1,4 @@
-app.boot "/view/search.html", ["euc_jp_escape", "thread_search"], (euc_jp_escape, ThreadSearch) ->
+app.boot "/view/search.html", ["thread_search"], (ThreadSearch) ->
   query = app.url.parse_query(location.href).query
 
   unless query?

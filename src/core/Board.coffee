@@ -209,8 +209,7 @@ class app.Board
     board = []
     while (reg_res = reg.exec(text))
       title = app.util.decode_char_reference(reg_res[2])
-      title2 = title.replace(/ ?(?:\[(?:無断)?転載禁止\]|(?:\(c\)|©|�|&copy;|&#169;)(?:2ch\.net|@?bbspink\.com)) ?/g,"")
-      title = if title2 isnt "" then title2 else title
+      title = app.util.removeNeedlessFromTitle(title)
       tmpTitle = app.util.normalize(title)
 
       board.push(

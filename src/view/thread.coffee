@@ -422,16 +422,16 @@ app.boot "/view/thread.html", ["board_title_solver"], (BoardTitleSolver) ->
         id = ""
         slip = ""
         trip = ""
-        if classList.indexOf("id") isnt -1 or classList.indexOf("anchor_id") isnt -1
+        if classList.includes("id") or classList.includes("anchor_id")
           id = @textContent
             .replace(/^id:/i, "ID:")
             .replace(/\(\d+\)$/, "")
             .replace(/\u25cf$/, "") #末尾●除去
-        if classList.indexOf("slip") isnt -1
+        if classList.includes("slip")
           slip = @textContent
             .replace(/^slip:/i, "")
             .replace(/\(\d+\)$/i, "")
-        if classList.indexOf("trip") isnt -1
+        if classList.includes("trip")
           trip = @textContent
             .replace(/\(\d+\)$/i, "")
 
@@ -546,7 +546,7 @@ app.boot "/view/thread.html", ["board_title_solver"], (BoardTitleSolver) ->
                 .addClass("searching")
                 .children()
                   .each ->
-                    if app.util.normalize(@textContent).indexOf(query) isnt -1
+                    if app.util.normalize(@textContent).includes(query)
                       @classList.add("search_hit")
                       hit_count++
                     else

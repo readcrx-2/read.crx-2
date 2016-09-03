@@ -16,7 +16,8 @@ do ->
   send_message_success = ->
     if submitThreadFlag
       exec """
-        if((location.href.indexOf("2ch.net") !== -1) || (location.href.indexOf("bbspink.com") !== -1) || (location.href.indexOf("open2ch.net") !== -1)) {
+        var url = location.href;
+        if(url.includes("2ch.net") || url.includes("bbspink.com") || url.includes("open2ch.net")) {
           metas = document.getElementsByTagName("meta");
           for(var i = 0; i < metas.length; i++) {
             if(metas[i].getAttribute("http-equiv") === "refresh") {
@@ -24,7 +25,7 @@ do ->
               break;
             }
           }
-        } else if (location.href.indexOf("2ch.sc") !== -1) {
+        } else if (url.includes("2ch.sc")) {
           as = document.getElementsByTagName("a");
           jumpurl = as[0].href;
         } else {

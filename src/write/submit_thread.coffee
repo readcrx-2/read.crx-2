@@ -13,18 +13,6 @@ do ->
       return
   return
 
-###
-# Util
-###
-IsExists = (array, v) ->
-  for obj in array
-    if v == obj
-      return true
-  return false
-PushArray = (array, v) ->
-  array.push(v) unless IsExists(array, v)
-  return true
-
 app.boot "/write/submit_thread.html", ->
   arg = app.url.parse_query(location.href)
   arg.url = app.url.fix(arg.url)

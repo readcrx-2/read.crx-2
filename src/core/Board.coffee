@@ -221,30 +221,29 @@ class app.Board
           for ngWord in ngWords
             # 関係ないプレフィックスは飛ばす
             continue if do (ngWord, prefixes = ["Comment:", "Name:", "Mail:", "ID:", "Body:", "RegExpName:", "RegExpMail:", "RegExpID:", "RegExpBody:"]) ->
-              for prefix in prefixes
-                if ngWord.indexOf(prefix) is 0
-                  return true
-              return false
+              return prefixes.some( (val) ->
+                return ngWord.startsWith(val)
+              )
 
-            if ngWord.indexOf("RegExp:") is 0
+            if ngWord.startsWith("RegExp:")
               try
                 reg_ng = new RegExp ngWord.substr(7)
                 if reg_ng.test(title)
                   return true
               catch e
                 continue
-            else if ngWord.indexOf("RegExpTitle:") is 0
+            else if ngWord.startsWith("RegExpTitle:")
               try
                 reg_ng = new RegExp ngWord.substr(12)
                 if reg_ng.test(title)
                   return true
               catch e
                 continue
-            else if ngWord.indexOf("Title:") is 0
-              if tmpTitle.indexOf(app.util.normalize(ngWord.substr(6))) isnt -1
+            else if ngWord.startsWith("Title:")
+              if tmpTitle.includes(app.util.normalize(ngWord.substr(6)))
                 return true
             else
-              if tmpTitle.indexOf(app.util.normalize(ngWord)) isnt -1
+              if tmpTitle.includes(app.util.normalize(ngWord))
                 return true
           return false
       )
@@ -271,12 +270,11 @@ class app.Board
     cache.get().then =>
       $.Deferred (d) =>
         last_modified = cache.last_modified
-        for thread in Board.parse(board_url, cache.data)
-          if thread.url is thread_url
-            d.resolve
-              res_count: thread.res_count
-              modified: last_modified
-            return
+        for thread in Board.parse(board_url, cache.data) when thread.url is thread_url
+          d.resolve
+            res_count: thread.res_count
+            modified: last_modified
+          return
         d.reject()
         return
     .promise()

@@ -13,18 +13,6 @@ do ->
       return
   return
 
-###
-# Util
-###
-IsExists = (array, v) ->
-  for obj in array
-    if v == obj
-      return true
-  return false
-PushArray = (array, v) ->
-  array.push(v) unless IsExists(array, v)
-  return true
-
 app.boot "/write/write.html", ->
   arg = app.url.parse_query(location.href)
   arg.url = app.url.fix(arg.url)
@@ -111,10 +99,10 @@ app.boot "/write/write.html", ->
     mails = []
     for d in data
       if names.length<=5
-        PushArray(names, d.input_name)
+        names.push(d.input_name) unless names.includes(d.input_name)
       if mails.length<=5
-        PushArray(mails, d.input_mail)
       if names.length+mails.length>10
+        mails.push(d.input_mail) unless mails.includes(d.input_mail)
         break
     html = "<datalist id=\"names\">"
     for n in names

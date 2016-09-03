@@ -254,16 +254,16 @@ module app.Bookmark {
 
     private loadFromChromeBookmark (callback?:Function):void {
       // EntryListクリア
-      this.getAll().forEach((entry:Entry) => {
+      for(var entry of this.getAll()) {
         this.remove(entry.url, false);
-      });
+      }
 
       // ロード
       chrome.bookmarks.getChildren(this.rootNodeId, (res:BookmarkTreeNode[]) => {
         if (res) {
-          res.forEach((node) => {
+          for(var node of res) {
             this.applyNodeAddToEntryList(node);
-          });
+          }
 
           if (!this.ready.wasCalled) {
             this.ready.call();
@@ -365,7 +365,7 @@ module app.Bookmark {
           var removeIdList: string[] = [], removedCount = 0;
 
           if (res) {
-            res.forEach((node) => {
+            for(var node of res) {
               var entry:Entry;
 
               if (node.url && node.title) {
@@ -375,14 +375,14 @@ module app.Bookmark {
                   removeIdList.push(node.id);
                 }
               }
-            });
+            }
           }
 
           if (removeIdList.length === 0 && callback) {
             callback(false);
           }
 
-          removeIdList.forEach((id: string) => {
+          for(var id of removeIdList) {
             chrome.bookmarks.remove(id, function () {
               //TODO 失敗検出
               removedCount++;
@@ -391,7 +391,7 @@ module app.Bookmark {
                 callback(true);
               }
             });
-          });
+          }
         }
       );
     }

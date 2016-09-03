@@ -13,18 +13,6 @@ do ->
       return
   return
 
-###
-# Util
-###
-IsExists = (array, v) ->
-  for obj in array
-    if v == obj
-      return true
-  return false
-PushArray = (array, v) ->
-  array.push(v) unless IsExists(array, v)
-  return true
-
 app.boot "/write/submit_thread.html", ->
   arg = app.url.parse_query(location.href)
   arg.url = app.url.fix(arg.url)
@@ -160,7 +148,7 @@ app.boot "/write/submit_thread.html", ->
       write_timer.kill()
     return
 
-  $view.find(".hide_iframe").bind "click", ->
+  $view.find(".hide_iframe").on "click", ->
     write_timer.kill()
     $view
       .find(".iframe_container")
@@ -176,7 +164,7 @@ app.boot "/write/submit_thread.html", ->
   $view.find(".mail").val(arg.mail)
   $view.find(".message").val(arg.message)
 
-  $view.find("form").bind "submit", (e) ->
+  $view.find("form").on "submit", (e) ->
     e.preventDefault()
 
     $view.find("input, textarea").attr("disabled", true)

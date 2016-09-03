@@ -1,6 +1,6 @@
 ///<reference path="../../typings/globals/jquery/index.d.ts" />
 
-module UI {
+namespace UI {
   "use strict";
 
   export class Sortable {

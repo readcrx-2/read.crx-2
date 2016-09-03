@@ -87,23 +87,27 @@ class app.view.View
   _setupOpenInRcrx: ->
     # .open_in_rcrxリンクの処理
     @$element
-      # Windowsのオートスクロール対策
       .on "mousedown", ".open_in_rcrx", (e) ->
-        if e.which is 2
-          e.preventDefault()
+        if e.which isnt 3
+          url = @href or @getAttribute("data-href")
+          title = @getAttribute("data-title") or @textContent
+          howToOpen = app.util.get_how_to_open(e)
+          newTab = app.config.get("always_new_tab") is "on"
+          newTab or= howToOpen.new_tab or howToOpen.new_window
+          background = howToOpen.background
+
+          app.message.send("open", {url, new_tab: newTab, background, title})
         return
 
       .on "click", ".open_in_rcrx", (e) ->
         e.preventDefault()
-        url = @href or @getAttribute("data-href")
-        title = @getAttribute("data-title") or @textContent
-        howToOpen = app.util.get_how_to_open(e)
-        newTab = app.config.get("always_new_tab") is "on"
-        newTab or= howToOpen.new_tab or howToOpen.new_window
-        background = howToOpen.background
-
-        app.message.send("open", {url, new_tab: newTab, background, title})
         return
+
+    # Windowsのオートスクロール対策
+    @$element[0].addEventListener "click", (e) ->
+      if e.target? and Array.from(e.target.classList).includes("open_in_rcrx")
+        e.preventDefault()
+      return
     return
 
 ###*
@@ -591,7 +595,7 @@ class app.view.TabContentView extends app.view.PaneContentView
           .on "click", (e) ->
             e.preventDefault()
 
-            chrome.tabs.create url: url
+            window.open(url, "_blank")
             return
 
       return
@@ -643,7 +647,7 @@ class app.view.TabContentView extends app.view.PaneContentView
       @$element.find(".button_change_netsc").remove()
 
     #2ch.scでscの投稿だけ表示(スレ&レス)
-    if /http:\/\/\w+\.2ch\.sc\/\w+\/(.*?)/.exec(url)
+    if app.url.tsld(url) is "2ch.sc"
       @$element.find(".button_only_sc").on "click", =>
         @$element.find(".net").toggleClass("net_hide")
         return

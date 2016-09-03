@@ -1,10 +1,10 @@
 ///<reference path="../app.ts" />
 ///<reference path="URL.ts" />
 
-module app {
+namespace app {
   "use strict";
 
-  export module Bookmark {
+  export namespace Bookmark {
     export interface ReadState {
       url: string;
       received: number;
@@ -179,7 +179,7 @@ module app {
       }
 
       import (target:EntryList):void {
-        target.getAll().forEach((b:Entry) => {
+        for(var b of target.getAll()) {
           var a:Entry;
 
           if (a = this.get(b.url)) {
@@ -192,7 +192,7 @@ module app {
           else {
             this.add(b);
           }
-        });
+        }
       }
 
       serverMove (from:string, to:string):void {
@@ -207,7 +207,7 @@ module app {
 
         tmp = /^http:\/\/[\w\.]+\//.exec(to)[0];
         // スレブックマーク移行
-        this.getThreadsByBoardURL(from).forEach((entry) => {
+        for(var entry of this.getThreadsByBoardURL(from)) {
           this.remove(entry.url);
 
           entry.url = entry.url.replace(/^http:\/\/[\w\.]+\//, tmp);
@@ -216,7 +216,7 @@ module app {
           }
 
           this.add(entry);
-        });
+        }
       }
 
       get (url:string):Entry {
@@ -397,9 +397,9 @@ module app {
           return bList.indexOf(url) === -1;
         });
 
-        rmList.forEach((url:string) => {
+        for(var url of rmList) {
           this.remove(url);
-        });
+        }
       }
 
       syncStart (b:SyncableEntryList):void {

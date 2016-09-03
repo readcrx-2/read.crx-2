@@ -34,7 +34,7 @@ class app.History
     if app.assert_arg("History.add", ["string", "string", "number"], arguments)
       return $.Deferred().reject().promise()
 
-    @_openDB().pipe((db) -> $.Deferred (d) ->
+    @_openDB().then((db) -> $.Deferred (d) ->
       db.transaction(
         (transaction) ->
           transaction.executeSql(
@@ -56,7 +56,7 @@ class app.History
     if app.assert_arg("History.remove", ["string"], arguments)
       return $.Deferred().reject().promise()
 
-    @_openDB().pipe((db) -> $.Deferred (d) ->
+    @_openDB().then((db) -> $.Deferred (d) ->
       db.transaction(
         (transaction) ->
           transaction.executeSql("DELETE FROM History WHERE url = ?", [url])
@@ -83,7 +83,7 @@ class app.History
     if app.assert_arg("History.get", ["number", "number"], [offset, limit])
       return $.Deferred().reject().promise()
 
-    @_openDB().pipe((db) -> $.Deferred (d) ->
+    @_openDB().then((db) -> $.Deferred (d) ->
       db.readTransaction(
         (transaction) ->
           transaction.executeSql(
@@ -113,7 +113,7 @@ class app.History
   @return {Promise}
   ###
   @get_all: () ->
-    @_openDB().pipe((db) -> $.Deferred (d) ->
+    @_openDB().then((db) -> $.Deferred (d) ->
       db.readTransaction(
         (transaction) ->
           transaction.executeSql(
@@ -137,7 +137,7 @@ class app.History
   @return {Promise}
   ###
   @count: ->
-    @_openDB().pipe((db) -> $.Deferred (d) ->
+    @_openDB().then((db) -> $.Deferred (d) ->
       db.readTransaction(
         (transaction) ->
           transaction.executeSql(
@@ -165,7 +165,7 @@ class app.History
     if offset? and app.assert_arg("History.clear", ["number"], arguments)
       return $.Deferred().reject().promise()
 
-    @_openDB().pipe((db) -> $.Deferred (d) ->
+    @_openDB().then((db) -> $.Deferred (d) ->
       db.transaction(
         (transaction) ->
           if typeof offset is "number"

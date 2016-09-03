@@ -7,7 +7,7 @@ interface Window {
 declare var webkitNotifications: any;
 declare var chrome: any;
 
-module app {
+namespace app {
   "use strict";
 
   var logLevels = ["log", "debug", "info", "warn", "error"];
@@ -17,7 +17,7 @@ module app {
       .createNotification(
         "",
         "深刻なエラーが発生したのでread.crxを終了します",
-        "詳細 : " + message
+        `詳細 : ${message}`
       )
       .show()
 
@@ -67,7 +67,7 @@ module app {
 
     for (key = 0; val = rule[key]; key++) {
       if (typeof arg[key] !== val) {
-        log("error", name + ": 不正な引数", deepCopy(arg));
+        log("error", `${name}: 不正な引数`, deepCopy(arg));
         return true;
       }
     }

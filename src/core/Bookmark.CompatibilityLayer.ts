@@ -3,11 +3,11 @@
 ///<reference path="Bookmark.ts" />
 ///<reference path="Bookmark.ChromeBookmarkEntryList.ts" />
 
-declare module app {
+declare namespace app {
   var read_state: any;
 }
 
-module app.Bookmark {
+namespace app.Bookmark {
   "use strict";
 
   export class CompatibilityLayer {

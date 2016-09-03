@@ -23,13 +23,13 @@
           .end()
           .find(".dialog_ok")
             .text(prop.label_ok)
-            .bind "click", ->
+            .on "click", ->
               $(@).closest(".dialog").remove()
               deferred.resolve(true)
           .end()
           .find(".dialog_no")
             .text(prop.label_no)
-            .bind "click", ->
+            .on "click", ->
               $(@).closest(".dialog").remove()
               deferred.resolve(false)
           .end()

@@ -10,7 +10,7 @@ app.module "thread_search", [], (callback) ->
         dataType: "text"
         timeout: 1000 * 30
       })
-      .pipe(((responseText) => $.Deferred (d) =>
+      .then(((responseText) => $.Deferred (d) =>
         try
           result = JSON.parse(responseText)
         catch

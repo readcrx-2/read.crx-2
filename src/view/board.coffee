@@ -28,7 +28,7 @@ app.boot "/view/board.html", ["board_title_solver"], (BoardTitleSolver) ->
     )
 
   if app.url.tsld(url) in ["2ch.net", "shitaraba.net", "bbspink.com", "2ch.sc", "open2ch.net"]
-    $view.find(".button_write").bind "click", ->
+    $view.find(".button_write").on "click", ->
       write()
       return
   else
@@ -111,7 +111,7 @@ app.boot "/view/board.html", ["board_title_solver"], (BoardTitleSolver) ->
             app.message.send("open", url: ex.url, new_tab: true)
           else
             for thread in board
-              if thread.title.indexOf(ex.title) isnt -1
+              if thread.title.includes(ex.title)
                 app.WriteHistory.add(thread.url, 1, ex.title, ex.name, ex.mail, ex.name, ex.mail, ex.mes, thread.created_at)
                 app.message.send("open", url: thread.url, new_tab: true)
                 break

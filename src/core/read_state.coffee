@@ -53,7 +53,7 @@ app.read_state.set = (read_state) ->
 
   app.read_state._db_open
 
-    .pipe (db) ->
+    .then (db) ->
       $.Deferred (deferred) ->
         db.transaction(
           (transaction) ->
@@ -86,7 +86,7 @@ app.read_state.get = (url) ->
 
   app.read_state._db_open
 
-    .pipe (db) ->
+    .then (db) ->
       $.Deferred (deferred) ->
         db.transaction (transaction) ->
           transaction.executeSql("""
@@ -111,7 +111,7 @@ app.read_state.get = (url) ->
 app.read_state.get_all = ->
   app.read_state._db_open
 
-    .pipe (db) ->
+    .then (db) ->
       $.Deferred (deferred) ->
         db.transaction (transaction) ->
           transaction.executeSql(
@@ -134,7 +134,7 @@ app.read_state.get_by_board = (url) ->
 
   app.read_state._db_open
 
-    .pipe (db) ->
+    .then (db) ->
       $.Deferred (deferred) ->
         db.transaction (transaction) ->
           transaction.executeSql("""
@@ -168,7 +168,7 @@ app.read_state.remove = (url) ->
 
   app.read_state._db_open
 
-    .pipe (db) ->
+    .then (db) ->
       $.Deferred (deferred) ->
         db.transaction (transaction) ->
           transaction.executeSql("""
@@ -190,7 +190,7 @@ app.read_state.remove = (url) ->
 app.read_state.clear = ->
   app.read_state._db_open
 
-    .pipe (db) ->
+    .then (db) ->
       $.Deferred (deferred) ->
         db.transaction (transaction) ->
           transaction.executeSql("DELETE FROM ReadState")

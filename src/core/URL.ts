@@ -1,5 +1,5 @@
-module app {
-  export module URL {
+namespace app {
+  export namespace URL {
     export function fix (url:string):string {
       return (
         url
@@ -72,7 +72,7 @@ module app {
 
       data = {};
 
-      query.split("&").forEach(function (segment) {
+      for(var segment of query.split("&")) {
         var tmp:any;
 
         tmp = segment.split("=");
@@ -83,7 +83,7 @@ module app {
         else {
           data[decodeURIComponent(tmp[0])] = true;
         }
-      });
+      }
 
       return data;
     }
@@ -111,10 +111,10 @@ module app {
         val = data[key];
 
         if (val === true) {
-          str += "&" + encodeURIComponent(key);
+          str += `&${encodeURIComponent(key)}`;
         }
         else {
-          str += "&" + encodeURIComponent(key) + "=" + encodeURIComponent(val);
+          str += `&${encodeURIComponent(key)}=${encodeURIComponent(val)}`;
         }
       }
 
@@ -124,8 +124,8 @@ module app {
 }
 
 // 互換性確保部分
-module app {
-  export module url {
+namespace app {
+  export namespace url {
     export var fix = app.URL.fix;
 
     export function guess_type (url):{type: string; bbs_type: string;} {

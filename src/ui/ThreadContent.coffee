@@ -91,10 +91,9 @@ class UI.ThreadContent
   getRead: ->
     containerBottom = @container.scrollTop + @container.clientHeight
     read = @container.children.length
-    for res, key in @container.children
-      if res.offsetTop > containerBottom
-        read = key - 1
-        break
+    for res, key in @container.children when res.offsetTop > containerBottom
+      read = key - 1
+      break
 
     # >>1の底辺が表示領域外にはみ出していた場合対策
     if read is 0
@@ -281,10 +280,9 @@ class UI.ThreadContent
         for ngWord in ngWords
           # 関係ないプレフィックスは飛ばす
           continue if do (ngWord, prefixes = ["Comment:", "Title:", "RegExpTitle:"]) ->
-            for prefix in prefixes
-              if ngWord.indexOf(prefix) is 0
-                return true
-            return false
+            return prefixes.some( (val) ->
+              return ngWord.startsWith(val)
+            )
 
           # 指定したレス番号はNG除外する
           if ignoreResRegNumber.test(ngWord)
@@ -295,7 +293,7 @@ class UI.ThreadContent
               ngWord = m[4]
 
           # キーワードごとのNG処理
-          if ngWord.indexOf("RegExp:") is 0
+          if ngWord.startsWith("RegExp:")
             try
               reg = new RegExp ngWord.substr(7)
               if reg.test(tmpTxt1)
@@ -303,7 +301,7 @@ class UI.ThreadContent
                 break
             catch e
               continue
-          else if ngWord.indexOf("RegExpName:") is 0
+          else if ngWord.startsWith("RegExpName:")
             try
               reg = new RegExp ngWord.substr(11)
               if reg.test(res.name)
@@ -311,7 +309,7 @@ class UI.ThreadContent
                 break
             catch e
               continue
-          else if ngWord.indexOf("RegExpMail:") is 0
+          else if ngWord.startsWith("RegExpMail:")
             try
               reg = new RegExp ngWord.substr(11)
               if reg.test(res.mail)
@@ -319,7 +317,7 @@ class UI.ThreadContent
                 break
             catch e
               continue
-          else if ngWord.indexOf("RegExpID:") is 0
+          else if ngWord.startsWith("RegExpID:")
             try
               reg = new RegExp ngWord.substr(9)
               if reg.test(res.other.substr(res.other.indexOf("ID:")))
@@ -327,7 +325,7 @@ class UI.ThreadContent
                 break
             catch e
               continue
-          else if ngWord.indexOf("RegExpBody:") is 0
+          else if ngWord.startsWith("RegExpBody:")
             try
               reg = new RegExp ngWord.substr(11)
               if reg.test(res.message)
@@ -335,34 +333,33 @@ class UI.ThreadContent
                 break
             catch e
               continue
-          else if ngWord.indexOf("Name:") is 0
-            if app.util.normalize(res.name).indexOf(app.util.normalize(ngWord.substr(5))) isnt -1
+          else if ngWord.startsWith("Name:")
+            if app.util.normalize(res.name).includes(app.util.normalize(ngWord.substr(5)))
               articleClass.push("ng")
               break
-          else if ngWord.indexOf("Mail:") is 0
-            if app.util.normalize(res.mail).indexOf(app.util.normalize(ngWord.substr(5))) isnt -1
+          else if ngWord.startsWith("Mail:")
+            if app.util.normalize(res.mail).includes(app.util.normalize(ngWord.substr(5)))
               articleClass.push("ng")
               break
-          else if ngWord.indexOf("ID:") is 0
-            if res.other.indexOf(ngWord) isnt -1
+          else if ngWord.startsWith("ID:")
+            if res.other.includes(ngWord)
               articleClass.push("ng")
               break
-          else if ngWord.indexOf("Body:") is 0
-            if app.util.normalize(res.message).indexOf(app.util.normalize(ngWord.substr(5))) isnt -1
+          else if ngWord.startsWith("Body:")
+            if app.util.normalize(res.message).includes(app.util.normalize(ngWord.substr(5)))
               articleClass.push("ng")
               break
           else
-            if tmpTxt2.indexOf(app.util.normalize(ngWord)) isnt -1
+            if tmpTxt2.includes(app.util.normalize(ngWord))
               articleClass.push("ng")
               break
 
         if /(?:\u3000{5}|\u3000\u0020|[^>]\u0020\u3000)(?!<br>|$)/i.test(res.message)
           articleClass.push("aa")
 
-        for writtenHistory in writtenRes
-          if writtenHistory.res is resNum
-            articleClass.push("written")
-            break
+        for writtenHistory in writtenRes when writtenHistory.res is resNum
+          articleClass.push("written")
+          break
 
         articleHtml = "<header>"
 
@@ -425,17 +422,19 @@ class UI.ThreadContent
               @idIndex[fixedId] = [] unless @idIndex[fixedId]?
               @idIndex[fixedId].push(resNum)
 
-              temp = ""
-              # slip追加
-              if articleDataSlip?
-                temp += """<span class="slip">SLIP:#{articleDataSlip}</span>"""
-              temp += """<span class="id">#{$1}</span>"""
-              return temp
+              return """<span class="id">#{$1}</span>"""
             )
             #.beid
             .replace /(?:^| )(BE:(\d+)\-[A-Z\d]+\(\d+\))/,
               """<a class="beid" href="http://be.2ch.net/test/p.php?i=$3" target="_blank">$1</a>"""
         )
+        # slip追加
+        if articleDataSlip?
+          if (index = tmp.indexOf("<span class=\"id\">")) isnt -1
+            tmp = tmp.slice(0, index) + """<span class="slip">SLIP:#{articleDataSlip}</span>""" + tmp.slice(index, tmp.length)
+          else
+            tmp += """<span class="slip">SLIP:#{articleDataSlip}</span>"""
+
         articleHtml += """<span class="other">#{tmp}</span>"""
 
         articleHtml += "</header>"

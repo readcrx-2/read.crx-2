@@ -3,7 +3,7 @@
     $(".contextmenu_menu").remove()
 
   $(document.documentElement)
-    .bind "mousedown keydown contextmenu", (e) ->
+    .on "mousedown keydown contextmenu", (e) ->
       if e.type is "keydown" and e.which isnt 27
         return
 
@@ -14,7 +14,7 @@
       cleanup()
       return
 
-  $(window).bind "blur", ->
+  $(window).on "blur", ->
     cleanup()
     return
 

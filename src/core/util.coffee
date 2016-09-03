@@ -53,7 +53,7 @@ app.util.ch_server_move_detect = (old_board_url, html) ->
       deferred.reject()
 
   #htmlが渡されなかった場合は通信する
-  .pipe null, ->
+  .then null, ->
     $.Deferred (deferred) ->
       $.ajax
         url: old_board_url
@@ -68,7 +68,7 @@ app.util.ch_server_move_detect = (old_board_url, html) ->
             deferred.reject()
 
   #htmlから移転を判定
-  .pipe (html) ->
+  .then (html) ->
     $.Deferred (deferred) ->
       res = ///location\.href="(http://\w+\.2ch\.net/\w*/)"///.exec(html)
 
@@ -108,7 +108,7 @@ app.util.get_how_to_open = (original_e) ->
   e = {which, shiftKey, ctrlKey} = original_e
   e.ctrlKey or= original_e.metaKey
   def = {new_tab: false, new_window: false, background: false}
-  if e.type is "click"
+  if e.type is "mousedown"
     if e.which is 1 and not e.shiftKey and not e.ctrlKey
       {new_tab: false, new_window: false, background: false}
     else if e.which is 1 and e.shiftKey and not e.ctrlKey
@@ -257,3 +257,8 @@ app.util.makeList = (n, m, a) ->
 # striptags
 app.util.stripTags = (str) ->
   return str.replace(/(<([^>]+)>)/ig, "")
+
+# タイトルから無断転載禁止などを取り除く
+app.util.removeNeedlessFromTitle = (title) ->
+  title2 = title.replace(/ ?(?:\[(?:無断)?転載禁止\]|(?:\(c\)|©|�|&copy;|&#169;)(?:2ch\.net|@?bbspink\.com)) ?/g,"")
+  return if title2 is "" then title else title2

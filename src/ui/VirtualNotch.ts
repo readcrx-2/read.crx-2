@@ -1,4 +1,4 @@
-module UI {
+namespace UI {
   "use strict";
 
   export class VirtualNotch {

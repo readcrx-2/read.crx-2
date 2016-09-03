@@ -52,7 +52,7 @@ namespace UI {
               return;
             }
 
-            if (e.which === 2) {
+            if (e.which === 2 && !this.element.querySelector("li.tab_selected").classList.contains("tab_locked")) {
               tab.remove(this.getAttribute("data-tabid"));
             }
             else {
@@ -132,7 +132,8 @@ namespace UI {
           tabId: li.getAttribute("data-tabid"),
           url: li.getAttribute("data-tabsrc"),
           title: li.title,
-          selected: li.classList.contains("tab_selected")
+          selected: li.classList.contains("tab_selected"),
+          locked: li.classList.contains("tab_locked")
         });
       }
 
@@ -147,7 +148,8 @@ namespace UI {
           tabId: li.getAttribute("data-tabid"),
           url: li.getAttribute("data-tabsrc"),
           title: li.title,
-          selected: true
+          selected: true,
+          locked: li.classList.contains("tab_locked")
         };
       }
       else {
@@ -157,13 +159,14 @@ namespace UI {
 
     add (
       url: string,
-      param: {title?: string; selected?: boolean; lazy?: boolean} =
-        {title: undefined, selected: undefined, lazy: undefined}
+      param: {title?: string; selected?: boolean; locked?: boolean; lazy?: boolean} =
+        {title: undefined, selected: undefined, locked: undefined, lazy: undefined}
     ): string {
       var tabId: string;
 
       param.title = param.title === undefined ? url : param.title;
       param.selected = param.selected === undefined ? true : param.selected;
+      param.locked = param.locked === undefined ? false : param.locked;
       param.lazy = param.lazy === undefined ? false : param.lazy;
 
       tabId = Tab.genId();
@@ -193,7 +196,7 @@ namespace UI {
         })
         .appendTo(this.element.querySelector(".tab_container"));
 
-      this.update(tabId, {title: param.title, selected: param.selected});
+      this.update(tabId, {title: param.title, selected: param.selected, locked: param.locked});
 
       return tabId;
     }
@@ -204,6 +207,7 @@ namespace UI {
         url?: string;
         title?: string;
         selected?: boolean;
+        locked?: boolean;
         _internal?: boolean;
       }
     ): void {
@@ -264,6 +268,19 @@ namespace UI {
 
         $iframe.trigger("tab_selected");
       }
+      if (param.locked) {
+        $(this.element)
+          .find(`li[data-tabid=\"${tabId}\"]`)
+            .addClass("tab_locked")
+            .find("img")
+              .hide();
+      } else if (!(param.locked === void 0 || param.locked === null)) {
+        $(this.element)
+          .find(`li[data-tabid=\"${tabId}\"].tab_locked`)
+            .removeClass("tab_locked")
+            .find("img")
+              .show();
+      }
     }
 
     remove (tabId: string): void {
@@ -287,7 +304,8 @@ namespace UI {
             tab.recentClosed.push({
               tabId: this.getAttribute("data-tabid"),
               url: tabsrc,
-              title: this.title
+              title: this.title,
+              locked: this.classList.contains("tab_locked")
             });
 
             if (tab.recentClosed.length > 50) {
@@ -323,6 +341,10 @@ namespace UI {
       }
 
       return null;
+    }
+
+    isLocked (tabId: string): boolean {
+      return this.element.querySelector("li.tab_selected").classList.contains("tab_locked");
     }
   }
 }

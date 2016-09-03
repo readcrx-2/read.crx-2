@@ -5,13 +5,13 @@
     "grunt-cli": "*",
     "coffee-script": "1.9.3",
     "typescript": "1.5.3",
-    "jasmine-core": "^2.4.1",
+    "jasmine-core": "2.4.1",
     "jquery": "3.1.0",
-    "jquery-mockjax": "^2.1.1",
-    "qunit-assert-step": "^1.0.3",
-    "qunitjs": "^2.0.0-rc1",
-    "raphael": "^2.2.0",
-    "typings": "^1.0.4"
+    "jquery-mockjax": "2.1.1",
+    "qunit-assert-step": "1.0.3",
+    "qunitjs": "2.0.0-rc1",
+    "raphael": "2.2.0",
+    "typings": "1.0.4"
   },
   "repository": {
     "type": "git",

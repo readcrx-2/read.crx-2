@@ -108,7 +108,7 @@ app.util.get_how_to_open = (original_e) ->
   e = {which, shiftKey, ctrlKey} = original_e
   e.ctrlKey or= original_e.metaKey
   def = {new_tab: false, new_window: false, background: false}
-  if e.type is "click"
+  if e.type is "mousedown"
     if e.which is 1 and not e.shiftKey and not e.ctrlKey
       {new_tab: false, new_window: false, background: false}
     else if e.which is 1 and e.shiftKey and not e.ctrlKey

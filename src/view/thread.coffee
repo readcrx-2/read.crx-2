@@ -358,7 +358,7 @@ app.boot "/view/thread.html", ["board_title_solver"], (BoardTitleSolver) ->
       return
 
     #通常リンク
-    .on "click", ".message a:not(.anchor)", (e) ->
+    .on "click mousedown", ".message a:not(.anchor)", (e) ->
       target_url = this.href
 
       #http、httpsスキーム以外ならクリックを無効化する

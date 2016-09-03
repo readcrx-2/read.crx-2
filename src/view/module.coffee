@@ -87,23 +87,27 @@ class app.view.View
   _setupOpenInRcrx: ->
     # .open_in_rcrxリンクの処理
     @$element
-      # Windowsのオートスクロール対策
       .on "mousedown", ".open_in_rcrx", (e) ->
-        if e.which is 2
-          e.preventDefault()
+        if e.which isnt 3
+          url = @href or @getAttribute("data-href")
+          title = @getAttribute("data-title") or @textContent
+          howToOpen = app.util.get_how_to_open(e)
+          newTab = app.config.get("always_new_tab") is "on"
+          newTab or= howToOpen.new_tab or howToOpen.new_window
+          background = howToOpen.background
+
+          app.message.send("open", {url, new_tab: newTab, background, title})
         return
 
       .on "click", ".open_in_rcrx", (e) ->
         e.preventDefault()
-        url = @href or @getAttribute("data-href")
-        title = @getAttribute("data-title") or @textContent
-        howToOpen = app.util.get_how_to_open(e)
-        newTab = app.config.get("always_new_tab") is "on"
-        newTab or= howToOpen.new_tab or howToOpen.new_window
-        background = howToOpen.background
-
-        app.message.send("open", {url, new_tab: newTab, background, title})
         return
+
+    # Windowsのオートスクロール対策
+    @$element[0].addEventListener "click", (e) ->
+      if e.target? and Array.from(e.target.classList).includes("open_in_rcrx")
+        e.preventDefault()
+      return
     return
 
 ###*

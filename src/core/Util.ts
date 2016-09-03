@@ -1,4 +1,4 @@
-module app.Util {
+namespace app.Util {
   "use strict";
 
   export function levenshteinDistance (

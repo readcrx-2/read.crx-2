@@ -10,7 +10,7 @@ interface Element {
   scrollIntoViewIfNeeded: Function;
 }
 
-module UI {
+namespace UI {
   "use strict";
 
   export class SelectableAccordion extends Accordion {

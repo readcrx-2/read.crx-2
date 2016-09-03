@@ -1,4 +1,4 @@
-module app.HTTP {
+namespace app.HTTP {
   "use strict";
 
   export class Request {
@@ -38,14 +38,14 @@ module app.HTTP {
       if (this.preventCache) {
         if (res = /\?(.*)$/.exec(url)) {
           if (res[1].length > 0) {
-            url += "&_=" + Date.now();
+            url += `&_=${Date.now()}`;
           }
           else {
-            url += "_=" + Date.now();
+            url += `_=${Date.now()}`;
           }
         }
         else {
-          url += "?=" + Date.now();
+          url += `?=${Date.now()}`;
         }
       }
 

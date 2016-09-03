@@ -4,7 +4,7 @@ app.boot "/view/bookmark_source_selector.html", ->
   $view = $(document.documentElement)
 
   $view
-    .delegate ".node", "click", ->
+    .on "click", ".node", ->
       $(this)
         .closest(".view_bookmark_source_selector")
           .find(".selected")
@@ -18,7 +18,7 @@ app.boot "/view/bookmark_source_selector.html", ->
       return
 
     .find(".submit")
-      .bind "click", ->
+      .on "click", ->
         bookmark_id = (
           $(this)
             .closest(".view_bookmark_source_selector")
@@ -31,20 +31,19 @@ app.boot "/view/bookmark_source_selector.html", ->
         return
 
   fn = (array_of_tree, ul) ->
-    for tree in array_of_tree
-      if tree.children?
-        li = document.createElement("li")
-        span = document.createElement("span")
-        span.className = "node"
-        span.textContent = tree.title
-        span.setAttribute("data-bookmark_id", tree.id)
-        li.appendChild(span)
-        ul.appendChild(li)
+    for tree in array_of_tree when tree.children?
+      li = document.createElement("li")
+      span = document.createElement("span")
+      span.className = "node"
+      span.textContent = tree.title
+      span.setAttribute("data-bookmark_id", tree.id)
+      li.appendChild(span)
+      ul.appendChild(li)
 
-        cul = document.createElement("ul")
-        li.appendChild(cul)
+      cul = document.createElement("ul")
+      li.appendChild(cul)
 
-        fn(tree.children, cul)
+      fn(tree.children, cul)
     null
 
   parent.chrome.bookmarks.getTree (array_of_tree) ->

@@ -17,7 +17,7 @@
       hit_count = 0
       for tr in $table.find("tbody")[0].children
         td = tr.children[prop.target_col]
-        if app.util.normalize(td.textContent).indexOf(prop.query) isnt -1
+        if app.util.normalize(td.textContent).includes(prop.query)
           tr.classList.add("table_search_hit")
           hit_count++
         else

@@ -2,7 +2,7 @@
 ///<reference path="../app.ts" />
 ///<reference path="VirtualNotch.ts" />
 
-module UI {
+namespace UI {
   "use strict";
 
   export class Tab {
@@ -218,10 +218,10 @@ module UI {
         }
 
         $(this.element)
-          .find("li[data-tabid=\"" + tabId + "\"]")
+          .find(`li[data-tabid=\"${tabId}\"]`)
             .attr("data-tabsrc", param.url)
           .end()
-          .find("iframe[data-tabid=\"" + tabId + "\"]")
+          .find(`iframe[data-tabid=\"${tabId}\"]`)
             .trigger("tab_beforeurlupdate")
             .attr("src", param.url)
             .trigger("tab_urlupdated");
@@ -232,7 +232,7 @@ module UI {
         tmp.stack[tmp.current].title = param.title;
 
         $(this.element)
-          .find("li[data-tabid=\"" + tabId + "\"]")
+          .find(`li[data-tabid=\"${tabId}\"]`)
             .attr("title", param.title)
             .find("span")
               .text(param.title);
@@ -244,7 +244,7 @@ module UI {
             .find(".tab_selected")
               .removeClass("tab_selected")
             .end()
-            .find("[data-tabid=\"" + tabId + "\"]")
+            .find(`[data-tabid=\"${tabId}\"]`)
               .addClass("tab_selected")
               .filter(".tab_content")
         );
@@ -255,7 +255,7 @@ module UI {
           var selectedTab, iframe: HTMLIFrameElement;
 
           if (selectedTab = this.getSelected()) {
-            iframe = <HTMLIFrameElement>this.element.querySelector("iframe[data-tabid=\"" + selectedTab.tabId + "\"]");
+            iframe = <HTMLIFrameElement>this.element.querySelector(`iframe[data-tabid=\"${tabId}\"]`);
             if (iframe.getAttribute("src") !== selectedTab.url) {
               iframe.src = selectedTab.url;
             }
@@ -272,7 +272,7 @@ module UI {
       tab = this;
 
       $(this.element)
-        .find("li[data-tabid=\"" + tabId + "\"]")
+        .find(`li[data-tabid=\"${tabId}\"]`)
           .each(function () {
             var tabsrc: string, tmp, key, closed, next;
 
@@ -303,7 +303,7 @@ module UI {
           })
           .remove()
         .end()
-        .find("iframe[data-tabid=\"" + tabId + "\"]")
+        .find(`iframe[data-tabid=\"${tabId}\"]`)
           .trigger("tab_removed")
         .remove();
     }

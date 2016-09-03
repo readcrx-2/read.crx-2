@@ -4,10 +4,15 @@ app.boot "/view/config.html", ["cache", "bbsmenu"], (Cache, BBSMenu) ->
   $view = $(document.documentElement)
 
   #閉じるボタン
-  $view.find(".button_close").bind "click", ->
+  $view.find(".button_close").on "click", ->
     if frameElement
       tmp = type: "request_killme"
       parent.postMessage(JSON.stringify(tmp), location.origin)
+    return
+
+  #掲示板を開いたときに閉じる
+  $view.find(".open_in_rcrx").on "click", ->
+    $view.find(".button_close").click()
     return
 
   #汎用設定項目
@@ -16,7 +21,7 @@ app.boot "/view/config.html", ["cache", "bbsmenu"], (Cache, BBSMenu) ->
       .each ->
         this.value = app.config.get(this.name) or ""
         null
-      .bind "input", ->
+      .on "input", ->
         app.config.set(this.name, this.value)
         return
 
@@ -25,7 +30,7 @@ app.boot "/view/config.html", ["cache", "bbsmenu"], (Cache, BBSMenu) ->
       .each ->
         this.value = app.config.get(this.name) or "0"
         null
-      .bind "input", ->
+      .on "input", ->
         app.config.set(this.name, if not isNaN +this.value then this.value else "0")
         return
 
@@ -34,7 +39,7 @@ app.boot "/view/config.html", ["cache", "bbsmenu"], (Cache, BBSMenu) ->
       .each ->
         this.checked = app.config.get(this.name) is "on"
         null
-      .bind "change", ->
+      .on "change", ->
         app.config.set(this.name, if this.checked then "on" else "off")
         return
 
@@ -44,7 +49,7 @@ app.boot "/view/config.html", ["cache", "bbsmenu"], (Cache, BBSMenu) ->
         if this.value is app.config.get(this.name)
           this.checked = true
         return
-      .bind "change", ->
+      .on "change", ->
         val = $view.find("""input[name="#{this.name}"]:checked""").val()
         app.config.set(this.name, val)
         return
@@ -278,13 +283,7 @@ app.boot "/view/config.html", ["cache", "bbsmenu"], (Cache, BBSMenu) ->
       app.read_state.get_all(),
       app.History.get_all()
     ).done( (read_state_res, history_res) ->
-      read_state_array = []
-      for rs in read_state_res
-        read_state_array.push(rs)
-      history_array = []
-      for his in history_res
-        history_array.push(his)
-      d.resolve({"read_state": read_state_array, "history": history_array})
+      d.resolve({"read_state": Array.from(read_state_res), "history": Array.from(history_res)})
       return
     )
     return d.promise()
@@ -300,10 +299,7 @@ app.boot "/view/config.html", ["cache", "bbsmenu"], (Cache, BBSMenu) ->
   , ->
     d = $.Deferred()
     app.WriteHistory.get_all().done( (data) ->
-      writehistory_array = []
-      for whis in data
-        writehistory_array.push(whis)
-      d.resolve({"writehistory": writehistory_array})
+      d.resolve({"writehistory": Array.from(data)})
       return
     )
     return d.promise()
@@ -333,7 +329,7 @@ app.boot "/view/config.html", ["cache", "bbsmenu"], (Cache, BBSMenu) ->
       return
 
   #ブックマークフォルダ変更ボタン
-  $view.find(".bookmark_source_change").bind "click", ->
+  $view.find(".bookmark_source_change").on "click", ->
     app.message.send("open", url: "bookmark_source_selector")
     return
 
@@ -355,7 +351,7 @@ app.boot "/view/config.html", ["cache", "bbsmenu"], (Cache, BBSMenu) ->
           deferred.resolve(res)
         else
           deferred.reject()
-    .pipe null, ->
+    .then null, ->
       $.Deferred (deferred) ->
         parent.chrome.extension.sendRequest rcrx_debug, req, (res) ->
           if res
@@ -396,7 +392,7 @@ app.boot "/view/config.html", ["cache", "bbsmenu"], (Cache, BBSMenu) ->
   if $view.find(".direct.bbsmenu").val() is ""
     resetBBSMenu()
 
-  $view.find(".direct.bbsmenu").bind "change", ->
+  $view.find(".direct.bbsmenu").on "change", ->
     if $view.find(".direct.bbsmenu").val() isnt ""
       $(".bbsmenu_reload").trigger("click")
     return
@@ -434,7 +430,7 @@ app.boot "/view/config.html", ["cache", "bbsmenu"], (Cache, BBSMenu) ->
         .addClass("loading")
         .text("更新中")
       $.Deferred (d) ->
-        jsonConfig = $.parseJSON(configFile)
+        jsonConfig = JSON.parse(configFile)
         keySet(jsonConfig)
         d.resolve()
       .done ->

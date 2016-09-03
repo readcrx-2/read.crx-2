@@ -13,18 +13,6 @@ do ->
       return
   return
 
-###
-# Util
-###
-IsExists = (array, v) ->
-  for obj in array
-    if v == obj
-      return true
-  return false
-PushArray = (array, v) ->
-  array.push(v) unless IsExists(array, v)
-  return true
-
 app.boot "/write/write.html", ->
   arg = app.url.parse_query(location.href)
   arg.url = app.url.fix(arg.url)
@@ -111,10 +99,10 @@ app.boot "/write/write.html", ->
     mails = []
     for d in data
       if names.length<=5
-        PushArray(names, d.input_name)
+        names.push(d.input_name) unless names.includes(d.input_name)
       if mails.length<=5
-        PushArray(mails, d.input_mail)
-      if names.length+mails.length>10
+        mails.push(d.input_mail) unless mails.includes(d.input_mail)
+      if names.length+mails.length>=10
         break
     html = "<datalist id=\"names\">"
     for n in names
@@ -156,7 +144,6 @@ app.boot "/write/write.html", ->
       write_timer.wake()
     else if message.type is "success"
       $view.find(".notice").text("書き込み成功")
-      console.log message.key
       setTimeout ->
         message = $view.find(".message").val()
         name = $view.find(".name").val()
@@ -174,7 +161,7 @@ app.boot "/write/write.html", ->
       write_timer.kill()
     return
 
-  $view.find(".hide_iframe").bind "click", ->
+  $view.find(".hide_iframe").on "click", ->
     write_timer.kill()
     $view
       .find(".iframe_container")
@@ -192,7 +179,7 @@ app.boot "/write/write.html", ->
   $view.find(".mail").val(arg.mail)
   $view.find(".message").val(arg.message)
 
-  $view.find("form").bind "submit", (e) ->
+  $view.find("form").on "submit", (e) ->
     e.preventDefault()
 
     $view.find("input, textarea").attr("disabled", true)
@@ -252,20 +239,21 @@ app.boot "/write/write.html", ->
           textarea:
             MESSAGE: iframe_arg.rcrx_message
       #フォーム生成
-      form = @contentWindow.document.createElement("form")
+      form = @contentDocument.createElement("form")
       form.setAttribute("accept-charset", form_data.charset)
       form.action = form_data.action
       form.method = "POST"
       for key, val of form_data.input
-        input = @contentWindow.document.createElement("input")
+        input = @contentDocument.createElement("input")
         input.name = key
         input.setAttribute("value", val)
         form.appendChild(input)
       for key, val of form_data.textarea
-        textarea = @contentWindow.document.createElement("textarea")
+        textarea = @contentDocument.createElement("textarea")
         textarea.name = key
         textarea.textContent = val
         form.appendChild(textarea)
+      @contentDocument.body.appendChild(form)
       form.__proto__.submit.call(form)
       return
     $iframe.appendTo(".iframe_container")

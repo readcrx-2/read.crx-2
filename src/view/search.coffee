@@ -1,4 +1,4 @@
-app.boot "/view/search.html", ["euc_jp_escape", "thread_search"], (euc_jp_escape, ThreadSearch) ->
+app.boot "/view/search.html", ["thread_search"], (ThreadSearch) ->
   query = app.url.parse_query(location.href).query
 
   unless query?
@@ -50,7 +50,7 @@ app.boot "/view/search.html", ["euc_jp_escape", "thread_search"], (euc_jp_escape
         else
           $needlessThread.removeClass("needless_thread_hide")
 
-        if $tbody.children().size() is 0 || $tbody.children().css("display") is "none"
+        if $tbody.children().length is 0 || $tbody.children().css("display") is "none"
           $tbody.addClass("body_empty")
         else
           $tbody.removeClass("body_empty")

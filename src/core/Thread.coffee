@@ -41,7 +41,7 @@ class app.Thread
 
     #キャッシュ取得
     promiseCacheGet = cache.get()
-    promiseCacheGet.pipe =>
+    promiseCacheGet.then =>
       $.Deferred (d) =>
         if forceUpdate or Date.now() - cache.last_updated > 1000 * 3
           #通信が生じる場合のみ、notifyでキャッシュを送出する
@@ -57,7 +57,7 @@ class app.Thread
           d.resolve()
         return
     #通信
-    .pipe null, =>
+    .then null, =>
       $.Deferred (d) =>
         if @tsld in ["shitaraba.net", "machi.to"]
           if promiseCacheGet.state() is "resolved"
@@ -67,7 +67,7 @@ class app.Thread
         else if (app.config.get("format_2chnet") isnt "dat" and @tsld is "2ch.net") or @tsld is "bbspink.com"
           if promiseCacheGet.state() is "resolved"
             deltaFlg = true
-            if cache.data.indexOf("<div class=\"footer push\">read.cgi ver 06")+1
+            if cache.data.includes("<div class=\"footer push\">read.cgi ver 06")
               readcgisixFlg = true
               xhrPath += (+cache.res_length + 1) + "-n"
             else
@@ -95,7 +95,7 @@ class app.Thread
             d.reject(response)
 
     #パース
-    .pipe((fn = (response) =>
+    .then((fn = (response) =>
       $.Deferred (d) =>
         guessRes = app.url.guess_type(@url)
 
@@ -154,7 +154,7 @@ class app.Thread
     ), fn)
 
     #したらば/まちBBS最新レス削除対策
-    .pipe (response, thread) ->
+    .then (response, thread) ->
       $.Deferred (d) ->
         getCachedInfo
           .done (cachedInfo) ->
@@ -354,7 +354,7 @@ class app.Thread
   ###
   @_parseNet = (text) ->
     # name, mail, other, message, thread_title
-    if text.indexOf("<div class=\"footer push\">read.cgi ver 06")+1
+    if text.includes("<div class=\"footer push\">read.cgi ver 06")
       text = text.replace(/<\/h1>/, "</h1></div></div>")
       reg = /^.*?<div class="post".*><div class="number">\d+.* : <\/div><div class="name"><b>(?:<a href="mailto:([^<>]*)">|<font [^>]*>)?(.*?)(?:<\/a>|<\/font>)?<\/b><\/div><div class="date">(.*)<\/div><div class="message"> ?(.*)$/
       separator = "</div></div>"
@@ -372,8 +372,7 @@ class app.Thread
 
       if title
         thread.title = app.util.decode_char_reference(title[1])
-        title2 = thread.title.replace(/ ?(?:\[(?:無断)?転載禁止\]|(?:\(c\)|©|�|&copy;|&#169;)(?:2ch\.net|@?bbspink\.com)) ?/g,"")
-        thread.title = if title2 isnt "" then title2 else title
+        thread.title = app.util.removeNeedlessFromTitle(thread.title)
       else if regRes
         thread.res.push
           name: regRes[2]

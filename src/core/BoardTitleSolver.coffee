@@ -42,7 +42,7 @@ class app.BoardTitleSolver
   @return {Promise}
   ###
   @searchFromBBSMenu: (url) ->
-    @getBBSMenu().pipe((bbsmenu) => $.Deferred (d) =>
+    @getBBSMenu().then((bbsmenu) => $.Deferred (d) =>
       if bbsmenu[url]?
         d.resolve(bbsmenu[url])
       else
@@ -82,7 +82,7 @@ class app.BoardTitleSolver
         jqxhr.overrideMimeType("text/plain; charset=Shift_JIS")
         return
     })
-    .pipe(
+    .then(
       (text) ->
         $.Deferred (d) ->
           if res = /^BBS_TITLE=(.+)$/m.exec(text)
@@ -116,7 +116,7 @@ class app.BoardTitleSolver
         jqxhr.overrideMimeType("text/plain; charset=EUC-JP")
         return
     })
-    .pipe(
+    .then(
       (text) ->
         $.Deferred (d) ->
           if res = /^BBS_TITLE=(.+)$/m.exec(text)
@@ -141,14 +141,14 @@ class app.BoardTitleSolver
     #bbsmenu内を検索
     @searchFromBBSMenu(url)
       #ブックマーク内を検索
-      .pipe(null, => @searchFromBookmark(url))
+      .then(null, => @searchFromBookmark(url))
       #SETTING.TXTからの取得を試みる
-      .pipe(null, =>
+      .then(null, =>
         if app.url.guess_type(url).bbs_type is "2ch"
           @searchFromSettingTXT(url)
       )
       #したらばのAPIから取得を試みる
-      .pipe(null, =>
+      .then(null, =>
         if app.url.guess_type(url).bbs_type is"jbbs"
           @searchFromJbbsAPI(url)
       )

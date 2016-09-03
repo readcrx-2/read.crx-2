@@ -446,7 +446,7 @@ class UI.ThreadContent
             #imgタグ変換
             .replace(/<img src="(.*?)".*?>/ig, "$1")
             #Rock54
-            .replace(/<small.*?Rock54: (Caution|Warning)\((.+?)\).*?<\/small>/ig, "<div class=\"rock54\">&#128064; Rock54: $1($2)</span>")
+            .replace(/<small.*?Rock54: (Caution|Warning)\((.+?)\).*?<\/small>/ig, "<div class=\"rock54\">&#128064; Rock54: $1($2)</div>")
             #タグ除去
             .replace(/<(?!(?:br|hr|div class="rock54"|\/?b)>).*?(?:>|$)/ig, "")
             #URLリンク

@@ -1,6 +1,6 @@
 ///<reference path="../../typings/globals/jquery/index.d.ts" />
 
-module UI {
+namespace UI {
   "use strict";
 
   declare var app: any;
@@ -35,7 +35,7 @@ module UI {
 
       app.util.search_next_thread(url, title)
         .done((res) => {
-          res.forEach(function (thread) {
+          for(var thread of res) {
             var $li = $("<li>", {
               class: "open_in_rcrx",
               text: thread.title,
@@ -45,7 +45,7 @@ module UI {
             if (app.bookmark.get(thread.url)) {
               $li.addClass("bookmarked");
             }
-          });
+          }
 
           this.$element.find(".status").text("");
         })

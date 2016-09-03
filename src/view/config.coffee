@@ -283,13 +283,7 @@ app.boot "/view/config.html", ["cache", "bbsmenu"], (Cache, BBSMenu) ->
       app.read_state.get_all(),
       app.History.get_all()
     ).done( (read_state_res, history_res) ->
-      read_state_array = []
-      for rs in read_state_res
-        read_state_array.push(rs)
-      history_array = []
-      for his in history_res
-        history_array.push(his)
-      d.resolve({"read_state": read_state_array, "history": history_array})
+      d.resolve({"read_state": Array.from(read_state_res), "history": Array.from(history_res)})
       return
     )
     return d.promise()
@@ -305,10 +299,7 @@ app.boot "/view/config.html", ["cache", "bbsmenu"], (Cache, BBSMenu) ->
   , ->
     d = $.Deferred()
     app.WriteHistory.get_all().done( (data) ->
-      writehistory_array = []
-      for whis in data
-        writehistory_array.push(whis)
-      d.resolve({"writehistory": writehistory_array})
+      d.resolve({"writehistory": Array.from(data)})
       return
     )
     return d.promise()
@@ -439,7 +430,7 @@ app.boot "/view/config.html", ["cache", "bbsmenu"], (Cache, BBSMenu) ->
         .addClass("loading")
         .text("更新中")
       $.Deferred (d) ->
-        jsonConfig = $.parseJSON(configFile)
+        jsonConfig = JSON.parse(configFile)
         keySet(jsonConfig)
         d.resolve()
       .done ->

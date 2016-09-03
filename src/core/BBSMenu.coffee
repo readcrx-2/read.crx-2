@@ -64,52 +64,47 @@ class app.BBSMenu
       )
       #通信
       .then(null, -> $.Deferred (d) ->
-        ajax_data =
-          url: url
-          cache: false
-          dataType: "text"
-          headers: {}
+        request = new app.HTTP.Request("GET", url, {
           mimeType: "text/plain; charset=Shift_JIS"
-          timeout: 1000 * 30
-          complete: ($xhr) ->
-            if $xhr.status is 200
-              d.resolve($xhr)
-            else if cache.data? and $xhr.status is 304
-              d.resolve($xhr)
-            else
-              d.reject($xhr)
-            return
+        })
 
         if cache.last_modified?
-          ajax_data.headers["If-Modified-Since"] = new Date(cache.last_modified).toUTCString()
+          request.headers["If-Modified-Since"] = new Date(cache.last_modified).toUTCString()
 
         if cache.etag?
-          ajax_data.headers["If-None-Match"] = cache.etag
+          request.headers["If-None-Match"] = cache.etag
 
-        $.ajax(ajax_data)
+        request.send (response) ->
+          if response.status is 200
+            d.resolve(response)
+          else if cache.data? and response.status is 304
+            d.resolve(response)
+          else
+            d.reject(response)
+          return
         return
       )
       #パース
-      .then((fn = ($xhr) -> $.Deferred (d) ->
-        if $xhr?.status is 200
-          menu = BBSMenu.parse($xhr.responseText)
+      .then((fn = (response) -> $.Deferred (d) ->
+        if response?.status is 200
+          menu = BBSMenu.parse(response.body)
         else if cache.data?
           menu = BBSMenu.parse(cache.data)
 
         if menu?.length > 0
-          if $xhr?.status is 200 or $xhr?.status is 304 or (not $xhr and cache.data?)
-            d.resolve($xhr, menu)
+          if response?.status is 200 or response?.status is 304 or (not response and cache.data?)
+            d.resolve(response, menu)
           else
-            d.reject($xhr, menu)
+            d.reject(response, menu)
         else
-          d.reject()
+          d.reject(response)
         return
       ), fn)
       #コールバック
-      .done ($xhr, menu) ->
+      .done (response, menu) ->
         BBSMenu._callbacks.fire(status: "success", data: menu)
         return
-      .fail ($xhr, menu) ->
+      .fail (response, menu) ->
         message = "板一覧の取得に失敗しました。"
         if menu?
           message += "キャッシュに残っていたデータを表示します。"
@@ -122,18 +117,19 @@ class app.BBSMenu
         BBSMenu._callbacks.empty()
         return
       #キャッシュ更新
-      .done ($xhr, menu) ->
-        if $xhr?.status is 200
+      .done (response, menu) ->
+        if response?.status is 200
+          cache.data = response.body
+          cache.last_updated = Date.now()
+
           last_modified = new Date(
-            $xhr.getResponseHeader("Last-Modified") or "dummy"
+            response.headers["Last-Modified"] or "dummy"
           ).getTime()
 
           unless isNaN(last_modified)
-            cache.data = $xhr.responseText
-            cache.last_updated = Date.now()
             cache.last_modified = last_modified
-            cache.put()
-        else if cache.data? and $xhr?.status is 304
+          cache.put()
+        else if cache.data? and response?.status is 304
           cache.last_updated = Date.now()
           cache.put()
         return

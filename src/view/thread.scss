@@ -450,6 +450,7 @@ header {
     border: 1px solid $thread-caution-border-color;
     border-radius: 3px;
     background: $thread-caution-background-color;
+    margin-top: 15px;
   }
 
   .content[data-res_search_hit_count="0"]:after {

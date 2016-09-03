@@ -101,8 +101,8 @@ app.boot "/write/write.html", ->
       if names.length<=5
         names.push(d.input_name) unless names.includes(d.input_name)
       if mails.length<=5
-      if names.length+mails.length>10
         mails.push(d.input_mail) unless mails.includes(d.input_mail)
+      if names.length+mails.length>=10
         break
     html = "<datalist id=\"names\">"
     for n in names

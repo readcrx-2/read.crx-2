@@ -446,7 +446,7 @@ class UI.ThreadContent
             #imgタグ変換
             .replace(/<img src="(.*?)".*?>/ig, "$1")
             #Rock54
-            .replace(/<small.*?Rock54: (Caution|Warning)\((.+?)\).*?<\/small>/ig, "<div class=\"rock54\">&#128064; Rock54: $1($2)</div>")
+            .replace(/(?:<small.*?>&#128064;|<i>&#128064;<\/i>)<br>Rock54: (Caution|Warning)\((.+?)\) ?.*?(?:<\/small>)?/ig, "<div class=\"rock54\">&#128064; Rock54: $1($2)</div>")
             #SLIPが変わったという表示
             .replace(/<hr>VIPQ2_EXTDAT: (.+): EXT was configured /i, "<div class=\"slipchange\">VIPQ2_EXTDAT: $1: EXT configure</div>")
             #タグ除去

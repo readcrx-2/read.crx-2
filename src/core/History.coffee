@@ -187,7 +187,34 @@ class app.History
             transaction.executeSql("DELETE FROM History")
           return
         ->
-          app.log("error", "app.history.clear: トランザクション中断")
+          app.log("error", "History.clear: トランザクション中断")
+          d.reject()
+          return
+        ->
+          d.resolve()
+          return
+      )
+      return
+    )
+    .promise()
+
+  ###*
+  @method clearRange
+  @param {Number} day
+  @return {Promise}
+  ###
+  @clearRange = (day) ->
+    if app.assert_arg("History.clearRange", ["number"], arguments)
+      return $.Deferred().reject().promise()
+
+    @_openDB().then((db) -> $.Deferred (d) ->
+      db.transaction(
+        (transaction) ->
+          dayUnix = Date.now()-86400000*day
+          transaction.executeSql("DELETE FROM History WHERE date < ?", [dayUnix])
+          return
+        ->
+          app.log("error", "History.clearRange: トランザクション中断")
           d.reject()
           return
         ->

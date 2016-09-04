@@ -799,7 +799,7 @@ app.main = ->
         tab.remove(sourceTabId)
       #タブを全て閉じる
       else if $this.is(".close_all")
-        $source.siblings().andBack().each ->
+        $source.siblings().addBack().each ->
           tabid = $(@).attr("data-tabid")
           tab.remove(tabid) unless tab.isLocked(tabid)
           return

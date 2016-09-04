@@ -801,7 +801,7 @@ app.main = ->
       else if $this.is(".close_all")
         $source.siblings().andBack().each ->
           tabid = $(@).attr("data-tabid")
-          tab.remove(tabid) unless tab.isLock(tabid)
+          tab.remove(tabid) unless tab.isLocked(tabid)
           return
       #他のタブを全て閉じる
       else if $this.is(".close_all_other")

@@ -597,6 +597,7 @@ app.main = ->
           url: tab.url
           title: tab.title
           lazy: not tab.selected
+          locked: tab.locked
           new_tab: true
         })
 
@@ -611,6 +612,7 @@ app.main = ->
       url: document.querySelector("iframe[data-tabid=\"#{tab.tabId}\"]").getAttribute("data-url")
       title: tab.title
       selected: tab.selected
+      locked: tab.locked
     localStorage.tab_state = JSON.stringify(data)
     return
 
@@ -644,6 +646,7 @@ app.main = ->
           tabId = target.add(iframe_info.src, {
             title: message.title or iframe_info.url
             selected: not (message.background or message.lazy)
+            locked: message.locked
             lazy: message.lazy
           })
         else
@@ -652,6 +655,7 @@ app.main = ->
             url: iframe_info.src
             title: message.title or iframe_info.url
             selected: true
+            locked: message.locked
           })
         $view
           .find("iframe[data-tabid=\"#{tabId}\"]")
@@ -761,6 +765,12 @@ app.main = ->
     if not getLatestRestorableTabID()
       $menu.find(".restore").remove()
 
+    if tab.isLocked(sourceTabId)
+      $menu.find(".lock").remove()
+      $menu.find(".close").remove()
+    else
+      $menu.find(".unlock").remove()
+
     if $menu.children().length is 0
       return
 
@@ -778,13 +788,20 @@ app.main = ->
             JSON.stringify(type: "request_reload")
             location.origin
           )
+      #タブを固定
+      else if $this.is(".lock")
+        tab.update(sourceTabId, locked: true)
+      #タブの固定を解除
+      else if $this.is(".unlock")
+        tab.update(sourceTabId, locked: false)
       #タブを閉じる
       else if $this.is(".close")
         tab.remove(sourceTabId)
       #タブを全て閉じる
       else if $this.is(".close_all")
-        $source.siblings().andBack().each ->
-          tab.remove($(@).attr("data-tabid"))
+        $source.siblings().addBack().each ->
+          tabid = $(@).attr("data-tabid")
+          tab.remove(tabid) unless tab.isLocked(tabid)
           return
       #他のタブを全て閉じる
       else if $this.is(".close_all_other")

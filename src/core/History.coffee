@@ -52,17 +52,30 @@ class app.History
     )
     .promise()
 
-  @remove: (url) ->
-    if app.assert_arg("History.remove", ["string"], arguments)
+  ###*
+  @method remove
+  @param {String} url
+  @param {Number} date
+  @return {Promise}
+  ###
+  @remove: (url, date) ->
+    if (
+      (date? and app.assert_arg("History.remove", ["string", "number"], arguments)) or
+      app.assert_arg("History.remove", ["string"], arguments)
+    )
       return $.Deferred().reject().promise()
 
     @_openDB().then((db) -> $.Deferred (d) ->
       db.transaction(
         (transaction) ->
-          transaction.executeSql("DELETE FROM History WHERE url = ?", [url])
+          if date?
+            console.log date
+            transaction.executeSql("DELETE FROM History WHERE (url = ? AND (date BETWEEN ? AND ?+60000-1))", [url, date, date])
+          else
+            transaction.executeSql("DELETE FROM History WHERE url = ?", [url])
           return
         ->
-          app.log("error", "app.history.remove: トランザクション中断")
+          app.log("error", "History.remove: トランザクション中断")
           d.reject()
           return
         ->
@@ -174,7 +187,34 @@ class app.History
             transaction.executeSql("DELETE FROM History")
           return
         ->
-          app.log("error", "app.history.clear: トランザクション中断")
+          app.log("error", "History.clear: トランザクション中断")
+          d.reject()
+          return
+        ->
+          d.resolve()
+          return
+      )
+      return
+    )
+    .promise()
+
+  ###*
+  @method clearRange
+  @param {Number} day
+  @return {Promise}
+  ###
+  @clearRange = (day) ->
+    if app.assert_arg("History.clearRange", ["number"], arguments)
+      return $.Deferred().reject().promise()
+
+    @_openDB().then((db) -> $.Deferred (d) ->
+      db.transaction(
+        (transaction) ->
+          dayUnix = Date.now()-86400000*day
+          transaction.executeSql("DELETE FROM History WHERE date < ?", [dayUnix])
+          return
+        ->
+          app.log("error", "History.clearRange: トランザクション中断")
           d.reject()
           return
         ->

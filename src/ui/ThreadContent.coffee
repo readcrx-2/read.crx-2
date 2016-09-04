@@ -446,22 +446,24 @@ class UI.ThreadContent
             #imgタグ変換
             .replace(/<img src="(.*?)".*?>/ig, "$1")
             #Rock54
-            .replace(/<small.*?Rock54: (Caution|Warning)\((.+?)\).*?<\/small>/ig, "<div class=\"rock54\">&#128064; Rock54: $1($2)</span>")
+            .replace(/(?:<small.*?>&#128064;|<i>&#128064;<\/i>)<br>Rock54: (Caution|Warning)\((.+?)\) ?.*?(?:<\/small>)?/ig, "<div class=\"rock54\">&#128064; Rock54: $1($2)</div>")
+            #SLIPが変わったという表示
+            .replace(/<hr>VIPQ2_EXTDAT: (.+): EXT was configured /i, "<div class=\"slipchange\">VIPQ2_EXTDAT: $1: EXT configure</div>")
             #タグ除去
-            .replace(/<(?!(?:br|hr|div class="rock54"|\/?b)>).*?(?:>|$)/ig, "")
+            .replace(/<(?!(?:br|hr|div class="(?:rock54|slipchange)"|\/?b)>).*?(?:>|$)/ig, "")
             #URLリンク
             .replace(/(h)?(ttps?:\/\/(?!img\.2ch\.net\/(?:ico|emoji)\/[\w\-_]+\.gif)(?:[a-hj-zA-HJ-Z\d_\-.!~*'();\/?:@=+$,%#]|\&(?!gt;)|[iI](?![dD]:)+)+)/g,
               '<a href="h$2" target="_blank">$1$2</a>')
             #Beアイコン埋め込み表示
             .replace ///^(?:\s*sssp|https?)://(img\.2ch\.net/ico/[\w\-_]+\.gif)\s*<br>///, ($0, $1) =>
-              if app.url.tsld(@url) in ["2ch.net", "bbspink.com"]
-                """<img class="beicon" src="/img/dummy_1x1.png" data-src="http://#{$1}" /><br />"""
+              if app.url.tsld(@url) in ["2ch.net", "bbspink.com", "2ch.sc"]
+                """<img class="beicon" src="/img/dummy_1x1.png" data-src="http://#{$1}"><br>"""
               else
                 $0
             #エモーティコン埋め込み表示
-            .replace ///(?:\s*sssp|https?)://(img\.2ch\.net/emoji/[\w\-_]+\.gif)\s*///, ($0, $1) =>
-              if app.url.tsld(@url) in ["2ch.net", "bbspink.com"]
-                """<img class="beicon emoticon" src="/img/dummy_1x1.png" data-src="http://#{$1}" /><br />"""
+            .replace ///(?:\s*sssp|https?)://(img\.2ch\.net/emoji/[\w\-_]+\.gif)\s*///g, ($0, $1) =>
+              if app.url.tsld(@url) in ["2ch.net", "bbspink.com", "2ch.sc"]
+                """<img class="beicon emoticon" src="/img/dummy_1x1.png" data-src="http://#{$1}">"""
               else
                 $0
             #アンカーリンク

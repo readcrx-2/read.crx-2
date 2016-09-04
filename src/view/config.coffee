@@ -179,8 +179,9 @@ app.boot "/view/config.html", ["cache", "bbsmenu"], (Cache, BBSMenu) ->
     return
 
   #履歴
-  setupHistory = (name, mainClass, cleanFunc, importFunc, outputFunc) ->
+  setupHistory = (name, mainClass, cleanFunc, cleanRangeFunc, importFunc, outputFunc) ->
     $clear_button = $view.find(".#{name}_clear")
+    $clear_range_button = $view.find(".#{name}_range_clear")
     $status = $view.find(".#{name}_status")
 
     #履歴件数表示
@@ -200,6 +201,24 @@ app.boot "/view/config.html", ["cache", "bbsmenu"], (Cache, BBSMenu) ->
             @contentWindow.$(".view").trigger("request_reload")
         .fail ->
           $status.text("削除失敗")
+        .always ->
+          $clear_button.show()
+      return
+
+    #履歴範囲削除ボタン
+    $clear_range_button.on "click", ->
+      $clear_range_button.hide()
+      $status.text("範囲指定削除中")
+
+      cleanRangeFunc(parseInt($view.find(".#{name}_date_range")[0].value))
+        .done ->
+          $status.text("範囲指定削除完了")
+          parent.$("iframe[src=\"view/#{name}.html\"]").each ->
+            @contentWindow.$(".view").trigger("request_reload")
+        .fail ->
+          $status.text("範囲指定削除失敗")
+        .always ->
+          $clear_range_button.show()
       return
 
     #履歴ファイルインポート
@@ -268,6 +287,8 @@ app.boot "/view/config.html", ["cache", "bbsmenu"], (Cache, BBSMenu) ->
 
   setupHistory("history", app.History, ->
     return $.when(app.History.clear(), app.read_state.clear())
+  , (day) ->
+    return app.History.clearRange(day)
   , (inputObj) ->
     deferred_add_func_array = []
     if inputObj.history
@@ -290,6 +311,8 @@ app.boot "/view/config.html", ["cache", "bbsmenu"], (Cache, BBSMenu) ->
   )
   setupHistory("writehistory", app.WriteHistory, ->
     return app.WriteHistory.clear()
+  , (day) ->
+    return app.WriteHistory.clearRange(day)
   , (inputObj) ->
     deferred_add_func_array = []
     if inputObj.writehistory

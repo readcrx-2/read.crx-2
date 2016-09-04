@@ -235,6 +235,11 @@ app.boot "/view/thread.html", ["board_title_solver"], (BoardTitleSolver) ->
       unless app.url.tsld(view_url) in ["2ch.net", "bbspink.com", "shitaraba.net"]
         $menu.find(".res_to_this, .res_to_this2").remove()
 
+      if $article.hasClass("written")
+        $menu.find(".add_writehistory").remove()
+      else
+        $menu.find(".del_writehistory").remove()
+
       unless $article.is(".popup > article")
         $menu.find(".jump_to_this").remove()
 
@@ -287,6 +292,11 @@ app.boot "/view/thread.html", ["board_title_solver"], (BoardTitleSolver) ->
         date2 = new Date(date1[1], date1[2]-1, date1[3], date1[4], date1[5], date1[6]).valueOf()
         app.WriteHistory.add(view_url, resnum, document.title, name, mail, name, mail, message, date2)
         $res.addClass("written")
+
+      else if $this.hasClass("del_writehistory")
+        resnum = parseInt($res.find(".num").text())
+        app.WriteHistory.remove(view_url, resnum)
+        $res.removeClass("written")
 
       else if $this.hasClass("toggle_aa_mode")
         $res.toggleClass("aa")

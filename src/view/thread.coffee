@@ -197,7 +197,7 @@ app.boot "/view/thread.html", ["board_title_solver"], (BoardTitleSolver) ->
       if (
         e.type is "click" and
         app.config.get("popup_trigger") is "click" and
-        $(e.target).is(".id.link, .id.freq, .anchor_id, .slip.link, .slip.freq, .trip.link, .trip.freq")
+        $(e.target).is(".id.link, .id.freq, .anchor_id, .slip.link, .slip.freq, .trip.link, .trip.freq, .rep.link, .rep.freq")
       )
         return
 
@@ -207,9 +207,7 @@ app.boot "/view/thread.html", ["board_title_solver"], (BoardTitleSolver) ->
       $article = $(@).parent()
       $menu = $(
         $("#template_res_menu").prop("content").querySelector(".res_menu")
-      ).clone()
-      # 何故かjQuery 2.1.0で例外が発生するので.hideを使わない
-      $menu.css("display": "none").appendTo($article)
+      ).clone().hide().appendTo($article)
 
       app.defer ->
         if getSelection().toString().length is 0
@@ -236,6 +234,11 @@ app.boot "/view/thread.html", ["board_title_solver"], (BoardTitleSolver) ->
 
       unless app.url.tsld(view_url) in ["2ch.net", "bbspink.com", "shitaraba.net"]
         $menu.find(".res_to_this, .res_to_this2").remove()
+
+      if $article.hasClass("written")
+        $menu.find(".add_writehistory").remove()
+      else
+        $menu.find(".del_writehistory").remove()
 
       unless $article.is(".popup > article")
         $menu.find(".jump_to_this").remove()
@@ -289,6 +292,11 @@ app.boot "/view/thread.html", ["board_title_solver"], (BoardTitleSolver) ->
         date2 = new Date(date1[1], date1[2]-1, date1[3], date1[4], date1[5], date1[6]).valueOf()
         app.WriteHistory.add(view_url, resnum, document.title, name, mail, name, mail, message, date2)
         $res.addClass("written")
+
+      else if $this.hasClass("del_writehistory")
+        resnum = parseInt($res.find(".num").text())
+        app.WriteHistory.remove(view_url, resnum)
+        $res.removeClass("written")
 
       else if $this.hasClass("toggle_aa_mode")
         $res.toggleClass("aa")

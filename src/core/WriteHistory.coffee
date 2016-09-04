@@ -63,6 +63,33 @@ class app.WriteHistory
     .promise()
 
   ###*
+  @method remove
+  @param {String} url
+  @param {Number} res
+  @return {Promise}
+  ###
+  @remove: (url, res) ->
+    if app.assert_arg("WriteHistory.remove", ["string", "number"], arguments)
+      return $.Deferred().reject().promise()
+
+    @_openDB().then((db) -> $.Deferred (d) ->
+      db.transaction(
+        (transaction) ->
+          transaction.executeSql("DELETE FROM WriteHistory WHERE url = ? AND res = ?", [url, res])
+          return
+        ->
+          app.log("error", "WriteHistory.remove: トランザクション中断")
+          d.reject()
+          return
+        ->
+          d.resolve()
+          return
+      )
+      return
+    )
+    .promise()
+
+  ###*
   @method get
   @param {Number} offset
   @param {Number} limit
@@ -197,7 +224,34 @@ class app.WriteHistory
             transaction.executeSql("DELETE FROM WriteHistory")
           return
         ->
-          app.log("error", "app.WriteHistory.clear: トランザクション中断")
+          app.log("error", "WriteHistory.clear: トランザクション中断")
+          d.reject()
+          return
+        ->
+          d.resolve()
+          return
+      )
+      return
+    )
+    .promise()
+
+  ###*
+  @method clearRange
+  @param {Number} day
+  @return {Promise}
+  ###
+  @clearRange = (day) ->
+    if app.assert_arg("WriteHistory.clearRange", ["number"], arguments)
+      return $.Deferred().reject().promise()
+
+    @_openDB().then((db) -> $.Deferred (d) ->
+      db.transaction(
+        (transaction) ->
+          dayUnix = Date.now()-86400000*day
+          transaction.executeSql("DELETE FROM WriteHistory WHERE date < ?", [dayUnix])
+          return
+        ->
+          app.log("error", "WriteHistory.clearRange: トランザクション中断")
           d.reject()
           return
         ->

@@ -92,6 +92,8 @@ class UI.ThreadList
       res: "td:nth-child(#{$table.find("th.res").index() + 1})"
       unread: "td:nth-child(#{$table.find("th.unread").index() + 1})"
       heat: "td:nth-child(#{$table.find("th.heat").index() + 1})"
+      writtenRes: "td:nth-child(#{$table.find("th.written_res").index() + 1})"
+      viewedDate: "td:nth-child(#{$table.find("th.viewed_date").index() + 1})"
 
     #ブックマーク更新時処理
     app.message.add_listener "bookmark_updated", (msg) =>
@@ -202,7 +204,7 @@ class UI.ThreadList
           return
 
     #コンテキストメニュー
-    if @_flg.bookmark or @_flg.bookmarkAddRm
+    if @_flg.bookmark or @_flg.bookmarkAddRm or @_flg.writtenRes or @_flg.viewedDate
       do ->
         onClick= ->
           $this = $(@)
@@ -211,14 +213,22 @@ class UI.ThreadList
           threadURL = $tr.attr("data-href")
           threadTitle = $tr.find(selector.title).text()
           threadRes = $tr.find(selector.res).text()
+          threadWrittenRes = parseInt($tr.find(selector.writtenRes).text())
+          date = $tr.find(selector.viewedDate).text()
+          if date? and date isnt ""
+            date_ = /(\d{4})\/(\d\d)\/(\d\d) (\d\d):(\d\d)/.exec(date)
+            threadViewedDate = new Date(date_[1], date_[2]-1, date_[3], date_[4], date_[5]).valueOf()
 
           if $this.hasClass("add_bookmark")
             app.bookmark.add(threadURL, threadTitle, threadRes)
           else if $this.hasClass("del_bookmark")
             app.bookmark.remove(threadURL)
-          else if $this.hasClass("del_read_state")
-            app.read_state.remove(threadURL)
-            app.History.remove(threadURL)
+          else if $this.hasClass("del_history")
+            app.History.remove(threadURL, threadViewedDate)
+            $tr.remove()
+          else if $this.hasClass("del_writehistory")
+            app.WriteHistory.remove(threadURL, threadWrittenRes)
+            $tr.remove()
 
           $this.parent().remove()
           return
@@ -245,13 +255,6 @@ class UI.ThreadList
                 $menu.find(".add_bookmark").remove()
               else
                 $menu.find(".del_bookmark").remove()
-
-              if (
-                not that._flg.unread or
-                not /^\d+$/.test(@querySelector(selector.unread).textContent) or
-                app.bookmark.get(url)?
-              )
-                $menu.find(".del_read_state").remove()
 
               $menu.one("click", "li", onClick)
 

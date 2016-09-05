@@ -259,7 +259,7 @@ namespace UI {
           var selectedTab, iframe: HTMLIFrameElement;
 
           if (selectedTab = this.getSelected()) {
-            iframe = <HTMLIFrameElement>this.element.querySelector(`iframe[data-tabid=\"${tabId}\"]`);
+            iframe = <HTMLIFrameElement>this.element.querySelector(`iframe[data-tabid=\"${selectedTab.tabId}\"]`);
             if (iframe.getAttribute("src") !== selectedTab.url) {
               iframe.src = selectedTab.url;
             }

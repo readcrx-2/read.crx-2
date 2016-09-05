@@ -52,7 +52,7 @@ namespace UI {
               return;
             }
 
-            if (e.which === 2 && !this.element.querySelector("li.tab_selected").classList.contains("tab_locked")) {
+            if (e.which === 2 && !this.classList.contains("tab_locked")) {
               tab.remove(this.getAttribute("data-tabid"));
             }
             else {

@@ -146,11 +146,15 @@ class app.BoardTitleSolver
       .then(null, =>
         if app.url.guess_type(url).bbs_type is "2ch"
           @searchFromSettingTXT(url)
+        else
+          $.Deferred().reject()
       )
       #したらばのAPIから取得を試みる
       .then(null, =>
         if app.url.guess_type(url).bbs_type is"jbbs"
           @searchFromJbbsAPI(url)
+        else
+          $.Deferred().reject()
       )
       .promise()
 

@@ -344,7 +344,8 @@ namespace UI {
     }
 
     isLocked (tabId: string): boolean {
-      return $(this.element).find(`li[data-tabid=\"${tabId}\"]`)[0].classList.contains("tab_locked");
+      var tab = $(this.element).find(`li[data-tabid=\"${tabId}\"]`)
+      return tab.length > 0 && tab[0].classList.contains("tab_locked");
     }
   }
 }

@@ -563,7 +563,17 @@ class UI.ThreadContent
 
         for a in @container.querySelectorAll(".message > a:not(.thumbnail):not(.has_thumbnail)")
           for replacer in dat when replacer.baseUrlReg.test(a.href)
-            if replacer.replaceUrl isnt ""
+            if replacer.param is "EXTRACT"
+              req = new app.HTTP.Request("GET", a.href)
+              req.send((res) ->
+                if res.status is 200
+                  r = replacer.scrapingPatternReg.exec(res.body)
+                  if r? and r[1]?
+                    addThumbnail(a, r[1])
+                  return
+                return
+              )
+            else if replacer.replaceUrl isnt ""
               addThumbnail(a, a.href.replace(replacer.baseUrlReg, replacer.replaceUrl))
             break
       return d.resolve()

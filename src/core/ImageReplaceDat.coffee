@@ -5,7 +5,7 @@
 ###
 class app.ImageReplaceDat
   _dat = []
-  _reg = /^([^\t]+)(?:\t([^\t]+)(?:\t([^\t]+))?)?/
+  _reg = /^([^\t]+)(?:\t([^\t]+)(?:\t([^\t]+)(?:\t([^\t]+)(?:\t([^\t]+)(?:\t([^\t]+))?)?)?)?)?/
   _configName = "image_replace_dat_obj"
   _configStringName = "image_replace_dat"
 
@@ -14,6 +14,8 @@ class app.ImageReplaceDat
   _setupReg = () ->
     for d in _dat
       d.baseUrlReg = new RegExp d.baseUrl
+      if d.scrapingPattern isnt ""
+        d.scrapingPatternReg = new RegExp d.scrapingPattern
     return
 
   _config =
@@ -48,15 +50,22 @@ class app.ImageReplaceDat
     if string isnt ""
       datStrSplit = string.split("\n")
       for d in datStrSplit
-        console.log d
         if d.startsWith("//") or d.startsWith(";") or d.startsWith("'") or d.startsWith("#")
           continue
         r = _reg.exec(d)
         if r? and r[1]?
+          param = ""
+          if r[4]?
+            switch r[4]
+              when "$EXTRACT"
+                param = "extract"
           dat.push(
             baseUrl: r[1]
             replaceUrl: if r[2]? then r[2] else ""
             refererUrl: if r[3]? then r[3] else ""
+            param: param
+            scrapingPattern: if param is "extract" and r[5]? then r[5] else ""
+            userAgent: if r[6]? then r[6] else ""
           )
     return dat
 
@@ -65,7 +74,8 @@ class app.ImageReplaceDat
   @param {Object} obj
   ###
   @set: (string) ->
-    _ng = @parse(string)
-    _config.set(_ng)
-    _setupReg(_ng)
+    _dat = @parse(string)
+    _config.set(_dat)
+    _setupReg()
+    console.log _dat
     return

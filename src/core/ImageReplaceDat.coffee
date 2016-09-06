@@ -49,7 +49,7 @@ class app.ImageReplaceDat
       datStrSplit = string.split("\n")
       for d in datStrSplit
         console.log d
-        if d.startsWith("//") or d.startsWith(":") or d.startsWith("'")
+        if d.startsWith("//") or d.startsWith(";") or d.startsWith("'") or d.startsWith("#")
           continue
         r = _reg.exec(d)
         if r? and r[1]?

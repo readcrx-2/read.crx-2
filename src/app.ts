@@ -263,6 +263,7 @@ namespace app {
       popup_trigger: "click",
       ngwords: "",
       ngobj: "[]",
+      chain_ng: "off",
       bookmark_show_dat: "on",
       hide_needless_thread: "on",
       default_name: "",

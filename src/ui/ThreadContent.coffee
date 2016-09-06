@@ -514,6 +514,11 @@ class UI.ThreadContent
                 document.createTextNode(" ")
               )
               res.getElementsByClassName("other")[0].appendChild(elm)
+            #連鎖NG
+            if app.config.get("chain_ng") is "on" and res.classList.contains("ng")
+              for r in index
+                thatClass = @container.childNodes[r - 1].classList
+                thatClass.add("ng") unless thatClass.contains("ng")
         return
 
       #サムネイル追加処理

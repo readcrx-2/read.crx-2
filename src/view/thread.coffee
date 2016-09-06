@@ -188,7 +188,7 @@ app.boot "/view/thread.html", ["board_title_solver"], (BoardTitleSolver) ->
       return
 
   $view
-    #レスメニュー表示
+    #レスメニュー表示(ヘッダー上)
     .on "click contextmenu", "article > header", (e) ->
       if $(e.target).is("a")
         return
@@ -212,6 +212,7 @@ app.boot "/view/thread.html", ["board_title_solver"], (BoardTitleSolver) ->
       app.defer ->
         if getSelection().toString().length is 0
           $menu.find(".copy_selection").remove()
+          $menu.find(".add_selection_to_ngwords").remove()
         return
 
       if $article.parent().hasClass("config_use_aa_font")
@@ -250,6 +251,40 @@ app.boot "/view/thread.html", ["board_title_solver"], (BoardTitleSolver) ->
         return
       return
 
+    #レスメニュー表示(内容上)
+    .on "contextmenu", "article > .message", (e) ->
+      if $(e.target).is("a")
+        return
+      unless getSelection().toString().length is 0
+        e.preventDefault()
+
+      $article = $(@).parent()
+      $menu = $(
+        $("#template_res_menu").prop("content").querySelector(".res_menu")
+      ).clone().hide().appendTo($article)
+
+      $menu.find(
+        ".copy_id,"+
+        ".add_id_to_ngwords,"+
+        ".copy_slip,"+
+        ".add_slip_to_ngwords,"+
+        ".copy_trip,"+
+        ".jump_to_this,"+
+        ".res_to_this,"+
+        ".res_to_this2,"+
+        ".add_writehistory,"+
+        ".del_writehistory,"+
+        ".toggle_aa_mode,"+
+        ".res_permalink"
+      ).remove()
+
+      app.defer ->
+        unless getSelection().toString().length is 0
+          $menu.show()
+          $.contextmenu($menu, e.clientX, e.clientY)
+        return
+      return
+
     #レスメニュー項目クリック
     .on "click", ".res_menu > li", "click", (e) ->
       $this = $(@)
@@ -268,6 +303,11 @@ app.boot "/view/thread.html", ["board_title_solver"], (BoardTitleSolver) ->
 
       else if $this.hasClass("copy_trip")
         app.clipboardWrite($res.attr("data-trip"))
+
+      else if $this.hasClass("add_selection_to_ngwords")
+        selectedText = getSelection().toString()
+        if selectedText.length > 0
+          app.NG.add(selectedText)
 
       else if $this.hasClass("add_id_to_ngwords")
         app.NG.add($res.attr("data-id"))

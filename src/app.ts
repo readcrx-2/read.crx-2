@@ -275,7 +275,7 @@ namespace app {
       sage_flag: "on",
       mousewheel_change_tab: "on",
       image_replace_dat_obj: "[]",
-      image_replace_dat: "^https?:\/\/(?:www\.youtube\.com\/watch\?(?:.+&)?v=|youtu\.be\/)([\w\-]+).*\thttps://img.youtube.com/vi/$1/default.jpg\n\.(png|jpe?g|gif|bmp|webp)([\?#:].*)?$\t.$1$2"
+      image_replace_dat: "^https?:\/\/(?:www\.youtube\.com\/watch\?(?:.+&)?v=|youtu\.be\/)([\w\-]+).*\thttps://img.youtube.com/vi/$1/default.jpg\nhttp:\/\/(?:www\.)?nicovideon?\.jp\/(?:(?:watch|thumb)(?:_naisho)?(?:\?v=|\/)|\?p=)(?!am|fz)[a-z]{2}(\d+)\thttp://tn-skr.smilevideo.jp/smile?i=$1\n\.(png|jpe?g|gif|bmp|webp)([\?#:].*)?$\t.$1$2"
     };
 
     private _cache:{[index:string]:string;} = {};

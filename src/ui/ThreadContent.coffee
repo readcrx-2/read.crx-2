@@ -519,6 +519,11 @@ class UI.ThreadContent
               for r in index
                 thatClass = @container.childNodes[r - 1].classList
                 thatClass.add("ng") unless thatClass.contains("ng")
+            #自分に対してのレス
+            if res.classList.contains("written")
+              for r in index
+                thatClass = @container.childNodes[r - 1].classList
+                thatClass.add("to_written") unless thatClass.contains("to_written")
         return
 
       #サムネイル追加処理

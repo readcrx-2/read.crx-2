@@ -366,6 +366,8 @@ header {
   $res-name-ob-color,
   $res-name-own-color,
   $res-name-own-ob-color,
+  $res-name-to-own-color,
+  $res-name-to-own-ob-color,
   $link-color,
   $freq-color,
   $anchor-color,
@@ -411,6 +413,15 @@ header {
     }
     .ob {
       color: $res-name-own-ob-color;
+    }
+  }
+
+  .to_written {
+    .name {
+      color: $res-name-to-own-color;
+    }
+    .ob {
+      color: $res-name-to-own-ob-color;
     }
   }
 
@@ -480,6 +491,8 @@ header {
     $res-name-ob-color: #036,
     $res-name-own-color: #ff4500,
     $res-name-own-ob-color: #ff7b00,
+    $res-name-to-own-color: #ff8c00,
+    $res-name-to-own-ob-color: #cd853f,
     $link-color: #00a,
     $freq-color: #a00,
     $anchor-color: #00e,
@@ -507,6 +520,8 @@ header {
     $res-name-ob-color: #69d,
     $res-name-own-color: #ff4500,
     $res-name-own-ob-color: #ff7b00,
+    $res-name-to-own-color: #ff8c00,
+    $res-name-to-own-ob-color: #cd853f,
     $link-color: #69d,
     $freq-color: #d99,
     $anchor-color: #6af,

@@ -470,20 +470,19 @@ app.boot "/view/thread.html", ["board_title_solver"], (BoardTitleSolver) ->
       e.preventDefault()
 
       popup_helper @, e, =>
-        classList = Array.from(@.classList)
         id = ""
         slip = ""
         trip = ""
-        if classList.includes("id") or classList.includes("anchor_id")
+        if @classList.contains("id") or @classList.contains("anchor_id")
           id = @textContent
             .replace(/^id:/i, "ID:")
             .replace(/\(\d+\)$/, "")
             .replace(/\u25cf$/, "") #末尾●除去
-        if classList.includes("slip")
+        if @classList.contains("slip")
           slip = @textContent
             .replace(/^slip:/i, "")
             .replace(/\(\d+\)$/i, "")
-        if classList.includes("trip")
+        if @classList.contains("trip")
           trip = @textContent
             .replace(/\(\d+\)$/i, "")
 

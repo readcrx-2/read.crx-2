@@ -5,6 +5,7 @@
 @param {String} url
 @requires jQuery
 @requires app.Cache
+@requires app.NG
 ###
 class app.Board
   constructor: (@url) ->
@@ -203,8 +204,7 @@ class app.Board
         reg = /^(\d+)\.dat<>(.+) \((\d+)\)$/gm
         base_url = "http://#{tmp[1]}/test/read.cgi/#{tmp[3]}/"
 
-    ngWords = (app.config.get('ngwords') or "").split('\n')
-    ngWords = ngWords.filter (word) -> word
+    ng = app.NG.get()
 
     board = []
     while (reg_res = reg.exec(text))
@@ -217,34 +217,15 @@ class app.Board
         title: title
         res_count: +reg_res[3]
         created_at: +reg_res[1] * 1000
-        ng: do (title, ngWords) ->
-          for ngWord in ngWords
-            # 関係ないプレフィックスは飛ばす
-            continue if do (ngWord, prefixes = ["Comment:", "Name:", "Mail:", "ID:", "Body:", "RegExpName:", "RegExpMail:", "RegExpID:", "RegExpBody:"]) ->
-              return prefixes.some( (val) ->
-                return ngWord.startsWith(val)
-              )
-
-            if ngWord.startsWith("RegExp:")
-              try
-                reg_ng = new RegExp ngWord.substr(7)
-                if reg_ng.test(title)
-                  return true
-              catch e
-                continue
-            else if ngWord.startsWith("RegExpTitle:")
-              try
-                reg_ng = new RegExp ngWord.substr(12)
-                if reg_ng.test(title)
-                  return true
-              catch e
-                continue
-            else if ngWord.startsWith("Title:")
-              if tmpTitle.includes(app.util.normalize(ngWord.substr(6)))
-                return true
-            else
-              if tmpTitle.includes(app.util.normalize(ngWord))
-                return true
+        ng: do (title, ng) ->
+          for n in ng
+            if (
+              (n.type is "regExp" and n.reg.test(title)) or
+              (n.type is "regExpTitle" and n.reg.test(title)) or
+              (n.type is "title" and tmpTitle.includes(n.word)) or
+              (n.type is "word" and tmpTitle.includes(n.word))
+            )
+              return true
           return false
       )
 

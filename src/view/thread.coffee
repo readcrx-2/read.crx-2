@@ -269,7 +269,7 @@ app.boot "/view/thread.html", ["board_title_solver"], (BoardTitleSolver) ->
         app.clipboardWrite($res.attr("data-trip"))
 
       else if $this.hasClass("add_id_to_ngwords")
-        app.config.set("ngwords", $res.attr("data-id") + "\n" + (app.config.get("ngwords") or ""))
+        app.NG.add($res.attr("data-id"))
 
       else if $this.hasClass("jump_to_this")
         threadContent.scrollTo(+$res.find(".num").text(), true)

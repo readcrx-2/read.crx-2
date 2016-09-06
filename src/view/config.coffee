@@ -8,6 +8,8 @@ app.boot "/view/config.html", ["cache", "bbsmenu"], (Cache, BBSMenu) ->
     if frameElement
       tmp = type: "request_killme"
       parent.postMessage(JSON.stringify(tmp), location.origin)
+    #NG設定
+    app.NG.set($view.find("textarea[name=\"ngwords\"]")[0].value)
     return
 
   #掲示板を開いたときに閉じる

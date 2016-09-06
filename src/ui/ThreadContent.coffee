@@ -259,9 +259,7 @@ class UI.ThreadContent
       items = [items]
 
     resNum = @container.children.length
-
-    ngWords = (app.config.get('ngwords') or "").split('\n')
-    ngWords = ngWords.filter (word) -> word
+    ng = app.NG.get()
 
     @getWrittenRes().done((writtenRes) =>
       html = ""
@@ -273,86 +271,6 @@ class UI.ThreadContent
         articleDataId = null
         articleDataSlip = null
         articleDataTrip = null
-
-        tmpTxt1 = res.name + " " + res.mail + " " + res.other + " " + res.message
-        tmpTxt2 = app.util.normalize(tmpTxt1)
-        ignoreResRegNumber = /^ignoreResNumber:(\d+)(-?(\d+))?,(.*)$/
-        for ngWord in ngWords
-          # 関係ないプレフィックスは飛ばす
-          continue if do (ngWord, prefixes = ["Comment:", "Title:", "RegExpTitle:"]) ->
-            return prefixes.some( (val) ->
-              return ngWord.startsWith(val)
-            )
-
-          # 指定したレス番号はNG除外する
-          if ignoreResRegNumber.test(ngWord)
-            m = ngWord.match(ignoreResRegNumber)
-            if (m[3] and m[1] <= resNum and resNum <= m[3]) or (Number(m[1]) is resNum)
-              continue
-            else
-              ngWord = m[4]
-
-          # キーワードごとのNG処理
-          if ngWord.startsWith("RegExp:")
-            try
-              reg = new RegExp ngWord.substr(7)
-              if reg.test(tmpTxt1)
-                articleClass.push("ng")
-                break
-            catch e
-              continue
-          else if ngWord.startsWith("RegExpName:")
-            try
-              reg = new RegExp ngWord.substr(11)
-              if reg.test(res.name)
-                articleClass.push("ng")
-                break
-            catch e
-              continue
-          else if ngWord.startsWith("RegExpMail:")
-            try
-              reg = new RegExp ngWord.substr(11)
-              if reg.test(res.mail)
-                articleClass.push("ng")
-                break
-            catch e
-              continue
-          else if ngWord.startsWith("RegExpID:")
-            try
-              reg = new RegExp ngWord.substr(9)
-              if reg.test(res.other.substr(res.other.indexOf("ID:")))
-                articleClass.push("ng")
-                break
-            catch e
-              continue
-          else if ngWord.startsWith("RegExpBody:")
-            try
-              reg = new RegExp ngWord.substr(11)
-              if reg.test(res.message)
-                articleClass.push("ng")
-                break
-            catch e
-              continue
-          else if ngWord.startsWith("Name:")
-            if app.util.normalize(res.name).includes(app.util.normalize(ngWord.substr(5)))
-              articleClass.push("ng")
-              break
-          else if ngWord.startsWith("Mail:")
-            if app.util.normalize(res.mail).includes(app.util.normalize(ngWord.substr(5)))
-              articleClass.push("ng")
-              break
-          else if ngWord.startsWith("ID:")
-            if res.other.includes(ngWord)
-              articleClass.push("ng")
-              break
-          else if ngWord.startsWith("Body:")
-            if app.util.normalize(res.message).includes(app.util.normalize(ngWord.substr(5)))
-              articleClass.push("ng")
-              break
-          else
-            if tmpTxt2.includes(app.util.normalize(ngWord))
-              articleClass.push("ng")
-              break
 
         if /(?:\u3000{5}|\u3000\u0020|[^>]\u0020\u3000)(?!<br>|$)/i.test(res.message)
           articleClass.push("aa")
@@ -498,6 +416,26 @@ class UI.ThreadContent
         articleHtml += "<div class=\"message\""
         if color? then articleHtml += " style=\"color:##{color[1]};\""
         articleHtml += ">#{tmp}</div>"
+
+        tmpTxt1 = res.name + " " + res.mail + " " + res.other + " " + res.message
+        tmpTxt2 = app.util.normalize(tmpTxt1)
+        for n in ng
+          if n.start? and ((n.finish? and n.start <= resNum and resNum <= n.finish) or (parseInt(n.start) is resNum))
+            continue
+          if (
+            (n.type is ("regExp") and n.reg.test(tmpTxt1)) or
+            (n.type is ("regExpName") and n.reg.test(res.name)) or
+            (n.type is ("regExpMail") and n.reg.test(res.mail)) or
+            (n.type is ("regExpId") and articleDataId? and n.reg.test(articleDataId)) or
+            (n.type is ("regExpBody") and n.reg.test(res.message)) or
+            (n.type is ("name") and app.util.normalize(res.name).includes(n.word)) or
+            (n.type is ("mail") and app.util.normalize(res.mail).includes(n.word)) or
+            (n.type is ("id") and articleDataId?.includes(n.word)) or
+            (n.type is ("body") and app.util.normalize(res.message).includes(n.word)) or
+            (n.type is ("word") and tmpTxt2.includes(n.word))
+          )
+            articleClass.push("ng")
+            break
 
         tmp = ""
         tmp += " class=\"#{articleClass.join(" ")}\""

@@ -10,6 +10,7 @@ do ->
       "config"
       "module"
       "Ninja"
+      "NG"
       "read_state"
       "url"
       "util"

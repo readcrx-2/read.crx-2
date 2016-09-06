@@ -228,6 +228,7 @@ app.boot "/view/thread.html", ["board_title_solver"], (BoardTitleSolver) ->
 
       unless $article.attr("data-slip")?
         $menu.find(".copy_slip").remove()
+        $menu.find(".add_slip_to_ngwords").remove()
 
       unless $article.attr("data-trip")?
         $menu.find(".copy_trip").remove()
@@ -270,6 +271,9 @@ app.boot "/view/thread.html", ["board_title_solver"], (BoardTitleSolver) ->
 
       else if $this.hasClass("add_id_to_ngwords")
         app.NG.add($res.attr("data-id"))
+
+      else if $this.hasClass("add_slip_to_ngwords")
+        app.NG.add("Slip:" + $res.attr("data-slip"))
 
       else if $this.hasClass("jump_to_this")
         threadContent.scrollTo(+$res.find(".num").text(), true)

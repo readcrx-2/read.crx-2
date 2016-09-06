@@ -108,12 +108,9 @@
         %h2 サムネイル表示
         %div
           %label
-            %input.direct(type="checkbox" name="thumbnail_supported")
-            YouTube/ニコニコ動画のサムネイルを表示する
+            %textarea.direct(name="image_replace_dat" rows="6" cols="80")
           %br
-          %label
-            %input.direct(type="checkbox" name="thumbnail_ext")
-            末尾が画像ファイルの拡張子で終わるURLのサムネイルを表示する
+            ここに ImageViewURLReplace.dat を記述してください
 
       %section
         %h2 アスキーアート表示

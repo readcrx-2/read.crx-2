@@ -10,6 +10,8 @@ app.boot "/view/config.html", ["cache", "bbsmenu"], (Cache, BBSMenu) ->
       parent.postMessage(JSON.stringify(tmp), location.origin)
     #NG設定
     app.NG.set($view.find("textarea[name=\"ngwords\"]")[0].value)
+    #ImageReplaceDat設定
+    app.ImageReplaceDat.set($view.find("textarea[name=\"image_replace_dat\"]")[0].value)
     return
 
   #掲示板を開いたときに閉じる

@@ -559,27 +559,13 @@ class UI.ThreadContent
 
         configThumbnailSupported = app.config.get("thumbnail_supported") is "on"
         configThumbnailExt = app.config.get("thumbnail_ext") is "on"
+        dat = app.ImageReplaceDat.get()
 
         for a in @container.querySelectorAll(".message > a:not(.thumbnail):not(.has_thumbnail)")
-          #サムネイル表示(対応サイト)
-          if configThumbnailSupported
-            #YouTube
-            if res = /// ^https?://
-                (?:www\.youtube\.com/watch\?(?:.+&)?v=|youtu\.be/)
-                ([\w\-]+).*
-              ///.exec(a.href)
-              addThumbnail(a, "https://img.youtube.com/vi/#{res[1]}/default.jpg")
-            #ニコニコ動画
-            else if res = /// ^http://(?:www\.nicovideo\.jp/watch/|nico\.ms/)
-                (?:sm|nm)(\d+) ///.exec(a.href)
-              tmp = "http://tn-skr#{parseInt(res[1], 10) % 4 + 1}.smilevideo.jp"
-              tmp += "/smile?i=#{res[1]}"
-              addThumbnail(a, tmp)
-
-          #サムネイル表示(画像っぽいURL)
-          if configThumbnailExt
-            if /\.(?:png|jpe?g|gif|bmp|webp)(?:[\?#:].*)?$/i.test(a.href)
-              addThumbnail(a, a.href)
+          for replacer in dat when replacer.baseUrlReg.test(a.href)
+            if replacer.ReplaceUrl isnt ""
+              addThumbnail(a, a.href.replace(replacer.baseUrlReg, replacer.replaceUrl))
+            break
       return d.resolve()
     )
     return d.promise()

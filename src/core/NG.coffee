@@ -139,7 +139,3 @@ class app.NG
     _setupReg(addNg)
     _ng = _ng.concat(addNg)
     return
-
-app.module "ng", [], (callback) ->
-  callback(app.NG)
-  return

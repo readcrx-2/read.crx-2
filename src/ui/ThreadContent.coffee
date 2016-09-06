@@ -563,7 +563,7 @@ class UI.ThreadContent
 
         for a in @container.querySelectorAll(".message > a:not(.thumbnail):not(.has_thumbnail)")
           for replacer in dat when replacer.baseUrlReg.test(a.href)
-            if replacer.ReplaceUrl isnt ""
+            if replacer.replaceUrl isnt ""
               addThumbnail(a, a.href.replace(replacer.baseUrlReg, replacer.replaceUrl))
             break
       return d.resolve()

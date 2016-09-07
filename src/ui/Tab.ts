@@ -259,7 +259,7 @@ namespace UI {
           var selectedTab, iframe: HTMLIFrameElement;
 
           if (selectedTab = this.getSelected()) {
-            iframe = <HTMLIFrameElement>this.element.querySelector(`iframe[data-tabid=\"${tabId}\"]`);
+            iframe = <HTMLIFrameElement>this.element.querySelector(`iframe[data-tabid=\"${selectedTab.tabId}\"]`);
             if (iframe.getAttribute("src") !== selectedTab.url) {
               iframe.src = selectedTab.url;
             }
@@ -344,7 +344,8 @@ namespace UI {
     }
 
     isLocked (tabId: string): boolean {
-      return $(this.element).find(`li[data-tabid=\"${tabId}\"]`)[0].classList.contains("tab_locked");
+      var tab = $(this.element).find(`li[data-tabid=\"${tabId}\"]`)
+      return tab.length > 0 && tab[0].classList.contains("tab_locked");
     }
   }
 }

@@ -339,7 +339,6 @@ namespace :write do
   file_ct "debug/write/submit_thread.js", [
     "src/core/URL.ts",
     "src/core/Ninja.coffee",
-    "src/core/WriteHistory.coffee",
     "src/write/submit_thread.coffee"
   ]
 end

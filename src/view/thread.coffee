@@ -188,7 +188,7 @@ app.boot "/view/thread.html", ["board_title_solver"], (BoardTitleSolver) ->
       return
 
   $view
-    #レスメニュー表示
+    #レスメニュー表示(ヘッダー上)
     .on "click contextmenu", "article > header", (e) ->
       if $(e.target).is("a")
         return
@@ -212,6 +212,7 @@ app.boot "/view/thread.html", ["board_title_solver"], (BoardTitleSolver) ->
       app.defer ->
         if getSelection().toString().length is 0
           $menu.find(".copy_selection").remove()
+          $menu.find(".add_selection_to_ngwords").remove()
         return
 
       if $article.parent().hasClass("config_use_aa_font")
@@ -228,6 +229,7 @@ app.boot "/view/thread.html", ["board_title_solver"], (BoardTitleSolver) ->
 
       unless $article.attr("data-slip")?
         $menu.find(".copy_slip").remove()
+        $menu.find(".add_slip_to_ngwords").remove()
 
       unless $article.attr("data-trip")?
         $menu.find(".copy_trip").remove()
@@ -246,6 +248,40 @@ app.boot "/view/thread.html", ["board_title_solver"], (BoardTitleSolver) ->
       app.defer ->
         $menu.show()
         $.contextmenu($menu, e.clientX, e.clientY)
+        return
+      return
+
+    #レスメニュー表示(内容上)
+    .on "contextmenu", "article > .message", (e) ->
+      if $(e.target).is("a")
+        return
+      unless getSelection().toString().length is 0
+        e.preventDefault()
+
+      $article = $(@).parent()
+      $menu = $(
+        $("#template_res_menu").prop("content").querySelector(".res_menu")
+      ).clone().hide().appendTo($article)
+
+      $menu.find(
+        ".copy_id,"+
+        ".add_id_to_ngwords,"+
+        ".copy_slip,"+
+        ".add_slip_to_ngwords,"+
+        ".copy_trip,"+
+        ".jump_to_this,"+
+        ".res_to_this,"+
+        ".res_to_this2,"+
+        ".add_writehistory,"+
+        ".del_writehistory,"+
+        ".toggle_aa_mode,"+
+        ".res_permalink"
+      ).remove()
+
+      app.defer ->
+        unless getSelection().toString().length is 0
+          $menu.show()
+          $.contextmenu($menu, e.clientX, e.clientY)
         return
       return
 
@@ -268,8 +304,16 @@ app.boot "/view/thread.html", ["board_title_solver"], (BoardTitleSolver) ->
       else if $this.hasClass("copy_trip")
         app.clipboardWrite($res.attr("data-trip"))
 
+      else if $this.hasClass("add_selection_to_ngwords")
+        selectedText = getSelection().toString()
+        if selectedText.length > 0
+          app.NG.add(selectedText)
+
       else if $this.hasClass("add_id_to_ngwords")
-        app.config.set("ngwords", $res.attr("data-id") + "\n" + (app.config.get("ngwords") or ""))
+        app.NG.add($res.attr("data-id"))
+
+      else if $this.hasClass("add_slip_to_ngwords")
+        app.NG.add("Slip:" + $res.attr("data-slip"))
 
       else if $this.hasClass("jump_to_this")
         threadContent.scrollTo(+$res.find(".num").text(), true)
@@ -426,20 +470,19 @@ app.boot "/view/thread.html", ["board_title_solver"], (BoardTitleSolver) ->
       e.preventDefault()
 
       popup_helper @, e, =>
-        classList = Array.from(@.classList)
         id = ""
         slip = ""
         trip = ""
-        if classList.includes("id") or classList.includes("anchor_id")
+        if @classList.contains("id") or @classList.contains("anchor_id")
           id = @textContent
             .replace(/^id:/i, "ID:")
             .replace(/\(\d+\)$/, "")
             .replace(/\u25cf$/, "") #末尾●除去
-        if classList.includes("slip")
+        if @classList.contains("slip")
           slip = @textContent
             .replace(/^slip:/i, "")
             .replace(/\(\d+\)$/i, "")
-        if classList.includes("trip")
+        if @classList.contains("trip")
           trip = @textContent
             .replace(/\(\d+\)$/i, "")
 

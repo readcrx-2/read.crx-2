@@ -10,6 +10,7 @@ do ->
       "config"
       "module"
       "Ninja"
+      "NG"
       "read_state"
       "url"
       "util"
@@ -105,7 +106,7 @@ class app.view.View
 
     # Windowsのオートスクロール対策
     @$element[0].addEventListener "click", (e) ->
-      if e.target? and Array.from(e.target.classList).includes("open_in_rcrx")
+      if e.target? and e.target.classList.contains("open_in_rcrx")
         e.preventDefault()
       return
     return

@@ -262,6 +262,8 @@ namespace app {
       aa_font: "aa",
       popup_trigger: "click",
       ngwords: "",
+      ngobj: "[]",
+      chain_ng: "off",
       bookmark_show_dat: "on",
       hide_needless_thread: "on",
       default_name: "",

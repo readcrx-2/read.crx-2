@@ -356,30 +356,30 @@ $z-index-notification: 9;
       border-color: $nav-bar-item-border-color;
     }
     > label > input {
-      background: url(/img/search2_19x19_#{$search-icon-color}.png) no-repeat;
+      background: url(/img/search2_19x19_#{$search-icon-color}.webp) no-repeat;
       color: $color;
     }
     > .button {
       &.button_bookmark {
-        background-image: url(/img/star_19x19_#{$icon-color}.png);
+        background-image: url(/img/star_19x19_#{$icon-color}.webp);
         &.bookmarked {
-          background-image: url(/img/star_19x19_#{$active-icon-color}.png);
+          background-image: url(/img/star_19x19_#{$active-icon-color}.webp);
         }
       }
       &.button_back {
-        background-image: url(/img/arrow_19x19_#{$icon-color}_r-90.png);
+        background-image: url(/img/arrow_19x19_#{$icon-color}_r-90.webp);
       }
       &.button_forward {
-        background-image: url(/img/arrow_19x19_#{$icon-color}_r90.png);
+        background-image: url(/img/arrow_19x19_#{$icon-color}_r90.webp);
       }
       &.button_reload {
-        background-image: url(/img/reload_19x19_#{$icon-color}.png);
+        background-image: url(/img/reload_19x19_#{$icon-color}.webp);
       }
       &.button_write {
-        background-image: url(/img/pencil_19x19_#{$icon-color}.png);
+        background-image: url(/img/pencil_19x19_#{$icon-color}.webp);
       }
       &.button_tool {
-        background-image: url(/img/menu_19x19_#{$icon-color}.png);
+        background-image: url(/img/menu_19x19_#{$icon-color}.webp);
         > ul {
           background-color: $nav-bar-background-color;
           border-color: $nav-bar-item-border-color;

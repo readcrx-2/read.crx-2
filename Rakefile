@@ -163,7 +163,15 @@ rule ".js" => "%{^debug/,src/}X.coffee" do |t|
 end
 
 rule ".png" => "src/image/svg/%{_\\d+x\\d+(?:_[a-fA-F0-9]+)?(?:_r\\-?\\d+)?$,}n.svg" do |t|
-  /_(\d+)x(\d+)(?:_([a-fA-F0-9]*))?(?:_r(\-?\d+))?\.png$/ =~ t.name
+  /_(\d+)x(\d+)\.png$/ =~ t.name
+
+  command = "convert -background transparent -resize #{$1}x#{$2} #{t.prerequisites[0]} #{t.name}"
+
+  sh command
+end
+
+rule ".webp" => "src/image/svg/%{_\\d+x\\d+(?:_[a-fA-F0-9]+)?(?:_r\\-?\\d+)?$,}n.svg" do |t|
+  /_(\d+)x(\d+)(?:_([a-fA-F0-9]*))?(?:_r(\-?\d+))?\.webp$/ =~ t.name
 
   command = "convert -background transparent"
 
@@ -211,27 +219,27 @@ namespace :img do
     "debug/img/read.crx_128x128.png",
     "debug/img/read.crx_48x48.png",
     "debug/img/read.crx_16x16.png",
-    "debug/img/close_16x16.png",
-    "debug/img/dummy_1x1.png",
-    "debug/img/loading.png",
+    "debug/img/close_16x16.webp",
+    "debug/img/dummy_1x1.webp",
+    "debug/img/loading.webp",
 
-    "debug/img/arrow_19x19_333_r90.png",
-    "debug/img/arrow_19x19_333_r-90.png",
-    "debug/img/search2_19x19_777.png",
-    "debug/img/star_19x19_333.png",
-    "debug/img/star_19x19_007fff.png",
-    "debug/img/reload_19x19_333.png",
-    "debug/img/pencil_19x19_333.png",
-    "debug/img/menu_19x19_333.png",
+    "debug/img/arrow_19x19_333_r90.webp",
+    "debug/img/arrow_19x19_333_r-90.webp",
+    "debug/img/search2_19x19_777.webp",
+    "debug/img/star_19x19_333.webp",
+    "debug/img/star_19x19_007fff.webp",
+    "debug/img/reload_19x19_333.webp",
+    "debug/img/pencil_19x19_333.webp",
+    "debug/img/menu_19x19_333.webp",
 
-    "debug/img/arrow_19x19_ddd_r90.png",
-    "debug/img/arrow_19x19_ddd_r-90.png",
-    "debug/img/search2_19x19_aaa.png",
-    "debug/img/star_19x19_ddd.png",
-    "debug/img/star_19x19_f93.png",
-    "debug/img/reload_19x19_ddd.png",
-    "debug/img/pencil_19x19_ddd.png",
-    "debug/img/menu_19x19_ddd.png"
+    "debug/img/arrow_19x19_ddd_r90.webp",
+    "debug/img/arrow_19x19_ddd_r-90.webp",
+    "debug/img/search2_19x19_aaa.webp",
+    "debug/img/star_19x19_ddd.webp",
+    "debug/img/star_19x19_f93.webp",
+    "debug/img/reload_19x19_ddd.webp",
+    "debug/img/pencil_19x19_ddd.webp",
+    "debug/img/menu_19x19_ddd.webp"
   ]
 
   directory "debug/img"
@@ -252,7 +260,7 @@ namespace :img do
     sh "convert -background transparent -resize 96x96 -extent 128x128-16-16 src/image/svg/read.crx.svg #{t.name}"
   end
 
-  file "debug/img/loading.png" => "src/image/svg/loading.svg" do |t|
+  file "debug/img/loading.webp" => "src/image/svg/loading.svg" do |t|
     sh "convert -background transparent -resize 100x100 src/image/svg/loading.svg #{t.name}"
   end
 end

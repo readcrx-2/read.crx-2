@@ -127,7 +127,7 @@ header {
   @include ascii-art;
 }
 
-.beicon[src="/img/loading.png"] {
+.beicon[src="/img/loading.webp"] {
   width: 32px;
   height: 32px;
   animation: rotateThis 1.5s linear infinite;
@@ -152,7 +152,7 @@ header {
       display: block;
       max-width: 150px;
       max-height: $container-height - $a-padding * 2;
-      &[src="/img/loading.png"] {
+      &[src="/img/loading.webp"] {
         width: 50px;
         height: 50px;
         animation: rotateThis 1.5s linear infinite;

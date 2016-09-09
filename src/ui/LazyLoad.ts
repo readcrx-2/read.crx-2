@@ -47,7 +47,7 @@ namespace UI {
 
       newImg.src = img.getAttribute("data-src");
       img.removeAttribute("data-src");
-      img.src = "/img/loading.png";
+      img.src = "/img/loading.webp";
     }
 
     private watch (): void {

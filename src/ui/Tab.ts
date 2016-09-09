@@ -185,7 +185,7 @@ namespace UI {
         .attr({"data-tabid": tabId, "data-tabsrc": url})
         .append(
           $("<span>"),
-          $("<img>", {src: "/img/close_16x16.png", title: "閉じる"})
+          $("<img>", {src: "/img/close_16x16.webp", title: "閉じる"})
         )
         .appendTo(this.element.querySelector(".tab_tabbar"));
 

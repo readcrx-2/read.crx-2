@@ -273,13 +273,13 @@ namespace UI {
           .find(`li[data-tabid=\"${tabId}\"]`)
             .addClass("tab_locked")
             .find("img")
-              .hide();
+              .addClass("hidden");
       } else if (!(param.locked === void 0 || param.locked === null)) {
         $(this.element)
           .find(`li[data-tabid=\"${tabId}\"].tab_locked`)
             .removeClass("tab_locked")
             .find("img")
-              .show();
+              .removeClass("hidden");
       }
     }
 

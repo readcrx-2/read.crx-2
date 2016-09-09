@@ -62,7 +62,7 @@ app.boot "/view/search.html", ["thread_search"], (ThreadSearch) ->
         $view.removeClass("loading")
         return
       .always ->
-        $view.find(".more").hide()
+        $view.find(".more").addClass("hidden")
         setTimeout((-> $button_reload.removeClass("disabled"); return), 5000)
         return
     return

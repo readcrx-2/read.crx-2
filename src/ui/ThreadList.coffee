@@ -192,10 +192,10 @@ class UI.ThreadList
             $table.table_search("search", {
               query: @value, target_col: title_index})
             hitCount = $table.attr("data-table_search_hit_count")
-            $(@).siblings(".hit_count").text(hitCount + "hit").show()
+            $(@).siblings(".hit_count").text(hitCount + "hit").removeClass("hidden")
           else
             $table.table_search("clear")
-            $(@).siblings(".hit_count").text("").hide()
+            $(@).siblings(".hit_count").text("").addClass("hidden")
           return
         .on "keyup", (e) ->
           if e.which is 27 #Esc

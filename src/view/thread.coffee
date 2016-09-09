@@ -105,7 +105,7 @@ app.boot "/view/thread.html", ["board_title_solver"], (BoardTitleSolver) ->
           .val("")
         .end()
         .find(".hit_count")
-          .hide()
+          .addClass("hidden")
           .text("")
 
       app.view_thread._draw($view, ex?.force_update, (thread) ->
@@ -207,7 +207,7 @@ app.boot "/view/thread.html", ["board_title_solver"], (BoardTitleSolver) ->
       $article = $(@).parent()
       $menu = $(
         $("#template_res_menu").prop("content").querySelector(".res_menu")
-      ).clone().hide().appendTo($article)
+      ).clone().addClass("hidden").appendTo($article)
 
       app.defer ->
         if getSelection().toString().length is 0
@@ -261,7 +261,7 @@ app.boot "/view/thread.html", ["board_title_solver"], (BoardTitleSolver) ->
       $article = $(@).parent()
       $menu = $(
         $("#template_res_menu").prop("content").querySelector(".res_menu")
-      ).clone().hide().appendTo($article)
+      ).clone().addClass("hidden").appendTo($article)
 
       $menu.find(
         ".copy_id,"+
@@ -622,7 +622,7 @@ app.boot "/view/thread.html", ["board_title_solver"], (BoardTitleSolver) ->
                 .end()
               .end()
               .find(".hit_count")
-                .hide()
+                .addClass("hidden")
                 .text("")
 
             if typeof search_stored_scrollTop is "number"
@@ -681,24 +681,24 @@ app.boot "/view/thread.html", ["board_title_solver"], (BoardTitleSolver) ->
           @_elm.href = app.safe_href(next.url)
           @_elm.textContent = text
           @_elm.setAttribute("data-title", next.title)
-          @_elm.style["display"] = "block"
+          @_elm.classList.remove("hidden")
         else
           @hide()
         return
       hide: ->
-        @_elm.style["display"] = "none"
+        @_elm.classList.add("remove")
         return
 
     search_next_thread =
       _elm: $view.find(".search_next_thread")[0]
       show: ->
         if content.childNodes.length >= 1000 or $view.find(".message_bar").hasClass("error")
-          @_elm.style["display"] = "block"
+          @_elm.classList.remove("hidden")
         else
           @hide()
         return
       hide: ->
-        @_elm.style["display"] = "none"
+        @_elm.classList.add("hidden")
         return
 
     update_thread_footer = ->

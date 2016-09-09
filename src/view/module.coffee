@@ -198,7 +198,7 @@ class app.view.IframeView extends app.view.View
         else if e.which is 27
           that._closeCommandBox()
         return
-      .hide()
+      .addClass("hidden")
       .appendTo(@$element)
     return
 
@@ -220,7 +220,7 @@ class app.view.IframeView extends app.view.View
     @$element
       .find(".command")
         .val("")
-        .hide()
+        .addClass("hidden")
         .data("lastActiveElement")?.focus()
     return
 
@@ -571,13 +571,13 @@ class app.view.TabContentView extends app.view.PaneContentView
         app.defer ->
           that.$element.one "click contextmenu", (e) ->
             if not $(e.target).is(".button_tool")
-              that.$element.find(".button_tool > ul").hide()
+              that.$element.find(".button_tool > ul").addClass("hidden")
             return
           return
       return
 
     $(window).on "blur", =>
-      @$element.find(".button_tool > ul").hide()
+      @$element.find(".button_tool > ul").addClass("hidden")
       return
 
     # Chromeで直接開く

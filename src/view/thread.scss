@@ -202,9 +202,7 @@ header {
     padding: 5px;
     background-color: rgba(black, 0.8);
     color: #eeeeee;
-    -webkit-animation-name: fade_in;
-    -webkit-animation-duration: 150ms;
-    -webkit-timing-function: ease-out;
+    animation: fade_in 150ms ease-out;
   }
 }
 .popup_disabled {
@@ -286,8 +284,6 @@ header {
 
 .next_thread_list {
   @include drop-shadow;
-
-  display:none;
 
   background-color: hsla(0, 0%, 0%, 0.85);
   color: hsl(0, 0%, 100%);

@@ -97,7 +97,7 @@ class app.ImageReplaceDat
     if string isnt ""
       datStrSplit = string.split("\n")
       for d in datStrSplit
-        if d.startsWith("//") or d.startsWith(";") or d.startsWith("'") or d.startsWith("#")
+        if ["//",";", "'"].some((ele) -> return d.startsWith(ele))
           continue
         r = _reg.exec(d)
         if r? and r[1]?

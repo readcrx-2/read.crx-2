@@ -229,7 +229,7 @@ class app.Board
               return true
           return false
         need_less: needlessReg.test(title)
-        is_net: !app.escape_html(title).startsWith("★")
+        is_net: !title.startsWith("★")
       )
 
     if bbs_type is "jbbs"

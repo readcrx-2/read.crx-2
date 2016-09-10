@@ -34,12 +34,10 @@ task :pack do
 
   Rake::Task[:clean].invoke
   Rake::Task[:default].invoke
-  Rake::Task["test:run"].invoke
   Rake::Task[:scan].invoke
 
   Dir.mktmpdir do |tmpdir|
     cp_r "debug", "#{tmpdir}/debug"
-    rm_r "#{tmpdir}/debug/test"
 
     if ENV["read.crx-2-pem-path"]
       pem_path = ENV["read.crx-2-pem-path"]

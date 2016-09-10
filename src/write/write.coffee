@@ -177,6 +177,7 @@ app.boot "/write/write.html", ->
           .remove()
         .end()
       .removeClass("fadeIn")
+      .addClass("hidden")
     $view.find("input, textarea").removeAttr("disabled")
     $view.find(".notice").text("")
     return

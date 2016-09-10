@@ -164,6 +164,7 @@ app.boot "/write/submit_thread.html", ->
           .remove()
         .end()
       .removeClass("fadeIn")
+      .addClass("hidden")
     $view.find("input, textarea").removeAttr("disabled")
     $view.find(".notice").text("")
     return

@@ -342,11 +342,15 @@ app.boot "/view/thread.html", ["board_title_solver"], (BoardTitleSolver) ->
         date2 = new Date(date1[1], date1[2]-1, date1[3], date1[4], date1[5], date1[6]).valueOf()
         app.WriteHistory.add(view_url, resnum, document.title, name, mail, name, mail, message, date2)
         $res.addClass("written")
+        orgRes = $content[0].childNodes[resnum-1]
+        orgRes.classList.add("written") unless orgRes.classList.contains("written")
 
       else if $this.hasClass("del_writehistory")
         resnum = parseInt($res.find(".num").text())
         app.WriteHistory.remove(view_url, resnum)
         $res.removeClass("written")
+        orgRes = $content[0].childNodes[resnum-1]
+        orgRes.classList.remove("written") if orgRes.classList.contains("written")
 
       else if $this.hasClass("toggle_aa_mode")
         $res.toggleClass("aa")

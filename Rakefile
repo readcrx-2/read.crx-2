@@ -18,7 +18,6 @@ task :default => [
   "view:build",
   "zombie:build",
   "write:build",
-  "test:build",
   "jquery",
   "rmappjs"
 ]
@@ -349,73 +348,6 @@ namespace :write do
     "src/core/Ninja.coffee",
     "src/write/submit_thread.coffee"
   ]
-end
-
-namespace :test do
-  task :build => [
-    "debug/test",
-    "debug/test/jasmine",
-    "debug/test/jasmine/jasmine.js",
-    "debug/test/jasmine/jasmine-html.js",
-    "debug/test/jasmine/jasmine.css",
-
-    "debug/test/qunit",
-    "debug/test/qunit/qunit.js",
-    "debug/test/qunit/qunit.css",
-    "debug/test/qunit/qunit-step.js",
-
-    "debug/test/jquery.mockjax.js",
-
-    "debug/test/test.html",
-    "debug/test/jasmine-exec.js",
-    "debug/test/test.js",
-    "debug/test/spec.js",
-    "debug/test/message_test.html",
-    "debug/test/message_test.js"
-  ]
-
-  task :run, :filter do |t, args|
-    require "cgi"
-
-    if ENV["read.crx-2-id"]
-      url = "chrome-extension://#{ENV["read.crx-2-id"]}/test/test.html"
-    else
-      url = "chrome-extension://#{debug_id}/test/test.html"
-    end
-
-    if args[:filter]
-      tmp = CGI.escape(args[:filter]).gsub("\+", "%20")
-      url += "?filter=#{tmp}&spec=#{tmp}"
-    end
-
-    # if RUBY_PLATFORM.include?("darwin")
-    #    sh "\"/Applications/Google Chrome.app/Contents/MacOS/Google Chrome\" '#{url}'"
-    # elsif RUBY_PLATFORM.include?("linux")
-    #   sh "google-chrome '#{url}'"
-    # else
-    #   # Windowsの場合、Chromeの場所を環境変数から取得する(設定必)
-    #   sh "#{ENV["CHROME_LOCATION"]} #{url}"
-    # end
-
-  end
-
-  directory "debug/test"
-
-  file_copy "debug/test/jquery.mockjax.js", "node_modules/jquery-mockjax/dist/jquery.mockjax.js"
-
-  directory "debug/test/jasmine"
-  file_copy "debug/test/jasmine/jasmine.js", "node_modules/jasmine-core/lib/jasmine-core/jasmine.js"
-  file_copy "debug/test/jasmine/jasmine-html.js", "node_modules/jasmine-core/lib/jasmine-core/jasmine-html.js"
-  file_copy "debug/test/jasmine/jasmine.css", "node_modules/jasmine-core/lib/jasmine-core/jasmine.css"
-
-  file_coffee "debug/test/spec.js", FileList["src/test/*.spec.coffee"]
-
-  directory "debug/test/qunit"
-  file_copy "debug/test/qunit/qunit.js", "node_modules/qunitjs/qunit/qunit.js"
-  file_copy "debug/test/qunit/qunit.css", "node_modules/qunitjs/qunit/qunit.css"
-  file_copy "debug/test/qunit/qunit-step.js", "node_modules/qunit-assert-step/qunit-assert-step.js"
-
-  file_coffee "debug/test/test.js", FileList["src/test/test_*.coffee"]
 end
 
 task :jquery do

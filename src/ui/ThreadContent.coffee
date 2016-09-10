@@ -528,7 +528,7 @@ class UI.ThreadContent
 
       #サムネイル追加処理
       do =>
-        addThumbnail = (sourceA, thumbnailPath) ->
+        addThumbnail = (sourceA, thumbnailPath, referrer, cookieStr) ->
           sourceA.classList.add("has_thumbnail")
 
           thumbnail = document.createElement("div")
@@ -542,6 +542,8 @@ class UI.ThreadContent
           thumbnailImg = document.createElement("img")
           thumbnailImg.src = "/img/dummy_1x1.webp"
           thumbnailImg.setAttribute("data-src", thumbnailPath)
+          if referrer? then thumbnailImg.setAttribute("data-referrer", referrer)
+          if cookieStr? then thumbnailImg.setAttribute("data-cookie", cookieStr)
           thumbnailLink.appendChild(thumbnailImg)
 
           sib = sourceA
@@ -557,25 +559,19 @@ class UI.ThreadContent
               break
           null
 
-        configThumbnailSupported = app.config.get("thumbnail_supported") is "on"
-        configThumbnailExt = app.config.get("thumbnail_ext") is "on"
-        dat = app.ImageReplaceDat.get()
-
+        deferArray = []
         for a in @container.querySelectorAll(".message > a:not(.thumbnail):not(.has_thumbnail)")
-          for replacer in dat when replacer.baseUrlReg.test(a.href)
-            if replacer.param is "EXTRACT"
-              req = new app.HTTP.Request("GET", a.href)
-              req.send((res) ->
-                if res.status is 200
-                  r = replacer.scrapingPatternReg.exec(res.body)
-                  if r? and r[1]?
-                    addThumbnail(a, r[1])
-                  return
-                return
-              )
-            else if replacer.replaceUrl isnt ""
-              addThumbnail(a, a.href.replace(replacer.baseUrlReg, replacer.replaceUrl))
-            break
-      return d.resolve()
+          deferArray.push(
+            app.ImageReplaceDat.do(a, a.href).done( (a, res) ->
+              addThumbnail(a, res.text, res.referrer, res.cookie)
+              return
+            )
+          )
+        $.when.apply(null, deferArray).always(->
+          d.resolve()
+          return
+        )
+        return
+      return
     )
     return d.promise()

@@ -103,6 +103,8 @@ app.boot "/view/board.html", ["board_title_solver"], (BoardTitleSolver) ->
             read_state: array_of_read_state[read_state_index[thread.url]]
             thread_number: thread_number
             ng: thread.ng
+            need_less: thread.need_less
+            is_net: thread.is_net
         )
 
         if ex?

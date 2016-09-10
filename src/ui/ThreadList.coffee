@@ -192,10 +192,10 @@ class UI.ThreadList
             $table.table_search("search", {
               query: @value, target_col: title_index})
             hitCount = $table.attr("data-table_search_hit_count")
-            $(@).siblings(".hit_count").text(hitCount + "hit").show()
+            $(@).siblings(".hit_count").text(hitCount + "hit").removeClass("hidden")
           else
             $table.table_search("clear")
-            $(@).siblings(".hit_count").text("").hide()
+            $(@).siblings(".hit_count").text("").addClass("hidden")
           return
         .on "keyup", (e) ->
           if e.which is 27 #Esc
@@ -229,6 +229,8 @@ class UI.ThreadList
           else if $this.hasClass("del_writehistory")
             app.WriteHistory.remove(threadURL, threadWrittenRes)
             $tr.remove()
+          else if $this.hasClass("del_read_state")
+            app.read_state.remove(threadURL)
 
           $this.parent().remove()
           return
@@ -255,6 +257,13 @@ class UI.ThreadList
                 $menu.find(".add_bookmark").remove()
               else
                 $menu.find(".del_bookmark").remove()
+
+              if (
+                 not that._flg.unread or
+                 not /^\d+$/.test(@querySelector(selector.unread).textContent) or
+                 app.bookmark.get(url)?
+               )
+                 $menu.find(".del_read_state").remove()
 
               $menu.one("click", "li", onClick)
 
@@ -315,8 +324,9 @@ class UI.ThreadList
         trClassName += " expired"
       if item.ng
         trClassName += " ng_thread"
-
-      if app.escape_html(item.title).substr(0,1) isnt "★"
+      if item.need_less
+        trClassName += " needlessThread"
+      if item.is_net
         trClassName += " net"
 
       tmpHTML = " data-href=\"#{app.escape_html(item.url)}\""
@@ -337,8 +347,6 @@ class UI.ThreadList
       #タイトル
       if @_flg.title
         tmpHTML += "<td>#{app.escape_html(item.title)}</td>"
-        if /.+\.2ch\.netの人気スレ|【漫画あり】コンビニで浪人を購入する方法|★★ ２ちゃんねる\(sc\)のご案内 ★★★|浪人はこんなに便利/.test(item.title)
-          trClassName += " needlessThread"
 
       #板名
       if @_flg.boardTitle

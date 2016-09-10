@@ -205,6 +205,7 @@ class app.Board
         base_url = "http://#{tmp[1]}/test/read.cgi/#{tmp[3]}/"
 
     ng = app.NG.get()
+    needlessReg = /.+\.2ch\.netの人気スレ|【漫画あり】コンビニで浪人を購入する方法|★★ ２ちゃんねる\(sc\)のご案内 ★★★|浪人はこんなに便利/
 
     board = []
     while (reg_res = reg.exec(text))
@@ -227,6 +228,8 @@ class app.Board
             )
               return true
           return false
+        need_less: needlessReg.test(title)
+        is_net: !app.escape_html(title).startsWith("★")
       )
 
     if bbs_type is "jbbs"

@@ -195,7 +195,7 @@ app.boot "/view/config.html", ["cache", "bbsmenu"], (Cache, BBSMenu) ->
 
     #履歴削除ボタン
     $clear_button.on "click", ->
-      $clear_button.hide()
+      $clear_button.addClass("hidden")
       $status.text("削除中")
 
       cleanFunc()
@@ -206,12 +206,12 @@ app.boot "/view/config.html", ["cache", "bbsmenu"], (Cache, BBSMenu) ->
         .fail ->
           $status.text("削除失敗")
         .always ->
-          $clear_button.show()
+          $clear_button.removeClass("hidden")
       return
 
     #履歴範囲削除ボタン
     $clear_range_button.on "click", ->
-      $clear_range_button.hide()
+      $clear_range_button.addClass("hidden")
       $status.text("範囲指定削除中")
 
       cleanRangeFunc(parseInt($view.find(".#{name}_date_range")[0].value))
@@ -222,7 +222,7 @@ app.boot "/view/config.html", ["cache", "bbsmenu"], (Cache, BBSMenu) ->
         .fail ->
           $status.text("範囲指定削除失敗")
         .always ->
-          $clear_range_button.show()
+          $clear_range_button.removeClass("hidden")
       return
 
     #履歴ファイルインポート

@@ -60,8 +60,8 @@ iframe {
     height: 5px;
   }
   #right_pane {
-    display: -webkit-flex;
-    -webkit-flex-flow: column;
+    display: flex;
+    flex-flow: column;
     #tab_a {
       width: 100%;
       height: 50%;
@@ -69,7 +69,7 @@ iframe {
     }
     #tab_b {
       width: 100%;
-      -webkit-flex-grow: 1;
+      flex-grow: 1;
       margin-top: 0;
     }
   }
@@ -81,7 +81,7 @@ iframe {
     width: 5px;
   }
   #right_pane {
-    display: -webkit-flex;
+    display: flex;
     #tab_a {
       width: 50%;
       height: 100%;
@@ -89,7 +89,7 @@ iframe {
     }
     #tab_b {
       height: 100%;
-      -webkit-flex: 1;
+      flex: 1;
       margin-left: 0;
     }
   }
@@ -97,12 +97,12 @@ iframe {
 
 #body.pane-2 {
   #right_pane {
-    display: -webkit-flex;
-    -webkit-flex-flow: column;
+    display: flex;
+    flex-flow: column;
     #tab_a {
       width: 100%;
       height: 100%;
-      -webkit-flex-grow: 1;
+      flex-grow: 1;
     }
     #tab_b, #tab_resizer {
       display: none;
@@ -135,12 +135,12 @@ iframe {
     font-size: 14px;
     font-weight: bold;
     margin-bottom: 5px;
-    display: -webkit-flex;
+    display: flex;
     > div {
       padding: 10px;
     }
     > div:first-child {
-      -webkit-flex-grow: 1;
+      flex-grow: 1;
       margin-right: 5px;
       > a {
         color: inherit;
@@ -150,7 +150,7 @@ iframe {
       cursor: pointer;
       width: 16px;
       height: 16px;
-      background: transparent url(/img/close_16x16.png) no-repeat center;
+      background: transparent url(/img/close_16x16.webp) no-repeat center;
       &:hover {
         background-color: rgba(#000, 0.2);
       }
@@ -162,7 +162,6 @@ iframe {
 }
 
 .keyboard_help {
-  display: none;
   z-index: $z-index-modalhelp;
   background: hsla(0, 0%, 0%, 0.9);
   color: hsl(0, 0%, 80%);

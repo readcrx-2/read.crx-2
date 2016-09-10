@@ -16,16 +16,16 @@
     %nav.nav_bar
       %label
         %input.searchbox
-        %span.hit_count
+        %span.hit_count.hidden
       .button.button_back.disabled
       .button.button_forward.disabled
       .button.button_reload
       .button.button_tool
-        %ul
+        %ul.hidden
           %li.button_link
             %a(target="_blank") Chromeで直接開く
     .content(tabindex="0")
-      .more
+      .more.hidden
 
   %template#template_thread_list_contextmenu
     %ul.thread_list_contextmenu

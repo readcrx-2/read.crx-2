@@ -1,4 +1,4 @@
-@import "../common.scss";
+﻿@import "../common.scss";
 
 @include common;
 
@@ -43,7 +43,7 @@ a {
 }
 
 .search {
-  display: -webkit-flex;
+  display: flex;
   padding: 2px;
   > input:not([type="hidden"]) {
     display: block;
@@ -55,7 +55,7 @@ a {
     padding: 0;
   }
   > input[type="text"] {
-    -webkit-flex-grow: 1;
+    flex-grow: 1;
     width: 0%;
     border-right: none;
     border-top-right-radius: 0;
@@ -179,7 +179,7 @@ li:not(.bookmark) + li.bookmark:before {
     $searchbox-submit-background-color: hsl(0, 0%, 100%),
     $searchbox-submit-background-image: (
       linear-gradient(hsla(0, 0%, 0%, 0.05), hsla(0, 0%, 0%, 0.1)),
-      url(/img/search2_19x19_777.png)
+      url(/img/search2_19x19_777.webp)
     )
   );
 }
@@ -203,7 +203,7 @@ li:not(.bookmark) + li.bookmark:before {
     $searchbox-submit-background-color: transparent,
     $searchbox-submit-background-image: (
       linear-gradient(hsla(0, 0%, 0%, 0.05), hsla(0, 0%, 0%, 0.1)),
-      url(/img/search2_19x19_aaa.png)
+      url(/img/search2_19x19_aaa.webp)
     )
   );
 }

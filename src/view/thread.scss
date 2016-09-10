@@ -127,7 +127,7 @@ header {
   @include ascii-art;
 }
 
-.beicon[src="/img/loading.png"] {
+.beicon[src="/img/loading.webp"] {
   width: 32px;
   height: 32px;
   animation: rotateThis 1.5s linear infinite;
@@ -152,7 +152,7 @@ header {
       display: block;
       max-width: 150px;
       max-height: $container-height - $a-padding * 2;
-      &[src="/img/loading.png"] {
+      &[src="/img/loading.webp"] {
         width: 50px;
         height: 50px;
         animation: rotateThis 1.5s linear infinite;
@@ -202,9 +202,7 @@ header {
     padding: 5px;
     background-color: rgba(black, 0.8);
     color: #eeeeee;
-    -webkit-animation-name: fade_in;
-    -webkit-animation-duration: 150ms;
-    -webkit-timing-function: ease-out;
+    animation: fade_in 150ms ease-out;
   }
 }
 .popup_disabled {
@@ -227,7 +225,7 @@ header {
   list-style-type: none;
   font-size: 14px;
   opacity: 0.25;
-  -webkit-transition: opacity 200ms;
+  transition: opacity 200ms;
   &:hover {
     opacity: 1;
   }
@@ -258,7 +256,7 @@ header {
   bottom: 0;
   left: 0;
   right: 75px;
-  display: -webkit-flex;
+  display: flex;
   > .loading_indicator, > .next_unread, > .search_next_thread {
     display: none;
     margin: 10px;
@@ -273,7 +271,7 @@ header {
   }
   > .next_unread {
     width: 0;
-    -webkit-flex-grow: 1;
+    flex-grow: 1;
     text-overflow: ellipsis;
     white-space: nowrap;
     overflow: hidden;
@@ -286,8 +284,6 @@ header {
 
 .next_thread_list {
   @include drop-shadow;
-
-  display:none;
 
   background-color: hsla(0, 0%, 0%, 0.85);
   color: hsl(0, 0%, 100%);

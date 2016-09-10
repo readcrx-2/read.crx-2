@@ -2,7 +2,7 @@
   $.fn.table_search = (method, prop) ->
     $table = $(this)
     $table
-      .hide()
+      .addClass("hidden")
       .removeAttr("data-table_search_hit_count")
       .find(".table_search_hit")
         .removeClass("table_search_hit")

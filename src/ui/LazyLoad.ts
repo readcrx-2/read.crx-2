@@ -37,13 +37,17 @@ namespace UI {
         $(img).replaceWith(this);
 
         if (e.type === "load") {
-          $(this).trigger("lazyload-load").hide().fadeIn();
+          $(this).trigger("lazyload-load").addClass("fade");
+          var _this = this;
+          setTimeout(function(){
+            _this.classList.add("fadeIn")
+          }, 0);
         }
       });
 
       newImg.src = img.getAttribute("data-src");
       img.removeAttribute("data-src");
-      img.src = "/img/loading.png";
+      img.src = "/img/loading.webp";
     }
 
     private watch (): void {

@@ -105,7 +105,7 @@ app.boot "/view/thread.html", ["board_title_solver"], (BoardTitleSolver) ->
           .val("")
         .end()
         .find(".hit_count")
-          .hide()
+          .addClass("hidden")
           .text("")
 
       app.view_thread._draw($view, ex?.force_update, (thread) ->
@@ -207,12 +207,13 @@ app.boot "/view/thread.html", ["board_title_solver"], (BoardTitleSolver) ->
       $article = $(@).parent()
       $menu = $(
         $("#template_res_menu").prop("content").querySelector(".res_menu")
-      ).clone().hide().appendTo($article)
+      ).clone().addClass("hidden").appendTo($article)
 
       app.defer ->
         if getSelection().toString().length is 0
           $menu.find(".copy_selection").remove()
           $menu.find(".add_selection_to_ngwords").remove()
+          $menu.find(".search_selection").remove()
         return
 
       if $article.parent().hasClass("config_use_aa_font")
@@ -255,33 +256,33 @@ app.boot "/view/thread.html", ["board_title_solver"], (BoardTitleSolver) ->
     .on "contextmenu", "article > .message", (e) ->
       if $(e.target).is("a")
         return
-      unless getSelection().toString().length is 0
+      if !e.ctrlKey and getSelection().toString().length isnt 0
         e.preventDefault()
 
-      $article = $(@).parent()
-      $menu = $(
-        $("#template_res_menu").prop("content").querySelector(".res_menu")
-      ).clone().hide().appendTo($article)
+        $article = $(@).parent()
+        $menu = $(
+          $("#template_res_menu").prop("content").querySelector(".res_menu")
+        ).clone().addClass("hidden").appendTo($article)
 
-      $menu.find(
-        ".copy_id,"+
-        ".add_id_to_ngwords,"+
-        ".copy_slip,"+
-        ".add_slip_to_ngwords,"+
-        ".copy_trip,"+
-        ".jump_to_this,"+
-        ".res_to_this,"+
-        ".res_to_this2,"+
-        ".add_writehistory,"+
-        ".del_writehistory,"+
-        ".toggle_aa_mode,"+
-        ".res_permalink"
-      ).remove()
+        $menu.find(
+          ".copy_id,"+
+          ".add_id_to_ngwords,"+
+          ".copy_slip,"+
+          ".add_slip_to_ngwords,"+
+          ".copy_trip,"+
+          ".jump_to_this,"+
+          ".res_to_this,"+
+          ".res_to_this2,"+
+          ".add_writehistory,"+
+          ".del_writehistory,"+
+          ".toggle_aa_mode,"+
+          ".res_permalink"
+        ).remove()
 
-      app.defer ->
-        unless getSelection().toString().length is 0
-          $menu.show()
-          $.contextmenu($menu, e.clientX, e.clientY)
+        app.defer ->
+          unless getSelection().toString().length is 0
+            $menu.show()
+            $.contextmenu($menu, e.clientX, e.clientY)
         return
       return
 
@@ -294,6 +295,11 @@ app.boot "/view/thread.html", ["board_title_solver"], (BoardTitleSolver) ->
         selectedText = getSelection().toString()
         if selectedText.length > 0
           app.clipboardWrite(selectedText)
+
+      else if $this.hasClass("search_selection")
+        selectedText = getSelection().toString()
+        if selectedText.length > 0
+          window.open("https://www.google.jp/search?q=#{selectedText}", "_blank")
 
       else if $this.hasClass("copy_id")
         app.clipboardWrite($res.attr("data-id"))
@@ -622,7 +628,7 @@ app.boot "/view/thread.html", ["board_title_solver"], (BoardTitleSolver) ->
                 .end()
               .end()
               .find(".hit_count")
-                .hide()
+                .addClass("hidden")
                 .text("")
 
             if typeof search_stored_scrollTop is "number"
@@ -681,24 +687,24 @@ app.boot "/view/thread.html", ["board_title_solver"], (BoardTitleSolver) ->
           @_elm.href = app.safe_href(next.url)
           @_elm.textContent = text
           @_elm.setAttribute("data-title", next.title)
-          @_elm.style["display"] = "block"
+          @_elm.classList.remove("hidden")
         else
           @hide()
         return
       hide: ->
-        @_elm.style["display"] = "none"
+        @_elm.classList.add("remove")
         return
 
     search_next_thread =
       _elm: $view.find(".search_next_thread")[0]
       show: ->
         if content.childNodes.length >= 1000 or $view.find(".message_bar").hasClass("error")
-          @_elm.style["display"] = "block"
+          @_elm.classList.remove("hidden")
         else
           @hide()
         return
       hide: ->
-        @_elm.style["display"] = "none"
+        @_elm.classList.add("hidden")
         return
 
     update_thread_footer = ->

@@ -1,4 +1,4 @@
-@import "../common.scss";
+﻿@import "../common.scss";
 
 @include common;
 
@@ -43,7 +43,7 @@ a {
 }
 
 .search {
-  display: -webkit-flex;
+  display: flex;
   padding: 2px;
   > input:not([type="hidden"]) {
     display: block;
@@ -55,7 +55,7 @@ a {
     padding: 0;
   }
   > input[type="text"] {
-    -webkit-flex-grow: 1;
+    flex-grow: 1;
     width: 0%;
     border-right: none;
     border-top-right-radius: 0;

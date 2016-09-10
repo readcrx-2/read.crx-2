@@ -23,9 +23,9 @@ body {
 
 header {
   margin: 0 0 5px 0;
-  display: -webkit-flex;
+  display: flex;
   > h1 {
-    -webkit-flex-grow: 1;
+    flex-grow: 1;
     font-size: 18px;
     margin: 0;
   }
@@ -57,8 +57,8 @@ header {
 form {
   margin: 0;
   height: 100%;
-  display: -webkit-flex;
-  -webkit-flex-flow: column;
+  display: flex;
+  flex-flow: column;
 }
 
 input[type="submit"], button {
@@ -71,7 +71,7 @@ textarea, input:not([type="submit"]) {
 
 textarea {
   display: block;
-  -webkit-flex-grow: 1;
+  flex-grow: 1;
   resize: none;
   width: 100%;
 }

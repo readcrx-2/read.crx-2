@@ -129,8 +129,8 @@ $z-index-notification: 9;
   }
   body {
     margin: 0;
-    display: -webkit-flex;
-    -webkit-flex-flow: column;
+    display: flex;
+    flex-flow: column;
   }
   .message_bar {
     font-size: 13px;
@@ -179,7 +179,7 @@ $z-index-notification: 9;
     > .button {
       width: 19px;
       cursor: pointer;
-      -webkit-transition: opacity 500ms;
+      transition: opacity 500ms;
       border-color: transparent;
       > a {
         display: block;
@@ -258,7 +258,7 @@ $z-index-notification: 9;
   }
   .content {
     height: 0;
-    -webkit-flex-grow: 1;
+    flex-grow: 1;
     overflow-x: hidden;
     overflow-y: scroll;
     position: relative;

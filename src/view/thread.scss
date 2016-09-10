@@ -225,7 +225,7 @@ header {
   list-style-type: none;
   font-size: 14px;
   opacity: 0.25;
-  -webkit-transition: opacity 200ms;
+  transition: opacity 200ms;
   &:hover {
     opacity: 1;
   }
@@ -256,7 +256,7 @@ header {
   bottom: 0;
   left: 0;
   right: 75px;
-  display: -webkit-flex;
+  display: flex;
   > .loading_indicator, > .next_unread, > .search_next_thread {
     display: none;
     margin: 10px;
@@ -271,7 +271,7 @@ header {
   }
   > .next_unread {
     width: 0;
-    -webkit-flex-grow: 1;
+    flex-grow: 1;
     text-overflow: ellipsis;
     white-space: nowrap;
     overflow: hidden;

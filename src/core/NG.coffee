@@ -13,7 +13,17 @@ class app.NG
   #それを展開
   _setupReg = (obj) ->
     for n in obj when n.type.startsWith("regExp")
-      n.reg = new RegExp n.word
+      try
+        n.reg = new RegExp n.word
+      catch e
+        app.message.send "notify", {
+          html: """
+            NG機能の正規表現(#{n.type}: #{n.word})を読み込むのに失敗しました
+            この行は無効化されます
+          """
+          background_color: "red"
+        }
+        n.type = "invalid"
     return
 
   _config =

@@ -10,6 +10,8 @@ app.boot "/view/config.html", ["cache", "bbsmenu"], (Cache, BBSMenu) ->
       parent.postMessage(JSON.stringify(tmp), location.origin)
     #NG設定
     app.NG.set($view.find("textarea[name=\"ngwords\"]")[0].value)
+    #ImageReplaceDat設定
+    app.ImageReplaceDat.set($view.find("textarea[name=\"image_replace_dat\"]")[0].value)
     return
 
   #掲示板を開いたときに閉じる
@@ -496,7 +498,6 @@ app.boot "/view/config.html", ["cache", "bbsmenu"], (Cache, BBSMenu) ->
          else $view.find("input[name=\"theme_id\"]").val([value]).trigger("change")
     return
 
-
   #設定エクスポート
   $view.find(".config_export_button").on "click", ->
     content = app.config.getAll()
@@ -510,6 +511,48 @@ app.boot "/view/config.html", ["cache", "bbsmenu"], (Cache, BBSMenu) ->
       download: "read.crx-2_config.json"
     })
     $a[0].click()
+    return
+
+  #datファイルインポート
+  $(".dat_file_show").on "click", ->
+    $dat_status.removeClass("done fail select")
+    $(".dat_file_hide").click()
+    return
+
+  datFile = "";
+  $dat_status = $view.find(".dat_import_status")
+  $(".dat_file_hide").change((e) ->
+    file = e.target.files
+    reader = new FileReader()
+    reader.readAsText(file[0])
+    reader.onload = ->
+        datFile = reader.result
+        $dat_status
+          .addClass("select")
+          .text("ファイル選択完了")
+      return
+    return
+  )
+
+  #設定インポート
+  $view.find(".dat_import_button").on "click", ->
+    if datFile isnt ""
+      $dat_status
+        .removeClass("done fail select")
+        .addClass("loading")
+        .text("更新中")
+      $.Deferred (d) ->
+        $view.find("textarea[name=\"image_replace_dat\"]")[0].value = datFile
+        d.resolve()
+      .done ->
+        $dat_status
+          .addClass("done")
+          .text("インポート完了")
+        return
+    else
+      $dat_status
+        .addClass("fail")
+        .text("ファイルを選択してください")
     return
 
   #書込履歴テーブル削除

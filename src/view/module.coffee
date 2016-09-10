@@ -8,6 +8,7 @@ do ->
       "bookmark"
       "bookmarkEntryList"
       "config"
+      "ImageReplaceDat"
       "module"
       "Ninja"
       "NG"

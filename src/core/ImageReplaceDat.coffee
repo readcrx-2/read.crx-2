@@ -13,9 +13,28 @@ class app.ImageReplaceDat
   #それを展開
   _setupReg = () ->
     for d in _dat
-      d.baseUrlReg = new RegExp d.baseUrl
-      if d.scrapingPattern isnt ""
-        d.scrapingPatternReg = new RegExp d.scrapingPattern
+      try
+        d.baseUrlReg = new RegExp d.baseUrl
+      catch e
+        app.message.send "notify", {
+          html: """
+            ImageViewURLReplace.datの一致URLの正規表現(#{d.baseUrl})を読み込むのに失敗しました
+            この行は無効化されます
+          """
+        }
+        d.baseUrl = "invalid://invalid"
+
+      try
+        if d.param? and d.param.type is "extract"
+          d.param.patternReg = new RegExp d.param.pattern
+      catch e
+        app.message.send "notify", {
+          html: """
+            ImageViewURLReplace.datのスクレイピング一致場所の正規表現(#{d.param.pattern})を読み込むのに失敗しました
+            この行は無効化されます
+          """
+        }
+        d.baseUrl = "invalid://invalid"
     return
 
   _config =

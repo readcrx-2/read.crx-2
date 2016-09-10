@@ -21,6 +21,7 @@ class app.ImageReplaceDat
             ImageViewURLReplace.datの一致URLの正規表現(#{d.baseUrl})を読み込むのに失敗しました
             この行は無効化されます
           """
+          background_color: "red"
         }
         d.baseUrl = "invalid://invalid"
 
@@ -33,6 +34,7 @@ class app.ImageReplaceDat
             ImageViewURLReplace.datのスクレイピング一致場所の正規表現(#{d.param.pattern})を読み込むのに失敗しました
             この行は無効化されます
           """
+          background_color: "red"
         }
         d.baseUrl = "invalid://invalid"
     return

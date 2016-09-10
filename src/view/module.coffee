@@ -652,7 +652,7 @@ class app.view.TabContentView extends app.view.PaneContentView
     #2ch.scでscの投稿だけ表示(スレ&レス)
     if app.url.tsld(url) is "2ch.sc"
       @$element.find(".button_only_sc").on "click", =>
-        @$element.find(".net").toggleClass("net_hide")
+        @$element.find(".net").toggleClass("hidden")
         return
     else
       @$element.find(".button_only_sc").remove()

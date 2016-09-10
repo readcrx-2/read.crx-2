@@ -334,7 +334,7 @@ class UI.ThreadContent
               if fixedId is @oneId
                 articleClass.push("one")
 
-              if fixedId.substr(-4,4) is ".net"
+              if fixedId.endsWith(".net")
                 articleClass.push("net")
 
               @idIndex[fixedId] = [] unless @idIndex[fixedId]?

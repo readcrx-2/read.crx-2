@@ -128,12 +128,6 @@ app.boot "/view/board.html", ["board_title_solver"], (BoardTitleSolver) ->
         $view.removeClass("loading")
         $view.trigger("view_loaded")
 
-        $needlessThread = $view.find(".needlessThread")
-        if app.config.get("hide_needless_thread") is "on"
-          $needlessThread.addClass("needless_thread_hide")
-        else
-          $needlessThread.removeClass("needless_thread_hide")
-
         $button = $view.find(".button_reload")
         $button.addClass("disabled")
         setTimeout((-> $button.removeClass("disabled")), 1000 * 5)

@@ -326,6 +326,8 @@ class UI.ThreadList
         trClassName += " ng_thread"
       if item.need_less
         trClassName += " needlessThread"
+        if app.config.get("hide_needless_thread") is "on"
+          trClassName += " hidden"
       if item.is_net
         trClassName += " net"
 

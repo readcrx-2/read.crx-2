@@ -130,7 +130,6 @@ class app.ImageReplaceDat
     _dat = @parse(string)
     _config.set(_dat)
     _setupReg()
-    console.log _dat
     return
 
   ###

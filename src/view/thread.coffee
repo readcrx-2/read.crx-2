@@ -299,7 +299,7 @@ app.boot "/view/thread.html", ["board_title_solver"], (BoardTitleSolver) ->
       else if $this.hasClass("search_selection")
         selectedText = getSelection().toString()
         if selectedText.length > 0
-          window.open("https://www.google.jp/search?q=#{selectedText}", "_blank")
+          window.open("https://www.google.co.jp/search?q=#{selectedText}", "_blank")
 
       else if $this.hasClass("copy_id")
         app.clipboardWrite($res.attr("data-id"))

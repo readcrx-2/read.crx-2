@@ -61,7 +61,7 @@ do ->
 
   main = ->
     #2ch投稿確認
-    if ///^http://\w+\.(2ch\.net|bbspink\.com|2ch\.sc|open2ch\.net)/test/bbs\.cgi///.test(location.href)
+    if ///^http://\w+\.(2ch\.net|bbspink\.com|2ch\.sc)/test/bbs\.cgi///.test(location.href)
       if /書きこみました/.test(document.title)
         send_message_success()
       else if /確認/.test(document.title)
@@ -74,6 +74,18 @@ do ->
       if /書きこみました/.test(document.title)
         send_message_success()
       else if /ERROR|スレッド作成規制中/.test(document.title)
+        send_message_error()
+
+    #open2ch投稿確認
+    if ///^http://\w+\.open2ch\.net/test/bbs\.cgi///.test(location.href)
+      font = document.getElementsByTagName("font")
+      text = document.title
+      if font.length > 0 then text += font[0].innerText
+      if /書きこみました/.test(text)
+        send_message_success()
+      else if /確認/.test(text)
+        setTimeout(send_message_confirm , 1000 * 6)
+      else if /ＥＲＲＯＲ/.test(text)
         send_message_error()
 
   boot = ->

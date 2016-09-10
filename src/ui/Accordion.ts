@@ -17,8 +17,8 @@ namespace UI {
 
       this.$element.addClass("accordion");
 
-      this.$element.find(".accordion_open").removeClass(".accordion_open");
-      this.$element.find(":header + :not(:header)").hide();
+      this.$element.find(".accordion_open").removeClass("accordion_open");
+      this.$element.find(":header + :not(:header)").addClass("hidden");
 
       this.$element.on("click", "> :header", function () {
         if (this.classList.contains("accordion_open")) {
@@ -34,11 +34,11 @@ namespace UI {
       this.$element
         .find(".accordion_open + *")
           .finish()
-          .show()
+          .removeClass("hidden")
         .end()
         .find(":header:not(.accordion_open) + *")
           .finish()
-          .hide();
+          .addClass("hidden");
     }
 
     open (header: HTMLElement, duration: number = 250): void {

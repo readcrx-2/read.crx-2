@@ -260,7 +260,8 @@ class app.view.Index extends app.view.View
         .one "click keydown", =>
           @hideKeyboardHelp()
           return
-        .fadeIn("fast")
+        .removeClass("hidden")
+        .addClass("fadeIn")
         .focus()
     return
 
@@ -268,9 +269,14 @@ class app.view.Index extends app.view.View
   @method hideKeyboardHelp
   ###
   hideKeyboardHelp: ->
-    @$element.find(".keyboard_help").fadeOut("fast")
+    ele = @$element.find(".keyboard_help")
+    ele.removeClass("fadeIn")
     iframe = document.querySelector(".iframe_focused")
     iframe?.contentDocument.querySelector(".content").focus()
+    setTimeout(->
+      ele.addClass("hidden")
+      return
+    , 250)
     return
 
 app.boot "/view/index.html", ->
@@ -443,21 +449,27 @@ app.main = ->
     text = message.message
     html = message.html
     background_color = message.background_color or "#777"
-    $("<div>")
+    div = $("<div>")
       .css("background-color", background_color)
       .append(
         (if html? then $("<div>", {html}) else $("<div>", {text}))
         $("<div>")
       )
       .one "click", "a, div:last-child", (e) ->
-        $(e.delegateTarget)
-          .animate({opacity: 0}, "fast")
-          .delay("fast")
-          .slideUp("fast", -> $(@).remove())
+        cl = e.delegateTarget.classList
+        cl.remove("fadeIn")
+        setTimeout( =>
+          t = e.delegateTarget
+          t.parentNode.removeChild(t)
+          return
+        , 250)
         return
-      .hide()
+      .addClass("fade")
       .appendTo("#app_notice_container")
-      .fadeIn()
+    app.defer( ->
+      div.addClass("fadeIn")
+      return
+    )
 
   #前回起動時のバージョンと違うバージョンだった場合、アップデート通知を送出
   do ->
@@ -623,11 +635,16 @@ app.main = ->
 
     if iframe_info.modal
       unless $view.find("iframe[src=\"#{iframe_info.src}\"]").length
-        $("<iframe>")
+        iframeEle = $("<iframe>")
           .attr("src", iframe_info.src)
           .attr("data-url", iframe_info.url)
           .attr("data-title", message.title or iframe_info.url)
+          .addClass("fade")
           .appendTo("#modal")
+        app.defer(->
+          iframeEle.addClass("fadeIn")
+          return
+        )
     else
       $li = $view.find(".tab_tabbar > li[data-tabsrc=\"#{iframe_info.src}\"]")
       if $li.length
@@ -672,7 +689,7 @@ app.main = ->
     if request.type in ["written", "written?"]
       iframe = document.querySelector("iframe[data-url=\"#{request.url}\"]")
       if iframe
-        tmp = JSON.stringify(type: "request_reload", force_update: true, kind: request.kind, mes: request.mes, name: request.name, mail: request.mail, title: request.title)
+        tmp = JSON.stringify(type: "request_reload", force_update: true, kind: request.kind, mes: request.mes, name: request.name, mail: request.mail, title: request.title, thread_url: request.thread_url)
         iframe.contentWindow.postMessage(tmp, location.origin)
 
   #viewからのメッセージを監視
@@ -703,8 +720,11 @@ app.main = ->
                 .remove($iframe.attr("data-tabid"))
         #モーダルのviewが送ってきた場合
         else if $iframe.is("#modal > iframe")
-          $iframe.fadeOut "fast", ->
+          $iframe.removeClass("fadeIn")
+          setTimeout( ->
             $iframe.remove()
+            return
+          , 250)
 
       #view_loadedの翻訳
       when "view_loaded"

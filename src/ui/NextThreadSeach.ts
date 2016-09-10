@@ -19,11 +19,13 @@ namespace UI {
     }
 
     show ():void {
-      this.$element.fadeIn("fast");
+      this.$element.removeClass("hidden");
+      app.defer(() => {this.$element.addClass("fadeIn")});
     }
 
     hide ():void {
-      this.$element.fadeOut("fast");
+      this.$element.addClass("hidden");
+      app.defer(() => {this.$element.removeClass("fadeIn")});
     }
 
     search (url:string, title:string):void {

@@ -192,10 +192,10 @@ class UI.ThreadList
             $table.table_search("search", {
               query: @value, target_col: title_index})
             hitCount = $table.attr("data-table_search_hit_count")
-            $(@).siblings(".hit_count").text(hitCount + "hit").show()
+            $(@).siblings(".hit_count").text(hitCount + "hit").removeClass("hidden")
           else
             $table.table_search("clear")
-            $(@).siblings(".hit_count").text("").hide()
+            $(@).siblings(".hit_count").text("").addClass("hidden")
           return
         .on "keyup", (e) ->
           if e.which is 27 #Esc
@@ -324,8 +324,11 @@ class UI.ThreadList
         trClassName += " expired"
       if item.ng
         trClassName += " ng_thread"
-
-      if app.escape_html(item.title).substr(0,1) isnt "★"
+      if item.need_less
+        trClassName += " needlessThread"
+        if app.config.get("hide_needless_thread") is "on"
+          trClassName += " hidden"
+      if item.is_net
         trClassName += " net"
 
       tmpHTML = " data-href=\"#{app.escape_html(item.url)}\""
@@ -346,8 +349,6 @@ class UI.ThreadList
       #タイトル
       if @_flg.title
         tmpHTML += "<td>#{app.escape_html(item.title)}</td>"
-        if /.+\.2ch\.netの人気スレ|【漫画あり】コンビニで浪人を購入する方法|★★ ２ちゃんねる\(sc\)のご案内 ★★★|浪人はこんなに便利/.test(item.title)
-          trClassName += " needlessThread"
 
       #板名
       if @_flg.boardTitle

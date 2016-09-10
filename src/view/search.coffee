@@ -44,12 +44,6 @@ app.boot "/view/search.html", ["thread_search"], (ThreadSearch) ->
 
         threadList.addItem(result)
 
-        $needlessThread = $view.find(".needlessThread")
-        if app.config.get("hide_needless_thread") is "on"
-          $needlessThread.addClass("needless_thread_hide")
-        else
-          $needlessThread.removeClass("needless_thread_hide")
-
         if $tbody.children().length is 0 || $tbody.children().css("display") is "none"
           $tbody.addClass("body_empty")
         else
@@ -62,7 +56,7 @@ app.boot "/view/search.html", ["thread_search"], (ThreadSearch) ->
         $view.removeClass("loading")
         return
       .always ->
-        $view.find(".more").hide()
+        $view.find(".more").addClass("hidden")
         setTimeout((-> $button_reload.removeClass("disabled"); return), 5000)
         return
     return

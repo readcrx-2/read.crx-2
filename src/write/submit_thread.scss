@@ -23,9 +23,9 @@ body {
 
 header {
   margin: 0 0 5px 0;
-  display: -webkit-flex;
+  display: flex;
   > h1 {
-    -webkit-flex-grow: 1;
+    flex-grow: 1;
     font-size: 18px;
     margin: 0;
   }
@@ -57,8 +57,8 @@ header {
 form {
   margin: 0;
   height: 100%;
-  display: -webkit-flex;
-  -webkit-flex-flow: column;
+  display: flex;
+  flex-flow: column;
 }
 
 input[type="submit"], button {
@@ -71,13 +71,12 @@ textarea, input:not([type="submit"]) {
 
 textarea {
   display: block;
-  -webkit-flex-grow: 1;
+  flex-grow: 1;
   resize: none;
   width: 100%;
 }
 
 .iframe_container {
-  display: none;
   position: fixed;
   left: 0;
   top: 0;
@@ -100,7 +99,7 @@ textarea {
   box-sizing: content-box;
   width: 16px;
   height: 16px;
-  background-image: url(/img/close_16x16.png);
+  background-image: url(/img/close_16x16.webp);
 }
 
 iframe {

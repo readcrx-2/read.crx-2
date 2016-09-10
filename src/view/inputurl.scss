@@ -15,7 +15,7 @@ html {
 }
 
 form {
-  display: -webkit-flex;
+  display: flex;
 }
 
 input {
@@ -27,7 +27,7 @@ input {
 input:first-child {
   @include input-text;
   width: 0;
-  -webkit-flex-grow: 1;
+  flex-grow: 1;
   margin-right: 10px;
 }
 
@@ -36,7 +36,6 @@ input[type="submit"] {
 }
 
 .notice {
-  display: none;
   margin-top: 5px;
   font-size: 14px;
 }

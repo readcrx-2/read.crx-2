@@ -100,7 +100,11 @@ app.boot "/write/submit_thread.html", ->
       $view.find(".notice").text("書き込み失敗 - #{message}")
     else
       $view.find(".notice").text("")
-      $view.find(".iframe_container").fadeIn("fast")
+      ele = $view.find(".iframe_container").removeClass("hidden")
+      app.defer(->
+        ele.addClass("fadeIn")
+        return
+      )
 
   write_timer =
     wake: ->
@@ -133,15 +137,19 @@ app.boot "/write/submit_thread.html", ->
           else
             server = arg.url.match(/^http:\/\/(\w+\.(?:2ch\.net|2ch\.sc|bbspink\.com|open2ch\.net)).*/)[1]
             url = "http://#{server}/test/read.cgi/#{keys[1]}/#{keys[2]}"
-            chrome.extension.sendRequest(type: "written", kind: "own", url: url, mes: mes, name: name, mail: mail, title: title)
+            chrome.extension.sendRequest(type: "written", kind: "own", url: arg.url, thread_url: url, mes: mes, name: name, mail: mail, title: title)
         else if app.url.tsld(arg.url) is "shitaraba.net"
-          chrome.extension.sendRequest(type: "written", kind: "board",  url: arg.url, mes: mes, name: name, mail: mail, title: title)
+          chrome.extension.sendRequest(type: "written", kind: "board", url: arg.url, mes: mes, name: name, mail: mail, title: title)
         chrome.tabs.getCurrent (tab) ->
           chrome.tabs.remove(tab.id)
       , 2000
       write_timer.kill()
     else if message.type is "confirm"
-      $view.find(".iframe_container").fadeIn("fast")
+      ele = $view.find(".iframe_container").removeClass("hidden")
+      app.defer(->
+        ele.addClass("fadeIn")
+        return
+      )
       write_timer.kill()
     else if message.type is "error"
       on_error(message.message)
@@ -155,7 +163,8 @@ app.boot "/write/submit_thread.html", ->
         .find("iframe")
           .remove()
         .end()
-      .fadeOut("fast")
+      .removeClass("fadeIn")
+      .addClass("hidden")
     $view.find("input, textarea").removeAttr("disabled")
     $view.find(".notice").text("")
     return

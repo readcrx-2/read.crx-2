@@ -108,12 +108,14 @@
         %h2 サムネイル表示
         %div
           %label
-            %input.direct(type="checkbox" name="thumbnail_supported")
-            YouTube/ニコニコ動画のサムネイルを表示する
+            %textarea.direct(name="image_replace_dat" rows="6" cols="80")
           %br
-          %label
-            %input.direct(type="checkbox" name="thumbnail_ext")
-            末尾が画像ファイルの拡張子で終わるURLのサムネイルを表示する
+            ここに ImageViewURLReplace.dat を記述してください
+          %br
+          %button.dat_file_show(type="button") ファイル読み込み(UTF-8)
+          %input(type="file" class="dat_file_hide hidden" accept=".dat")
+          %button.dat_import_button(type="button") インポート
+          %span.dat_import_status
 
       %section
         %h2 アスキーアート表示
@@ -190,7 +192,7 @@
             %button.history_clear(type="button") 削除
             %button.history_export(type="button") エクスポート
             %button.history_file_show(type="button") ファイル読み込み
-            %input(type="file" class="history_file_hide hide" accept=".json")
+            %input(type="file" class="history_file_hide hidden" accept=".json")
             %button.history_import(type="button") インポート
             %span.history_status
             %br
@@ -203,7 +205,7 @@
             %button.writehistory_clear(type="button") 削除
             %button.writehistory_export(type="button") エクスポート
             %button.writehistory_file_show(type="button") ファイル読み込み
-            %input(type="file" class="writehistory_file_hide hide" accept=".json")
+            %input(type="file" class="writehistory_file_hide hidden" accept=".json")
             %button.writehistory_import(type="button") インポート
             %span.writehistory_status
             %br
@@ -211,10 +213,6 @@
             %button.writehistory_range_clear(type="button") 削除
             %br
             %input.direct(type="checkbox" name="no_history") 書込履歴を保存しない(チェック時のみ有効)
-            %br
-            書込履歴テーブル:
-            %button.writehistory_delete_table(type="button") 削除
-            (1.2.0～1.3.0から1.3.1以降へ移行時に一度だけ実行してください、実行後に再起動してください)
             %br
           .cache
             キャッシュ:
@@ -224,9 +222,20 @@
             設定
             %button.config_export_button(type="button") エクスポート
             %button.config_file_show(type="button") ファイル読み込み
-            %input(type="file" class="config_file_hide hide" accept=".json")
+            %input(type="file" class="config_file_hide hidden" accept=".json")
             %button.config_import_button(type="button") インポート
             %span.config_import_status
+
+      %section
+        %h2 2ch.netのスレッド読み込み形式
+        %div
+          %label
+            %input.direct(name="format_2chnet" type="radio" value="html" checked)
+            html形式
+          %br
+          %label
+            %input.direct(name="format_2chnet" type="radio" value="dat" checked)
+            dat形式(要Proxy)
 
       %section
         %h2 その他
@@ -269,17 +278,11 @@
           %label
             UserAgent
             %input.direct.useragent(type="text" name="useragent")
-
-      %section
-        %h2 2ch.netのスレッド読み込み形式
-        %div
-          %label
-            %input.direct(name="format_2chnet" type="radio" value="html" checked)
-            html形式
           %br
-          %label
-            %input.direct(name="format_2chnet" type="radio" value="dat" checked)
-            dat形式(要Proxy)
+          書込履歴テーブル:
+          %button.writehistory_delete_table(type="button") 削除
+          (1.2.0～1.3.0から1.3.1以降へ移行時に一度だけ実行してください、実行後に再起動してください)
+
     %template#template_ninja_item
       .ninja_item
         %span.site_name

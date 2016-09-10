@@ -257,8 +257,6 @@ namespace app {
       auto_load_second: "0",
       auto_load_all: "off",
       auto_load_move: "off",
-      thumbnail_supported: "on",
-      thumbnail_ext: "off",
       aa_font: "aa",
       popup_trigger: "click",
       ngwords: "",
@@ -275,7 +273,9 @@ namespace app {
       useragent: "",
       format_2chnet: "html",
       sage_flag: "on",
-      mousewheel_change_tab: "on"
+      mousewheel_change_tab: "on",
+      image_replace_dat_obj: "[]",
+      image_replace_dat: "^https?:\/\/(?:www\.youtube\.com\/watch\?(?:.+&)?v=|youtu\.be\/)([\w\-]+).*\thttps://img.youtube.com/vi/$1/default.jpg\nhttp:\/\/(?:www\.)?nicovideon?\.jp\/(?:(?:watch|thumb)(?:_naisho)?(?:\?v=|\/)|\?p=)(?!am|fz)[a-z]{2}(\d+)\thttp://tn-skr.smilevideo.jp/smile?i=$1\n\.(png|jpe?g|gif|bmp|webp)([\?#:].*)?$\t.$1$2"
     };
 
     private _cache:{[index:string]:string;} = {};

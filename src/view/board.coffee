@@ -105,14 +105,17 @@ app.boot "/view/board.html", ["board_title_solver"], (BoardTitleSolver) ->
             ng: thread.ng
         )
 
-        if ex? and app.config.get("no_writehistory") is "off"
+        if ex?
+          writeFlag = app.config.get("no_writehistory") is "off"
           if ex.kind is "own"
-            app.WriteHistory.add(ex.url, 1, ex.title, ex.name, ex.mail, ex.name, ex.mail, ex.mes, Date.now().valueOf())
-            app.message.send("open", url: ex.url, new_tab: true)
+            if writeFlag
+              app.WriteHistory.add(ex.thread_url, 1, ex.title, ex.name, ex.mail, ex.name, ex.mail, ex.mes, Date.now().valueOf())
+            app.message.send("open", url: ex.thread_url, new_tab: true)
           else
             for thread in board
               if thread.title.includes(ex.title)
-                app.WriteHistory.add(thread.url, 1, ex.title, ex.name, ex.mail, ex.name, ex.mail, ex.mes, thread.created_at)
+                if writeFlag
+                  app.WriteHistory.add(thread.url, 1, ex.title, ex.name, ex.mail, ex.name, ex.mail, ex.mes, thread.created_at)
                 app.message.send("open", url: thread.url, new_tab: true)
                 break
 

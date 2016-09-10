@@ -689,7 +689,7 @@ app.main = ->
     if request.type in ["written", "written?"]
       iframe = document.querySelector("iframe[data-url=\"#{request.url}\"]")
       if iframe
-        tmp = JSON.stringify(type: "request_reload", force_update: true, kind: request.kind, mes: request.mes, name: request.name, mail: request.mail, title: request.title)
+        tmp = JSON.stringify(type: "request_reload", force_update: true, kind: request.kind, mes: request.mes, name: request.name, mail: request.mail, title: request.title, thread_url: request.thread_url)
         iframe.contentWindow.postMessage(tmp, location.origin)
 
   #viewからのメッセージを監視

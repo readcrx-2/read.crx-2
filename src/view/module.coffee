@@ -357,7 +357,8 @@ class app.view.PaneContentView extends app.view.IframeView
             mes: if message.mes? then message.mes else null,
             name: if message.name? then message.name else null,
             mail: if message.mail? then message.mail else null,
-            title: if message.title? then message.title else null
+            title: if message.title? then message.title else null,
+            thread_url: if message.thread_url? then message.thread_url else null
           )
 
         # tab_selected(postMessage) -> tab_selected(event) 翻訳処理

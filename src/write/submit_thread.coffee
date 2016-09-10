@@ -137,9 +137,9 @@ app.boot "/write/submit_thread.html", ->
           else
             server = arg.url.match(/^http:\/\/(\w+\.(?:2ch\.net|2ch\.sc|bbspink\.com|open2ch\.net)).*/)[1]
             url = "http://#{server}/test/read.cgi/#{keys[1]}/#{keys[2]}"
-            chrome.extension.sendRequest(type: "written", kind: "own", url: url, mes: mes, name: name, mail: mail, title: title)
+            chrome.extension.sendRequest(type: "written", kind: "own", url: arg.url, thread_url: url, mes: mes, name: name, mail: mail, title: title)
         else if app.url.tsld(arg.url) is "shitaraba.net"
-          chrome.extension.sendRequest(type: "written", kind: "board",  url: arg.url, mes: mes, name: name, mail: mail, title: title)
+          chrome.extension.sendRequest(type: "written", kind: "board", url: arg.url, mes: mes, name: name, mail: mail, title: title)
         chrome.tabs.getCurrent (tab) ->
           chrome.tabs.remove(tab.id)
       , 2000

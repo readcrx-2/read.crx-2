@@ -15,9 +15,12 @@ app.boot "/view/inputurl.html", ->
       app.message.send("open", {url, new_tab: true})
       parent.postMessage(JSON.stringify(type: "request_killme"), location.origin)
     else
-      $view
+      ele = $view
         .find(".notice")
-          .hide()
           .text("未対応形式のURLです")
-          .fadeIn("fast")
+          .removeClass("hidden")
+      app.defer(->
+        ele.addClass("fadeIn")
+        return
+      )
     return

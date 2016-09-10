@@ -103,16 +103,21 @@ app.boot "/view/board.html", ["board_title_solver"], (BoardTitleSolver) ->
             read_state: array_of_read_state[read_state_index[thread.url]]
             thread_number: thread_number
             ng: thread.ng
+            need_less: thread.need_less
+            is_net: thread.is_net
         )
 
-        if ex? and app.config.get("no_writehistory") is "off"
+        if ex?
+          writeFlag = app.config.get("no_writehistory") is "off"
           if ex.kind is "own"
-            app.WriteHistory.add(ex.url, 1, ex.title, ex.name, ex.mail, ex.name, ex.mail, ex.mes, Date.now().valueOf())
-            app.message.send("open", url: ex.url, new_tab: true)
+            if writeFlag
+              app.WriteHistory.add(ex.thread_url, 1, ex.title, ex.name, ex.mail, ex.name, ex.mail, ex.mes, Date.now().valueOf())
+            app.message.send("open", url: ex.thread_url, new_tab: true)
           else
             for thread in board
               if thread.title.includes(ex.title)
-                app.WriteHistory.add(thread.url, 1, ex.title, ex.name, ex.mail, ex.name, ex.mail, ex.mes, thread.created_at)
+                if writeFlag
+                  app.WriteHistory.add(thread.url, 1, ex.title, ex.name, ex.mail, ex.name, ex.mail, ex.mes, thread.created_at)
                 app.message.send("open", url: thread.url, new_tab: true)
                 break
 
@@ -122,12 +127,6 @@ app.boot "/view/board.html", ["board_title_solver"], (BoardTitleSolver) ->
       .always ->
         $view.removeClass("loading")
         $view.trigger("view_loaded")
-
-        $needlessThread = $view.find(".needlessThread")
-        if app.config.get("hide_needless_thread") is "on"
-          $needlessThread.addClass("needless_thread_hide")
-        else
-          $needlessThread.removeClass("needless_thread_hide")
 
         $button = $view.find(".button_reload")
         $button.addClass("disabled")

@@ -334,7 +334,7 @@ class UI.ThreadContent
               if fixedId is @oneId
                 articleClass.push("one")
 
-              if fixedId.substr(-4,4) is ".net"
+              if fixedId.endsWith(".net")
                 articleClass.push("net")
 
               @idIndex[fixedId] = [] unless @idIndex[fixedId]?
@@ -375,13 +375,13 @@ class UI.ThreadContent
             #Beアイコン埋め込み表示
             .replace ///^(?:\s*sssp|https?)://(img\.2ch\.net/ico/[\w\-_]+\.gif)\s*<br>///, ($0, $1) =>
               if app.url.tsld(@url) in ["2ch.net", "bbspink.com", "2ch.sc"]
-                """<img class="beicon" src="/img/dummy_1x1.png" data-src="http://#{$1}"><br>"""
+                """<img class="beicon" src="/img/dummy_1x1.webp" data-src="http://#{$1}"><br>"""
               else
                 $0
             #エモーティコン埋め込み表示
             .replace ///(?:\s*sssp|https?)://(img\.2ch\.net/emoji/[\w\-_]+\.gif)\s*///g, ($0, $1) =>
               if app.url.tsld(@url) in ["2ch.net", "bbspink.com", "2ch.sc"]
-                """<img class="beicon emoticon" src="/img/dummy_1x1.png" data-src="http://#{$1}">"""
+                """<img class="beicon emoticon" src="/img/dummy_1x1.webp" data-src="http://#{$1}">"""
               else
                 $0
             #アンカーリンク
@@ -528,7 +528,7 @@ class UI.ThreadContent
 
       #サムネイル追加処理
       do =>
-        addThumbnail = (sourceA, thumbnailPath) ->
+        addThumbnail = (sourceA, thumbnailPath, referrer, cookieStr) ->
           sourceA.classList.add("has_thumbnail")
 
           thumbnail = document.createElement("div")
@@ -540,8 +540,10 @@ class UI.ThreadContent
           thumbnail.appendChild(thumbnailLink)
 
           thumbnailImg = document.createElement("img")
-          thumbnailImg.src = "/img/dummy_1x1.png"
+          thumbnailImg.src = "/img/dummy_1x1.webp"
           thumbnailImg.setAttribute("data-src", thumbnailPath)
+          if referrer? then thumbnailImg.setAttribute("data-referrer", referrer)
+          if cookieStr? then thumbnailImg.setAttribute("data-cookie", cookieStr)
           thumbnailLink.appendChild(thumbnailImg)
 
           sib = sourceA
@@ -557,29 +559,19 @@ class UI.ThreadContent
               break
           null
 
-        configThumbnailSupported = app.config.get("thumbnail_supported") is "on"
-        configThumbnailExt = app.config.get("thumbnail_ext") is "on"
-
+        deferArray = []
         for a in @container.querySelectorAll(".message > a:not(.thumbnail):not(.has_thumbnail)")
-          #サムネイル表示(対応サイト)
-          if configThumbnailSupported
-            #YouTube
-            if res = /// ^https?://
-                (?:www\.youtube\.com/watch\?(?:.+&)?v=|youtu\.be/)
-                ([\w\-]+).*
-              ///.exec(a.href)
-              addThumbnail(a, "https://img.youtube.com/vi/#{res[1]}/default.jpg")
-            #ニコニコ動画
-            else if res = /// ^http://(?:www\.nicovideo\.jp/watch/|nico\.ms/)
-                (?:sm|nm)(\d+) ///.exec(a.href)
-              tmp = "http://tn-skr#{parseInt(res[1], 10) % 4 + 1}.smilevideo.jp"
-              tmp += "/smile?i=#{res[1]}"
-              addThumbnail(a, tmp)
-
-          #サムネイル表示(画像っぽいURL)
-          if configThumbnailExt
-            if /\.(?:png|jpe?g|gif|bmp|webp)(?:[\?#:].*)?$/i.test(a.href)
-              addThumbnail(a, a.href)
-      return d.resolve()
+          deferArray.push(
+            app.ImageReplaceDat.do(a, a.href).done( (a, res) ->
+              addThumbnail(a, res.text, res.referrer, res.cookie)
+              return
+            )
+          )
+        $.when.apply(null, deferArray).always(->
+          d.resolve()
+          return
+        )
+        return
+      return
     )
     return d.promise()

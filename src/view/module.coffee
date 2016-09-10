@@ -8,6 +8,7 @@ do ->
       "bookmark"
       "bookmarkEntryList"
       "config"
+      "ImageReplaceDat"
       "module"
       "Ninja"
       "NG"
@@ -198,7 +199,7 @@ class app.view.IframeView extends app.view.View
         else if e.which is 27
           that._closeCommandBox()
         return
-      .hide()
+      .addClass("hidden")
       .appendTo(@$element)
     return
 
@@ -220,7 +221,7 @@ class app.view.IframeView extends app.view.View
     @$element
       .find(".command")
         .val("")
-        .hide()
+        .addClass("hidden")
         .data("lastActiveElement")?.focus()
     return
 
@@ -357,7 +358,8 @@ class app.view.PaneContentView extends app.view.IframeView
             mes: if message.mes? then message.mes else null,
             name: if message.name? then message.name else null,
             mail: if message.mail? then message.mail else null,
-            title: if message.title? then message.title else null
+            title: if message.title? then message.title else null,
+            thread_url: if message.thread_url? then message.thread_url else null
           )
 
         # tab_selected(postMessage) -> tab_selected(event) 翻訳処理
@@ -571,13 +573,13 @@ class app.view.TabContentView extends app.view.PaneContentView
         app.defer ->
           that.$element.one "click contextmenu", (e) ->
             if not $(e.target).is(".button_tool")
-              that.$element.find(".button_tool > ul").hide()
+              that.$element.find(".button_tool > ul").addClass("hidden")
             return
           return
       return
 
     $(window).on "blur", =>
-      @$element.find(".button_tool > ul").hide()
+      @$element.find(".button_tool > ul").addClass("hidden")
       return
 
     # Chromeで直接開く
@@ -650,7 +652,7 @@ class app.view.TabContentView extends app.view.PaneContentView
     #2ch.scでscの投稿だけ表示(スレ&レス)
     if app.url.tsld(url) is "2ch.sc"
       @$element.find(".button_only_sc").on "click", =>
-        @$element.find(".net").toggleClass("net_hide")
+        @$element.find(".net").toggleClass("hidden")
         return
     else
       @$element.find(".button_only_sc").remove()

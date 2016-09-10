@@ -18,7 +18,6 @@ task :default => [
   "view:build",
   "zombie:build",
   "write:build",
-  "test:build",
   "jquery",
   "rmappjs"
 ]
@@ -163,7 +162,15 @@ rule ".js" => "%{^debug/,src/}X.coffee" do |t|
 end
 
 rule ".png" => "src/image/svg/%{_\\d+x\\d+(?:_[a-fA-F0-9]+)?(?:_r\\-?\\d+)?$,}n.svg" do |t|
-  /_(\d+)x(\d+)(?:_([a-fA-F0-9]*))?(?:_r(\-?\d+))?\.png$/ =~ t.name
+  /_(\d+)x(\d+)\.png$/ =~ t.name
+
+  command = "convert -background transparent -resize #{$1}x#{$2} #{t.prerequisites[0]} #{t.name}"
+
+  sh command
+end
+
+rule ".webp" => "src/image/svg/%{_\\d+x\\d+(?:_[a-fA-F0-9]+)?(?:_r\\-?\\d+)?$,}n.svg" do |t|
+  /_(\d+)x(\d+)(?:_([a-fA-F0-9]*))?(?:_r(\-?\d+))?\.webp$/ =~ t.name
 
   command = "convert -background transparent"
 
@@ -211,27 +218,27 @@ namespace :img do
     "debug/img/read.crx_128x128.png",
     "debug/img/read.crx_48x48.png",
     "debug/img/read.crx_16x16.png",
-    "debug/img/close_16x16.png",
-    "debug/img/dummy_1x1.png",
-    "debug/img/loading.png",
+    "debug/img/close_16x16.webp",
+    "debug/img/dummy_1x1.webp",
+    "debug/img/loading.webp",
 
-    "debug/img/arrow_19x19_333_r90.png",
-    "debug/img/arrow_19x19_333_r-90.png",
-    "debug/img/search2_19x19_777.png",
-    "debug/img/star_19x19_333.png",
-    "debug/img/star_19x19_007fff.png",
-    "debug/img/reload_19x19_333.png",
-    "debug/img/pencil_19x19_333.png",
-    "debug/img/menu_19x19_333.png",
+    "debug/img/arrow_19x19_333_r90.webp",
+    "debug/img/arrow_19x19_333_r-90.webp",
+    "debug/img/search2_19x19_777.webp",
+    "debug/img/star_19x19_333.webp",
+    "debug/img/star_19x19_007fff.webp",
+    "debug/img/reload_19x19_333.webp",
+    "debug/img/pencil_19x19_333.webp",
+    "debug/img/menu_19x19_333.webp",
 
-    "debug/img/arrow_19x19_ddd_r90.png",
-    "debug/img/arrow_19x19_ddd_r-90.png",
-    "debug/img/search2_19x19_aaa.png",
-    "debug/img/star_19x19_ddd.png",
-    "debug/img/star_19x19_f93.png",
-    "debug/img/reload_19x19_ddd.png",
-    "debug/img/pencil_19x19_ddd.png",
-    "debug/img/menu_19x19_ddd.png"
+    "debug/img/arrow_19x19_ddd_r90.webp",
+    "debug/img/arrow_19x19_ddd_r-90.webp",
+    "debug/img/search2_19x19_aaa.webp",
+    "debug/img/star_19x19_ddd.webp",
+    "debug/img/star_19x19_f93.webp",
+    "debug/img/reload_19x19_ddd.webp",
+    "debug/img/pencil_19x19_ddd.webp",
+    "debug/img/menu_19x19_ddd.webp"
   ]
 
   directory "debug/img"
@@ -252,7 +259,7 @@ namespace :img do
     sh "convert -background transparent -resize 96x96 -extent 128x128-16-16 src/image/svg/read.crx.svg #{t.name}"
   end
 
-  file "debug/img/loading.png" => "src/image/svg/loading.svg" do |t|
+  file "debug/img/loading.webp" => "src/image/svg/loading.svg" do |t|
     sh "convert -background transparent -resize 100x100 src/image/svg/loading.svg #{t.name}"
   end
 end
@@ -341,73 +348,6 @@ namespace :write do
     "src/core/Ninja.coffee",
     "src/write/submit_thread.coffee"
   ]
-end
-
-namespace :test do
-  task :build => [
-    "debug/test",
-    "debug/test/jasmine",
-    "debug/test/jasmine/jasmine.js",
-    "debug/test/jasmine/jasmine-html.js",
-    "debug/test/jasmine/jasmine.css",
-
-    "debug/test/qunit",
-    "debug/test/qunit/qunit.js",
-    "debug/test/qunit/qunit.css",
-    "debug/test/qunit/qunit-step.js",
-
-    "debug/test/jquery.mockjax.js",
-
-    "debug/test/test.html",
-    "debug/test/jasmine-exec.js",
-    "debug/test/test.js",
-    "debug/test/spec.js",
-    "debug/test/message_test.html",
-    "debug/test/message_test.js"
-  ]
-
-  task :run, :filter do |t, args|
-    require "cgi"
-
-    if ENV["read.crx-2-id"]
-      url = "chrome-extension://#{ENV["read.crx-2-id"]}/test/test.html"
-    else
-      url = "chrome-extension://#{debug_id}/test/test.html"
-    end
-
-    if args[:filter]
-      tmp = CGI.escape(args[:filter]).gsub("\+", "%20")
-      url += "?filter=#{tmp}&spec=#{tmp}"
-    end
-
-    # if RUBY_PLATFORM.include?("darwin")
-    #    sh "\"/Applications/Google Chrome.app/Contents/MacOS/Google Chrome\" '#{url}'"
-    # elsif RUBY_PLATFORM.include?("linux")
-    #   sh "google-chrome '#{url}'"
-    # else
-    #   # Windowsの場合、Chromeの場所を環境変数から取得する(設定必)
-    #   sh "#{ENV["CHROME_LOCATION"]} #{url}"
-    # end
-
-  end
-
-  directory "debug/test"
-
-  file_copy "debug/test/jquery.mockjax.js", "node_modules/jquery-mockjax/dist/jquery.mockjax.js"
-
-  directory "debug/test/jasmine"
-  file_copy "debug/test/jasmine/jasmine.js", "node_modules/jasmine-core/lib/jasmine-core/jasmine.js"
-  file_copy "debug/test/jasmine/jasmine-html.js", "node_modules/jasmine-core/lib/jasmine-core/jasmine-html.js"
-  file_copy "debug/test/jasmine/jasmine.css", "node_modules/jasmine-core/lib/jasmine-core/jasmine.css"
-
-  file_coffee "debug/test/spec.js", FileList["src/test/*.spec.coffee"]
-
-  directory "debug/test/qunit"
-  file_copy "debug/test/qunit/qunit.js", "node_modules/qunitjs/qunit/qunit.js"
-  file_copy "debug/test/qunit/qunit.css", "node_modules/qunitjs/qunit/qunit.css"
-  file_copy "debug/test/qunit/qunit-step.js", "node_modules/qunit-assert-step/qunit-assert-step.js"
-
-  file_coffee "debug/test/test.js", FileList["src/test/test_*.coffee"]
 end
 
 task :jquery do

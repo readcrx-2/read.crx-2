@@ -67,7 +67,6 @@
     "/view/inputurl.html",
     "/view/search.html",
     "/view/sidemenu.html",
-    "/view/thread.html",
-    "/test/message_test.html"
+    "/view/thread.html"
   ]
 }

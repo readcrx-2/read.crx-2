@@ -142,9 +142,12 @@ class app.ImageReplaceDat
     def = $.Deferred()
     dat = @get()
     doing = false
-    for d in dat when d.baseUrlReg.test(string)
+    for d in dat
       continue if d.baseUrl is "invalid://invalid"
-      continue if d.replaceUrl is ""
+      continue if !d.baseUrlReg.test(string)
+      if d.replaceUrl is ""
+        d.reject()
+        break
 
       doing = true
       res = {}

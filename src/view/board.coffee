@@ -60,7 +60,7 @@ app.boot "/view/board.html", ["board_title_solver"], (BoardTitleSolver) ->
 
   new app.view.TabContentView(document.documentElement)
 
-  BoardTitleSolver.ask({url}).always (title) ->
+  BoardTitleSolver.ask(url).always (title) ->
     if title
       document.title = title
     if app.config.get("no_history") is "off"

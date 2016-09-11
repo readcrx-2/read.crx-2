@@ -75,13 +75,18 @@ class app.BoardTitleSolver
   @return {Promise}
   ###
   @searchFromSettingTXT: (url) ->
-    $.ajax(url + "SETTING.TXT", {
-      dataType: "text"
-      timeout: 1000 * 10
-      beforeSend: (jqxhr) ->
-        jqxhr.overrideMimeType("text/plain; charset=Shift_JIS")
+    $.Deferred (d) ->
+      request = new app.HTTP.Request("GET", url + "SETTING.TXT", {
+        mimeType: "text/plain; charset=Shift_JIS"
+        timeout: 1000 * 10
+      })
+      request.send (response) ->
+        if response.status is 200
+          d.resolve(response.body)
+        else
+          d.reject(response.body)
         return
-    })
+      return
     .then(
       (text) ->
         $.Deferred (d) ->
@@ -109,13 +114,18 @@ class app.BoardTitleSolver
     tmp = url.split("/")
     ajax_path = "http://jbbs.shitaraba.net/bbs/api/setting.cgi/#{tmp[3]}/#{tmp[4]}/"
 
-    $.ajax(ajax_path, {
-      dataType: "text"
-      timeout: 1000 * 10
-      beforeSend: (jqxhr) ->
-        jqxhr.overrideMimeType("text/plain; charset=EUC-JP")
+    $.Deferred (d) ->
+      request = new app.HTTP.Request("GET", ajax_path, {
+        mimeType: "text/plain; charset=EUC-JP"
+        timeout: 1000 * 10
+      })
+      request.send (response) ->
+        if response.status is 200
+          d.resolve(response.body)
+        else
+          d.reject(response.body)
         return
-    })
+      return
     .then(
       (text) ->
         $.Deferred (d) ->
@@ -131,12 +141,11 @@ class app.BoardTitleSolver
 
   ###*
   @method ask
-  @param {Object} prop
-    @param {String} prop.url
+  @param {String} url
   @return Promise
   ###
-  @ask: (prop) ->
-    url = app.url.fix(prop.url)
+  @ask: (url) ->
+    url = app.url.fix(url)
 
     #bbsmenu内を検索
     @searchFromBBSMenu(url)

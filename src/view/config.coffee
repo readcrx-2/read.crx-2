@@ -301,7 +301,7 @@ app.boot "/view/config.html", ["cache", "bbsmenu"], (Cache, BBSMenu) ->
     if inputObj.read_state
       for rs in inputObj.read_state
         deferred_add_func_array.push(app.read_state.set(rs))
-    return $.when.apply(null, deferred_add_func_array)
+    return $.when(deferred_add_func_array...)
   , ->
     d = $.Deferred()
     $.when(

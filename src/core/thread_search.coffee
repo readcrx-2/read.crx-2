@@ -21,12 +21,17 @@ app.module "thread_search", [], (callback) ->
       return def.promise()
 
     read: ->
-      $.ajax({
-        url: "http://dig.2ch.net/?keywords=#{encodeURI(@query)}&maxResult=500&json=1"
-        cache: false
-        dataType: "text"
-        timeout: 1000 * 30
-      })
+      $.Deferred (d) =>
+        request = new app.HTTP.Request("GET", "http://dig.2ch.net/?keywords=#{encodeURI(@query)}&maxResult=500&json=1", {
+          cache: false
+        })
+        request.send (response) ->
+          if response.status is 200
+            d.resolve(response.body)
+          else
+            d.reject(response.body)
+          return
+        return
       .then(((responseText) => $.Deferred (d) =>
         try
           result = JSON.parse(responseText)

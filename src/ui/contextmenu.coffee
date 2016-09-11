@@ -1,4 +1,4 @@
-(($) ->
+do ($ = jQuery) ->
   cleanup = ->
     $(".contextmenu_menu").remove()
 
@@ -35,5 +35,3 @@
           $this.css("top", "#{this_pos.top - $this.outerHeight()}px")
 
         null
-
-)(jQuery)

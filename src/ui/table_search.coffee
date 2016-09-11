@@ -1,4 +1,4 @@
-(($) ->
+do ($ = jQuery) ->
   $.fn.table_search = (method, prop) ->
     $table = $(this)
     $table
@@ -28,4 +28,3 @@
 
     $table.show()
     this
-)(jQuery)

@@ -696,7 +696,7 @@ app.boot "/view/thread.html", ["board_title_solver"], (BoardTitleSolver) ->
           @hide()
         return
       hide: ->
-        @_elm.classList.add("remove")
+        @_elm.classList.add("hidden")
         return
 
     search_next_thread =

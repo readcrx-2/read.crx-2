@@ -252,7 +252,8 @@ app.util.stripTags = (str) ->
 # タイトルから無断転載禁止などを取り除く
 app.util.removeNeedlessFromTitle = (title) ->
   title2 = title.replace(/ ?(?:\[(?:無断)?転載禁止\]|(?:\(c\)|©|�|&copy;|&#169;)(?:2ch\.net|@?bbspink\.com)) ?/g,"")
-  return if title2 is "" then title else title2
+  title = if title2 is "" then title else title2
+  return title.replace(/<\/?mark>/g, "")
 
 # 配列のDeferredを平行処理
 # array: 処理する配列

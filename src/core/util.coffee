@@ -261,3 +261,17 @@ app.util.stripTags = (str) ->
 app.util.removeNeedlessFromTitle = (title) ->
   title2 = title.replace(/ ?(?:\[(?:無断)?転載禁止\]|(?:\(c\)|©|�|&copy;|&#169;)(?:2ch\.net|@?bbspink\.com)) ?/g,"")
   return if title2 is "" then title else title2
+
+# 配列のDeferredを平行処理
+# array: 処理する配列
+# func: 実行する処理
+app.util.concurrent = (array, func) ->
+  d = $.Deferred()
+  deferArray = []
+  for a in array
+    deferArray.push(func(a))
+  $.when.apply(null, deferArray).always(->
+    d.resolve(Array.from(arguments))
+    return
+  )
+  return d.promise()

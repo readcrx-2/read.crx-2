@@ -39,11 +39,8 @@ app.module "thread_search", [], (callback) ->
           d.reject(message: "通信エラー（JSONパースエラー）")
           return
 
-        deferArray = []
-        for x in result.result
-          deferArray.push(_parse(x))
-        $.when.apply(null, deferArray).always(->
-          d.resolve(Array.from(arguments))
+        app.util.concurrent(result.result, _parse).done( (res) ->
+          d.resolve(res)
           return
         )
         return

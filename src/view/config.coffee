@@ -318,11 +318,12 @@ app.boot "/view/config.html", ["cache", "bbsmenu"], (Cache, BBSMenu) ->
   , (day) ->
     return app.WriteHistory.clearRange(day)
   , (inputObj) ->
-    deferred_add_func_array = []
     if inputObj.writehistory
-      for whis in inputObj.writehistory
-        deferred_add_func_array.push(app.WriteHistory.add(whis.url, whis.res, whis.title, whis.name, whis.mail, whis.input_name, whis.input_mail, whis.message, whis.date))
-    return $.when.apply(null, deferred_add_func_array)
+      return app.util.concurrent(inputObj.writehistory, (whis) ->
+        return app.WriteHistory.add(whis.url, whis.res, whis.title, whis.name, whis.mail, whis.input_name, whis.input_mail, whis.message, whis.date)
+      )
+    else
+      return $.Deferred().resolve().promise()
   , ->
     d = $.Deferred()
     app.WriteHistory.get_all().done( (data) ->

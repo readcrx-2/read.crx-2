@@ -559,15 +559,12 @@ class UI.ThreadContent
               break
           null
 
-        deferArray = []
-        for a in @container.querySelectorAll(".message > a:not(.thumbnail):not(.has_thumbnail)")
-          deferArray.push(
-            app.ImageReplaceDat.do(a, a.href).done( (a, res) ->
-              addThumbnail(a, res.text, res.referrer, res.cookie)
-              return
-            )
+        app.util.concurrent(@container.querySelectorAll(".message > a:not(.thumbnail):not(.has_thumbnail)"), (a) ->
+          return app.ImageReplaceDat.do(a, a.href).done( (a, res) ->
+            addThumbnail(a, res.text, res.referrer, res.cookie)
+            return
           )
-        $.when.apply(null, deferArray).always(->
+        ).done(->
           d.resolve()
           return
         )

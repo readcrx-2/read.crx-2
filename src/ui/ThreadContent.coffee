@@ -320,8 +320,10 @@ class UI.ThreadContent
         #.other
         tmp = (
           res.other
+            #be
+            .replace(/<\/div><div class="be .*?"><a href="(http:\/\/be\.2ch\.net\/user\/\d+?)".*?>(.*?)<\/a>/, "<a class=\"beid\" href=\"$1\" target=\"_blank\">$2</a>")
             #タグ除去
-            .replace(/<.*?(?:>|$)/g, "")
+            .replace(/<(?!(?:a class="beid".*?>[^<>]+<\/a)>).*?(?:>|$)/g, "")
             #.id
             .replace(/(?:^| )(ID:(?!\?\?\?)[^ <>"']+|発信元:\d+.\d+.\d+.\d+)/, ($0, $1) =>
               fixedId = $1.replace(/\u25cf$/, "") #末尾●除去
@@ -508,7 +510,7 @@ class UI.ThreadContent
               elm = document.createElement("span")
             elm.textContent = "返信 (#{resCount})"
             elm.className = if resCount >= 5 then "rep freq" else "rep link"
-            res.setAttribute("data-rescount", app.util.makeList(1, resCount, " "))
+            res.setAttribute("data-rescount", [1..resCount].join(" "))
             if newFlg
               res.getElementsByClassName("other")[0].appendChild(
                 document.createTextNode(" ")
@@ -540,10 +542,17 @@ class UI.ThreadContent
           thumbnail.appendChild(thumbnailLink)
 
           thumbnailImg = document.createElement("img")
+          thumbnailImg.className = "image"
           thumbnailImg.src = "/img/dummy_1x1.webp"
           thumbnailImg.setAttribute("data-src", thumbnailPath)
           if referrer? then thumbnailImg.setAttribute("data-referrer", referrer)
           if cookieStr? then thumbnailImg.setAttribute("data-cookie", cookieStr)
+          thumbnailLink.appendChild(thumbnailImg)
+
+          thumbnailImg = document.createElement("img")
+          thumbnailImg.className = "favicon"
+          thumbnailImg.src = "/img/dummy_1x1.webp"
+          thumbnailImg.setAttribute("data-src", "https://www.google.com/s2/favicons?domain=#{app.url.getDomain(sourceA.href)}")
           thumbnailLink.appendChild(thumbnailImg)
 
           sib = sourceA
@@ -559,15 +568,12 @@ class UI.ThreadContent
               break
           null
 
-        deferArray = []
-        for a in @container.querySelectorAll(".message > a:not(.thumbnail):not(.has_thumbnail)")
-          deferArray.push(
-            app.ImageReplaceDat.do(a, a.href).done( (a, res) ->
-              addThumbnail(a, res.text, res.referrer, res.cookie)
-              return
-            )
+        app.util.concurrent(@container.querySelectorAll(".message > a:not(.thumbnail):not(.has_thumbnail)"), (a) ->
+          return app.ImageReplaceDat.do(a, a.href).done( (a, res) ->
+            addThumbnail(a, res.text, res.referrer, res.cookie)
+            return
           )
-        $.when.apply(null, deferArray).always(->
+        ).done(->
           d.resolve()
           return
         )

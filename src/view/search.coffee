@@ -44,7 +44,7 @@ app.boot "/view/search.html", ["thread_search"], (ThreadSearch) ->
 
         threadList.addItem(result)
 
-        if $tbody.children().length is 0 || $tbody.children().css("display") is "none"
+        if $tbody.children().length is 0 or $tbody.children().css("display") is "none"
           $tbody.addClass("body_empty")
         else
           $tbody.removeClass("body_empty")

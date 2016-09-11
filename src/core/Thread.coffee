@@ -366,7 +366,7 @@ class app.Thread
     thread = res: []
     first = true
 
-    for line, key in text.split(separator)
+    for line in text.split(separator)
       title = titleReg.exec(line)
       regRes = reg.exec(line)
 
@@ -401,23 +401,23 @@ class app.Thread
   @return {null|Object}
   ###
   @_parseCh = (text) ->
-    # name, mail, other, message, thread_title
-    reg = /^(.*?)<>(.*?)<>(.*?)<>(.*?)<>(.*?)(?:<>)?$/
     numberOfBroken = 0
     thread = res: []
     first = true
 
     for line, key in text.split("\n")
-      regRes = reg.exec(line)
-      if regRes
+      continue if line is ""
+      # name, mail, other, message, thread_title
+      sp = line.split("<>")
+      if sp.length >= 4
         if key is 0
-          thread.title = app.util.decode_char_reference(regRes[5])
+          thread.title = app.util.decode_char_reference(sp[4])
 
         thread.res.push
-          name: regRes[1]
-          mail: regRes[2]
-          message: regRes[4]
-          other: regRes[3]
+          name: sp[0]
+          mail: sp[1]
+          message: sp[3]
+          other: sp[2]
       else
         continue if line is ""
         numberOfBroken++
@@ -440,13 +440,14 @@ class app.Thread
   @return {null|Object}
   ###
   @_parseMachi = (text) ->
-    # res_num, name, mail, other, message, thread_title
-    reg = /^(\d+)<>(.*)<>(.*)<>(.*)<>(.*)<>(.*)$/gm
     thread = {res: []}
     resCount = 0
 
-    while regRes = reg.exec(text)
-      while ++resCount isnt +regRes[1]
+    for line in text.split("\n")
+      continue if line is ""
+      # res_num, name, mail, other, message, thread_title
+      sp = line.split("<>")
+      while ++resCount isnt +sp[0]
         thread.res.push
           name: "あぼーん"
           mail: "あぼーん"
@@ -454,13 +455,13 @@ class app.Thread
           other: "あぼーん"
 
       if resCount is 1
-        thread.title = app.util.decode_char_reference(regRes[6])
+        thread.title = app.util.decode_char_reference(sp[5])
 
       thread.res.push
-        name: regRes[2]
-        mail: regRes[3]
-        message: regRes[5]
-        other: regRes[4]
+        name: sp[1]
+        mail: sp[2]
+        message: sp[4]
+        other: sp[3]
 
     if thread.res.length > 0 then thread else null
 
@@ -472,13 +473,14 @@ class app.Thread
   @return {null|Object}
   ###
   @_parseJbbs = (text) ->
-    # res_num, name, mail, date, message, thread_title, id
-    reg = /^(\d+)<>(.*)<>(.*)<>(.*)<>(.*)<>(.*)<>(.*)$/gm
     thread = {res: []}
     resCount = 0
 
-    while regRes = reg.exec(text)
-      while ++resCount isnt +regRes[1]
+    for line in text.split("\n")
+      continue if line is ""
+      # res_num, name, mail, date, message, thread_title, id
+      sp = line.split("<>")
+      while ++resCount isnt +sp[0]
         thread.res.push
           name: "あぼーん"
           mail: "あぼーん"
@@ -486,12 +488,12 @@ class app.Thread
           other: "あぼーん"
 
       if resCount is 1
-        thread.title = app.util.decode_char_reference(regRes[6])
+        thread.title = app.util.decode_char_reference(sp[5])
 
       thread.res.push
-        name: regRes[2]
-        mail: regRes[3]
-        message: regRes[5]
-        other: regRes[4] + if regRes[7] then " ID:" + regRes[7] else ""
+        name: sp[1]
+        mail: sp[2]
+        message: sp[4]
+        other: sp[3] + if sp[6] then " ID:#{sp[6]}" else ""
 
     if thread.res.length > 0 then thread else null

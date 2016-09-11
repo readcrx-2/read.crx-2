@@ -55,18 +55,17 @@ app.util.ch_server_move_detect = (old_board_url, html) ->
   #htmlが渡されなかった場合は通信する
   .then null, ->
     $.Deferred (deferred) ->
-      $.ajax
-        url: old_board_url
-        cache: false
-        dataType: "text"
-        timeout: 1000 * 30
+      request = new app.HTTP.Request("GET", old_board_url, {
         mimeType: "text/html; charset=Shift_JIS"
-        complete: ($xhr) ->
-          if $xhr.status is 200
-            deferred.resolve($xhr.responseText)
-          else
-            deferred.reject()
-
+        cache: false
+      })
+      request.send (response) ->
+        if response.status is 200
+          d.resolve(response.body)
+        else
+          d.reject()
+        return
+      return
   #htmlから移転を判定
   .then (html) ->
     $.Deferred (deferred) ->
@@ -246,14 +245,6 @@ app.util.normalize = (str) ->
     #大文字を小文字に変換
     .toLowerCase()
 
-# nからmをaで区切った文字列を出力
-app.util.makeList = (n, m, a) ->
-  s = ""
-  for i in [n...m]
-    s += i + a
-  s += m
-  return s
-
 # striptags
 app.util.stripTags = (str) ->
   return str.replace(/(<([^>]+)>)/ig, "")
@@ -261,4 +252,19 @@ app.util.stripTags = (str) ->
 # タイトルから無断転載禁止などを取り除く
 app.util.removeNeedlessFromTitle = (title) ->
   title2 = title.replace(/ ?(?:\[(?:無断)?転載禁止\]|(?:\(c\)|©|�|&copy;|&#169;)(?:2ch\.net|@?bbspink\.com)) ?/g,"")
-  return if title2 is "" then title else title2
+  title = if title2 is "" then title else title2
+  return title.replace(/<\/?mark>/g, "")
+
+# 配列のDeferredを平行処理
+# array: 処理する配列
+# func: 実行する処理
+app.util.concurrent = (array, func) ->
+  d = $.Deferred()
+  deferArray = []
+  for a in array
+    deferArray.push(func(a))
+  $.when.apply(null, deferArray).always(->
+    d.resolve(Array.from(arguments))
+    return
+  )
+  return d.promise()

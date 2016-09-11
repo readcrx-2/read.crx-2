@@ -1,4 +1,4 @@
-(($) ->
+do ($ = jQuery) ->
   cleanup = ->
     $(".contextmenu_menu").remove()
 
@@ -25,7 +25,7 @@
       .addClass("contextmenu_menu")
       .css(position: "fixed", left: x, top: y)
       .each ->
-        $this = $(this)
+        $this = $(@)
         this_pos = $this.position()
 
         if window.innerWidth < this_pos.left + $this.outerWidth()
@@ -35,5 +35,3 @@
           $this.css("top", "#{this_pos.top - $this.outerHeight()}px")
 
         null
-
-)(jQuery)

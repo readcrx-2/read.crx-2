@@ -77,8 +77,8 @@ app.boot "/write/submit_thread.html", ->
     return
 
   $view.find(".message").on "keyup", (e) ->
-    line = this.value.split(/\n/).length
-    $view.find(".notice").text("#{this.value.length}文字 #{line}行")
+    line = @value.split(/\n/).length
+    $view.find(".notice").text("#{@value.length}文字 #{line}行")
     return
 
   if app.config.get("sage_flag") is "on"

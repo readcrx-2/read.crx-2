@@ -5,7 +5,6 @@
 ###
 class app.ImageReplaceDat
   _dat = []
-  _reg = /^([^\t]+)(?:\t([^\t]+)(?:\t([^\t]+)(?:\t([^\t]+)(?:\t([^\t]+)(?:\t([^\t]+))?)?)?)?)?/
   _configName = "image_replace_dat_obj"
   _configStringName = "image_replace_dat"
 
@@ -101,20 +100,20 @@ class app.ImageReplaceDat
       for d in datStrSplit
         if ["//",";", "'"].some((ele) -> return d.startsWith(ele))
           continue
-        r = _reg.exec(d)
-        if r? and r[1]?
+        r = d.split("\t")
+        if r[0]?
           obj =
-            baseUrl: r[1]
-            replaceUrl: if r[2]? then r[2] else ""
-            referrerUrl: if r[3]? then r[3] else ""
-            userAgent: if r[6]? then r[6] else ""
+            baseUrl: r[0]
+            replaceUrl: if r[1]? then r[1] else ""
+            referrerUrl: if r[2]? then r[2] else ""
+            userAgent: if r[5]? then r[5] else ""
 
-          if r[4]?
+          if r[3]?
             obj.param = {}
-            rurl = r[4].split("=")[1]
-            if r[4].includes("$EXTRACT")
+            rurl = r[3].split("=")[1]
+            if r[3].includes("$EXTRACT")
               obj.param.type = "extract"
-              obj.param.pattern = r[5]
+              obj.param.pattern = r[4]
               obj.param.referrerUrl = if rurl? then rurl else ""
             else if r[4].includes("$COOKIE")
               obj.param.type = "cookie"

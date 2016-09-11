@@ -1,4 +1,4 @@
-(($)->
+do ($ = jQuery) ->
   template_confirm = """
     <div class="dialog dialog_confirm dialog_overlay">
       <div class="dialog_spacer"></div>
@@ -37,4 +37,3 @@
       else
         deferred.reject()
     .promise()
-)(jQuery)

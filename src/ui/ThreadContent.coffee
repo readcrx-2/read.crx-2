@@ -540,10 +540,17 @@ class UI.ThreadContent
           thumbnail.appendChild(thumbnailLink)
 
           thumbnailImg = document.createElement("img")
+          thumbnailImg.className = "image"
           thumbnailImg.src = "/img/dummy_1x1.webp"
           thumbnailImg.setAttribute("data-src", thumbnailPath)
           if referrer? then thumbnailImg.setAttribute("data-referrer", referrer)
           if cookieStr? then thumbnailImg.setAttribute("data-cookie", cookieStr)
+          thumbnailLink.appendChild(thumbnailImg)
+
+          thumbnailImg = document.createElement("img")
+          thumbnailImg.className = "favicon"
+          thumbnailImg.src = "/img/dummy_1x1.webp"
+          thumbnailImg.setAttribute("data-src", "https://www.google.com/s2/favicons?domain=#{app.url.getDomain(sourceA.href)}")
           thumbnailLink.appendChild(thumbnailImg)
 
           sib = sourceA

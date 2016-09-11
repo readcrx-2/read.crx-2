@@ -148,7 +148,7 @@ header {
     padding: $a-padding;
     box-shadow: 0 1px 3px 0px rgba(black, 0.4);
 
-    > img {
+    > img.image {
       display: block;
       max-width: 150px;
       max-height: $container-height - $a-padding * 2;
@@ -158,8 +158,7 @@ header {
         animation: rotateThis 1.5s linear infinite;
       }
     }
-
-    &::after {
+    > img.favicon {
       @include drop-shadow;
       position: absolute;
       right: -4px;
@@ -171,15 +170,6 @@ header {
 
       background: hsl(0, 0%, 97.5%);
       border-radius: 2px;
-    }
-
-    &[href^="http://www.nicovideo.jp/watch/"]::after {
-      content: url(http://www.nicovideo.jp/favicon.ico);
-    }
-
-    &[href^="http://youtu.be/"]::after,
-    &[href^="http://www.youtube.com/watch?"]::after {
-      content: url(http://www.youtube.com/favicon.ico);
     }
   }
 }

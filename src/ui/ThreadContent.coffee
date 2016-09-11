@@ -320,8 +320,10 @@ class UI.ThreadContent
         #.other
         tmp = (
           res.other
+            #be
+            .replace(/<\/div><div class="be .*?"><a href="(http:\/\/be\.2ch\.net\/user\/\d+?)".*?>(.*?)<\/a>/, "<a class=\"beid\" href=\"$1\" target=\"_blank\">$2</a>")
             #タグ除去
-            .replace(/<.*?(?:>|$)/g, "")
+            .replace(/<(?!(?:a class="beid".*?>[^<>]+<\/a)>).*?(?:>|$)/g, "")
             #.id
             .replace(/(?:^| )(ID:(?!\?\?\?)[^ <>"']+|発信元:\d+.\d+.\d+.\d+)/, ($0, $1) =>
               fixedId = $1.replace(/\u25cf$/, "") #末尾●除去

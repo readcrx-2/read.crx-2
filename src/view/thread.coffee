@@ -299,7 +299,7 @@ app.boot "/view/thread.html", ["board_title_solver"], (BoardTitleSolver) ->
       else if $this.hasClass("search_selection")
         selectedText = getSelection().toString()
         if selectedText.length > 0
-          window.open("https://www.google.jp/search?q=#{selectedText}", "_blank")
+          window.open("https://www.google.co.jp/search?q=#{selectedText}", "_blank")
 
       else if $this.hasClass("copy_id")
         app.clipboardWrite($res.attr("data-id"))
@@ -421,7 +421,7 @@ app.boot "/view/thread.html", ["board_title_solver"], (BoardTitleSolver) ->
 
     #通常リンク
     .on "click mousedown", ".message a:not(.anchor)", (e) ->
-      target_url = this.href
+      target_url = @href
 
       #http、httpsスキーム以外ならクリックを無効化する
       if not /// ^https?:// ///.test(target_url)
@@ -468,7 +468,7 @@ app.boot "/view/thread.html", ["board_title_solver"], (BoardTitleSolver) ->
       else
         return
 
-      BoardTitleSolver.ask(url: board_url, offline: true).done (title) =>
+      BoardTitleSolver.ask(board_url).done (title) =>
         popup_helper @, e, =>
           $("<div>", {class: "popup_linkinfo"})
             .append($("<div>", text: title + after))
@@ -696,7 +696,7 @@ app.boot "/view/thread.html", ["board_title_solver"], (BoardTitleSolver) ->
           @hide()
         return
       hide: ->
-        @_elm.classList.add("remove")
+        @_elm.classList.add("hidden")
         return
 
     search_next_thread =
@@ -753,7 +753,7 @@ app.boot "/view/thread.html", ["board_title_solver"], (BoardTitleSolver) ->
   #パンくずリスト表示
   do ->
     board_url = app.url.thread_to_board(view_url)
-    BoardTitleSolver.ask(url: board_url).always (title) ->
+    BoardTitleSolver.ask(board_url).always (title) ->
       $view
         .find(".breadcrumb > li > a")
           .attr("href", board_url)

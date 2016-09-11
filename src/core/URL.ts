@@ -59,6 +59,13 @@ namespace app {
       return res ? res[1] : "";
     }
 
+    export function getDomain (url:string):string {
+      var res:any;
+
+      res = /^https?:\/\/(.+?)\//.exec(url);
+      return res ? res[1] : "";
+    }
+
     export function threadToBoard (url:string):string {
       return (
         fix(url)
@@ -140,6 +147,7 @@ namespace app {
     }
 
     export var tsld = app.URL.tsld;
+    export var getDomain = app.URL.getDomain;
     export var thread_to_board = app.URL.threadToBoard;
     export var parse_query = app.URL.parseQuery;
     export var parse_hashquery = app.URL.parseHashQuery;

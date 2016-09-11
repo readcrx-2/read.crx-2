@@ -52,7 +52,7 @@ do ($ = jQuery) ->
     #同一ソースからのポップアップが既に有る場合は、処理を中断
     flg = false
     $popup.siblings(".popup").each ->
-      flg or= $($(this).data("popup_source")).is(source)
+      flg or= $($(@).data("popup_source")).is(source)
       return
     if flg
       $popup.remove()

@@ -1,6 +1,6 @@
 do ($ = jQuery) ->
   $.fn.table_search = (method, prop) ->
-    $table = $(this)
+    $table = $(@)
     $table
       .addClass("hidden")
       .removeAttr("data-table_search_hit_count")
@@ -27,4 +27,4 @@ do ($ = jQuery) ->
       $table.removeClass("table_search")
 
     $table.show()
-    this
+    @

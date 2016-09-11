@@ -5,7 +5,7 @@ app.boot "/view/bookmark_source_selector.html", ->
 
   $view
     .on "click", ".node", ->
-      $(this)
+      $(@)
         .closest(".view_bookmark_source_selector")
           .find(".selected")
             .removeClass("selected")
@@ -20,7 +20,7 @@ app.boot "/view/bookmark_source_selector.html", ->
     .find(".submit")
       .on "click", ->
         bookmark_id = (
-          $(this)
+          $(@)
             .closest(".view_bookmark_source_selector")
               .find(".node.selected")
                 .attr("data-bookmark_id")

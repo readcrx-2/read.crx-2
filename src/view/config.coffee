@@ -23,39 +23,39 @@ app.boot "/view/config.html", ["cache", "bbsmenu"], (Cache, BBSMenu) ->
   $view
     .find("input.direct[type=\"text\"], textarea.direct")
       .each ->
-        this.value = app.config.get(this.name) or ""
+        @value = app.config.get(@name) or ""
         null
       .on "input", ->
-        app.config.set(this.name, this.value)
+        app.config.set(@name, @value)
         return
 
   $view
     .find("input.direct[type=\"number\"]")
       .each ->
-        this.value = app.config.get(this.name) or "0"
+        @value = app.config.get(@name) or "0"
         null
       .on "input", ->
-        app.config.set(this.name, if not isNaN +this.value then this.value else "0")
+        app.config.set(@name, if not isNaN +@value then @value else "0")
         return
 
   $view
     .find("input.direct[type=\"checkbox\"]")
       .each ->
-        this.checked = app.config.get(this.name) is "on"
+        @checked = app.config.get(@name) is "on"
         null
       .on "change", ->
-        app.config.set(this.name, if this.checked then "on" else "off")
+        app.config.set(@name, if @checked then "on" else "off")
         return
 
   $view
     .find("input.direct[type=\"radio\"]")
       .each ->
-        if this.value is app.config.get(this.name)
-          this.checked = true
+        if @value is app.config.get(@name)
+          @checked = true
         return
       .on "change", ->
-        val = $view.find("""input[name="#{this.name}"]:checked""").val()
-        app.config.set(this.name, val)
+        val = $view.find("""input[name="#{@name}"]:checked""").val()
+        app.config.set(@name, val)
         return
 
   #バージョン情報表示

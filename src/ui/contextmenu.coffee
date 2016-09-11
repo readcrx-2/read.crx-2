@@ -25,7 +25,7 @@ do ($ = jQuery) ->
       .addClass("contextmenu_menu")
       .css(position: "fixed", left: x, top: y)
       .each ->
-        $this = $(this)
+        $this = $(@)
         this_pos = $this.position()
 
         if window.innerWidth < this_pos.left + $this.outerWidth()

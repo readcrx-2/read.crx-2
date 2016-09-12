@@ -90,6 +90,9 @@ app.boot "/view/sidemenu.html", ["bbsmenu"], (BBSMenu) ->
             frag.appendChild(h3)
 
             ul = document.createElement("ul")
+            cl = ul.classList
+            cl.add("slide")
+            cl.add("hidden")
             for board in category.board
               ul.appendChild(board_to_li(board))
             frag.appendChild(ul)

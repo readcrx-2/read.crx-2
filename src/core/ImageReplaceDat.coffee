@@ -145,7 +145,7 @@ class app.ImageReplaceDat
       continue if d.baseUrl is "invalid://invalid"
       continue if !d.baseUrlReg.test(string)
       if d.replaceUrl is ""
-        d.reject()
+        def.reject(a, "No parsing")
         break
 
       doing = true

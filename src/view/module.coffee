@@ -210,7 +210,7 @@ class app.view.IframeView extends app.view.View
     @$element
       .find(".command")
         .data("lastActiveElement", document.activeElement)
-        .show()
+        .removeClass("hidden")
         .focus()
     return
 
@@ -569,7 +569,7 @@ class app.view.TabContentView extends app.view.PaneContentView
 
     #メニューの表示/非表示制御
     @$element.find(".button_tool").on "click", ->
-      if $(@).find("ul").toggle().is(":visible")
+      if $(@).find("ul").toggleClass("hidden").hasClass("hidden")
         app.defer ->
           that.$element.one "click contextmenu", (e) ->
             if not $(e.target).is(".button_tool")

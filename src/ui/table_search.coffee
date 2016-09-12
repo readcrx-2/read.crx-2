@@ -26,5 +26,5 @@ do ($ = jQuery) ->
     else if method is "clear"
       $table.removeClass("table_search")
 
-    $table.show()
+    $table.removeClass("hidden")
     @

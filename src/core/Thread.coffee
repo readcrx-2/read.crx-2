@@ -379,14 +379,6 @@ class app.Thread
           mail: regRes[1] or ""
           message: regRes[4]
           other: regRes[3]
-      else
-        continue if true or line is ""
-        numberOfBroken++
-        thread.res.push
-          name: "</b>データ破損<b>"
-          mail: ""
-          message: "データが破損しています"
-          other: ""
 
     if thread.res.length > 0 and thread.res.length > numberOfBroken
       thread
@@ -442,28 +434,41 @@ class app.Thread
   @_parseMachi = (text) ->
     thread = {res: []}
     resCount = 0
+    numberOfBroken = 0
 
     for line in text.split("\n")
       continue if line is ""
       # res_num, name, mail, other, message, thread_title
       sp = line.split("<>")
-      while ++resCount isnt +sp[0]
+      if sp.length >= 5
+        while ++resCount isnt +sp[0]
+          thread.res.push
+            name: "あぼーん"
+            mail: "あぼーん"
+            message: "あぼーん"
+            other: "あぼーん"
+
+        if resCount is 1
+          thread.title = app.util.decode_char_reference(sp[5])
+
         thread.res.push
-          name: "あぼーん"
-          mail: "あぼーん"
-          message: "あぼーん"
-          other: "あぼーん"
+          name: sp[1]
+          mail: sp[2]
+          message: sp[4]
+          other: sp[3]
+      else
+        continue if line is ""
+        numberOfBroken++
+        thread.res.push
+          name: "</b>データ破損<b>"
+          mail: ""
+          message: "データが破損しています"
+          other: ""
 
-      if resCount is 1
-        thread.title = app.util.decode_char_reference(sp[5])
-
-      thread.res.push
-        name: sp[1]
-        mail: sp[2]
-        message: sp[4]
-        other: sp[3]
-
-    if thread.res.length > 0 then thread else null
+    if thread.res.length > 0 and thread.res.length > numberOfBroken
+      thread
+    else
+      null
 
   ###*
   @method _parseJbbs
@@ -475,25 +480,39 @@ class app.Thread
   @_parseJbbs = (text) ->
     thread = {res: []}
     resCount = 0
+    numberOfBroken = 0
 
     for line in text.split("\n")
       continue if line is ""
       # res_num, name, mail, date, message, thread_title, id
       sp = line.split("<>")
-      while ++resCount isnt +sp[0]
+      if sp.length >= 6
+        while ++resCount isnt +sp[0]
+          thread.res.push
+            name: "あぼーん"
+            mail: "あぼーん"
+            message: "あぼーん"
+            other: "あぼーん"
+
+        if resCount is 1
+          thread.title = app.util.decode_char_reference(sp[5])
+
         thread.res.push
-          name: "あぼーん"
-          mail: "あぼーん"
-          message: "あぼーん"
-          other: "あぼーん"
+          name: sp[1]
+          mail: sp[2]
+          message: sp[4]
+          other: sp[3] + if sp[6] then " ID:#{sp[6]}" else ""
 
-      if resCount is 1
-        thread.title = app.util.decode_char_reference(sp[5])
+      else
+        continue if line is ""
+        numberOfBroken++
+        thread.res.push
+          name: "</b>データ破損<b>"
+          mail: ""
+          message: "データが破損しています"
+          other: ""
 
-      thread.res.push
-        name: sp[1]
-        mail: sp[2]
-        message: sp[4]
-        other: sp[3] + if sp[6] then " ID:#{sp[6]}" else ""
-
-    if thread.res.length > 0 then thread else null
+    if thread.res.length > 0 and thread.res.length > numberOfBroken
+      thread
+    else
+      null

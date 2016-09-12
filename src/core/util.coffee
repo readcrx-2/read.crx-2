@@ -263,8 +263,8 @@ app.util.concurrent = (array, func) ->
   deferArray = []
   for a in array
     deferArray.push(func(a))
-  $.when.apply(null, deferArray).always(->
-    d.resolve(Array.from(arguments))
+  $.when(deferArray...).done( (res...) ->
+    d.resolve(res)
     return
   )
   return d.promise()

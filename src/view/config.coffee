@@ -259,7 +259,7 @@ app.boot "/view/config.html", ["cache", "bbsmenu"], (Cache, BBSMenu) ->
           $status
             .addClass("done")
             .text("#{count}件 インポート完了")
-          $clear_button.show()
+          $clear_button.removeClass("hidden")
           return
         .fail ->
           $status

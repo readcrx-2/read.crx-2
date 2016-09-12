@@ -6,7 +6,7 @@
     %title 設定
     %link(rel="stylesheet" href="/ui.css?v=#{MANIFEST["version"]}")
     %link(rel="stylesheet" href="config.css?v=#{MANIFEST["version"]}")
-    %script(src="/lib/jquery/jquery.min.js?v=#{MANIFEST["version"]}")
+    %script(src="/lib/jquery/jquery.slim.min.js?v=#{MANIFEST["version"]}")
     %script(src="/ui.js?v=#{MANIFEST["version"]}")
     %script(src="/app.js?v=#{MANIFEST["version"]}")
     %script(src="module.js?v=#{MANIFEST["version"]}")
@@ -105,7 +105,10 @@
             %input.direct(name="auto_load_move" type="radio" value="newest") 最終レス
 
       %section
-        %h2 サムネイル表示
+        %h2
+          サムネイル表示(
+          %a(href="https://github.com/readcrx-2/read.crx-2/wiki/ImageViewURLReplace.dat%E3%81%AE%E4%BB%95%E6%A7%98" target="_blank") 詳細
+          )
         %div
           %label
             %textarea.direct(name="image_replace_dat" rows="6" cols="80")

@@ -350,5 +350,5 @@ end
 
 task :jquery do
   mkdir_p "debug/lib/jquery"
-  cp "node_modules/jquery/dist/jquery.min.js", "debug/lib/jquery/jquery.min.js"
+  cp "node_modules/jquery/dist/jquery.slim.min.js", "debug/lib/jquery/jquery.slim.min.js"
 end

@@ -98,8 +98,8 @@ class app.ImageReplaceDat
     if string isnt ""
       datStrSplit = string.split("\n")
       for d in datStrSplit
-        if ["//",";", "'"].some((ele) -> return d.startsWith(ele))
-          continue
+        continue if d is ""
+        continue if ["//",";", "'"].some((ele) -> return d.startsWith(ele))
         r = d.split("\t")
         if r[0]?
           obj =
@@ -145,7 +145,7 @@ class app.ImageReplaceDat
       continue if d.baseUrl is "invalid://invalid"
       continue if !d.baseUrlReg.test(string)
       if d.replaceUrl is ""
-        d.reject()
+        def.resolve(a, string, "No parsing")
         break
 
       doing = true
@@ -164,7 +164,7 @@ class app.ImageReplaceDat
           def.resolve(a, res)
           return
         ).fail(->
-          def.reject(a, "Fail getExtract")
+          def.resolve(a, string, "Fail getExtract")
           return
         )
       else
@@ -175,10 +175,11 @@ class app.ImageReplaceDat
             def.resolve(a, res)
             return
           ).fail(->
-            def.reject(a, "Fail getCookie")
+            def.resolve(a, string, "Fail getCookie")
             return
           )
         else
           def.resolve(a, res)
-    def.reject(a, "Fail noBaseUrlReg") unless doing
+      break
+    def.resolve(a, string, "Fail noBaseUrlReg") unless doing
     return def.promise()

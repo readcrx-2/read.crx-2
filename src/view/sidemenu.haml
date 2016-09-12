@@ -6,7 +6,7 @@
     %title sidemenu
     %link(rel="stylesheet" href="/ui.css?v=#{MANIFEST["version"]}")
     %link(rel="stylesheet" href="sidemenu.css?v=#{MANIFEST["version"]}")
-    %script(src="/lib/jquery/jquery.min.js?v=#{MANIFEST["version"]}")
+    %script(src="/lib/jquery/jquery.slim.min.js?v=#{MANIFEST["version"]}")
     %script(src="/ui.js?v=#{MANIFEST["version"]}")
     %script(src="/app.js?v=#{MANIFEST["version"]}")
     %script(src="module.js?v=#{MANIFEST["version"]}")
@@ -16,7 +16,7 @@
       %input(type="text" name="q" placeholder="スレッド検索")
       %input(type="submit" value="")
     %h3 read.crx
-    %ul
+    %ul.slide.hidden
       %li
         %a(class="open_in_rcrx" data-href="bookmark" title="ブックマーク") ブックマーク
       %li

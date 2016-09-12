@@ -569,11 +569,11 @@ class UI.ThreadContent
           null
 
         app.util.concurrent(@container.querySelectorAll(".message > a:not(.thumbnail):not(.has_thumbnail)"), (a) ->
-          return app.ImageReplaceDat.do(a, a.href).done( (a, res) ->
-            addThumbnail(a, res.text, res.referrer, res.cookie)
+          return app.ImageReplaceDat.do(a, a.href).done( (a, res, err) ->
+            addThumbnail(a, res.text, res.referrer, res.cookie) unless err?
             return
           )
-        ).done(->
+        ).done( ->
           d.resolve()
           return
         )

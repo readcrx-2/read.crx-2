@@ -145,7 +145,7 @@ class app.ImageReplaceDat
       continue if d.baseUrl is "invalid://invalid"
       continue if !d.baseUrlReg.test(string)
       if d.replaceUrl is ""
-        def.reject(a, "No parsing")
+        def.resolve(a, string, "No parsing")
         break
 
       doing = true
@@ -164,7 +164,7 @@ class app.ImageReplaceDat
           def.resolve(a, res)
           return
         ).fail(->
-          def.reject(a, "Fail getExtract")
+          def.resolve(a, string, "Fail getExtract")
           return
         )
       else
@@ -175,10 +175,11 @@ class app.ImageReplaceDat
             def.resolve(a, res)
             return
           ).fail(->
-            def.reject(a, "Fail getCookie")
+            def.resolve(a, string, "Fail getCookie")
             return
           )
         else
           def.resolve(a, res)
-    def.reject(a, "Fail noBaseUrlReg") unless doing
+      break
+    def.resolve(a, string, "Fail noBaseUrlReg") unless doing
     return def.promise()

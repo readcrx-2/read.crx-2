@@ -98,8 +98,8 @@ class app.ImageReplaceDat
     if string isnt ""
       datStrSplit = string.split("\n")
       for d in datStrSplit
-        if ["//",";", "'"].some((ele) -> return d.startsWith(ele))
-          continue
+        continue if d is ""
+        continue if ["//",";", "'"].some((ele) -> return d.startsWith(ele))
         r = d.split("\t")
         if r[0]?
           obj =

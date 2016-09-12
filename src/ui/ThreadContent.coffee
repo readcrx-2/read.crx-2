@@ -79,7 +79,20 @@ class UI.ThreadContent
 
     if target
       if animate
-        @_$container.animate(scrollTop: target.offsetTop + offset)
+        do =>
+          to = target.offsetTop + offset
+          now = @container.scrollTop
+          change = (to - now)/15
+          min = Math.min(to-change, to+change)
+          max = Math.max(to-change, to+change)
+          animateInterval = setInterval( =>
+            if min <= @container.scrollTop <= max
+              @container.scrollTop = to
+              clearInterval(animateInterval)
+            else
+              @container.scrollTop += change
+            return
+          , 20)
       else
         @container.scrollTop = target.offsetTop + offset
     return

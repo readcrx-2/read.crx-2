@@ -91,7 +91,6 @@ namespace UI {
       $(header)
         .removeClass("accordion_open")
         .next()
-          .finish()
           .removeAttr("style");
         setTimeout( () => {
           $(header).next()

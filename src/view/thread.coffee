@@ -247,7 +247,7 @@ app.boot "/view/thread.html", ["board_title_solver"], (BoardTitleSolver) ->
         $menu.find(".jump_to_this").remove()
 
       app.defer ->
-        $menu.show()
+        $menu.removeClass("hidden")
         $.contextmenu($menu, e.clientX, e.clientY)
         return
       return
@@ -281,7 +281,7 @@ app.boot "/view/thread.html", ["board_title_solver"], (BoardTitleSolver) ->
 
         app.defer ->
           unless getSelection().toString().length is 0
-            $menu.show()
+            $menu.removeClass("hidden")
             $.contextmenu($menu, e.clientX, e.clientY)
         return
       return
@@ -618,7 +618,7 @@ app.boot "/view/thread.html", ["board_title_solver"], (BoardTitleSolver) ->
               .end()
               .find(".hit_count")
                 .text(hit_count + "hit")
-                .show()
+                .removeClass("hidden")
 
             if scrollTop is $content.scrollTop()
               $content.triggerHandler("scroll")

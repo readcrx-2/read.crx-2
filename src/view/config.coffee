@@ -442,10 +442,10 @@ app.boot "/view/config.html", ["cache", "bbsmenu"], (Cache, BBSMenu) ->
     reader = new FileReader()
     reader.readAsText(file[0])
     reader.onload = ->
-        configFile = reader.result
-        $cfg_status
-          .addClass("select")
-          .text("ファイル選択完了")
+      configFile = reader.result
+      $cfg_status
+        .addClass("select")
+        .text("ファイル選択完了")
       return
     return
   )
@@ -527,10 +527,10 @@ app.boot "/view/config.html", ["cache", "bbsmenu"], (Cache, BBSMenu) ->
     reader = new FileReader()
     reader.readAsText(file[0])
     reader.onload = ->
-        datFile = reader.result
-        $dat_status
-          .addClass("select")
-          .text("ファイル選択完了")
+      datFile = reader.result
+      $dat_status
+        .addClass("select")
+        .text("ファイル選択完了")
       return
     return
   )

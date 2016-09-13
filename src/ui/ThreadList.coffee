@@ -259,11 +259,11 @@ class UI.ThreadList
                 $menu.find(".del_bookmark").remove()
 
               if (
-                 not that._flg.unread or
-                 not /^\d+$/.test(@querySelector(selector.unread).textContent) or
-                 app.bookmark.get(url)?
-               )
-                 $menu.find(".del_read_state").remove()
+                not that._flg.unread or
+                not /^\d+$/.test(@querySelector(selector.unread).textContent) or
+                app.bookmark.get(url)?
+              )
+                $menu.find(".del_read_state").remove()
 
               $menu.one("click", "li", onClick)
 

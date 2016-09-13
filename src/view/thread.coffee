@@ -373,19 +373,19 @@ app.boot "/view/thread.html", ["board_title_solver"], (BoardTitleSolver) ->
 
         if @classList.contains("disabled")
           $("<div>", {
-              text: @getAttribute("data-disabled_reason")
-              class: "popup_disabled"
-            })
-            .appendTo($popup)
+            text: @getAttribute("data-disabled_reason")
+            class: "popup_disabled"
+          })
+          .appendTo($popup)
         else
           anchorData = app.util.Anchor.parseAnchor(anchor)
 
           if anchorData.targetCount >= 25
             $("<div>", {
-                text: "指定されたレスの量が極端に多いため、ポップアップを表示しません"
-                class: "popup_disabled"
-              })
-              .appendTo($popup)
+              text: "指定されたレスの量が極端に多いため、ポップアップを表示しません"
+              class: "popup_disabled"
+            })
+            .appendTo($popup)
           else if 0 < anchorData.targetCount
             tmp = $content[0].children
             for segment in anchorData.segments
@@ -400,10 +400,10 @@ app.boot "/view/thread.html", ["board_title_solver"], (BoardTitleSolver) ->
 
         if $popup.children().length is 0
           $("<div>", {
-              text: "対象のレスが見つかりません"
-              class: "popup_disabled"
-            })
-            .appendTo($popup)
+            text: "対象のレスが見つかりません"
+            class: "popup_disabled"
+          })
+          .appendTo($popup)
 
         $popup
       return
@@ -501,10 +501,10 @@ app.boot "/view/thread.html", ["board_title_solver"], (BoardTitleSolver) ->
 
         if $article.parent().is(".popup_id") and ($article.attr("data-id") is id or $article.attr("data-slip") is slip or $article.attr("data-trip") is trip)
           $("<div>", {
-              text: "現在ポップアップしているIP/ID/SLIP/トリップです"
-              class: "popup_disabled"
-            })
-            .appendTo($popup)
+            text: "現在ポップアップしているIP/ID/SLIP/トリップです"
+            class: "popup_disabled"
+          })
+          .appendTo($popup)
         else if threadContent.idIndex[id]
           for resNum in threadContent.idIndex[id]
             $popup.append($content[0].childNodes[resNum - 1].cloneNode(true))
@@ -516,10 +516,10 @@ app.boot "/view/thread.html", ["board_title_solver"], (BoardTitleSolver) ->
             $popup.append($content[0].childNodes[resNum - 1].cloneNode(true))
         else
           $("<div>", {
-              text: "対象のレスが見つかりません"
-              class: "popup_disabled"
-            })
-            .appendTo($popup)
+            text: "対象のレスが見つかりません"
+            class: "popup_disabled"
+          })
+          .appendTo($popup)
         $popup
       return
 

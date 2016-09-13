@@ -60,6 +60,8 @@ class UI.ThreadContent
     @oneId = null
     return
 
+  _scrolling = false
+  _scrollInterval = null
   ###*
   @method scrollTo
   @param {Number} resNum
@@ -78,6 +80,9 @@ class UI.ThreadContent
       target = $(target).prevAll(":not(.ng)")[0]
 
     if target
+      if _scrolling
+        clearInterval(_scrollInterval)
+        _scrolling = false
       if animate
         do =>
           to = target.offsetTop + offset
@@ -85,10 +90,12 @@ class UI.ThreadContent
           change = (to - now)/15
           min = Math.min(to-change, to+change)
           max = Math.max(to-change, to+change)
-          animateInterval = setInterval( =>
+          _scrolling = true
+          _scrollInterval = setInterval( =>
+            console.log min, @container.scrollTop, max
             if min <= @container.scrollTop <= max
               @container.scrollTop = to
-              clearInterval(animateInterval)
+              clearInterval(_scrollInterval)
             else
               @container.scrollTop += change
             return

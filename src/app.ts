@@ -257,6 +257,8 @@ namespace app {
       auto_load_second: "0",
       auto_load_all: "off",
       auto_load_move: "off",
+      image_blur: "off",
+      image_blur_length: "4",
       aa_font: "aa",
       popup_trigger: "click",
       ngwords: "",

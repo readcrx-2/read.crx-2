@@ -556,6 +556,7 @@ class UI.ThreadContent
       do =>
         addThumbnail = (sourceA, thumbnailPath, referrer, cookieStr) ->
           sourceA.classList.add("has_thumbnail")
+          sourceA.closest("article").classList.add("has_image")
 
           thumbnail = document.createElement("div")
           thumbnail.className = "thumbnail"
@@ -592,16 +593,67 @@ class UI.ThreadContent
               break
           null
 
-        app.util.concurrent(@container.querySelectorAll(".message > a:not(.thumbnail):not(.has_thumbnail)"), (a) ->
-          return app.ImageReplaceDat.do(a, a.href).done( (a, res, err) ->
-            addThumbnail(a, res.text, res.referrer, res.cookie) unless err?
-            return
+        #非同期処理の終了確認用Deferredオブジェクト配列
+        asyncProcessDfds = []
+
+        #設定による規定値
+        configImageBlur = app.config.get("image_blur") is "on"
+
+        #リンクのごとの処理
+        for a in @container.querySelectorAll(".message > a:not(.thumbnail):not(.has_thumbnail)")
+          #サムネイル
+          asyncProcessDfds.push(
+            app.ImageReplaceDat.do(a, a.href).done( (a, res, err) ->
+              addThumbnail(a, res.text, res.referrer, res.cookie) unless err?
+              return
+            )
           )
-        ).done( ->
-          d.resolve()
-          return
-        )
+
+        #グロ画像に対するぼかし処理
+        if configImageBlur
+          $content = @container.children
+          for anc in @container.querySelectorAll(".anchor:not(.has_blur_word)")
+            continue unless /.*[^ァ-ヺ^ー]グロ[^ァ-ヺ^ー].*|.*死ね.*/.test(anc.parentNode.textContent)
+            anc.classList.add("has_blur_word")
+            anchorData = app.util.Anchor.parseAnchor(anc.innerHTML)
+            continue if anchorData.targetCount is 0
+
+            for segment in anchorData.segments
+              now = segment[0] - 1
+              end = segment[1] - 1
+              while now <= end
+                if $content[now]
+                  for thumb in $content[now].querySelectorAll(".thumbnail:not(.image_blur)")
+                    @setImageBlur(thumb, true)
+                else
+                  break
+                now++
+
+        #メソッド内で起動した非同期処理の終了を待機する
+        if asyncProcessDfds.length > 0
+          $.when.apply($, asyncProcessDfds).always( ->
+            return d.resolve()
+          )
+        else
+          return d.resolve()
+
         return
       return
     )
     return d.promise()
+
+  ###*
+  @method setImageBlur
+  @param {Element} thumbnail
+  @parm {Boolean} blurMode
+  ###
+  setImageBlur: (thumbnail, blurMode) ->
+    img = thumbnail.querySelector("a > img.image")
+    if blurMode
+      v = app.config.get("image_blur_length")
+      thumbnail.classList.add("image_blur")
+      img.style.WebkitFilter = "blur(#{v}px)"
+    else
+      thumbnail.classList.remove("image_blur")
+      img.style.WebkitFilter = "none"
+    return

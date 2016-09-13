@@ -86,18 +86,22 @@ class UI.ThreadContent
       if animate
         do =>
           to = target.offsetTop + offset
-          now = @container.scrollTop
-          change = (to - now)/15
+          change = (to - @container.scrollTop)/15
           min = Math.min(to-change, to+change)
           max = Math.max(to-change, to+change)
           _scrolling = true
           _scrollInterval = setInterval( =>
-            console.log min, @container.scrollTop, max
+            before = @container.scrollTop
             if min <= @container.scrollTop <= max
               @container.scrollTop = to
               clearInterval(_scrollInterval)
+              _scrolling = false
             else
               @container.scrollTop += change
+            console.log @container.scrollTop, before
+            if @container.scrollTop is before
+              clearInterval(_scrollInterval)
+              _scrolling = false
             return
           , 20)
       else

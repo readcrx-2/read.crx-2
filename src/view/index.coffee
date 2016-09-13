@@ -573,11 +573,11 @@ app.main = ->
 
           if app.url.guess_type(tmpURL).type is "thread"
             app.message.send "open", {
-                new_tab: true
-                lazy: true
-                url: tmpURL
-                title: tmp.title
-              }
+              new_tab: true
+              lazy: true
+              url: tmpURL
+              title: tmp.title
+            }
             tabA.remove(tmp.tabId)
       #3->2
       if message.val is "pane-2"
@@ -586,11 +586,11 @@ app.main = ->
           tmpURL = iframe.getAttribute("data-url")
 
           app.message.send "open", {
-              new_tab: true
-              lazy: true
-              url: tmpURL
-              title: tmp.title
-            }
+            new_tab: true
+            lazy: true
+            url: tmpURL
+            title: tmp.title
+          }
           tabB.remove(tmp.tabId)
     return
 

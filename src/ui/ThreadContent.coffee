@@ -58,10 +58,11 @@ class UI.ThreadContent
     @type null | String
     ###
     @oneId = null
+
+    _scrolling = false
+    _scrollInterval = null
     return
 
-  _scrolling = false
-  _scrollInterval = null
   ###*
   @method scrollTo
   @param {Number} resNum

@@ -74,7 +74,6 @@ do ($ = jQuery) ->
         top: mouse_y
         bottom: document.body.offsetHeight - mouse_y
 
-      css = {}
       #通常はカーソル左か右のスペースを用いるが、そのどちらもが狭い場合は上下に配置する
       if Math.max(space.left, space.right) > 400
         #例え右より左が広くても、右に十分なスペースが有れば右に配置
@@ -88,14 +87,14 @@ do ($ = jQuery) ->
             "max-width": document.body.offsetWidth - space.right - margin * 2
         css.top = "#{Math.min(space.top, document.body.offsetHeight - $popup.outerHeight()) - margin}px"
       else
+        css =
+          left: margin
+          "max-width": document.body.offsetWidth - margin * 2
         #例え上より下が広くても、上に十分なスペースが有れば上に配置
         if space.top > Math.min(350, space.bottom)
           css.bottom = space.bottom + margin
         else
           css.top = document.body.offsetHeight - space.bottom + margin
-        css =
-          left: margin
-          "max-width": document.body.offsetWidth - margin * 2
       $popup.css(css)
       return
 

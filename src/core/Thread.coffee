@@ -295,7 +295,7 @@ class app.Thread
   @return {null|Object}
   ###
   @_getXhrInfo = (url) ->
-    tmp = ///^http://(\w+\.(\w+\.\w+))/(?:test|bbs)/read\.cgi/
+    tmp = ///^http://((?:\w+\.)?(\w+\.\w+))/(?:test|bbs)/read\.cgi/
       (\w+)/(\d+)/(?:(\d+)/)?$///.exec(url)
     unless tmp then return null
     switch tmp[2]

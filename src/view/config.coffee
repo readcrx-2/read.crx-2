@@ -543,7 +543,9 @@ app.boot "/view/config.html", ["cache", "bbsmenu"], (Cache, BBSMenu) ->
         .addClass("loading")
         .text("更新中")
       $.Deferred (d) ->
-        $view.find("textarea[name=\"image_replace_dat\"]")[0].value = datFile
+        datDom = $view.find("textarea[name=\"image_replace_dat\"]")
+        datDom[0].value = datFile
+        datDom.trigger("input")
         d.resolve()
       .done ->
         $dat_status

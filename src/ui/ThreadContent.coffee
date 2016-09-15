@@ -543,7 +543,6 @@ class UI.ThreadContent
 
       #harmImg更新
       do =>
-        console.log @harmImgIndex
         for res in @harmImgIndex
           ele = @container.children[res - 1]
           ele.addClass("has_blur_word")
@@ -693,8 +692,9 @@ class UI.ThreadContent
     name = $res.find(".name").text()
     mail = $res.find(".mail").text()
     message = $res.find(".message").text()
-    date = @stringToDate($res.find(".other").text()).valueOf()
-    app.WriteHistory.add(@url, resnum, document.title, name, mail, name, mail, message, date)
+    date = @stringToDate($res.find(".other").text())
+    if date?
+      app.WriteHistory.add(@url, resnum, document.title, name, mail, name, mail, message, date.valueOf())
     return
 
   ###*
@@ -712,5 +712,10 @@ class UI.ThreadContent
   @return {Date}
   ###
   stringToDate: (string) ->
-    date1 = string.match(/(\d+)\/(\d+)\/(\d+)\(.\) (\d+):(\d+):(\d+).*/)
-    return new Date(date1[1], date1[2]-1, date1[3], date1[4], date1[5], date1[6])
+    date1 = string.match(/(\d+)\/(\d+)\/(\d+)\(.\) (\d+):(\d+):(\d+)(?:\.(\d+))?.*/)
+    if date1.length >= 6
+      return new Date(date1[1], date1[2]-1, date1[3], date1[4], date1[5], date1[6])
+    else if date1.length >= 5
+      return new Date(date1[1], date1[2]-1, date1[3], date1[4], date1[5])
+    else
+      return null

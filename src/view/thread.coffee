@@ -113,10 +113,11 @@ app.boot "/view/thread.html", ["board_title_solver"], (BoardTitleSolver) ->
           i = thread.res.length - 1
           while i >= 0
             if ex.mes.replace(/\s/g, "") is app.util.decode_char_reference(app.util.stripTags(thread.res[i].message)).replace(/\s/g, "")
-              date = threadContent.stringToDate(thread.res[i].other).valueOf()
+              date = threadContent.stringToDate(thread.res[i].other)
               name = app.util.decode_char_reference(thread.res[i].name)
               mail = app.util.decode_char_reference(thread.res[i].mail)
-              app.WriteHistory.add(view_url, i+1, document.title, name, mail, ex.name, ex.mail, ex.mes, date)
+              if date?
+                app.WriteHistory.add(view_url, i+1, document.title, name, mail, ex.name, ex.mail, ex.mes, date.valueOf())
               break
             i--
         return

@@ -34,16 +34,8 @@ class app.view.View
   constructor: (@element) ->
     @$element = $(@element)
 
-    @_disableAutoScroll()
     @_setupTheme()
     @_setupOpenInRcrx()
-    return
-
-  _disableAutoScroll: ->
-    @$element.on "mousedown", (e) ->
-      if e.button is 1
-        e.preventDefault()
-      return
     return
 
   ###*
@@ -100,13 +92,7 @@ class app.view.View
 
           app.message.send("open", {url, new_tab: newTab, background, title})
         return
-
-      .on "click", ".open_in_rcrx", (e) ->
-        e.preventDefault()
-        return
-
-    # Windowsのオートスクロール対策
-    @$element[0].addEventListener "click", (e) ->
+    @element.addEventListener "click", (e) ->
       if e.target? and e.target.classList.contains("open_in_rcrx")
         e.preventDefault()
       return

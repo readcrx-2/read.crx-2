@@ -6,7 +6,7 @@
     %title 設定
     %link(rel="stylesheet" href="/ui.css?v=#{MANIFEST["version"]}")
     %link(rel="stylesheet" href="config.css?v=#{MANIFEST["version"]}")
-    %script(src="/lib/jquery/jquery.slim.min.js?v=#{MANIFEST["version"]}")
+    %script(src="/lib/jshortquery.min.js?v=#{MANIFEST["version"]}")
     %script(src="/ui.js?v=#{MANIFEST["version"]}")
     %script(src="/app.js?v=#{MANIFEST["version"]}")
     %script(src="module.js?v=#{MANIFEST["version"]}")
@@ -119,6 +119,16 @@
           %input(type="file" class="dat_file_hide hidden" accept=".dat")
           %button.dat_import_button(type="button") インポート
           %span.dat_import_status
+          %br
+          %label
+            %input.direct(type="checkbox" name="image_blur")
+            「グロ」「死ね」を含むレスがある場合、画像にぼかしをかける
+          %br
+          ぼかし具合:
+          %label
+            %input.direct(type="range" name="image_blur_length" min="1" max="9")
+            %span.image_blur_length_text
+            px
 
       %section
         %h2 アスキーアート表示

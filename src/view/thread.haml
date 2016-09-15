@@ -6,7 +6,7 @@
     %title
     %link(rel="stylesheet" href="/ui.css?v=#{MANIFEST["version"]}")
     %link(rel="stylesheet" href="thread.css?v=#{MANIFEST["version"]}")
-    %script(src="/lib/jquery/jquery.slim.min.js?v=#{MANIFEST["version"]}")
+    %script(src="/lib/jshortquery.min.js?v=#{MANIFEST["version"]}")
     %script(src="/ui.js?v=#{MANIFEST["version"]}")
     %script(src="/app.js?v=#{MANIFEST["version"]}")
     %script(src="module.js?v=#{MANIFEST["version"]}")
@@ -72,4 +72,6 @@
         %li.add_writehistory 書込履歴に追加
         %li.del_writehistory 書込履歴から削除
         %li.toggle_aa_mode
+        %li.set_image_blur 画像にぼかしをかける
+        %li.reset_image_blur 画像のぼかしを解除する
         %li.res_permalink Chromeで開く

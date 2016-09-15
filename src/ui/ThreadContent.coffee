@@ -42,26 +42,42 @@ class UI.ThreadContent
     @repIndex = {}
 
     ###*
-    @property writtenRes
+    @property harmImgIndex
     @type Array
     ###
-    @getWrittenRes = =>
-      d = $.Deferred()
-      app.WriteHistory.getByUrl(@url).done( (data) ->
-        d.resolve(data)
-        return
-      )
-      return d.promise()
+    @harmImgIndex = []
 
     ###*
     @property oneId
     @type null | String
     ###
     @oneId = null
+
+    ###*
+    @property _scrolling
+    @type boolean
+    ###
+    @_scrolling = false
+
+    ###*
+    @property _scrollInterval
+    @type null | Object
+    ###
+    @_scrollInterval = null
     return
 
-  _scrolling = false
-  _scrollInterval = null
+  ###*
+  @method getWrittenRes
+  @return {Array}
+  ###
+  getWrittenRes: ->
+    d = $.Deferred()
+    app.WriteHistory.getByUrl(@url).done( (data) ->
+      d.resolve(data)
+      return
+    )
+    return d.promise()
+
   ###*
   @method scrollTo
   @param {Number} resNum
@@ -69,7 +85,7 @@ class UI.ThreadContent
   @param {Number} [offset=0]
   ###
   scrollTo: (resNum, animate = false, offset = 0) ->
-    target = @container.childNodes[resNum - 1]
+    target = @container.children[resNum - 1]
 
     # 検索中で、ターゲットが非ヒット項目で非表示の場合、スクロールを中断
     if target and @container.classList.contains("searching") and not target.classList.contains("search_hit")
@@ -80,28 +96,27 @@ class UI.ThreadContent
       target = $(target).prevAll(":not(.ng)")[0]
 
     if target
-      if _scrolling
+      if @_scrolling
         clearInterval(_scrollInterval)
-        _scrolling = false
+        @_scrolling = false
       if animate
         do =>
           to = target.offsetTop + offset
           change = (to - @container.scrollTop)/15
           min = Math.min(to-change, to+change)
           max = Math.max(to-change, to+change)
-          _scrolling = true
-          _scrollInterval = setInterval( =>
+          @_scrolling = true
+          @_scrollInterval = setInterval( =>
             before = @container.scrollTop
             if min <= @container.scrollTop <= max
               @container.scrollTop = to
-              clearInterval(_scrollInterval)
-              _scrolling = false
+              clearInterval(@_scrollInterval)
+              @_scrolling = false
             else
               @container.scrollTop += change
-            console.log @container.scrollTop, before
             if @container.scrollTop is before
-              clearInterval(_scrollInterval)
-              _scrolling = false
+              clearInterval(@_scrollInterval)
+              @_scrolling = false
             return
           , 20)
       else
@@ -385,6 +400,7 @@ class UI.ThreadContent
 
         #文字色
         color = res.message.match(/<font color="(.*?)">/i)
+
         tmp = (
           res.message
             #imgタグ変換
@@ -423,6 +439,9 @@ class UI.ThreadContent
               else
                 disabled = false
 
+              #グロ/死ねの返信レス
+              isThatHarmImg = /.*[^ァ-ヺ^ー]グロ([^ァ-ヺ^ー].*|$)|.*死ね.*/.test(res.message)
+
               #rep_index更新
               if not disabled
                 for segment in anchor.segments
@@ -430,6 +449,7 @@ class UI.ThreadContent
                   while target <= segment[1]
                     @repIndex[target] = [] unless @repIndex[target]?
                     @repIndex[target].push(resNum) unless resNum in @repIndex[target]
+                    @harmImgIndex.push(target) if isThatHarmImg
                     target++
 
               "<a href=\"javascript:undefined;\" class=\"anchor" +
@@ -484,7 +504,7 @@ class UI.ThreadContent
         for id, index of @idIndex
           idCount = index.length
           for resNum in index
-            elm = @container.childNodes[resNum - 1].getElementsByClassName("id")[0]
+            elm = @container.children[resNum - 1].getElementsByClassName("id")[0]
             elm.firstChild.nodeValue = elm.firstChild.nodeValue.replace(/(?:\(\d+\))?$/, "(#{idCount})")
             if idCount >= 5
               elm.classList.remove("link")
@@ -498,7 +518,7 @@ class UI.ThreadContent
         for slip, index of @slipIndex
           slipCount = index.length
           for resNum in index
-            elm = @container.childNodes[resNum - 1].getElementsByClassName("slip")[0]
+            elm = @container.children[resNum - 1].getElementsByClassName("slip")[0]
             elm.firstChild.nodeValue = elm.firstChild.nodeValue.replace(/(?:\(\d+\))?$/, "(#{slipCount})")
             if slipCount >= 5
               elm.classList.remove("link")
@@ -512,7 +532,7 @@ class UI.ThreadContent
         for trip, index of @tripIndex
           tripCount = index.length
           for resNum in index
-            elm = @container.childNodes[resNum - 1].getElementsByClassName("trip")[0]
+            elm = @container.children[resNum - 1].getElementsByClassName("trip")[0]
             elm.firstChild.nodeValue = elm.firstChild.nodeValue.replace(/(?:\(\d+\))?$/, "(#{tripCount})")
             if tripCount >= 5
               elm.classList.remove("link")
@@ -521,10 +541,21 @@ class UI.ThreadContent
               elm.classList.add("link")
         return
 
+      #harmImg更新
+      do =>
+        console.log @harmImgIndex
+        for res in @harmImgIndex
+          ele = @container.children[res - 1]
+          ele.addClass("has_blur_word")
+          if ele.hasClass("has_image")
+            for thumb in ele.querySelectorAll(".thumbnail:not(.image_blur)")
+              @setImageBlur(thumb, true)
+        return
+
       #参照関係再構築
       do =>
         for resKey, index of @repIndex
-          res = @container.childNodes[resKey - 1]
+          res = @container.children[resKey - 1]
           if res
             resCount = index.length
             if elm = res.getElementsByClassName("rep")[0]
@@ -543,12 +574,12 @@ class UI.ThreadContent
             #連鎖NG
             if app.config.get("chain_ng") is "on" and res.classList.contains("ng")
               for r in index
-                thatClass = @container.childNodes[r - 1].classList
+                thatClass = @container.children[r - 1].classList
                 thatClass.add("ng") unless thatClass.contains("ng")
             #自分に対してのレス
             if res.classList.contains("written")
               for r in index
-                thatClass = @container.childNodes[r - 1].classList
+                thatClass = @container.children[r - 1].classList
                 thatClass.add("to_written") unless thatClass.contains("to_written")
         return
 
@@ -556,6 +587,8 @@ class UI.ThreadContent
       do =>
         addThumbnail = (sourceA, thumbnailPath, referrer, cookieStr) ->
           sourceA.classList.add("has_thumbnail")
+          article = sourceA.closest("article")
+          article.classList.add("has_image")
 
           thumbnail = document.createElement("div")
           thumbnail.className = "thumbnail"
@@ -569,6 +602,11 @@ class UI.ThreadContent
           thumbnailImg.className = "image"
           thumbnailImg.src = "/img/dummy_1x1.webp"
           thumbnailImg.setAttribute("data-src", thumbnailPath)
+          #グロ画像に対するぼかし処理
+          if article.hasClass("has_blur_word") and app.config.get("image_blur") is "on"
+            thumbnail.className += " image_blur"
+            v = app.config.get("image_blur_length")
+            thumbnailImg.style.WebkitFilter = "blur(#{v}px)"
           if referrer? then thumbnailImg.setAttribute("data-referrer", referrer)
           if cookieStr? then thumbnailImg.setAttribute("data-cookie", cookieStr)
           thumbnailLink.appendChild(thumbnailImg)
@@ -597,7 +635,7 @@ class UI.ThreadContent
             addThumbnail(a, res.text, res.referrer, res.cookie) unless err?
             return
           )
-        ).done( ->
+        ).always(->
           d.resolve()
           return
         )
@@ -605,3 +643,74 @@ class UI.ThreadContent
       return
     )
     return d.promise()
+
+  ###*
+  @method setImageBlur
+  @param {Element} thumbnail
+  @parm {Boolean} blurMode
+  ###
+  setImageBlur: (thumbnail, blurMode) ->
+    img = thumbnail.querySelector("a > img.image")
+    if blurMode
+      v = app.config.get("image_blur_length")
+      thumbnail.classList.add("image_blur")
+      img.style.WebkitFilter = "blur(#{v}px)"
+    else
+      thumbnail.classList.remove("image_blur")
+      img.style.WebkitFilter = "none"
+    return
+
+  ###*
+  @method addClassWithOrg
+  @param {Element} $res
+  @parm {String} className
+  ###
+  addClassWithOrg: ($res, className) ->
+    $res.addClass(className)
+    resnum = parseInt($res.find(".num").text())
+    orgRes = @container.children[resnum-1]
+    orgRes.classList.add("written") unless orgRes.classList.contains("written")
+    return
+
+  ###*
+  @method removeClassWithOrg
+  @param {Element} $res
+  @parm {String} className
+  ###
+  removeClassWithOrg: ($res, className) ->
+    $res.removeClass("written")
+    resnum = parseInt($res.find(".num").text())
+    orgRes = @container.children[resnum-1]
+    orgRes.classList.remove("written") if orgRes.classList.contains("written")
+    return
+
+  ###*
+  @method addWriteHistory
+  @param {Element} $res
+  ###
+  addWriteHistory: ($res) ->
+    resnum = parseInt($res.find(".num").text())
+    name = $res.find(".name").text()
+    mail = $res.find(".mail").text()
+    message = $res.find(".message").text()
+    date = @stringToDate($res.find(".other").text()).valueOf()
+    app.WriteHistory.add(@url, resnum, document.title, name, mail, name, mail, message, date)
+    return
+
+  ###*
+  @method removeWriteHistory
+  @param {Element} $res
+  ###
+  removeWriteHistory: ($res) ->
+    resnum = parseInt($res.find(".num").text())
+    app.WriteHistory.remove(@url, resnum)
+    return
+
+  ###*
+  @method stringToDate
+  @param {String} string
+  @return {Date}
+  ###
+  stringToDate: (string) ->
+    date1 = string.match(/(\d+)\/(\d+)\/(\d+)\(.\) (\d+):(\d+):(\d+).*/)
+    return new Date(date1[1], date1[2]-1, date1[3], date1[4], date1[5], date1[6])

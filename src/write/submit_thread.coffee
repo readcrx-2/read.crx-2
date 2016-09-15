@@ -131,8 +131,6 @@ app.boot "/write/submit_thread.html", ->
         if app.url.tsld(arg.url) in ["2ch.net", "2ch.sc", "bbspink.com", "open2ch.net"]
           keys = message.key.match(/.*\/test\/read\.cgi\/(\w+?)\/(\d+)\/l\d+/)
           if !keys?
-            console.log message
-            console.log message.key
             $view.find(".notice").text("書き込み失敗 - 不明な転送場所")
           else
             server = arg.url.match(/^http:\/\/(\w+\.(?:2ch\.net|2ch\.sc|bbspink\.com|open2ch\.net)).*/)[1]

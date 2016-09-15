@@ -167,7 +167,7 @@ class app.Board
   @return {Object | null} xhr_info
   ###
   @_get_xhr_info: (board_url) ->
-    tmp = ///^http://(\w+\.(\w+\.\w+))/(\w+)/(?:(\d+)/)?$///.exec(board_url)
+    tmp = ///^http://((?:\w+\.)?(\w+\.\w+))/(\w+)/(?:(\d+)/)?$///.exec(board_url)
     unless tmp
       return null
     switch tmp[2]
@@ -189,7 +189,7 @@ class app.Board
   @return {Array | null} board
   ###
   @parse: (url, text) ->
-    tmp = /^http:\/\/(\w+\.(\w+\.\w+))\/(\w+)\/(\w+)?/.exec(url)
+    tmp = /^http:\/\/((?:\w+\.)?(\w+\.\w+))\/(\w+)\/(\w+)?/.exec(url)
     switch tmp[2]
       when "machi.to"
         bbs_type = "machi"

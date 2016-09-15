@@ -113,12 +113,10 @@ app.boot "/view/thread.html", ["board_title_solver"], (BoardTitleSolver) ->
           i = thread.res.length - 1
           while i >= 0
             if ex.mes.replace(/\s/g, "") is app.util.decode_char_reference(app.util.stripTags(thread.res[i].message)).replace(/\s/g, "")
-              date_ = /(\d{4})\/(\d\d)\/(\d\d)... (\d\d):(\d\d):(\d\d)(\.(\d+))?/.exec(thread.res[i].other)
-              if date_?
-                date = new Date(date_[1], date_[2]-1, date_[3], date_[4], date_[5], date_[6], if date_[8]? then date_[8] else null).valueOf()
-                name = app.util.decode_char_reference(thread.res[i].name)
-                mail = app.util.decode_char_reference(thread.res[i].mail)
-                app.WriteHistory.add(view_url, i+1, document.title, name, mail, ex.name, ex.mail, ex.mes, date) unless isNaN(date)
+              date = threadContent.stringToDate(thread.res[i].other).valueOf()
+              name = app.util.decode_char_reference(thread.res[i].name)
+              mail = app.util.decode_char_reference(thread.res[i].mail)
+              app.WriteHistory.add(view_url, i+1, document.title, name, mail, ex.name, ex.mail, ex.mes, date)
               break
             i--
         return
@@ -246,6 +244,19 @@ app.boot "/view/thread.html", ["board_title_solver"], (BoardTitleSolver) ->
       unless $article.is(".popup > article")
         $menu.find(".jump_to_this").remove()
 
+      # 画像にぼかしをかける/画像のぼかしを解除する
+      unless $article.hasClass("has_image")
+        $menu.find(".set_image_blur").remove()
+        $menu.find(".reset_image_blur").remove()
+      else
+        bflg = Array.from($article.find(".thumbnail")).some((ele) ->
+          return ele.classList.contains("image_blur")
+        )
+        if bflg
+          $menu.find(".set_image_blur").remove()
+        else
+          $menu.find(".reset_image_blur").remove()
+
       app.defer ->
         $menu.removeClass("hidden")
         $.contextmenu($menu, e.clientX, e.clientY)
@@ -276,6 +287,8 @@ app.boot "/view/thread.html", ["board_title_solver"], (BoardTitleSolver) ->
           ".add_writehistory,"+
           ".del_writehistory,"+
           ".toggle_aa_mode,"+
+          ".set_image_blur,"+
+          ".reset_image_blur,"+
           ".res_permalink"
         ).remove()
 
@@ -334,29 +347,28 @@ app.boot "/view/thread.html", ["board_title_solver"], (BoardTitleSolver) ->
         """)
 
       else if $this.hasClass("add_writehistory")
-        resnum = parseInt($res.find(".num").text())
-        name = $res.find(".name").text()
-        mail = $res.find(".mail").text()
-        message = $res.find(".message").text()
-        date1 = $res.find(".other").text().match(/(\d+)\/(\d+)\/(\d+)\(.\) (\d+):(\d+):(\d+).*/)
-        date2 = new Date(date1[1], date1[2]-1, date1[3], date1[4], date1[5], date1[6]).valueOf()
-        app.WriteHistory.add(view_url, resnum, document.title, name, mail, name, mail, message, date2)
-        $res.addClass("written")
-        orgRes = $content[0].childNodes[resnum-1]
-        orgRes.classList.add("written") unless orgRes.classList.contains("written")
+        threadContent.addWriteHistory($res)
+        threadContent.addClassWithOrg($res, "written")
 
       else if $this.hasClass("del_writehistory")
-        resnum = parseInt($res.find(".num").text())
-        app.WriteHistory.remove(view_url, resnum)
-        $res.removeClass("written")
-        orgRes = $content[0].childNodes[resnum-1]
-        orgRes.classList.remove("written") if orgRes.classList.contains("written")
+        threadContent.removeWriteHistory($res)
+        threadContent.removeClassWithOrg($res, "written")
 
       else if $this.hasClass("toggle_aa_mode")
         $res.toggleClass("aa")
 
       else if $this.hasClass("res_permalink")
         open(app.safe_href(view_url + $res.find(".num").text()))
+
+      # 画像をぼかす
+      else if $this.hasClass("set_image_blur")
+        for thumb in $res.find(".thumbnail")
+          threadContent.setImageBlur(thumb, true)
+
+      # 画像のぼかしを解除する
+      else if $this.hasClass("reset_image_blur")
+        for thumb in $res.find(".thumbnail")
+          threadContent.setImageBlur(thumb, false)
 
       $this.parent().remove()
       return
@@ -507,13 +519,13 @@ app.boot "/view/thread.html", ["board_title_solver"], (BoardTitleSolver) ->
           .appendTo($popup)
         else if threadContent.idIndex[id]
           for resNum in threadContent.idIndex[id]
-            $popup.append($content[0].childNodes[resNum - 1].cloneNode(true))
+            $popup.append($content[0].children[resNum - 1].cloneNode(true))
         else if threadContent.slipIndex[slip]
           for resNum in threadContent.slipIndex[slip]
-            $popup.append($content[0].childNodes[resNum - 1].cloneNode(true))
+            $popup.append($content[0].children[resNum - 1].cloneNode(true))
         else if threadContent.tripIndex[trip]
           for resNum in threadContent.tripIndex[trip]
-            $popup.append($content[0].childNodes[resNum - 1].cloneNode(true))
+            $popup.append($content[0].children[resNum - 1].cloneNode(true))
         else
           $("<div>", {
             text: "対象のレスが見つかりません"
@@ -702,7 +714,7 @@ app.boot "/view/thread.html", ["board_title_solver"], (BoardTitleSolver) ->
     search_next_thread =
       _elm: $view.find(".search_next_thread")[0]
       show: ->
-        if content.childNodes.length >= 1000 or $view.find(".message_bar").hasClass("error")
+        if content.children.length >= 1000 or $view.find(".message_bar").hasClass("error")
           @_elm.classList.remove("hidden")
         else
           @hide()
@@ -799,6 +811,7 @@ app.view_thread._draw = ($view, force_update, beforeAdd) ->
   thread = new app.Thread($view.attr("data-url"))
   threadGetDeferred = null
   promiseThreadGet = thread.get(force_update)
+  promiseThreadGet
     .progress ->
       threadGetDeferred = fn(thread, false)
       return
@@ -852,7 +865,7 @@ app.view_thread._read_state_manager = ($view) ->
 
   get_read_state.done ({read_state, read_state_updated}) ->
     scan = ->
-      received = content.childNodes.length
+      received = content.children.length
       #onbeforeunload内で呼び出された時に、この値が0になる場合が有る
       return if received is 0
 

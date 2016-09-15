@@ -119,6 +119,15 @@
           %input(type="file" class="dat_file_hide hidden" accept=".dat")
           %button.dat_import_button(type="button") インポート
           %span.dat_import_status
+          %br
+          %label
+            %input.direct(type="checkbox" name="image_blur")
+            「グロ」「死ね」を含むレスがある場合、画像にぼかしをかける
+          %label
+            ぼかし具合:
+            %input.direct(type="range" name="image_blur_length" min="1" max="9")
+            %span.image_blur_length_text
+            px
 
       %section
         %h2 アスキーアート表示

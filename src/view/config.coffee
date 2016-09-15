@@ -58,6 +58,17 @@ app.boot "/view/config.html", ["cache", "bbsmenu"], (Cache, BBSMenu) ->
         app.config.set(@name, val)
         return
 
+  $view
+    .find("input.direct[type=\"range\"]")
+      .each ->
+        @value = app.config.get(@name) or "0"
+        $view.find(".#{@name}_text").text(@value)
+        null
+      .on "input", ->
+        $view.find(".#{@name}_text").text(@value)
+        app.config.set(@name, @value)
+        return
+
   #バージョン情報表示
   $view.find(".version_text")
     .text("#{app.manifest.name} v#{app.manifest.version} + #{navigator.userAgent}")

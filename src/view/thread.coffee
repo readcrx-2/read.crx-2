@@ -246,6 +246,21 @@ app.boot "/view/thread.html", ["board_title_solver"], (BoardTitleSolver) ->
       unless $article.is(".popup > article")
         $menu.find(".jump_to_this").remove()
 
+      # 画像にぼかしをかける/画像のぼかしを解除する
+      unless $article.hasClass("has_image")
+        $menu.find(".set_image_blur").remove()
+        $menu.find(".reset_image_blur").remove()
+      else
+        bflg = false
+        for res in $article.find(".thumbnail")
+          continue unless res.classList.contains("image_blur")
+          bflg = true
+          break
+        if bflg
+          $menu.find(".set_image_blur").remove()
+        else
+          $menu.find(".reset_image_blur").remove()
+
       app.defer ->
         $menu.removeClass("hidden")
         $.contextmenu($menu, e.clientX, e.clientY)
@@ -276,6 +291,8 @@ app.boot "/view/thread.html", ["board_title_solver"], (BoardTitleSolver) ->
           ".add_writehistory,"+
           ".del_writehistory,"+
           ".toggle_aa_mode,"+
+          ".set_image_blur,"+
+          ".reset_image_blur,"+
           ".res_permalink"
         ).remove()
 
@@ -357,6 +374,16 @@ app.boot "/view/thread.html", ["board_title_solver"], (BoardTitleSolver) ->
 
       else if $this.hasClass("res_permalink")
         open(app.safe_href(view_url + $res.find(".num").text()))
+
+      # 画像をぼかす
+      else if $this.hasClass("set_image_blur")
+        dftval = app.config.get("image_blur_default")
+        for thumb in $res.find(".thumbnail")
+          $view.data("threadContent").setImageBlur(thumb, true)
+      # 画像のぼかしを解除する
+      else if $this.hasClass("reset_image_blur")
+        for thumb in $res.find(".thumbnail")
+          $view.data("threadContent").setImageBlur(thumb, false)
 
       $this.parent().remove()
       return

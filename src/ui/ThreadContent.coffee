@@ -543,7 +543,6 @@ class UI.ThreadContent
 
       #harmImg更新
       do =>
-        console.log @harmImgIndex
         for res in @harmImgIndex
           ele = @container.children[res - 1]
           ele.addClass("has_blur_word")

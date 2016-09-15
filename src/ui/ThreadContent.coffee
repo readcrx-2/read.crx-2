@@ -58,10 +58,11 @@ class UI.ThreadContent
     @type null | String
     ###
     @oneId = null
+
+    _scrolling = false
+    _scrollInterval = null
     return
 
-  _scrolling = false
-  _scrollInterval = null
   ###*
   @method scrollTo
   @param {Number} resNum
@@ -98,7 +99,6 @@ class UI.ThreadContent
               _scrolling = false
             else
               @container.scrollTop += change
-            console.log @container.scrollTop, before
             if @container.scrollTop is before
               clearInterval(_scrollInterval)
               _scrolling = false

@@ -826,6 +826,7 @@ app.view_thread._draw = ($view, force_update, beforeAdd) ->
   thread = new app.Thread($view.attr("data-url"))
   threadGetDeferred = null
   promiseThreadGet = thread.get(force_update)
+  promiseThreadGet
     .progress ->
       threadGetDeferred = fn(thread, false)
       return

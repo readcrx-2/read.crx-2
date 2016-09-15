@@ -69,7 +69,6 @@ class app.History
       db.transaction(
         (transaction) ->
           if date?
-            console.log date
             transaction.executeSql("DELETE FROM History WHERE (url = ? AND (date BETWEEN ? AND ?+60000-1))", [url, date, date])
           else
             transaction.executeSql("DELETE FROM History WHERE url = ?", [url])

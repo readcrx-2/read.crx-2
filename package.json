@@ -5,7 +5,8 @@
     "coffee-script": "1.9.3",
     "typescript": "1.5.3",
     "jquery": "3.1.0",
-    "typings": "1.0.4"
+    "typings": "1.0.4",
+    "ShortQuery.js": "S--Minecraft/ShortQuery.js#0.1.6"
   },
   "repository": {
     "type": "git",

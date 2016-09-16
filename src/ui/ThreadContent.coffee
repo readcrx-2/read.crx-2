@@ -544,10 +544,11 @@ class UI.ThreadContent
       #harmImg更新
       do =>
         for res in @harmImgIndex
-          ele = @container.children[res - 1]
-          ele.addClass("has_blur_word")
-          if ele.hasClass("has_image")
-            for thumb in ele.querySelectorAll(".thumbnail:not(.image_blur)")
+          elm = @container.children[res - 1]
+          continue unless elm
+          elm.classList.add("has_blur_word")
+          if elm.classList.contains("has_image") and app.config.get("image_blur") is "on"
+            for thumb in elm.querySelectorAll(".thumbnail:not(.image_blur)")
               @setImageBlur(thumb, true)
         return
 

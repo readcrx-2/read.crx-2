@@ -546,7 +546,7 @@ class UI.ThreadContent
         for res in @harmImgIndex
           ele = @container.children[res - 1]
           ele.addClass("has_blur_word")
-          if ele.hasClass("has_image")
+          if ele.hasClass("has_image") and app.config.get("image_blur") is "on"
             for thumb in ele.querySelectorAll(".thumbnail:not(.image_blur)")
               @setImageBlur(thumb, true)
         return

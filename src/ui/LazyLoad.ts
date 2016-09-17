@@ -22,6 +22,11 @@ namespace UI {
       this.scroll = true;
     }
 
+    public immediateLoad (img: HTMLImageElement): void {
+      if (img.getAttribute("data-src") === null) return;
+      this.load(img);
+    }
+
     private load (img: HTMLImageElement): void {
       var newImg: HTMLImageElement, attrIndex: number, attr: Attr;
 

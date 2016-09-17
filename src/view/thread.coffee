@@ -77,8 +77,7 @@ app.boot "/view/thread.html", ["board_title_solver"], (BoardTitleSolver) ->
     $popup.find("article").removeClass("last read received")
     #ポップアップ内のサムネイルの遅延ロードを解除
     $popup.find("img[data-src]").each ->
-      @src = @getAttribute("data-src")
-      @removeAttribute("data-src")
+      $view.data("lazyload").immediateLoad(@)
       return
     $.popup($view, $popup, e.clientX, e.clientY, that)
 

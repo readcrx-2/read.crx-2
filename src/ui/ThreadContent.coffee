@@ -97,7 +97,7 @@ class UI.ThreadContent
 
     if target
       if @_scrolling
-        clearInterval(_scrollInterval)
+        clearInterval(@_scrollInterval)
         @_scrolling = false
       if animate
         do =>

@@ -38,8 +38,7 @@ $RECYCLE.BIN/
 .LSOverride
 
 # Icon must end with two \r
-Icon
-
+Icon
 
 # Thumbnails
 ._*
@@ -107,4 +106,6 @@ Session.vim
 *~
 
 ### My Project
-debug/
+/debug/
+/src/app.js
+/typings/

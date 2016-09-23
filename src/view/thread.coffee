@@ -251,7 +251,7 @@ app.boot "/view/thread.html", ->
         $menu.find(".set_image_blur").remove()
         $menu.find(".reset_image_blur").remove()
       else
-        bflg = Array.from($article.find(".thumbnail")).some((ele) ->
+        bflg = Array.from($article.find(".thumbnail, .mediaviewer[media-type='image']")).some((ele) ->
           return ele.classList.contains("image_blur")
         )
         if bflg
@@ -364,12 +364,12 @@ app.boot "/view/thread.html", ->
 
       # 画像をぼかす
       else if $this.hasClass("set_image_blur")
-        for thumb in $res.find(".thumbnail")
+        for thumb in $res.find(".thumbnail, .mediaviewer[media-type='image']")
           threadContent.setImageBlur(thumb, true)
 
       # 画像のぼかしを解除する
       else if $this.hasClass("reset_image_blur")
-        for thumb in $res.find(".thumbnail")
+        for thumb in $res.find(".thumbnail, .mediaviewer[media-type='image']")
           threadContent.setImageBlur(thumb, false)
 
       $this.parent().remove()
@@ -552,7 +552,7 @@ app.boot "/view/thread.html", ->
 
     #何もないところをダブルクリックすると更新する
     .on "dblclick",".message", (e) ->
-      if app.config.get("dblclick_reload") is "on" and !$(e.target).is("a, .thumbnail")
+      if app.config.get("dblclick_reload") is "on" and !$(e.target).is("a, .thumbnail, .mediaviewer")
         $view.trigger "request_reload"
       return
 

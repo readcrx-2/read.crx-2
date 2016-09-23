@@ -545,7 +545,7 @@ class UI.ThreadContent
           continue unless elm
           elm.classList.add("has_blur_word")
           if elm.classList.contains("has_image") and app.config.get("image_blur") is "on"
-            for thumb in elm.querySelectorAll(".thumbnail:not(.image_blur)")
+            for thumb in elm.querySelectorAll(".thumbnail:not(.image_blur), .mediaviewer:not(.image_blur)")
               @setImageBlur(thumb, true)
         return
 
@@ -581,6 +581,9 @@ class UI.ThreadContent
       #サムネイル追加処理
       do =>
         addThumbnail = (sourceA, thumbnailPath, referrer, cookieStr) ->
+          if app.config.get("use_mediaviewer") is "on"
+            addMediaViewer(sourceA, "image", thumbnailPath)
+            return
           sourceA.classList.add("has_thumbnail")
           article = sourceA.closest("article")
           article.classList.add("has_image")
@@ -625,7 +628,62 @@ class UI.ThreadContent
               break
           null
 
-        app.util.concurrent(fragment.querySelectorAll(".message > a:not(.thumbnail):not(.has_thumbnail)"), (a) ->
+        #mediaviewerの追加処理
+        addMediaViewer = (sourceA, mediaType, mediaPath="", referrer, cookieStr) ->
+          sourceA.classList.add("has_mediaviewer")
+          if mediaType is "image"
+            article = sourceA.closest("article")
+            article.classList.add("has_image")
+
+          mediaViewer = document.createElement("div")
+          mediaViewer.className = "mediaviewer"
+          mediaViewer.setAttribute("media-type", mediaType)
+
+          switch mediaType
+            when "image"
+              mediaLink = document.createElement("a")
+              mediaLink.href = app.safe_href(sourceA.href)
+              mediaLink.target = "_blank"
+
+              mediaImage = document.createElement("img")
+              mediaImage.className = "image"
+              mediaImage.src = "/img/dummy_1x1.webp"
+              mediaImage.setAttribute("data-src", mediaPath)
+              if referrer? then thumbnailImg.setAttribute("data-referrer", referrer)
+              if cookieStr? then thumbnailImg.setAttribute("data-cookie", cookieStr)
+              #グロ画像に対するぼかし処理
+              if article.hasClass("has_blur_word") and app.config.get("image_blur") is "on"
+                mediaViewer.className += " image_blur"
+                v = app.config.get("image_blur_length")
+                mediaImage.style.WebkitFilter = "blur(#{v}px)"
+              mediaImage.style.maxWidth = app.config.get("image_width") + "px"
+              mediaImage.style.maxHeight = app.config.get("image_height") + "px"
+              mediaLink.appendChild(mediaImage)
+
+              mediaFavicon = document.createElement("img")
+              mediaFavicon.className = "favicon"
+              mediaFavicon.src = "/img/dummy_1x1.webp"
+              mediaFavicon.setAttribute("data-src", "https://www.google.com/s2/favicons?domain=#{app.url.getDomain(sourceA.href)}")
+              mediaLink.appendChild(mediaFavicon)
+
+          mediaViewer.appendChild(mediaLink)
+
+          sib = sourceA
+          while true
+            pre = sib
+            sib = pre.nextSibling
+            if sib is null or sib.nodeName is "BR"
+              if sib?.nextSibling?.classList?.contains("mediaviewer")
+                continue
+              if not pre.classList?.contains("mediaviewer")
+                sourceA.parentNode.insertBefore(document.createElement("br"), sib)
+              sourceA.parentNode.insertBefore(mediaViewer, sib)
+              break
+            null
+          return
+
+        app.util.concurrent(fragment.querySelectorAll(".message > a:not(.thumbnail):not(.has_thumbnail)" +
+            ":not(.mediaviewer):not(.has_mediaviewer)"), (a) ->
           return app.ImageReplaceDat.do(a, a.href).done( (a, res, err) ->
             addThumbnail(a, res.text, res.referrer, res.cookie) unless err?
             return
@@ -643,17 +701,17 @@ class UI.ThreadContent
 
   ###*
   @method setImageBlur
-  @param {Element} thumbnail
+  @param {Element} thumbnail or mediaviewer
   @parm {Boolean} blurMode
   ###
-  setImageBlur: (thumbnail, blurMode) ->
-    img = thumbnail.querySelector("a > img.image")
+  setImageBlur: (mediaviewer, blurMode) ->
+    img = mediaviewer.querySelector("a > img.image")
     if blurMode
       v = app.config.get("image_blur_length")
-      thumbnail.classList.add("image_blur")
+      mediaviewer.classList.add("image_blur")
       img.style.WebkitFilter = "blur(#{v}px)"
     else
-      thumbnail.classList.remove("image_blur")
+      mediaviewer.classList.remove("image_blur")
       img.style.WebkitFilter = "none"
     return
 

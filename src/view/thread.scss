@@ -137,11 +137,9 @@ header {
 }
 
 .thumbnail {
-  $container-height: 100px;
   position: relative;
   display: inline-block;
   margin: 10px;
-  height: $container-height;
 
   > a {
     $a-padding: 3px;
@@ -153,8 +151,6 @@ header {
 
     > img.image {
       display: block;
-      max-width: 150px;
-      max-height: $container-height - $a-padding * 2;
       &[src="/img/loading.webp"] {
         width: 50px;
         height: 50px;

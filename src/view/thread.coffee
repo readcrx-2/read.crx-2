@@ -80,7 +80,9 @@ app.boot "/view/thread.html", ->
     $popup.find("img[data-src]").each ->
       $view.data("lazyload").immediateLoad(@)
       return
-    popupView.show($popup[0], e.clientX, e.clientY, that)
+    app.defer ->
+      popupView.show($popup[0], e.clientX, e.clientY, that)
+      return
 
   if app.url.tsld(view_url) in ["2ch.net", "shitaraba.net", "bbspink.com", "2ch.sc", "open2ch.net"]
     $view.find(".button_write").on "click", ->
@@ -134,6 +136,10 @@ app.boot "/view/thread.html", ->
       $content.one "scroll", ->
         on_scroll = true
         return
+
+      # 可変サイズの画像が存在している場合は1ページ目の画像チェック用を実行する
+      if app.config.get("image_height_fix") is "off"
+        threadContent.checkImageExists(true)
 
       $last = $content.find(".last")
       if $last.length is 1
@@ -773,11 +779,21 @@ app.boot "/view/thread.html", ->
 
     return
 
-  #サムネイルロード時の縦位置調整
-  $view.on "lazyload-load", ".thumbnail > a > img", ->
-    a = @parentNode
-    container = a.parentNode
-    a.style["top"] = "#{(container.offsetHeight - a.offsetHeight) / 2}px"
+  # サムネイルロード時の追加処理
+  $view.on "lazyload-load", ".thumbnail > a > img.image", ->
+    # Lazyloadを実行させるためにスクロールを発火
+    if app.config.get("image_height_fix") is "off"
+      $content.triggerHandler("scroll")
+    return
+
+  # 逆スクロール時の位置合わせ
+  $view.on "lazyload-load-reverse", ".thumbnail > a > img.image", ->
+    if app.config.get("image_height_fix") is "off"
+      content = $content[0]
+      imgHeight = @offsetHeight
+      imgHeight -= 50   # loading.webp
+      content.scrollTop += imgHeight
+    return
 
   #パンくずリスト表示
   do ->

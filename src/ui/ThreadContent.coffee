@@ -53,6 +53,24 @@ class UI.ThreadContent
     ###
     @oneId = null
 
+    ###*
+    @property _lastScrollInfo
+    @type Object
+    @private
+    ###
+    @_lastScrollInfo = {
+      "resNum": 0,
+      "animate": false,
+      "offset": 0
+    }
+
+    ###*
+    @property _timeoutID
+    @type Number
+    @private
+    ###
+    @_timeoutID = 0
+
     try
       @harmfulReg = new RegExp(app.config.get("image_blur_word"))
       @findHarmfulFlag = true
@@ -81,12 +99,74 @@ class UI.ThreadContent
     return d.promise()
 
   ###*
+  @method _reScrollTo
+  @private
+  ###
+  _reScrollTo: ->
+    @scrollTo(@_lastScrollInfo.resNum, @_lastScrollInfo.animate, @_lastScrollInfo.offset, true)
+    return
+
+  ###*
+  @method checkImageExists
+  @param {Boolean} checkOnly
+  @param {Number} [resNum=1]
+  @param {Number} [offset=0]
+  @return {Boolean} loadFlag
+  ###
+  checkImageExists: (checkOnly, resNum = 1, offset = 0) ->
+    loadFlag = false
+    target = @container.children[resNum - 1]
+
+    viewTop = target.offsetTop + offset
+    viewBottom = viewTop + @container.offsetHeight
+    if viewBottom > @container.scrollHeight
+      viewBottom = @container.scrollHeight
+      viewTop = viewBottom - @container.offsetHeight
+
+    # 遅延ロードの解除
+    loadImageByElement = (targetElement) =>
+      qStr = if checkOnly then "img" else "img[data-src]"
+      for img in targetElement.querySelectorAll(qStr)
+        loadFlag = true
+        continue if checkOnly or img.getAttribute("data-src") is null
+        if img.classList.contains("favicon")
+          img.src = img.getAttribute("data-src")
+          img.removeAttribute("data-src")
+        else
+          $(img).trigger("immediateload")
+      return
+
+    # 表示範囲内の要素をスキャンする
+    # (上方)
+    tmpResNum = resNum
+    tmpTarget = target
+    while tmpTarget?.offsetTop + tmpTarget?.offsetHeight > viewTop and tmpResNum > 0
+      loadImageByElement(tmpTarget)
+      tmpResNum--
+      tmpTarget = @container.children[tmpResNum - 1] if tmpResNum > 0
+    # (下方)
+    tmpResNum = resNum + 1
+    tmpTarget = @container.children[resNum]
+    while tmpTarget?.offsetTop < viewBottom and tmpTarget
+      loadImageByElement(tmpTarget)
+      tmpResNum++
+      tmpTarget = @container.children[tmpResNum - 1]
+
+    return loadFlag
+
+  ###*
   @method scrollTo
   @param {Number} resNum
   @param {Boolean} [animate=false]
   @param {Number} [offset=0]
+  @param {Boolean} [rerun=false]
   ###
-  scrollTo: (resNum, animate = false, offset = 0) ->
+  scrollTo: (resNum, animate = false, offset = 0, rerun = false) ->
+    @_lastScrollInfo.resNum = resNum
+    @_lastScrollInfo.animate = animate
+    @_lastScrollInfo.offset = offset
+    loadFlag = false
+
     target = @container.children[resNum - 1]
 
     # 検索中で、ターゲットが非ヒット項目で非表示の場合、スクロールを中断
@@ -98,6 +178,23 @@ class UI.ThreadContent
       target = $(target).prevAll(":not(.ng)")[0] or $(target).nextAll(":not(.ng)")[0]
 
     if target
+      # 可変サイズの画像が存在している場合は画像を事前にロードする
+      if app.config.get("image_height_fix") is "off" and not rerun
+        loadFlag = @checkImageExists(false, resNum, offset)
+
+      # 遅延スクロールの設定
+      if loadFlag or @_timeoutID isnt 0
+        clearTimeout(@_timeoutID) if @_timeoutID isnt 0
+        @container.scrollTop = target.offsetTop + offset
+        delayScrollTime = parseInt(app.config.get("delay_scroll_time"))
+        @_timeoutID = setTimeout( =>
+          @_timeoutID = 0
+          @_reScrollTo()
+        , delayScrollTime)
+        return
+      return if rerun and @container.scrollTop is target.offsetTop + offset
+
+      # スクロールの実行
       if animate
         do =>
           @_$container.trigger("scrollstart")
@@ -614,6 +711,8 @@ class UI.ThreadContent
             thumbnail.className += " image_blur"
             v = app.config.get("image_blur_length")
             thumbnailImg.style.WebkitFilter = "blur(#{v}px)"
+          thumbnailImg.style.maxWidth = app.config.get("image_width") + "px"
+          thumbnailImg.style.maxHeight = app.config.get("image_height") + "px"
           if referrer? then thumbnailImg.setAttribute("data-referrer", referrer)
           if cookieStr? then thumbnailImg.setAttribute("data-cookie", cookieStr)
           thumbnailLink.appendChild(thumbnailImg)
@@ -624,18 +723,23 @@ class UI.ThreadContent
           thumbnailFavicon.setAttribute("data-src", "https://www.google.com/s2/favicons?domain=#{app.url.getDomain(sourceA.href)}")
           thumbnailLink.appendChild(thumbnailFavicon)
 
+          # 高さ固定の場合
+          if app.config.get("image_height_fix") is "on"
+            h = parseInt(app.config.get("image_height"))
+            thumbnail.style.height = h + "px"
+
           sib = sourceA
           while true
             pre = sib
             sib = pre.nextSibling
-            if sib is null or sib.nodeName is "BR"
+            if !sib? or sib.nodeName is "BR"
               if sib?.nextSibling?.classList?.contains("thumbnail")
                 continue
               if not pre.classList?.contains("thumbnail")
                 sourceA.parentNode.insertBefore(document.createElement("br"), sib)
               sourceA.parentNode.insertBefore(thumbnail, sib)
               break
-          null
+          return
 
         app.util.concurrent(@container.querySelectorAll(".message > a:not(.thumbnail):not(.has_thumbnail)"), (a) ->
           return app.ImageReplaceDat.do(a, a.href).done( (a, res, err) ->

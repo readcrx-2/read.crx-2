@@ -1,21 +1,20 @@
 namespace app {
   export namespace URL {
+    export const CH_BOARD_REG = /^(http:\/\/[\w\.]+\/test\/read\.cgi\/\w+\/\d+).*?$/;
+    export const MACHI_BOARD_REG = /^(http:\/\/\w+\.machi\.to\/bbs\/read\.cgi\/\w+\/\d+).*?$/;
+    export const SHITARABA_BOARD_REG = /^http:\/\/jbbs\.(?:livedoor\.jp|shitaraba\.net)\/(bbs\/read\.cgi\/\w+\/\d+\/\d+).*?$/;
+    export const CH_THREAD_REG = /^(http:\/\/[\w\.]+\/\w+\/)(?:#.*)?$/;
+    export const SHITARABA_THREAD_REG = /^http:\/\/jbbs\.(?:livedoor\.jp|shitaraba\.net)\/(\w+\/\d+\/)(?:#.*)?$/;
     export function fix (url:string):string {
       return (
         url
           // スレ系 誤爆する事は考えられないので、パラメータ部分をバッサリ切ってしまう
-          .replace(/^(http:\/\/[\w\.]+\/test\/read\.cgi\/\w+\/\d+).*?$/, "$1/")
-          .replace(/^(http:\/\/\w+\.machi\.to\/bbs\/read\.cgi\/\w+\/\d+).*?$/, "$1/")
-          .replace(
-            /^http:\/\/jbbs\.(?:livedoor\.jp|shitaraba\.net)\/(bbs\/read\.cgi\/\w+\/\d+\/\d+).*?$/,
-            "http://jbbs.shitaraba.net/$1/"
-          )
+          .replace(CH_BOARD_REG, "$1/")
+          .replace(MACHI_BOARD_REG, "$1/")
+          .replace(SHITARABA_BOARD_REG, "http://jbbs.shitaraba.net/$1/")
           // 板系 完全に誤爆を少しでも減らすために、パラメータ形式も限定する
-          .replace(/^(http:\/\/[\w\.]+\/\w+\/)(?:#.*)?$/, "$1")
-          .replace(
-            /^http:\/\/jbbs\.(?:livedoor\.jp|shitaraba\.net)\/(\w+\/\d+\/)(?:#.*)?$/,
-            "http://jbbs.shitaraba.net/$1"
-          )
+          .replace(CH_THREAD_REG, "$1")
+          .replace(SHITARABA_THREAD_REG, "http://jbbs.shitaraba.net/$1")
       );
     }
 
@@ -52,10 +51,11 @@ namespace app {
       }
     }
 
+    export const tsldReg = /^https?:\/\/(?:\w+\.)*(\w+\.\w+)\//;
     export function tsld (url:string):string {
       var res:any;
 
-      res = /^https?:\/\/(?:\w+\.)*(\w+\.\w+)\//.exec(url);
+      res = tsldReg.exec(url);
       return res ? res[1] : "";
     }
 

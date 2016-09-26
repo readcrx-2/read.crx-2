@@ -151,11 +151,12 @@ class app.ImageReplaceDat
       doing = true
       res = {}
       res.referrer = string.replace(dat.baseUrl, dat.referrerUrl)
+      extractReg = /\$EXTRACT(\d+)?/g
       if d.param? and d.param.type is "extract"
         _getExtract(string, d).done((exMatch) ->
           res.text = string
             .replace(d.baseUrlReg, d.replaceUrl)
-            .replace(/\$EXTRACT(\d+)?/g, (str, num) ->
+            .replace(extractReg, (str, num) ->
               if num?
                 return exMatch[num]
               else

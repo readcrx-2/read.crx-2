@@ -499,13 +499,15 @@ class UI.ThreadContent
 
       @container.insertAdjacentHTML("BeforeEnd", html)
 
+      numbersReg = /(?:\(\d+\))?$/
       #idカウント, .freq/.link更新
       do =>
         for id, index of @idIndex
           idCount = index.length
           for resNum in index
             elm = @container.children[resNum - 1].getElementsByClassName("id")[0]
-            elm.firstChild.nodeValue = elm.firstChild.nodeValue.replace(/(?:\(\d+\))?$/, "(#{idCount})")
+            elmFirst = elm.firstChild
+            elmFirst.textContent = elmFirst.textContent.replace(numbersReg, "(#{idCount})")
             if idCount >= 5
               elm.classList.remove("link")
               elm.classList.add("freq")
@@ -519,7 +521,8 @@ class UI.ThreadContent
           slipCount = index.length
           for resNum in index
             elm = @container.children[resNum - 1].getElementsByClassName("slip")[0]
-            elm.firstChild.nodeValue = elm.firstChild.nodeValue.replace(/(?:\(\d+\))?$/, "(#{slipCount})")
+            elmFirst = elm.firstChild
+            elmFirst.textContent = elmFirst.textContent.replace(numbersReg, "(#{slipCount})")
             if slipCount >= 5
               elm.classList.remove("link")
               elm.classList.add("freq")
@@ -533,7 +536,8 @@ class UI.ThreadContent
           tripCount = index.length
           for resNum in index
             elm = @container.children[resNum - 1].getElementsByClassName("trip")[0]
-            elm.firstChild.nodeValue = elm.firstChild.nodeValue.replace(/(?:\(\d+\))?$/, "(#{tripCount})")
+            elmFirst = elm.firstChild
+            elmFirst.textContent = elmFirst.textContent.replace(numbersReg, "(#{tripCount})")
             if tripCount >= 5
               elm.classList.remove("link")
               elm.classList.add("freq")
@@ -574,13 +578,11 @@ class UI.ThreadContent
             #連鎖NG
             if app.config.get("chain_ng") is "on" and res.classList.contains("ng")
               for r in index
-                thatClass = @container.children[r - 1].classList
-                thatClass.add("ng") unless thatClass.contains("ng")
+                @container.children[r - 1].classList.add("ng")
             #自分に対してのレス
             if res.classList.contains("written")
               for r in index
-                thatClass = @container.children[r - 1].classList
-                thatClass.add("to_written") unless thatClass.contains("to_written")
+                @container.children[r - 1].classList.add("to_written")
         return
 
       #サムネイル追加処理
@@ -611,11 +613,11 @@ class UI.ThreadContent
           if cookieStr? then thumbnailImg.setAttribute("data-cookie", cookieStr)
           thumbnailLink.appendChild(thumbnailImg)
 
-          thumbnailImg = document.createElement("img")
-          thumbnailImg.className = "favicon"
-          thumbnailImg.src = "/img/dummy_1x1.webp"
-          thumbnailImg.setAttribute("data-src", "https://www.google.com/s2/favicons?domain=#{app.url.getDomain(sourceA.href)}")
-          thumbnailLink.appendChild(thumbnailImg)
+          thumbnailFavicon = document.createElement("img")
+          thumbnailFavicon.className = "favicon"
+          thumbnailFavicon.src = "/img/dummy_1x1.webp"
+          thumbnailFavicon.setAttribute("data-src", "https://www.google.com/s2/favicons?domain=#{app.url.getDomain(sourceA.href)}")
+          thumbnailLink.appendChild(thumbnailFavicon)
 
           sib = sourceA
           while true
@@ -668,8 +670,7 @@ class UI.ThreadContent
   addClassWithOrg: ($res, className) ->
     $res.addClass(className)
     resnum = parseInt($res.find(".num").text())
-    orgRes = @container.children[resnum-1]
-    orgRes.classList.add("written") unless orgRes.classList.contains("written")
+    @container.children[resnum-1].classList.add("written")
     return
 
   ###*
@@ -680,8 +681,7 @@ class UI.ThreadContent
   removeClassWithOrg: ($res, className) ->
     $res.removeClass("written")
     resnum = parseInt($res.find(".num").text())
-    orgRes = @container.children[resnum-1]
-    orgRes.classList.remove("written") if orgRes.classList.contains("written")
+    @container.children[resnum-1].classList.remove("written")
     return
 
   ###*

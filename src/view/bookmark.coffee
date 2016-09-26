@@ -16,7 +16,7 @@ app.boot "/view/bookmark.html", ->
 
   new app.view.TabContentView(document.documentElement)
 
-  trUpdatedObserver = new WebKitMutationObserver (records) ->
+  trUpdatedObserver = new MutationObserver (records) ->
     for record in records
       if record.target.webkitMatchesSelector("tr.updated")
         record.target.parentNode.appendChild(record.target)
@@ -103,9 +103,9 @@ app.boot "/view/bookmark.html", ->
     #dat落ちを表示/非表示
     $expired = $view.find(".expired")
     if app.config.get("bookmark_show_dat") is "off"
-      $expired.addClass("expired_hide")
+      $expired.addClass("hidden")
     else
-      $expired.removeClass("expired_hide")
+      $expired.removeClass("hidden")
     return
 
   threadList.addItem(
@@ -121,9 +121,9 @@ app.boot "/view/bookmark.html", ->
   #dat落ちを表示/非表示
   $expired = $view.find(".expired")
   if app.config.get("bookmark_show_dat") is "off"
-    $expired.addClass("expired_hide")
+    $expired.addClass("hidden")
   else
-    $expired.removeClass("expired_hide")
+    $expired.removeClass("hidden")
 
   app.message.send("request_update_read_state", {})
   $table.table_sort("update")

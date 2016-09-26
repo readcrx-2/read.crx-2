@@ -591,7 +591,7 @@ class app.view.TabContentView extends app.view.PaneContentView
 
     # dat落ちを表示/非表示
     @$element.find(".button_toggle_dat").on "click", =>
-      @$element.find(".expired").toggleClass("expired_hide")
+      @$element.find(".expired").toggleClass("hidden")
       return
 
     # 未読スレッドを全て開く

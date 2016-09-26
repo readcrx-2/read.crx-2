@@ -811,6 +811,16 @@ app.boot "/view/thread.html", ->
       a.style["top"] = "#{(container.offsetHeight - a.offsetHeight) / 2}px"
     return
 
+  #逆スクロール時の位置合わせ
+  $view.on "lazyload-loadbybottom", ".mediaviewer > a > img.image", ->
+    if app.config.get("use_mediaviewer") is "on"
+      if app.config.get("image_height_fix") isnt "on"
+        content = $content[0]
+        imgHeight = @offsetHeight
+        imgHeight -= 50 if @tagName is "IMG"  # loading.webp
+        content.scrollTop += imgHeight
+    return
+
   #パンくずリスト表示
   do ->
     board_url = app.url.thread_to_board(view_url)
@@ -852,6 +862,8 @@ app.view_thread._draw = ($view, force_update, beforeAdd) ->
       $view.data("lazyload").scan()
 
       $view.trigger("view_loaded")
+
+      $view.data("lazyload").viewLoaded = true
 
       d.resolve(thread)
     )

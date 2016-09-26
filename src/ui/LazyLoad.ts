@@ -1,4 +1,5 @@
 ///<reference path="../global.d.ts" />
+///<reference path="../app.ts" />
 
 namespace UI {
   "use strict";
@@ -11,6 +12,7 @@ namespace UI {
     private imgs: HTMLImageElement[] = [];
     private imgPlaceTable = new Map<HTMLImageElement, number>();
     private updateInterval: number = null;
+    public viewLoaded: boolean = false;
 
     constructor (container: HTMLElement) {
       this.container = container;
@@ -33,7 +35,7 @@ namespace UI {
       this.load(img);
     }
 
-    private load (img: HTMLImageElement): void {
+    private load (img: HTMLImageElement, byBottom: boolean = false): void {
       var newImg: HTMLImageElement, cpyImg: HTMLImageElement, attr: Attr, attrs: Attr[];
       // immediateLoadにて処理済みのものを除外する
       if (img.getAttribute("data-src") === null) return;
@@ -54,7 +56,11 @@ namespace UI {
         $(img).replaceWith(this);
 
         if (e.type === "load") {
-          $(this).trigger("lazyload-load");
+          if (byBottom === false) {
+            $(this).trigger("lazyload-load");
+          } else {
+            $(this).trigger("lazyload-loadbybottom");
+          }
           UI.Animate.fadeIn(this);
         }
       });
@@ -123,6 +129,29 @@ namespace UI {
             scrollTop + clientHeight < top)
           ) {
             this.load(img);
+            return false;
+          }
+        }
+        // 逆スクロール時の範囲チェック
+        if (this.viewLoaded === true && app.config.get("use_mediaviewer") === "on") {
+          var bottom: number, target_height: number;
+
+          bottom = 0;
+          current = img;
+          target_height = parseInt(app.config.get("image_height"));
+
+          while (current !== null && current !== this.container) {
+            bottom += current.offsetTop;
+            current = <HTMLElement>current.offsetParent;
+          }
+          if (bottom === 0) return true;
+          bottom += target_height;
+
+          if (
+            bottom > this.container.scrollTop &&
+            bottom < this.container.scrollTop + this.container.clientHeight
+          ) {
+            this.load(img, true);
             return false;
           }
         }

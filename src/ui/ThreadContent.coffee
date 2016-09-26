@@ -498,6 +498,9 @@ class UI.ThreadContent
         html += articleHtml
 
       @container.insertAdjacentHTML("BeforeEnd", html)
+      fragment = document.createDocumentFragment()
+      for child in @container.children
+        fragment.appendChild(child.cloneNode(true))
 
       numbersReg = /(?:\(\d+\))?$/
       #idカウント, .freq/.link更新
@@ -505,7 +508,7 @@ class UI.ThreadContent
         for id, index of @idIndex
           idCount = index.length
           for resNum in index
-            elm = @container.children[resNum - 1].getElementsByClassName("id")[0]
+            elm = fragment.children[resNum - 1].getElementsByClassName("id")[0]
             elmFirst = elm.firstChild
             elmFirst.textContent = elmFirst.textContent.replace(numbersReg, "(#{idCount})")
             if idCount >= 5
@@ -520,7 +523,7 @@ class UI.ThreadContent
         for slip, index of @slipIndex
           slipCount = index.length
           for resNum in index
-            elm = @container.children[resNum - 1].getElementsByClassName("slip")[0]
+            elm = fragment.children[resNum - 1].getElementsByClassName("slip")[0]
             elmFirst = elm.firstChild
             elmFirst.textContent = elmFirst.textContent.replace(numbersReg, "(#{slipCount})")
             if slipCount >= 5
@@ -535,7 +538,7 @@ class UI.ThreadContent
         for trip, index of @tripIndex
           tripCount = index.length
           for resNum in index
-            elm = @container.children[resNum - 1].getElementsByClassName("trip")[0]
+            elm = fragment.children[resNum - 1].getElementsByClassName("trip")[0]
             elmFirst = elm.firstChild
             elmFirst.textContent = elmFirst.textContent.replace(numbersReg, "(#{tripCount})")
             if tripCount >= 5
@@ -548,7 +551,7 @@ class UI.ThreadContent
       #harmImg更新
       do =>
         for res in @harmImgIndex
-          elm = @container.children[res - 1]
+          elm = fragment.children[res - 1]
           continue unless elm
           elm.classList.add("has_blur_word")
           if elm.classList.contains("has_image") and app.config.get("image_blur") is "on"
@@ -559,7 +562,7 @@ class UI.ThreadContent
       #参照関係再構築
       do =>
         for resKey, index of @repIndex
-          res = @container.children[resKey - 1]
+          res = fragment.children[resKey - 1]
           if res
             resCount = index.length
             if elm = res.getElementsByClassName("rep")[0]
@@ -578,11 +581,11 @@ class UI.ThreadContent
             #連鎖NG
             if app.config.get("chain_ng") is "on" and res.classList.contains("ng")
               for r in index
-                @container.children[r - 1].classList.add("ng")
+                fragment.children[r - 1].classList.add("ng")
             #自分に対してのレス
             if res.classList.contains("written")
               for r in index
-                @container.children[r - 1].classList.add("to_written")
+                fragment.children[r - 1].classList.add("to_written")
         return
 
       #サムネイル追加処理
@@ -632,12 +635,14 @@ class UI.ThreadContent
               break
           null
 
-        app.util.concurrent(@container.querySelectorAll(".message > a:not(.thumbnail):not(.has_thumbnail)"), (a) ->
+        app.util.concurrent(fragment.querySelectorAll(".message > a:not(.thumbnail):not(.has_thumbnail)"), (a) ->
           return app.ImageReplaceDat.do(a, a.href).done( (a, res, err) ->
             addThumbnail(a, res.text, res.referrer, res.cookie) unless err?
             return
           )
-        ).always(->
+        ).always(=>
+          @container.textContent = null
+          @container.appendChild(fragment)
           d.resolve()
           return
         )

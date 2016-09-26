@@ -53,6 +53,15 @@ class UI.ThreadContent
     ###
     @oneId = null
 
+    ###*
+    @property _lastScrollInfo
+    @type Object
+    ###
+    @_lastScrollInfo = {
+      "resNum": "",
+      "animate": false,
+      "offset": 0,
+    }
     return
 
   ###*
@@ -68,12 +77,27 @@ class UI.ThreadContent
     return d.promise()
 
   ###*
+  @method reScrollTo
+  ###
+  reScrollTo: ->
+    @scrollTo(@_lastScrollInfo.resNum, @_lastScrollInfo.animate, @_lastScrollInfo.offset, true)
+    return
+
+  ###*
   @method scrollTo
   @param {Number} resNum
   @param {Boolean} [animate=false]
   @param {Number} [offset=0]
+  @param {Boolean} [rerun=false]
+  @param {Boolean} [checkImage=false]
+  @return {Boolean} true:images loaded
   ###
-  scrollTo: (resNum, animate = false, offset = 0) ->
+  scrollTo: (resNum, animate = false, offset = 0, rerun = false, checkImage = false) ->
+    @_lastScrollInfo.resNum = resNum
+    @_lastScrollInfo.animate = animate
+    @_lastScrollInfo.offset = offset
+    loadFlag = false
+
     target = @container.children[resNum - 1]
 
     # 検索中で、ターゲットが非ヒット項目で非表示の場合、スクロールを中断
@@ -85,7 +109,53 @@ class UI.ThreadContent
       target = $(target).prevAll(":not(.ng)")[0] or $(target).nextAll(":not(.ng)")[0]
 
     if target
-      if animate
+      # 可変サイズの画像が存在している場合は画像を事前にロードする
+      if app.config.get("use_mediaviewer") is "on" and
+          app.config.get("image_height_fix") isnt "on" and
+          not rerun
+        viewTop = target.offsetTop + offset
+        viewBottom = viewTop + @container.offsetHeight
+        if viewBottom > @container.scrollHeight
+          viewBottom = @container.scrollHeight
+          viewTop = viewBottom - @container.offsetHeight
+
+        # 遅延ロードの解除
+        loadImageByElement = (targetElement) =>
+          targetResNum = parseInt(targetElement.querySelector(".num").textContent)
+          if checkImage
+            qStr = "img"
+          else
+            qStr = "img[data-src]"
+          for img in targetElement.querySelectorAll(qStr)
+            loadFlag = true
+            continue if checkImage or img.getAttribute("data-src") is null
+            unless img.className is "favicon"
+              $(img).trigger("immediateLoad")
+            else
+              img.src = img.getAttribute("data-src")
+              img.removeAttribute("data-src")
+          return
+
+        # 表示範囲内の要素をスキャンする
+        # (上方)
+        tmpResNum = resNum
+        tmpTarget = target
+        while tmpTarget?.offsetTop + tmpTarget?.offsetHeight > viewTop
+          loadImageByElement(tmpTarget)
+          break if tmpResNum is 1
+          tmpResNum--
+          tmpTarget = @container.children[tmpResNum - 1]
+        # (下方)
+        tmpResNum = resNum + 1
+        tmpTarget = @container.children[resNum]
+        while tmpTarget?.offsetTop < viewBottom
+          loadImageByElement(tmpTarget)
+          tmpResNum++
+          tmpTarget = @container.children[tmpResNum - 1]
+          break unless tmpTarget
+
+      # スクロールの実行
+      if animate and not loadFlag
         do =>
           to = target.offsetTop + offset
           change = (to - @container.scrollTop)/15
@@ -105,7 +175,7 @@ class UI.ThreadContent
           )
       else
         @container.scrollTop = target.offsetTop + offset
-    return
+    return loadFlag
 
   ###*
   @method getRead
@@ -667,6 +737,15 @@ class UI.ThreadContent
               mediaLink.appendChild(mediaFavicon)
 
           mediaViewer.appendChild(mediaLink)
+
+          #高さ固定の場合
+          if app.config.get("image_height_fix") is "on"
+            switch mediaType
+              when "image"
+                h = parseInt(app.config.get("image_height"))
+              else
+                h = 100   # 最低高
+            mediaViewer.style.height = h + "px"
 
           sib = sourceA
           while true

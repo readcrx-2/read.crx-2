@@ -261,6 +261,8 @@ namespace app {
       ["use_mediaviewer", "off"],
       ["image_width", "150"],
       ["image_height", "100"],
+      ["image_height_fix", "on"],
+      ["delay_scroll_time", "500"],
       ["aa_font", "aa"],
       ["popup_trigger", "click"],
       ["ngwords", ""],

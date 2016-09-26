@@ -34,14 +34,19 @@ namespace UI {
     }
 
     private load (img: HTMLImageElement): void {
-      var newImg: HTMLImageElement, attr: Attr, attrs: Attr[];
+      var newImg: HTMLImageElement, cpyImg: HTMLImageElement, attr: Attr, attrs: Attr[];
+      // immediateLoadにて処理済みのものを除外する
+      if (img.getAttribute("data-src") === null) return;
 
       newImg = document.createElement("img");
 
-      attrs = Array.from(img.attributes)
-      for (attr of attrs) {
-        if (attr.name !== "data-src") {
-          newImg.setAttribute(attr.name, attr.value);
+      if (img.tagName === "IMG" && img.className !== "favicon") {
+        cpyImg = img;
+        attrs = Array.from(cpyImg.attributes)
+        for (attr of attrs) {
+          if (attr.name !== "data-src") {
+            newImg.setAttribute(attr.name, attr.value);
+          }
         }
       }
 
@@ -54,9 +59,13 @@ namespace UI {
         }
       });
 
-      newImg.src = img.getAttribute("data-src");
+      if (img.tagName === "IMG" && img.className !== "favicon") {
+        img.src = "/img/loading.webp";
+        newImg.src = img.getAttribute("data-src");
+      } else {
+        img.src = img.getAttribute("data-src");
+      }
       img.removeAttribute("data-src");
-      img.src = "/img/loading.webp";
     }
 
     private watch (): void {

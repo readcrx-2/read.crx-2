@@ -196,6 +196,29 @@ class app.Cache
       return
     .promise()
 
+  ###*
+  @method clearRange
+  @param {Number} day
+  @return {Promise}
+  ###
+  clearRange: (day) ->
+    Cache._db_open.then (db) => $.Deferred (d) =>
+      db.transaction(
+        (tr) =>
+          dayUnix = Date.now()-86400000*day
+          tr.executeSql("DELETE FROM Cache WHERE last_updated < ?", [dayUnix])
+          return
+        ->
+          app.log("error", "Cache.clearRange: トランザクション中断")
+          d.reject()
+          return
+        ->
+          d.resolve()
+          return
+      )
+      return
+    .promise()
+
 app.module "cache", [], (callback) ->
   callback(app.Cache)
   return

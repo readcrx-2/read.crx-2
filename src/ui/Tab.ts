@@ -101,22 +101,38 @@ namespace UI {
         }
         else if (message.type === "requestTabBack") {
           if (history.current > 0) {
-            history.current--;
-            this.update(tabId, {
-              title: history.stack[history.current].title,
-              url: history.stack[history.current].url,
-              _internal: true
-            })
+            if (message.newTab) {
+              this.add(history.stack[history.current-1].url, {
+                title: history.stack[history.current-1].title,
+                selected: !message.background,
+                lazy: message.background
+              })
+            } else {
+              history.current--;
+              this.update(tabId, {
+                title: history.stack[history.current].title,
+                url: history.stack[history.current].url,
+                _internal: true
+              })
+            }
           }
         }
         else if (message.type === "requestTabForward") {
           if (history.current < history.stack.length - 1) {
-            history.current++;
-            this.update(tabId, {
-              title: history.stack[history.current].title,
-              url: history.stack[history.current].url,
-              _internal: true
-            });
+            if (message.newTab) {
+              this.add(history.stack[history.current+1].url, {
+                title: history.stack[history.current+1].title,
+                selected: !message.background,
+                lazy: message.background
+              })
+            } else {
+              history.current++;
+              this.update(tabId, {
+                title: history.stack[history.current].title,
+                url: history.stack[history.current].url,
+                _internal: true
+              })
+            }
           }
         }
       });

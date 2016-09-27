@@ -791,7 +791,7 @@ app.main = ->
     else
       $menu.find(".unlock").remove()
 
-    if $menu.children().length is 0
+    if $menu[0].children.length is 0
       return
 
     $menu.one "click", "li", ->

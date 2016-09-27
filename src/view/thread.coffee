@@ -73,7 +73,7 @@ app.boot "/view/thread.html", ["board_title_solver"], (BoardTitleSolver) ->
 
   popup_helper = (that, e, fn) ->
     $popup = fn()
-    return if $popup.children().length is 0
+    return if $popup[0].children.length is 0
     $popup.find("article").removeClass("last read received")
     #ポップアップ内のサムネイルの遅延ロードを解除
     $popup.find("img[data-src]").each ->
@@ -410,7 +410,7 @@ app.boot "/view/thread.html", ["board_title_solver"], (BoardTitleSolver) ->
                   break
                 now++
 
-        if $popup.children().length is 0
+        if $popup[0].children.length is 0
           $("<div>", {
             text: "対象のレスが見つかりません"
             class: "popup_disabled"

@@ -500,7 +500,7 @@ class app.view.TabContentView extends app.view.PaneContentView
             title = @$element.find("title").text() or url
 
             if @$element.hasClass("view_thread")
-              resCount = @$element.find(".content").children().length
+              resCount = @$element.find(".content")[0].children.length
 
             if resCount? and resCount > 0
               app.bookmark.add(url, title, resCount)

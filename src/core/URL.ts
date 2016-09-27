@@ -60,10 +60,10 @@ namespace app {
     }
 
     export function getDomain (url:string):string {
-      var res:any;
+      var splited:string[];
 
-      res = /^https?:\/\/(.+?)\//.exec(url);
-      return res ? res[1] : "";
+      splited = url.split("/");
+      return splited.length > 1 ? splited[2] : "";
     }
 
     export function threadToBoard (url:string):string {

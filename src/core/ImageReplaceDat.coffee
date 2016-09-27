@@ -112,12 +112,14 @@ class app.ImageReplaceDat
             obj.param = {}
             rurl = r[3].split("=")[1]
             if r[3].includes("$EXTRACT")
-              obj.param.type = "extract"
-              obj.param.pattern = r[4]
-              obj.param.referrerUrl = if rurl? then rurl else ""
+              obj.param =
+                type: "extract"
+                pattern: r[4]
+                referrerUrl: if rurl? then rurl else ""
             else if r[4].includes("$COOKIE")
-              obj.param.type = "cookie"
-              obj.param.referrerUrl = if rurl? then rurl else ""
+              obj.param =
+                type: "cookie"
+                referrerUrl: if rurl? then rurl else ""
           dat.push(obj)
     return dat
 

@@ -401,6 +401,7 @@ class UI.ThreadContent
         #文字色
         color = res.message.match(/<font color="(.*?)">/i)
 
+        harmfulReg = /.*[^ァ-ヺ^ー]グロ([^ァ-ヺ^ー].*|$)|.*死ね.*/
         tmp = (
           res.message
             #imgタグ変換
@@ -440,7 +441,7 @@ class UI.ThreadContent
                 disabled = false
 
               #グロ/死ねの返信レス
-              isThatHarmImg = /.*[^ァ-ヺ^ー]グロ([^ァ-ヺ^ー].*|$)|.*死ね.*/.test(res.message)
+              isThatHarmImg = harmfulReg.test(res.message)
 
               #rep_index更新
               if not disabled

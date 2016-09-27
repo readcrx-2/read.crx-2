@@ -367,7 +367,7 @@ namespace app {
 
     //設定の連想配列をjson文字列で渡す
     getAll ():string {
-      var json = new Object();
+      var json = {};
       for(var key in Config._default) {
         json["config_" + key] = Config._default[key];
       }

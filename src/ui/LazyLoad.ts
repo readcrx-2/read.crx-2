@@ -9,8 +9,8 @@ namespace UI {
 
     container: HTMLElement;
     private scroll = false;
-    private imgs: HTMLImageElement[] = [];
-    private imgPlaceTable = new Map<HTMLImageElement, number>();
+    private imgs: HTMLElement[] = [];
+    private imgPlaceTable = new Map<HTMLElement, number>();
     private updateInterval: number = null;
     public viewLoaded: boolean = false;
 
@@ -30,17 +30,27 @@ namespace UI {
       this.imgPlaceTable.clear();
     }
 
-    public immediateLoad (img: HTMLImageElement): void {
-      if (img.getAttribute("data-src") === null) return;
-      this.load(img);
+    public immediateLoad (img: any): void {
+      if (img.tagName === "IMG" || img.tagName === "VIDEO") {
+        if (img.getAttribute("data-src") === null) return;
+        this.load(img);
+      }
     }
 
-    private load (img: HTMLImageElement, byBottom: boolean = false): void {
+    private load (img: any, byBottom: boolean = false): void {
       var newImg: HTMLImageElement, cpyImg: HTMLImageElement, attr: Attr, attrs: Attr[];
+
+      // タグ名に基づいて型をキャストする
+      if (img.tagName === "IMG") {
+        img = <HTMLImageElement>img;
+        newImg = document.createElement("img");
+      } else if (img.tagName === "AUDIO") {
+        img = <HTMLAudioElement>img;
+      } else if (img.tagName === "VIDEO") {
+        img = <HTMLVideoElement>img;
+      }
       // immediateLoadにて処理済みのものを除外する
       if (img.getAttribute("data-src") === null) return;
-
-      newImg = document.createElement("img");
 
       if (img.tagName === "IMG" && img.className !== "favicon") {
         cpyImg = img;
@@ -64,10 +74,23 @@ namespace UI {
           UI.Animate.fadeIn(this);
         }
       });
+      $(img).one("load error loadedmetadata", function (e) {
+        if (img.tagName === "IMG" && img.className === "favicon") return;
+        if (e.type !== "error") {
+          if (byBottom === false) {
+            $(this).trigger("lazyload-load");
+          } else {
+            $(this).trigger("lazyload-loadbybottom");
+          }
+        }
+      });
 
       if (img.tagName === "IMG" && img.className !== "favicon") {
         img.src = "/img/loading.webp";
         newImg.src = img.getAttribute("data-src");
+      } else if (img.tagName === "AUDIO" || img.tagName === "VIDEO") {
+        img.preload = "metadata";
+        img.src = img.getAttribute("data-src");
       } else {
         img.src = img.getAttribute("data-src");
       }
@@ -93,7 +116,7 @@ namespace UI {
     }
 
     scan (): void {
-      this.imgs = Array.prototype.slice.call(this.container.querySelectorAll("img[data-src]"));
+      this.imgs = Array.prototype.slice.call(this.container.querySelectorAll("img[data-src], audio[data-src], video[data-src]"));
       if (this.imgs.length > 0) {
         this.update();
         this.watch();
@@ -108,7 +131,7 @@ namespace UI {
       scrollTop = this.container.scrollTop;
       clientHeight = this.container.clientHeight;
 
-      this.imgs = this.imgs.filter((img: HTMLImageElement) => {
+      this.imgs = this.imgs.filter((img: HTMLElement) => {
         var top: number, current: HTMLElement;
 
         if (img.offsetWidth !== 0) { //imgが非表示の時はロードしない
@@ -138,7 +161,11 @@ namespace UI {
 
           bottom = 0;
           current = img;
-          target_height = parseInt(app.config.get("image_height"));
+          if (img.tagName === "IMG") {
+            target_height = parseInt(app.config.get("image_height"));
+          } else if (img.tagName === "VIDEO") {
+            target_height = parseInt(app.config.get("video_height"));
+          }
 
           while (current !== null && current !== this.container) {
             bottom += current.offsetTop;

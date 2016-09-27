@@ -77,13 +77,13 @@ app.boot "/view/thread.html", ->
     return if $popup[0].children.length is 0
     $popup.find("article").removeClass("last read received")
     #ポップアップ内のサムネイルの遅延ロードを解除
-    $popup.find("img[data-src]").each ->
+    $popup.find("img[data-src], video[data-src]").each ->
       $view.data("lazyload").immediateLoad(@)
       return
     #setTimeoutを使用してlazyloadの終了を待つ
     setTimeout( ->
       #マウスオーバーによるズームの設定
-      $popup.find("img.image").each ->
+      $popup.find("img.image, video").each ->
         app.view_thread._setup_hover_zoom(@)
       #popupの表示
       popupView.show($popup[0], e.clientX, e.clientY, that)
@@ -199,7 +199,7 @@ app.boot "/view/thread.html", ->
       return
 
   #画像の即時ロード
-  $view.on "immediateLoad", "img", (e) ->
+  $view.on "immediateLoad", "img, video", (e) ->
     $view.data("lazyload").immediateLoad(@)
     return
 
@@ -226,6 +226,25 @@ app.boot "/view/thread.html", ->
     window.addEventListener "view_unload", ->
       clearInterval(auto_load_interval)
       return
+
+  #video再生中のマウスポインタ制御
+  videoPlayTime = 0
+  controlVideoCursor = (v, act) ->
+    switch act
+      when "play"
+        videoPlayTime = Date.now()
+      when "timeupdate"
+        unless v.style.cursor is "none"
+          if Date.now() - videoPlayTime > 2000
+            v.style.cursor = "none"
+      when "pause", "ended"
+        v.style.cursor = "auto"
+        videoPlayTime = 0
+      when "mousemove"
+        unless videoPlayTime is 0
+          v.style.cursor = "auto"
+          videoPlayTime = Date.now()
+    return
 
   $view
     #レスメニュー表示(ヘッダー上)
@@ -291,7 +310,7 @@ app.boot "/view/thread.html", ->
         $menu.find(".set_image_blur").remove()
         $menu.find(".reset_image_blur").remove()
       else
-        bflg = Array.from($article.find(".thumbnail, .mediaviewer[media-type='image']")).some((ele) ->
+        bflg = Array.from($article.find(".thumbnail, .mediaviewer[media-type='image'], .mediaviewer[media-type='video']")).some((ele) ->
           return ele.classList.contains("image_blur")
         )
         if bflg
@@ -404,12 +423,12 @@ app.boot "/view/thread.html", ->
 
       # 画像をぼかす
       else if $this.hasClass("set_image_blur")
-        for thumb in $res.find(".thumbnail, .mediaviewer[media-type='image']")
+        for thumb in $res.find(".thumbnail, .mediaviewer[media-type='image'], .mediaviewer[media-type='video']")
           threadContent.setImageBlur(thumb, true)
 
       # 画像のぼかしを解除する
       else if $this.hasClass("reset_image_blur")
-        for thumb in $res.find(".thumbnail, .mediaviewer[media-type='image']")
+        for thumb in $res.find(".thumbnail, .mediaviewer[media-type='image'], .mediaviewer[media-type='video']")
           threadContent.setImageBlur(thumb, false)
 
       $this.parent().remove()
@@ -594,6 +613,38 @@ app.boot "/view/thread.html", ->
     .on "dblclick",".message", (e) ->
       if app.config.get("dblclick_reload") is "on" and !$(e.target).is("a, .thumbnail, .mediaviewer")
         $view.trigger "request_reload"
+      return
+
+    #VIDEOの再生/一時停止
+    .on "click", ".mediaviewer > video", (e) ->
+      if @paused
+        @play()
+      else
+        @pause()
+      return
+
+    #VIDEO再生中はマウスポインタを消す
+    .on "mouseenter", ".mediaviewer > video", (e) ->
+      @addEventListener "play", ->
+        controlVideoCursor(@, "play")
+        return
+      , false
+      @addEventListener "timeupdate", ->
+        controlVideoCursor(@, "timeupdate")
+        return
+      , false
+      @addEventListener "pause", ->
+        controlVideoCursor(@, "pause")
+        return
+      , false
+      @addEventListener "ended", ->
+        controlVideoCursor(@, "ended")
+        return
+      , false
+      return
+    #マウスポインタのリセット
+    .on "mousemove", ".mediaviewer > video", (e) ->
+      controlVideoCursor(@, "mousemove")
       return
 
   #クイックジャンプパネル
@@ -807,19 +858,23 @@ app.boot "/view/thread.html", ->
     return
 
   #サムネイルロード時の縦位置調整
-  $view.on "lazyload-load", ".thumbnail > a > img, .mediaviewer > a > img.image", ->
-    a = @parentNode
-    container = a.parentNode
-    #画像の指定高が大きく画像が小さい場合は不自然になるのでセンタリングを行わない
-    if container.classList.contains("thumbnail")
-      a.style["top"] = "#{(container.offsetHeight - a.offsetHeight) / 2}px"
+  $view.on "lazyload-load", ".thumbnail > a > img, .mediaviewer > a > img.image, .mediaviewer > video", ->
+    if @tagName is "IMG"
+      a = @parentNode
+      container = a.parentNode
+      #画像の指定高が大きく画像が小さい場合は不自然になるのでセンタリングを行わない
+      if container.classList.contains("thumbnail")
+        a.style["top"] = "#{(container.offsetHeight - a.offsetHeight) / 2}px"
+    else
+      container = @closest(".mediaviewer")
+
     if container.classList.contains("mediaviewer")
       #マウスオーバーによるズームの設定
       app.view_thread._setup_hover_zoom(this)
     return
 
   #逆スクロール時の位置合わせ
-  $view.on "lazyload-loadbybottom", ".mediaviewer > a > img.image", ->
+  $view.on "lazyload-loadbybottom", ".mediaviewer > a > img.image, .mediaviewer > video", ->
     if app.config.get("use_mediaviewer") is "on"
       if app.config.get("image_height_fix") isnt "on"
         content = $content[0]
@@ -1015,6 +1070,9 @@ app.view_thread._setup_hover_zoom = (img) ->
   zoomFlg = false
   if app.config.get("hover_zoom_image") is "on" and img.tagName is "IMG"
     zoomRatio = app.config.get("zoom_ratio_image") + "%"
+    zoomFlg = true
+  else if app.config.get("hover_zoom_video") is "on" and img.tagName is "VIDEO"
+    zoomRatio = app.config.get("zoom_ratio_video") + "%"
     zoomFlg = true
   if zoomFlg
     $(img).hover ->

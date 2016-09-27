@@ -123,9 +123,9 @@ class UI.ThreadContent
         loadImageByElement = (targetElement) =>
           targetResNum = parseInt(targetElement.querySelector(".num").textContent)
           if checkImage
-            qStr = "img"
+            qStr = "img, video"
           else
-            qStr = "img[data-src]"
+            qStr = "img[data-src], video[data-src]"
           for img in targetElement.querySelectorAll(qStr)
             loadFlag = true
             continue if checkImage or img.getAttribute("data-src") is null
@@ -701,13 +701,21 @@ class UI.ThreadContent
         #mediaviewerの追加処理
         addMediaViewer = (sourceA, mediaType, mediaPath="", referrer, cookieStr) ->
           sourceA.classList.add("has_mediaviewer")
-          if mediaType is "image"
+          if mediaType is "image" or mediaType is "video"
             article = sourceA.closest("article")
             article.classList.add("has_image")
 
           mediaViewer = document.createElement("div")
           mediaViewer.className = "mediaviewer"
           mediaViewer.setAttribute("media-type", mediaType)
+          #グロ画像に対するぼかし処理
+          if mediaType is "image" or mediaType is "video"
+            if article.hasClass("has_blur_word") and app.config.get("image_blur") is "on"
+              mediaViewer.className += " image_blur"
+              v = app.config.get("image_blur_length")
+              webkitFilter = "blur(#{v}px)"
+            else
+              webkitFilter = "none"
 
           switch mediaType
             when "image"
@@ -721,11 +729,7 @@ class UI.ThreadContent
               mediaImage.setAttribute("data-src", mediaPath)
               if referrer? then thumbnailImg.setAttribute("data-referrer", referrer)
               if cookieStr? then thumbnailImg.setAttribute("data-cookie", cookieStr)
-              #グロ画像に対するぼかし処理
-              if article.hasClass("has_blur_word") and app.config.get("image_blur") is "on"
-                mediaViewer.className += " image_blur"
-                v = app.config.get("image_blur_length")
-                mediaImage.style.WebkitFilter = "blur(#{v}px)"
+              mediaImage.style.WebkitFilter = webkitFilter
               mediaImage.style.maxWidth = app.config.get("image_width") + "px"
               mediaImage.style.maxHeight = app.config.get("image_height") + "px"
               mediaLink.appendChild(mediaImage)
@@ -736,6 +740,25 @@ class UI.ThreadContent
               mediaFavicon.setAttribute("data-src", "https://www.google.com/s2/favicons?domain=#{app.url.getDomain(sourceA.href)}")
               mediaLink.appendChild(mediaFavicon)
 
+            when "audio", "video"
+              mediaLink = document.createElement(mediaType)
+              mediaLink.src = ""
+              if mediaPath is ""
+                mediaLink.setAttribute("data-src", sourceA.href)
+              else
+                mediaLink.setAttribute("data-src", mediaPath)
+              mediaLink.preload = "none"
+              switch mediaType
+                when "audio"
+                  mediaLink.style.width = app.config.get("audio_width") + "px"
+                  mediaLink.setAttribute("controls", "")
+                when "video"
+                  mediaLink.style.WebkitFilter = webkitFilter
+                  mediaLink.style.maxWidth = app.config.get("video_width") + "px"
+                  mediaLink.style.maxHeight = app.config.get("video_height") + "px"
+                  if app.config.get("video_controls") is "on"
+                    mediaLink.setAttribute("controls", "")
+
           mediaViewer.appendChild(mediaLink)
 
           #高さ固定の場合
@@ -743,6 +766,8 @@ class UI.ThreadContent
             switch mediaType
               when "image"
                 h = parseInt(app.config.get("image_height"))
+              when "video"
+                h = parseInt(app.config.get("video_height"))
               else
                 h = 100   # 最低高
             mediaViewer.style.height = h + "px"
@@ -765,6 +790,21 @@ class UI.ThreadContent
             ":not(.mediaviewer):not(.has_mediaviewer)"), (a) ->
           return app.ImageReplaceDat.do(a, a.href).done( (a, res, err) ->
             addThumbnail(a, res.text, res.referrer, res.cookie) unless err?
+            if app.config.get("use_mediaviewer") is "on"
+              #Audioの確認
+              if app.config.get("audio_supported") is "on"
+                if /\.(?:mp3|m4a|wav|oga|spx)(?:[\?#:&].*)?$/.test(a.href)
+                  addMediaViewer(a, "audio")
+                if app.config.get("audio_supported_ogg") is "on"
+                  if /\.(?:ogg|ogx)(?:[\?#:&].*)?$/.test(a.href)
+                    addMediaViewer(a, "audio")
+              #Videoの確認
+              if app.config.get("video_supported") is "on"
+                if /\.(?:mp4|m4v|webm|ogv)(?:[\?#:&].*)?$/.test(a.href)
+                  addMediaViewer(a, "video")
+                if app.config.get("video_supported_ogg") is "on"
+                  if /\.(?:ogg|ogx)(?:[\?#:&].*)?$/.test(a.href)
+                    addMediaViewer(a, "video")
             return
           )
         ).always(=>
@@ -784,7 +824,7 @@ class UI.ThreadContent
   @parm {Boolean} blurMode
   ###
   setImageBlur: (mediaviewer, blurMode) ->
-    img = mediaviewer.querySelector("a > img.image")
+    img = mediaviewer.querySelector("a > img.image, video")
     if blurMode
       v = app.config.get("image_blur_length")
       mediaviewer.classList.add("image_blur")

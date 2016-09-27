@@ -146,7 +146,7 @@
           %div
             %label
               %input.direct(type="checkbox" name="use_mediaviewer")
-              拡張機能を使用する(大きさ指定/拡大表示)
+              拡張機能を使用する(大きさ指定/拡大表示/音声と動画の再生)
             %br
             %label
               最大幅:
@@ -157,6 +157,46 @@
               最大高さ:
               %input.direct(type="range" name="image_height" min="100" max="600" step="10")
               %span.image_height_text
+              px
+
+      %section
+        %h2 音声と動画の再生
+        %div
+          %label
+            %input.direct(type="checkbox" name="audio_supported")
+            音声ファイル(mp3|m4a|wav|oga|spx)を再生可能にする
+          %div
+            %label
+              %input.direct(type="checkbox" name="audio_supported_ogg")
+              oggファイル(ogg|ogx)を音声データとみなす
+            %br
+            %label
+              最大幅:
+              %input.direct(type="range" name="audio_width" min="240" max="480" step="10")
+              %span.audio_width_text
+              px
+        %div
+          %label
+            %input.direct(type="checkbox" name="video_supported")
+            動画ファイル(mp4|m4v|webm|ogv)を再生可能にする
+          %div
+            %label
+              %input.direct(type="checkbox" name="video_supported_ogg")
+              oggファイル(ogg|ogx)を動画データとみなす
+            %label
+              %input.direct(type="checkbox" name="video_controls" checked)
+              コントローラを表示する
+            %br
+            %label
+              最大幅:
+              %input.direct(type="range" name="video_width" min="160" max="800" step="10")
+              %span.video_width_text
+              px
+            %br
+            %label
+              最大高さ:
+              %input.direct(type="range" name="video_height" min="160" max="600" step="10")
+              %span.video_height_text
               px
 
       %section
@@ -171,6 +211,14 @@
               拡大率:
               %input.direct(type="range" name="zoom_ratio_image" min="100" max="500" step="5")
               %span.zoom_ratio_image_text
+              \%
+            %br
+            %label
+              %input.direct(type="checkbox" name="hover_zoom_video") 動画
+            %label
+              拡大率:
+              %input.direct(type="range" name="zoom_ratio_video" min="100" max="500" step="5")
+              %span.zoom_ratio_video_text
               \%
           %br
           %dl

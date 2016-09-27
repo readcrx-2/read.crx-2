@@ -82,6 +82,10 @@ app.boot "/view/thread.html", ->
       return
     #setTimeoutを使用してlazyloadの終了を待つ
     setTimeout( ->
+      #マウスオーバーによるズームの設定
+      $popup.find("img.image").each ->
+        app.view_thread._setup_hover_zoom(@)
+      #popupの表示
       popupView.show($popup[0], e.clientX, e.clientY, that)
     , 0)
 
@@ -809,6 +813,9 @@ app.boot "/view/thread.html", ->
     #画像の指定高が大きく画像が小さい場合は不自然になるのでセンタリングを行わない
     if container.classList.contains("thumbnail")
       a.style["top"] = "#{(container.offsetHeight - a.offsetHeight) / 2}px"
+    if container.classList.contains("mediaviewer")
+      #マウスオーバーによるズームの設定
+      app.view_thread._setup_hover_zoom(this)
     return
 
   #逆スクロール時の位置合わせ
@@ -819,6 +826,8 @@ app.boot "/view/thread.html", ->
         imgHeight = @offsetHeight
         imgHeight -= 50 if @tagName is "IMG"  # loading.webp
         content.scrollTop += imgHeight
+      #マウスオーバーによるズームの設定
+      app.view_thread._setup_hover_zoom(this)
     return
 
   #パンくずリスト表示
@@ -1000,3 +1009,18 @@ app.view_thread._read_state_manager = ($view) ->
       return if $view.hasClass("loading")
       scan_and_save()
       return
+
+#マウスオーバーによるズームの設定
+app.view_thread._setup_hover_zoom = (img) ->
+  zoomFlg = false
+  if app.config.get("hover_zoom_image") is "on" and img.tagName is "IMG"
+    zoomRatio = app.config.get("zoom_ratio_image") + "%"
+    zoomFlg = true
+  if zoomFlg
+    $(img).hover ->
+      $(img.closest(".mediaviewer")).css("z-index", "255")
+      $(img).css("zoom", zoomRatio)
+    , ->
+      $(img.closest(".mediaviewer")).css("z-index", "auto")
+      $(img).css("zoom", "normal")
+  return

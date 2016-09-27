@@ -261,6 +261,8 @@ namespace app {
       ["use_mediaviewer", "off"],
       ["image_width", "150"],
       ["image_height", "100"],
+      ["hover_zoom_image", "off"],
+      ["zoom_ratio_image", "200"],
       ["image_height_fix", "on"],
       ["delay_scroll_time", "500"],
       ["aa_font", "aa"],

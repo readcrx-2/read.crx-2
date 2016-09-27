@@ -17,7 +17,7 @@ do ($ = jQuery) ->
       hit_count = 0
       for tr in $table.find("tbody")[0].children
         td = tr.children[prop.target_col]
-        if app.util.normalize(td.textContent).includes(prop.query)
+        if !tr.classList.contains("hidden") and app.util.normalize(td.textContent).includes(prop.query)
           tr.classList.add("table_search_hit")
           hit_count++
         else

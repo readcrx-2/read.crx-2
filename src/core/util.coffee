@@ -61,9 +61,9 @@ app.util.ch_server_move_detect = (old_board_url, html) ->
       })
       request.send (response) ->
         if response.status is 200
-          d.resolve(response.body)
+          deferred.resolve(response.body)
         else
-          d.reject()
+          deferred.reject()
         return
       return
   #htmlから移転を判定

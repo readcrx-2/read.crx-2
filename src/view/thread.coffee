@@ -81,6 +81,10 @@ app.boot "/view/thread.html", ->
       $view.data("lazyload").immediateLoad(@)
       return
     app.defer ->
+      # マウスオーバーによるズームの設定
+      $popup.find("img.image").each ->
+        app.view_thread._setupHoverZoom(@)
+      # popupの表示
       popupView.show($popup[0], e.clientX, e.clientY, that)
       return
 
@@ -784,6 +788,8 @@ app.boot "/view/thread.html", ->
     # Lazyloadを実行させるためにスクロールを発火
     if app.config.get("image_height_fix") is "off"
       $content.triggerHandler("scroll")
+    # マウスオーバーによるズームの設定
+    app.view_thread._setupHoverZoom(@)
     return
 
   # 逆スクロール時の位置合わせ
@@ -793,6 +799,8 @@ app.boot "/view/thread.html", ->
       imgHeight = @offsetHeight
       imgHeight -= 50   # loading.webp
       content.scrollTop += imgHeight
+    # マウスオーバーによるズームの設定
+    app.view_thread._setupHoverZoom(@)
     return
 
   #パンくずリスト表示
@@ -972,3 +980,18 @@ app.view_thread._read_state_manager = ($view) ->
       return if $view.hasClass("loading")
       scan_and_save()
       return
+
+# マウスオーバーによるズームの設定
+app.view_thread._setupHoverZoom = (img) ->
+  zoomFlg = false
+  if app.config.get("hover_zoom_image") is "on" and img.tagName is "IMG"
+    zoomRatio = app.config.get("zoom_ratio_image") + "%"
+    zoomFlg = true
+  if zoomFlg
+    $(img).hover ->
+      $(img.closest(".thumbnail")).addClass("zoom")
+      $(img).css("zoom", zoomRatio)
+    , ->
+      $(img.closest(".thumbnail")).removeClass("zoom")
+      $(img).css("zoom", "normal")
+  return

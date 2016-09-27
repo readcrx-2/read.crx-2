@@ -162,6 +162,17 @@
       %section
         %h2 画像オプション
         %div
+          %label
+            マウスを重ねた時に拡大表示
+            %br
+            %label
+              %input.direct(type="checkbox" name="hover_zoom_image") サムネイル
+            %label
+              拡大率:
+              %input.direct(type="range" name="zoom_ratio_image" min="100" max="500" step="5")
+              %span.zoom_ratio_image_text
+              \%
+          %br
           %dl
             %dt 位置合わせの制御方法
             %dd 拡張機能を使用して画像のサイズを指定する場合、スレッドを開いた時の位置合わせの方法を指定します。

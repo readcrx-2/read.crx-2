@@ -196,7 +196,7 @@ namespace app {
       }
 
       serverMove (from:string, to:string):void {
-        var entry:Entry, tmp;
+        var entry:Entry, tmp, reg;
 
         // 板ブックマーク移行
         if (entry = this.get(from)) {
@@ -205,12 +205,13 @@ namespace app {
           this.add(entry);
         }
 
-        tmp = /^http:\/\/[\w\.]+\//.exec(to)[0];
+        reg = /^http:\/\/[\w\.]+\//
+        tmp = reg.exec(to)[0];
         // スレブックマーク移行
         for(var entry of this.getThreadsByBoardURL(from)) {
           this.remove(entry.url);
 
-          entry.url = entry.url.replace(/^http:\/\/[\w\.]+\//, tmp);
+          entry.url = entry.url.replace(reg, tmp);
           if (entry.readState) {
             entry.readState.url = entry.url;
           }

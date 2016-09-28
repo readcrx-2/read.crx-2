@@ -20,6 +20,7 @@ app.boot "/view/board.html", ["board_title_solver"], (BoardTitleSolver) ->
 
   write = (param) ->
     param or= {}
+    param.title = document.title
     param.url = url
     open(
       "/write/submit_thread.html?#{app.url.build_param(param)}"

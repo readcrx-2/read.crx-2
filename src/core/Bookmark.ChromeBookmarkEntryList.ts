@@ -49,7 +49,7 @@ module app.Bookmark {
     }
 
     static URLToEntry (url:string):Entry {
-      var fixedURL:string, guessRes:app.URL.GuessResult, arg, entry:Entry;
+      var fixedURL:string, guessRes:app.URL.GuessResult, arg, entry:Entry, reg;
 
       fixedURL = app.URL.fix(url);
       guessRes = app.URL.guessType(fixedURL);
@@ -69,14 +69,15 @@ module app.Bookmark {
         expired: false
       };
 
-      if (/^\d+$/.test(arg.res_count)) {
+      reg = /^\d+$/
+      if (reg.test(arg.res_count)) {
         entry.resCount = +arg.res_count;
       }
 
       if (
-        /^\d+$/.test(arg.received) &&
-        /^\d+$/.test(arg.read) &&
-        /^\d+$/.test(arg.last)
+        reg.test(arg.received) &&
+        reg.test(arg.read) &&
+        reg.test(arg.last)
       ) {
         entry.readState = {
           url: fixedURL,

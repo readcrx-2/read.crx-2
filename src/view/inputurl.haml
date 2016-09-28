@@ -12,8 +12,8 @@
     %script(src="inputurl.js?v=#{MANIFEST["version"]}")
   %body
     %nav.nav_bar
-      .button.button_back.disabled
-      .button.button_forward.disabled
+      .button.button_back.disabled(title="戻る")
+      .button.button_forward.disabled(title="進む")
     .container
       %form
         %input(name="url" placeholder="ここにURLを入力して下さい" autofocus)

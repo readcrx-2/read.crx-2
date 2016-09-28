@@ -92,9 +92,10 @@ class app.BoardTitleSolver
         $.Deferred (d) ->
           if res = /^BBS_TITLE=(.+)$/m.exec(text)
             title = res[1].replace("＠2ch掲示板", "")
-            if app.url.tsld(url) is "2ch.sc"
+            tsld = app.url.tsld(url)
+            if tsld is "2ch.sc"
               title += "_sc"
-            if app.url.tsld(url) is "open2ch.net"
+            else if tsld is "open2ch.net"
               title += "_op"
             d.resolve(title)
           else

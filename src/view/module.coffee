@@ -365,7 +365,7 @@ class app.view.PaneContentView extends app.view.IframeView
 
         parent.postMessage(JSON.stringify(message), location.origin)
         return
-
+     @$element
       # view_loaded翻訳処理
       .on "view_loaded", ->
         parent.postMessage(
@@ -457,15 +457,20 @@ class app.view.TabContentView extends app.view.PaneContentView
             @$element.find(".button_back, .button_forward").remove()
       return
 
-    @$element.find(".button_back, .button_forward").on "click", ->
-      $this = $(@)
+    @$element.find(".button_back, .button_forward").on "mousedown", (e) ->
+      if e.which isnt 3
+        $this = $(@)
+        howToOpen = app.util.get_how_to_open(e)
+        newTab = app.config.get("always_new_tab") is "on"
+        newTab or= howToOpen.new_tab or howToOpen.new_window
+        background = howToOpen.background
 
-      if not $this.is(".disabled")
-        tmp = if $this.is(".button_back") then "Back" else "Forward"
-        parent.postMessage(
-          JSON.stringify(type: "requestTab#{tmp}"),
-          location.origin
-        )
+        if not $this.is(".disabled")
+          tmp = if $this.is(".button_back") then "Back" else "Forward"
+          parent.postMessage(
+            JSON.stringify(type: "requestTab#{tmp}", newTab: newTab, background: background),
+            location.origin
+          )
       return
     return
 
@@ -500,7 +505,7 @@ class app.view.TabContentView extends app.view.PaneContentView
             title = @$element.find("title").text() or url
 
             if @$element.hasClass("view_thread")
-              resCount = @$element.find(".content").children().length
+              resCount = @$element.find(".content")[0].children.length
 
             if resCount? and resCount > 0
               app.bookmark.add(url, title, resCount)
@@ -591,7 +596,7 @@ class app.view.TabContentView extends app.view.PaneContentView
 
     # dat落ちを表示/非表示
     @$element.find(".button_toggle_dat").on "click", =>
-      @$element.find(".expired").toggleClass("expired_hide")
+      @$element.find(".expired").toggleClass("hidden")
       return
 
     # 未読スレッドを全て開く

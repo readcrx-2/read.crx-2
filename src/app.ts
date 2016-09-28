@@ -296,7 +296,7 @@ namespace app {
         var localStorage_length = localStorage.length
         for (index = 0; index < localStorage_length; index++) {
           key = localStorage.key(index);
-          if (/^config_/.test(key)) {
+          if (key.indexOf("config_") === 0) {
             val = localStorage.getItem(key);
             this._cache[key] = val;
             found[key] = val;
@@ -317,7 +317,7 @@ namespace app {
             val = res[key];
 
             if (
-              /^config_/.test(key) &&
+              key.indexOf("config_") === 0 &&
               (typeof val === "string" || typeof val ==="number")
             ) {
               this._cache[key] = val;
@@ -332,7 +332,7 @@ namespace app {
 
         if (area === "local") {
           for (key in change) {
-            if (!/^config_/.test(key)) continue;
+            if (key.indexOf("config_") !== 0) continue;
 
             info = change[key];
             if (typeof info.newValue === "string") {
@@ -367,7 +367,7 @@ namespace app {
 
     //設定の連想配列をjson文字列で渡す
     getAll ():string {
-      var json = new Object();
+      var json = {};
       for(var key in Config._default) {
         json["config_" + key] = Config._default[key];
       }
@@ -432,13 +432,18 @@ namespace app {
     config = new Config();
   }
 
+  export const AMP_REG = /\&/g;
+  export const LT_REG = /</g;
+  export const GT_REG = />/g;
+  export const QUOT_REG = /"/g;
+  export const APOS_REG = /'/g;
   export function escape_html (str:string):string {
     return str
-      .replace(/\&/g, "&amp;")
-      .replace(/</g, "&lt;")
-      .replace(/>/g, "&gt;")
-      .replace(/"/g, "&quot;")
-      .replace(/'/g, "&apos;");
+      .replace(AMP_REG, "&amp;")
+      .replace(LT_REG, "&lt;")
+      .replace(GT_REG, "&gt;")
+      .replace(QUOT_REG, "&quot;")
+      .replace(APOS_REG, "&apos;");
   }
 
   export function safe_href (url:string):string {

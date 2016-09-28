@@ -50,13 +50,14 @@ namespace app.HTTP {
       }
 
       xhr = new XMLHttpRequest();
-      timer = setTimeout(xhr.abort.bind(xhr), this.timeout);
 
       xhr.open(this.method, url);
 
       if (this.mimeType !== null) {
         xhr.overrideMimeType(this.mimeType);
       }
+
+      xhr.timeout = this.timeout;
 
       for (key in this.headers) {
         val = this.headers[key];
@@ -67,11 +68,13 @@ namespace app.HTTP {
       xhr.addEventListener("loadend", function () {
         var resonseHeaders;
 
-        clearTimeout(timer);
-
         resonseHeaders = Request.parseHTTPHeader(xhr.getAllResponseHeaders());
 
         callback(new Response(xhr.status, resonseHeaders, xhr.responseText));
+      });
+
+      xhr.addEventListener("timeout", function () {
+        callback(new Response(0));
       });
 
       xhr.addEventListener("abort", function () {

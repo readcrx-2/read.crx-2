@@ -231,6 +231,9 @@
             キャッシュ:
             %span.cache_status
             %button.cache_clear(type="button") 削除
+            %br
+            %input(type="number" class="cache_date_range" min="1" value="7") 日以上の前のキャッシュを
+            %button.cache_range_clear(type="button") 削除
           .config_import
             設定
             %button.config_export_button(type="button") エクスポート

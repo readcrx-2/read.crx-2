@@ -3,7 +3,7 @@
   %head
     %meta(charset="utf-8")
     %meta(name="referrer" content="never")
-    %title 新規スレッド作成
+    %title
     %link(rel="stylesheet" href="/write/submit_thread.css?v=#{MANIFEST["version"]}")
     %script(src="/lib/jshortquery.min.js?v=#{MANIFEST["version"]}")
     %script(src="/app.js?v=#{MANIFEST["version"]}")
@@ -11,7 +11,7 @@
   %body.view_write
     %form
       %header
-        %h1 新規スレッド作成
+        %h1
         %button.preview_button(tabindex="1") AA表示確認
       %div#main
         %input(type="submit" value="書き込む" tabindex="6")

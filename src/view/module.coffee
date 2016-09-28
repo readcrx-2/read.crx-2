@@ -365,7 +365,7 @@ class app.view.PaneContentView extends app.view.IframeView
 
         parent.postMessage(JSON.stringify(message), location.origin)
         return
-
+     @$element
       # view_loaded翻訳処理
       .on "view_loaded", ->
         parent.postMessage(

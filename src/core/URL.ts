@@ -51,11 +51,11 @@ namespace app {
       }
     }
 
-    export const tsldReg = /^https?:\/\/(?:\w+\.)*(\w+\.\w+)\//;
+    export const TSLD_REG = /^https?:\/\/(?:\w+\.)*(\w+\.\w+)\//;
     export function tsld (url:string):string {
       var res:any;
 
-      res = tsldReg.exec(url);
+      res = TSLD_REG.exec(url);
       return res ? res[1] : "";
     }
 

@@ -73,6 +73,10 @@ namespace app.HTTP {
         callback(new Response(xhr.status, resonseHeaders, xhr.responseText));
       });
 
+      xhr.addEventListener("timeout", function () {
+        callback(new Response(0));
+      });
+
       xhr.addEventListener("abort", function () {
         callback(new Response(0));
       });

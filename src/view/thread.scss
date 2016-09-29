@@ -179,8 +179,6 @@ header {
 .popup {
   position: fixed;
   z-index: $z-index-popup;
-  max-width: 500px;
-  max-height: 300px;
   overflow: auto;
   box-shadow: 0 3px 10px rgba(black, 0.75);
   border: 3px solid #666;

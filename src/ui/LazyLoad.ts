@@ -28,7 +28,7 @@ namespace UI {
     }
 
     private load (img: HTMLImageElement): void {
-      var newImg: HTMLImageElement, attrIndex: number, attr: Attr, attrs: Attr[];
+      var newImg: HTMLImageElement, attr: Attr, attrs: Attr[];
 
       newImg = document.createElement("img");
 

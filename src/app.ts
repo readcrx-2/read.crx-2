@@ -65,7 +65,7 @@ namespace app {
   export function assert_arg (name:string, rule:string[], arg:any[]):boolean {
     var key:number, val:any;
 
-    for (let [key, val] of rule.entries()) {
+    for ([key, val] of rule.entries()) {
       if (typeof arg[key] !== val) {
         log("error", `${name}: 不正な引数`, deepCopy(arg));
         return true;
@@ -111,7 +111,7 @@ namespace app {
     }
 
     call (...arg:any[]):void {
-      var key:number, callback:Function, tmpCallbackStore;
+      var callback:Function, tmpCallbackStore;
 
       if (!this._config.persistent && this._latestCallArg) {
         app.log("error",
@@ -150,7 +150,7 @@ namespace app {
       window.addEventListener("message", (e:MessageEvent) => {
         if (e.origin !== location.origin) return;
 
-        var data, iframes, key:number, iframe:HTMLIFrameElement;
+        var data, iframes, iframe:HTMLIFrameElement;
 
         if (typeof e.data === "string") {
           try {
@@ -204,7 +204,7 @@ namespace app {
     }
 
     send (type:string, message:any, targetWindow?:Window):void {
-      var data: Object, iframes, key:number, iframe:HTMLIFrameElement;
+      var data: Object, iframes, iframe:HTMLIFrameElement;
 
       data = {
         type: "app.message",
@@ -290,8 +290,7 @@ namespace app {
 
       // localStorageからの移行処理
       (() => {
-        var found:{[index:string]:string;} = {}, index:number, key:string,
-          val:string;
+        var found:{[index:string]:string;} = {}, key:string, val:string;
 
         for (key in localStorage) {
           if (key.startsWith("config_")) {
@@ -479,7 +478,7 @@ namespace app {
       add_ready_module;
 
     fire_definition = (module_id, dependencies, definition) => {
-      var dep_modules = [], key, dep_module_id, callback;
+      var dep_modules = [], dep_module_id, callback;
 
       for (dep_module_id of dependencies) {
         dep_modules.push(ready_modules[dep_module_id].module);

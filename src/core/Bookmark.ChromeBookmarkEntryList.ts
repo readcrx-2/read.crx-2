@@ -307,8 +307,8 @@ module app.Bookmark {
         chrome.bookmarks.get(id, (res:BookmarkTreeNode[]) => {
           var changes:any = {},
             node = res[0],
-            newURL = ChromeBookmarkEntryList.entryToURL(newEntry),
-            currentEntry = ChromeBookmarkEntryList.URLToEntry(node.url);
+            newURL = ChromeBookmarkEntryList.entryToURL(newEntry);
+            //currentEntry = ChromeBookmarkEntryList.URLToEntry(node.url); //used in future
 
           if (node.title !== newEntry.title) {
             changes.title = newEntry.title;

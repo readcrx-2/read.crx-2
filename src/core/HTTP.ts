@@ -30,7 +30,7 @@ namespace app.HTTP {
     }
 
     send (callback:Function):void {
-      var res, xhr:XMLHttpRequest, timer:number, url:string, key:string,
+      var res, xhr:XMLHttpRequest, url:string, key:string,
         val:string;
 
       url = this.url;

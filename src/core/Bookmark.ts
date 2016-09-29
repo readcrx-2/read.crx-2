@@ -261,7 +261,7 @@ namespace app {
       }
 
       getThreadsByBoardURL (url:string):Entry[] {
-        var res = [], key:number, threadURL:string;
+        var res = [], threadURL:string;
 
         url = app.URL.fix(url);
 

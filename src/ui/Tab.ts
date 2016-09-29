@@ -139,7 +139,7 @@ namespace UI {
     }
 
     getAll (): any {
-      var li: HTMLLIElement, key: number, tmp, res = [];
+      var li: HTMLLIElement, tmp, res = [];
 
       tmp = Array.from(this.element.querySelectorAll("li"));
 
@@ -307,7 +307,7 @@ namespace UI {
       $(this.element)
         .find(`li[data-tabid=\"${tabId}\"]`)
           .each(function () {
-            var tabsrc: string, tmp, key, closed, next;
+            var tabsrc: string, tmp, key, next;
 
             tabsrc = this.getAttribute("data-tabsrc");
 

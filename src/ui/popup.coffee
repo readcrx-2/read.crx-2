@@ -85,16 +85,25 @@ do ($ = jQuery) ->
           css =
             right: "#{space.right - margin}px"
             maxWidth: "#{document.body.offsetWidth - space.right - margin * 2}px"
-        css.top = "#{Math.min(space.top, document.body.offsetHeight - $popup.outerHeight()) - margin}px"
+        if document.body.offsetHeight > $popup.outerHeight()
+          cssTop = Math.min(space.top, document.body.offsetHeight - $popup.outerHeight()) - margin
+        else
+          cssTop = margin * 2   # ツールバーにかかるのを防ぐためにmarginを１つ余分に追加
+        css.top = "#{cssTop}px"
+        css.maxHeight = "#{document.body.offsetHeight - cssTop - margin}px"
       else
         css =
           left: "#{margin}px"
           maxWidth: "#{document.body.offsetWidth - margin * 2}px"
         #例え上より下が広くても、上に十分なスペースが有れば上に配置
         if space.top > Math.min(350, space.bottom)
-          css.bottom = "#{space.bottom - margin}px"
+          cssBottom = space.bottom - margin
+          css.bottom = "#{cssBottom}px"
+          css.maxHeight = "#{document.body.offsetHeight - cssBottom - margin}px"
         else
-          css.top = "#{document.body.offsetHeight - space.bottom + margin}px"
+          cssTop = document.body.offsetHeight - space.bottom + margin
+          css.top = "#{cssTop}px"
+          css.maxHeight = "#{document.body.offsetHeight - cssTop - margin}px"
       $popup.css(css)
       return
 

@@ -119,8 +119,8 @@ namespace app {
     }
 
     export class EntryList {
-      private cache: {[index:string]:Entry;} = {};
-      private boardURLIndex: {[index:string]:string[];} = {};
+      private cache = new Map<string, Entry>();
+      private boardURLIndex = new Map<string, string[]>();
 
       add (entry:Entry):boolean {
         var boardURL:string;
@@ -128,14 +128,14 @@ namespace app {
         if (!this.get(entry.url)) {
           entry = app.deepCopy(entry);
 
-          this.cache[entry.url] = entry;
+          this.cache.set(entry.url, entry);
 
           if (entry.type === "thread") {
             boardURL = app.URL.threadToBoard(entry.url);
-            if (!this.boardURLIndex[boardURL]) {
-              this.boardURLIndex[boardURL] = [];
+            if (!this.boardURLIndex.has(boardURL)) {
+              this.boardURLIndex.set(boardURL, []);
             }
-            this.boardURLIndex[boardURL].push(entry.url);
+            this.boardURLIndex.get(boardURL).push(entry.url);
           }
           return true;
         }
@@ -146,7 +146,7 @@ namespace app {
 
       update (entry:Entry):boolean {
         if (this.get(entry.url)) {
-          this.cache[entry.url] = app.deepCopy(entry);
+          this.cache.set(entry.url, app.deepCopy(entry));
           return true;
         }
         else {
@@ -159,18 +159,18 @@ namespace app {
 
         url = app.URL.fix(url);
 
-        if (this.cache[url]) {
-          if (this.cache[url].type === "thread") {
+        if (this.cache.has(url)) {
+          if (this.cache.get(url).type === "thread") {
             boardURL = app.URL.threadToBoard(url);
-            if (this.boardURLIndex[boardURL]) {
-              tmp = this.boardURLIndex[boardURL].indexOf(url);
+            if (this.boardURLIndex.has(boardURL)) {
+              tmp = this.boardURLIndex.get(boardURL).indexOf(url);
               if (tmp !== -1) {
-                this.boardURLIndex[boardURL].splice(tmp, 1);
+                this.boardURLIndex.get(boardURL).splice(tmp, 1);
               }
             }
           }
 
-          delete this.cache[url];
+          this.cache.delete(url);
           return true;
         }
         else {
@@ -223,25 +223,25 @@ namespace app {
       get (url:string):Entry {
         url = app.URL.fix(url);
 
-        return this.cache[url] ? app.deepCopy(this.cache[url]) : null;
+        return this.cache.has(url) ? app.deepCopy(this.cache.get(url)) : null;
       }
 
       getAll ():Entry[] {
-        var key:string, res = [];
+        var res = [];
 
-        for (key in this.cache) {
-          res.push(this.cache[key]);
+        for (var val of this.cache.values()) {
+          res.push(val);
         }
 
         return app.deepCopy(res);
       }
 
       getAllThreads ():Entry[] {
-        var key:string, res = [];
+        var res = [];
 
-        for (key in this.cache) {
-          if (this.cache[key].type === "thread") {
-            res.push(this.cache[key]);
+        for (var val of this.cache.values()) {
+          if (val.type === "thread") {
+            res.push(val);
           }
         }
 
@@ -249,11 +249,11 @@ namespace app {
       }
 
       getAllBoards ():Entry[] {
-        var key:string, res = [];
+        var res = [];
 
-        for (key in this.cache) {
-          if (this.cache[key].type === "board") {
-            res.push(this.cache[key]);
+        for (var val of this.cache.values()) {
+          if (val.type === "board") {
+            res.push(val);
           }
         }
 
@@ -265,8 +265,8 @@ namespace app {
 
         url = app.URL.fix(url);
 
-        if (this.boardURLIndex[url]) {
-          for (key = 0; threadURL = this.boardURLIndex[url][key]; key++) {
+        if (this.boardURLIndex.has(url)) {
+          for (key = 0; threadURL = this.boardURLIndex.get(url)[key]; key++) {
             res.push(this.get(threadURL));
           }
         }

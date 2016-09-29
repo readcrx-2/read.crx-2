@@ -80,21 +80,21 @@ do ($ = jQuery) ->
         if space.right > 350
           css =
             left: "#{space.left + margin}px"
-            "max-width": document.body.offsetWidth - space.left - margin * 2
+            maxWidth: "#{document.body.offsetWidth - space.left - margin * 2}px"
         else
           css =
-            right: "#{space.right + margin}px"
-            "max-width": document.body.offsetWidth - space.right - margin * 2
+            right: "#{space.right - margin}px"
+            maxWidth: "#{document.body.offsetWidth - space.right - margin * 2}px"
         css.top = "#{Math.min(space.top, document.body.offsetHeight - $popup.outerHeight()) - margin}px"
       else
         css =
-          left: margin
-          "max-width": document.body.offsetWidth - margin * 2
+          left: "#{margin}px"
+          maxWidth: "#{document.body.offsetWidth - margin * 2}px"
         #例え上より下が広くても、上に十分なスペースが有れば上に配置
         if space.top > Math.min(350, space.bottom)
-          css.bottom = space.bottom + margin
+          css.bottom = "#{space.bottom - margin}px"
         else
-          css.top = document.body.offsetHeight - space.bottom + margin
+          css.top = "#{document.body.offsetHeight - space.bottom + margin}px"
       $popup.css(css)
       return
 

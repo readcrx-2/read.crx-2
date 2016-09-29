@@ -65,7 +65,7 @@ namespace app {
   export function assert_arg (name:string, rule:string[], arg:any[]):boolean {
     var key:number, val:any;
 
-    for (key = 0; val = rule[key]; key++) {
+    for (let [key, val] of rule.entries()) {
       if (typeof arg[key] !== val) {
         log("error", `${name}: 不正な引数`, deepCopy(arg));
         return true;
@@ -124,7 +124,7 @@ namespace app {
 
         tmpCallbackStore = this._callbackStore.slice(0);
 
-        for (key = 0; callback = tmpCallbackStore[key]; key++) {
+        for (callback of tmpCallbackStore) {
           if (this._callbackStore.includes(callback)) {
             callback.apply(null, deepCopy(arg));
           }
@@ -168,11 +168,11 @@ namespace app {
         }
 
         if (data.propagation !== false) {
-          iframes = document.getElementsByTagName("iframe");
+          iframes = Array.from(document.getElementsByTagName("iframe"));
 
           // parentから伝わってきた場合はiframeにも伝える
           if (e.source === parent) {
-            for (key = 0; iframe = iframes[key]; key++) {
+            for (iframe of iframes) {
               iframe.contentWindow.postMessage(e.data, location.origin);
             }
           }
@@ -182,7 +182,7 @@ namespace app {
               parent.postMessage(e.data, location.origin);
             }
 
-            for (key = 0; iframe = iframes[key]; key++) {
+            for (iframe of iframes) {
               if (iframe.contentWindow === e.source) continue;
               iframe.contentWindow.postMessage(e.data, location.origin);
             }
@@ -221,8 +221,8 @@ namespace app {
           parent.postMessage(data, location.origin);
         }
 
-        iframes = document.getElementsByTagName("iframe");
-        for (key = 0; iframe = iframes[key]; key++) {
+        iframes = Array.from(document.getElementsByTagName("iframe"));
+        for (iframe of iframes) {
           iframe.contentWindow.postMessage(data, location.origin);
         }
         this._fire(type, message);
@@ -481,7 +481,7 @@ namespace app {
     fire_definition = (module_id, dependencies, definition) => {
       var dep_modules = [], key, dep_module_id, callback;
 
-      for (key = 0; dep_module_id = dependencies[key]; key++) {
+      for (dep_module_id of dependencies) {
         dep_modules.push(ready_modules[dep_module_id].module);
       }
 

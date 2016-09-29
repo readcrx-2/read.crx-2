@@ -139,11 +139,11 @@ namespace UI {
     }
 
     getAll (): any {
-      var li: HTMLLIElement, key: number, tmp: NodeList, res = [];
+      var li: HTMLLIElement, key: number, tmp, res = [];
 
-      tmp = this.element.querySelectorAll("li");
+      tmp = Array.from(this.element.querySelectorAll("li"));
 
-      for (key = 0; li = <HTMLLIElement>tmp[key]; key++) {
+      for (li of tmp) {
         res.push({
           tabId: li.getAttribute("data-tabid"),
           url: li.getAttribute("data-tabsrc"),
@@ -311,7 +311,7 @@ namespace UI {
 
             tabsrc = this.getAttribute("data-tabsrc");
 
-            for (key = 0; tmp = tab.recentClosed[key]; key++) {
+            for (tmp of tab.recentClosed) {
               if (tmp.url === tabsrc) {
                 tab.recentClosed.splice(key, 1);
               }
@@ -349,7 +349,7 @@ namespace UI {
     restoreClosed (tabId: string): string {
       var tab, key;
 
-      for (key = 0; tab = this.recentClosed[key]; key++) {
+      for (tab of this.recentClosed) {
         if (tab.tabId === tabId) {
           this.recentClosed.splice(key, 1);
           return this.add(tab.url, {title: tab.title});

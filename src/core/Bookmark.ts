@@ -266,7 +266,7 @@ namespace app {
         url = app.URL.fix(url);
 
         if (this.boardURLIndex.has(url)) {
-          for (key = 0; threadURL = this.boardURLIndex.get(url)[key]; key++) {
+          for (threadURL of this.boardURLIndex.get(url)) {
             res.push(this.get(threadURL));
           }
         }

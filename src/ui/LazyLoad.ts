@@ -28,11 +28,12 @@ namespace UI {
     }
 
     private load (img: HTMLImageElement): void {
-      var newImg: HTMLImageElement, attrIndex: number, attr: Attr;
+      var newImg: HTMLImageElement, attrIndex: number, attr: Attr, attrs: Attr[];
 
       newImg = document.createElement("img");
 
-      for (attrIndex = 0; attr = img.attributes[attrIndex]; attrIndex++) {
+      attrs = Array.from(img.attributes)
+      for (attr of attrs) {
         if (attr.name !== "data-src") {
           newImg.setAttribute(attr.name, attr.value);
         }

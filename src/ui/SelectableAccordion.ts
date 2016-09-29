@@ -1,4 +1,4 @@
-///<reference path="../../typings/globals/jquery/index.d.ts" />
+///<reference path="../../node_modules/@types/jquery/index.d.ts" />
 ///<reference path="Accordion.ts" />
 
 /*

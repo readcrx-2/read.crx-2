@@ -20,7 +20,7 @@ namespace UI {
       overlay = document.createElement("div")
       overlay.classList.add("sortable_overlay");
 
-      overlay.addEventListener("contextmenu", function (e) {
+      overlay.addEventListener("contextmenu", (e) => {
         e.preventDefault();
       });
 
@@ -100,7 +100,7 @@ namespace UI {
 
       var clicks = 1;
       var timer = null;
-      this.container.addEventListener("mousedown", function (e) {
+      this.container.addEventListener("mousedown", (e) => {
         if (e.target === container) return;
         if (e.which !== 1) return;
         if (option.exclude && (<Element>e.target).webkitMatchesSelector(option.exclude)) return;
@@ -108,7 +108,7 @@ namespace UI {
         clearTimeout(timer);
 
         // 0.5秒待ってダブルクリックかシングルクリックか判定する
-        timer = setTimeout(function() {
+        timer = setTimeout( () => {
           clicks = 1;
         },500);
 

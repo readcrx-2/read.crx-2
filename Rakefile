@@ -99,7 +99,7 @@ def typescript(src, output)
   end
 
   src.each {|a|
-    sh "node_modules/.bin/tsc --target ES5 #{a}"
+    sh "node_modules/.bin/tsc --target es2015 --lib dom,es2015,es2016 #{a}"
   }
 
   tmp = src.map {|a| a.gsub(/\.ts$/, ".js") }

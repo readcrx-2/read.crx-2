@@ -384,7 +384,7 @@ module app.Bookmark {
           }
 
           for(var id of removeIdList) {
-            chrome.bookmarks.remove(id, function () {
+            chrome.bookmarks.remove(id, () => {
               //TODO 失敗検出
               removedCount++;
 

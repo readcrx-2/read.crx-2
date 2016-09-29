@@ -24,7 +24,7 @@ namespace UI {
           $("<div>", {class: "tab_container"})
         )
         .find(".tab_tabbar")
-          .on("notchedmousewheel", function (e) {
+          .on("notchedmousewheel", (e) => {
             if (app.config.get("mousewheel_change_tab") === "on") {
               var tmp: string, next: Element;
 
@@ -59,7 +59,7 @@ namespace UI {
               tab.update(this.getAttribute("data-tabid"), {selected: true});
             }
           })
-          .on("mousedown", "img", function (e) {
+          .on("mousedown", "img", (e) => {
             e.preventDefault();
           })
           .on("click", "img", function () {
@@ -77,11 +77,11 @@ namespace UI {
 
         message = JSON.parse(e.data);
 
-        if ([
+        if (![
             "requestTabHistory",
             "requestTabBack",
             "requestTabForward"
-          ].indexOf(message.type) === -1) {
+          ].includes(message.type)) {
           return;
         }
 

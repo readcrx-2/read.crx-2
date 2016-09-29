@@ -21,14 +21,14 @@ namespace app {
       )
       .show()
 
-    parent.chrome.tabs.getCurrent(function (tab):void {
+    parent.chrome.tabs.getCurrent( (tab): void => {
       parent.chrome.tabs.remove(tab.id);
     });
   }
   export var clitical_error = criticalError;
 
   export function log (level:string, ...data:any[]) {
-    if (logLevels.indexOf(level) !== -1) {
+    if (logLevels.includes(level)) {
       console[level].apply(console, data);
     }
     else {
@@ -125,7 +125,7 @@ namespace app {
         tmpCallbackStore = this._callbackStore.slice(0);
 
         for (key = 0; callback = tmpCallbackStore[key]; key++) {
-          if (this._callbackStore.indexOf(callback) !== -1) {
+          if (this._callbackStore.includes(callback)) {
             callback.apply(null, deepCopy(arg));
           }
         }
@@ -293,10 +293,8 @@ namespace app {
         var found:{[index:string]:string;} = {}, index:number, key:string,
           val:string;
 
-        var localStorage_length = localStorage.length
-        for (index = 0; index < localStorage_length; index++) {
-          key = localStorage.key(index);
-          if (key.indexOf("config_") === 0) {
+        for (key in localStorage) {
+          if (key.startsWith("config_")) {
             val = localStorage.getItem(key);
             this._cache[key] = val;
             found[key] = val;
@@ -317,7 +315,7 @@ namespace app {
             val = res[key];
 
             if (
-              key.indexOf("config_") === 0 &&
+              key.startsWith("config_") &&
               (typeof val === "string" || typeof val ==="number")
             ) {
               this._cache[key] = val;
@@ -332,7 +330,7 @@ namespace app {
 
         if (area === "local") {
           for (key in change) {
-            if (key.indexOf("config_") !== 0) continue;
+            if (!key.startsWith("config_")) continue;
 
             info = change[key];
             if (typeof info.newValue === "string") {
@@ -452,7 +450,7 @@ namespace app {
 
   export var manifest: any;
 
-  (function() {
+  (() => {
     var xhr:XMLHttpRequest;
     if (/^chrome-extension:\/\//.test(location.origin)) {
       xhr = new XMLHttpRequest();
@@ -474,11 +472,11 @@ namespace app {
   }
 
   export var module;
-  (function () {
+  (() => {
     var pending_modules = [], ready_modules = {}, fire_definition,
       add_ready_module;
 
-    fire_definition = function (module_id, dependencies, definition) {
+    fire_definition = (module_id, dependencies, definition) => {
       var dep_modules = [], key, dep_module_id, callback;
 
       for (key = 0; dep_module_id = dependencies[key]; key++) {
@@ -487,15 +485,15 @@ namespace app {
 
       if (module_id !== null) {
         callback = add_ready_module.bind({
-          module_id: module_id,
-          dependencies: dependencies
+          module_id,
+          dependencies
         });
-        defer(function () {
+        defer( () => {
           definition.apply(null, dep_modules.concat(callback));
         });
       }
       else {
-        defer(function () {
+        defer( () => {
           definition.apply(null, dep_modules);
         });
       }
@@ -509,8 +507,8 @@ namespace app {
 
       // このモジュールが初期化された事で依存関係が満たされたモジュールを初期化
       pending_modules = pending_modules.filter((val) => {
-        if (val.dependencies.indexOf(this.module_id) !== -1) {
-          if (!val.dependencies.some(function (a) { return !ready_modules[a]; })) {
+        if (val.dependencies.includes(this.module_id)) {
+          if (!val.dependencies.some((a) => { return !ready_modules[a]; } )) {
             fire_definition(val.module_id, val.dependencies, val.definition);
             return false;
           }
@@ -523,11 +521,11 @@ namespace app {
       if (!dependencies) dependencies = [];
 
       // 依存関係が満たされていないモジュールは、しまっておく
-      if (dependencies.some(function (a) { return !ready_modules[a]; })) {
+      if (dependencies.some((a) => { return !ready_modules[a]; } )) {
         pending_modules.push({
-          module_id: module_id,
-          dependencies: dependencies,
-          definition: definition
+          module_id,
+          dependencies,
+          definition
         });
       }
       // 依存関係が満たされている場合、即座にモジュール初期化を開始する
@@ -537,7 +535,7 @@ namespace app {
     };
 
     if (window["jQuery"]) {
-      app.module("jquery", [], function (callback) {
+      app.module("jquery", [], (callback) => {
         callback(window["jQuery"]);
       });
     }
@@ -566,8 +564,8 @@ namespace app {
         location.reload(true);
       }
       else {
-        $(function () {
-          app.config.ready(function () {
+        $(() => {
+          app.config.ready(() => {
             if (requirements) {
               app.module(null, requirements, fn);
             }

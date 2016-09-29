@@ -387,15 +387,15 @@ namespace app {
       private followDeletion (b:EntryList):void {
         var aList:string[], bList:string[], rmList:string[];
 
-        aList = this.getAll().map(function (entry:Entry) {
+        aList = this.getAll().map( (entry:Entry) => {
           return entry.url;
         });
-        bList = b.getAll().map(function (entry:Entry) {
+        bList = b.getAll().map( (entry:Entry) => {
           return entry.url;
         });
 
-        rmList = aList.filter(function (url:string) {
-          return bList.indexOf(url) === -1;
+        rmList = aList.filter( (url:string) => {
+          return !bList.includes(url);
         });
 
         for(var url of rmList) {

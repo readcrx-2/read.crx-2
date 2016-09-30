@@ -32,6 +32,11 @@ tr.expired td:first-child:before {
   color: red;
 }
 
+tr.errored:not(.expired) td:first-child:before {
+  content: "[更新失敗] ";
+  color: red;
+}
+
 td {
   &:nth-child(2), &:nth-child(3), &:nth-child(4) {
     text-align: right;

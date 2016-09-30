@@ -110,6 +110,10 @@ class UI.ThreadList
         else
           $tr.removeClass("expired")
 
+      if msg.type is "errored"
+        $tr = $table.find("tr[data-href=\"#{msg.bookmark.url}\"]")
+        $tr.addClass("errored")
+
       if @_flg.bookmark
         if msg.type is "added"
           $tr = $table.find("tr[data-href=\"#{msg.bookmark.url}\"]")

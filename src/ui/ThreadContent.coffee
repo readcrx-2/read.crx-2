@@ -93,7 +93,11 @@ class UI.ThreadContent
 
     # もしターゲットがNGだった場合、その直前の非NGレスをターゲットに変更する
     if target and target.classList.contains("ng")
-      target = $(target).prevAll(":not(.ng)")[0]
+      _target = $(target).prevAll(":not(.ng)")[0]
+      if _target
+        target = _target
+      else
+        target = $(target).nextAll(":not(.ng)")[0]
 
     if target
       if @_scrolling

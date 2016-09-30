@@ -82,6 +82,7 @@ class app.view.View
     # .open_in_rcrxリンクの処理
     @$element
       .on "mousedown", ".open_in_rcrx", (e) ->
+        e.preventDefault()
         if e.which isnt 3
           url = @href or @getAttribute("data-href")
           title = @getAttribute("data-title") or @textContent

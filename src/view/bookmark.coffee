@@ -56,7 +56,7 @@ app.boot "/view/bookmark.html", ->
 
     fn = (res) ->
       if res?
-        delete loadingServer[@prev.split("/")[2]]
+        delete loadingServer[app.url.getDomain(@prev)]
         count.loading--
         status = if res.status is "success" then "success" else "error"
         count[status]++
@@ -82,7 +82,7 @@ app.boot "/view/bookmark.html", ->
       # 同一サーバーへの最大接続数: 1
       else if count.loading < 2
         for current, key in board_list
-          server = current.split("/")[2]
+          server = app.url.getDomain(current)
           continue if loadingServer[server]
           loadingServer[server] = true
           board_list.splice(key, 1)
@@ -99,13 +99,6 @@ app.boot "/view/bookmark.html", ->
       return
 
     fn()
-
-    #dat落ちを表示/非表示
-    $expired = $view.find(".expired")
-    if app.config.get("bookmark_show_dat") is "off"
-      $expired.addClass("hidden")
-    else
-      $expired.removeClass("hidden")
     return
 
   threadList.addItem(
@@ -117,13 +110,6 @@ app.boot "/view/bookmark.html", ->
       created_at: /\/(\d+)\/$/.exec(a.url)[1] * 1000
       expired: a.expired
   )
-
-  #dat落ちを表示/非表示
-  $expired = $view.find(".expired")
-  if app.config.get("bookmark_show_dat") is "off"
-    $expired.addClass("hidden")
-  else
-    $expired.removeClass("hidden")
 
   app.message.send("request_update_read_state", {})
   $table.table_sort("update")

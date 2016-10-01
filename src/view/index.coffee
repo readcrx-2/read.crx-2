@@ -450,8 +450,7 @@ app.main = ->
         $("<div>")
       )
       .one "click", "a, div:last-child", (e) ->
-        cl = e.delegateTarget.classList
-        UI.Animate.fadeOut(cl).on("finish", =>
+        UI.Animate.fadeOut(e.delegateTarget).on("finish", =>
           t = e.delegateTarget
           t.parentNode.removeChild(t)
         )
@@ -705,7 +704,7 @@ app.main = ->
                 .remove($iframe.attr("data-tabid"))
         #モーダルのviewが送ってきた場合
         else if $iframe.is("#modal > iframe")
-          UI.Animate.fadeIn($iframe[0]).on("finish", ->
+          UI.Animate.fadeOut($iframe[0]).on("finish", ->
             $iframe.remove()
             return
           )

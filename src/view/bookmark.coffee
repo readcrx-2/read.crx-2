@@ -65,7 +65,6 @@ app.boot "/view/bookmark.html", ->
         status = if res.status is "success" then "success" else "error"
         count[status]++
         if status is "error"
-          console.log board_thread_table
           for board in board_thread_table.get(@prev)
             app.message.send("bookmark_updated", {type: "errored", bookmark: {type: "thread", url: board}, entry: {type: "thread"}})
 

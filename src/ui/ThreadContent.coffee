@@ -91,13 +91,9 @@ class UI.ThreadContent
     if target and @container.classList.contains("searching") and not target.classList.contains("search_hit")
       target = null
 
-    # もしターゲットがNGだった場合、その直前の非NGレスをターゲットに変更する
+    # もしターゲットがNGだった場合、その直前/直後の非NGレスをターゲットに変更する
     if target and target.classList.contains("ng")
-      _target = $(target).prevAll(":not(.ng)")[0]
-      if _target
-        target = _target
-      else
-        target = $(target).nextAll(":not(.ng)")[0]
+      _target = $(target).prevAll(":not(.ng)")[0] or $(target).nextAll(":not(.ng)")[0]
 
     if target
       if @_scrolling

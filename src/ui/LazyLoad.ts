@@ -1,4 +1,4 @@
-///<reference path="../../node_modules/@types/jquery/index.d.ts" />
+///<reference path="../global.d.ts" />
 
 namespace UI {
   "use strict";
@@ -43,10 +43,8 @@ namespace UI {
         $(img).replaceWith(this);
 
         if (e.type === "load") {
-          $(this).trigger("lazyload-load").addClass("fade");
-          setTimeout( () => {
-            this.classList.add("fadeIn")
-          }, 0);
+          $(this).trigger("lazyload-load");
+          UI.Animate.fadeIn(this);
         }
       });
 

@@ -56,20 +56,6 @@ $z-index-notification: 9;
     }
   }
 
-  .fade {
-    &.fadeIn {
-      opacity: 1;
-    }
-    opacity: 0;
-    transition: opacity 250ms ease-in-out;
-  }
-
-  .slide {
-    height: 0;
-    overflow: hidden;
-    transition: height 250ms ease-in-out;
-  }
-
   .hidden {
     display: none;
   }

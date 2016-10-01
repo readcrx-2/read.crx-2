@@ -101,11 +101,7 @@ app.boot "/write/submit_thread.html", ->
       $view.find(".notice").text("書き込み失敗 - #{message}")
     else
       $view.find(".notice").text("")
-      ele = $view.find(".iframe_container").removeClass("hidden")
-      app.defer(->
-        ele.addClass("fadeIn")
-        return
-      )
+      UI.Animate.fadeOut($view.find(".iframe_container")[0])
 
   write_timer =
     wake: ->
@@ -144,11 +140,7 @@ app.boot "/write/submit_thread.html", ->
       , 2000
       write_timer.kill()
     else if message.type is "confirm"
-      ele = $view.find(".iframe_container").removeClass("hidden")
-      app.defer(->
-        ele.addClass("fadeIn")
-        return
-      )
+      UI.Animate.fadeIn($view.find(".iframe_container")[0])
       write_timer.kill()
     else if message.type is "error"
       on_error(message.message)
@@ -157,13 +149,12 @@ app.boot "/write/submit_thread.html", ->
 
   $view.find(".hide_iframe").on "click", ->
     write_timer.kill()
+    UI.Animate.fadeOut($view[0])
     $view
       .find(".iframe_container")
         .find("iframe")
           .remove()
         .end()
-      .removeClass("fadeIn")
-      .addClass("hidden")
     $view.find("input, textarea").removeAttr("disabled")
     $view.find(".notice").text("")
     return

@@ -255,28 +255,22 @@ class app.view.Index extends app.view.View
   @method showKeyboardHelp
   ###
   showKeyboardHelp: ->
-    @$element
-      .find(".keyboard_help")
-        .one "click keydown", =>
-          @hideKeyboardHelp()
-          return
-        .removeClass("hidden")
-        .addClass("fadeIn")
-        .focus()
+    $help = @$element.find(".keyboard_help")
+    $help
+      .one "click keydown", =>
+        @hideKeyboardHelp()
+        return
+      .focus()
+    UI.Animate.fadeIn($help[0])
     return
 
   ###*
   @method hideKeyboardHelp
   ###
   hideKeyboardHelp: ->
-    ele = @$element.find(".keyboard_help")
-    ele.removeClass("fadeIn")
+    UI.Animate.fadeOut(@$element.find(".keyboard_help")[0])
     iframe = document.querySelector(".iframe_focused")
     iframe?.contentDocument.querySelector(".content").focus()
-    setTimeout(->
-      ele.addClass("hidden")
-      return
-    , 250)
     return
 
 app.boot "/view/index.html", ->
@@ -457,19 +451,13 @@ app.main = ->
       )
       .one "click", "a, div:last-child", (e) ->
         cl = e.delegateTarget.classList
-        cl.remove("fadeIn")
-        setTimeout( =>
+        UI.Animate.fadeOut(cl).on("finish", =>
           t = e.delegateTarget
           t.parentNode.removeChild(t)
-          return
-        , 250)
+        )
         return
-      .addClass("fade")
       .appendTo("#app_notice_container")
-    app.defer( ->
-      div.addClass("fadeIn")
-      return
-    )
+    UI.Animate.fadeIn(div[0])
 
   #前回起動時のバージョンと違うバージョンだった場合、アップデート通知を送出
   do ->
@@ -641,10 +629,7 @@ app.main = ->
           .attr("data-title", message.title or iframe_info.url)
           .addClass("fade")
           .appendTo("#modal")
-        app.defer(->
-          iframeEle.addClass("fadeIn")
-          return
-        )
+        UI.Animate.fadeIn(iframeEle[0])
     else
       $li = $view.find(".tab_tabbar > li[data-tabsrc=\"#{iframe_info.src}\"]")
       if $li.length
@@ -720,11 +705,10 @@ app.main = ->
                 .remove($iframe.attr("data-tabid"))
         #モーダルのviewが送ってきた場合
         else if $iframe.is("#modal > iframe")
-          $iframe.removeClass("fadeIn")
-          setTimeout( ->
+          UI.Animate.fadeIn($iframe[0]).on("finish", ->
             $iframe.remove()
             return
-          , 250)
+          )
 
       #view_loadedの翻訳
       when "view_loaded"

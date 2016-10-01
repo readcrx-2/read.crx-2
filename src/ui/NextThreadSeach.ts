@@ -1,4 +1,4 @@
-///<reference path="../../node_modules/@types/jquery/index.d.ts" />
+///<reference path="../global.d.ts" />
 
 namespace UI {
   "use strict";
@@ -19,13 +19,11 @@ namespace UI {
     }
 
     show ():void {
-      this.$element.removeClass("hidden");
-      app.defer(() => {this.$element.addClass("fadeIn")});
+      UI.Animate.fadeIn(this.element);
     }
 
     hide ():void {
-      this.$element.addClass("hidden");
-      app.defer(() => {this.$element.removeClass("fadeIn")});
+      UI.Animate.fadeOut(this.element);
     }
 
     search (url:string, title:string):void {

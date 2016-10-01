@@ -66,6 +66,8 @@ do ($ = jQuery) ->
     #表示位置決定
     do ->
       margin = 20
+      viewTop = default_parent[0].querySelector(".nav_bar").offsetHeight
+      viewHeight = document.body.offsetHeight - viewTop
 
       #カーソルの上下左右のスペースを測定
       space =
@@ -85,10 +87,11 @@ do ($ = jQuery) ->
           css =
             right: "#{space.right - margin}px"
             maxWidth: "#{document.body.offsetWidth - space.right - margin * 2}px"
-        if document.body.offsetHeight > $popup.outerHeight()
-          cssTop = Math.min(space.top, document.body.offsetHeight - $popup.outerHeight()) - margin
+        cursorTop = Math.max(space.top, viewTop + margin * 2)
+        if viewHeight > $popup.outerHeight()
+          cssTop = Math.min(cursorTop, document.body.offsetHeight - $popup.outerHeight()) - margin
         else
-          cssTop = margin * 2   # ツールバーにかかるのを防ぐためにmarginを１つ余分に追加
+          cssTop = viewTop + margin
         css.top = "#{cssTop}px"
         css.maxHeight = "#{document.body.offsetHeight - cssTop - margin}px"
       else
@@ -97,13 +100,13 @@ do ($ = jQuery) ->
           maxWidth: "#{document.body.offsetWidth - margin * 2}px"
         #例え上より下が広くても、上に十分なスペースが有れば上に配置
         if space.top > Math.min(350, space.bottom)
-          cssBottom = space.bottom - margin
+          cssBottom = Math.max(space.bottom, margin)
           css.bottom = "#{cssBottom}px"
-          css.maxHeight = "#{document.body.offsetHeight - cssBottom - margin}px"
+          css.maxHeight = "#{viewHeight - cssBottom - margin}px"
         else
           cssTop = document.body.offsetHeight - space.bottom + margin
           css.top = "#{cssTop}px"
-          css.maxHeight = "#{document.body.offsetHeight - cssTop - margin}px"
+          css.maxHeight = "#{viewHeight - cssTop - margin}px"
       $popup.css(css)
       return
 

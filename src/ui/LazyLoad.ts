@@ -9,17 +9,23 @@ namespace UI {
     container: HTMLElement;
     private scroll = false;
     private imgs: HTMLImageElement[] = [];
+    private imgPlaceTable = new Map<HTMLImageElement, number>();
     private updateInterval: number = null;
 
     constructor (container: HTMLElement) {
       this.container = container;
 
       $(this.container).on("scroll", this.onScroll.bind(this));
+      $(this.container).on("resize", this.onResize.bind(this));
       this.scan();
     }
 
     private onScroll (): void {
       this.scroll = true;
+    }
+
+    private onResize (): void {
+      this.imgPlaceTable.clear();
     }
 
     public immediateLoad (img: HTMLImageElement): void {
@@ -83,21 +89,29 @@ namespace UI {
     }
 
     update (): void {
+      var scrollTop: number, clientHeight: number;
+      scrollTop = this.container.scrollTop;
+      clientHeight = this.container.clientHeight;
+
       this.imgs = this.imgs.filter((img: HTMLImageElement) => {
         var top: number, current: HTMLElement;
 
         if (img.offsetWidth !== 0) { //imgが非表示の時はロードしない
-          top = 0;
-          current = img;
-
-          while (current !== null && current !== this.container) {
-            top += current.offsetTop;
-            current = <HTMLElement>current.offsetParent;
+          if (this.imgPlaceTable.has(img)) {
+            top = this.imgPlaceTable.get(img);
+          } else {
+            top = 0;
+            current = img;
+            while (current !== null && current !== this.container) {
+              top += current.offsetTop;
+              current = <HTMLElement>current.offsetParent;
+            }
+            this.imgPlaceTable.set(img, top);
           }
 
           if (
-            !(top + img.offsetHeight < this.container.scrollTop ||
-            this.container.scrollTop + this.container.clientHeight < top)
+            !(top + img.offsetHeight < scrollTop ||
+            scrollTop + clientHeight < top)
           ) {
             this.load(img);
             return false;

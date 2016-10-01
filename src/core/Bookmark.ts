@@ -45,7 +45,7 @@ namespace app {
         expired: legacy.expired === true
       };
 
-      if (typeof legacy.res_count === "number" && !isNaN(legacy.res_count)) {
+      if (Number.isFinite(legacy.res_count)) {
         entry.resCount = legacy.res_count;
       }
 
@@ -53,9 +53,9 @@ namespace app {
         readState = legacy.read_state;
         if (
           readState.url === entry.url &&
-          typeof readState.received === "number" && !isNaN(readState.received) &&
-          typeof readState.last === "number" && !isNaN(readState.last) &&
-          typeof readState.read === "number" && !isNaN(readState.read)
+          Number.isFinite(readState.received) &&
+          Number.isFinite(readState.last) &&
+          Number.isFinite(readState.read)
         ) {
           entry.readState = readState;
         }
@@ -77,7 +77,7 @@ namespace app {
         expired: entry.expired === true
       };
 
-      if (typeof entry.resCount === "number" && !isNaN(entry.resCount)) {
+      if (Number.isFinite(entry.resCount)) {
         legacy.res_count = entry.resCount;
       }
 
@@ -85,9 +85,9 @@ namespace app {
         readState = entry.readState;
         if (
           readState.url === entry.url &&
-          typeof readState.received === "number" && !isNaN(readState.received) &&
-          typeof readState.last === "number" && !isNaN(readState.last) &&
-          typeof readState.read === "number" && !isNaN(readState.read)
+          Number.isFinite(readState.received) &&
+          Number.isFinite(readState.last) &&
+          Number.isFinite(readState.read)
         ) {
           legacy.read_state = readState;
         }

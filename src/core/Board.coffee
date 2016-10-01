@@ -128,7 +128,7 @@ class app.Board
           response.headers["Last-Modified"] or "dummy"
         ).getTime()
 
-        if not isNaN(last_modified)
+        if Number.isFinite(last_modified)
           cache.last_modified = last_modified
 
         if etag = response.headers["ETag"]

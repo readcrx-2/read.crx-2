@@ -126,7 +126,7 @@ class app.BBSMenu
             response.headers["Last-Modified"] or "dummy"
           ).getTime()
 
-          unless isNaN(last_modified)
+          if Number.isFinite(last_modified)
             cache.last_modified = last_modified
           cache.put()
         else if cache.data? and response?.status is 304

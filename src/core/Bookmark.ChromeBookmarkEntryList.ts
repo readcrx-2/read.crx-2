@@ -29,7 +29,7 @@ module app.Bookmark {
 
       param = {};
 
-      if (typeof entry.resCount === "number" && !isNaN(entry.resCount)) {
+      if (Number.isFinite(entry.resCount)) {
         param.res_count = entry.resCount;
       }
 

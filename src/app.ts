@@ -80,7 +80,7 @@ namespace app {
   }
   export class Callbacks {
     private _config: CallbacksConfiguration;
-    private _callbackStore:Function[] = [];
+    private _callbackStore = new Set<Function>();
     private _latestCallArg: any[] = null;
     wasCalled = false;
 
@@ -93,16 +93,13 @@ namespace app {
         callback.apply(null, deepCopy(this._latestCallArg));
       }
       else {
-        this._callbackStore.push(callback);
+        this._callbackStore.add(callback);
       }
     }
 
     remove (callback:Function):void {
-      var index:number;
-
-      index = this._callbackStore.indexOf(callback);
-      if (index !== -1) {
-        this._callbackStore.splice(index, 1);
+      if (this._callbackStore.has(callback)) {
+        this._callbackStore.delete(callback);
       }
       else {
         log("error",
@@ -122,16 +119,16 @@ namespace app {
 
         this._latestCallArg = deepCopy(arg);
 
-        tmpCallbackStore = this._callbackStore.slice(0);
+        tmpCallbackStore = new Set(this._callbackStore.keys());
 
         for (callback of tmpCallbackStore) {
-          if (this._callbackStore.includes(callback)) {
+          if (this._callbackStore.has(callback)) {
             callback.apply(null, deepCopy(arg));
           }
         }
 
         if (!this._config.persistent) {
-          this._callbackStore = null;
+          this._callbackStore.clear();
         }
       }
     }
@@ -474,14 +471,15 @@ namespace app {
 
   export var module;
   (() => {
-    var pending_modules = [], ready_modules = {}, fire_definition,
-      add_ready_module;
+    var pending_modules = new Set<any>();
+    var ready_modules = new Map<string, any>();
+    var fire_definition, add_ready_module;
 
     fire_definition = (module_id, dependencies, definition) => {
       var dep_modules = [], dep_module_id, callback;
 
       for (dep_module_id of dependencies) {
-        dep_modules.push(ready_modules[dep_module_id].module);
+        dep_modules.push(ready_modules.get(dep_module_id).module);
       }
 
       if (module_id !== null) {
@@ -501,29 +499,28 @@ namespace app {
     };
 
     add_ready_module = function (module) {
-      ready_modules[this.module_id] = {
+      ready_modules.set(this.module_id,{
         dependencies: this.dependencies,
         module: module
-      };
+      });
 
       // このモジュールが初期化された事で依存関係が満たされたモジュールを初期化
-      pending_modules = pending_modules.filter((val) => {
+      for (var val of pending_modules.values()) {
         if (val.dependencies.includes(this.module_id)) {
-          if (!val.dependencies.some((a) => { return !ready_modules[a]; } )) {
+          if (!val.dependencies.some((a) => { return !ready_modules.get(a); } )) {
             fire_definition(val.module_id, val.dependencies, val.definition);
-            return false;
+            pending_modules.delete(module);
           }
         }
-        return true;
-      });
+      }
     };
 
     app.module = function (module_id, dependencies, definition) {
       if (!dependencies) dependencies = [];
 
       // 依存関係が満たされていないモジュールは、しまっておく
-      if (dependencies.some((a) => { return !ready_modules[a]; } )) {
-        pending_modules.push({
+      if (dependencies.some((a) => { return !ready_modules.get(a); } )) {
+        pending_modules.add({
           module_id,
           dependencies,
           definition

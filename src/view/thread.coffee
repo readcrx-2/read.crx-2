@@ -308,7 +308,7 @@ app.boot "/view/thread.html", ["board_title_solver"], (BoardTitleSolver) ->
       if $this.hasClass("copy_selection")
         selectedText = getSelection().toString()
         if selectedText.length > 0
-          app.clipboardWrite(selectedText)
+          document.execCommand("copy")
 
       else if $this.hasClass("search_selection")
         selectedText = getSelection().toString()

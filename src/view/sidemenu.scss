@@ -55,7 +55,7 @@ a {
     margin: 0;
     padding: 0;
   }
-  > input[type="text"] {
+  > input[type="search"] {
     flex-grow: 1;
     width: 0%;
     border-right: none;
@@ -150,7 +150,7 @@ li:not(.bookmark) + li.bookmark:before {
     &:not([type="hidden"]) {
       border-color: $searchbox-item-border-color;
     }
-    &[type="text"] {
+    &[type="search"] {
       background-color: $searchbox-background-color;
       color: $searchbox-color;
     }

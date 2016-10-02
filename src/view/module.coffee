@@ -12,6 +12,7 @@ do ->
       "module"
       "Ninja"
       "NG"
+      "notification"
       "read_state"
       "url"
       "util"
@@ -296,7 +297,7 @@ class app.view.IframeView extends app.view.View
             # /
             else
               e.preventDefault()
-              $(".searchbox, form.search > input[type=\"text\"]").focus()
+              $(".searchbox, form.search > input[type=\"search\"]").focus()
           else
             # 数値
             if 48 <= e.which <= 57

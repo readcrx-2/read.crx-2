@@ -165,12 +165,13 @@ app.boot "/view/thread.html", ["board_title_solver"], (BoardTitleSolver) ->
   #自動更新
   do ->
     auto_load = ->
-      if parseInt(app.config.get("auto_load_second")) >= 5000
-        return setInterval ->
+      second = parseInt(app.config.get("auto_load_second"))
+      if second >= 5000
+        return setInterval( ->
           if app.config.get("auto_load_all") is "on" or $(".tab_container", parent.document).find("iframe[data-url=\"#{view_url}\"]").hasClass("tab_selected")
             $view.trigger "request_reload" unless $view.find(".content").hasClass("searching")
           return
-        , parseInt(app.config.get("auto_load_second"))
+        , second)
       return
 
     auto_load_interval = auto_load()

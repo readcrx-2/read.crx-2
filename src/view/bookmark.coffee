@@ -17,6 +17,7 @@ app.boot "/view/bookmark.html", ->
   new app.view.TabContentView(document.documentElement)
 
   trUpdatedObserver = new MutationObserver (records) ->
+    console.log records
     for record in records
       if record.target.webkitMatchesSelector("tr.updated")
         record.target.parentNode.appendChild(record.target)
@@ -128,12 +129,13 @@ app.boot "/view/bookmark.html", ->
   #自動更新
   do ->
     auto_load = ->
-      if parseInt(app.config.get("auto_load_second_board")) >= 20000
-        return setInterval ->
+      second = parseInt(app.config.get("auto_load_second_board"))
+      if second >= 20000
+        return setInterval( ->
           if app.config.get("auto_load_all") is "on" or $(".tab_container", parent.document).find("iframe[data-url=\"bookmark\"]").hasClass("tab_selected")
             $view.trigger "request_reload" unless $view.find(".content").hasClass("searching")
           return
-        , parseInt(app.config.get("auto_load_second_board"))
+        , second)
       return
 
     auto_load_interval = auto_load()

@@ -13,7 +13,7 @@ class app.ImageReplaceDat
   _setupReg = () ->
     for d in _dat
       try
-        d.baseUrlReg = new RegExp d.baseUrl
+        d.baseUrlReg = new RegExp(d.baseUrl, "i")
       catch e
         app.message.send "notify", {
           html: """
@@ -26,7 +26,7 @@ class app.ImageReplaceDat
 
       try
         if d.param? and d.param.type is "extract"
-          d.param.patternReg = new RegExp d.param.pattern
+          d.param.patternReg = new RegExp(d.param.pattern, "i")
       catch e
         app.message.send "notify", {
           html: """

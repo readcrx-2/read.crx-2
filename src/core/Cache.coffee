@@ -138,8 +138,8 @@ class app.Cache
         typeof @last_updated is "number" and
         (not @last_modified? or typeof @last_modified is "number") and
         (not @etag? or typeof @etag is "string") and
-        (not @res_length? or (typeof @res_length is "number" and not isNaN(@res_length))) and
-        (not @dat_size? or (typeof @dat_size is "number" and not isNaN(@dat_size)))
+        (not @res_length? or Number.isFinite(@res_length)) and
+        (not @dat_size? or Number.isFinite(@dat_size))
       app.log("error", "Cache::put データが不正です", @)
       return $.Deferred().reject().promise()
 

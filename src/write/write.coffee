@@ -123,11 +123,7 @@ app.boot "/write/write.html", ->
       $view.find(".notice").text("書き込み失敗 - #{message}")
     else
       $view.find(".notice").text("")
-      ele = $view.find(".iframe_container").removeClass("hidden")
-      app.defer(->
-        ele.addClass("fadeIn")
-        return
-      )
+      UI.Animate.fadeIn($view.find(".iframe_container")[0])
 
     chrome.extension.sendRequest(type: "written?", url: arg.url, mes: arg.message, name: arg.name, mail: arg.mail)
 
@@ -158,11 +154,7 @@ app.boot "/write/write.html", ->
       , 2000
       write_timer.kill()
     else if message.type is "confirm"
-      ele = $view.find(".iframe_container").removeClass("hidden")
-      app.defer(->
-        ele.addClass("fadeIn")
-        return
-      )
+      UI.Animate.fadeIn($view.find(".iframe_container")[0])
       write_timer.kill()
     else if message.type is "error"
       on_error(message.message)
@@ -171,13 +163,11 @@ app.boot "/write/write.html", ->
 
   $view.find(".hide_iframe").on "click", ->
     write_timer.kill()
-    $view
-      .find(".iframe_container")
-        .find("iframe")
-          .remove()
-        .end()
-      .removeClass("fadeIn")
-      .addClass("hidden")
+    $iframeContainer = $view.find(".iframe_container")
+    UI.Animate.fadeOut($iframeContainer[0]).on("finish", ->
+      $iframeContainer.find("iframe").remove()
+      return
+    )
     $view.find("input, textarea").removeAttr("disabled")
     $view.find(".notice").text("")
     return

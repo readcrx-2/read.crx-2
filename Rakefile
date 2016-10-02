@@ -99,7 +99,7 @@ def typescript(src, output)
   end
 
   src.each {|a|
-    sh "node_modules/.bin/tsc --target ES5 #{a}"
+    sh "node_modules/.bin/tsc --target es2015 --lib dom,es2015,es2016 --skipLibCheck --noUnusedLocals #{a}"
   }
 
   tmp = src.map {|a| a.gsub(/\.ts$/, ".js") }
@@ -332,6 +332,7 @@ namespace :write do
     "src/core/URL.ts",
     "src/core/Ninja.coffee",
     "src/core/WriteHistory.coffee",
+    "src/ui/Animate.coffee",
     "src/write/write.coffee"
   ]
 
@@ -344,6 +345,7 @@ namespace :write do
   file_ct "debug/write/submit_thread.js", [
     "src/core/URL.ts",
     "src/core/Ninja.coffee",
+    "src/ui/Animate.coffee",
     "src/write/submit_thread.coffee"
   ]
 end

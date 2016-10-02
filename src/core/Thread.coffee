@@ -259,7 +259,7 @@ class app.Thread
           response.headers["Last-Modified"] or "dummy"
         ).getTime()
 
-        if not isNaN(lastModified)
+        if Number.isFinite(lastModified)
           cache.last_modified = lastModified
 
         etag = response.headers["ETag"]

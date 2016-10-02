@@ -45,7 +45,7 @@ namespace app {
         expired: legacy.expired === true
       };
 
-      if (typeof legacy.res_count === "number" && !isNaN(legacy.res_count)) {
+      if (Number.isFinite(legacy.res_count)) {
         entry.resCount = legacy.res_count;
       }
 
@@ -53,9 +53,9 @@ namespace app {
         readState = legacy.read_state;
         if (
           readState.url === entry.url &&
-          typeof readState.received === "number" && !isNaN(readState.received) &&
-          typeof readState.last === "number" && !isNaN(readState.last) &&
-          typeof readState.read === "number" && !isNaN(readState.read)
+          Number.isFinite(readState.received) &&
+          Number.isFinite(readState.last) &&
+          Number.isFinite(readState.read)
         ) {
           entry.readState = readState;
         }
@@ -77,7 +77,7 @@ namespace app {
         expired: entry.expired === true
       };
 
-      if (typeof entry.resCount === "number" && !isNaN(entry.resCount)) {
+      if (Number.isFinite(entry.resCount)) {
         legacy.res_count = entry.resCount;
       }
 
@@ -85,9 +85,9 @@ namespace app {
         readState = entry.readState;
         if (
           readState.url === entry.url &&
-          typeof readState.received === "number" && !isNaN(readState.received) &&
-          typeof readState.last === "number" && !isNaN(readState.last) &&
-          typeof readState.read === "number" && !isNaN(readState.read)
+          Number.isFinite(readState.received) &&
+          Number.isFinite(readState.last) &&
+          Number.isFinite(readState.read)
         ) {
           legacy.read_state = readState;
         }
@@ -119,8 +119,8 @@ namespace app {
     }
 
     export class EntryList {
-      private cache: {[index:string]:Entry;} = {};
-      private boardURLIndex: {[index:string]:string[];} = {};
+      private cache = new Map<string, Entry>();
+      private boardURLIndex = new Map<string, string[]>();
 
       add (entry:Entry):boolean {
         var boardURL:string;
@@ -128,14 +128,14 @@ namespace app {
         if (!this.get(entry.url)) {
           entry = app.deepCopy(entry);
 
-          this.cache[entry.url] = entry;
+          this.cache.set(entry.url, entry);
 
           if (entry.type === "thread") {
             boardURL = app.URL.threadToBoard(entry.url);
-            if (!this.boardURLIndex[boardURL]) {
-              this.boardURLIndex[boardURL] = [];
+            if (!this.boardURLIndex.has(boardURL)) {
+              this.boardURLIndex.set(boardURL, []);
             }
-            this.boardURLIndex[boardURL].push(entry.url);
+            this.boardURLIndex.get(boardURL).push(entry.url);
           }
           return true;
         }
@@ -146,7 +146,7 @@ namespace app {
 
       update (entry:Entry):boolean {
         if (this.get(entry.url)) {
-          this.cache[entry.url] = app.deepCopy(entry);
+          this.cache.set(entry.url, app.deepCopy(entry));
           return true;
         }
         else {
@@ -159,18 +159,18 @@ namespace app {
 
         url = app.URL.fix(url);
 
-        if (this.cache[url]) {
-          if (this.cache[url].type === "thread") {
+        if (this.cache.has(url)) {
+          if (this.cache.get(url).type === "thread") {
             boardURL = app.URL.threadToBoard(url);
-            if (this.boardURLIndex[boardURL]) {
-              tmp = this.boardURLIndex[boardURL].indexOf(url);
+            if (this.boardURLIndex.has(boardURL)) {
+              tmp = this.boardURLIndex.get(boardURL).indexOf(url);
               if (tmp !== -1) {
-                this.boardURLIndex[boardURL].splice(tmp, 1);
+                this.boardURLIndex.get(boardURL).splice(tmp, 1);
               }
             }
           }
 
-          delete this.cache[url];
+          this.cache.delete(url);
           return true;
         }
         else {
@@ -223,25 +223,25 @@ namespace app {
       get (url:string):Entry {
         url = app.URL.fix(url);
 
-        return this.cache[url] ? app.deepCopy(this.cache[url]) : null;
+        return this.cache.has(url) ? app.deepCopy(this.cache.get(url)) : null;
       }
 
       getAll ():Entry[] {
-        var key:string, res = [];
+        var res = [];
 
-        for (key in this.cache) {
-          res.push(this.cache[key]);
+        for (var val of this.cache.values()) {
+          res.push(val);
         }
 
         return app.deepCopy(res);
       }
 
       getAllThreads ():Entry[] {
-        var key:string, res = [];
+        var res = [];
 
-        for (key in this.cache) {
-          if (this.cache[key].type === "thread") {
-            res.push(this.cache[key]);
+        for (var val of this.cache.values()) {
+          if (val.type === "thread") {
+            res.push(val);
           }
         }
 
@@ -249,11 +249,11 @@ namespace app {
       }
 
       getAllBoards ():Entry[] {
-        var key:string, res = [];
+        var res = [];
 
-        for (key in this.cache) {
-          if (this.cache[key].type === "board") {
-            res.push(this.cache[key]);
+        for (var val of this.cache.values()) {
+          if (val.type === "board") {
+            res.push(val);
           }
         }
 
@@ -261,12 +261,12 @@ namespace app {
       }
 
       getThreadsByBoardURL (url:string):Entry[] {
-        var res = [], key:number, threadURL:string;
+        var res = [], threadURL:string;
 
         url = app.URL.fix(url);
 
-        if (this.boardURLIndex[url]) {
-          for (key = 0; threadURL = this.boardURLIndex[url][key]; key++) {
+        if (this.boardURLIndex.has(url)) {
+          for (threadURL of this.boardURLIndex.get(url)) {
             res.push(this.get(threadURL));
           }
         }
@@ -387,15 +387,15 @@ namespace app {
       private followDeletion (b:EntryList):void {
         var aList:string[], bList:string[], rmList:string[];
 
-        aList = this.getAll().map(function (entry:Entry) {
+        aList = this.getAll().map( (entry:Entry) => {
           return entry.url;
         });
-        bList = b.getAll().map(function (entry:Entry) {
+        bList = b.getAll().map( (entry:Entry) => {
           return entry.url;
         });
 
-        rmList = aList.filter(function (url:string) {
-          return bList.indexOf(url) === -1;
+        rmList = aList.filter( (url:string) => {
+          return !bList.includes(url);
         });
 
         for(var url of rmList) {

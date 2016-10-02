@@ -6,7 +6,7 @@ namespace app.Util {
     b:string,
     allowReplace:boolean = true
   ):number {
-    var repCost:number, table:number[][], c:number, ac:number, bc:number;
+    var repCost:number, table:number[][], ac:number, bc:number;
 
     repCost = allowReplace ? 1 : 2;
 

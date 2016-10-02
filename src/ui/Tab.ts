@@ -1,4 +1,4 @@
-///<reference path="../../typings/globals/jquery/index.d.ts" />
+///<reference path="../../node_modules/@types/jquery/index.d.ts" />
 ///<reference path="../app.ts" />
 ///<reference path="VirtualNotch.ts" />
 
@@ -24,7 +24,7 @@ namespace UI {
           $("<div>", {class: "tab_container"})
         )
         .find(".tab_tabbar")
-          .on("notchedmousewheel", function (e) {
+          .on("notchedmousewheel", (e) => {
             if (app.config.get("mousewheel_change_tab") === "on") {
               var tmp: string, next: Element;
 
@@ -59,7 +59,7 @@ namespace UI {
               tab.update(this.getAttribute("data-tabid"), {selected: true});
             }
           })
-          .on("mousedown", "img", function (e) {
+          .on("mousedown", "img", (e) => {
             e.preventDefault();
           })
           .on("click", "img", function () {
@@ -77,11 +77,11 @@ namespace UI {
 
         message = JSON.parse(e.data);
 
-        if ([
+        if (![
             "requestTabHistory",
             "requestTabBack",
             "requestTabForward"
-          ].indexOf(message.type) === -1) {
+          ].includes(message.type)) {
           return;
         }
 
@@ -139,11 +139,11 @@ namespace UI {
     }
 
     getAll (): any {
-      var li: HTMLLIElement, key: number, tmp: NodeList, res = [];
+      var li: HTMLLIElement, tmp, res = [];
 
-      tmp = this.element.querySelectorAll("li");
+      tmp = Array.from(this.element.querySelectorAll("li"));
 
-      for (key = 0; li = <HTMLLIElement>tmp[key]; key++) {
+      for (li of tmp) {
         res.push({
           tabId: li.getAttribute("data-tabid"),
           url: li.getAttribute("data-tabsrc"),
@@ -307,11 +307,11 @@ namespace UI {
       $(this.element)
         .find(`li[data-tabid=\"${tabId}\"]`)
           .each(function () {
-            var tabsrc: string, tmp, key, closed, next;
+            var tabsrc: string, tmp, key, next;
 
             tabsrc = this.getAttribute("data-tabsrc");
 
-            for (key = 0; tmp = tab.recentClosed[key]; key++) {
+            for (tmp of tab.recentClosed) {
               if (tmp.url === tabsrc) {
                 tab.recentClosed.splice(key, 1);
               }
@@ -349,7 +349,7 @@ namespace UI {
     restoreClosed (tabId: string): string {
       var tab, key;
 
-      for (key = 0; tab = this.recentClosed[key]; key++) {
+      for (tab of this.recentClosed) {
         if (tab.tabId === tabId) {
           this.recentClosed.splice(key, 1);
           return this.add(tab.url, {title: tab.title});

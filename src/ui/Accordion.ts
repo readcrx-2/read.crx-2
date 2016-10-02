@@ -1,5 +1,4 @@
-///<reference path="../../typings/globals/jquery/index.d.ts" />
-///<reference path="../app.ts" />
+///<reference path="../global.d.ts" />
 
 namespace UI {
   "use strict";
@@ -20,7 +19,7 @@ namespace UI {
 
       this.$element.find(".accordion_open").removeClass(".accordion_open");
 
-      this.$element.on("click", "> :header", function () {
+      this.$element.on("click", "> h3", function () {
         if (this.classList.contains("accordion_open")) {
           accordion.close(this);
         }
@@ -30,39 +29,17 @@ namespace UI {
       });
     }
 
-    private getOriginHeight($ele: JQuery): number {
-      var $e = $ele.clone();
-      var width = $ele[0].clientWidth;
-      $e.css({
-        height: "auto",
-        width: width,
-        position: "absolute",
-        visibility: "hidden",
-        display: "block"
+    update (): void {
+      this.$element.find("h3 + *").each(function () {
+        this.addClass("hidden");
       });
-      $("body").append($e);
-      var height = $e[0].clientHeight;
-      $e.remove();
-      return height;
+      this.setOpen(this.element.querySelector("h3"));
     }
 
-    update (): void {
-      this.$element
-        .find(".accordion_open + *")
-          .removeClass("hidden")
-        .end()
-        .find(":header:not(.accordion_open) + *")
-          .removeAttr("style");
-        setTimeout( () => {
-          this.$element
-            .find(".accordion_open + *")
-              .css("height", this.getOriginHeight(this.$element.find(".accordion_open + *")));
-        }, 0);
-        setTimeout( () => {
-          this.$element
-            .find(":header:not(.accordion_open) + *")
-              .addClass("hidden");
-        }, 250);
+    setOpen (header: HTMLElement): void {
+      var $header = $(header)
+      $header.addClass("accordion_open")
+      $header.next().removeClass("hidden")
     }
 
     open (header: HTMLElement): void {
@@ -70,32 +47,21 @@ namespace UI {
 
       accordion = this;
 
-      $(header)
-        .addClass("accordion_open")
-        .next()
-          .removeClass("hidden")
-        .end()
+      var $header = $(header)
+      $header.addClass("accordion_open")
+      UI.Animate.slideDown($header.next()[0])
+
+      $header
         .siblings(".accordion_open")
           .each(function () {
             accordion.close(this);
           });
-        setTimeout( () => {
-          $(header)
-            .addClass("accordion_open")
-            .next()
-              .css("height", this.getOriginHeight($(header).next()));
-        }, 0);
     }
 
     close (header: HTMLElement): void {
-      $(header)
-        .removeClass("accordion_open")
-        .next()
-          .removeAttr("style");
-        setTimeout( () => {
-          $(header).next()
-            .addClass("hidden");
-        }, 250);
+      var $header = $(header)
+      $header.removeClass("accordion_open")
+      UI.Animate.slideUp($header.next()[0])
     }
   }
 }

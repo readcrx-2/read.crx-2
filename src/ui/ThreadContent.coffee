@@ -91,9 +91,9 @@ class UI.ThreadContent
     if target and @container.classList.contains("searching") and not target.classList.contains("search_hit")
       target = null
 
-    # もしターゲットがNGだった場合、その直前の非NGレスをターゲットに変更する
+    # もしターゲットがNGだった場合、その直前/直後の非NGレスをターゲットに変更する
     if target and target.classList.contains("ng")
-      target = $(target).prevAll(":not(.ng)")[0]
+      _target = $(target).prevAll(":not(.ng)")[0] or $(target).nextAll(":not(.ng)")[0]
 
     if target
       if @_scrolling
@@ -297,6 +297,8 @@ class UI.ThreadContent
     unless Array.isArray(items)
       items = [items]
 
+    return d.resolve().promise() unless items.length > 0
+
     resNum = @container.children.length
     ng = app.NG.get()
 
@@ -499,6 +501,7 @@ class UI.ThreadContent
         html += articleHtml
 
       @container.insertAdjacentHTML("BeforeEnd", html)
+
       fragment = document.createDocumentFragment()
       for child in @container.children
         fragment.appendChild(child.cloneNode(true))

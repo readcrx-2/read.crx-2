@@ -252,6 +252,7 @@ namespace app {
       ["open_all_unread_lazy", "on"],
       ["dblclick_reload", "on"],
       ["auto_load_second", "0"],
+      ["auto_load_second_board", "0"],
       ["auto_load_all", "off"],
       ["auto_load_move", "off"],
       ["image_blur", "off"],

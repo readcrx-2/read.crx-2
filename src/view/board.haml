@@ -37,7 +37,8 @@
         %option(label="勢い") 4
         %option(label="作成日時") 5
     .content(tabindex="0")
-    .loading_overlay Loading...
+    %footer.board_footer
+      .loading_indicator.hidden 読み込み中
 
   %template#template_thread_list_contextmenu
     %menu.thread_list_contextmenu

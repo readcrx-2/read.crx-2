@@ -92,6 +92,10 @@
             %input.direct(type="number" name="auto_load_second" min="0")ms
           %br
           %label
+            板の自動更新間隔ミリ秒数 (最小20000ms、最小値以下をセットすると無効になります)
+            %input.direct(type="number" name="auto_load_second_board" min="0")ms
+          %br
+          %label
             %input.direct(type="checkbox" name="auto_load_all") 開いていないタブも自動更新する(read.crx起動後、一度は開かないと更新されません)
           %br
           自動更新後の移動:

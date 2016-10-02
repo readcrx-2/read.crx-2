@@ -16,6 +16,7 @@ do ->
 app.boot "/write/submit_thread.html", ->
   arg = app.url.parse_query(location.href)
   arg.url = app.url.fix(arg.url)
+  arg.title or= arg.url
   arg.name or= app.config.get("default_name")
   arg.mail or= app.config.get("default_mail")
   arg.message or= ""
@@ -100,11 +101,7 @@ app.boot "/write/submit_thread.html", ->
       $view.find(".notice").text("書き込み失敗 - #{message}")
     else
       $view.find(".notice").text("")
-      ele = $view.find(".iframe_container").removeClass("hidden")
-      app.defer(->
-        ele.addClass("fadeIn")
-        return
-      )
+      UI.Animate.fadeOut($view.find(".iframe_container")[0])
 
   write_timer =
     wake: ->
@@ -143,11 +140,7 @@ app.boot "/write/submit_thread.html", ->
       , 2000
       write_timer.kill()
     else if message.type is "confirm"
-      ele = $view.find(".iframe_container").removeClass("hidden")
-      app.defer(->
-        ele.addClass("fadeIn")
-        return
-      )
+      UI.Animate.fadeIn($view.find(".iframe_container")[0])
       write_timer.kill()
     else if message.type is "error"
       on_error(message.message)
@@ -156,17 +149,18 @@ app.boot "/write/submit_thread.html", ->
 
   $view.find(".hide_iframe").on "click", ->
     write_timer.kill()
+    UI.Animate.fadeOut($view[0])
     $view
       .find(".iframe_container")
         .find("iframe")
           .remove()
         .end()
-      .removeClass("fadeIn")
-      .addClass("hidden")
     $view.find("input, textarea").removeAttr("disabled")
     $view.find(".notice").text("")
     return
 
+  document.title = arg.title + "板"
+  $view.find("h1").text(arg.title + "板")
   $view.find(".name").val(arg.name)
   $view.find(".mail").val(arg.mail)
   $view.find(".message").val(arg.message)

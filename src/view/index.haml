@@ -22,7 +22,7 @@
         #tab_resizer
         #tab_b
       #modal
-    .keyboard_help.hidden.fade(tabindex="-1")
+    .keyboard_help.hidden(tabindex="-1")
       %header このヘルプを閉じるには、任意のキーを押して下さい。
       %h2 キーボードショートカット一覧
       %dl
@@ -82,7 +82,7 @@
         %dt 任意の数値
         %dd 該当するレス番号の位置にジャンプする（スレッド表示内限定）
     %template#template_tab_contextmenu
-      %ul.tab_contextmenu
+      %menu.tab_contextmenu
         %li.restore 閉じたタブを開く
         %li.reload 再読み込み
         %li.lock タブを固定

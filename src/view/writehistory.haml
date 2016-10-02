@@ -14,16 +14,16 @@
   %body
     %nav.nav_bar
       %label
-        %input.searchbox
+        %input.searchbox(type="search" placeholder="検索")
         %span.hit_count.hidden
-      .button.button_back.disabled
-      .button.button_forward.disabled
-      .button.button_reload
-      .button.button_tool
+      .button.button_back.disabled(title="戻る")
+      .button.button_forward.disabled(title="進む")
+      .button.button_reload(title="再読み込み")
+      .button.button_tool(title="メニュー")
         %ul.hidden
           %li.button_history_clear 書込履歴を消去
     .content(tabindex="0")
     .loading_overlay Loading...
     %template#template_thread_list_contextmenu
-      %ul.thread_list_contextmenu
+      %menu.thread_list_contextmenu
         %li.del_writehistory この履歴を削除

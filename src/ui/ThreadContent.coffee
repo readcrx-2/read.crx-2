@@ -91,9 +91,9 @@ class UI.ThreadContent
     if target and @container.classList.contains("searching") and not target.classList.contains("search_hit")
       target = null
 
-    # もしターゲットがNGだった場合、その直前の非NGレスをターゲットに変更する
+    # もしターゲットがNGだった場合、その直前/直後の非NGレスをターゲットに変更する
     if target and target.classList.contains("ng")
-      target = $(target).prevAll(":not(.ng)")[0]
+      _target = $(target).prevAll(":not(.ng)")[0] or $(target).nextAll(":not(.ng)")[0]
 
     if target
       if @_scrolling
@@ -297,6 +297,8 @@ class UI.ThreadContent
     unless Array.isArray(items)
       items = [items]
 
+    return d.resolve().promise() unless items.length > 0
+
     resNum = @container.children.length
     ng = app.NG.get()
 
@@ -401,6 +403,7 @@ class UI.ThreadContent
         #文字色
         color = res.message.match(/<font color="(.*?)">/i)
 
+        harmfulReg = /.*[^ァ-ヺ^ー]グロ([^ァ-ヺ^ー].*|$)|.*死ね.*/
         tmp = (
           res.message
             #imgタグ変換
@@ -440,7 +443,7 @@ class UI.ThreadContent
                 disabled = false
 
               #グロ/死ねの返信レス
-              isThatHarmImg = /.*[^ァ-ヺ^ー]グロ([^ァ-ヺ^ー].*|$)|.*死ね.*/.test(res.message)
+              isThatHarmImg = harmfulReg.test(res.message)
 
               #rep_index更新
               if not disabled
@@ -499,13 +502,19 @@ class UI.ThreadContent
 
       @container.insertAdjacentHTML("BeforeEnd", html)
 
+      fragment = document.createDocumentFragment()
+      for child in @container.children
+        fragment.appendChild(child.cloneNode(true))
+
+      numbersReg = /(?:\(\d+\))?$/
       #idカウント, .freq/.link更新
       do =>
         for id, index of @idIndex
           idCount = index.length
           for resNum in index
-            elm = @container.children[resNum - 1].getElementsByClassName("id")[0]
-            elm.firstChild.nodeValue = elm.firstChild.nodeValue.replace(/(?:\(\d+\))?$/, "(#{idCount})")
+            elm = fragment.children[resNum - 1].getElementsByClassName("id")[0]
+            elmFirst = elm.firstChild
+            elmFirst.textContent = elmFirst.textContent.replace(numbersReg, "(#{idCount})")
             if idCount >= 5
               elm.classList.remove("link")
               elm.classList.add("freq")
@@ -518,8 +527,9 @@ class UI.ThreadContent
         for slip, index of @slipIndex
           slipCount = index.length
           for resNum in index
-            elm = @container.children[resNum - 1].getElementsByClassName("slip")[0]
-            elm.firstChild.nodeValue = elm.firstChild.nodeValue.replace(/(?:\(\d+\))?$/, "(#{slipCount})")
+            elm = fragment.children[resNum - 1].getElementsByClassName("slip")[0]
+            elmFirst = elm.firstChild
+            elmFirst.textContent = elmFirst.textContent.replace(numbersReg, "(#{slipCount})")
             if slipCount >= 5
               elm.classList.remove("link")
               elm.classList.add("freq")
@@ -532,8 +542,9 @@ class UI.ThreadContent
         for trip, index of @tripIndex
           tripCount = index.length
           for resNum in index
-            elm = @container.children[resNum - 1].getElementsByClassName("trip")[0]
-            elm.firstChild.nodeValue = elm.firstChild.nodeValue.replace(/(?:\(\d+\))?$/, "(#{tripCount})")
+            elm = fragment.children[resNum - 1].getElementsByClassName("trip")[0]
+            elmFirst = elm.firstChild
+            elmFirst.textContent = elmFirst.textContent.replace(numbersReg, "(#{tripCount})")
             if tripCount >= 5
               elm.classList.remove("link")
               elm.classList.add("freq")
@@ -544,7 +555,7 @@ class UI.ThreadContent
       #harmImg更新
       do =>
         for res in @harmImgIndex
-          elm = @container.children[res - 1]
+          elm = fragment.children[res - 1]
           continue unless elm
           elm.classList.add("has_blur_word")
           if elm.classList.contains("has_image") and app.config.get("image_blur") is "on"
@@ -555,7 +566,7 @@ class UI.ThreadContent
       #参照関係再構築
       do =>
         for resKey, index of @repIndex
-          res = @container.children[resKey - 1]
+          res = fragment.children[resKey - 1]
           if res
             resCount = index.length
             if elm = res.getElementsByClassName("rep")[0]
@@ -574,13 +585,11 @@ class UI.ThreadContent
             #連鎖NG
             if app.config.get("chain_ng") is "on" and res.classList.contains("ng")
               for r in index
-                thatClass = @container.children[r - 1].classList
-                thatClass.add("ng") unless thatClass.contains("ng")
+                fragment.children[r - 1].classList.add("ng")
             #自分に対してのレス
             if res.classList.contains("written")
               for r in index
-                thatClass = @container.children[r - 1].classList
-                thatClass.add("to_written") unless thatClass.contains("to_written")
+                fragment.children[r - 1].classList.add("to_written")
         return
 
       #サムネイル追加処理
@@ -611,11 +620,11 @@ class UI.ThreadContent
           if cookieStr? then thumbnailImg.setAttribute("data-cookie", cookieStr)
           thumbnailLink.appendChild(thumbnailImg)
 
-          thumbnailImg = document.createElement("img")
-          thumbnailImg.className = "favicon"
-          thumbnailImg.src = "/img/dummy_1x1.webp"
-          thumbnailImg.setAttribute("data-src", "https://www.google.com/s2/favicons?domain=#{app.url.getDomain(sourceA.href)}")
-          thumbnailLink.appendChild(thumbnailImg)
+          thumbnailFavicon = document.createElement("img")
+          thumbnailFavicon.className = "favicon"
+          thumbnailFavicon.src = "/img/dummy_1x1.webp"
+          thumbnailFavicon.setAttribute("data-src", "https://www.google.com/s2/favicons?domain=#{app.url.getDomain(sourceA.href)}")
+          thumbnailLink.appendChild(thumbnailFavicon)
 
           sib = sourceA
           while true
@@ -630,12 +639,14 @@ class UI.ThreadContent
               break
           null
 
-        app.util.concurrent(@container.querySelectorAll(".message > a:not(.thumbnail):not(.has_thumbnail)"), (a) ->
+        app.util.concurrent(fragment.querySelectorAll(".message > a:not(.thumbnail):not(.has_thumbnail)"), (a) ->
           return app.ImageReplaceDat.do(a, a.href).done( (a, res, err) ->
             addThumbnail(a, res.text, res.referrer, res.cookie) unless err?
             return
           )
-        ).always(->
+        ).always(=>
+          @container.textContent = null
+          @container.appendChild(fragment)
           d.resolve()
           return
         )
@@ -668,8 +679,7 @@ class UI.ThreadContent
   addClassWithOrg: ($res, className) ->
     $res.addClass(className)
     resnum = parseInt($res.find(".num").text())
-    orgRes = @container.children[resnum-1]
-    orgRes.classList.add("written") unless orgRes.classList.contains("written")
+    @container.children[resnum-1].classList.add("written")
     return
 
   ###*
@@ -680,8 +690,7 @@ class UI.ThreadContent
   removeClassWithOrg: ($res, className) ->
     $res.removeClass("written")
     resnum = parseInt($res.find(".num").text())
-    orgRes = @container.children[resnum-1]
-    orgRes.classList.remove("written") if orgRes.classList.contains("written")
+    @container.children[resnum-1].classList.remove("written")
     return
 
   ###*

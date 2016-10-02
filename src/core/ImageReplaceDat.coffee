@@ -13,7 +13,7 @@ class app.ImageReplaceDat
   _setupReg = () ->
     for d in _dat
       try
-        d.baseUrlReg = new RegExp d.baseUrl
+        d.baseUrlReg = new RegExp(d.baseUrl, "i")
       catch e
         app.message.send "notify", {
           html: """
@@ -26,7 +26,7 @@ class app.ImageReplaceDat
 
       try
         if d.param? and d.param.type is "extract"
-          d.param.patternReg = new RegExp d.param.pattern
+          d.param.patternReg = new RegExp(d.param.pattern, "i")
       catch e
         app.message.send "notify", {
           html: """
@@ -112,12 +112,14 @@ class app.ImageReplaceDat
             obj.param = {}
             rurl = r[3].split("=")[1]
             if r[3].includes("$EXTRACT")
-              obj.param.type = "extract"
-              obj.param.pattern = r[4]
-              obj.param.referrerUrl = if rurl? then rurl else ""
+              obj.param =
+                type: "extract"
+                pattern: r[4]
+                referrerUrl: if rurl? then rurl else ""
             else if r[4].includes("$COOKIE")
-              obj.param.type = "cookie"
-              obj.param.referrerUrl = if rurl? then rurl else ""
+              obj.param =
+                type: "cookie"
+                referrerUrl: if rurl? then rurl else ""
           dat.push(obj)
     return dat
 
@@ -151,11 +153,12 @@ class app.ImageReplaceDat
       doing = true
       res = {}
       res.referrer = string.replace(dat.baseUrl, dat.referrerUrl)
+      extractReg = /\$EXTRACT(\d+)?/g
       if d.param? and d.param.type is "extract"
         _getExtract(string, d).done((exMatch) ->
           res.text = string
             .replace(d.baseUrlReg, d.replaceUrl)
-            .replace(/\$EXTRACT(\d+)?/g, (str, num) ->
+            .replace(extractReg, (str, num) ->
               if num?
                 return exMatch[num]
               else

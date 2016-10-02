@@ -30,7 +30,7 @@ namespace app.HTTP {
     }
 
     send (callback:Function):void {
-      var res, xhr:XMLHttpRequest, timer:number, url:string, key:string,
+      var res, xhr:XMLHttpRequest, url:string, key:string,
         val:string;
 
       url = this.url;
@@ -50,7 +50,6 @@ namespace app.HTTP {
       }
 
       xhr = new XMLHttpRequest();
-      timer = setTimeout(xhr.abort.bind(xhr), this.timeout);
 
       xhr.open(this.method, url);
 
@@ -58,23 +57,27 @@ namespace app.HTTP {
         xhr.overrideMimeType(this.mimeType);
       }
 
+      xhr.timeout = this.timeout;
+
       for (key in this.headers) {
         val = this.headers[key];
 
         xhr.setRequestHeader(key, val);
       }
 
-      xhr.addEventListener("loadend", function () {
+      xhr.addEventListener("loadend", () => {
         var resonseHeaders;
-
-        clearTimeout(timer);
 
         resonseHeaders = Request.parseHTTPHeader(xhr.getAllResponseHeaders());
 
         callback(new Response(xhr.status, resonseHeaders, xhr.responseText));
       });
 
-      xhr.addEventListener("abort", function () {
+      xhr.addEventListener("timeout", () => {
+        callback(new Response(0));
+      });
+
+      xhr.addEventListener("abort", () => {
         callback(new Response(0));
       });
 

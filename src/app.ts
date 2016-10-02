@@ -1,4 +1,4 @@
-///<reference path="../typings/globals/jquery/index.d.ts" />
+///<reference path="../node_modules/@types/jquery/index.d.ts" />
 
 interface Window {
   chrome: any;
@@ -21,14 +21,14 @@ namespace app {
       )
       .show()
 
-    parent.chrome.tabs.getCurrent(function (tab):void {
+    parent.chrome.tabs.getCurrent( (tab): void => {
       parent.chrome.tabs.remove(tab.id);
     });
   }
   export var clitical_error = criticalError;
 
   export function log (level:string, ...data:any[]) {
-    if (logLevels.indexOf(level) !== -1) {
+    if (logLevels.includes(level)) {
       console[level].apply(console, data);
     }
     else {
@@ -65,7 +65,7 @@ namespace app {
   export function assert_arg (name:string, rule:string[], arg:any[]):boolean {
     var key:number, val:any;
 
-    for (key = 0; val = rule[key]; key++) {
+    for ([key, val] of rule.entries()) {
       if (typeof arg[key] !== val) {
         log("error", `${name}: 不正な引数`, deepCopy(arg));
         return true;
@@ -80,7 +80,7 @@ namespace app {
   }
   export class Callbacks {
     private _config: CallbacksConfiguration;
-    private _callbackStore:Function[] = [];
+    private _callbackStore = new Set<Function>();
     private _latestCallArg: any[] = null;
     wasCalled = false;
 
@@ -93,16 +93,13 @@ namespace app {
         callback.apply(null, deepCopy(this._latestCallArg));
       }
       else {
-        this._callbackStore.push(callback);
+        this._callbackStore.add(callback);
       }
     }
 
     remove (callback:Function):void {
-      var index:number;
-
-      index = this._callbackStore.indexOf(callback);
-      if (index !== -1) {
-        this._callbackStore.splice(index, 1);
+      if (this._callbackStore.has(callback)) {
+        this._callbackStore.delete(callback);
       }
       else {
         log("error",
@@ -111,7 +108,7 @@ namespace app {
     }
 
     call (...arg:any[]):void {
-      var key:number, callback:Function, tmpCallbackStore;
+      var callback:Function, tmpCallbackStore;
 
       if (!this._config.persistent && this._latestCallArg) {
         app.log("error",
@@ -122,16 +119,16 @@ namespace app {
 
         this._latestCallArg = deepCopy(arg);
 
-        tmpCallbackStore = this._callbackStore.slice(0);
+        tmpCallbackStore = new Set(this._callbackStore.keys());
 
-        for (key = 0; callback = tmpCallbackStore[key]; key++) {
-          if (this._callbackStore.indexOf(callback) !== -1) {
+        for (callback of tmpCallbackStore) {
+          if (this._callbackStore.has(callback)) {
             callback.apply(null, deepCopy(arg));
           }
         }
 
         if (!this._config.persistent) {
-          this._callbackStore = null;
+          this._callbackStore.clear();
         }
       }
     }
@@ -150,7 +147,7 @@ namespace app {
       window.addEventListener("message", (e:MessageEvent) => {
         if (e.origin !== location.origin) return;
 
-        var data, iframes, key:number, iframe:HTMLIFrameElement;
+        var data, iframes, iframe:HTMLIFrameElement;
 
         if (typeof e.data === "string") {
           try {
@@ -168,11 +165,11 @@ namespace app {
         }
 
         if (data.propagation !== false) {
-          iframes = document.getElementsByTagName("iframe");
+          iframes = Array.from(document.getElementsByTagName("iframe"));
 
           // parentから伝わってきた場合はiframeにも伝える
           if (e.source === parent) {
-            for (key = 0; iframe = iframes[key]; key++) {
+            for (iframe of iframes) {
               iframe.contentWindow.postMessage(e.data, location.origin);
             }
           }
@@ -182,7 +179,7 @@ namespace app {
               parent.postMessage(e.data, location.origin);
             }
 
-            for (key = 0; iframe = iframes[key]; key++) {
+            for (iframe of iframes) {
               if (iframe.contentWindow === e.source) continue;
               iframe.contentWindow.postMessage(e.data, location.origin);
             }
@@ -204,7 +201,7 @@ namespace app {
     }
 
     send (type:string, message:any, targetWindow?:Window):void {
-      var data: Object, iframes, key:number, iframe:HTMLIFrameElement;
+      var data: Object, iframes, iframe:HTMLIFrameElement;
 
       data = {
         type: "app.message",
@@ -221,8 +218,8 @@ namespace app {
           parent.postMessage(data, location.origin);
         }
 
-        iframes = document.getElementsByTagName("iframe");
-        for (key = 0; iframe = iframes[key]; key++) {
+        iframes = Array.from(document.getElementsByTagName("iframe"));
+        for (iframe of iframes) {
           iframe.contentWindow.postMessage(data, location.origin);
         }
         this._fire(type, message);
@@ -247,40 +244,40 @@ namespace app {
   (<any>message).remove_listener = message.removeListener;
 
   export class Config {
-    private static _default = {
-      layout: "pane-3",
-      theme_id: "default",
-      always_new_tab: "on",
-      button_change_netsc_newtab: "off",
-      open_all_unread_lazy: "on",
-      dblclick_reload: "on",
-      auto_load_second: "0",
-      auto_load_all: "off",
-      auto_load_move: "off",
-      image_blur: "off",
-      image_blur_length: "4",
-      aa_font: "aa",
-      popup_trigger: "click",
-      ngwords: "",
-      ngobj: "[]",
-      chain_ng: "off",
-      bookmark_show_dat: "on",
-      hide_needless_thread: "on",
-      default_name: "",
-      default_mail: "",
-      no_history: "off",
-      no_writehistory: "off",
-      user_css: "",
-      bbsmenu: "http://kita.jikkyo.org/cbm/cbm.cgi/20.p0.m0.jb.vs.op.sc.nb.bb/-all/bbsmenu.html",
-      useragent: "",
-      format_2chnet: "html",
-      sage_flag: "on",
-      mousewheel_change_tab: "on",
-      image_replace_dat_obj: "[]",
-      image_replace_dat: "^https?:\\/\\/(?:www\\.youtube\\.com\\/watch\\?(?:.+&)?v=|youtu\\.be\\/)([\\w\\-]+).*\thttps://img.youtube.com/vi/$1/default.jpg\nhttp:\\/\\/(?:www\\.)?nicovideon?\\.jp\\/(?:(?:watch|thumb)(?:_naisho)?(?:\\?v=|\\/)|\\?p=)(?!am|fz)[a-z]{2}(\\d+)\thttp://tn-skr.smilevideo.jp/smile?i=$1\n\\.(png|jpe?g|gif|bmp|webp)([\\?#:].*)?$\t.$1$2"
-    };
+    private static _default = new Map<string, string>([
+      ["layout", "pane-3"],
+      ["theme_id", "default"],
+      ["always_new_tab", "on"],
+      ["button_change_netsc_newtab", "off"],
+      ["open_all_unread_lazy", "on"],
+      ["dblclick_reload", "on"],
+      ["auto_load_second", "0"],
+      ["auto_load_all", "off"],
+      ["auto_load_move", "off"],
+      ["image_blur", "off"],
+      ["image_blur_length", "4"],
+      ["aa_font", "aa"],
+      ["popup_trigger", "click"],
+      ["ngwords", ""],
+      ["ngobj", "[]"],
+      ["chain_ng", "off"],
+      ["bookmark_show_dat", "on"],
+      ["hide_needless_thread", "on"],
+      ["default_name", ""],
+      ["default_mail", ""],
+      ["no_history", "off"],
+      ["no_writehistory", "off"],
+      ["user_css", ""],
+      ["bbsmenu", "http://kita.jikkyo.org/cbm/cbm.cgi/20.p0.m0.jb.vs.op.sc.nb.bb/-all/bbsmenu.html"],
+      ["useragent", ""],
+      ["format_2chnet", "html"],
+      ["sage_flag", "on"],
+      ["mousewheel_change_tab", "on"],
+      ["image_replace_dat_obj", "[]"],
+      ["image_replace_dat", "^https?:\\/\\/(?:www\\.youtube\\.com\\/watch\\?(?:.+&)?v=|youtu\\.be\\/)([\\w\\-]+).*\thttps://img.youtube.com/vi/$1/default.jpg\nhttp:\\/\\/(?:www\\.)?nicovideon?\\.jp\\/(?:(?:watch|thumb)(?:_naisho)?(?:\\?v=|\\/)|\\?p=)(?!am|fz)[a-z]{2}(\\d+)\thttp://tn-skr.smilevideo.jp/smile?i=$1\n\\.(png|jpe?g|gif|bmp|webp)([\\?#:].*)?$\t.$1$2"]
+    ]);
 
-    private _cache:{[index:string]:string;} = {};
+    private _cache = new Map<string, string>();
     ready: Function;
     _onChanged: any;
 
@@ -290,15 +287,12 @@ namespace app {
 
       // localStorageからの移行処理
       (() => {
-        var found:{[index:string]:string;} = {}, index:number, key:string,
-          val:string;
+        var found:{[index:string]:string;} = {}, key:string, val:string;
 
-        var localStorage_length = localStorage.length
-        for (index = 0; index < localStorage_length; index++) {
-          key = localStorage.key(index);
-          if (/^config_/.test(key)) {
+        for (key in localStorage) {
+          if (key.startsWith("config_")) {
             val = localStorage.getItem(key);
-            this._cache[key] = val;
+            this._cache.set(key, val);
             found[key] = val;
           }
         }
@@ -317,10 +311,10 @@ namespace app {
             val = res[key];
 
             if (
-              /^config_/.test(key) &&
+              key.startsWith("config_") &&
               (typeof val === "string" || typeof val ==="number")
             ) {
-              this._cache[key] = val;
+              this._cache.set(key, val);
             }
           }
           ready.call();
@@ -332,11 +326,11 @@ namespace app {
 
         if (area === "local") {
           for (key in change) {
-            if (!/^config_/.test(key)) continue;
+            if (!key.startsWith("config_")) continue;
 
             info = change[key];
             if (typeof info.newValue === "string") {
-              this._cache[key] = info.newValue;
+              this._cache.set(key, info.newValue);
 
               app.message.send("config_updated", {
                 key: key.slice(7),
@@ -344,7 +338,7 @@ namespace app {
               });
             }
             else {
-              delete this._cache[key];
+              delete this._cache.delete(key);
             }
           }
         }
@@ -354,11 +348,11 @@ namespace app {
     }
 
     get (key:string):string {
-      if (this._cache["config_" + key] != null) {
-        return this._cache["config_" + key];
+      if (this._cache.has("config_" + key)) {
+        return this._cache.get("config_" + key);
       }
-      else if (Config._default[key] != null) {
-        return Config._default[key];
+      else if (Config._default.has(key)) {
+        return Config._default.get(key);
       }
       else {
         return undefined;
@@ -367,11 +361,13 @@ namespace app {
 
     //設定の連想配列をjson文字列で渡す
     getAll ():string {
-      var json = new Object();
-      for(var key in Config._default) {
-        json["config_" + key] = Config._default[key];
+      var json = {};
+      for(var [key, val] of Config._default) {
+        json["config_" + key] = val;
       }
-      $.extend(json, this._cache);
+      for(var [key, val] of this._cache) {
+        json[key] = val;
+      }
       return JSON.stringify(json);
     }
 
@@ -422,7 +418,7 @@ namespace app {
     }
 
     destroy ():void {
-      this._cache = null;
+      this._cache.clear();
       chrome.storage.onChanged.removeListener(this._onChanged);
     }
   }
@@ -432,13 +428,18 @@ namespace app {
     config = new Config();
   }
 
+  export const AMP_REG = /\&/g;
+  export const LT_REG = /</g;
+  export const GT_REG = />/g;
+  export const QUOT_REG = /"/g;
+  export const APOS_REG = /'/g;
   export function escape_html (str:string):string {
     return str
-      .replace(/\&/g, "&amp;")
-      .replace(/</g, "&lt;")
-      .replace(/>/g, "&gt;")
-      .replace(/"/g, "&quot;")
-      .replace(/'/g, "&apos;");
+      .replace(AMP_REG, "&amp;")
+      .replace(LT_REG, "&lt;")
+      .replace(GT_REG, "&gt;")
+      .replace(QUOT_REG, "&quot;")
+      .replace(APOS_REG, "&apos;");
   }
 
   export function safe_href (url:string):string {
@@ -447,7 +448,7 @@ namespace app {
 
   export var manifest: any;
 
-  (function() {
+  (() => {
     var xhr:XMLHttpRequest;
     if (/^chrome-extension:\/\//.test(location.origin)) {
       xhr = new XMLHttpRequest();
@@ -469,60 +470,60 @@ namespace app {
   }
 
   export var module;
-  (function () {
-    var pending_modules = [], ready_modules = {}, fire_definition,
-      add_ready_module;
+  (() => {
+    var pending_modules = new Set<any>();
+    var ready_modules = new Map<string, any>();
+    var fire_definition, add_ready_module;
 
-    fire_definition = function (module_id, dependencies, definition) {
-      var dep_modules = [], key, dep_module_id, callback;
+    fire_definition = (module_id, dependencies, definition) => {
+      var dep_modules = [], dep_module_id, callback;
 
-      for (key = 0; dep_module_id = dependencies[key]; key++) {
-        dep_modules.push(ready_modules[dep_module_id].module);
+      for (dep_module_id of dependencies) {
+        dep_modules.push(ready_modules.get(dep_module_id).module);
       }
 
       if (module_id !== null) {
         callback = add_ready_module.bind({
-          module_id: module_id,
-          dependencies: dependencies
+          module_id,
+          dependencies
         });
-        defer(function () {
+        defer( () => {
           definition.apply(null, dep_modules.concat(callback));
         });
       }
       else {
-        defer(function () {
+        defer( () => {
           definition.apply(null, dep_modules);
         });
       }
     };
 
     add_ready_module = function (module) {
-      ready_modules[this.module_id] = {
+      ready_modules.set(this.module_id,{
         dependencies: this.dependencies,
         module: module
-      };
+      });
 
       // このモジュールが初期化された事で依存関係が満たされたモジュールを初期化
-      pending_modules = pending_modules.filter((val) => {
-        if (val.dependencies.indexOf(this.module_id) !== -1) {
-          if (!val.dependencies.some(function (a) { return !ready_modules[a]; })) {
+      for (var val of pending_modules.values()) {
+        if (val.dependencies.includes(this.module_id)) {
+          if (!val.dependencies.some((a) => { return !ready_modules.get(a); } )) {
             fire_definition(val.module_id, val.dependencies, val.definition);
-            return false;
+            pending_modules.delete(module);
           }
         }
-        return true;
-      });
+      }
     };
 
     app.module = function (module_id, dependencies, definition) {
       if (!dependencies) dependencies = [];
 
       // 依存関係が満たされていないモジュールは、しまっておく
-      if (dependencies.some(function (a) { return !ready_modules[a]; })) {
-        pending_modules.push({
-          module_id: module_id,
-          dependencies: dependencies,
-          definition: definition
+      if (dependencies.some((a) => { return !ready_modules.get(a); } )) {
+        pending_modules.add({
+          module_id,
+          dependencies,
+          definition
         });
       }
       // 依存関係が満たされている場合、即座にモジュール初期化を開始する
@@ -532,7 +533,7 @@ namespace app {
     };
 
     if (window["jQuery"]) {
-      app.module("jquery", [], function (callback) {
+      app.module("jquery", [], (callback) => {
         callback(window["jQuery"]);
       });
     }
@@ -561,8 +562,8 @@ namespace app {
         location.reload(true);
       }
       else {
-        $(function () {
-          app.config.ready(function () {
+        $(() => {
+          app.config.ready(() => {
             if (requirements) {
               app.module(null, requirements, fn);
             }

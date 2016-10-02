@@ -12,7 +12,6 @@ read.crx 2は[Google Chrome][chrome]アプリとして作られた2chブラウ�
     cd read.crx-2
 
     npm install
-    node_modules/.bin/typings install
     bundle install
 
     bundle exec rake pack

@@ -98,7 +98,7 @@ namespace app.Bookmark {
     get_by_board (boardURL:string):LegacyEntry[] {
       return (
         this.cbel.getThreadsByBoardURL(boardURL)
-          .map(function (entry:Entry):LegacyEntry {
+          .map( (entry:Entry):LegacyEntry => {
             return app.Bookmark.currentToLegacy(entry);
           })
       );
@@ -107,7 +107,7 @@ namespace app.Bookmark {
     get_all ():LegacyEntry[] {
       return (
         this.cbel.getAll()
-          .map(function (entry:Entry):LegacyEntry {
+          .map( (entry:Entry):LegacyEntry => {
             return app.Bookmark.currentToLegacy(entry);
           })
       );
@@ -131,7 +131,7 @@ namespace app.Bookmark {
           entry.resCount = entry.readState.received;
         }
 
-        this.cbel.add(entry, undefined, function (res) {
+        this.cbel.add(entry, undefined, (res) => {
           deferred[res ? "resolve" : "reject"]();
         });
       });
@@ -142,7 +142,7 @@ namespace app.Bookmark {
     remove (url:string) {
       var deferred = $.Deferred();
 
-      this.cbel.remove(url, undefined, function (res) {
+      this.cbel.remove(url, undefined, (res) => {
         deferred[res ? "resolve" : "reject"]();
       });
 
@@ -156,7 +156,7 @@ namespace app.Bookmark {
 
       if (entry) {
         entry.readState = readState;
-        this.cbel.update(entry, undefined, function (res) {
+        this.cbel.update(entry, undefined, (res) => {
           deferred[res ? "resolve" : "reject"]();
         });
       }
@@ -173,7 +173,7 @@ namespace app.Bookmark {
 
       if (entry) {
         entry.resCount = resCount;
-        this.cbel.update(entry, undefined, function (res) {
+        this.cbel.update(entry, undefined, (res) => {
           deferred[res ? "resolve" : "reject"]();
         });
       }
@@ -187,7 +187,7 @@ namespace app.Bookmark {
 
       if (entry) {
         entry.expired = expired;
-        this.cbel.update(entry, undefined, function (res) {
+        this.cbel.update(entry, undefined, (res) => {
           deferred[res ? "resolve" : "reject"]();
         });
       }

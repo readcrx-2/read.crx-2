@@ -35,7 +35,7 @@ app.boot "/view/config.html", ["cache", "bbsmenu"], (Cache, BBSMenu) ->
         @value = app.config.get(@name) or "0"
         null
       .on "input", ->
-        app.config.set(@name, if not isNaN +@value then @value else "0")
+        app.config.set(@name, if not Number.isInteger(@value) then @value else "0")
         return
 
   $view
@@ -344,8 +344,8 @@ app.boot "/view/config.html", ["cache", "bbsmenu"], (Cache, BBSMenu) ->
     return d.promise()
   )
 
-  #キャッシュ削除ボタン
   do ->
+    #キャッシュ削除ボタン
     $clear_button = $view.find(".cache_clear")
     $status = $view.find(".cache_status")
 
@@ -366,6 +366,20 @@ app.boot "/view/config.html", ["cache", "bbsmenu"], (Cache, BBSMenu) ->
           $status.text("削除失敗")
           return
       return
+    #キャッシュ範囲削除ボタン
+    $clear_range_button = $view.find(".cache_range_clear")
+    $clear_range_button.on "click", ->
+      $status.text("範囲指定削除中")
+
+      cache.clearRange(parseInt($view.find(".cache_date_range")[0].value))
+        .done ->
+          $status.text("削除完了")
+          return
+        .fail ->
+          $status.text("削除失敗")
+          return
+      return
+    return
 
   #ブックマークフォルダ変更ボタン
   $view.find(".bookmark_source_change").on "click", ->

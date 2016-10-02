@@ -13,10 +13,10 @@
     %script(src="sidemenu.js?v=#{MANIFEST["version"]}")
   %body.content(tabindex="0")
     %form.search
-      %input(type="text" name="q" placeholder="スレッド検索")
+      %input(type="search" name="q" placeholder="スレッド検索")
       %input(type="submit" value="")
     %h3 read.crx
-    %ul.slide.hidden
+    %ul
       %li
         %a(class="open_in_rcrx" data-href="bookmark" title="ブックマーク") ブックマーク
       %li

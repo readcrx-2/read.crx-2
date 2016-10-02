@@ -18,9 +18,5 @@ app.boot "/view/inputurl.html", ->
       ele = $view
         .find(".notice")
           .text("未対応形式のURLです")
-          .removeClass("hidden")
-      app.defer(->
-        ele.addClass("fadeIn")
-        return
-      )
+      UI.Animate.fadeIn(ele[0])
     return

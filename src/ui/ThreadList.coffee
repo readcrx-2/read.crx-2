@@ -103,8 +103,16 @@ class UI.ThreadList
         $tr = $table.find("tr[data-href=\"#{msg.bookmark.url}\"]")
         if msg.bookmark.expired
           $tr.addClass("expired")
+          if app.config.get("bookmark_show_dat") is "off"
+            $tr.addClass("hidden")
+          else
+            $tr.removeClass("hidden")
         else
           $tr.removeClass("expired")
+
+      if msg.type is "errored"
+        $tr = $table.find("tr[data-href=\"#{msg.bookmark.url}\"]")
+        $tr.addClass("errored")
 
       if @_flg.bookmark
         if msg.type is "added"
@@ -326,10 +334,13 @@ class UI.ThreadList
         trClassName += " ng_thread"
       if item.need_less
         trClassName += " needlessThread"
-        if app.config.get("hide_needless_thread") is "on"
-          trClassName += " hidden"
       if item.is_net
         trClassName += " net"
+      if (
+        (item.expired and app.config.get("bookmark_show_dat") is "off") or
+        (item.need_less and app.config.get("hide_needless_thread") is "on")
+      )
+        trClassName += " hidden"
 
       tmpHTML = " data-href=\"#{app.escape_html(item.url)}\""
       tmpHTML += " data-title=\"#{app.escape_html(item.title)}\""

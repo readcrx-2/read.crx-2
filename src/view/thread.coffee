@@ -73,7 +73,7 @@ app.boot "/view/thread.html", ["board_title_solver"], (BoardTitleSolver) ->
 
   popup_helper = (that, e, fn) ->
     $popup = fn()
-    return if $popup.children().length is 0
+    return if $popup[0].children.length is 0
     $popup.find("article").removeClass("last read received")
     #ポップアップ内のサムネイルの遅延ロードを解除
     $popup.find("img[data-src]").each ->
@@ -410,7 +410,7 @@ app.boot "/view/thread.html", ["board_title_solver"], (BoardTitleSolver) ->
                   break
                 now++
 
-        if $popup.children().length is 0
+        if $popup[0].children.length is 0
           $("<div>", {
             text: "対象のレスが見つかりません"
             class: "popup_disabled"
@@ -573,12 +573,12 @@ app.boot "/view/thread.html", ["board_title_solver"], (BoardTitleSolver) ->
         if res and not already[res_num]
           $jump_panel[0]
             .querySelector(panel_item_selector)
-              .style["display"] = "block"
+              .style.display = "block"
           already[res_num] = true
         else
           $jump_panel[0]
             .querySelector(panel_item_selector)
-              .style["display"] = "none"
+              .style.display = "none"
       return
 
     $jump_panel.on "click", (e) ->
@@ -770,7 +770,7 @@ app.boot "/view/thread.html", ["board_title_solver"], (BoardTitleSolver) ->
         .find(".breadcrumb > li > a")
           .attr("href", board_url)
           .text(if title? then "#{title.replace(/板$/, "")}板" else "板")
-          .css("display", "none")
+          .addClass("hidden")
       # Windows版Chromeで描画が崩れる現象を防ぐため、わざとリフローさせる。
       app.defer ->
         $view.find(".breadcrumb > li > a").css("display", "inline-block")

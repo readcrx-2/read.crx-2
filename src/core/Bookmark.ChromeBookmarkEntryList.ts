@@ -18,7 +18,7 @@ module app.Bookmark {
 
   export class ChromeBookmarkEntryList extends SyncableEntryList {
     rootNodeId: string;
-    nodeIdStore: {[fixedURL:string]:string;} = {};
+    nodeIdStore = new Map<string, string>();
     ready = new app.Callbacks();
     needReconfigureRootNodeId = new app.Callbacks({persistent: true});
 
@@ -29,7 +29,7 @@ module app.Bookmark {
 
       param = {};
 
-      if (typeof entry.resCount === "number" && !isNaN(entry.resCount)) {
+      if (Number.isFinite(entry.resCount)) {
         param.res_count = entry.resCount;
       }
 
@@ -49,7 +49,7 @@ module app.Bookmark {
     }
 
     static URLToEntry (url:string):Entry {
-      var fixedURL:string, guessRes:app.URL.GuessResult, arg, entry:Entry;
+      var fixedURL:string, guessRes:app.URL.GuessResult, arg, entry:Entry, reg;
 
       fixedURL = app.URL.fix(url);
       guessRes = app.URL.guessType(fixedURL);
@@ -69,14 +69,15 @@ module app.Bookmark {
         expired: false
       };
 
-      if (/^\d+$/.test(arg.res_count)) {
+      reg = /^\d+$/
+      if (reg.test(arg.res_count)) {
         entry.resCount = +arg.res_count;
       }
 
       if (
-        /^\d+$/.test(arg.received) &&
-        /^\d+$/.test(arg.read) &&
-        /^\d+$/.test(arg.last)
+        reg.test(arg.received) &&
+        reg.test(arg.read) &&
+        reg.test(arg.last)
       ) {
         entry.readState = {
           url: fixedURL,
@@ -112,17 +113,16 @@ module app.Bookmark {
         if (this.get(entry.url)) {
           // node側の方が新しいと判定された場合のみupdateを行う。
           if (app.Bookmark.newerEntry(entry, this.get(entry.url)) === entry) {
-            delete this.nodeIdStore[entry.url];
-            this.nodeIdStore[entry.url] = node.id;
+            this.nodeIdStore.set(entry.url, node.id);
             this.update(entry, false);
           }
           // addによりcreateChromeBookmarkが呼ばれた場合
-          else if (!this.nodeIdStore[entry.url]) {
-            this.nodeIdStore[entry.url] = node.id;
+          else if (!this.nodeIdStore.has(entry.url)) {
+            this.nodeIdStore.set(entry.url, node.id);
           }
         }
         else {
-          this.nodeIdStore[entry.url] = node.id;
+          this.nodeIdStore.set(entry.url, node.id);
           this.add(entry, false);
         }
       }
@@ -153,8 +153,8 @@ module app.Bookmark {
           }
           // ノードのURLが他の板/スレを示す物に変更された時
           else {
-            delete this.nodeIdStore[url];
-            this.nodeIdStore[newEntry.url] = nodeId;
+            this.nodeIdStore.delete(url);
+            this.nodeIdStore.set(newEntry.url, nodeId);
 
             this.remove(entry.url, false);
             this.add(newEntry, false);
@@ -173,17 +173,15 @@ module app.Bookmark {
       var url = this.getURLFromNodeId(nodeId);
 
       if (url !== null) {
-        delete this.nodeIdStore[url];
+        this.nodeIdStore.delete(url);
 
         this.remove(url, false);
       }
     }
 
     private getURLFromNodeId (nodeId:string):string {
-      var url:string;
-
-      for (url in this.nodeIdStore) {
-        if (this.nodeIdStore[url] === nodeId) {
+      for (var [url, id] of this.nodeIdStore) {
+        if (id === nodeId) {
           return url;
         }
       }
@@ -304,12 +302,13 @@ module app.Bookmark {
     private updateChromeBookmark (newEntry:Entry, callback?:Function):void {
       var id:string;
 
-      if (id = this.nodeIdStore[newEntry.url]) {
+      if (this.nodeIdStore.has(newEntry.url)) {
+        id = this.nodeIdStore.get(newEntry.url)
         chrome.bookmarks.get(id, (res:BookmarkTreeNode[]) => {
           var changes:any = {},
             node = res[0],
-            newURL = ChromeBookmarkEntryList.entryToURL(newEntry),
-            currentEntry = ChromeBookmarkEntryList.URLToEntry(node.url);
+            newURL = ChromeBookmarkEntryList.entryToURL(newEntry);
+            //currentEntry = ChromeBookmarkEntryList.URLToEntry(node.url); //used in future
 
           if (node.title !== newEntry.title) {
             changes.title = newEntry.title;
@@ -355,8 +354,8 @@ module app.Bookmark {
     }
 
     private removeChromeBookmark (url: string, callback?: Function): void {
-      if (url in this.nodeIdStore) {
-        delete this.nodeIdStore[url];
+      if (this.nodeIdStore.has(url)) {
+        this.nodeIdStore.delete(url);
       }
 
       chrome.bookmarks.getChildren(
@@ -383,7 +382,7 @@ module app.Bookmark {
           }
 
           for(var id of removeIdList) {
-            chrome.bookmarks.remove(id, function () {
+            chrome.bookmarks.remove(id, () => {
               //TODO 失敗検出
               removedCount++;
 

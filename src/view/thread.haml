@@ -15,14 +15,14 @@
     .message_bar
     %nav.nav_bar
       %label
-        %input.searchbox
+        %input.searchbox(type="search" placeholder="検索")
         %span.hit_count.hidden
-      .button.button_back.disabled
-      .button.button_forward.disabled
-      .button.button_reload
-      .button.button_bookmark
-      .button.button_write
-      .button.button_tool
+      .button.button_back.disabled(title="戻る")
+      .button.button_forward.disabled(title="進む")
+      .button.button_reload(title="再読み込み")
+      .button.button_bookmark(title="ブックマークする")
+      .button.button_write(title="書き込む")
+      .button.button_tool(title="メニュー")
         %ul.hidden
           %li.button_link
             %a(target="_blank") Chromeで直接開く
@@ -46,7 +46,7 @@
       %li.jump_not_read 未読
       %li.jump_new 新着
       %li.jump_newest 最後
-    .next_thread_list.fade.hidden
+    .next_thread_list.hidden
       %img.close(src="/img/close_16x16.webp")
       %h1
         板内で最も
@@ -57,7 +57,7 @@
     .loading_overlay Loading...
 
     %template#template_res_menu
-      %ul.res_menu
+      %menu.res_menu
         %li.copy_selection 選択範囲をコピー
         %li.add_selection_to_ngwords 選択範囲をNG指定
         %li.search_selection 選択範囲を検索

@@ -46,7 +46,6 @@ app.boot "/view/sidemenu.html", ["bbsmenu"], (BBSMenu) ->
 
       $view.find("ul:first-of-type").append(frag)
       accordion.update()
-      accordion.open($view[0].querySelector("h3"), 0)
       return
 
     #ブックマーク更新時処理
@@ -90,16 +89,12 @@ app.boot "/view/sidemenu.html", ["bbsmenu"], (BBSMenu) ->
             frag.appendChild(h3)
 
             ul = document.createElement("ul")
-            cl = ul.classList
-            cl.add("slide")
-            cl.add("hidden")
             for board in category.board
               ul.appendChild(board_to_li(board))
             frag.appendChild(ul)
 
         $view.find("body").append(frag)
         accordion.update()
-        accordion.open($view[0].querySelector("h3"), 0)
         $view.removeClass("loading")
         return
       return

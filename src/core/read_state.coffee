@@ -35,12 +35,9 @@ app.read_state.set = (read_state) ->
   if not read_state? or
       typeof read_state isnt "object" or
       typeof read_state.url isnt "string" or
-      typeof read_state.last isnt "number" or
-      isNaN(read_state.last) or
-      typeof read_state.read isnt "number" or
-      isNaN(read_state.read) or
-      typeof read_state.received isnt "number" or
-      isNaN(read_state.received)
+      not Number.isFinite(read_state.last) or
+      not Number.isFinite(read_state.read) or
+      not Number.isFinite(read_state.received)
     app.log("error", "app.read_state.set: 引数が不正です", arguments)
     return $.Deferred().reject().promise()
 

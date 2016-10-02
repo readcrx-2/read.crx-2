@@ -16,7 +16,7 @@ app.boot "/view/bookmark.html", ->
 
   new app.view.TabContentView(document.documentElement)
 
-  trUpdatedObserver = new WebKitMutationObserver (records) ->
+  trUpdatedObserver = new MutationObserver (records) ->
     for record in records
       if record.target.webkitMatchesSelector("tr.updated")
         record.target.parentNode.appendChild(record.target)
@@ -40,14 +40,18 @@ app.boot "/view/bookmark.html", ->
       attributeFilter: ["class"]
     })
 
-    board_list = []
+    board_list = new Set()
+    board_thread_table = new Map()
     for bookmark in app.bookmarkEntryList.getAllThreads()
       board_url = app.url.thread_to_board(bookmark.url)
-      unless board_url in board_list
-        board_list.push(board_url)
+      board_list.add(board_url)
+      if board_thread_table.has(board_url)
+        board_thread_table.get(board_url).push(bookmark.url)
+      else
+        board_thread_table.set(board_url, [bookmark.url])
 
     count =
-      all: board_list.length
+      all: board_list.size
       loading: 0
       success: 0
       error: 0
@@ -56,10 +60,13 @@ app.boot "/view/bookmark.html", ->
 
     fn = (res) ->
       if res?
-        delete loadingServer[@prev.split("/")[2]]
+        delete loadingServer[app.url.getDomain(@prev)]
         count.loading--
         status = if res.status is "success" then "success" else "error"
         count[status]++
+        if status is "error"
+          for board in board_thread_table.get(@prev)
+            app.message.send("bookmark_updated", {type: "errored", bookmark: {type: "thread", url: board}, entry: {type: "thread"}})
 
       if count.all is count.success + count.error
         #更新完了
@@ -81,11 +88,13 @@ app.boot "/view/bookmark.html", ->
       # 合計最大同時接続数: 2
       # 同一サーバーへの最大接続数: 1
       else if count.loading < 2
-        for current, key in board_list
-          server = current.split("/")[2]
+        keys = board_list.values()
+        while !keys.done
+          current = keys.next().value
+          server = app.url.getDomain(current)
           continue if loadingServer[server]
           loadingServer[server] = true
-          board_list.splice(key, 1)
+          board_list.delete(current)
           count.loading++
           app.board.get(current, fn.bind(prev: current))
           fn()
@@ -99,13 +108,6 @@ app.boot "/view/bookmark.html", ->
       return
 
     fn()
-
-    #dat落ちを表示/非表示
-    $expired = $view.find(".expired")
-    if app.config.get("bookmark_show_dat") is "off"
-      $expired.addClass("expired_hide")
-    else
-      $expired.removeClass("expired_hide")
     return
 
   threadList.addItem(
@@ -117,13 +119,6 @@ app.boot "/view/bookmark.html", ->
       created_at: /\/(\d+)\/$/.exec(a.url)[1] * 1000
       expired: a.expired
   )
-
-  #dat落ちを表示/非表示
-  $expired = $view.find(".expired")
-  if app.config.get("bookmark_show_dat") is "off"
-    $expired.addClass("expired_hide")
-  else
-    $expired.removeClass("expired_hide")
 
   app.message.send("request_update_read_state", {})
   $table.table_sort("update")

@@ -132,6 +132,7 @@ header {
 .beicon[src="/img/loading.webp"] {
   width: 32px;
   height: 32px;
+  will-change: transform;
   animation: rotateThis 1.5s linear infinite;
 }
 
@@ -157,6 +158,7 @@ header {
       &[src="/img/loading.webp"] {
         width: 50px;
         height: 50px;
+        will-change: transform;
         animation: rotateThis 1.5s linear infinite;
       }
     }
@@ -179,8 +181,6 @@ header {
 .popup {
   position: fixed;
   z-index: $z-index-popup;
-  max-width: 500px;
-  max-height: 300px;
   overflow: auto;
   box-shadow: 0 3px 10px rgba(black, 0.75);
   border: 3px solid #666;

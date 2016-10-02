@@ -90,8 +90,8 @@ app.boot "/view/bookmark.html", ->
       # 同一サーバーへの最大接続数: 1
       else if count.loading < 2
         keys = board_list.values()
-        while !keys.done
-          current = keys.next().value
+        while !(board = keys.next()).done
+          current = board.value
           server = app.url.getDomain(current)
           continue if loadingServer[server]
           loadingServer[server] = true

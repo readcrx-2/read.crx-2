@@ -86,7 +86,6 @@ do ->
 
   #文字参照をデコード
   span = document.createElement("span")
-
   app.util.decode_char_reference = (str) ->
     str.replace /\&(?:#(\d+)|#x([\dA-Fa-f]+)|([\da-zA-Z]+));/g, ($0, $1, $2, $3) ->
       #数値文字参照 - 10進数
@@ -103,31 +102,29 @@ do ->
         $0
 
   #マウスクリックのイベントオブジェクトから、リンク先をどう開くべきかの情報を導く
+  openMap = new Map([
+    #which(number), shift(bool), ctrl(bool)の文字列
+    ["1falsefalse", { new_tab: false, new_window: false, background: false }]
+    ["1truefalse",  { new_tab: false, new_window: true,  background: false }]
+    ["1falsetrue",  { new_tab: true,  new_window: false, background: true  }]
+    ["1truetrue",   { new_tab: true,  new_window: false, background: false }]
+    ["2falsefalse", { new_tab: true,  new_window: false, background: true  }]
+    ["2truefalse",  { new_tab: true,  new_window: false, background: false }]
+    ["2falsetrue",  { new_tab: true,  new_window: false, background: true  }]
+    ["2truetrue",   { new_tab: true,  new_window: false, background: false }]
+  ])
   app.util.get_how_to_open = (original_e) ->
     e = {which, shiftKey, ctrlKey} = original_e
     e.ctrlKey or= original_e.metaKey
     def = {new_tab: false, new_window: false, background: false}
     if e.type is "mousedown"
-      if e.which is 1 and not e.shiftKey and not e.ctrlKey
-        {new_tab: false, new_window: false, background: false}
-      else if e.which is 1 and e.shiftKey and not e.ctrlKey
-        {new_tab: false, new_window: true, background: false}
-      else if e.which is 1 and not e.shiftKey and e.ctrlKey
-        {new_tab: true, new_window: false, background: true}
-      else if e.which is 1 and e.shiftKey and e.ctrlKey
-        {new_tab: true, new_window: false, background: false}
-      else if e.which is 2 and not e.shiftKey and not e.ctrlKey
-        {new_tab: true, new_window: false, background: true}
-      else if e.which is 2 and e.shiftKey and not e.ctrlKey
-        {new_tab: true, new_window: false, background: false}
-      else if e.which is 2 and not e.shiftKey and e.ctrlKey
-        {new_tab: true, new_window: false, background: true}
-      else if e.which is 2 and e.shiftKey and e.ctrlKey
-        {new_tab: true, new_window: false, background: false}
+      key = "" + e.which + e.shiftKey + e.ctrlKey
+      if openMap.has(key)
+        return openMap.get(key)
       else
-        def
+        return def
     else
-      def
+      return def
 
   app.util.search_next_thread = (thread_url, thread_title) ->
     $.Deferred (d) ->

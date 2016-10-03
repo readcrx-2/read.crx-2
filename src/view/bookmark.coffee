@@ -166,6 +166,6 @@ app.boot "/view/bookmark.html", ->
       if after > before
         notifyStr += "タイトル: #{title}  新規: #{after - before}  未読: #{unreadRes}\n"
     if notifyStr isnt ""
-      app.notification.create("ブックマークの更新", notifyStr, "title")
+      app.notification.create("ブックマークの更新", notifyStr, "bookmark", "bookmark")
     return
   return

@@ -93,7 +93,7 @@ class UI.ThreadContent
 
     # もしターゲットがNGだった場合、その直前/直後の非NGレスをターゲットに変更する
     if target and target.classList.contains("ng")
-      _target = $(target).prevAll(":not(.ng)")[0] or $(target).nextAll(":not(.ng)")[0]
+      target = $(target).prevAll(":not(.ng)")[0] or $(target).nextAll(":not(.ng)")[0]
 
     if target
       if @_scrolling
@@ -415,10 +415,10 @@ class UI.ThreadContent
             #タグ除去
             .replace(/<(?!(?:br|hr|div class="(?:rock54|slipchange)"|\/?b)>).*?(?:>|$)/ig, "")
             #URLリンク
-            .replace(/(h)?(ttps?:\/\/(?!img\.2ch\.net\/(?:ico|emoji)\/[\w\-_]+\.gif)(?:[a-hj-zA-HJ-Z\d_\-.!~*'();\/?:@=+$,%#]|\&(?!gt;)|[iI](?![dD]:)+)+)/g,
+            .replace(/(h)?(ttps?:\/\/(?!img\.2ch\.net\/(?:ico|emoji|premium)\/[\w\-_]+\.gif)(?:[a-hj-zA-HJ-Z\d_\-.!~*'();\/?:@=+$,%#]|\&(?!gt;)|[iI](?![dD]:)+)+)/g,
               '<a href="h$2" target="_blank">$1$2</a>')
             #Beアイコン埋め込み表示
-            .replace ///^(?:\s*sssp|https?)://(img\.2ch\.net/ico/[\w\-_]+\.gif)\s*<br>///, ($0, $1) =>
+            .replace ///^(?:\s*sssp|https?)://(img\.2ch\.net/(?:ico|premium)/[\w\-_]+\.gif)\s*<br>///, ($0, $1) =>
               if app.url.tsld(@url) in ["2ch.net", "bbspink.com", "2ch.sc"]
                 """<img class="beicon" src="/img/dummy_1x1.webp" data-src="http://#{$1}"><br>"""
               else
@@ -466,9 +466,11 @@ class UI.ThreadContent
         if color? then articleHtml += " style=\"color:##{color[1]};\""
         articleHtml += ">#{tmp}</div>"
 
+        ngKeys = ng.keys()
         tmpTxt1 = res.name + " " + res.mail + " " + res.other + " " + res.message
         tmpTxt2 = app.util.normalize(tmpTxt1)
-        for n in ng
+        while !(current = ngKeys.next()).done
+          n = current.value
           if n.start? and ((n.finish? and n.start <= resNum and resNum <= n.finish) or (parseInt(n.start) is resNum))
             continue
           if (

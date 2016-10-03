@@ -142,4 +142,28 @@ app.boot "/view/board.html", ["board_title_solver"], (BoardTitleSolver) ->
     load(ex)
     return
   load()
+
+  #自動更新
+  do ->
+    auto_load = ->
+      second = parseInt(app.config.get("auto_load_second_board"))
+      if second >= 20000
+        return setInterval( ->
+          if app.config.get("auto_load_all") is "on" or $(".tab_container", parent.document).find("iframe[data-url=\"#{url}\"]").hasClass("tab_selected")
+            $view.trigger "request_reload" unless $view.find(".content").hasClass("searching")
+          return
+        , second)
+      return
+
+    auto_load_interval = auto_load()
+
+    app.message.add_listener "config_updated", (message) ->
+      if message.key is "auto_load_second_board"
+        clearInterval auto_load_interval
+        auto_load_interval = auto_load()
+      return
+
+    window.addEventListener "view_unload", ->
+      clearInterval(auto_load_interval)
+      return
   return

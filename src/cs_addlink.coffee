@@ -11,11 +11,14 @@ open_button_id = "36e5cda5"
 close_button_id = "92a5da13"
 
 if (regs.some (a) -> a.test(location.href))
-  document.body.addEventListener "click", (e) ->
+  document.body.addEventListener "mousedown", (e) ->
     if e.target.id is open_button_id
       url = chrome.extension.getURL("/view/index.html")
       url += "?q=#{encodeURIComponent(location.href)}"
-      open(url)
+      a = document.createElement("a")
+      a.href = url
+      event = new MouseEvent("click", {button: e.button ,ctrlKey: e.ctrlKey, shiftKey: e.shiftKey})
+      a.dispatchEvent(event)
     else if e.target.id is close_button_id
       @removeChild(e.target.parentNode)
     return

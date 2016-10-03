@@ -4,7 +4,7 @@
 @static
 ###
 class app.NG
-  _ng = []
+  _ng = null
   _configName = "ngobj"
   _configStringName = "ngwords"
   _ignoreResRegNumber = /^ignoreResNumber:(\d+)(?:-?(\d+))?,(.*)$/
@@ -12,7 +12,10 @@ class app.NG
   #jsonには正規表現のオブジェクトが含めれないので
   #それを展開
   _setupReg = (obj) ->
-    for n in obj when n.type.startsWith("regExp")
+    keys = obj.keys()
+    while !(current = keys.next()).done
+      n = current.value
+      continue if !n.type.startsWith("regExp")
       try
         n.reg = new RegExp n.word
       catch e
@@ -40,11 +43,11 @@ class app.NG
 
   ###*
   @method get
-  @param {Function} Callback
+  @return {Object}
   ###
   @get: ->
-    if _ng.length is 0
-      _ng = _config.get()
+    if !_ng?
+      _ng = new Set(_config.get())
       _setupReg(_ng)
     return _ng
 
@@ -54,7 +57,7 @@ class app.NG
   @return {Object}
   ###
   @parse: (string) ->
-    ng = []
+    ng = new Set()
     if string isnt ""
       ngStrSplit = string.split("\n")
       for ngWord in ngStrSplit
@@ -125,7 +128,7 @@ class app.NG
             type: "word"
             word: app.util.normalize(ngWord)
         if ngElement.word isnt ""
-          ng.push(ngElement)
+          ng.add(ngElement)
     return ng
 
   ###*
@@ -134,7 +137,7 @@ class app.NG
   ###
   @set: (string) ->
     _ng = @parse(string)
-    _config.set(_ng)
+    _config.set(Array.from(_ng))
     _setupReg(_ng)
     return
 
@@ -145,7 +148,10 @@ class app.NG
   @add: (string) ->
     _config.setString(string + "\n" + _config.getString())
     addNg = @parse(string)
-    _config.set(_config.get().concat(addNg))
+    _config.set(Array.from(_config.get()).concat(Array.from(addNg)))
+
     _setupReg(addNg)
-    _ng = _ng.concat(addNg)
+    addNgKeys = addNg.keys()
+    while !(current = addNgKeys.next()).done
+      _ng.add(current.value)
     return

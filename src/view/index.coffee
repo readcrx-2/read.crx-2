@@ -292,9 +292,9 @@ app.boot "/view/index.html", ->
         for tab in win.tabs
           if tab.id isnt current_tab.id and tab.url is app_path
             chrome.windows.update(win.id, focused: true)
-            chrome.tabs.update(tab.id, selected: true)
+            chrome.tabs.update(tab.id, highlighted: true)
             if query
-              chrome.tabs.sendRequest(tab.id, {type: "open", query})
+              chrome.runtime.sendMessage({type: "open", query})
             chrome.tabs.remove(current_tab.id)
             return
       history.replaceState(null, null, "/view/index.html")

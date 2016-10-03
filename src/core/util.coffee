@@ -42,6 +42,7 @@ class app.util.Anchor
     data
 
 do ->
+  boardUrlReg = /^https?:\/\/\w+\.2ch\.net\/(\w+)\/$/
   #2chの鯖移転検出関数
   #移転を検出した場合は移転先のURLをresolveに載せる
   #検出出来なかった場合はrejectする
@@ -76,6 +77,26 @@ do ->
           deferred.resolve(res[1])
         else
           deferred.reject()
+    #bbsmenuから検索
+    .then null, ->
+      return $.Deferred((d) =>
+        app.BBSMenu.get (result) =>
+          if result.data?
+            match = old_board_url.match(boardUrlReg)
+            console.log match
+            d.reject() unless match.length > 0
+            for category in result.data
+              for board in category.board
+                m = board.url.match(boardUrlReg)
+                if m? and match[1] is m[1]
+                  d.resolve(m[0])
+                  break
+            d.reject()
+          else
+            d.reject()
+          return
+        return
+      )
 
     #移転を検出した場合は移転検出メッセージを送出
     .done (new_board_url) ->

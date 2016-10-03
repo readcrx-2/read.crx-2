@@ -35,3 +35,40 @@ td {
 tr.ng_thread {
   display: none;
 }
+
+.board_footer {
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  right: 75px;
+  display: flex;
+  > .loading_indicator {
+    margin: 10px;
+    padding: 10px;
+    border: 1px solid hsl(0, 0%, 70%);
+    border-radius: 5px;
+    font-size: 12px;
+    background-color: hsl(0, 0%, 20%);
+    color: hsl(0, 0%, 100%);
+  }
+}
+
+.view.loading {
+  .content {
+    display: block !important;
+    ~ .loading_overlay {
+      display: none !important;
+    }
+    ~ .board_footer .loading_indicator {
+      display: block;
+    }
+    &:empty {
+      ~ .loading_overlay {
+        display: block !important;
+      }
+      ~ .board_footer .loading_indicator {
+        display: none;
+      }
+    }
+  }
+}

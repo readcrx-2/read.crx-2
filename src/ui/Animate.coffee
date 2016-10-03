@@ -38,7 +38,6 @@ do ->
     return height
 
   out.slideDown = (ele) ->
-    console.log "down", ele.previousSibling.textContent, ele.cloneNode(true)
     ele.removeClass("hidden")
     h = getOriginHeight(ele)
     frames =
@@ -47,13 +46,9 @@ do ->
       duration: 250
       easing: "ease-in-out"
     ani = ele.animate(frames, timing)
-    ani.on("finish", ->
-      console.log "downed", ele.previousSibling.textContent, ele.cloneNode(true)
-    )
     return ani
 
   out.slideUp = (ele) ->
-    console.log "up", ele.previousSibling.textContent, ele.cloneNode(true)
     h = ele.clientHeight
     frames =
       height: ["#{h}px", "0px"]
@@ -63,7 +58,6 @@ do ->
     ani = ele.animate(frames, timing)
     ani.on("finish", ->
       ele.addClass("hidden")
-      console.log "uped", ele.previousSibling.textContent, ele.cloneNode(true)
       return
     )
     return ani

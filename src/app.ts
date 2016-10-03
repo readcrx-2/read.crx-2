@@ -4,7 +4,7 @@ interface Window {
   chrome: any;
 }
 
-declare var webkitNotifications: any;
+declare var Notification: any;
 declare var chrome: any;
 
 namespace app {
@@ -13,13 +13,11 @@ namespace app {
   var logLevels = ["log", "debug", "info", "warn", "error"];
 
   export function criticalError (message:string):void {
-    webkitNotifications
-      .createNotification(
-        "",
-        "深刻なエラーが発生したのでread.crxを終了します",
-        `詳細 : ${message}`
-      )
-      .show()
+    new Notification(
+      "",
+      "深刻なエラーが発生したのでread.crxを終了します",
+      `詳細 : ${message}`
+    )
 
     parent.chrome.tabs.getCurrent( (tab): void => {
       parent.chrome.tabs.remove(tab.id);
@@ -252,8 +250,11 @@ namespace app {
       ["open_all_unread_lazy", "on"],
       ["dblclick_reload", "on"],
       ["auto_load_second", "0"],
+      ["auto_load_second_board", "0"],
+      ["auto_load_second_bookmark", "0"],
       ["auto_load_all", "off"],
       ["auto_load_move", "off"],
+      ["auto_bookmark_notify", "on"],
       ["image_blur", "off"],
       ["image_blur_length", "4"],
       ["aa_font", "aa"],
@@ -338,7 +339,7 @@ namespace app {
               });
             }
             else {
-              delete this._cache.delete(key);
+              this._cache.delete(key);
             }
           }
         }

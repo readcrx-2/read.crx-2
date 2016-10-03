@@ -44,7 +44,7 @@ class app.BBSMenu
 
     menu
 
-  @_callbacks: $.Callbacks()
+  @_callbacks: new app.Callbacks({persistent: true})
   @_updating: false
   @_update: (force_reload) ->
     BBSMenu._updating = true
@@ -102,19 +102,19 @@ class app.BBSMenu
       ), fn)
       #コールバック
       .done (response, menu) ->
-        BBSMenu._callbacks.fire(status: "success", data: menu)
+        BBSMenu._callbacks.call(status: "success", data: menu)
         return
       .fail (response, menu) ->
         message = "板一覧の取得に失敗しました。"
         if menu?
           message += "キャッシュに残っていたデータを表示します。"
-          BBSMenu._callbacks.fire({status: "error", data: menu, message})
+          BBSMenu._callbacks.call({status: "error", data: menu, message})
         else
-          BBSMenu._callbacks.fire({status: "error", message})
+          BBSMenu._callbacks.call({status: "error", message})
         return
       .always ->
         BBSMenu._updating = false
-        BBSMenu._callbacks.empty()
+        BBSMenu._callbacks.destroy()
         return
       #キャッシュ更新
       .done (response, menu) ->

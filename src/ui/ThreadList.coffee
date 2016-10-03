@@ -140,6 +140,7 @@ class UI.ThreadList
           td = tr.querySelector(selector.res)
           old_res_count = +td.textContent
           td.textContent = msg.bookmark.res_count
+          td.setAttr("data-beforeres", old_res_count)
           if @_flg.unread
             td = tr.querySelector(selector.unread)
             old_unread = +td.textContent

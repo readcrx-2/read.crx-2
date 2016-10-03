@@ -87,16 +87,26 @@
       %section
         %h2 自動更新
         %div
+          自動更新間隔ミリ秒数: (最小値以下をセットすると無効になります)
+          %br
           %label
-            スレの自動更新間隔ミリ秒数 (最小5000ms、最小値以下をセットすると無効になります、勢いが遅いスレで30000ms未満にするとエラーがでます)
+            スレ (最小5000ms、勢いが遅いスレで30000ms未満にするとエラーがでます)
             %input.direct(type="number" name="auto_load_second" min="0")ms
           %br
           %label
-            板の自動更新間隔ミリ秒数 (最小20000ms、最小値以下をセットすると無効になります)
+            板の自動更新間隔ミリ秒数 (最小20000ms)
             %input.direct(type="number" name="auto_load_second_board" min="0")ms
           %br
           %label
-            %input.direct(type="checkbox" name="auto_load_all") 開いていないタブも自動更新する(read.crx起動後、一度は開かないと更新されません)
+            ブックマークの自動更新間隔ミリ秒数 (最小20000ms)
+            %input.direct(type="number" name="auto_load_second_bookmark" min="0")ms
+          %br
+          %br
+          %label
+            %input.direct(type="checkbox" name="auto_load_all") 開いていないタブも自動更新する(read.crx起動後、一度は開かないと更新されません、ブックマークは常に自動更新されます)
+          %br
+          %label
+            %input.direct(type="checkbox" name="auto_bookmark_notify") ブックマークを自動更新しているときに新着レスがあった場合、通知を送る
           %br
           自動更新後の移動:
           %label

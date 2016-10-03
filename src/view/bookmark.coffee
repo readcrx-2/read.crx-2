@@ -23,7 +23,7 @@ app.boot "/view/bookmark.html", ->
     return
 
   #リロード時処理
-  $view.on "request_reload", ->
+  $view.on "request_reload", (e, auto = false) ->
     return if $view.hasClass("loading")
     $reload_button = $view.find(".button_reload")
     return if $reload_button.hasClass("disabled")
@@ -79,6 +79,8 @@ app.boot "/view/bookmark.html", ->
             tr.parentNode.appendChild(tr)
           trUpdatedObserver.disconnect()
           $view.removeClass("loading")
+          if app.config.get("auto_bookmark_notify") is "on" and auto
+            notify()
           $view.find(".searchbox").prop("disabled", false)
           setTimeout(->
             $reload_button.removeClass("disabled")
@@ -128,11 +130,10 @@ app.boot "/view/bookmark.html", ->
   #自動更新
   do ->
     auto_load = ->
-      second = parseInt(app.config.get("auto_load_second_board"))
+      second = parseInt(app.config.get("auto_load_second_bookmark"))
       if second >= 20000
         return setInterval( ->
-          if app.config.get("auto_load_all") is "on" or $(".tab_container", parent.document).find("iframe[data-url=\"bookmark\"]").hasClass("tab_selected")
-            $view.trigger "request_reload" unless $view.find(".content").hasClass("searching")
+          $view.trigger("request_reload", true) unless $view.find(".content").hasClass("searching")
           return
         , second)
       return
@@ -140,7 +141,7 @@ app.boot "/view/bookmark.html", ->
     auto_load_interval = auto_load()
 
     app.message.add_listener "config_updated", (message) ->
-      if message.key is "auto_load_second_board"
+      if message.key is "auto_load_second_bookmark"
         clearInterval auto_load_interval
         auto_load_interval = auto_load()
       return
@@ -148,4 +149,23 @@ app.boot "/view/bookmark.html", ->
     window.addEventListener "view_unload", ->
       clearInterval(auto_load_interval)
       return
+    return
+
+  # 通知
+  notify = ->
+    notifyStr = ""
+    trs = Array.from($view[0].querySelectorAll("tr.updated"))
+    for tr in trs
+      tds = tr.getElementsByTagName("td")
+      title = tds[0].textContent
+      if title.length >= 10
+        title = title.slice(0, 15-3) + "..."
+      before = parseInt(tds[1].getAttr("data-beforeres"))
+      after = parseInt(tds[1].textContent)
+      unreadRes = tds[2].textContent
+      if after > before
+        notifyStr += "タイトル: #{title}  新規: #{after - before}  未読: #{unreadRes}\n"
+    if notifyStr isnt ""
+      app.notification.create("ブックマークの更新", notifyStr, "title")
+    return
   return

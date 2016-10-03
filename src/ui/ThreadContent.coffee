@@ -418,7 +418,7 @@ class UI.ThreadContent
             .replace(/(h)?(ttps?:\/\/(?!img\.2ch\.net\/(?:ico|emoji)\/[\w\-_]+\.gif)(?:[a-hj-zA-HJ-Z\d_\-.!~*'();\/?:@=+$,%#]|\&(?!gt;)|[iI](?![dD]:)+)+)/g,
               '<a href="h$2" target="_blank">$1$2</a>')
             #Beアイコン埋め込み表示
-            .replace ///^(?:\s*sssp|https?)://(img\.2ch\.net/ico/[\w\-_]+\.gif)\s*<br>///, ($0, $1) =>
+            .replace ///^(?:\s*sssp|https?)://(img\.2ch\.net/(?:ico|premium)/[\w\-_]+\.gif)\s*<br>///, ($0, $1) =>
               if app.url.tsld(@url) in ["2ch.net", "bbspink.com", "2ch.sc"]
                 """<img class="beicon" src="/img/dummy_1x1.webp" data-src="http://#{$1}"><br>"""
               else

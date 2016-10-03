@@ -339,7 +339,7 @@ namespace app {
               });
             }
             else {
-              delete this._cache.delete(key);
+              this._cache.delete(key);
             }
           }
         }

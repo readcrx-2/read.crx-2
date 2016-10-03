@@ -17,7 +17,6 @@ app.boot "/view/bookmark.html", ->
   new app.view.TabContentView(document.documentElement)
 
   trUpdatedObserver = new MutationObserver (records) ->
-    console.log records
     for record in records
       if record.target.webkitMatchesSelector("tr.updated")
         record.target.parentNode.appendChild(record.target)

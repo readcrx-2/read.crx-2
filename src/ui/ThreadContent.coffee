@@ -466,9 +466,11 @@ class UI.ThreadContent
         if color? then articleHtml += " style=\"color:##{color[1]};\""
         articleHtml += ">#{tmp}</div>"
 
+        ngKeys = ng.keys()
         tmpTxt1 = res.name + " " + res.mail + " " + res.other + " " + res.message
         tmpTxt2 = app.util.normalize(tmpTxt1)
-        for n in ng
+        while !(current = ngKeys.next()).done
+          n = current.value
           if n.start? and ((n.finish? and n.start <= resNum and resNum <= n.finish) or (parseInt(n.start) is resNum))
             continue
           if (

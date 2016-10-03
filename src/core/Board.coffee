@@ -219,7 +219,9 @@ class app.Board
         res_count: +reg_res[3]
         created_at: +reg_res[1] * 1000
         ng: do (title, ng) ->
-          for n in ng
+          ngKeys = ng.keys()
+          while !(current = ngKeys.next()).done
+            n = current.value
             if (
               (n.type is "regExp" and n.reg.test(title)) or
               (n.type is "regExpTitle" and n.reg.test(title)) or

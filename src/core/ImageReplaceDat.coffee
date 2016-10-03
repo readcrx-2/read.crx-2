@@ -4,14 +4,16 @@
 @static
 ###
 class app.ImageReplaceDat
-  _dat = []
+  _dat = null
   _configName = "image_replace_dat_obj"
   _configStringName = "image_replace_dat"
 
   #jsonには正規表現のオブジェクトが含めれないので
   #それを展開
   _setupReg = () ->
-    for d in _dat
+    keys = _dat.keys()
+    while !(current = keys.next()).done
+      d = current.value
       try
         d.baseUrlReg = new RegExp(d.baseUrl, "i")
       catch e
@@ -83,8 +85,8 @@ class app.ImageReplaceDat
   @return {Object}
   ###
   @get: ->
-    if _dat.length is 0
-      _dat = _config.get()
+    if !_dat?
+      _dat = new Set(_config.get())
       _setupReg()
     return _dat
 
@@ -94,7 +96,7 @@ class app.ImageReplaceDat
   @return {Object}
   ###
   @parse: (string) ->
-    dat = []
+    dat = new Set()
     if string isnt ""
       datStrSplit = string.split("\n")
       for d in datStrSplit
@@ -120,7 +122,7 @@ class app.ImageReplaceDat
               obj.param =
                 type: "cookie"
                 referrerUrl: if rurl? then rurl else ""
-          dat.push(obj)
+          dat.add(obj)
     return dat
 
   ###*
@@ -129,7 +131,7 @@ class app.ImageReplaceDat
   ###
   @set: (string) ->
     _dat = @parse(string)
-    _config.set(_dat)
+    _config.set(Array.from(_dat))
     _setupReg()
     return
 
@@ -143,7 +145,9 @@ class app.ImageReplaceDat
     def = $.Deferred()
     dat = @get()
     doing = false
-    for d in dat
+    keys = dat.keys()
+    while !(current = keys.next()).done
+      d = current.value
       continue if d.baseUrl is "invalid://invalid"
       continue if !d.baseUrlReg.test(string)
       if d.replaceUrl is ""
@@ -152,7 +156,7 @@ class app.ImageReplaceDat
 
       doing = true
       res = {}
-      res.referrer = string.replace(dat.baseUrl, dat.referrerUrl)
+      res.referrer = string.replace(d.baseUrl, d.referrerUrl)
       extractReg = /\$EXTRACT(\d+)?/g
       if d.param? and d.param.type is "extract"
         _getExtract(string, d).done((exMatch) ->

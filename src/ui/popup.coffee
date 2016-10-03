@@ -85,7 +85,7 @@ do ($ = jQuery) ->
             maxWidth: "#{document.body.offsetWidth - space.left - margin * 2}px"
         else
           css =
-            right: "#{space.right - margin}px"
+            right: "#{space.right + margin}px"
             maxWidth: "#{document.body.offsetWidth - space.right - margin * 2}px"
         cursorTop = Math.max(space.top, viewTop + margin * 2)
         if viewHeight > $popup.outerHeight()

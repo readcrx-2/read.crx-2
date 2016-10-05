@@ -7,7 +7,6 @@ window.UI ?= {}
 @param {Element} default_parent
 ###
 class UI.PopupView
-  "use strict"
 
   constructor: (@default_parent)->
     ###*
@@ -35,33 +34,6 @@ class UI.PopupView
   ###
   show: (@popup, @mouseX, @mouseY, @source) ->
 
-    remove = (forceRemove = false) =>
-      while @_popupStack.length > 0
-        popupInfo = @_popupStack[@_popupStack.length - 1]
-        # 末端の非アクティブ・ノードを選択
-        break if forceRemove is false and
-                (popupInfo.source.classList.contains("active") or
-                popupInfo.popup.classList.contains("active"))
-        # 該当ノードの除去
-        popupInfo.source.removeEventListener("mouseenter", on_mouseenter)
-        popupInfo.source.removeEventListener("mouseleave", on_mouseleave)
-        popupInfo.popup.removeEventListener("mouseenter", on_mouseenter)
-        popupInfo.popup.removeEventListener("mouseleave", on_mouseleave)
-        popupInfo.source.classList.remove("popup_source")
-        @_popupArea.removeChild(popupInfo.popup)
-        @_popupStack.pop()
-        null
-      return
-
-    on_mouseenter = ->
-      @classList.add("active")
-      return
-
-    on_mouseleave = ->
-      @classList.remove("active")
-      setTimeout(remove, 300)
-      return
-
     #同一ソースからのポップアップが既に有る場合は、処理を中断
     if @_popupStack.length > 0
       popupInfo = @_popupStack[@_popupStack.length - 1]
@@ -71,9 +43,9 @@ class UI.PopupView
     #それ以外は、全てのノードを削除
     if @source.closest(".popup")
       @source.classList.remove("active")
-      remove(false)
+      @_remove(false)
     else
-      remove(true)
+      @_remove(true)
 
     #表示位置決定
     $ =>
@@ -125,11 +97,11 @@ class UI.PopupView
 
     # ノードの設定
     @source.classList.add("popup_source")
-    @source.addEventListener("mouseenter", on_mouseenter)
-    @source.addEventListener("mouseleave", on_mouseleave)
+    @source.addEventListener("mouseenter", (e) => @_on_mouseenter(e.currentTarget))
+    @source.addEventListener("mouseleave", (e) => @_on_mouseleave(e.currentTarget))
     @popup.classList.add("popup")
-    @popup.addEventListener("mouseenter", on_mouseenter)
-    @popup.addEventListener("mouseleave", on_mouseleave)
+    @popup.addEventListener("mouseenter", (e) => @_on_mouseenter(e.currentTarget))
+    @popup.addEventListener("mouseleave", (e) => @_on_mouseleave(e.currentTarget))
 
     # リンク情報の保管
     popupInfo =
@@ -141,4 +113,45 @@ class UI.PopupView
     @source.classList.add("active")
     @_popupArea.appendChild(popupInfo.popup)
 
+    return
+
+  ###*
+  @method _remove
+  @param {Boolean} forceRemove
+  ###
+  _remove: (forceRemove) ->
+    while @_popupStack.length > 0
+      popupInfo = @_popupStack[@_popupStack.length - 1]
+      # 末端の非アクティブ・ノードを選択
+      break if forceRemove is false and
+              (popupInfo.source.classList.contains("active") or
+              popupInfo.popup.classList.contains("active"))
+      # 該当ノードの除去
+      popupInfo.source.removeEventListener("mouseenter", (e) => @_on_mouseenter(e.currentTarget))
+      popupInfo.source.removeEventListener("mouseleave", (e) => @_on_mouseleave(e.currentTarget))
+      popupInfo.popup.removeEventListener("mouseenter", (e) => @_on_mouseenter(e.currentTarget))
+      popupInfo.popup.removeEventListener("mouseleave", (e) => @_on_mouseleave(e.currentTarget))
+      popupInfo.source.classList.remove("popup_source")
+      @_popupArea.removeChild(popupInfo.popup)
+      @_popupStack.pop()
+      null
+    return
+
+  ###*
+  @method _on_mouseenter
+  @param {Object} target
+  ###
+  _on_mouseenter: (target) ->
+    target.classList.add("active")
+    return
+
+  ###*
+  @method _on_mouseleave
+  @param {Object} target
+  ###
+  _on_mouseleave: (target) ->
+    target.classList.remove("active")
+    setTimeout( =>
+      @_remove(false)
+    , 300)
     return

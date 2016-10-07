@@ -1,9 +1,9 @@
-app.boot "/view/bookmark.html", ->
+app.boot "/view/bookmark.html",["board_title_solver"], (BoardTitleSolver) ->
   $view = $(document.documentElement)
 
   $table = $("<table>")
   threadList = new UI.ThreadList($table[0], {
-    th: ["title", "res", "unread", "heat", "createdDate"]
+    th: ["title", "boardTitle", "res", "unread", "heat", "createdDate"]
     bookmarkAddRm: true
     searchbox: $view.find(".searchbox")[0]
   })
@@ -112,15 +112,22 @@ app.boot "/view/bookmark.html", ->
     fn()
     return
 
-  threadList.addItem(
-    for a in app.bookmarkEntryList.getAllThreads()
-      title: a.title
-      url: a.url
-      res_count: a.resCount or 0
-      read_state: a.readState or {url: a.url, read: 0, received: 0, last: 0}
-      created_at: /\/(\d+)\/$/.exec(a.url)[1] * 1000
-      expired: a.expired
-  )
+  for a in app.bookmarkEntryList.getAllThreads()
+    do (a) ->
+      boardUrl = app.url.thread_to_board(a.url)
+      BoardTitleSolver.ask(boardUrl).done((boardName) ->
+        threadList.addItem(
+          title: a.title
+          url: a.url
+          res_count: a.resCount or 0
+          read_state: a.readState or {url: a.url, read: 0, received: 0, last: 0}
+          created_at: /\/(\d+)\/$/.exec(a.url)[1] * 1000
+          expired: a.expired
+          board_url: boardUrl
+          board_title: boardName
+        )
+        return
+      )
 
   app.message.send("request_update_read_state", {})
   $table.table_sort("update")

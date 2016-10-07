@@ -190,13 +190,21 @@ class UI.ThreadList
       title_index = $table.find("th.title").index()
       $searchbox = $(option.searchbox)
 
+      _isComposing = false
       $searchbox
         .closest(".view")
           .on "request_reload", ->
             $(option.searchbox).val("").triggerHandler("input")
             return
         .end()
+        .on "compositionstart", ->
+          _isComposing = true
+          return
+        .on "compositionend", ->
+          _isComposing = false
+          return
         .on "input", ->
+          return if _isComposing
           if @value isnt ""
             $table.table_search("search", {
               query: @value, target_col: title_index})

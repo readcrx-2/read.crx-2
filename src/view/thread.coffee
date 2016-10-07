@@ -603,9 +603,17 @@ app.boot "/view/thread.html", ["board_title_solver"], (BoardTitleSolver) ->
   #検索ボックス
   do ->
     search_stored_scrollTop = null
+    _isComposing = false
     $view
       .find(".searchbox")
+        .on "compositionstart", ->
+          _isComposing = true
+          return
+        .on "compositionend", ->
+          _isComposing = false
+          return
         .on "input", ->
+          return if _isComposing
           if @value isnt ""
             if typeof search_stored_scrollTop isnt "number"
               search_stored_scrollTop = $content.scrollTop()

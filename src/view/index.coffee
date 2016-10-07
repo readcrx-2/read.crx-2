@@ -664,12 +664,12 @@ app.main = ->
     return
 
   #openリクエストの監視
-  chrome.extension.onRequest.addListener (request) ->
+  chrome.runtime.onMessage.addListener (request) ->
     if request.type is "open"
       app.message.send("open", url: request.query, new_tab: true)
 
   #書き込み完了メッセージの監視
-  chrome.extension.onRequest.addListener (request) ->
+  chrome.runtime.onMessage.addListener (request) ->
     if request.type in ["written", "written?"]
       iframe = document.querySelector("iframe[data-url=\"#{request.url}\"]")
       if iframe

@@ -125,7 +125,7 @@ app.boot "/write/write.html", ->
       $view.find(".notice").text("")
       UI.Animate.fadeIn($view.find(".iframe_container")[0])
 
-    chrome.extension.sendRequest(type: "written?", url: arg.url, mes: arg.message, name: arg.name, mail: arg.mail)
+    chrome.runtime.sendMessage(type: "written?", url: arg.url, mes: arg.message, name: arg.name, mail: arg.mail)
 
   write_timer =
     wake: ->
@@ -148,7 +148,7 @@ app.boot "/write/write.html", ->
         message = $view.find(".message").val()
         name = $view.find(".name").val()
         mail = $view.find(".mail").val()
-        chrome.extension.sendRequest(type: "written", url: arg.url, mes: message, name: name, mail: mail)
+        chrome.runtime.sendMessage(type: "written", url: arg.url, mes: message, name: name, mail: mail)
         chrome.tabs.getCurrent (tab) ->
           chrome.tabs.remove(tab.id)
       , 2000

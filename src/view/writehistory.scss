@@ -5,7 +5,7 @@
 @include content-table;
 
 @media (max-width: 500px) {
-  th.viewed_date {
+  th.written_date {
     width: 0;
   }
 }

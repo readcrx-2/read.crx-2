@@ -57,6 +57,7 @@ app.boot "/view/thread.html", ["board_title_solver"], (BoardTitleSolver) ->
   searchNextThread = new UI.SearchNextThread(
     $view.find(".next_thread_list")[0]
   )
+  popupView = new UI.PopupView($view[0])
 
   if app.config.get("aa_font") is "aa"
     $content.addClass("config_use_aa_font")
@@ -79,7 +80,7 @@ app.boot "/view/thread.html", ["board_title_solver"], (BoardTitleSolver) ->
     $popup.find("img[data-src]").each ->
       $view.data("lazyload").immediateLoad(@)
       return
-    $.popup($view, $popup, e.clientX, e.clientY, that)
+    popupView.show($popup[0], e.clientX, e.clientY, that)
 
   if app.url.tsld(view_url) in ["2ch.net", "shitaraba.net", "bbspink.com", "2ch.sc", "open2ch.net"]
     $view.find(".button_write").on "click", ->

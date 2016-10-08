@@ -5,7 +5,7 @@
   "homepage_url": "http://readcrx-2.github.io/read.crx-2/",
   "description" : "2chブラウザ",
   "manifest_version": 2,
-  "minimum_chrome_version" : "47",
+  "minimum_chrome_version" : "49",
   "content_security_policy": "default-src 'self'; img-src 'self' http://* https://* data:; style-src 'self' 'unsafe-inline'; connect-src 'self' http://*; child-src 'self' http://*; font-src data:",
   "incognito" : "split",
   "options_page" : "view/index.html?q=config",

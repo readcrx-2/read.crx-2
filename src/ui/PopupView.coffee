@@ -85,7 +85,7 @@ class UI.PopupView
           @popup.style.maxWidth = "#{document.body.offsetWidth - space.right - margin * 2}px"
         cursorTop = Math.max(space.top, viewTop + margin * 2)
         outerHeight = @_getOuterHeight(@popup, true)
-        if viewHeight > outerHeight
+        if viewHeight > outerHeight + margin
           cssTop = Math.min(cursorTop, document.body.offsetHeight - outerHeight) - margin
         else
           cssTop = viewTop + margin

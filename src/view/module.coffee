@@ -530,10 +530,11 @@ class app.view.TabContentView extends app.view.PaneContentView
     $table.on "table_sort_updated", (e, ex) ->
       $selector
         .find("option")
+          .attr("selected", false)
           .filter(->
             String(ex.sort_attribute or ex.sort_index) is @textContent
           )
-            .attr("selected", true)
+          .attr("selected", true)
       return
 
     $selector.on "change", ->
@@ -592,7 +593,7 @@ class app.view.TabContentView extends app.view.PaneContentView
           .on "click", (e) ->
             e.preventDefault()
 
-            window.open(url, "_blank")
+            parent.chrome.tabs.create url: url
             return
 
       return

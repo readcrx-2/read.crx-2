@@ -615,6 +615,7 @@ app.boot "/view/thread.html", ->
           return
         .on "input", ->
           return if _isComposing
+          $content.triggerHandler("searchstart")
           if @value isnt ""
             if typeof search_stored_scrollTop isnt "number"
               search_stored_scrollTop = $content.scrollTop()
@@ -660,6 +661,8 @@ app.boot "/view/thread.html", ->
             if typeof search_stored_scrollTop is "number"
               $content.scrollTop(search_stored_scrollTop)
               search_stored_scrollTop = null
+
+          $content.triggerHandler("searchfinish")
           return
 
         .on "keyup", (e) ->

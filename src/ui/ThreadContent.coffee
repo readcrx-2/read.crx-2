@@ -87,6 +87,8 @@ class UI.ThreadContent
     if target
       if animate
         do =>
+          @_$container.trigger("scrollstart")
+
           to = target.offsetTop + offset
           change = (to - @container.scrollTop)/15
           min = Math.min(to-change, to+change)
@@ -95,10 +97,12 @@ class UI.ThreadContent
             before = @container.scrollTop
             if min <= @container.scrollTop <= max
               @container.scrollTop = to
+              @_$container.trigger("scrollfinish")
               return
             else
               @container.scrollTop += change
             if @container.scrollTop is before
+              @_$container.trigger("scrollfinish")
               return
             requestAnimationFrame(_scrollInterval)
             return

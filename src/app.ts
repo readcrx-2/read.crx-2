@@ -5,6 +5,7 @@ interface Window {
 }
 
 declare var Notification: any;
+declare var requestIdleCallback: any;
 declare var chrome: any;
 
 namespace app {
@@ -57,7 +58,7 @@ namespace app {
   export var deep_copy = deepCopy;
 
   export function defer (fn:Function):void {
-    setTimeout(fn, 0);
+    requestIdleCallback(fn);
   }
 
   export function assert_arg (name:string, rule:string[], arg:any[]):boolean {

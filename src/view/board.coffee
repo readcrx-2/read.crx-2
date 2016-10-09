@@ -1,4 +1,4 @@
-app.boot "/view/board.html", ["board_title_solver"], (BoardTitleSolver) ->
+app.boot "/view/board.html", ->
   url = app.url.parse_query(location.href).q
   (alert("不正な引数です"); return) unless url?
   url = app.url.fix(url)
@@ -61,7 +61,7 @@ app.boot "/view/board.html", ["board_title_solver"], (BoardTitleSolver) ->
 
   new app.view.TabContentView(document.documentElement)
 
-  BoardTitleSolver.ask(url).always (title) ->
+  app.BoardTitleSolver.ask(url).always (title) ->
     if title
       document.title = title
     if app.config.get("no_history") is "off"

@@ -3,7 +3,7 @@ app.boot "/view/bookmark.html", ->
 
   $table = $("<table>")
   threadList = new UI.ThreadList($table[0], {
-    th: ["title", "res", "unread", "heat", "createdDate"]
+    th: ["title", "boardTitle", "res", "unread", "heat", "createdDate"]
     bookmarkAddRm: true
     searchbox: $view.find(".searchbox")[0]
   })
@@ -112,15 +112,22 @@ app.boot "/view/bookmark.html", ->
     fn()
     return
 
-  threadList.addItem(
-    for a in app.bookmarkEntryList.getAllThreads()
-      title: a.title
-      url: a.url
-      res_count: a.resCount or 0
-      read_state: a.readState or {url: a.url, read: 0, received: 0, last: 0}
-      created_at: /\/(\d+)\/$/.exec(a.url)[1] * 1000
-      expired: a.expired
-  )
+  for a in app.bookmarkEntryList.getAllThreads()
+    do (a) ->
+      boardUrl = app.url.thread_to_board(a.url)
+      app.BoardTitleSolver.ask(boardUrl).done((boardName) ->
+        threadList.addItem(
+          title: a.title
+          url: a.url
+          res_count: a.resCount or 0
+          read_state: a.readState or {url: a.url, read: 0, received: 0, last: 0}
+          created_at: /\/(\d+)\/$/.exec(a.url)[1] * 1000
+          expired: a.expired
+          board_url: boardUrl
+          board_title: boardName
+        )
+        return
+      )
 
   app.message.send("request_update_read_state", {})
   $table.table_sort("update")
@@ -160,9 +167,9 @@ app.boot "/view/bookmark.html", ->
       title = tds[0].textContent
       if title.length >= 10
         title = title.slice(0, 15-3) + "..."
-      before = parseInt(tds[1].getAttr("data-beforeres"))
-      after = parseInt(tds[1].textContent)
-      unreadRes = tds[2].textContent
+      before = parseInt(tds[2].getAttr("data-beforeres"))
+      after = parseInt(tds[2].textContent)
+      unreadRes = tds[3].textContent
       if after > before
         notifyStr += "タイトル: #{title}  新規: #{after - before}  未読: #{unreadRes}\n"
     if notifyStr isnt ""

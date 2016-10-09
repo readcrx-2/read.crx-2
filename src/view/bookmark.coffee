@@ -1,4 +1,4 @@
-app.boot "/view/bookmark.html",["board_title_solver"], (BoardTitleSolver) ->
+app.boot "/view/bookmark.html", ->
   $view = $(document.documentElement)
 
   $table = $("<table>")
@@ -115,7 +115,7 @@ app.boot "/view/bookmark.html",["board_title_solver"], (BoardTitleSolver) ->
   for a in app.bookmarkEntryList.getAllThreads()
     do (a) ->
       boardUrl = app.url.thread_to_board(a.url)
-      BoardTitleSolver.ask(boardUrl).done((boardName) ->
+      app.BoardTitleSolver.ask(boardUrl).done((boardName) ->
         threadList.addItem(
           title: a.title
           url: a.url
@@ -167,9 +167,9 @@ app.boot "/view/bookmark.html",["board_title_solver"], (BoardTitleSolver) ->
       title = tds[0].textContent
       if title.length >= 10
         title = title.slice(0, 15-3) + "..."
-      before = parseInt(tds[1].getAttr("data-beforeres"))
-      after = parseInt(tds[1].textContent)
-      unreadRes = tds[2].textContent
+      before = parseInt(tds[2].getAttr("data-beforeres"))
+      after = parseInt(tds[2].textContent)
+      unreadRes = tds[3].textContent
       if after > before
         notifyStr += "タイトル: #{title}  新規: #{after - before}  未読: #{unreadRes}\n"
     if notifyStr isnt ""

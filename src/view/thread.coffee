@@ -38,7 +38,7 @@ do ->
 
 app.view_thread = {}
 
-app.boot "/view/thread.html", ["board_title_solver"], (BoardTitleSolver) ->
+app.boot "/view/thread.html", ->
   view_url = app.url.parse_query(location.href).q
   return alert("不正な引数です") unless view_url
   view_url = app.url.fix(view_url)
@@ -481,7 +481,7 @@ app.boot "/view/thread.html", ["board_title_solver"], (BoardTitleSolver) ->
       else
         return
 
-      BoardTitleSolver.ask(board_url).done (title) =>
+      app.BoardTitleSolver.ask(board_url).done (title) =>
         popup_helper @, e, =>
           $("<div>", {class: "popup_linkinfo"})
             .append($("<div>", text: title + after))
@@ -774,7 +774,7 @@ app.boot "/view/thread.html", ["board_title_solver"], (BoardTitleSolver) ->
   #パンくずリスト表示
   do ->
     board_url = app.url.thread_to_board(view_url)
-    BoardTitleSolver.ask(board_url).always (title) ->
+    app.BoardTitleSolver.ask(board_url).always (title) ->
       $view
         .find(".breadcrumb > li > a")
           .attr("href", board_url)

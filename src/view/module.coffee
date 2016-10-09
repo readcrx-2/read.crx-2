@@ -1,6 +1,7 @@
 do ->
   if frameElement
     modules = [
+      "BoardTitleSolver"
       "History"
       "WriteHistory"
       "Thread"

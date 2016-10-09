@@ -61,7 +61,16 @@ class UI.ThreadContent
       "resNum": "",
       "animate": false,
       "offset": 0,
+      "scrollTime": 0
     }
+
+    ###*
+    @property _delayScrollInterval
+    @type Number
+    @private
+    ###
+    @_delayScrollInterval = 0
+
     return
 
   ###*
@@ -77,10 +86,25 @@ class UI.ThreadContent
     return d.promise()
 
   ###*
-  @method reScrollTo
+  @method _reScrollTo
   ###
-  reScrollTo: ->
+  _reScrollTo: ->
     @scrollTo(@_lastScrollInfo.resNum, @_lastScrollInfo.animate, @_lastScrollInfo.offset, true)
+    return
+
+  ###*
+  @method _delayScrollTo
+  ###
+  _delayScrollTo: ->
+    return if @_delayScrollInterval isnt 0
+    delayScrollTime = parseInt(app.config.get("delay_scroll_time"))
+    @_delayScrollInterval = setInterval( =>
+      if Date.now() - @_lastScrollInfo.scrollTime > delayScrollTime
+        clearInterval(@_delayScrollInterval)
+        @_delayScrollInterval = 0
+        @_reScrollTo()
+      return
+    , 20)
     return
 
   ###*
@@ -90,12 +114,13 @@ class UI.ThreadContent
   @param {Number} [offset=0]
   @param {Boolean} [rerun=false]
   @param {Boolean} [checkImage=false]
-  @return {Boolean} true:images loaded
   ###
   scrollTo: (resNum, animate = false, offset = 0, rerun = false, checkImage = false) ->
     @_lastScrollInfo.resNum = resNum
     @_lastScrollInfo.animate = animate
     @_lastScrollInfo.offset = offset
+    unless rerun
+      @_lastScrollInfo.scrollTime = 0
     loadFlag = false
 
     target = @container.children[resNum - 1]
@@ -175,7 +200,10 @@ class UI.ThreadContent
           )
       else
         @container.scrollTop = target.offsetTop + offset
-    return loadFlag
+
+      @_lastScrollInfo.scrollTime = Date.now() unless rerun
+      @_delayScrollTo() if loadFlag
+    return
 
   ###*
   @method getRead

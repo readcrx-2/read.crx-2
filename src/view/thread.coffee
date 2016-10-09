@@ -142,38 +142,18 @@ app.boot "/view/thread.html", ->
         on_scroll = true
         return
 
-      load_flg0 = false
-      load_flg1 = false
-      load_flg2 = false
-      load_interval = 0
-      scroll_time = 0
       #可変サイズの画像が存在している場合は1ページ目の画像チェック用にスクロールを実行する
       if app.config.get("use_mediaviewer") is "on" and
           app.config.get("image_height_fix") isnt "on"
-        load_flg0 = threadContent.scrollTo("1", false, 0, false, true)
-        scroll_time = Date.now()
+        threadContent.scrollTo("1", false, 0, false, true)
 
       $last = $content.find(".last")
       if $last.length is 1
-        load_flg1 = threadContent.scrollTo(+$last.find(".num").text())
-        scroll_time = Date.now()
+        threadContent.scrollTo(+$last.find(".num").text())
 
       #スクロールされなかった場合も余所の処理を走らすためにscrollを発火
       unless on_scroll
         $content.triggerHandler("scroll")
-
-      #スクロールに際して画像のロードが発生した場合は、待機時間の後再スクロールする
-      delay_scroll_time = Number(app.config.get("delay_scroll_time"))
-      load_interval = setInterval( ->
-        if Date.now() - scroll_time > delay_scroll_time
-          clearInterval(load_interval)
-          threadContent.reScrollTo() if load_flg0 or load_flg1 or load_flg2
-          load_flg0 = 0
-          load_flg1 = 0
-          load_flg2 = 0
-          scroll_time = 0
-        return
-      , 20)
 
       #二度目以降のread_state_attached時
       $view.on "read_state_attached", ->
@@ -182,26 +162,18 @@ app.boot "/view/thread.html", ->
         switch move_mode
           when "new"
             $tmp = $content.children(".last.received + article")
-            load_flg2 = threadContent.scrollTo(+$tmp.find(".num").text(), true, -100) if $tmp.length is 1
-            scroll_time = Date.now()
+            threadContent.scrollTo(+$tmp.find(".num").text(), true, -100) if $tmp.length is 1
           when "surely_new"
             res_num = $view.find("article.received + article").index() + 1
-            load_flg2 = threadContent.scrollTo(res_num, true) if typeof res_num is "number"
-            scroll_time = Date.now()
+            threadContent.scrollTo(res_num, true) if typeof res_num is "number"
           when "newest"
             res_num = $view.find("article:last-child").index() + 1
-            load_flg2 = threadContent.scrollTo(res_num, true) if typeof res_num is "number"
-            scroll_time = Date.now()
+            threadContent.scrollTo(res_num, true) if typeof res_num is "number"
 
     app.view_thread._draw($view).always ->
       if app.config.get("no_history") is "off"
         app.History.add(view_url, document.title, opened_at)
       return
-
-  #画像の即時ロード
-  $view.on "immediateLoad", "img, video", (e) ->
-    $view.data("lazyload").immediateLoad(@)
-    return
 
   #自動更新
   do ->
@@ -226,6 +198,11 @@ app.boot "/view/thread.html", ->
     window.addEventListener "view_unload", ->
       clearInterval(auto_load_interval)
       return
+
+  #画像の即時ロード
+  $view.on "immediateLoad", "img, video", (e) ->
+    $view.data("lazyload").immediateLoad(@)
+    return
 
   #video再生中のマウスポインタ制御
   videoPlayTime = 0

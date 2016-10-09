@@ -204,6 +204,16 @@ app.boot "/view/thread.html", ->
     $view.data("lazyload").immediateLoad(@)
     return
 
+  #遅延ロードの停止
+  $view.on "lazyload-stop", (e) ->
+    $view.data("lazyload").stop()
+    return
+
+  #遅延ロードの開始
+  $view.on "lazyload-start", (e) ->
+    $view.data("lazyload").start()
+    return
+
   #video再生中のマウスポインタ制御
   videoPlayTime = 0
   controlVideoCursor = (v, act) ->

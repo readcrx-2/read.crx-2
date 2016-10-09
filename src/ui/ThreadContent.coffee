@@ -182,6 +182,9 @@ class UI.ThreadContent
       # スクロールの実行
       if animate and not loadFlag
         do =>
+          # 画像が多数存在する場合、先頭や最後にジャンプすると大量のロードが発生してしまうため一時停止する
+          $(target).trigger("lazyload-stop")
+
           to = target.offsetTop + offset
           change = (to - @container.scrollTop)/15
           min = Math.min(to-change, to+change)
@@ -190,10 +193,12 @@ class UI.ThreadContent
             before = @container.scrollTop
             if min <= @container.scrollTop <= max
               @container.scrollTop = to
+              $(target).trigger("lazyload-start")
               return
             else
               @container.scrollTop += change
             if @container.scrollTop is before
+              $(target).trigger("lazyload-start")
               return
             requestAnimationFrame(_scrollInterval)
             return

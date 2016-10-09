@@ -13,6 +13,7 @@ namespace UI {
     private imgPlaceTable = new Map<HTMLElement, number>();
     private updateInterval: number = null;
     private loaded: boolean = false;
+    private pause: boolean = false;
 
     constructor (container: HTMLElement) {
       this.container = container;
@@ -32,6 +33,14 @@ namespace UI {
 
     public viewLoaded (): void {
       this.loaded = true;
+    }
+
+    public start(): void {
+      this.pause = false;
+    }
+
+    public stop(): void {
+      this.pause = true;
     }
 
     public immediateLoad (img: any): void {
@@ -134,6 +143,7 @@ namespace UI {
       var scrollTop: number, clientHeight: number;
       scrollTop = this.container.scrollTop;
       clientHeight = this.container.clientHeight;
+      if (this.pause === true) return;
 
       this.imgs = this.imgs.filter((img: HTMLElement) => {
         var top: number, current: HTMLElement;

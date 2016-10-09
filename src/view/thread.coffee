@@ -904,7 +904,7 @@ app.view_thread._draw = ($view, force_update, beforeAdd) ->
 
       $view.trigger("view_loaded")
 
-      $view.data("lazyload").viewLoaded = true
+      $view.data("lazyload").viewLoaded()
 
       d.resolve(thread)
     )

@@ -12,7 +12,7 @@ namespace UI {
     private imgs: HTMLElement[] = [];
     private imgPlaceTable = new Map<HTMLElement, number>();
     private updateInterval: number = null;
-    public viewLoaded: boolean = false;
+    private loaded: boolean = false;
 
     constructor (container: HTMLElement) {
       this.container = container;
@@ -28,6 +28,10 @@ namespace UI {
 
     private onResize (): void {
       this.imgPlaceTable.clear();
+    }
+
+    public viewLoaded (): void {
+      this.loaded = true;
     }
 
     public immediateLoad (img: any): void {
@@ -156,7 +160,7 @@ namespace UI {
           }
         }
         // 逆スクロール時の範囲チェック
-        if (this.viewLoaded === true && app.config.get("use_mediaviewer") === "on") {
+        if (this.loaded === true && app.config.get("use_mediaviewer") === "on") {
           var bottom: number, target_height: number;
 
           bottom = 0;

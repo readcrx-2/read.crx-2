@@ -53,17 +53,6 @@ class UI.ThreadContent
     ###
     @oneId = null
 
-    ###*
-    @property _scrolling
-    @type boolean
-    ###
-    @_scrolling = false
-
-    ###*
-    @property _scrollInterval
-    @type null | Object
-    ###
-    @_scrollInterval = null
     return
 
   ###*
@@ -96,29 +85,24 @@ class UI.ThreadContent
       target = $(target).prevAll(":not(.ng)")[0] or $(target).nextAll(":not(.ng)")[0]
 
     if target
-      if @_scrolling
-        clearInterval(@_scrollInterval)
-        @_scrolling = false
       if animate
         do =>
           to = target.offsetTop + offset
           change = (to - @container.scrollTop)/15
           min = Math.min(to-change, to+change)
           max = Math.max(to-change, to+change)
-          @_scrolling = true
-          @_scrollInterval = setInterval( =>
+          requestAnimationFrame(_scrollInterval = =>
             before = @container.scrollTop
             if min <= @container.scrollTop <= max
               @container.scrollTop = to
-              clearInterval(@_scrollInterval)
-              @_scrolling = false
+              return
             else
               @container.scrollTop += change
             if @container.scrollTop is before
-              clearInterval(@_scrollInterval)
-              @_scrolling = false
+              return
+            requestAnimationFrame(_scrollInterval)
             return
-          , 20)
+          )
       else
         @container.scrollTop = target.offsetTop + offset
     return

@@ -399,14 +399,14 @@ app.boot "/view/config.html", ["cache", "bbsmenu"], (Cache, BBSMenu) ->
     $status.text("インポート中")
 
     $.Deferred (deferred) ->
-      parent.chrome.extension.sendRequest rcrx_webstore, req, (res) ->
+      parent.chrome.runtime.sendMessage rcrx_webstore, req, (res) ->
         if res
           deferred.resolve(res)
         else
           deferred.reject()
     .then null, ->
       $.Deferred (deferred) ->
-        parent.chrome.extension.sendRequest rcrx_debug, req, (res) ->
+        parent.chrome.runtime.sendMessage rcrx_debug, req, (res) ->
           if res
             deferred.resolve(res)
           else

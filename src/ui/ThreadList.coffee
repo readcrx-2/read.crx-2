@@ -124,12 +124,18 @@ class UI.ThreadList
 
       if @_flg.bookmarkAddRm
         if msg.type is "added"
-          @addItem(
-            title: msg.bookmark.title
-            url: msg.bookmark.url
-            res_count: msg.bookmark.res_count or 0
-            read_state: msg.bookmark.read_state or null
-            created_at: /\/(\d+)\/$/.exec(msg.bookmark.url)[1] * 1000
+          boardUrl = app.url.thread_to_board(msg.bookmark.url)
+          app.BoardTitleSolver.ask(boardUrl).done((boardName) =>
+            @addItem(
+              title: msg.bookmark.title
+              url: msg.bookmark.url
+              res_count: msg.bookmark.res_count or 0
+              read_state: msg.bookmark.read_state or null
+              created_at: /\/(\d+)\/$/.exec(msg.bookmark.url)[1] * 1000
+              board_url: boardUrl
+              board_title: boardName
+            )
+            return
           )
         else if msg.type is "removed"
           $table.find("tr[data-href=\"#{msg.bookmark.url}\"]").remove()
@@ -190,13 +196,21 @@ class UI.ThreadList
       title_index = $table.find("th.title").index()
       $searchbox = $(option.searchbox)
 
+      _isComposing = false
       $searchbox
         .closest(".view")
           .on "request_reload", ->
             $(option.searchbox).val("").triggerHandler("input")
             return
         .end()
+        .on "compositionstart", ->
+          _isComposing = true
+          return
+        .on "compositionend", ->
+          _isComposing = false
+          return
         .on "input", ->
+          return if _isComposing
           if @value isnt ""
             $table.table_search("search", {
               query: @value, target_col: title_index})

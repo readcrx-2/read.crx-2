@@ -38,7 +38,7 @@ tr.errored:not(.expired) td:first-child:before {
 }
 
 td {
-  &:nth-child(2), &:nth-child(3), &:nth-child(4) {
+  &:nth-child(3), &:nth-child(4), &:nth-child(5) {
     text-align: right;
   }
 }

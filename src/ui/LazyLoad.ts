@@ -149,7 +149,9 @@ namespace UI {
         var top: number, current: HTMLElement;
 
         if (img.offsetWidth !== 0) { //imgが非表示の時はロードしない
-          if (this.imgPlaceTable.has(img)) {
+          if ((app.config.get("use_mediaviewer") !== "on" ||
+              app.config.get("image_height_fix") === "on") &&
+              this.imgPlaceTable.has(img)) {
             top = this.imgPlaceTable.get(img);
           } else {
             top = 0;

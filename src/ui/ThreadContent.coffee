@@ -815,18 +815,128 @@ class UI.ThreadContent
             null
           return
 
-        app.util.concurrent(@container.querySelectorAll(".message > a:not(.thumbnail):not(.has_thumbnail)" +
-            ":not(.mediaviewer):not(.has_mediaviewer)"), (a) ->
-          return app.ImageReplaceDat.do(a, a.href).done( (a, res, err) ->
-            addThumbnail(a, res.text, res.referrer, res.cookie) unless err?
-            if app.config.get("use_mediaviewer") is "on"
-              #Audioの確認
-              if app.config.get("audio_supported") is "on"
-                if /\.(?:mp3|m4a|wav|oga|spx)(?:[\?#:&].*)?$/.test(a.href)
+        #展開URL追加処理
+        addExpandedURL = (sourceA, finalUrl) ->
+          sourceA.classList.add("has_expandedURL")
+
+          expandedURL = document.createElement("div")
+          expandedURL.className = "expandedURL"
+          if app.config.get("expand_short_url") is "popup"
+            expandedURL.classList.add("hide_data")
+            expandedURL.setAttribute("short-url", sourceA.href)
+
+          if finalUrl is ""
+            expandedURL.innerHTML = "展開できませんでした。"
+          else
+            expandedURLLink = document.createElement("a")
+            expandedURLLink.appendChild(document.createTextNode(finalUrl))
+            expandedURLLink.href = app.safe_href(finalUrl)
+            expandedURLLink.target = "_blank"
+            expandedURL.appendChild(expandedURLLink)
+
+          sib = sourceA
+          while true
+            pre = sib
+            sib = pre.nextSibling
+            if sib is null or sib.nodeName is "BR"
+              if sib?.nextSibling?.classList?.contains("expandedURL")
+                continue
+              if not pre.classList?.contains("expandedURL")
+                sourceA.parentNode.insertBefore(document.createElement("br"), sib)
+              sourceA.parentNode.insertBefore(expandedURL, sib)
+              break
+          null
+          #展開されたURLについてサムネイルなどの追加を行う
+          checkUrlString(expandedURLLink) if finalUrl isnt ""
+          return
+
+        #非同期処理の終了確認用Deferredオブジェクト配列
+        asyncProcessDfds = []
+
+        #短縮URLの展開と追加
+        expandShortURL = (aSrc, targetUrl) ->
+          dfd = $.Deferred()
+
+          xhr = new XMLHttpRequest()
+          if /// //t\.co/ ///.test(targetUrl)
+            xhr.open("GET", targetUrl)
+            xhr.responseType = "document"
+          else
+            xhr.open("HEAD", targetUrl)
+          xhr.timeout = 1000
+
+          xhr.onload = (e) ->
+            if xhr.status >= 400
+              addExpandedURL(aSrc, xhr.responseURL)
+              return dfd.resolve()
+            if /// //t\.co/ ///.test(targetUrl)
+              # 本来ならこちらが正式な方法？
+#              final_url = ""
+#              metacont = ""
+#              for meta in xhr.response.getElementsByTagName("meta")
+#                continue unless meta.getAttribute("http-equiv") is "refresh"
+#                metacont = meta.getAttribute("content")
+#                break
+#              if metacont isnt ""
+#                r1 = /URL=([\w\.\/:-]+)/.exec(metacont)
+#                final_url = r1[1]
+              # 高速化のためにタイトルで代用
+              final_url = xhr.response.getElementsByTagName("Title")[0].textContent
+            else
+              final_url = xhr.responseURL
+            #無限ループの防止
+            if final_url is targetUrl
+              final_url = ""
+            #取得したURLが短縮URLだった場合は再帰呼出しする
+            if checkShortURL(final_url)
+              expandShortURL(aSrc, final_url).done( ->
+                return dfd.resolve()
+              )
+            #短縮URL以外なら登録する
+            else
+              addExpandedURL(aSrc, final_url)
+              return dfd.resolve()
+          xhr.onerror = (e) ->
+            addExpandedURL(aSrc, "")
+            return dfd.resolve()
+          xhr.ontimeout = ->
+            addExpandedURL(aSrc, "")
+            return dfd.resolve()
+
+          xhr.send()
+          asyncProcessDfds.push(dfd)
+          return dfd.promise()
+
+        #短縮URLの確認
+        shortUrlSites = ["amzn.to", "bit.ly", "buff.ly", "cas.st", "dlvr.it",
+                         "fb.me", "goo.gl", "ift.tt", "is.gd", "itun.es",
+                         "j.mp", "jump.cx", "ow.ly", "p.tl", "prt.nu",
+                         "snipurl.com", "spoti.fi",
+                         "t.co", "tiny.cc", "tinyurl.com", "tl.gd", "tr.im", "trib.al",
+                         "url.ie", "urx.nu", "urx2.nu", "urx3.nu", "ur0.pw",
+                         "wk.tk", "xrl.us"]
+        checkShortURL = (tUrl) ->
+          if tmp = /// ^h?ttps?://([\w\-\.]+)/.+ ///.exec(tUrl)
+            return true if shortUrlSites.indexOf(tmp[1]) >= 0
+          return false
+
+        #URL別の処理
+        checkUrlString = (a) ->
+          #サムネイルの追加
+          asyncProcessDfds.push(
+            app.ImageReplaceDat.do(a, a.href).done( (a, res, err) ->
+              addThumbnail(a, res.text, res.referrer, res.cookie) unless err?
+              return
+            )
+          )
+          if app.config.get("use_mediaviewer") is "on"
+            #Audioの確認
+            if app.config.get("audio_supported") is "on"
+              if /\.(?:mp3|m4a|wav|oga|spx)(?:[\?#:&].*)?$/.test(a.href)
+                addMediaViewer(a, "audio")
+              if app.config.get("audio_supported_ogg") is "on"
+                if /\.(?:ogg|ogx)(?:[\?#:&].*)?$/.test(a.href)
                   addMediaViewer(a, "audio")
-                if app.config.get("audio_supported_ogg") is "on"
-                  if /\.(?:ogg|ogx)(?:[\?#:&].*)?$/.test(a.href)
-                    addMediaViewer(a, "audio")
               #Videoの確認
               if app.config.get("video_supported") is "on"
                 if /\.(?:mp4|m4v|webm|ogv)(?:[\?#:&].*)?$/.test(a.href)
@@ -834,12 +944,26 @@ class UI.ThreadContent
                 if app.config.get("video_supported_ogg") is "on"
                   if /\.(?:ogg|ogx)(?:[\?#:&].*)?$/.test(a.href)
                     addMediaViewer(a, "video")
+          return
+
+        #<a>タグのチェック
+        for a in @container.querySelectorAll(".message > a:not(.thumbnail):not(.has_thumbnail)" +
+            ":not(.mediaviewer):not(.has_mediaviewer):not(.expandedURL):not(.has_expandedURL)")
+          #URL別の処理
+          checkUrlString(a)
+          #短縮URLの展開
+          if app.config.get("expand_short_url") isnt "none"
+            expandShortURL(a, a.href) if checkShortURL(a.href)
+
+        #メソッド内で起動した非同期処理の終了を待機する
+        if asyncProcessDfds.length > 0
+          $.when.apply($, asyncProcessDfds).always( =>
+            d.resolve()
             return
           )
-        ).always(=>
-          d.resolve()
-          return
-        )
+        else
+          return d.resolve()
+
         return
       return
     )

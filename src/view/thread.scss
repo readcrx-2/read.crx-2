@@ -218,6 +218,31 @@ header {
   }
 }
 
+.expandedURL {
+  position: relative;
+  display: inline-block;
+  margin: 5px 10px;
+
+  > a {
+    font-style: italic;
+  }
+  &::before {
+    margin-right: 10px;
+    content: "→";
+  }
+  .thumbnail, .mediaviewer {
+    margin-left: 30px;
+  }
+
+  .popup & {
+    display: block;
+    padding: 5px;
+  }
+}
+.hide_data {
+  display: none;
+}
+
 .popup {
   position: fixed;
   z-index: $z-index-popup;

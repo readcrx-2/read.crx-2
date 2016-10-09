@@ -634,6 +634,25 @@ app.boot "/view/thread.html", ->
       controlVideoCursor(@, "mousemove")
       return
 
+    #展開済みURLのポップアップ
+    .on "mouseenter", ".has_expandedURL", (e) ->
+      return if app.config.get("expand_short_url") isnt "popup"
+      popup_helper this, e, =>
+        target_url = this.href
+
+        frag = document.createDocumentFragment()
+        sib = this
+        while true
+          sib = sib.nextSibling
+          if sib?.classList?.contains("expandedURL") and
+             sib?.getAttribute("short-url") is target_url
+            frag.appendChild(sib.cloneNode(true))
+            break
+        null
+
+        $popup = $("<div>").append(frag)
+      return
+
   #クイックジャンプパネル
   do ->
     jump_hoge =

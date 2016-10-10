@@ -712,6 +712,8 @@ app.boot "/view/thread.html", ->
           return
         .on "input", ->
           return if _isComposing
+          # 画像の大量ロード防止のため、LazyLoadを停止する
+          $view.data("lazyload").stop()
           if @value isnt ""
             if typeof search_stored_scrollTop isnt "number"
               search_stored_scrollTop = $content.scrollTop()
@@ -757,6 +759,11 @@ app.boot "/view/thread.html", ->
             if typeof search_stored_scrollTop is "number"
               $content.scrollTop(search_stored_scrollTop)
               search_stored_scrollTop = null
+
+          # 検索結果により位置が変わるのでテーブルをクリアする
+          $view.data("lazyload").clearImagePlaceTable()
+          # LazyLoadの再開
+          $view.data("lazyload").start()
           return
 
         .on "keyup", (e) ->

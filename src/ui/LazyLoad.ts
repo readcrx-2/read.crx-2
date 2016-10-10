@@ -43,6 +43,10 @@ namespace UI {
       this.pause = true;
     }
 
+    public clearImagePlaceTable (): void {
+      this.imgPlaceTable.clear();
+    }
+
     public immediateLoad (img: any): void {
       if (img.tagName === "IMG" || img.tagName === "VIDEO") {
         if (img.getAttribute("data-src") === null) return;

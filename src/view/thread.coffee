@@ -709,6 +709,7 @@ app.boot "/view/thread.html", ->
           return
         .on "compositionend", ->
           _isComposing = false
+          $(@).triggerHandler("input")
           return
         .on "input", ->
           return if _isComposing

@@ -208,6 +208,7 @@ class UI.ThreadList
           return
         .on "compositionend", ->
           _isComposing = false
+          $(@).triggerHandler("input")
           return
         .on "input", ->
           return if _isComposing

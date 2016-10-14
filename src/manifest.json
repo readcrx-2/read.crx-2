@@ -6,7 +6,7 @@
   "description" : "2chブラウザ",
   "manifest_version": 2,
   "minimum_chrome_version" : "49",
-  "content_security_policy": "default-src 'self'; img-src 'self' http://* https://* data:; style-src 'self' 'unsafe-inline'; connect-src 'self' http://*; child-src 'self' http://*; font-src data:",
+  "content_security_policy": "default-src 'self'; img-src 'self' http://* https://* data:; style-src 'self' 'unsafe-inline'; connect-src 'self' http://*; child-src 'self' http://*; font-src data:; media-src 'self' http://* https://*",
   "incognito" : "split",
   "options_page" : "view/index.html?q=config",
   "permissions" : [
@@ -18,7 +18,8 @@
     "notifications",
     "webRequest",
     "webRequestBlocking",
-    "http://*/"
+    "http://*/",
+    "https://*/"
   ],
   "app" : {
     "launch" : {

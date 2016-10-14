@@ -53,6 +53,24 @@ class UI.ThreadContent
     ###
     @oneId = null
 
+    ###*
+    @property _lastScrollInfo
+    @type Object
+    ###
+    @_lastScrollInfo = {
+      "resNum": "",
+      "animate": false,
+      "offset": 0,
+      "scrollTime": 0
+    }
+
+    ###*
+    @property _delayScrollInterval
+    @type Number
+    @private
+    ###
+    @_delayScrollInterval = 0
+
     return
 
   ###*
@@ -68,12 +86,43 @@ class UI.ThreadContent
     return d.promise()
 
   ###*
+  @method _reScrollTo
+  ###
+  _reScrollTo: ->
+    @scrollTo(@_lastScrollInfo.resNum, @_lastScrollInfo.animate, @_lastScrollInfo.offset, true)
+    return
+
+  ###*
+  @method _delayScrollTo
+  ###
+  _delayScrollTo: ->
+    return if @_delayScrollInterval isnt 0
+    delayScrollTime = parseInt(app.config.get("delay_scroll_time"))
+    @_delayScrollInterval = setInterval( =>
+      if Date.now() - @_lastScrollInfo.scrollTime > delayScrollTime
+        clearInterval(@_delayScrollInterval)
+        @_delayScrollInterval = 0
+        @_reScrollTo()
+      return
+    , 20)
+    return
+
+  ###*
   @method scrollTo
   @param {Number} resNum
   @param {Boolean} [animate=false]
   @param {Number} [offset=0]
+  @param {Boolean} [rerun=false]
+  @param {Boolean} [checkImage=false]
   ###
-  scrollTo: (resNum, animate = false, offset = 0) ->
+  scrollTo: (resNum, animate = false, offset = 0, rerun = false, checkImage = false) ->
+    @_lastScrollInfo.resNum = resNum
+    @_lastScrollInfo.animate = animate
+    @_lastScrollInfo.offset = offset
+    unless rerun
+      @_lastScrollInfo.scrollTime = 0
+    loadFlag = false
+
     target = @container.children[resNum - 1]
 
     # 検索中で、ターゲットが非ヒット項目で非表示の場合、スクロールを中断
@@ -85,8 +134,57 @@ class UI.ThreadContent
       target = $(target).prevAll(":not(.ng)")[0] or $(target).nextAll(":not(.ng)")[0]
 
     if target
-      if animate
+      # 可変サイズの画像が存在している場合は画像を事前にロードする
+      if app.config.get("use_mediaviewer") is "on" and
+          app.config.get("image_height_fix") isnt "on" and
+          not rerun
+        viewTop = target.offsetTop + offset
+        viewBottom = viewTop + @container.offsetHeight
+        if viewBottom > @container.scrollHeight
+          viewBottom = @container.scrollHeight
+          viewTop = viewBottom - @container.offsetHeight
+
+        # 遅延ロードの解除
+        loadImageByElement = (targetElement) =>
+          targetResNum = parseInt(targetElement.querySelector(".num").textContent)
+          if checkImage
+            qStr = "img, video"
+          else
+            qStr = "img[data-src], video[data-src]"
+          for img in targetElement.querySelectorAll(qStr)
+            loadFlag = true
+            continue if checkImage or img.getAttribute("data-src") is null
+            unless img.className is "favicon"
+              $(img).trigger("immediateLoad")
+            else
+              img.src = img.getAttribute("data-src")
+              img.removeAttribute("data-src")
+          return
+
+        # 表示範囲内の要素をスキャンする
+        # (上方)
+        tmpResNum = resNum
+        tmpTarget = target
+        while tmpTarget?.offsetTop + tmpTarget?.offsetHeight > viewTop
+          loadImageByElement(tmpTarget)
+          break if tmpResNum is 1
+          tmpResNum--
+          tmpTarget = @container.children[tmpResNum - 1]
+        # (下方)
+        tmpResNum = resNum + 1
+        tmpTarget = @container.children[resNum]
+        while tmpTarget?.offsetTop < viewBottom
+          loadImageByElement(tmpTarget)
+          tmpResNum++
+          tmpTarget = @container.children[tmpResNum - 1]
+          break unless tmpTarget
+
+      # スクロールの実行
+      if animate and not loadFlag
         do =>
+          # 画像が多数存在する場合、先頭や最後にジャンプすると大量のロードが発生してしまうため一時停止する
+          $(target).trigger("lazyload-stop")
+
           to = target.offsetTop + offset
           change = (to - @container.scrollTop)/15
           min = Math.min(to-change, to+change)
@@ -95,16 +193,21 @@ class UI.ThreadContent
             before = @container.scrollTop
             if min <= @container.scrollTop <= max
               @container.scrollTop = to
+              $(target).trigger("lazyload-start")
               return
             else
               @container.scrollTop += change
             if @container.scrollTop is before
+              $(target).trigger("lazyload-start")
               return
             requestAnimationFrame(_scrollInterval)
             return
           )
       else
         @container.scrollTop = target.offsetTop + offset
+
+      @_lastScrollInfo.scrollTime = Date.now() unless rerun
+      @_delayScrollTo() if loadFlag
     return
 
   ###*
@@ -488,17 +591,13 @@ class UI.ThreadContent
 
       @container.insertAdjacentHTML("BeforeEnd", html)
 
-      fragment = document.createDocumentFragment()
-      for child in @container.children
-        fragment.appendChild(child.cloneNode(true))
-
       numbersReg = /(?:\(\d+\))?$/
       #idカウント, .freq/.link更新
       do =>
         for id, index of @idIndex
           idCount = index.length
           for resNum in index
-            elm = fragment.children[resNum - 1].getElementsByClassName("id")[0]
+            elm = @container.children[resNum - 1].getElementsByClassName("id")[0]
             elmFirst = elm.firstChild
             elmFirst.textContent = elmFirst.textContent.replace(numbersReg, "(#{idCount})")
             if idCount >= 5
@@ -513,7 +612,7 @@ class UI.ThreadContent
         for slip, index of @slipIndex
           slipCount = index.length
           for resNum in index
-            elm = fragment.children[resNum - 1].getElementsByClassName("slip")[0]
+            elm = @container.children[resNum - 1].getElementsByClassName("slip")[0]
             elmFirst = elm.firstChild
             elmFirst.textContent = elmFirst.textContent.replace(numbersReg, "(#{slipCount})")
             if slipCount >= 5
@@ -528,7 +627,7 @@ class UI.ThreadContent
         for trip, index of @tripIndex
           tripCount = index.length
           for resNum in index
-            elm = fragment.children[resNum - 1].getElementsByClassName("trip")[0]
+            elm = @container.children[resNum - 1].getElementsByClassName("trip")[0]
             elmFirst = elm.firstChild
             elmFirst.textContent = elmFirst.textContent.replace(numbersReg, "(#{tripCount})")
             if tripCount >= 5
@@ -541,18 +640,18 @@ class UI.ThreadContent
       #harmImg更新
       do =>
         for res in @harmImgIndex
-          elm = fragment.children[res - 1]
+          elm = @container.children[res - 1]
           continue unless elm
           elm.classList.add("has_blur_word")
           if elm.classList.contains("has_image") and app.config.get("image_blur") is "on"
-            for thumb in elm.querySelectorAll(".thumbnail:not(.image_blur)")
+            for thumb in elm.querySelectorAll(".thumbnail:not(.image_blur), .mediaviewer:not(.image_blur)")
               @setImageBlur(thumb, true)
         return
 
       #参照関係再構築
       do =>
         for resKey, index of @repIndex
-          res = fragment.children[resKey - 1]
+          res = @container.children[resKey - 1]
           if res
             resCount = index.length
             if elm = res.getElementsByClassName("rep")[0]
@@ -571,16 +670,19 @@ class UI.ThreadContent
             #連鎖NG
             if app.config.get("chain_ng") is "on" and res.classList.contains("ng")
               for r in index
-                fragment.children[r - 1].classList.add("ng")
+                @container.children[r - 1].classList.add("ng")
             #自分に対してのレス
             if res.classList.contains("written")
               for r in index
-                fragment.children[r - 1].classList.add("to_written")
+                @container.children[r - 1].classList.add("to_written")
         return
 
       #サムネイル追加処理
       do =>
         addThumbnail = (sourceA, thumbnailPath, referrer, cookieStr) ->
+          if app.config.get("use_mediaviewer") is "on"
+            addMediaViewer(sourceA, "image", thumbnailPath)
+            return
           sourceA.classList.add("has_thumbnail")
           article = sourceA.closest("article")
           article.classList.add("has_image")
@@ -625,17 +727,243 @@ class UI.ThreadContent
               break
           null
 
-        app.util.concurrent(fragment.querySelectorAll(".message > a:not(.thumbnail):not(.has_thumbnail)"), (a) ->
-          return app.ImageReplaceDat.do(a, a.href).done( (a, res, err) ->
-            addThumbnail(a, res.text, res.referrer, res.cookie) unless err?
+        #mediaviewerの追加処理
+        addMediaViewer = (sourceA, mediaType, mediaPath="", referrer, cookieStr) ->
+          sourceA.classList.add("has_mediaviewer")
+          if mediaType is "image" or mediaType is "video"
+            article = sourceA.closest("article")
+            article.classList.add("has_image")
+
+          mediaViewer = document.createElement("div")
+          mediaViewer.className = "mediaviewer"
+          mediaViewer.setAttribute("media-type", mediaType)
+          #グロ画像に対するぼかし処理
+          if mediaType is "image" or mediaType is "video"
+            if article.hasClass("has_blur_word") and app.config.get("image_blur") is "on"
+              mediaViewer.className += " image_blur"
+              v = app.config.get("image_blur_length")
+              webkitFilter = "blur(#{v}px)"
+            else
+              webkitFilter = "none"
+
+          switch mediaType
+            when "image"
+              mediaLink = document.createElement("a")
+              mediaLink.href = app.safe_href(sourceA.href)
+              mediaLink.target = "_blank"
+
+              mediaImage = document.createElement("img")
+              mediaImage.className = "image"
+              mediaImage.src = "/img/dummy_1x1.webp"
+              mediaImage.setAttribute("data-src", mediaPath)
+              if referrer? then thumbnailImg.setAttribute("data-referrer", referrer)
+              if cookieStr? then thumbnailImg.setAttribute("data-cookie", cookieStr)
+              mediaImage.style.WebkitFilter = webkitFilter
+              mediaImage.style.maxWidth = app.config.get("image_width") + "px"
+              mediaImage.style.maxHeight = app.config.get("image_height") + "px"
+              mediaLink.appendChild(mediaImage)
+
+              mediaFavicon = document.createElement("img")
+              mediaFavicon.className = "favicon"
+              mediaFavicon.src = "/img/dummy_1x1.webp"
+              mediaFavicon.setAttribute("data-src", "https://www.google.com/s2/favicons?domain=#{app.url.getDomain(sourceA.href)}")
+              mediaLink.appendChild(mediaFavicon)
+
+            when "audio", "video"
+              mediaLink = document.createElement(mediaType)
+              mediaLink.src = ""
+              if mediaPath is ""
+                mediaLink.setAttribute("data-src", sourceA.href)
+              else
+                mediaLink.setAttribute("data-src", mediaPath)
+              mediaLink.preload = "none"
+              switch mediaType
+                when "audio"
+                  mediaLink.style.width = app.config.get("audio_width") + "px"
+                  mediaLink.setAttribute("controls", "")
+                when "video"
+                  mediaLink.style.WebkitFilter = webkitFilter
+                  mediaLink.style.maxWidth = app.config.get("video_width") + "px"
+                  mediaLink.style.maxHeight = app.config.get("video_height") + "px"
+                  if app.config.get("video_controls") is "on"
+                    mediaLink.setAttribute("controls", "")
+
+          mediaViewer.appendChild(mediaLink)
+
+          #高さ固定の場合
+          if app.config.get("image_height_fix") is "on"
+            switch mediaType
+              when "image"
+                h = parseInt(app.config.get("image_height"))
+              when "video"
+                h = parseInt(app.config.get("video_height"))
+              else
+                h = 100   # 最低高
+            mediaViewer.style.height = h + "px"
+
+          sib = sourceA
+          while true
+            pre = sib
+            sib = pre.nextSibling
+            if sib is null or sib.nodeName is "BR"
+              if sib?.nextSibling?.classList?.contains("mediaviewer")
+                continue
+              if not pre.classList?.contains("mediaviewer")
+                sourceA.parentNode.insertBefore(document.createElement("br"), sib)
+              sourceA.parentNode.insertBefore(mediaViewer, sib)
+              break
+            null
+          return
+
+        #展開URL追加処理
+        addExpandedURL = (sourceA, finalUrl) ->
+          sourceA.classList.add("has_expandedURL")
+
+          expandedURL = document.createElement("div")
+          expandedURL.className = "expandedURL"
+          if app.config.get("expand_short_url") is "popup"
+            expandedURL.classList.add("hide_data")
+            expandedURL.setAttribute("short-url", sourceA.href)
+
+          if finalUrl is ""
+            expandedURL.innerHTML = "展開できませんでした。"
+          else
+            expandedURLLink = document.createElement("a")
+            expandedURLLink.appendChild(document.createTextNode(finalUrl))
+            expandedURLLink.href = app.safe_href(finalUrl)
+            expandedURLLink.target = "_blank"
+            expandedURL.appendChild(expandedURLLink)
+
+          sib = sourceA
+          while true
+            pre = sib
+            sib = pre.nextSibling
+            if sib is null or sib.nodeName is "BR"
+              if sib?.nextSibling?.classList?.contains("expandedURL")
+                continue
+              if not pre.classList?.contains("expandedURL")
+                sourceA.parentNode.insertBefore(document.createElement("br"), sib)
+              sourceA.parentNode.insertBefore(expandedURL, sib)
+              break
+          null
+          #展開されたURLについてサムネイルなどの追加を行う
+          checkUrlString(expandedURLLink) if finalUrl isnt ""
+          return
+
+        #非同期処理の終了確認用Deferredオブジェクト配列
+        asyncProcessDfds = []
+
+        #短縮URLの展開と追加
+        expandShortURL = (aSrc, targetUrl) ->
+          dfd = $.Deferred()
+
+          xhr = new XMLHttpRequest()
+          if /// //t\.co/ ///.test(targetUrl)
+            xhr.open("GET", targetUrl)
+            xhr.responseType = "document"
+          else
+            xhr.open("HEAD", targetUrl)
+          xhr.timeout = 1000
+
+          xhr.onload = (e) ->
+            if xhr.status >= 400
+              addExpandedURL(aSrc, xhr.responseURL)
+              return dfd.resolve()
+            if /// //t\.co/ ///.test(targetUrl)
+              # 本来ならこちらが正式な方法？
+#              final_url = ""
+#              metacont = ""
+#              for meta in xhr.response.getElementsByTagName("meta")
+#                continue unless meta.getAttribute("http-equiv") is "refresh"
+#                metacont = meta.getAttribute("content")
+#                break
+#              if metacont isnt ""
+#                r1 = /URL=([\w\.\/:-]+)/.exec(metacont)
+#                final_url = r1[1]
+              # 高速化のためにタイトルで代用
+              final_url = xhr.response.getElementsByTagName("Title")[0].textContent
+            else
+              final_url = xhr.responseURL
+            #無限ループの防止
+            if final_url is targetUrl
+              final_url = ""
+            #取得したURLが短縮URLだった場合は再帰呼出しする
+            if checkShortURL(final_url)
+              expandShortURL(aSrc, final_url).done( ->
+                return dfd.resolve()
+              )
+            #短縮URL以外なら登録する
+            else
+              addExpandedURL(aSrc, final_url)
+              return dfd.resolve()
+          xhr.onerror = (e) ->
+            addExpandedURL(aSrc, "")
+            return dfd.resolve()
+          xhr.ontimeout = ->
+            addExpandedURL(aSrc, "")
+            return dfd.resolve()
+
+          xhr.send()
+          asyncProcessDfds.push(dfd)
+          return dfd.promise()
+
+        #短縮URLの確認
+        shortUrlSites = ["amzn.to", "bit.ly", "buff.ly", "cas.st", "dlvr.it",
+                         "fb.me", "goo.gl", "ift.tt", "is.gd", "itun.es",
+                         "j.mp", "jump.cx", "ow.ly", "p.tl", "prt.nu",
+                         "snipurl.com", "spoti.fi",
+                         "t.co", "tiny.cc", "tinyurl.com", "tl.gd", "tr.im", "trib.al",
+                         "url.ie", "urx.nu", "urx2.nu", "urx3.nu", "ur0.pw",
+                         "wk.tk", "xrl.us"]
+        checkShortURL = (tUrl) ->
+          if tmp = /// ^h?ttps?://([\w\-\.]+)/.+ ///.exec(tUrl)
+            return true if shortUrlSites.indexOf(tmp[1]) >= 0
+          return false
+
+        #URL別の処理
+        checkUrlString = (a) ->
+          #サムネイルの追加
+          asyncProcessDfds.push(
+            app.ImageReplaceDat.do(a, a.href).done( (a, res, err) ->
+              addThumbnail(a, res.text, res.referrer, res.cookie) unless err?
+              return
+            )
+          )
+          if app.config.get("use_mediaviewer") is "on"
+            #Audioの確認
+            if app.config.get("audio_supported") is "on"
+              if /\.(?:mp3|m4a|wav|oga|spx)(?:[\?#:&].*)?$/.test(a.href)
+                addMediaViewer(a, "audio")
+              if app.config.get("audio_supported_ogg") is "on"
+                if /\.(?:ogg|ogx)(?:[\?#:&].*)?$/.test(a.href)
+                  addMediaViewer(a, "audio")
+              #Videoの確認
+              if app.config.get("video_supported") is "on"
+                if /\.(?:mp4|m4v|webm|ogv)(?:[\?#:&].*)?$/.test(a.href)
+                  addMediaViewer(a, "video")
+                if app.config.get("video_supported_ogg") is "on"
+                  if /\.(?:ogg|ogx)(?:[\?#:&].*)?$/.test(a.href)
+                    addMediaViewer(a, "video")
+          return
+
+        #<a>タグのチェック
+        for a in @container.querySelectorAll(".message > a:not(.thumbnail):not(.has_thumbnail)" +
+            ":not(.mediaviewer):not(.has_mediaviewer):not(.expandedURL):not(.has_expandedURL)")
+          #URL別の処理
+          checkUrlString(a)
+          #短縮URLの展開
+          if app.config.get("expand_short_url") isnt "none"
+            expandShortURL(a, a.href) if checkShortURL(a.href)
+
+        #メソッド内で起動した非同期処理の終了を待機する
+        if asyncProcessDfds.length > 0
+          $.when.apply($, asyncProcessDfds).always( =>
+            d.resolve()
             return
           )
-        ).always(=>
-          @container.textContent = null
-          @container.appendChild(fragment)
-          d.resolve()
-          return
-        )
+        else
+          return d.resolve()
+
         return
       return
     )
@@ -643,17 +971,17 @@ class UI.ThreadContent
 
   ###*
   @method setImageBlur
-  @param {Element} thumbnail
+  @param {Element} thumbnail or mediaviewer
   @parm {Boolean} blurMode
   ###
-  setImageBlur: (thumbnail, blurMode) ->
-    img = thumbnail.querySelector("a > img.image")
+  setImageBlur: (mediaviewer, blurMode) ->
+    img = mediaviewer.querySelector("a > img.image, video")
     if blurMode
       v = app.config.get("image_blur_length")
-      thumbnail.classList.add("image_blur")
+      mediaviewer.classList.add("image_blur")
       img.style.WebkitFilter = "blur(#{v}px)"
     else
-      thumbnail.classList.remove("image_blur")
+      mediaviewer.classList.remove("image_blur")
       img.style.WebkitFilter = "none"
     return
 

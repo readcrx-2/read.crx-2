@@ -1,4 +1,5 @@
 ///<reference path="../global.d.ts" />
+///<reference path="../app.ts" />
 
 namespace UI {
   "use strict";
@@ -8,9 +9,11 @@ namespace UI {
 
     container: HTMLElement;
     private scroll = false;
-    private imgs: HTMLImageElement[] = [];
-    private imgPlaceTable = new Map<HTMLImageElement, number>();
+    private imgs: HTMLElement[] = [];
+    private imgPlaceTable = new Map<HTMLElement, number>();
     private updateInterval: number = null;
+    private loaded: boolean = false;
+    private pause: boolean = false;
 
     constructor (container: HTMLElement) {
       this.container = container;
@@ -28,20 +31,51 @@ namespace UI {
       this.imgPlaceTable.clear();
     }
 
-    public immediateLoad (img: HTMLImageElement): void {
-      if (img.getAttribute("data-src") === null) return;
-      this.load(img);
+    public viewLoaded (): void {
+      this.loaded = true;
     }
 
-    private load (img: HTMLImageElement): void {
-      var newImg: HTMLImageElement, attr: Attr, attrs: Attr[];
+    public start(): void {
+      this.pause = false;
+    }
 
-      newImg = document.createElement("img");
+    public stop(): void {
+      this.pause = true;
+    }
 
-      attrs = Array.from(img.attributes)
-      for (attr of attrs) {
-        if (attr.name !== "data-src") {
-          newImg.setAttribute(attr.name, attr.value);
+    public clearImagePlaceTable (): void {
+      this.imgPlaceTable.clear();
+    }
+
+    public immediateLoad (img: any): void {
+      if (img.tagName === "IMG" || img.tagName === "VIDEO") {
+        if (img.getAttribute("data-src") === null) return;
+        this.load(img);
+      }
+    }
+
+    private load (img: any, byBottom: boolean = false): void {
+      var newImg: HTMLImageElement, cpyImg: HTMLImageElement, attr: Attr, attrs: Attr[];
+
+      // タグ名に基づいて型をキャストする
+      if (img.tagName === "IMG") {
+        img = <HTMLImageElement>img;
+        newImg = document.createElement("img");
+      } else if (img.tagName === "AUDIO") {
+        img = <HTMLAudioElement>img;
+      } else if (img.tagName === "VIDEO") {
+        img = <HTMLVideoElement>img;
+      }
+      // immediateLoadにて処理済みのものを除外する
+      if (img.getAttribute("data-src") === null) return;
+
+      if (img.tagName === "IMG" && img.className !== "favicon") {
+        cpyImg = img;
+        attrs = Array.from(cpyImg.attributes)
+        for (attr of attrs) {
+          if (attr.name !== "data-src") {
+            newImg.setAttribute(attr.name, attr.value);
+          }
         }
       }
 
@@ -49,14 +83,35 @@ namespace UI {
         $(img).replaceWith(this);
 
         if (e.type === "load") {
-          $(this).trigger("lazyload-load");
+          if (byBottom === false) {
+            $(this).trigger("lazyload-load");
+          } else {
+            $(this).trigger("lazyload-loadbybottom");
+          }
           UI.Animate.fadeIn(this);
         }
       });
+      $(img).one("load error loadedmetadata", function (e) {
+        if (img.tagName === "IMG" && img.className === "favicon") return;
+        if (e.type !== "error") {
+          if (byBottom === false) {
+            $(this).trigger("lazyload-load");
+          } else {
+            $(this).trigger("lazyload-loadbybottom");
+          }
+        }
+      });
 
-      newImg.src = img.getAttribute("data-src");
+      if (img.tagName === "IMG" && img.className !== "favicon") {
+        img.src = "/img/loading.webp";
+        newImg.src = img.getAttribute("data-src");
+      } else if (img.tagName === "AUDIO" || img.tagName === "VIDEO") {
+        img.preload = "metadata";
+        img.src = img.getAttribute("data-src");
+      } else {
+        img.src = img.getAttribute("data-src");
+      }
       img.removeAttribute("data-src");
-      img.src = "/img/loading.webp";
     }
 
     private watch (): void {
@@ -78,7 +133,7 @@ namespace UI {
     }
 
     scan (): void {
-      this.imgs = Array.prototype.slice.call(this.container.querySelectorAll("img[data-src]"));
+      this.imgs = Array.prototype.slice.call(this.container.querySelectorAll("img[data-src], audio[data-src], video[data-src]"));
       if (this.imgs.length > 0) {
         this.update();
         this.watch();
@@ -92,12 +147,15 @@ namespace UI {
       var scrollTop: number, clientHeight: number;
       scrollTop = this.container.scrollTop;
       clientHeight = this.container.clientHeight;
+      if (this.pause === true) return;
 
-      this.imgs = this.imgs.filter((img: HTMLImageElement) => {
+      this.imgs = this.imgs.filter((img: HTMLElement) => {
         var top: number, current: HTMLElement;
 
         if (img.offsetWidth !== 0) { //imgが非表示の時はロードしない
-          if (this.imgPlaceTable.has(img)) {
+          if ((app.config.get("use_mediaviewer") !== "on" ||
+              app.config.get("image_height_fix") === "on") &&
+              this.imgPlaceTable.has(img)) {
             top = this.imgPlaceTable.get(img);
           } else {
             top = 0;
@@ -114,6 +172,33 @@ namespace UI {
             scrollTop + clientHeight < top)
           ) {
             this.load(img);
+            return false;
+          }
+        }
+        // 逆スクロール時の範囲チェック
+        if (this.loaded === true && app.config.get("use_mediaviewer") === "on") {
+          var bottom: number, target_height: number;
+
+          bottom = 0;
+          current = img;
+          if (img.tagName === "IMG") {
+            target_height = parseInt(app.config.get("image_height"));
+          } else if (img.tagName === "VIDEO") {
+            target_height = parseInt(app.config.get("video_height"));
+          }
+
+          while (current !== null && current !== this.container) {
+            bottom += current.offsetTop;
+            current = <HTMLElement>current.offsetParent;
+          }
+          if (bottom === 0) return true;
+          bottom += target_height;
+
+          if (
+            bottom > this.container.scrollTop &&
+            bottom < this.container.scrollTop + this.container.clientHeight
+          ) {
+            this.load(img, true);
             return false;
           }
         }

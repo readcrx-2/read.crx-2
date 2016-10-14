@@ -178,6 +178,71 @@ header {
   }
 }
 
+.mediaviewer {
+  position: relative;
+  display: inline-block;
+  margin: 10px;
+
+  > a, > audio, > video {
+    display: inline-block;
+    position: relative;
+    padding: 3px;
+    box-shadow: 0 1px 3px 0px rgba(black, 0.4);
+  }
+  > video, > audio {
+    background-color: #666666;
+  }
+  > a {
+    background-color: white;
+    > img.image {
+      display: block;
+      &[src="/img/loading.webp"] {
+        width: 50px;
+        height: 50px;
+        animation: rotateThis 1.5s linear infinite;
+      }
+    }
+    > img.favicon {
+      @include drop-shadow;
+      position: absolute;
+      right: -4px;
+      bottom: -4px;
+
+      width: 16px;
+      height: 16px;
+      padding: 2px;
+
+      background: hsl(0, 0%, 97.5%);
+      border-radius: 2px;
+    }
+  }
+}
+
+.expandedURL {
+  position: relative;
+  display: inline-block;
+  margin: 5px 10px;
+
+  > a {
+    font-style: italic;
+  }
+  &::before {
+    margin-right: 10px;
+    content: "→";
+  }
+  .thumbnail, .mediaviewer {
+    margin-left: 30px;
+  }
+
+  .popup & {
+    display: block;
+    padding: 5px;
+  }
+}
+.hide_data {
+  display: none;
+}
+
 .popup {
   position: fixed;
   z-index: $z-index-popup;

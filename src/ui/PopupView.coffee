@@ -189,7 +189,7 @@ class UI.PopupView
         @_popupMarginHeight += parseInt(@_popupStyle.marginTop)
         @_popupMarginHeight += parseInt(@_popupStyle.marginBottom)
         boxShadow = @_popupStyle.boxShadow
-        tmp = /rgba\(.*\) ([\d]+)px ([\d]+)px ([\d]+)px ([\d]+)px/.exec(boxShadow)
+        tmp = /rgba?\(.*\) (-?[\d]+)px (-?[\d]+)px ([\d]+)px (-?[\d]+)px/.exec(boxShadow)
         @_popupMarginHeight += Math.abs(parseInt(tmp[2]))
         @_popupMarginHeight += Math.abs(parseInt(tmp[4]))
       outerHeight += @_popupMarginHeight

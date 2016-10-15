@@ -11,12 +11,17 @@ namespace UI {
     private imgs: HTMLImageElement[] = [];
     private imgPlaceTable = new Map<HTMLImageElement, number>();
     private updateInterval: number = null;
+    private pause: boolean = false;
 
     constructor (container: HTMLElement) {
       this.container = container;
 
       $(this.container).on("scroll", this.onScroll.bind(this));
       $(this.container).on("resize", this.onResize.bind(this));
+      $(this.container).on("scrollstart", this.onScrollStart.bind(this));
+      $(this.container).on("scrollfinish", this.onScrollFinish.bind(this));
+      $(this.container).on("searchstart", this.onSearchStart.bind(this));
+      $(this.container).on("searchfinish", this.onSearchFinish.bind(this));
       this.scan();
     }
 
@@ -31,6 +36,26 @@ namespace UI {
     public immediateLoad (img: HTMLImageElement): void {
       if (img.getAttribute("data-src") === null) return;
       this.load(img);
+    }
+
+    // スクロール中に無駄な画像ロードが発生するのを防止する
+    private onScrollStart(): void {
+      this.pause = true;
+    }
+
+    private onScrollFinish(): void {
+      this.pause = false;
+    }
+
+    // 検索中に無駄な画像ロードが発生するのを防止する
+    private onSearchStart(): void {
+      this.pause = true;
+    }
+
+    // 検索による表示位置の変更に対応するため、テーブルをクリアしてから再開する
+    private onSearchFinish(): void {
+      this.imgPlaceTable.clear();
+      this.pause = false;
     }
 
     private load (img: HTMLImageElement): void {
@@ -92,6 +117,7 @@ namespace UI {
       var scrollTop: number, clientHeight: number;
       scrollTop = this.container.scrollTop;
       clientHeight = this.container.clientHeight;
+      if (this.pause === true) return;
 
       this.imgs = this.imgs.filter((img: HTMLImageElement) => {
         var top: number, current: HTMLElement;

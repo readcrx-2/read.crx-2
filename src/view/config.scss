@@ -130,10 +130,10 @@ section button {
 
 .bbsmenu_reload_status {
   &.done {
-    color: green;
+    color: $color-success;
   }
   &.fail {
-    color: red;
+    color: $color-error;
   }
 }
 

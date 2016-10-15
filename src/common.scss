@@ -9,6 +9,11 @@ $z-index-modal: 7;
 $z-index-modalhelp: 8;
 $z-index-notification: 9;
 
+$color-pending: #7F7F7F;
+$color-loading: #AC7239;
+$color-success: #339933;
+$color-error: #BF3F3F;
+
 @mixin common {
   button, input, select, textarea {
     font-family: inherit;

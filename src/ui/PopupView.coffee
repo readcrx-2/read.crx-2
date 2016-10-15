@@ -107,6 +107,7 @@ class UI.PopupView
 
     # ノードの設定
     @source.classList.add("popup_source")
+    @source.classList.add("active")
     @source.addEventListener("mouseenter", (e) => @_on_mouseenter(e.currentTarget))
     @source.addEventListener("mouseleave", (e) => @_on_mouseleave(e.currentTarget))
     @popup.classList.add("popup")
@@ -120,7 +121,6 @@ class UI.PopupView
     @_popupStack.push(popupInfo)
 
     # popupの表示
-    @source.classList.add("active")
     @_popupArea.appendChild(popupInfo.popup)
 
     return

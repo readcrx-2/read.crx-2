@@ -391,7 +391,7 @@ class UI.ThreadContent
         #文字色
         color = res.message.match(/<font color="(.*?)">/i)
 
-        harmfulReg = /.*[^ァ-ヺ^ー]グロ([^ァ-ヺ^ー].*|$)|.*死ね.*/
+        harmfulReg = new RegExp(app.config.get("image_blur_word"))
         tmp = (
           res.message
             #imgタグ変換

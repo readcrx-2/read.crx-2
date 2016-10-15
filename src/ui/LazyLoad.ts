@@ -9,7 +9,7 @@ namespace UI {
     container: HTMLElement;
     private scroll = false;
     private imgs: HTMLImageElement[] = [];
-    private imgPlaceTable = new Map<HTMLImageElement, number>();
+    private imgPlaceTable = new Map<HTMLImageElement, {top: number, offsetHeight: number}>();
     private updateInterval: number = null;
     private pause: boolean = false;
 
@@ -120,23 +120,24 @@ namespace UI {
       if (this.pause === true) return;
 
       this.imgs = this.imgs.filter((img: HTMLImageElement) => {
-        var top: number, current: HTMLElement;
+        var current: HTMLElement;
 
         if (img.offsetWidth !== 0) { //imgが非表示の時はロードしない
           if (this.imgPlaceTable.has(img)) {
-            top = this.imgPlaceTable.get(img);
+            var {top, offsetHeight} = this.imgPlaceTable.get(img);
           } else {
-            top = 0;
+            var top = 0;
             current = img;
             while (current !== null && current !== this.container) {
               top += current.offsetTop;
               current = <HTMLElement>current.offsetParent;
             }
-            this.imgPlaceTable.set(img, top);
+            var offsetHeight = img.offsetHeight
+            this.imgPlaceTable.set(img, {top, offsetHeight});
           }
 
           if (
-            !(top + img.offsetHeight < scrollTop ||
+            !(top + offsetHeight < scrollTop ||
             scrollTop + clientHeight < top)
           ) {
             this.load(img);

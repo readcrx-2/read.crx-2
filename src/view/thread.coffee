@@ -374,6 +374,9 @@ app.boot "/view/thread.html", ->
 
       $this.parent().remove()
       return
+    .on "mousedown", ".res_menu > li", (e) ->
+      e.preventDefault()
+      return
 
     # アンカーポップアップ
     .on "mouseenter", ".anchor, .name_anchor", (e) ->

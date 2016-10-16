@@ -53,6 +53,19 @@ class UI.ThreadContent
     ###
     @oneId = null
 
+    try
+      @harmfulReg = new RegExp(app.config.get("image_blur_word"))
+      @findHarmfulFlag = true
+    catch e
+     app.message.send "notify", {
+       html: """
+         画像ぼかしの正規表現を読み込むのに失敗しました
+         画像ぼかし機能は無効化されます
+       """
+       background_color: "red"
+     }
+     @findHarmfulFlag = false
+
     return
 
   ###*
@@ -391,7 +404,6 @@ class UI.ThreadContent
         #文字色
         color = res.message.match(/<font color="(.*?)">/i)
 
-        harmfulReg = new RegExp(app.config.get("image_blur_word"))
         tmp = (
           res.message
             #imgタグ変換
@@ -431,7 +443,7 @@ class UI.ThreadContent
                 disabled = false
 
               #グロ/死ねの返信レス
-              isThatHarmImg = harmfulReg.test(res.message)
+              isThatHarmImg = @findHarmfulFlag and @harmfulReg.test(res.message)
 
               #rep_index更新
               if not disabled

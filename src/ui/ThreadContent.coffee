@@ -57,14 +57,14 @@ class UI.ThreadContent
       @harmfulReg = new RegExp(app.config.get("image_blur_word"))
       @findHarmfulFlag = true
     catch e
-     app.message.send "notify", {
-       html: """
-         画像ぼかしの正規表現を読み込むのに失敗しました
-         画像ぼかし機能は無効化されます
-       """
-       background_color: "red"
-     }
-     @findHarmfulFlag = false
+      app.message.send "notify", {
+        html: """
+          画像ぼかしの正規表現を読み込むのに失敗しました
+          画像ぼかし機能は無効化されます
+        """
+        background_color: "red"
+      }
+      @findHarmfulFlag = false
 
     return
 
@@ -474,18 +474,18 @@ class UI.ThreadContent
           if n.start? and ((n.finish? and n.start <= resNum and resNum <= n.finish) or (parseInt(n.start) is resNum))
             continue
           if (
-            (n.type is ("regExp") and n.reg.test(tmpTxt1)) or
-            (n.type is ("regExpName") and n.reg.test(res.name)) or
-            (n.type is ("regExpMail") and n.reg.test(res.mail)) or
-            (n.type is ("regExpId") and articleDataId? and n.reg.test(articleDataId)) or
-            (n.type is ("regExpSlip") and articleDataSlip? and n.reg.test(articleDataSlip)) or
-            (n.type is ("regExpBody") and n.reg.test(res.message)) or
-            (n.type is ("name") and app.util.normalize(res.name).includes(n.word)) or
-            (n.type is ("mail") and app.util.normalize(res.mail).includes(n.word)) or
-            (n.type is ("id") and articleDataId?.includes(n.word)) or
-            (n.type is ("slip") and articleDataSlip?.includes(n.word)) or
-            (n.type is ("body") and app.util.normalize(res.message).includes(n.word)) or
-            (n.type is ("word") and tmpTxt2.includes(n.word))
+            (n.type is "regExp" and n.reg.test(tmpTxt1)) or
+            (n.type is "regExpName" and n.reg.test(res.name)) or
+            (n.type is "regExpMail" and n.reg.test(res.mail)) or
+            (n.type is "regExpId" and articleDataId? and n.reg.test(articleDataId)) or
+            (n.type is "regExpSlip" and articleDataSlip? and n.reg.test(articleDataSlip)) or
+            (n.type is "regExpBody" and n.reg.test(res.message)) or
+            (n.type is "name" and app.util.normalize(res.name).includes(n.word)) or
+            (n.type is "mail" and app.util.normalize(res.mail).includes(n.word)) or
+            (n.type is "id" and articleDataId?.includes(n.word)) or
+            (n.type is "slip" and articleDataSlip?.includes(n.word)) or
+            (n.type is "body" and app.util.normalize(res.message).includes(n.word)) or
+            (n.type is "word" and tmpTxt2.includes(n.word))
           )
             articleClass.push("ng")
             break

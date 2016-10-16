@@ -473,6 +473,17 @@ app.main = ->
     return
   )
 
+  #更新通知
+  chrome.runtime.onUpdateAvailable.addListener( ({version}) ->
+    app.message.send "notify", {
+      html: """
+        #{app.manifest.name} の #{version} が利用可能です
+      """
+      background_color: "green"
+    }
+    return
+  )
+
   # ウィンドウサイズ関連処理
   adjustWindowSize = new app.Callbacks()
   do ->

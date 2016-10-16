@@ -130,10 +130,10 @@ section button {
 
 .bbsmenu_reload_status {
   &.done {
-    color: green;
+    color: $color-success;
   }
   &.fail {
-    color: red;
+    color: $color-error;
   }
 }
 
@@ -143,6 +143,10 @@ input[type="text"]:invalid {
 
 .label_textarea, .label_textarea > a {
   vertical-align: top;
+}
+
+.image_blur_word {
+  width: 350px;
 }
 
 .bbsmenu {

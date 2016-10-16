@@ -37,6 +37,20 @@ class UI.PopupView
     ###
     @_popupMarginHeight = -1
 
+    ###*
+    @property _currentX
+    @type Number
+    @private
+    ###
+    @_currentX = 0
+
+    ###*
+    @property _currentY
+    @type Number
+    @private
+    ###
+    @_currentY = 0
+
     return
 
   ###*
@@ -56,7 +70,7 @@ class UI.PopupView
     #sourceがpopup内のものならば、兄弟ノードの削除
     #それ以外は、全てのノードを削除
     if @source.closest(".popup")
-      @source.classList.remove("active")
+      @source.closest(".popup").classList.add("active")
       @_remove(false)
     else
       @_remove(true)
@@ -105,11 +119,19 @@ class UI.PopupView
           @popup.style.maxHeight = "#{viewHeight - cssTop - margin}px"
       return
 
+    # マウス座標の監視
+    if @_popupStack.length is 0
+      @_currentX = @mouseX
+      @_currentY = @mouseY
+      @default_parent.addEventListener("mousemove", (e) => @_on_mousemove(e))
+
     # ノードの設定
     @source.classList.add("popup_source")
+    @source.setAttribute("stack-index", @_popupStack.length)
     @source.addEventListener("mouseenter", (e) => @_on_mouseenter(e.currentTarget))
     @source.addEventListener("mouseleave", (e) => @_on_mouseleave(e.currentTarget))
     @popup.classList.add("popup")
+    @popup.setAttribute("stack-index", @_popupStack.length)
     @popup.addEventListener("mouseenter", (e) => @_on_mouseenter(e.currentTarget))
     @popup.addEventListener("mouseleave", (e) => @_on_mouseleave(e.currentTarget))
 
@@ -120,8 +142,12 @@ class UI.PopupView
     @_popupStack.push(popupInfo)
 
     # popupの表示
-    @source.classList.add("active")
     @_popupArea.appendChild(popupInfo.popup)
+
+    # ノードのアクティブ化
+    setTimeout( =>
+      @_activateNode()
+    , 0)
 
     return
 
@@ -142,9 +168,13 @@ class UI.PopupView
       popupInfo.popup.removeEventListener("mouseenter", (e) => @_on_mouseenter(e.currentTarget))
       popupInfo.popup.removeEventListener("mouseleave", (e) => @_on_mouseleave(e.currentTarget))
       popupInfo.source.classList.remove("popup_source")
+      popupInfo.source.removeAttribute("stack-index")
       @_popupArea.removeChild(popupInfo.popup)
       @_popupStack.pop()
       null
+    # マウス座標の監視終了
+    if @_popupStack.length is 0
+      @default_parent.removeEventListener("mousemove", (e) => @_on_mousemove(e))
     return
 
   ###*
@@ -153,6 +183,19 @@ class UI.PopupView
   ###
   _on_mouseenter: (target) ->
     target.classList.add("active")
+    # ペア・ノードの非アクティブ化
+    stackIndex = target.getAttribute("stack-index")
+    if target.classList.contains("popup")
+      @_popupStack[stackIndex].source.classList.remove("active")
+    else if target.classList.contains("popup_source")
+      @_popupStack[stackIndex].popup.classList.remove("active")
+    # 末端ノードの非アクティブ化
+    if @_popupStack.length - 1 > stackIndex
+      @_popupStack[@_popupStack.length - 1].source.classList.remove("active")
+      @_popupStack[@_popupStack.length - 1].popup.classList.remove("active")
+      setTimeout( =>
+        @_remove(false)
+      , 300)
     return
 
   ###*
@@ -164,6 +207,36 @@ class UI.PopupView
     setTimeout( =>
       @_remove(false)
     , 300)
+    return
+
+  ###*
+  @method _on_mousemove
+  @param {Object} Event
+  ###
+  _on_mousemove: (e) ->
+    @_currentX = e.clientX
+    @_currentY = e.clientY
+    return
+
+  ###*
+  @method _activateNode
+  ###
+  _activateNode: ->
+    elm = document.elementFromPoint(@_currentX, @_currentY)
+    if Object.is(elm, @source)
+      @source.classList.add("active")
+    else if Object.is(elm, @popup) or Object.is(elm.closest(".popup"), @popup)
+      @popup.classList.add("active")
+    else if elm.classList.contains("popup_source") or elm.classList.contains("popup")
+      elm.classList.add("active")
+    else if elm.closest(".popup")
+      elm.closest(".popup").classList.add("active")
+    else
+      @_popupStack[@_popupStack.length - 1].source.classList.remove("active")
+      @_popupStack[@_popupStack.length - 1].popup.classList.remove("active")
+      setTimeout( =>
+        @_remove(false)
+      , 300)
     return
 
   ###*
@@ -189,7 +262,7 @@ class UI.PopupView
         @_popupMarginHeight += parseInt(@_popupStyle.marginTop)
         @_popupMarginHeight += parseInt(@_popupStyle.marginBottom)
         boxShadow = @_popupStyle.boxShadow
-        tmp = /rgba\(.*\) ([\d]+)px ([\d]+)px ([\d]+)px ([\d]+)px/.exec(boxShadow)
+        tmp = /rgba?\(.*\) (-?[\d]+)px (-?[\d]+)px ([\d]+)px (-?[\d]+)px/.exec(boxShadow)
         @_popupMarginHeight += Math.abs(parseInt(tmp[2]))
         @_popupMarginHeight += Math.abs(parseInt(tmp[4]))
       outerHeight += @_popupMarginHeight

@@ -3,15 +3,23 @@ app.boot "/view/config.html", ["cache", "bbsmenu"], (Cache, BBSMenu) ->
 
   $view = $(document.documentElement)
 
+  whenClose = ->
+    #NG設定
+    app.NG.set($view.find("textarea[name=\"ngwords\"]")[0].value)
+    #ImageReplaceDat設定
+    app.ImageReplaceDat.set($view.find("textarea[name=\"image_replace_dat\"]")[0].value)
+    return
+
   #閉じるボタン
   $view.find(".button_close").on "click", ->
     if frameElement
       tmp = type: "request_killme"
       parent.postMessage(JSON.stringify(tmp), location.origin)
-    #NG設定
-    app.NG.set($view.find("textarea[name=\"ngwords\"]")[0].value)
-    #ImageReplaceDat設定
-    app.ImageReplaceDat.set($view.find("textarea[name=\"image_replace_dat\"]")[0].value)
+    whenClose()
+    return
+
+  window.addEventListener "unload", ->
+    whenClose()
     return
 
   #掲示板を開いたときに閉じる

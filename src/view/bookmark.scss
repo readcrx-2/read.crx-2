@@ -29,12 +29,12 @@ tbody:empty {
 
 tr.expired td:first-child:before {
   content: "[dat落ち] ";
-  color: red;
+  color: $color-error;
 }
 
 tr.errored:not(.expired) td:first-child:before {
   content: "[更新失敗] ";
-  color: red;
+  color: $color-error;
 }
 
 td {
@@ -64,25 +64,25 @@ td {
   height: initial;
   background: transparent;
   > .pending {
-    color: hsl(0, 0%, 50%);
+    color: $color-pending;
     &::before {
       content: "待機中: ";
     }
   }
   > .loading {
-    color: hsl(30, 50%, 45%);
+    color: $color-loading;
     &::before {
       content: "更新中: ";
     }
   }
   > .success {
-    color: hsl(120, 50%, 40%);
+    color: $color-success;
     &::before {
       content: "更新成功: ";
     }
   }
   > .error {
-    color: hsl(0, 50%, 50%);
+    color: $color-error;
     &::before {
       content: "更新失敗: ";
     }

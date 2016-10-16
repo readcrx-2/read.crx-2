@@ -302,7 +302,7 @@ app.boot "/view/thread.html", ->
       return
 
     #レスメニュー項目クリック
-    .on "click", ".res_menu > li", "click", (e) ->
+    .on "click", ".res_menu > li", (e) ->
       $this = $(@)
       $res = $this.closest("article")
 
@@ -314,7 +314,7 @@ app.boot "/view/thread.html", ->
       else if $this.hasClass("search_selection")
         selectedText = getSelection().toString()
         if selectedText.length > 0
-          window.open("https://www.google.co.jp/search?q=#{selectedText}", "_blank")
+          open("https://www.google.co.jp/search?q=#{selectedText}", "_blank")
 
       else if $this.hasClass("copy_id")
         app.clipboardWrite($res.attr("data-id"))
@@ -373,6 +373,9 @@ app.boot "/view/thread.html", ->
           threadContent.setImageBlur(thumb, false)
 
       $this.parent().remove()
+      return
+    .on "mousedown", ".res_menu > li", (e) ->
+      e.preventDefault()
       return
 
     # アンカーポップアップ
@@ -616,6 +619,7 @@ app.boot "/view/thread.html", ->
           return
         .on "input", ->
           return if _isComposing
+          $content.triggerHandler("searchstart")
           if @value isnt ""
             if typeof search_stored_scrollTop isnt "number"
               search_stored_scrollTop = $content.scrollTop()
@@ -661,6 +665,8 @@ app.boot "/view/thread.html", ->
             if typeof search_stored_scrollTop is "number"
               $content.scrollTop(search_stored_scrollTop)
               search_stored_scrollTop = null
+
+          $content.triggerHandler("searchfinish")
           return
 
         .on "keyup", (e) ->

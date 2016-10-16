@@ -258,6 +258,7 @@ namespace app {
       ["auto_bookmark_notify", "on"],
       ["image_blur", "off"],
       ["image_blur_length", "4"],
+      ["image_blur_word", ".*[^ァ-ヺ^ー]グロ([^ァ-ヺ^ー].*|$)|.*死ね.*"],
       ["aa_font", "aa"],
       ["popup_trigger", "click"],
       ["ngwords", ""],

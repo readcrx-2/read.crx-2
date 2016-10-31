@@ -686,6 +686,26 @@ app.main = ->
         tmp = JSON.stringify(type: "request_reload", force_update: true, kind: request.kind, mes: request.mes, name: request.name, mail: request.mail, title: request.title, thread_url: request.thread_url)
         iframe.contentWindow.postMessage(tmp, location.origin)
 
+  # リクエスト・ヘッダーの監視
+  chrome.webRequest.onBeforeSendHeaders.addListener (details) ->
+    replaceHeader = (name, value) ->
+      for header in details.requestHeaders
+        if header.name.toLowerCase() is name
+          header.value = value
+          break
+      return
+
+    # 短縮URLの展開でのt.coに対する例外
+    if details.method is "HEAD" and app.URL.getDomain(details.url) is "t.co"
+      replaceHeader("user-agent", "")
+
+    return {requestHeaders: details.requestHeaders}
+  ,{
+    urls: ["*://t.co/*"],
+    types: ["xmlhttprequest"]
+  }
+  ,["blocking", "requestHeaders"]
+
   #viewからのメッセージを監視
   window.addEventListener "message", (e) ->
     return if e.origin isnt location.origin or typeof e.data isnt "string"
@@ -850,4 +870,3 @@ app.main = ->
       )
     return
   return
-

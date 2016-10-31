@@ -18,7 +18,8 @@
     "notifications",
     "webRequest",
     "webRequestBlocking",
-    "http://*/"
+    "http://*/",
+    "https://*/"
   ],
   "app" : {
     "launch" : {

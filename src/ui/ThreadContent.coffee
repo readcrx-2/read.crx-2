@@ -772,33 +772,109 @@ class UI.ThreadContent
               break
           return
 
-        app.util.concurrent(@container.querySelectorAll(".message > a:not(.thumbnail):not(.has_thumbnail)"), (a) ->
-          return app.ImageReplaceDat.do(a, a.href).done( (a, res, err) ->
-            addThumbnail(a, res.text, "image", res.referrer, res.cookie) unless err?
-            # Audioの確認
-            if app.config.get("audio_supported") is "on"
-              if /\.(?:mp3|m4a|wav|oga|spx)(?:[\?#:&].*)?$/.test(a.href)
-                addThumbnail(a, a.href, "audio")
-              if (
-                app.config.get("audio_supported_ogg") is "on" and
-                /\.(?:ogg|ogx)(?:[\?#:&].*)?$/.test(a.href)
+        # 展開URL追加処理
+        addExpandedURL = (sourceA, finalUrl) ->
+          sourceA.classList.add("has_expandedURL")
+
+          expandedURL = document.createElement("div")
+          expandedURL.className = "expandedURL"
+          expandedURL.setAttribute("short-url", sourceA.href)
+          if app.config.get("expand_short_url") is "popup"
+            expandedURL.classList.add("hide_data")
+
+          if finalUrl
+            expandedURLLink = document.createElement("a")
+            expandedURLLink.textContent = finalUrl
+            expandedURLLink.href = app.safe_href(finalUrl)
+            expandedURLLink.target = "_blank"
+            expandedURL.appendChild(expandedURLLink)
+          else
+            expandedURL.classList.add("expand_error")
+            expandedURLLink = null
+
+          sib = sourceA
+          while true
+            pre = sib
+            sib = pre.nextSibling
+            if !sib? or sib.nodeName is "BR"
+              if sib?.nextSibling?.classList?.contains("expandedURL")
+                continue
+              if not pre.classList?.contains("expandedURL")
+                sourceA.parentNode.insertBefore(document.createElement("br"), sib)
+              sourceA.parentNode.insertBefore(expandedURL, sib)
+              break
+
+          return expandedURLLink
+
+        # MediaTypeの取得
+        getMediaType = (href, dftValue) ->
+          mediaType = null
+          # Audioの確認
+          if /\.(?:mp3|m4a|wav|oga|spx)(?:[\?#:&].*)?$/.test(href)
+            mediaType = "audio"
+          if (
+            app.config.get("audio_supported_ogg") is "on" and
+            /\.(?:ogg|ogx)(?:[\?#:&].*)?$/.test(href)
+          )
+            mediaType = "audio"
+          # Videoの確認
+          if /\.(?:mp4|m4v|webm|ogv)(?:[\?#:&].*)?$/.test(href)
+            mediaType = "video"
+          if (
+            app.config.get("video_supported_ogg") is "on" and
+            /\.(?:ogg|ogx)(?:[\?#:&].*)?$/.test(href)
+          )
+            mediaType = "video"
+          # 初期値の設定と有効性のチェック
+          switch mediaType
+            when null
+              mediaType = dftValue
+            when "audio"
+              mediaType = null if app.config.get("audio_supported") is "off"
+            when "video"
+              mediaType = null if app.config.get("video_supported") is "off"
+          return mediaType
+
+        checkUrl = (a) ->
+          d2 = $.Deferred()
+          if app.config.get("expand_short_url") isnt "none"
+            if app.url.SHORT_URL_REG.test(a.href)
+              # 短縮URLの展開
+              app.url.expandShortURL(a, a.href).done( (a, finalUrl) ->
+                newLink = addExpandedURL(a, finalUrl)
+                if finalUrl
+                  d2.resolve(newLink, newLink.href)
+                else
+                  d2.resolve(a, a.href)
+                return
               )
-                addThumbnail(a, a.href, "audio")
-            # Videoの確認
-            if app.config.get("video_supported") is "on"
-              if /\.(?:mp4|m4v|webm|ogv)(?:[\?#:&].*)?$/.test(a.href)
-                addThumbnail(a, a.href, "video")
-              if (
-                app.config.get("video_supported_ogg") is "on" and
-                /\.(?:ogg|ogx)(?:[\?#:&].*)?$/.test(a.href)
-              )
-                addThumbnail(a, a.href, "video")
-            return
+            else
+              d2.resolve(a, a.href)
+          else
+            d2.resolve(a, a.href)
+          return d2.promise()
+
+        app.util.concurrent(@container.querySelectorAll(
+          ".message > a:not(.thumbnail):not(.has_thumbnail):not(.expandedURL):not(.has_expandedURL)"
+          ), (a) ->
+          checkUrl(a).then( (a, link) ->
+            return app.ImageReplaceDat.do(a, link)
+          ).then( (a, res, err) ->
+            # MediaTypeの設定
+            unless err?
+              href = res.text
+              mediaType = getMediaType(href, "image")
+            else
+              href = a.href
+              mediaType = getMediaType(href, null)
+            # サムネイルの追加
+            addThumbnail(a, href, mediaType, res.referrer, res.cookie) if mediaType
           )
         ).always(=>
           d.resolve()
           return
         )
+
         return
       return
     )

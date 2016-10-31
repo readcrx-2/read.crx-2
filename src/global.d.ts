@@ -3,3 +3,7 @@
 namespace UI {
   declare var Animate:any;
 }
+
+interface XMLHttpRequest {
+  responseURL: string;
+}

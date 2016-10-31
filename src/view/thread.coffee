@@ -77,12 +77,12 @@ app.boot "/view/thread.html", ->
     return if $popup[0].children.length is 0
     $popup.find("article").removeClass("last read received")
     #ポップアップ内のサムネイルの遅延ロードを解除
-    $popup.find("img[data-src]").each ->
+    $popup.find("img[data-src], video[data-src]").each ->
       $view.data("lazyload").immediateLoad(@)
       return
     app.defer ->
       # マウスオーバーによるズームの設定
-      $popup.find("img.image").each ->
+      $popup.find("img.image, video").each ->
         app.view_thread._setupHoverZoom(@)
       # popupの表示
       popupView.show($popup[0], e.clientX, e.clientY, that)
@@ -141,7 +141,7 @@ app.boot "/view/thread.html", ->
         on_scroll = true
         return
 
-      # 可変サイズの画像が存在している場合は1ページ目の画像チェック用を実行する
+      # 可変サイズの画像が存在している場合は1ページ目の画像チェックを実行する
       if app.config.get("image_height_fix") is "off"
         threadContent.checkImageExists(true)
 
@@ -261,7 +261,7 @@ app.boot "/view/thread.html", ->
         $menu.find(".set_image_blur").remove()
         $menu.find(".reset_image_blur").remove()
       else
-        bflg = Array.from($article.find(".thumbnail")).some((ele) ->
+        bflg = Array.from($article.find(".thumbnail[media-type='image'], .thumbnail[media-type='video']")).some((ele) ->
           return ele.classList.contains("image_blur")
         )
         if bflg
@@ -374,12 +374,12 @@ app.boot "/view/thread.html", ->
 
       # 画像をぼかす
       else if $this.hasClass("set_image_blur")
-        for thumb in $res.find(".thumbnail")
+        for thumb in $res.find(".thumbnail[media-type='image'], .thumbnail[media-type='video']")
           threadContent.setImageBlur(thumb, true)
 
       # 画像のぼかしを解除する
       else if $this.hasClass("reset_image_blur")
-        for thumb in $res.find(".thumbnail")
+        for thumb in $res.find(".thumbnail[media-type='image'], .thumbnail[media-type='video']")
           threadContent.setImageBlur(thumb, false)
 
       $this.parent().remove()
@@ -567,6 +567,40 @@ app.boot "/view/thread.html", ->
     .on "dblclick",".message", (e) ->
       if app.config.get("dblclick_reload") is "on" and !$(e.target).is("a, .thumbnail")
         $view.trigger "request_reload"
+      return
+
+    # VIDEOの再生/一時停止
+    .on "click", ".thumbnail > video", (e) ->
+      @preload = "auto" if @preload is "metadata"
+      if @paused
+        @play()
+      else
+        @pause()
+      return
+
+    # VIDEO再生中はマウスポインタを消す
+    .on "mouseenter", ".thumbnail > video", (e) ->
+      @addEventListener("play", (evt) ->
+        app.view_thread._controlVideoCursor(@, evt.type)
+        return
+      , false)
+      @addEventListener("timeupdate", (evt) ->
+        app.view_thread._controlVideoCursor(@, evt.type)
+        return
+      , false)
+      @addEventListener("pause", (evt) ->
+        app.view_thread._controlVideoCursor(@, evt.type)
+        return
+      , false)
+      @addEventListener("ended", (evt) ->
+        app.view_thread._controlVideoCursor(@, evt.type)
+        return
+      , false)
+      return
+
+    # マウスポインタのリセット
+    .on "mousemove", ".thumbnail > video", (e) ->
+      app.view_thread._controlVideoCursor(@, e.type)
       return
 
   #クイックジャンプパネル
@@ -784,7 +818,7 @@ app.boot "/view/thread.html", ->
     return
 
   # サムネイルロード時の追加処理
-  $view.on "lazyload-load", ".thumbnail > a > img.image", ->
+  $view.on "lazyload-load", ".thumbnail > a > img.image, .thumbnail > video", ->
     # Lazyloadを実行させるためにスクロールを発火
     if app.config.get("image_height_fix") is "off"
       $content.triggerHandler("scroll")
@@ -793,12 +827,16 @@ app.boot "/view/thread.html", ->
     return
 
   # 逆スクロール時の位置合わせ
-  $view.on "lazyload-load-reverse", ".thumbnail > a > img.image", ->
+  $view.on "lazyload-load-reverse", ".thumbnail > a > img.image, .thumbnail > video", ->
     if app.config.get("image_height_fix") is "off"
       content = $content[0]
-      imgHeight = @offsetHeight
-      imgHeight -= 50   # loading.webp
-      content.scrollTop += imgHeight
+      mediaHeight = @offsetHeight
+      switch @tagName
+        when "IMG"
+          mediaHeight -= 50   # loading.webp
+        when "VIDEO"
+          mediaHeight -= 150  # default Height
+      content.scrollTop += mediaHeight
     # マウスオーバーによるズームの設定
     app.view_thread._setupHoverZoom(@)
     return
@@ -982,16 +1020,38 @@ app.view_thread._read_state_manager = ($view) ->
       return
 
 # マウスオーバーによるズームの設定
-app.view_thread._setupHoverZoom = (img) ->
+app.view_thread._setupHoverZoom = (media) ->
   zoomFlg = false
-  if app.config.get("hover_zoom_image") is "on" and img.tagName is "IMG"
+  if app.config.get("hover_zoom_image") is "on" and media.tagName is "IMG"
     zoomRatio = app.config.get("zoom_ratio_image") + "%"
     zoomFlg = true
+  else if app.config.get("hover_zoom_video") is "on" and media.tagName is "VIDEO"
+    zoomRatio = app.config.get("zoom_ratio_video") + "%"
+    zoomFlg = true
   if zoomFlg
-    $(img).hover ->
-      $(img.closest(".thumbnail")).addClass("zoom")
-      $(img).css("zoom", zoomRatio)
+    $(media).hover ->
+      $(media.closest(".thumbnail")).addClass("zoom")
+      $(media).css("zoom", zoomRatio)
     , ->
-      $(img.closest(".thumbnail")).removeClass("zoom")
-      $(img).css("zoom", "normal")
+      $(media.closest(".thumbnail")).removeClass("zoom")
+      $(media).css("zoom", "normal")
+  return
+
+# VIDEO再生中のマウスポインタ制御
+app.view_thread._videoPlayTime = 0
+app.view_thread._controlVideoCursor = (v, act) ->
+  switch act
+    when "play"
+      app.view_thread._videoPlayTime = Date.now()
+    when "timeupdate"
+      return if v.style.cursor is "none"
+      if Date.now() - app.view_thread._videoPlayTime > 2000
+        v.style.cursor = "none"
+    when "pause", "ended"
+      v.style.cursor = "auto"
+      app.view_thread._videoPlayTime = 0
+    when "mousemove"
+      return if app.view_thread._videoPlayTime is 0
+      v.style.cursor = "auto"
+      app.view_thread._videoPlayTime = Date.now()
   return

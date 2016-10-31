@@ -141,14 +141,16 @@ header {
   display: inline-block;
   margin: 10px;
 
-  > a {
+  > a, > audio, > video {
     $a-padding: 3px;
     position: relative;
     display: inline-block;
-    background-color: white;
     padding: $a-padding;
     box-shadow: 0 1px 3px 0px rgba(black, 0.4);
+  }
 
+  > a {
+    background-color: white;
     > img.image {
       display: block;
       &[src="/img/loading.webp"] {
@@ -171,6 +173,9 @@ header {
       background: hsl(0, 0%, 97.5%);
       border-radius: 2px;
     }
+  }
+  > video, > audio {
+    background-color: #666666;
   }
   &.zoom {
      z-index: $z-index-thumnail-zoom;

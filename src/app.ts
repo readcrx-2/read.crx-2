@@ -261,6 +261,8 @@ namespace app {
       ["image_blur_word", ".*[^ァ-ヺ^ー]グロ([^ァ-ヺ^ー].*|$)|.*死ね.*"],
       ["image_width", "150"],
       ["image_height", "100"],
+      ["hover_zoom_image", "off"],
+      ["zoom_ratio_image", "200"],
       ["image_height_fix", "on"],
       ["delay_scroll_time", "600"],
       ["aa_font", "aa"],

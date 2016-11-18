@@ -4,18 +4,19 @@
 namespace UI {
   "use strict";
 
-  interface ImagePosition {
+  interface MediaPosition {
     top: number;
     offsetHeight: number;
   }
+  type HTMLMediaElement = HTMLImageElement | HTMLAudioElement | HTMLVideoElement;
 
   export class LazyLoad {
     static UPDATE_INTERVAL = 200;
 
     container: HTMLElement;
     private scroll = false;
-    private imgs: HTMLImageElement[] = [];
-    private imgPlaceTable = new Map<HTMLImageElement, ImagePosition>();
+    private medias: HTMLMediaElement[] = [];
+    private mediaPlaceTable = new Map<HTMLMediaElement, MediaPosition>();
     private updateInterval: number = null;
     private pause: boolean = false;
     private lastScrollTop: number = -1;
@@ -29,7 +30,7 @@ namespace UI {
       $(this.container).on("scrollfinish", this.onScrollFinish.bind(this));
       $(this.container).on("searchstart", this.onSearchStart.bind(this));
       $(this.container).on("searchfinish", this.onSearchFinish.bind(this));
-      $(this.container).on("immediateload", "img", this.onImmediateLoad.bind(this));
+      $(this.container).on("immediateload", "img, video", this.onImmediateLoad.bind(this));
       this.scan();
     }
 
@@ -38,12 +39,14 @@ namespace UI {
     }
 
     private onResize (): void {
-      this.imgPlaceTable.clear();
+      this.mediaPlaceTable.clear();
     }
 
-    public immediateLoad (img: HTMLImageElement): void {
-      if (img.getAttribute("data-src") === null) return;
-      this.load(img);
+    public immediateLoad (media: HTMLMediaElement): void {
+      if (media.tagName === "IMG" || media.tagName === "VIDEO") {
+        if (media.getAttribute("data-src") === null) return;
+        this.load(media);
+      }
     }
 
     // スクロール中に無駄な画像ロードが発生するのを防止する
@@ -62,7 +65,7 @@ namespace UI {
 
     // 検索による表示位置の変更に対応するため、テーブルをクリアしてから再開する
     private onSearchFinish(): void {
-      this.imgPlaceTable.clear();
+      this.mediaPlaceTable.clear();
       this.pause = false;
     }
 
@@ -70,15 +73,18 @@ namespace UI {
       this.immediateLoad(e.target);
     }
 
-    private load (img: HTMLImageElement, reverse: boolean = false): void {
+    private load (media: HTMLMediaElement, reverse: boolean = false): void {
       var newImg: HTMLImageElement, attr: Attr, attrs: Attr[];
+      var imgFlg: boolean = (media.tagName === "IMG");
+      var faviconFlg: boolean = media.classList.contains("favicon");
+
       // immediateLoadにて処理済みのものを除外する
-      if (img.getAttribute("data-src") === null) return;
+      if (media.getAttribute("data-src") === null) return;
 
       newImg = document.createElement("img");
 
-      if (!img.classList.contains("favicon")) {
-        attrs = <Attr[]>Array.from(img.attributes)
+      if (imgFlg && !faviconFlg) {
+        attrs = <Attr[]>Array.from(media.attributes)
         for (attr of attrs) {
           if (attr.name !== "data-src") {
             newImg.setAttribute(attr.name, attr.value);
@@ -87,7 +93,7 @@ namespace UI {
       }
 
       $(newImg).one("load error", function (e) {
-        $(img).replaceWith(this);
+        $(media).replaceWith(this);
 
         if (e.type === "load") {
           if (reverse === false) {
@@ -98,14 +104,26 @@ namespace UI {
           UI.Animate.fadeIn(this);
         }
       });
+      $(media).one("loadedmetadata error", function (e) {
+        if (imgFlg && (faviconFlg || media.classList.contains("loading"))) {
+          return;
+        }
+        if (e.type !== "error") {
+          if (reverse === false) {
+            $(this).trigger("lazyload-load");
+          } else {
+            $(this).trigger("lazyload-load-reverse");
+          }
+        }
+      });
 
-      if (!img.classList.contains("favicon")) {
-        img.src = "/img/loading.webp";
-        newImg.src = img.getAttribute("data-src");
+      if (imgFlg && !faviconFlg) {
+        media.src = "/img/loading.webp";
+        newImg.src = media.getAttribute("data-src");
       } else {
-        img.src = img.getAttribute("data-src");
+        media.src = media.getAttribute("data-src");
       }
-      img.removeAttribute("data-src");
+      media.removeAttribute("data-src");
     }
 
     private watch (): void {
@@ -127,8 +145,8 @@ namespace UI {
     }
 
     scan (): void {
-      this.imgs = Array.prototype.slice.call(this.container.querySelectorAll("img[data-src]"));
-      if (this.imgs.length > 0) {
+      this.medias = Array.prototype.slice.call(this.container.querySelectorAll("img[data-src], audio[data-src], video[data-src]"));
+      if (this.medias.length > 0) {
         this.update();
         this.watch();
       }
@@ -137,32 +155,32 @@ namespace UI {
       }
     }
 
-    private getImagePosition (img: HTMLImageElement): ImagePosition {
-      var current: HTMLImageElement;
-      var pos: ImagePosition = {top: 0, offsetHeight: 0};
+    private getMediaPosition (media: HTMLMediaElement): MediaPosition {
+      var current: HTMLMediaElement;
+      var pos: MediaPosition = {top: 0, offsetHeight: 0};
 
       // 高さが固定の場合のみテーブルの値を使用する
       if (
         app.config.get("image_height_fix") === "on" &&
-        this.imgPlaceTable.has(img)
+        this.mediaPlaceTable.has(media)
       ) {
-        pos = this.imgPlaceTable.get(img);
+        pos = this.mediaPlaceTable.get(media);
       } else {
         pos.top = 0;
-        current = img;
+        current = media;
         while (current !== null && current !== this.container) {
           pos.top += current.offsetTop;
-          current = <HTMLImageElement>current.offsetParent;
+          current = <HTMLMediaElement>current.offsetParent;
         }
-        pos.offsetHeight = img.offsetHeight;
-        this.imgPlaceTable.set(img, pos);
+        pos.offsetHeight = media.offsetHeight;
+        this.mediaPlaceTable.set(media, pos);
       }
       return pos;
     }
 
     update (): void {
       var scrollTop: number, clientHeight: number, reverseMode: boolean = false;
-      var pos: ImagePosition;
+      var pos: MediaPosition;
 
       scrollTop = this.container.scrollTop;
       clientHeight = this.container.clientHeight;
@@ -175,15 +193,23 @@ namespace UI {
       }
       this.lastScrollTop = scrollTop;
 
-      this.imgs = this.imgs.filter((img: HTMLImageElement) => {
+      this.medias = this.medias.filter((media: HTMLMediaElement) => {
 
         // 逆スクロール時の範囲チェック(lazyload-load-reverseを優先させるため先に実行)
         if (reverseMode === true) {
           var bottom: number, targetHeight: number;
 
-          targetHeight = parseInt(app.config.get("image_height"));
+          targetHeight = 0;
+          switch (media.tagName) {
+            case "IMG":
+              targetHeight = parseInt(app.config.get("image_height"));
+              break;
+            case "VIDEO":
+              targetHeight = parseInt(app.config.get("video_height"));
+              break;
+          }
 
-          pos = this.getImagePosition(img);
+          pos = this.getMediaPosition(media);
           if (pos.top === 0) return true;
           bottom = pos.top + targetHeight;
 
@@ -191,26 +217,26 @@ namespace UI {
             bottom > this.container.scrollTop &&
             bottom < this.container.scrollTop + this.container.clientHeight
           ) {
-            this.load(img, true);
+            this.load(media, true);
             return false;
           }
         }
 
-        if (img.offsetWidth !== 0) { //imgが非表示の時はロードしない
-          pos = this.getImagePosition(img);
+        if (media.offsetWidth !== 0) {  //imgが非表示の時はロードしない
+          pos = this.getMediaPosition(media);
 
           if (
             !(pos.top + pos.offsetHeight < scrollTop ||
             scrollTop + clientHeight < pos.top)
           ) {
-            this.load(img);
+            this.load(media);
             return false;
           }
         }
         return true;
       });
 
-      if (this.imgs.length === 0) {
+      if (this.medias.length === 0) {
         this.unwatch();
       }
     }

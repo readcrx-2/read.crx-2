@@ -475,6 +475,7 @@ app.main = ->
 
   #更新通知
   chrome.runtime.onUpdateAvailable.addListener( ({version}) ->
+    return if version is app.manifest.version
     app.message.send "notify", {
       html: """
         #{app.manifest.name} の #{version} が利用可能です

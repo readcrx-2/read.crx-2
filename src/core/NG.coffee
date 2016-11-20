@@ -70,6 +70,7 @@ class app.NG
           ngElement =
             start: m[1]
             finish: m[2]
+          ngWord = m[3]
         # キーワードごとのNG処理
         if ngWord.startsWith("RegExp:")
           ngElement =

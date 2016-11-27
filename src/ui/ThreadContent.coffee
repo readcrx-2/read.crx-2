@@ -152,6 +152,15 @@ class UI.ThreadContent
       tmpResNum++
       tmpTarget = @container.children[tmpResNum - 1]
 
+    # 遅延スクロールの設定
+    if loadFlag or @_timeoutID isnt 0
+      clearTimeout(@_timeoutID) if @_timeoutID isnt 0
+      delayScrollTime = parseInt(app.config.get("delay_scroll_time"))
+      @_timeoutID = setTimeout( =>
+        @_timeoutID = 0
+        @_reScrollTo()
+      , delayScrollTime)
+
     return loadFlag
 
   ###*
@@ -184,13 +193,7 @@ class UI.ThreadContent
 
       # 遅延スクロールの設定
       if loadFlag or @_timeoutID isnt 0
-        clearTimeout(@_timeoutID) if @_timeoutID isnt 0
         @container.scrollTop = target.offsetTop + offset
-        delayScrollTime = parseInt(app.config.get("delay_scroll_time"))
-        @_timeoutID = setTimeout( =>
-          @_timeoutID = 0
-          @_reScrollTo()
-        , delayScrollTime)
         return
       return if rerun and @container.scrollTop is target.offsetTop + offset
 

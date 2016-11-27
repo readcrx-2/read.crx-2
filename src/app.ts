@@ -275,6 +275,8 @@ namespace app {
       ["zoom_ratio_video", "200"],
       ["image_height_fix", "on"],
       ["delay_scroll_time", "600"],
+      ["expand_short_url", "none"],
+      ["expand_short_url_timeout", "3000"],
       ["aa_font", "aa"],
       ["popup_trigger", "click"],
       ["ngwords", ""],

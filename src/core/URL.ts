@@ -1,3 +1,6 @@
+///<reference path="HTTP.ts" />
+///<reference path="../app.ts" />
+
 namespace app {
   export namespace URL {
     export const CH_BOARD_REG = /^(http:\/\/[\w\.]+\/test\/read\.cgi\/\w+\/\d+).*?$/;
@@ -127,6 +130,38 @@ namespace app {
 
       return str.slice(1);
     }
+
+    export const SHORT_URL_REG = /^h?ttps?:\/\/(?:amba\.to|amzn\.to|bit\.ly|buff\.ly|cas\.st|dlvr\.it|fb\.me|g\.co|goo\.gl|htn\.to|ift\.tt|is\.gd|itun\.es|j\.mp|jump\.cx|ow\.ly|p\.tl|prt\.nu|snipurl\.com|spoti\.fi|t\.co|tiny\.cc|tinyurl\.com|tl\.gd|tr\.im|trib\.al|url\.ie|urx\.nu|urx2\.nu|urx3\.nu|ur0\.pw|wk\.tk|xrl\.us)\/.+/;
+
+    export function expandShortURL (a: HTMLElement, shortUrl: string): any {
+      var dfd = $.Deferred();
+      var finalUrl: string = "";
+
+      var req = new app.HTTP.Request("HEAD", shortUrl);
+      req.timeout = parseInt(app.config.get("expand_short_url_timeout"));
+
+      req.send((res) => {
+        if (res.status === 0 || res.status >= 400) {
+          return dfd.resolve(a, null);
+        }
+        finalUrl = res.responseURL;
+        // 無限ループの防止
+        if (finalUrl === shortUrl) {
+          return dfd.resolve(a, null);
+        }
+        // 取得したURLが短縮URLだった場合は再帰呼出しする
+        if (SHORT_URL_REG.test(finalUrl)) {
+          expandShortURL(a, finalUrl).done( (a, finalUrl) => {
+            return dfd.resolve(a, finalUrl);
+          });
+        // 短縮URL以外なら終了
+        } else {
+          return dfd.resolve(a, finalUrl);
+        }
+      });
+
+      return dfd.promise();
+    }
   }
 }
 
@@ -152,5 +187,7 @@ namespace app {
     export var parse_query = app.URL.parseQuery;
     export var parse_hashquery = app.URL.parseHashQuery;
     export var build_param = app.URL.buildQueryString;
+    export const SHORT_URL_REG = app.URL.SHORT_URL_REG;
+    export var expandShortURL = app.URL.expandShortURL;
   }
 }

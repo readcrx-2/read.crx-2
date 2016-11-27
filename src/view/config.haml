@@ -243,6 +243,23 @@
             %input.direct(type="number" name="delay_scroll_time" min="0" max="5000")ms
 
       %section
+        %h2 短縮URLの展開
+        %div
+          %label
+            %input.direct(name="expand_short_url" type="radio" value="none" checked)
+            何もしない
+          %label
+            %input.direct(name="expand_short_url" type="radio" value="inline")
+            本文内に表示する
+          %label
+            %input.direct(name="expand_short_url" type="radio" value="popup")
+            マウスを重ねた時にポップアップする
+          %br
+          %label
+            タイムアウト:
+            %input.direct(type="number" name="expand_short_url_timeout" min="0")ms
+
+      %section
         %h2 アスキーアート表示
         %div
           %label

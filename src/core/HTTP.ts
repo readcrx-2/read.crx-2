@@ -1,3 +1,5 @@
+///<reference path="../global.d.ts" />
+
 namespace app.HTTP {
   "use strict";
 
@@ -70,7 +72,7 @@ namespace app.HTTP {
 
         resonseHeaders = Request.parseHTTPHeader(xhr.getAllResponseHeaders());
 
-        callback(new Response(xhr.status, resonseHeaders, xhr.responseText));
+        callback(new Response(xhr.status, resonseHeaders, xhr.responseText, xhr.responseURL));
       });
 
       xhr.addEventListener("timeout", () => {
@@ -115,7 +117,8 @@ namespace app.HTTP {
     constructor (
       public status:number,
       public headers:{[index:string]:string;} = {},
-      public body:string = null
+      public body:string = null,
+      public responseURL: string = null
     ) {
     }
   }

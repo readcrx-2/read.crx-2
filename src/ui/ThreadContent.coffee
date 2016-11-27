@@ -53,6 +53,24 @@ class UI.ThreadContent
     ###
     @oneId = null
 
+    ###*
+    @property _lastScrollInfo
+    @type Object
+    @private
+    ###
+    @_lastScrollInfo = {
+      "resNum": 0,
+      "animate": false,
+      "offset": 0
+    }
+
+    ###*
+    @property _timeoutID
+    @type Number
+    @private
+    ###
+    @_timeoutID = 0
+
     try
       @harmfulReg = new RegExp(app.config.get("image_blur_word"))
       @findHarmfulFlag = true
@@ -81,12 +99,74 @@ class UI.ThreadContent
     return d.promise()
 
   ###*
+  @method _reScrollTo
+  @private
+  ###
+  _reScrollTo: ->
+    @scrollTo(@_lastScrollInfo.resNum, @_lastScrollInfo.animate, @_lastScrollInfo.offset, true)
+    return
+
+  ###*
+  @method checkImageExists
+  @param {Boolean} checkOnly
+  @param {Number} [resNum=1]
+  @param {Number} [offset=0]
+  @return {Boolean} loadFlag
+  ###
+  checkImageExists: (checkOnly, resNum = 1, offset = 0) ->
+    loadFlag = false
+    target = @container.children[resNum - 1]
+
+    viewTop = target.offsetTop + offset
+    viewBottom = viewTop + @container.offsetHeight
+    if viewBottom > @container.scrollHeight
+      viewBottom = @container.scrollHeight
+      viewTop = viewBottom - @container.offsetHeight
+
+    # 遅延ロードの解除
+    loadImageByElement = (targetElement) =>
+      qStr = if checkOnly then "img, video" else "img[data-src], video[data-src]"
+      for media in targetElement.querySelectorAll(qStr)
+        loadFlag = true
+        continue if checkOnly or media.getAttribute("data-src") is null
+        if media.classList.contains("favicon")
+          media.src = media.getAttribute("data-src")
+          media.removeAttribute("data-src")
+        else
+          $(media).trigger("immediateload")
+      return
+
+    # 表示範囲内の要素をスキャンする
+    # (上方)
+    tmpResNum = resNum
+    tmpTarget = target
+    while tmpTarget?.offsetTop + tmpTarget?.offsetHeight > viewTop and tmpResNum > 0
+      loadImageByElement(tmpTarget)
+      tmpResNum--
+      tmpTarget = @container.children[tmpResNum - 1] if tmpResNum > 0
+    # (下方)
+    tmpResNum = resNum + 1
+    tmpTarget = @container.children[resNum]
+    while tmpTarget?.offsetTop < viewBottom and tmpTarget
+      loadImageByElement(tmpTarget)
+      tmpResNum++
+      tmpTarget = @container.children[tmpResNum - 1]
+
+    return loadFlag
+
+  ###*
   @method scrollTo
   @param {Number} resNum
   @param {Boolean} [animate=false]
   @param {Number} [offset=0]
+  @param {Boolean} [rerun=false]
   ###
-  scrollTo: (resNum, animate = false, offset = 0) ->
+  scrollTo: (resNum, animate = false, offset = 0, rerun = false) ->
+    @_lastScrollInfo.resNum = resNum
+    @_lastScrollInfo.animate = animate
+    @_lastScrollInfo.offset = offset
+    loadFlag = false
+
     target = @container.children[resNum - 1]
 
     # 検索中で、ターゲットが非ヒット項目で非表示の場合、スクロールを中断
@@ -98,6 +178,23 @@ class UI.ThreadContent
       target = $(target).prevAll(":not(.ng)")[0] or $(target).nextAll(":not(.ng)")[0]
 
     if target
+      # 可変サイズの画像が存在している場合は画像を事前にロードする
+      if app.config.get("image_height_fix") is "off" and not rerun
+        loadFlag = @checkImageExists(false, resNum, offset)
+
+      # 遅延スクロールの設定
+      if loadFlag or @_timeoutID isnt 0
+        clearTimeout(@_timeoutID) if @_timeoutID isnt 0
+        @container.scrollTop = target.offsetTop + offset
+        delayScrollTime = parseInt(app.config.get("delay_scroll_time"))
+        @_timeoutID = setTimeout( =>
+          @_timeoutID = 0
+          @_reScrollTo()
+        , delayScrollTime)
+        return
+      return if rerun and @container.scrollTop is target.offsetTop + offset
+
+      # スクロールの実行
       if animate
         do =>
           @_$container.trigger("scrollstart")
@@ -592,60 +689,192 @@ class UI.ThreadContent
 
       #サムネイル追加処理
       do =>
-        addThumbnail = (sourceA, thumbnailPath, referrer, cookieStr) ->
+        addThumbnail = (sourceA, thumbnailPath, mediaType = "image", referrer, cookieStr) ->
           sourceA.classList.add("has_thumbnail")
-          article = sourceA.closest("article")
-          article.classList.add("has_image")
 
           thumbnail = document.createElement("div")
           thumbnail.className = "thumbnail"
+          thumbnail.setAttribute("media-type", mediaType)
 
-          thumbnailLink = document.createElement("a")
-          thumbnailLink.href = app.safe_href(sourceA.href)
-          thumbnailLink.target = "_blank"
+          if mediaType in ["image", "video"]
+            article = sourceA.closest("article")
+            article.classList.add("has_image")
+            # グロ画像に対するぼかし処理
+            if article.hasClass("has_blur_word") and app.config.get("image_blur") is "on"
+              thumbnail.className += " image_blur"
+              v = app.config.get("image_blur_length")
+              webkitFilter = "blur(#{v}px)"
+            else
+              webkitFilter = "none"
+
+          switch mediaType
+            when "image"
+              thumbnailLink = document.createElement("a")
+              thumbnailLink.href = app.safe_href(sourceA.href)
+              thumbnailLink.target = "_blank"
+
+              thumbnailImg = document.createElement("img")
+              thumbnailImg.className = "image"
+              thumbnailImg.src = "/img/dummy_1x1.webp"
+              thumbnailImg.setAttribute("data-src", thumbnailPath)
+              thumbnailImg.style.WebkitFilter = webkitFilter
+              thumbnailImg.style.maxWidth = app.config.get("image_width") + "px"
+              thumbnailImg.style.maxHeight = app.config.get("image_height") + "px"
+              if referrer? then thumbnailImg.setAttribute("data-referrer", referrer)
+              if cookieStr? then thumbnailImg.setAttribute("data-cookie", cookieStr)
+              thumbnailLink.appendChild(thumbnailImg)
+
+              thumbnailFavicon = document.createElement("img")
+              thumbnailFavicon.className = "favicon"
+              thumbnailFavicon.src = "/img/dummy_1x1.webp"
+              thumbnailFavicon.setAttribute("data-src", "https://www.google.com/s2/favicons?domain=#{app.url.getDomain(sourceA.href)}")
+              thumbnailLink.appendChild(thumbnailFavicon)
+
+            when "audio", "video"
+              thumbnailLink = document.createElement(mediaType)
+              thumbnailLink.src = ""
+              thumbnailLink.setAttribute("data-src", thumbnailPath)
+              thumbnailLink.preload = "metadata"
+              switch mediaType
+                when "audio"
+                  thumbnailLink.style.width = app.config.get("audio_width") + "px"
+                  thumbnailLink.setAttribute("controls", "")
+                when "video"
+                  thumbnailLink.style.WebkitFilter = webkitFilter
+                  thumbnailLink.style.maxWidth = app.config.get("video_width") + "px"
+                  thumbnailLink.style.maxHeight = app.config.get("video_height") + "px"
+                  if app.config.get("video_controls") is "on"
+                    thumbnailLink.setAttribute("controls", "")
+
           thumbnail.appendChild(thumbnailLink)
 
-          thumbnailImg = document.createElement("img")
-          thumbnailImg.className = "image"
-          thumbnailImg.src = "/img/dummy_1x1.webp"
-          thumbnailImg.setAttribute("data-src", thumbnailPath)
-          #グロ画像に対するぼかし処理
-          if article.hasClass("has_blur_word") and app.config.get("image_blur") is "on"
-            thumbnail.className += " image_blur"
-            v = app.config.get("image_blur_length")
-            thumbnailImg.style.WebkitFilter = "blur(#{v}px)"
-          if referrer? then thumbnailImg.setAttribute("data-referrer", referrer)
-          if cookieStr? then thumbnailImg.setAttribute("data-cookie", cookieStr)
-          thumbnailLink.appendChild(thumbnailImg)
-
-          thumbnailFavicon = document.createElement("img")
-          thumbnailFavicon.className = "favicon"
-          thumbnailFavicon.src = "/img/dummy_1x1.webp"
-          thumbnailFavicon.setAttribute("data-src", "https://www.google.com/s2/favicons?domain=#{app.url.getDomain(sourceA.href)}")
-          thumbnailLink.appendChild(thumbnailFavicon)
+          # 高さ固定の場合
+          if app.config.get("image_height_fix") is "on"
+            switch mediaType
+              when "image"
+                h = parseInt(app.config.get("image_height"))
+              when "video"
+                h = parseInt(app.config.get("video_height"))
+              else
+                h = 100   # 最低高
+            thumbnail.style.height = h + "px"
 
           sib = sourceA
           while true
             pre = sib
             sib = pre.nextSibling
-            if sib is null or sib.nodeName is "BR"
+            if !sib? or sib.nodeName is "BR"
               if sib?.nextSibling?.classList?.contains("thumbnail")
                 continue
               if not pre.classList?.contains("thumbnail")
                 sourceA.parentNode.insertBefore(document.createElement("br"), sib)
               sourceA.parentNode.insertBefore(thumbnail, sib)
               break
-          null
+          return
 
-        app.util.concurrent(@container.querySelectorAll(".message > a:not(.thumbnail):not(.has_thumbnail)"), (a) ->
-          return app.ImageReplaceDat.do(a, a.href).done( (a, res, err) ->
-            addThumbnail(a, res.text, res.referrer, res.cookie) unless err?
-            return
+        # 展開URL追加処理
+        addExpandedURL = (sourceA, finalUrl) ->
+          sourceA.classList.add("has_expandedURL")
+
+          expandedURL = document.createElement("div")
+          expandedURL.className = "expandedURL"
+          expandedURL.setAttribute("short-url", sourceA.href)
+          if app.config.get("expand_short_url") is "popup"
+            expandedURL.classList.add("hide_data")
+
+          if finalUrl
+            expandedURLLink = document.createElement("a")
+            expandedURLLink.textContent = finalUrl
+            expandedURLLink.href = app.safe_href(finalUrl)
+            expandedURLLink.target = "_blank"
+            expandedURL.appendChild(expandedURLLink)
+          else
+            expandedURL.classList.add("expand_error")
+            expandedURLLink = null
+
+          sib = sourceA
+          while true
+            pre = sib
+            sib = pre.nextSibling
+            if !sib? or sib.nodeName is "BR"
+              if sib?.nextSibling?.classList?.contains("expandedURL")
+                continue
+              if not pre.classList?.contains("expandedURL")
+                sourceA.parentNode.insertBefore(document.createElement("br"), sib)
+              sourceA.parentNode.insertBefore(expandedURL, sib)
+              break
+
+          return expandedURLLink
+
+        # MediaTypeの取得
+        getMediaType = (href, dftValue) ->
+          mediaType = null
+          # Audioの確認
+          if /\.(?:mp3|m4a|wav|oga|spx)(?:[\?#:&].*)?$/.test(href)
+            mediaType = "audio"
+          if (
+            app.config.get("audio_supported_ogg") is "on" and
+            /\.(?:ogg|ogx)(?:[\?#:&].*)?$/.test(href)
+          )
+            mediaType = "audio"
+          # Videoの確認
+          if /\.(?:mp4|m4v|webm|ogv)(?:[\?#:&].*)?$/.test(href)
+            mediaType = "video"
+          if (
+            app.config.get("video_supported_ogg") is "on" and
+            /\.(?:ogg|ogx)(?:[\?#:&].*)?$/.test(href)
+          )
+            mediaType = "video"
+          # 初期値の設定と有効性のチェック
+          switch mediaType
+            when null
+              mediaType = dftValue
+            when "audio"
+              mediaType = null if app.config.get("audio_supported") is "off"
+            when "video"
+              mediaType = null if app.config.get("video_supported") is "off"
+          return mediaType
+
+        checkUrl = (a) ->
+          d2 = $.Deferred()
+          if app.config.get("expand_short_url") isnt "none"
+            if app.url.SHORT_URL_REG.test(a.href)
+              # 短縮URLの展開
+              app.url.expandShortURL(a, a.href).done( (a, finalUrl) ->
+                newLink = addExpandedURL(a, finalUrl)
+                if finalUrl
+                  d2.resolve(newLink, newLink.href)
+                else
+                  d2.resolve(a, a.href)
+                return
+              )
+            else
+              d2.resolve(a, a.href)
+          else
+            d2.resolve(a, a.href)
+          return d2.promise()
+
+        app.util.concurrent(@container.querySelectorAll(
+          ".message > a:not(.thumbnail):not(.has_thumbnail):not(.expandedURL):not(.has_expandedURL)"
+          ), (a) ->
+          checkUrl(a).then( (a, link) ->
+            return app.ImageReplaceDat.do(a, link)
+          ).then( (a, res, err) ->
+            # MediaTypeの設定
+            unless err?
+              href = res.text
+              mediaType = getMediaType(href, "image")
+            else
+              href = a.href
+              mediaType = getMediaType(href, null)
+            # サムネイルの追加
+            addThumbnail(a, href, mediaType, res.referrer, res.cookie) if mediaType
           )
         ).always(=>
           d.resolve()
           return
         )
+
         return
       return
     )
@@ -657,14 +886,14 @@ class UI.ThreadContent
   @parm {Boolean} blurMode
   ###
   setImageBlur: (thumbnail, blurMode) ->
-    img = thumbnail.querySelector("a > img.image")
+    media = thumbnail.querySelector("a > img.image, video")
     if blurMode
       v = app.config.get("image_blur_length")
       thumbnail.classList.add("image_blur")
-      img.style.WebkitFilter = "blur(#{v}px)"
+      media.style.WebkitFilter = "blur(#{v}px)"
     else
       thumbnail.classList.remove("image_blur")
-      img.style.WebkitFilter = "none"
+      media.style.WebkitFilter = "none"
     return
 
   ###*

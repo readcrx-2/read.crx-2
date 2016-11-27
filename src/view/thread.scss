@@ -137,24 +137,22 @@ header {
 }
 
 .thumbnail {
-  $container-height: 100px;
   position: relative;
   display: inline-block;
   margin: 10px;
-  height: $container-height;
 
-  > a {
+  > a, > audio, > video {
     $a-padding: 3px;
     position: relative;
-    display: block;
-    background-color: white;
+    display: inline-block;
     padding: $a-padding;
     box-shadow: 0 1px 3px 0px rgba(black, 0.4);
+  }
 
+  > a {
+    background-color: white;
     > img.image {
       display: block;
-      max-width: 150px;
-      max-height: $container-height - $a-padding * 2;
       &[src="/img/loading.webp"] {
         width: 50px;
         height: 50px;
@@ -176,6 +174,41 @@ header {
       border-radius: 2px;
     }
   }
+  > video, > audio {
+    background-color: #666666;
+  }
+  &.zoom {
+     z-index: $z-index-thumnail-zoom;
+  }
+}
+
+.expandedURL {
+  position: relative;
+  display: inline-block;
+  margin: 5px 10px;
+
+  > a {
+    font-style: italic;
+  }
+  &::before {
+    margin-right: 10px;
+    content: "(" attr(short-url) ") →";
+  }
+  > .thumbnail {
+    margin-left: 30px;
+  }
+  &.expand_error::after {
+    content: "展開できませんでした。";
+  }
+
+  .popup & {
+    display: block;
+    padding: 5px;
+  }
+}
+
+.hide_data {
+  display: none;
 }
 
 .popup {

@@ -4,11 +4,11 @@ window.UI ?= {}
 @namespace UI
 @class PopupView
 @constructor
-@param {Element} default_parent
+@param {Element} defaultParent
 ###
 class UI.PopupView
 
-  constructor: (@default_parent)->
+  constructor: (@defaultParent)->
     ###*
     @property _popupStack
     @type Array
@@ -21,7 +21,7 @@ class UI.PopupView
     @type Object
     @private
     ###
-    @_popupArea = @default_parent.querySelector(".popup_area")
+    @_popupArea = @defaultParent.querySelector(".popup_area")
 
     ###*
     @property _popupStyle
@@ -51,6 +51,27 @@ class UI.PopupView
     ###
     @_currentY = 0
 
+    ###*
+    @property _delayTime
+    @type Number
+    @private
+    ###
+    @_delayTime = parseInt(app.config.get("popup_delay_time"))
+
+    ###*
+    @property _delayTimeoutID
+    @type Number
+    @private
+    ###
+    @_delayTimeoutID = 0
+
+    ###*
+    @property _delayRemoveTimeoutID
+    @type Number
+    @private
+    ###
+    @_delayRemoveTimeoutID = 0
+
     return
 
   ###*
@@ -62,92 +83,124 @@ class UI.PopupView
   ###
   show: (@popup, @mouseX, @mouseY, @source) ->
 
-    #同一ソースからのポップアップが既に有る場合は、処理を中断
+    # 同一ソースからのポップアップが既に有る場合は、処理を中断
     if @_popupStack.length > 0
       popupInfo = @_popupStack[@_popupStack.length - 1]
       return if Object.is(@source, popupInfo.source)
 
-    #sourceがpopup内のものならば、兄弟ノードの削除
-    #それ以外は、全てのノードを削除
+    # sourceがpopup内のものならば、兄弟ノードの削除
+    # それ以外は、全てのノードを削除
     if @source.closest(".popup")
       @source.closest(".popup").classList.add("active")
       @_remove(false)
     else
       @_remove(true)
 
-    #表示位置決定
-    do =>
+    # 待機中の処理があればキャンセルする
+    if @_delayTimeoutID isnt 0
+      clearTimeout(@_delayTimeoutID)
+      @_delayTimeoutID = 0
+
+    # 表示位置の決定
+    setDispPosition = (popupNode) =>
       margin = 20
-      viewTop = @default_parent.querySelector(".nav_bar").offsetHeight
+      viewTop = @defaultParent.querySelector(".nav_bar").offsetHeight
       viewHeight = document.body.offsetHeight - viewTop
 
-      #カーソルの上下左右のスペースを測定
+      # カーソルの上下左右のスペースを測定
       space =
         left: @mouseX
         right: document.body.offsetWidth - @mouseX
         top: @mouseY
         bottom: document.body.offsetHeight - @mouseY
 
-      #通常はカーソル左か右のスペースを用いるが、そのどちらもが狭い場合は上下に配置する
+      # 通常はカーソル左か右のスペースを用いるが、そのどちらもが狭い場合は上下に配置する
       if Math.max(space.left, space.right) > 400
-        #例え右より左が広くても、右に十分なスペースが有れば右に配置
+        # 例え右より左が広くても、右に十分なスペースが有れば右に配置
         if space.right > 350
-          @popup.style.left = "#{space.left + margin}px"
-          @popup.style.maxWidth = "#{document.body.offsetWidth - space.left - margin * 2}px"
+          popupNode.style.left = "#{space.left + margin}px"
+          popupNode.style.maxWidth = "#{document.body.offsetWidth - space.left - margin * 2}px"
         else
-          @popup.style.right = "#{space.right + margin}px"
-          @popup.style.maxWidth = "#{document.body.offsetWidth - space.right - margin * 2}px"
+          popupNode.style.right = "#{space.right + margin}px"
+          popupNode.style.maxWidth = "#{document.body.offsetWidth - space.right - margin * 2}px"
         cursorTop = Math.max(space.top, viewTop + margin * 2)
-        outerHeight = @_getOuterHeight(@popup, true)
+        outerHeight = @_getOuterHeight(popupNode, true)
         if viewHeight > outerHeight + margin
           cssTop = Math.min(cursorTop, document.body.offsetHeight - outerHeight) - margin
         else
           cssTop = viewTop + margin
-        @popup.style.top = "#{cssTop}px"
-        @popup.style.maxHeight = "#{document.body.offsetHeight - cssTop - margin}px"
+        popupNode.style.top = "#{cssTop}px"
+        popupNode.style.maxHeight = "#{document.body.offsetHeight - cssTop - margin}px"
       else
-        @popup.style.left = "#{margin}px"
-        @popup.style.maxWidth = "#{document.body.offsetWidth - margin * 2}px"
-        #例え上より下が広くても、上に十分なスペースが有れば上に配置
+        popupNode.style.left = "#{margin}px"
+        popupNode.style.maxWidth = "#{document.body.offsetWidth - margin * 2}px"
+        # 例え上より下が広くても、上に十分なスペースが有れば上に配置
         if space.top > Math.min(350, space.bottom)
           cssBottom = Math.max(space.bottom, margin)
-          @popup.style.bottom = "#{cssBottom}px"
-          @popup.style.maxHeight = "#{viewHeight - cssBottom - margin}px"
+          popupNode.style.bottom = "#{cssBottom}px"
+          popupNode.style.maxHeight = "#{viewHeight - cssBottom - margin}px"
         else
           cssTop = document.body.offsetHeight - space.bottom + margin
-          @popup.style.top = "#{cssTop}px"
-          @popup.style.maxHeight = "#{viewHeight - cssTop - margin}px"
+          popupNode.style.top = "#{cssTop}px"
+          popupNode.style.maxHeight = "#{viewHeight - cssTop - margin}px"
       return
 
     # マウス座標の監視
     if @_popupStack.length is 0
       @_currentX = @mouseX
       @_currentY = @mouseY
-      @default_parent.addEventListener("mousemove", (e) => @_on_mousemove(e))
+      @defaultParent.addEventListener("mousemove", (e) => @_onMouseMove(e))
 
-    # ノードの設定
-    @source.classList.add("popup_source")
-    @source.setAttribute("stack-index", @_popupStack.length)
-    @source.addEventListener("mouseenter", (e) => @_on_mouseenter(e.currentTarget))
-    @source.addEventListener("mouseleave", (e) => @_on_mouseleave(e.currentTarget))
-    @popup.classList.add("popup")
-    @popup.setAttribute("stack-index", @_popupStack.length)
-    @popup.addEventListener("mouseenter", (e) => @_on_mouseenter(e.currentTarget))
-    @popup.addEventListener("mouseleave", (e) => @_on_mouseleave(e.currentTarget))
+    # 新規ノードの設定
+    setupNewNode = (sourceNode, popupNode) =>
+      # 表示位置の決定
+      setDispPosition(popupNode)
 
-    # リンク情報の保管
-    popupInfo =
-      source: @source
-      popup: @popup
-    @_popupStack.push(popupInfo)
+      # ノードの設定
+      sourceNode.classList.add("popup_source")
+      sourceNode.setAttribute("stack-index", @_popupStack.length)
+      sourceNode.addEventListener("mouseenter", (e) => @_onMouseEnter(e.currentTarget))
+      sourceNode.addEventListener("mouseleave", (e) => @_onMouseLeave(e.currentTarget))
+      popupNode.classList.add("popup")
+      popupNode.setAttribute("stack-index", @_popupStack.length)
+      popupNode.addEventListener("mouseenter", (e) => @_onMouseEnter(e.currentTarget))
+      popupNode.addEventListener("mouseleave", (e) => @_onMouseLeave(e.currentTarget))
 
-    # popupの表示
-    @_popupArea.appendChild(popupInfo.popup)
+      # リンク情報の保管
+      popupInfo =
+        source: sourceNode
+        popup: popupNode
+      @_popupStack.push(popupInfo)
 
-    # ノードのアクティブ化
-    setTimeout( =>
-      @_activateNode()
-    , 0)
+      return
+
+    # 即時表示の場合
+    if @_delayTime < 100
+      # 新規ノードの設定
+      setupNewNode(@source, @popup)
+      # popupの表示
+      @_popupArea.appendChild(@popup)
+      # ノードのアクティブ化
+      app.defer =>
+        @_activateNode()
+        return
+
+    # 遅延表示の場合
+    else
+      do (sourceNode = @source, popupNode = @popup) =>
+        @_delayTimeoutID = setTimeout( =>
+          @_delayTimeoutID = 0
+          # マウス座標がポップアップ元のままの場合のみ実行する
+          elm = document.elementFromPoint(@_currentX, @_currentY)
+          if Object.is(elm, sourceNode)
+            # 新規ノードの設定
+            setupNewNode(sourceNode, popupNode)
+            # ノードのアクティブ化
+            sourceNode.classList.add("active")
+            # popupの表示
+            @_popupArea.appendChild(popupNode)
+        , @_delayTime)
+        return
 
     return
 
@@ -159,29 +212,45 @@ class UI.PopupView
     while @_popupStack.length > 0
       popupInfo = @_popupStack[@_popupStack.length - 1]
       # 末端の非アクティブ・ノードを選択
-      break if forceRemove is false and
-              (popupInfo.source.classList.contains("active") or
-              popupInfo.popup.classList.contains("active"))
+      break if (
+        !forceRemove and
+        (
+          popupInfo.source.classList.contains("active") or
+          popupInfo.popup.classList.contains("active")
+        )
+      )
       # 該当ノードの除去
-      popupInfo.source.removeEventListener("mouseenter", (e) => @_on_mouseenter(e.currentTarget))
-      popupInfo.source.removeEventListener("mouseleave", (e) => @_on_mouseleave(e.currentTarget))
-      popupInfo.popup.removeEventListener("mouseenter", (e) => @_on_mouseenter(e.currentTarget))
-      popupInfo.popup.removeEventListener("mouseleave", (e) => @_on_mouseleave(e.currentTarget))
+      popupInfo.source.removeEventListener("mouseenter", (e) => @_onMouseEnter(e.currentTarget))
+      popupInfo.source.removeEventListener("mouseleave", (e) => @_onMouseLeave(e.currentTarget))
+      popupInfo.popup.removeEventListener("mouseenter", (e) => @_onMouseEnter(e.currentTarget))
+      popupInfo.popup.removeEventListener("mouseleave", (e) => @_onMouseLeave(e.currentTarget))
       popupInfo.source.classList.remove("popup_source")
       popupInfo.source.removeAttribute("stack-index")
       @_popupArea.removeChild(popupInfo.popup)
       @_popupStack.pop()
-      null
+
     # マウス座標の監視終了
     if @_popupStack.length is 0
-      @default_parent.removeEventListener("mousemove", (e) => @_on_mousemove(e))
+      @defaultParent.removeEventListener("mousemove", (e) => @_onMouseMove(e))
     return
 
   ###*
-  @method _on_mouseenter
+  @method _delayRemove
+  @param {Boolean} forceRemove
+  ###
+  _delayRemove: (forceRemove) ->
+    clearTimeout(@_delayRemoveTimeoutID) if @_delayRemoveTimeoutID isnt 0
+    @_delayRemoveTimeoutID = setTimeout( =>
+      @_delayRemoveTimeoutID = 0
+      @_remove(forceRemove)
+    , 300)
+    return
+
+  ###*
+  @method _onMouseEnter
   @param {Object} target
   ###
-  _on_mouseenter: (target) ->
+  _onMouseEnter: (target) ->
     target.classList.add("active")
     # ペア・ノードの非アクティブ化
     stackIndex = target.getAttribute("stack-index")
@@ -193,27 +262,23 @@ class UI.PopupView
     if @_popupStack.length - 1 > stackIndex
       @_popupStack[@_popupStack.length - 1].source.classList.remove("active")
       @_popupStack[@_popupStack.length - 1].popup.classList.remove("active")
-      setTimeout( =>
-        @_remove(false)
-      , 300)
+      @_delayRemove(false)
     return
 
   ###*
-  @method _on_mouseleave
+  @method _onMouseLeave
   @param {Object} target
   ###
-  _on_mouseleave: (target) ->
+  _onMouseLeave: (target) ->
     target.classList.remove("active")
-    setTimeout( =>
-      @_remove(false)
-    , 300)
+    @_delayRemove(false)
     return
 
   ###*
-  @method _on_mousemove
+  @method _onMouseMove
   @param {Object} Event
   ###
-  _on_mousemove: (e) ->
+  _onMouseMove: (e) ->
     @_currentX = e.clientX
     @_currentY = e.clientY
     return
@@ -232,11 +297,9 @@ class UI.PopupView
     else if elm.closest(".popup")
       elm.closest(".popup").classList.add("active")
     else
-      @_popupStack[@_popupStack.length - 1].source.classList.remove("active")
-      @_popupStack[@_popupStack.length - 1].popup.classList.remove("active")
-      setTimeout( =>
-        @_remove(false)
-      , 300)
+      @source.classList.remove("active")
+      @popup.classList.remove("active")
+      @_delayRemove(false)
     return
 
   ###*

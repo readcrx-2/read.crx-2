@@ -279,6 +279,7 @@ namespace app {
       ["expand_short_url_timeout", "3000"],
       ["aa_font", "aa"],
       ["popup_trigger", "click"],
+      ["popup_delay_time", "0"],
       ["ngwords", ""],
       ["ngobj", "[]"],
       ["chain_ng", "off"],

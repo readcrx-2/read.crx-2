@@ -9,6 +9,7 @@ do ->
       "bookmark"
       "bookmarkEntryList"
       "config"
+      "contextMenus"
       "ImageReplaceDat"
       "module"
       "Ninja"

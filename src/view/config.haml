@@ -271,15 +271,21 @@
             通常の文章と同じフォントで表示
 
       %section
-        %h2 ID/参照ポップアップの表示方法
+        %h2 ポップアップ制御
         %div
+          ID/参照ポップアップの表示方法:
           %label
             %input.direct(name="popup_trigger" type="radio" value="click" checked)
             クリック
-          %br
           %label
             %input.direct(name="popup_trigger" type="radio" value="mouseenter")
             マウスを重ねる
+          %br
+          %label
+            ディレイタイム(最小100ms):
+            %input.direct(type="number" name="popup_delay_time" min="0" max="5000")ms
+          %br
+          ポップアップの表示タイミングを遅らせる場合に指定してください。100ms未満の値が指定された場合は即時に表示されます。(アンカー/ID/参照全て共通)
 
       %section
         %h2

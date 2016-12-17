@@ -522,6 +522,7 @@ app.boot "/view/config.html", ["cache", "bbsmenu"], (Cache, BBSMenu) ->
           when "checkbox"then $key.prop("checked", value is "on").trigger("change")
           when "radio" then $key.val([value]).trigger("change")
           when "range" then $key.val([value]).trigger("input")
+          when "number" then $key.val([value]).trigger("input")
           else
             $keyTextArea = $view.find("textarea[name=\"#{key}\"]")
             if $keyTextArea[0] then $keyTextArea.val(value).trigger("input")

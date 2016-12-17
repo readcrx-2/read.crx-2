@@ -277,38 +277,14 @@ app.boot "/view/thread.html", ->
 
     #レスメニュー表示(内容上)
     .on "contextmenu", "article > .message", (e) ->
-      if $(e.target).is("a")
-        return
-      if !e.ctrlKey and getSelection().toString().length isnt 0
-        e.preventDefault()
-
-        $article = $(@).parent()
-        $menu = $(
-          $("#template_res_menu").prop("content").querySelector(".res_menu")
-        ).clone().addClass("hidden").appendTo($article)
-
-        $menu.find(
-          ".copy_id,"+
-          ".add_id_to_ngwords,"+
-          ".copy_slip,"+
-          ".add_slip_to_ngwords,"+
-          ".copy_trip,"+
-          ".jump_to_this,"+
-          ".res_to_this,"+
-          ".res_to_this2,"+
-          ".add_writehistory,"+
-          ".del_writehistory,"+
-          ".toggle_aa_mode,"+
-          ".set_image_blur,"+
-          ".reset_image_blur,"+
-          ".res_permalink"
-        ).remove()
-
-        app.defer ->
-          unless getSelection().toString().length is 0
-            $menu.removeClass("hidden")
-            $.contextmenu($menu, e.clientX, e.clientY)
-        return
+      # 選択範囲をNG登録
+      app.contextMenus.update("add_selection_to_ngwords", {
+        onclick: (info, tab) ->
+          selectedText = getSelection().toString()
+          if selectedText.length > 0
+            app.NG.add(selectedText)
+          return
+      })
       return
 
     #レスメニュー項目クリック
@@ -620,6 +596,43 @@ app.boot "/view/thread.html", ->
 
         frag.querySelector(".expandedURL").classList.remove("hide_data")
         $popup = $("<div>").append(frag)
+      return
+
+    # リンクのコンテキストメニュー
+    .on "contextmenu", ".message > a", (e) ->
+      enableFlg = !(@classList.contains("anchor") or @classList.contains("anchor_id"))
+      # リンクアドレスをNG登録
+      app.contextMenus.update("add_link_to_ngwords", {
+        enabled: enableFlg,
+        onclick: (info, tab) =>
+          app.NG.add(@href)
+          return
+      })
+      return
+
+    # 画像のコンテキストメニュー
+    .on "contextmenu", "img, video, audio", (e) ->
+      switch @tagName
+        when "IMG"
+          menuTitle = "画像のアドレスをNG指定"
+          # リンクアドレスをNG登録
+          app.contextMenus.update("add_link_to_ngwords", {
+            enabled: true,
+            onclick: (info, tab) =>
+              app.NG.add(@parentNode.href)
+              return
+          })
+        when "VIDEO"
+          menuTitle = "動画のアドレスをNG指定"
+        when "AUDIO"
+          menuTitle = "音声のアドレスをNG指定"
+      # メディアのアドレスをNG登録
+      app.contextMenus.update("add_media_to_ngwords", {
+        title: menuTitle,
+        onclick: (info, tab) =>
+          app.NG.add(@src)
+          return
+      })
       return
 
   #クイックジャンプパネル

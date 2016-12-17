@@ -18,6 +18,7 @@
     "notifications",
     "webRequest",
     "webRequestBlocking",
+    "contextMenus",
     "http://*/",
     "https://*/"
   ],

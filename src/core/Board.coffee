@@ -204,8 +204,6 @@ class app.Board
         reg = /^(\d+)\.dat<>(.+) \((\d+)\)$/gm
         base_url = "http://#{tmp[1]}/test/read.cgi/#{tmp[3]}/"
 
-    needlessReg = /.+\.2ch\.netの人気スレ|【漫画あり】コンビニで浪人を購入する方法|★★ ２ちゃんねる\(sc\)のご案内 ★★★|浪人はこんなに便利/
-
     board = []
     while (reg_res = reg.exec(text))
       title = app.util.decode_char_reference(reg_res[2])
@@ -217,7 +215,6 @@ class app.Board
         res_count: +reg_res[3]
         created_at: +reg_res[1] * 1000
         ng: app.NG.isNGBoard(title)
-        need_less: needlessReg.test(title)
         is_net: !title.startsWith("★")
       )
 

@@ -204,32 +204,19 @@ class app.Board
         reg = /^(\d+)\.dat<>(.+) \((\d+)\)$/gm
         base_url = "http://#{tmp[1]}/test/read.cgi/#{tmp[3]}/"
 
-    ng = app.NG.get()
     needlessReg = /.+\.2ch\.netの人気スレ|【漫画あり】コンビニで浪人を購入する方法|★★ ２ちゃんねる\(sc\)のご案内 ★★★|浪人はこんなに便利/
 
     board = []
     while (reg_res = reg.exec(text))
       title = app.util.decode_char_reference(reg_res[2])
       title = app.util.removeNeedlessFromTitle(title)
-      tmpTitle = app.util.normalize(title)
 
       board.push(
         url: base_url + reg_res[1] + "/"
         title: title
         res_count: +reg_res[3]
         created_at: +reg_res[1] * 1000
-        ng: do (title, ng) ->
-          ngKeys = ng.keys()
-          while !(current = ngKeys.next()).done
-            n = current.value
-            if (
-              (n.type is "regExp" and n.reg.test(title)) or
-              (n.type is "regExpTitle" and n.reg.test(title)) or
-              (n.type is "title" and tmpTitle.includes(n.word)) or
-              (n.type is "word" and tmpTitle.includes(n.word))
-            )
-              return true
-          return false
+        ng: app.NG.isNGBoard(title)
         need_less: needlessReg.test(title)
         is_net: !title.startsWith("★")
       )

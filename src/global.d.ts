@@ -1,9 +1,13 @@
 ///<reference path="../node_modules/@types/jquery/index.d.ts" />
 
-namespace UI {
-  declare var Animate:any;
+interface Window {
+  chrome: any;
 }
 
-interface XMLHttpRequest {
-  responseURL: string;
+declare var Notification: any;
+declare var requestIdleCallback: any;
+declare var chrome: any;
+
+namespace UI {
+  declare var Animate: any;
 }

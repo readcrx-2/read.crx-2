@@ -132,7 +132,7 @@ namespace app.Bookmark {
         }
 
         this.cbel.add(entry, undefined, (res) => {
-          deferred[res ? "resolve" : "reject"]();
+          res ? deferred.resolve() : deferred.reject();
         });
       });
 
@@ -143,7 +143,7 @@ namespace app.Bookmark {
       var deferred = $.Deferred();
 
       this.cbel.remove(url, undefined, (res) => {
-        deferred[res ? "resolve" : "reject"]();
+        res ? deferred.resolve() : deferred.reject();
       });
 
       return deferred.promise();
@@ -157,7 +157,7 @@ namespace app.Bookmark {
       if (entry) {
         entry.readState = readState;
         this.cbel.update(entry, undefined, (res) => {
-          deferred[res ? "resolve" : "reject"]();
+          res ? deferred.resolve() : deferred.reject();
         });
       }
       else {
@@ -174,7 +174,7 @@ namespace app.Bookmark {
       if (entry) {
         entry.resCount = resCount;
         this.cbel.update(entry, undefined, (res) => {
-          deferred[res ? "resolve" : "reject"]();
+          res ? deferred.resolve() : deferred.reject();
         });
       }
 
@@ -188,7 +188,7 @@ namespace app.Bookmark {
       if (entry) {
         entry.expired = expired;
         this.cbel.update(entry, undefined, (res) => {
-          deferred[res ? "resolve" : "reject"]();
+          res ? deferred.resolve() : deferred.reject();
         });
       }
 

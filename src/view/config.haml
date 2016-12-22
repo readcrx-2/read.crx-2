@@ -289,10 +289,25 @@
 
       %section
         %h2
+          ReplaceStr.txt(
+          %a(href="https://github.com/readcrx-2/read.crx-2/wiki/ReplaceStr.txt%E3%81%AE%E4%BB%95%E6%A7%98" target="_blank") 詳細
+          )
+        %div
+          %label
+            %textarea.direct(name="replace_str_txt" rows="6" cols="80")
+          %br
+            ここに ReplaceStr.txt を記述してください
+          %br
+          %button.replacestr_file_show(type="button") ファイル読み込み(UTF-8)
+          %input(type="file" class="replacestr_file_hide hidden" accept=".dat")
+          %button.dat_import_button(type="button") インポート
+          %span.dat_import_status
+
+      %section
+        %h2
           NG機能(
           %a(href="https://github.com/readcrx-2/read.crx-2/wiki/NG%E3%83%AF%E3%83%BC%E3%83%89%E3%81%AE%E4%BB%95%E6%A7%98" target="_blank") 詳細
           )
-
         %div
           %label
             %textarea.direct(name="ngwords" rows="6" cols="80")

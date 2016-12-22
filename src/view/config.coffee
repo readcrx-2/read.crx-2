@@ -8,6 +8,8 @@ app.boot "/view/config.html", ["cache", "bbsmenu"], (Cache, BBSMenu) ->
     app.NG.set($view.find("textarea[name=\"ngwords\"]")[0].value)
     #ImageReplaceDat設定
     app.ImageReplaceDat.set($view.find("textarea[name=\"image_replace_dat\"]")[0].value)
+    #ReplaceStrTxt設定
+    app.ReplaceStrTxt.set($view.find("textarea[name=\"replace_str_txt\"]")[0].value)
     return
 
   #閉じるボタン
@@ -570,7 +572,7 @@ app.boot "/view/config.html", ["cache", "bbsmenu"], (Cache, BBSMenu) ->
     return
   )
 
-  #設定インポート
+  #datインポート
   $view.find(".dat_import_button").on "click", ->
     if datFile isnt ""
       $dat_status
@@ -589,6 +591,50 @@ app.boot "/view/config.html", ["cache", "bbsmenu"], (Cache, BBSMenu) ->
         return
     else
       $dat_status
+        .addClass("fail")
+        .text("ファイルを選択してください")
+    return
+
+  #replaceStrTxtファイルインポート
+  $(".replacestr_file_show").on "click", ->
+    $replacestr_status.removeClass("done fail select")
+    $(".replacestr_file_hide").click()
+    return
+
+  replacestrFile = "";
+  $replacestr_status = $view.find(".replacestr_import_status")
+  $(".replacestr_file_hide").change((e) ->
+    file = e.target.files
+    reader = new FileReader()
+    reader.readAsText(file[0])
+    reader.onload = ->
+      replacestrFile = reader.result
+      $replacestr_status
+        .addClass("select")
+        .text("ファイル選択完了")
+      return
+    return
+  )
+
+  #replaceStrTxtインポート
+  $view.find(".replacestr_import_button").on "click", ->
+    if replacestrFile isnt ""
+      $replacestr_status
+        .removeClass("done fail select")
+        .addClass("loading")
+        .text("更新中")
+      $.Deferred (d) ->
+        replacestrDom = $view.find("textarea[name=\"replace_str_txt\"]")
+        replacestrDom[0].value = replacestrFile
+        replacestrDom.trigger("input")
+        d.resolve()
+      .done ->
+        $replacestr_status
+          .addClass("done")
+          .text("インポート完了")
+        return
+    else
+      $replacestr_status
         .addClass("fail")
         .text("ファイルを選択してください")
     return

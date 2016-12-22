@@ -11,9 +11,7 @@ class app.ReplaceStrTxt
   #jsonには正規表現のオブジェクトが含めれないので
   #それを展開
   _setupReg = () ->
-    keys = _replaceTable.keys()
-    while !(current = keys.next()).done
-      d = current.value
+    for d from _replaceTable
       try
         if d.type is "rx"
           d.beforeReg = new RegExp(d.before, "g")
@@ -114,9 +112,7 @@ class app.ReplaceStrTxt
   @param {Object} res
   ###
   @do: (url, title, res) ->
-    keys = @get().keys()
-    while !(current = keys.next()).done
-      d = current.value
+    for d from @get()
       continue if d.before is "#^##invalid##^#"
       continue if d.url is "invalid://invalid"
       if d.url?

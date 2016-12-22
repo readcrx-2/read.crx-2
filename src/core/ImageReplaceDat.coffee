@@ -11,9 +11,7 @@ class app.ImageReplaceDat
   #jsonには正規表現のオブジェクトが含めれないので
   #それを展開
   _setupReg = () ->
-    keys = _dat.keys()
-    while !(current = keys.next()).done
-      d = current.value
+    for d from _dat
       try
         d.baseUrlReg = new RegExp(d.baseUrl, "i")
       catch e
@@ -145,9 +143,7 @@ class app.ImageReplaceDat
     def = $.Deferred()
     dat = @get()
     doing = false
-    keys = dat.keys()
-    while !(current = keys.next()).done
-      d = current.value
+    for d from dat
       continue if d.baseUrl is "invalid://invalid"
       continue if !d.baseUrlReg.test(string)
       if d.replaceUrl is ""

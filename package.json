@@ -2,7 +2,7 @@
   "name": "read.crx-2",
   "version": "0.0.0",
   "devDependencies": {
-    "coffee-script": "1.11.0",
+    "coffee-script": "1.12.2",
     "typescript": "2.1.4",
     "jquery": "3.1.1",
     "ShortQuery.js": "S--Minecraft/ShortQuery.js#0.1.6",

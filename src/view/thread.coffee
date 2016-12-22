@@ -999,12 +999,12 @@ app.view_thread._read_state_manager = ($view) ->
         attachedReadState.last = read_state.last
       if read_state.read <= contentLength
         content.children[read_state.read - 1]?.classList.add("read")
-        read_state.read = -999
+        attachedReadState.read = -999
       else
         attachedReadState.read = read_state.read
       if read_state.received <= contentLength
         content.children[read_state.received - 1]?.classList.add("received")
-        read_state.received = -999
+        attachedReadState.received = -999
       else
         attachedReadState.received = read_state.received
       readStateAttached = true

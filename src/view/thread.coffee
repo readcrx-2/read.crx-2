@@ -672,13 +672,14 @@ app.boot "/view/thread.html", ->
       for key, val of jump_hoge
         if $target.is(key)
           selector = val
+          offset = if key in [".jump_not_read", "jump_new"] then -100 else 0
           break
 
       if selector
         res_num = $view.find(selector).index() + 1
 
         if typeof res_num is "number"
-          threadContent.scrollTo(res_num, true)
+          threadContent.scrollTo(res_num, true, offset)
         else
           app.log("warn", "[view_thread] .jump_panel: ターゲットが存在しません")
       return

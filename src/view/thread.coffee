@@ -160,6 +160,10 @@ app.boot "/view/thread.html", ->
         switch move_mode
           when "new"
             $tmp = $content.children(".last.received + article")
+            # 新着が存在しない場合はスクロールを実行するためにレスを探す
+            $tmp = $content.children("article.last") unless $tmp.length is 1
+            $tmp = $content.children("article.read") unless $tmp.length is 1
+            $tmp = $content.children("article:last-child") unless $tmp.length is 1
             threadContent.scrollTo(+$tmp.find(".num").text(), true, -100) if $tmp.length is 1
           when "surely_new"
             res_num = $view.find("article.received + article").index() + 1
@@ -947,6 +951,8 @@ app.view_thread._read_state_manager = ($view) ->
   board_url = app.url.thread_to_board(view_url)
   $content = $($view.find(".content"))
   content = $content[0]
+  readStateAttached = false
+  attachedReadState = {last: 0, read: 0, received: 0}
 
   #read_stateの取得
   get_read_state = $.Deferred (deferred) ->
@@ -962,14 +968,46 @@ app.view_thread._read_state_manager = ($view) ->
 
   #スレの描画時に、read_state関連のクラスを付与する
   $view.on "view_loaded", ->
+    # 2回目の処理
+    # 画像のロードにより位置がずれることがあるので初回処理時の内容を使用する
+    if readStateAttached
+      if attachedReadState.last > 0
+        content.querySelector(".last")?.classList.remove("last")
+        content.children[attachedReadState.last - 1]?.classList.add("last")
+      if attachedReadState.read > 0
+        content.querySelector(".read")?.classList.remove("read")
+        content.children[attachedReadState.read - 1]?.classList.add("read")
+      if attachedReadState.received > 0
+        content.querySelector(".received")?.classList.remove("received")
+        content.children[attachedReadState.received - 1]?.classList.add("received")
+      readStateAttached = false
+      $view.triggerHandler("read_state_attached")
+      return
+    # 初回の処理
     get_read_state.done ({read_state, read_state_updated}) ->
       content.querySelector(".last")?.classList.remove("last")
       content.querySelector(".read")?.classList.remove("read")
       content.querySelector(".received")?.classList.remove("received")
 
-      content.children[read_state.last - 1]?.classList.add("last")
-      content.children[read_state.read - 1]?.classList.add("read")
-      content.children[read_state.received - 1]?.classList.add("received")
+      # キャッシュの内容が古い場合にread_stateの内容の方が大きくなることがあるので
+      # その場合は次回の処理に委ねる
+      contentLength = content.children.length
+      if read_state.last <= contentLength
+        content.children[read_state.last - 1]?.classList.add("last")
+        attachedReadState.last = -999
+      else
+        attachedReadState.last = read_state.last
+      if read_state.read <= contentLength
+        content.children[read_state.read - 1]?.classList.add("read")
+        read_state.read = -999
+      else
+        attachedReadState.read = read_state.read
+      if read_state.received <= contentLength
+        content.children[read_state.received - 1]?.classList.add("received")
+        read_state.received = -999
+      else
+        attachedReadState.received = read_state.received
+      readStateAttached = true
 
       $view.triggerHandler("read_state_attached")
     return

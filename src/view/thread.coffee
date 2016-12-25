@@ -900,6 +900,7 @@ app.view_thread._draw = ($view, force_update, beforeAdd) ->
   deferred = $.Deferred()
 
   $view.addClass("loading")
+  $view.css("cursor", "wait")
   $reload_button = $view.find(".button_reload")
   $reload_button.addClass("disabled")
   content = $view.find(".content")[0]
@@ -939,6 +940,7 @@ app.view_thread._draw = ($view, force_update, beforeAdd) ->
         threadGetDeferred = fn(thread, not promiseThreadGetState)
         .always ->
           $view.removeClass("loading")
+          $view.css("cursor", "auto")
           setTimeout((-> $reload_button.removeClass("disabled")), 1000 * 5)
           if threadGetDeferred.state() is "resolved" then deferred.resolve() else deferred.reject()
           return

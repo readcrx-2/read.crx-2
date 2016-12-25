@@ -74,14 +74,14 @@ article {
   content: "しおり";
 }
 
-.read:not(:last-child):after {
-  @include view_thread_res_info;
-  content: "ここから未読";
-}
-
 .received:not(:last-child):after {
   @include view_thread_res_info;
   content: "ここから新着";
+}
+
+.read:not(:last-child):after {
+  @include view_thread_res_info;
+  content: "ここから未読";
 }
 
 header {

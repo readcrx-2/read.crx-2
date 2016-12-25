@@ -672,7 +672,7 @@ app.boot "/view/thread.html", ->
       for key, val of jump_hoge
         if $target.is(key)
           selector = val
-          offset = if key in [".jump_not_read", "jump_new"] then -100 else 0
+          offset = if key in [".jump_not_read", ".jump_new"] then -100 else 0
           break
 
       if selector

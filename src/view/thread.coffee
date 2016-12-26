@@ -896,6 +896,8 @@ app.boot "/view/thread.html", ->
 
   return
 
+readStateAttached = false
+
 app.view_thread._draw = ($view, force_update, beforeAdd) ->
   deferred = $.Deferred()
 
@@ -928,6 +930,7 @@ app.view_thread._draw = ($view, force_update, beforeAdd) ->
   thread = new app.Thread($view.attr("data-url"))
   threadGetDeferred = null
   promiseThreadGet = thread.get(force_update)
+  readStateAttached = false
   promiseThreadGet
     .progress ->
       threadGetDeferred = fn(thread, false)

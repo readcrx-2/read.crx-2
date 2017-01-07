@@ -7,6 +7,15 @@ class app.ReplaceStrTxt
   _replaceTable = null
   _configName = "replace_str_txt_obj"
   _configStringName = "replace_str_txt"
+  _urlPattern =
+    contain: 0
+    dontContain: 1
+    match: 2
+    dontMatch: 3
+    regex: 4
+    dontRegex: 5
+  _INVALID_BEFORE = "#^##invalid##^#"
+  _INVALID_URL = "invalid://invalid"
 
   #jsonには正規表現のオブジェクトが含めれないので
   #それを展開
@@ -22,15 +31,15 @@ class app.ReplaceStrTxt
       catch e
         app.message.send "notify", {
           html: """
-            ReplaceStr.txtの置換対象正規表現(#{d.baseUrl})を読み込むのに失敗しました
+            ReplaceStr.txtの置換対象正規表現(#{d.before})を読み込むのに失敗しました
             この行は無効化されます
           """
           background_color: "red"
         }
-        d.before = "#^##invalid##^#"
+        d.before = _INVALID_BEFORE
 
       try
-        if d.urlPattern is 4 or d.urlPattern is 5
+        if d.urlPattern is _urlPattern.regex or d.urlPattern is _urlPattern.dontRegex
           d.urlReg = new RegExp(d.url)
       catch e
         app.message.send "notify", {
@@ -40,7 +49,7 @@ class app.ReplaceStrTxt
           """
           background_color: "red"
         }
-        d.url = "invalid://invalid"
+        d.url = _INVALID_URL
     return
 
   _config =
@@ -113,16 +122,16 @@ class app.ReplaceStrTxt
   ###
   @do: (url, title, res) ->
     for d from @get()
-      continue if d.before is "#^##invalid##^#"
-      continue if d.url is "invalid://invalid"
+      continue if d.before is _INVALID_BEFORE
+      continue if d.url is _INVALID_URL
       if d.url?
-        if d.urlPattern is 0 or d.urlPattern is 1
+        if d.urlPattern is _urlPattern.contain or d.urlPattern is _urlPattern.dontContain
           flag = (url.includes(d.url) or title.includes(d.url))
-        else if d.urlPattern is 2 or d.urlPattern is 3
+        else if d.urlPattern is _urlPattern.match or d.urlPattern is _urlPattern.dontMatch
           flag = (url is d.url or title is d.url)
         if (
-          ((d.urlPattern is 0 or d.urlPattern is 2) and !flag) or
-          ((d.urlPattern is 1 or d.urlPattern is 3) and flag)
+          ((d.urlPattern is _urlPattern.contain or d.urlPattern is _urlPattern.match) and !flag) or
+          ((d.urlPattern is _urlPattern.dontContain or d.urlPattern is _urlPattern.dontMatch) and flag)
         )
           continue
       if d.type is "ex2"

@@ -12,6 +12,7 @@ do ->
       "contextMenus"
       "ImageReplaceDat"
       "module"
+      "ReplaceStrTxt"
       "Ninja"
       "NG"
       "notification"

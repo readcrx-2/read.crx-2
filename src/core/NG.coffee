@@ -12,9 +12,7 @@ class app.NG
   #jsonには正規表現のオブジェクトが含めれないので
   #それを展開
   _setupReg = (obj) ->
-    keys = obj.keys()
-    while !(current = keys.next()).done
-      n = current.value
+    for n from obj
       continue if !n.type.startsWith("regExp")
       try
         n.reg = new RegExp n.word
@@ -152,9 +150,8 @@ class app.NG
     _config.set(Array.from(_config.get()).concat(Array.from(addNg)))
 
     _setupReg(addNg)
-    addNgKeys = addNg.keys()
-    while !(current = addNgKeys.next()).done
-      _ng.add(current.value)
+    for ang from addNg
+      _ng.add(ang)
     return
 
   ###*
@@ -163,9 +160,7 @@ class app.NG
   ###
   @isNGBoard: (title) ->
     tmpTitle = app.util.normalize(title)
-    ngKeys = @get().keys()
-    while !(current = ngKeys.next()).done
-      n = current.value
+    for n from @get()
       if (
         (n.type is "regExp" and n.reg.test(title)) or
         (n.type is "regExpTitle" and n.reg.test(title)) or
@@ -180,12 +175,10 @@ class app.NG
   @param {Array} res
   ###
   @isNGThread: (res) ->
-    ngKeys = @get().keys()
     tmpTxt1 = res.name + " " + res.mail + " " + res.other + " " + res.message
     tmpTxt2 = app.util.normalize(tmpTxt1)
 
-    while !(current = ngKeys.next()).done
-      n = current.value
+    for n from @get()
       if n.start? and ((n.finish? and n.start <= resNum and resNum <= n.finish) or (parseInt(n.start) is resNum))
         continue
       if (

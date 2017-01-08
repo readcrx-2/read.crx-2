@@ -416,6 +416,8 @@ class UI.ThreadContent
         if app.NG.isNGThread(res)
           articleClass.push("ng")
 
+        res = app.ReplaceStrTxt.do(@url, document.title, res)
+
         if /(?:\u3000{5}|\u3000\u0020|[^>]\u0020\u3000)(?!<br>|$)/i.test(res.message)
           articleClass.push("aa")
 

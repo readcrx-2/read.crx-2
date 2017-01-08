@@ -7,13 +7,12 @@ class app.ImageReplaceDat
   _dat = null
   _configName = "image_replace_dat_obj"
   _configStringName = "image_replace_dat"
+  _INVALID_URL = "invalid://invalid"
 
   #jsonには正規表現のオブジェクトが含めれないので
   #それを展開
   _setupReg = () ->
-    keys = _dat.keys()
-    while !(current = keys.next()).done
-      d = current.value
+    for d from _dat
       try
         d.baseUrlReg = new RegExp(d.baseUrl, "i")
       catch e
@@ -24,7 +23,7 @@ class app.ImageReplaceDat
           """
           background_color: "red"
         }
-        d.baseUrl = "invalid://invalid"
+        d.baseUrl = _INVALID_URL
 
       try
         if d.param? and d.param.type is "extract"
@@ -37,7 +36,7 @@ class app.ImageReplaceDat
           """
           background_color: "red"
         }
-        d.baseUrl = "invalid://invalid"
+        d.baseUrl = _INVALID_URL
     return
 
   _config =
@@ -145,10 +144,8 @@ class app.ImageReplaceDat
     def = $.Deferred()
     dat = @get()
     doing = false
-    keys = dat.keys()
-    while !(current = keys.next()).done
-      d = current.value
-      continue if d.baseUrl is "invalid://invalid"
+    for d from dat
+      continue if d.baseUrl is _INVALID_URL
       continue if !d.baseUrlReg.test(string)
       if d.replaceUrl is ""
         def.resolve(a, string, "No parsing")

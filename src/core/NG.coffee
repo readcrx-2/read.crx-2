@@ -12,9 +12,7 @@ class app.NG
   #jsonには正規表現のオブジェクトが含めれないので
   #それを展開
   _setupReg = (obj) ->
-    keys = obj.keys()
-    while !(current = keys.next()).done
-      n = current.value
+    for n from obj
       continue if !n.type.startsWith("regExp")
       try
         n.reg = new RegExp n.word
@@ -152,7 +150,50 @@ class app.NG
     _config.set(Array.from(_config.get()).concat(Array.from(addNg)))
 
     _setupReg(addNg)
-    addNgKeys = addNg.keys()
-    while !(current = addNgKeys.next()).done
-      _ng.add(current.value)
+    for ang from addNg
+      _ng.add(ang)
     return
+
+  ###*
+  @method isNGBoard
+  @param {String} title
+  ###
+  @isNGBoard: (title) ->
+    tmpTitle = app.util.normalize(title)
+    for n from @get()
+      if (
+        (n.type is "regExp" and n.reg.test(title)) or
+        (n.type is "regExpTitle" and n.reg.test(title)) or
+        (n.type is "title" and tmpTitle.includes(n.word)) or
+        (n.type is "word" and tmpTitle.includes(n.word))
+      )
+        return true
+    return false
+
+  ###*
+  @method isNGThread
+  @param {Array} res
+  ###
+  @isNGThread: (res) ->
+    tmpTxt1 = res.name + " " + res.mail + " " + res.other + " " + res.message
+    tmpTxt2 = app.util.normalize(tmpTxt1)
+
+    for n from @get()
+      if n.start? and ((n.finish? and n.start <= resNum and resNum <= n.finish) or (parseInt(n.start) is resNum))
+        continue
+      if (
+        (n.type is "regExp" and n.reg.test(tmpTxt1)) or
+        (n.type is "regExpName" and n.reg.test(res.name)) or
+        (n.type is "regExpMail" and n.reg.test(res.mail)) or
+        (n.type is "regExpId" and articleDataId? and n.reg.test(articleDataId)) or
+        (n.type is "regExpSlip" and articleDataSlip? and n.reg.test(articleDataSlip)) or
+        (n.type is "regExpBody" and n.reg.test(res.message)) or
+        (n.type is "name" and app.util.normalize(res.name).includes(n.word)) or
+        (n.type is "mail" and app.util.normalize(res.mail).includes(n.word)) or
+        (n.type is "id" and articleDataId?.includes(n.word)) or
+        (n.type is "slip" and articleDataSlip?.includes(n.word)) or
+        (n.type is "body" and app.util.normalize(res.message).includes(n.word)) or
+        (n.type is "word" and tmpTxt2.includes(n.word))
+      )
+        return true
+    return false

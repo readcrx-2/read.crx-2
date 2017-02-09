@@ -615,6 +615,9 @@ app.main = ->
       app.message.send("open", url: "bookmark")
     return
 
+  # コンテキストメニューの作成
+  app.contextMenus.createAll()
+
   #終了時にタブの状態を保存する
   window.addEventListener "unload", ->
     data = for tab in tabA.getAll().concat(tabB.getAll())
@@ -623,6 +626,8 @@ app.main = ->
       selected: tab.selected
       locked: tab.locked
     localStorage.tab_state = JSON.stringify(data)
+    #コンテキストメニューの削除
+    app.contextMenus.removeAll()
     return
 
   #openメッセージ受信部

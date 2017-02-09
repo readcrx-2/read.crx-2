@@ -1,5 +1,3 @@
-///<reference path="../global.d.ts" />
-
 namespace app.HTTP {
   "use strict";
 

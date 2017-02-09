@@ -152,6 +152,15 @@ class UI.ThreadContent
       tmpResNum++
       tmpTarget = @container.children[tmpResNum - 1]
 
+    # 遅延スクロールの設定
+    if loadFlag or @_timeoutID isnt 0
+      clearTimeout(@_timeoutID) if @_timeoutID isnt 0
+      delayScrollTime = parseInt(app.config.get("delay_scroll_time"))
+      @_timeoutID = setTimeout( =>
+        @_timeoutID = 0
+        @_reScrollTo()
+      , delayScrollTime)
+
     return loadFlag
 
   ###*
@@ -184,13 +193,7 @@ class UI.ThreadContent
 
       # 遅延スクロールの設定
       if loadFlag or @_timeoutID isnt 0
-        clearTimeout(@_timeoutID) if @_timeoutID isnt 0
         @container.scrollTop = target.offsetTop + offset
-        delayScrollTime = parseInt(app.config.get("delay_scroll_time"))
-        @_timeoutID = setTimeout( =>
-          @_timeoutID = 0
-          @_reScrollTo()
-        , delayScrollTime)
         return
       return if rerun and @container.scrollTop is target.offsetTop + offset
 
@@ -398,7 +401,6 @@ class UI.ThreadContent
     return d.resolve().promise() unless items.length > 0
 
     resNum = @container.children.length
-    ng = app.NG.get()
 
     @getWrittenRes().done((writtenRes) =>
       html = ""
@@ -410,6 +412,11 @@ class UI.ThreadContent
         articleDataId = null
         articleDataSlip = null
         articleDataTrip = null
+
+        if app.NG.isNGThread(res)
+          articleClass.push("ng")
+
+        res = app.ReplaceStrTxt.do(@url, document.title, res)
 
         if /(?:\u3000{5}|\u3000\u0020|[^>]\u0020\u3000)(?!<br>|$)/i.test(res.message)
           articleClass.push("aa")
@@ -562,30 +569,6 @@ class UI.ThreadContent
         articleHtml += "<div class=\"message\""
         if color? then articleHtml += " style=\"color:##{color[1]};\""
         articleHtml += ">#{tmp}</div>"
-
-        ngKeys = ng.keys()
-        tmpTxt1 = res.name + " " + res.mail + " " + res.other + " " + res.message
-        tmpTxt2 = app.util.normalize(tmpTxt1)
-        while !(current = ngKeys.next()).done
-          n = current.value
-          if n.start? and ((n.finish? and n.start <= resNum and resNum <= n.finish) or (parseInt(n.start) is resNum))
-            continue
-          if (
-            (n.type is "regExp" and n.reg.test(tmpTxt1)) or
-            (n.type is "regExpName" and n.reg.test(res.name)) or
-            (n.type is "regExpMail" and n.reg.test(res.mail)) or
-            (n.type is "regExpId" and articleDataId? and n.reg.test(articleDataId)) or
-            (n.type is "regExpSlip" and articleDataSlip? and n.reg.test(articleDataSlip)) or
-            (n.type is "regExpBody" and n.reg.test(res.message)) or
-            (n.type is "name" and app.util.normalize(res.name).includes(n.word)) or
-            (n.type is "mail" and app.util.normalize(res.mail).includes(n.word)) or
-            (n.type is "id" and articleDataId?.includes(n.word)) or
-            (n.type is "slip" and articleDataSlip?.includes(n.word)) or
-            (n.type is "body" and app.util.normalize(res.message).includes(n.word)) or
-            (n.type is "word" and tmpTxt2.includes(n.word))
-          )
-            articleClass.push("ng")
-            break
 
         tmp = ""
         tmp += " class=\"#{articleClass.join(" ")}\""

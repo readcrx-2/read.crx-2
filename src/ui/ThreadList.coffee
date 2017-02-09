@@ -348,14 +348,9 @@ class UI.ThreadList
         trClassName += " expired"
       if item.ng
         trClassName += " ng_thread"
-      if item.need_less
-        trClassName += " needlessThread"
       if item.is_net
         trClassName += " net"
-      if (
-        (item.expired and app.config.get("bookmark_show_dat") is "off") or
-        (item.need_less and app.config.get("hide_needless_thread") is "on")
-      )
+      if item.expired and app.config.get("bookmark_show_dat") is "off"
         trClassName += " hidden"
 
       tmpHTML = " data-href=\"#{app.escape_html(item.url)}\""

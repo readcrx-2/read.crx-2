@@ -271,22 +271,43 @@
             通常の文章と同じフォントで表示
 
       %section
-        %h2 ID/参照ポップアップの表示方法
+        %h2 ポップアップ制御
         %div
+          ID/参照ポップアップの表示方法:
           %label
             %input.direct(name="popup_trigger" type="radio" value="click" checked)
             クリック
-          %br
           %label
             %input.direct(name="popup_trigger" type="radio" value="mouseenter")
             マウスを重ねる
+          %br
+          %label
+            ディレイタイム(最小100ms):
+            %input.direct(type="number" name="popup_delay_time" min="0" max="5000")ms
+          %br
+          ポップアップの表示タイミングを遅らせる場合に指定してください。100ms未満の値が指定された場合は即時に表示されます。(アンカー/ID/参照全て共通)
+
+      %section
+        %h2
+          ReplaceStr.txt(
+          %a(href="https://github.com/readcrx-2/read.crx-2/wiki/ReplaceStr.txt%E3%81%AE%E4%BB%95%E6%A7%98" target="_blank") 詳細
+          )
+        %div
+          %label
+            %textarea.direct(name="replace_str_txt" rows="6" cols="80")
+          %br
+            ここに ReplaceStr.txt を記述してください
+          %br
+          %button.replacestr_file_show(type="button") ファイル読み込み(UTF-8)
+          %input(type="file" class="replacestr_file_hide hidden" accept=".dat")
+          %button.dat_import_button(type="button") インポート
+          %span.dat_import_status
 
       %section
         %h2
           NG機能(
           %a(href="https://github.com/readcrx-2/read.crx-2/wiki/NG%E3%83%AF%E3%83%BC%E3%83%89%E3%81%AE%E4%BB%95%E6%A7%98" target="_blank") 詳細
           )
-
         %div
           %label
             %textarea.direct(name="ngwords" rows="6" cols="80")
@@ -300,9 +321,6 @@
           %br
           %label
             %input.direct(type="checkbox" name="bookmark_show_dat") ブックマークのdat落ちスレを常に表示する
-          %br
-          %label
-            %input.direct(type="checkbox" name="hide_needless_thread") ～の人気スレ・コンビニで浪人を購入する方法等のスレを非表示にする
 
       %section
         %h2 書き込み

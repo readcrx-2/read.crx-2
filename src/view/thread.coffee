@@ -160,6 +160,10 @@ app.boot "/view/thread.html", ->
         switch move_mode
           when "new"
             $tmp = $content.children(".last.received + article")
+            # 新着が存在しない場合はスクロールを実行するためにレスを探す
+            $tmp = $content.children("article.last") unless $tmp.length is 1
+            $tmp = $content.children("article.read") unless $tmp.length is 1
+            $tmp = $content.children("article:last-child") unless $tmp.length is 1
             threadContent.scrollTo(+$tmp.find(".num").text(), true, -100) if $tmp.length is 1
           when "surely_new"
             res_num = $view.find("article.received + article").index() + 1
@@ -277,38 +281,14 @@ app.boot "/view/thread.html", ->
 
     #レスメニュー表示(内容上)
     .on "contextmenu", "article > .message", (e) ->
-      if $(e.target).is("a")
-        return
-      if !e.ctrlKey and getSelection().toString().length isnt 0
-        e.preventDefault()
-
-        $article = $(@).parent()
-        $menu = $(
-          $("#template_res_menu").prop("content").querySelector(".res_menu")
-        ).clone().addClass("hidden").appendTo($article)
-
-        $menu.find(
-          ".copy_id,"+
-          ".add_id_to_ngwords,"+
-          ".copy_slip,"+
-          ".add_slip_to_ngwords,"+
-          ".copy_trip,"+
-          ".jump_to_this,"+
-          ".res_to_this,"+
-          ".res_to_this2,"+
-          ".add_writehistory,"+
-          ".del_writehistory,"+
-          ".toggle_aa_mode,"+
-          ".set_image_blur,"+
-          ".reset_image_blur,"+
-          ".res_permalink"
-        ).remove()
-
-        app.defer ->
-          unless getSelection().toString().length is 0
-            $menu.removeClass("hidden")
-            $.contextmenu($menu, e.clientX, e.clientY)
-        return
+      # 選択範囲をNG登録
+      app.contextMenus.update("add_selection_to_ngwords", {
+        onclick: (info, tab) ->
+          selectedText = getSelection().toString()
+          if selectedText.length > 0
+            app.NG.add(selectedText)
+          return
+      })
       return
 
     #レスメニュー項目クリック
@@ -622,6 +602,43 @@ app.boot "/view/thread.html", ->
         $popup = $("<div>").append(frag)
       return
 
+    # リンクのコンテキストメニュー
+    .on "contextmenu", ".message > a", (e) ->
+      enableFlg = !(@classList.contains("anchor") or @classList.contains("anchor_id"))
+      # リンクアドレスをNG登録
+      app.contextMenus.update("add_link_to_ngwords", {
+        enabled: enableFlg,
+        onclick: (info, tab) =>
+          app.NG.add(@href)
+          return
+      })
+      return
+
+    # 画像のコンテキストメニュー
+    .on "contextmenu", "img, video, audio", (e) ->
+      switch @tagName
+        when "IMG"
+          menuTitle = "画像のアドレスをNG指定"
+          # リンクアドレスをNG登録
+          app.contextMenus.update("add_link_to_ngwords", {
+            enabled: true,
+            onclick: (info, tab) =>
+              app.NG.add(@parentNode.href)
+              return
+          })
+        when "VIDEO"
+          menuTitle = "動画のアドレスをNG指定"
+        when "AUDIO"
+          menuTitle = "音声のアドレスをNG指定"
+      # メディアのアドレスをNG登録
+      app.contextMenus.update("add_media_to_ngwords", {
+        title: menuTitle,
+        onclick: (info, tab) =>
+          app.NG.add(@src)
+          return
+      })
+      return
+
   #クイックジャンプパネル
   do ->
     jump_hoge =
@@ -655,13 +672,14 @@ app.boot "/view/thread.html", ->
       for key, val of jump_hoge
         if $target.is(key)
           selector = val
+          offset = if key in [".jump_not_read", ".jump_new"] then -100 else 0
           break
 
       if selector
         res_num = $view.find(selector).index() + 1
 
         if typeof res_num is "number"
-          threadContent.scrollTo(res_num, true)
+          threadContent.scrollTo(res_num, true, offset)
         else
           app.log("warn", "[view_thread] .jump_panel: ターゲットが存在しません")
       return
@@ -878,10 +896,13 @@ app.boot "/view/thread.html", ->
 
   return
 
+readStateAttached = false
+
 app.view_thread._draw = ($view, force_update, beforeAdd) ->
   deferred = $.Deferred()
 
   $view.addClass("loading")
+  $view.css("cursor", "wait")
   $reload_button = $view.find(".button_reload")
   $reload_button.addClass("disabled")
   content = $view.find(".content")[0]
@@ -909,6 +930,7 @@ app.view_thread._draw = ($view, force_update, beforeAdd) ->
   thread = new app.Thread($view.attr("data-url"))
   threadGetDeferred = null
   promiseThreadGet = thread.get(force_update)
+  readStateAttached = false
   promiseThreadGet
     .progress ->
       threadGetDeferred = fn(thread, false)
@@ -921,6 +943,7 @@ app.view_thread._draw = ($view, force_update, beforeAdd) ->
         threadGetDeferred = fn(thread, not promiseThreadGetState)
         .always ->
           $view.removeClass("loading")
+          $view.css("cursor", "auto")
           setTimeout((-> $reload_button.removeClass("disabled")), 1000 * 5)
           if threadGetDeferred.state() is "resolved" then deferred.resolve() else deferred.reject()
           return
@@ -934,6 +957,8 @@ app.view_thread._read_state_manager = ($view) ->
   board_url = app.url.thread_to_board(view_url)
   $content = $($view.find(".content"))
   content = $content[0]
+  readStateAttached = false
+  attachedReadState = {last: 0, read: 0, received: 0}
 
   #read_stateの取得
   get_read_state = $.Deferred (deferred) ->
@@ -949,14 +974,46 @@ app.view_thread._read_state_manager = ($view) ->
 
   #スレの描画時に、read_state関連のクラスを付与する
   $view.on "view_loaded", ->
+    # 2回目の処理
+    # 画像のロードにより位置がずれることがあるので初回処理時の内容を使用する
+    if readStateAttached
+      if attachedReadState.last > 0
+        content.querySelector(".last")?.classList.remove("last")
+        content.children[attachedReadState.last - 1]?.classList.add("last")
+      if attachedReadState.read > 0
+        content.querySelector(".read")?.classList.remove("read")
+        content.children[attachedReadState.read - 1]?.classList.add("read")
+      if attachedReadState.received > 0
+        content.querySelector(".received")?.classList.remove("received")
+        content.children[attachedReadState.received - 1]?.classList.add("received")
+      readStateAttached = false
+      $view.triggerHandler("read_state_attached")
+      return
+    # 初回の処理
     get_read_state.done ({read_state, read_state_updated}) ->
       content.querySelector(".last")?.classList.remove("last")
       content.querySelector(".read")?.classList.remove("read")
       content.querySelector(".received")?.classList.remove("received")
 
-      content.children[read_state.last - 1]?.classList.add("last")
-      content.children[read_state.read - 1]?.classList.add("read")
-      content.children[read_state.received - 1]?.classList.add("received")
+      # キャッシュの内容が古い場合にread_stateの内容の方が大きくなることがあるので
+      # その場合は次回の処理に委ねる
+      contentLength = content.children.length
+      if read_state.last <= contentLength
+        content.children[read_state.last - 1]?.classList.add("last")
+        attachedReadState.last = -999
+      else
+        attachedReadState.last = read_state.last
+      if read_state.read <= contentLength
+        content.children[read_state.read - 1]?.classList.add("read")
+        attachedReadState.read = -999
+      else
+        attachedReadState.read = read_state.read
+      if read_state.received <= contentLength
+        content.children[read_state.received - 1]?.classList.add("received")
+        attachedReadState.received = -999
+      else
+        attachedReadState.received = read_state.received
+      readStateAttached = true
 
       $view.triggerHandler("read_state_attached")
     return

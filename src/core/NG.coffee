@@ -185,13 +185,13 @@ class app.NG
         (n.type is "regExp" and n.reg.test(tmpTxt1)) or
         (n.type is "regExpName" and n.reg.test(res.name)) or
         (n.type is "regExpMail" and n.reg.test(res.mail)) or
-        (n.type is "regExpId" and articleDataId? and n.reg.test(articleDataId)) or
-        (n.type is "regExpSlip" and articleDataSlip? and n.reg.test(articleDataSlip)) or
+        (n.type is "regExpId" and res.id? and n.reg.test(res.id)) or
+        (n.type is "regExpSlip" and res.slip? and n.reg.test(res.slip)) or
         (n.type is "regExpBody" and n.reg.test(res.message)) or
         (n.type is "name" and app.util.normalize(res.name).includes(n.word)) or
         (n.type is "mail" and app.util.normalize(res.mail).includes(n.word)) or
-        (n.type is "id" and articleDataId?.includes(n.word)) or
-        (n.type is "slip" and articleDataSlip?.includes(n.word)) or
+        (n.type is "id" and res.id?.includes(n.word)) or
+        (n.type is "slip" and res.slip?.includes(n.word)) or
         (n.type is "body" and app.util.normalize(res.message).includes(n.word)) or
         (n.type is "word" and tmpTxt2.includes(n.word))
       )

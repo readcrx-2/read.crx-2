@@ -408,21 +408,15 @@ class UI.ThreadContent
       for res in items
         resNum++
 
-        articleClass = []
-        articleDataId = null
-        articleDataSlip = null
-        articleDataTrip = null
-
-        if app.NG.isNGThread(res)
-          articleClass.push("ng")
+        res.class = []
 
         res = app.ReplaceStrTxt.do(@url, document.title, res)
 
         if /(?:\u3000{5}|\u3000\u0020|[^>]\u0020\u3000)(?!<br>|$)/i.test(res.message)
-          articleClass.push("aa")
+          res.class.push("aa")
 
         for writtenHistory in writtenRes when writtenHistory.res is resNum
-          articleClass.push("written")
+          res.class.push("written")
           break
 
         articleHtml = "<header>"
@@ -438,7 +432,7 @@ class UI.ThreadContent
           res.name
             .replace(/<(?!(?:\/?b|\/?font(?: color="?[#a-zA-Z0-9]+"?)?)>)/g, "&lt;")
             .replace(/<\/b>\(([^<>]+? [^<>]+?)\)<b>$/, ($0, $1) =>
-              articleDataSlip = $1
+              res.slip = $1
 
               @slipIndex[$1] = [] unless @slipIndex[$1]?
               @slipIndex[$1].push(resNum)
@@ -446,7 +440,7 @@ class UI.ThreadContent
               return ""
             )
             .replace(/<\/b>(◆[^<>]+?) <b>/, ($0, $1) =>
-              articleDataTrip = $1
+              res.trip = $1
 
               @tripIndex[$1] = [] unless @tripIndex[$1]?
               @tripIndex[$1].push(resNum)
@@ -474,16 +468,16 @@ class UI.ThreadContent
             .replace(/(?:^| )(ID:(?!\?\?\?)[^ <>"']+|発信元:\d+.\d+.\d+.\d+)/, ($0, $1) =>
               fixedId = $1.replace(/\u25cf$/, "") #末尾●除去
 
-              articleDataId = fixedId
+              res.id = fixedId
 
               if resNum is 1
                 @oneId = fixedId
 
               if fixedId is @oneId
-                articleClass.push("one")
+                res.class.push("one")
 
               if fixedId.endsWith(".net")
-                articleClass.push("net")
+                res.class.push("net")
 
               @idIndex[fixedId] = [] unless @idIndex[fixedId]?
               @idIndex[fixedId].push(resNum)
@@ -495,11 +489,11 @@ class UI.ThreadContent
               """<a class="beid" href="http://be.2ch.net/test/p.php?i=$3" target="_blank">$1</a>"""
         )
         # slip追加
-        if articleDataSlip?
+        if res.slip?
           if (index = tmp.indexOf("<span class=\"id\">")) isnt -1
-            tmp = tmp.slice(0, index) + """<span class="slip">SLIP:#{articleDataSlip}</span>""" + tmp.slice(index, tmp.length)
+            tmp = tmp.slice(0, index) + """<span class="slip">SLIP:#{res.slip}</span>""" + tmp.slice(index, tmp.length)
           else
-            tmp += """<span class="slip">SLIP:#{articleDataSlip}</span>"""
+            tmp += """<span class="slip">SLIP:#{res.slip}</span>"""
 
         articleHtml += """<span class="other">#{tmp}</span>"""
 
@@ -507,6 +501,11 @@ class UI.ThreadContent
 
         #文字色
         color = res.message.match(/<font color="(.*?)">/i)
+
+        # id, slip, tripが取り終わったタイミングでNG判定を行う
+        # NG判定されるものは、ReplaceStrTxtで置き換え後のテキストなので注意すること
+        if app.NG.isNGThread(res)
+          res.class.push("ng")
 
         tmp = (
           res.message
@@ -571,13 +570,13 @@ class UI.ThreadContent
         articleHtml += ">#{tmp}</div>"
 
         tmp = ""
-        tmp += " class=\"#{articleClass.join(" ")}\""
-        if articleDataId?
-          tmp += " data-id=\"#{articleDataId}\""
-        if articleDataSlip?
-          tmp += " data-slip=\"#{articleDataSlip}\""
-        if articleDataTrip?
-          tmp += " data-trip=\"#{articleDataTrip}\""
+        tmp += " class=\"#{res.class.join(" ")}\""
+        if res.id?
+          tmp += " data-id=\"#{res.id}\""
+        if res.slip?
+          tmp += " data-slip=\"#{res.slip}\""
+        if res.trip?
+          tmp += " data-trip=\"#{res.trip}\""
 
         articleHtml = """<article#{tmp}>#{articleHtml}</article>"""
         html += articleHtml

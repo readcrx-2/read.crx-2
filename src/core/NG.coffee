@@ -59,6 +59,7 @@ class app.NG
     if string isnt ""
       ngStrSplit = string.split("\n")
       for ngWord in ngStrSplit
+        ngElement = {}
         # 関係ないプレフィックスは飛ばす
         if ngWord.startsWith("Comment:")
           continue
@@ -71,61 +72,47 @@ class app.NG
           ngWord = m[3]
         # キーワードごとのNG処理
         if ngWord.startsWith("RegExp:")
-          ngElement =
-            type: "regExp"
-            word: ngWord.substr(7)
+          ngElement.type = "regExp"
+          ngElement.word = ngWord.substr(7)
         else if ngWord.startsWith("RegExpTitle:")
-          ngElement =
-            type: "regExpTitle"
-            word: ngWord.substr(12)
+          ngElement.type = "regExpTitle"
+          ngElement.word = ngWord.substr(12)
         else if ngWord.startsWith("RegExpName:")
-          ngElement =
-            type: "regExpName"
-            word: ngWord.substr(11)
+          ngElement.type = "regExpName"
+          ngElement.word = ngWord.substr(11)
         else if ngWord.startsWith("RegExpMail:")
-          ngElement =
-            type: "regExpMail"
-            word: ngWord.substr(11)
+          ngElement.type = "regExpMail"
+          ngElement.word = ngWord.substr(11)
         else if ngWord.startsWith("RegExpID:")
-          ngElement =
-            type: "regExpId"
-            word: ngWord.substr(9)
+          ngElement.type = "regExpId"
+          ngElement.word = ngWord.substr(9)
         else if ngWord.startsWith("RegExpSlip:")
-          ngElement =
-            type: "regExpSlip"
-            word: ngWord.substr(11)
+          ngElement.type = "regExpSlip"
+          ngElement.word = ngWord.substr(11)
         else if ngWord.startsWith("RegExpBody:")
-          ngElement =
-            type: "regExpBody"
-            word: ngWord.substr(11)
+          ngElement.type = "regExpBody"
+          ngElement.word = ngWord.substr(11)
         else if ngWord.startsWith("Title:")
-          ngElement =
-            type: "title"
-            word: app.util.normalize(ngWord.substr(6))
+          ngElement.type = "title"
+          ngElement.word = app.util.normalize(ngWord.substr(6))
         else if ngWord.startsWith("Name:")
-          ngElement =
-            type: "name"
-            word: app.util.normalize(ngWord.substr(5))
+          ngElement.type = "name"
+          ngElement.word = app.util.normalize(ngWord.substr(5))
         else if ngWord.startsWith("Mail:")
-          ngElement =
-            type: "mail"
-            word: app.util.normalize(ngWord.substr(5))
+          ngElement.type = "mail"
+          ngElement.word = app.util.normalize(ngWord.substr(5))
         else if ngWord.startsWith("ID:")
-          ngElement =
-            type: "id"
-            word: ngWord
+          ngElement.type = "id"
+          ngElement.word = ngWord
         else if ngWord.startsWith("Slip:")
-          ngElement =
-            type: "slip"
-            word: ngWord.substr(5)
+          ngElement.type = "slip"
+          ngElement.word = ngWord.substr(5)
         else if ngWord.startsWith("Body:")
-          ngElement =
-            type: "body"
-            word: app.util.normalize(ngWord.substr(5))
+          ngElement.type = "body"
+          ngElement.word = app.util.normalize(ngWord.substr(5))
         else
-          ngElement =
-            type: "word"
-            word: app.util.normalize(ngWord)
+          ngElement.type = "word"
+          ngElement.word = app.util.normalize(ngWord)
         if ngElement.word isnt ""
           ng.add(ngElement)
     return ng
@@ -179,19 +166,19 @@ class app.NG
     tmpTxt2 = app.util.normalize(tmpTxt1)
 
     for n from @get()
-      if n.start? and ((n.finish? and n.start <= resNum and resNum <= n.finish) or (parseInt(n.start) is resNum))
+      if n.start? and ((n.finish? and n.start <= res.num and res.num <= n.finish) or (parseInt(n.start) is res.num))
         continue
       if (
         (n.type is "regExp" and n.reg.test(tmpTxt1)) or
         (n.type is "regExpName" and n.reg.test(res.name)) or
         (n.type is "regExpMail" and n.reg.test(res.mail)) or
-        (n.type is "regExpId" and articleDataId? and n.reg.test(articleDataId)) or
-        (n.type is "regExpSlip" and articleDataSlip? and n.reg.test(articleDataSlip)) or
+        (n.type is "regExpId" and res.id? and n.reg.test(res.id)) or
+        (n.type is "regExpSlip" and res.slip? and n.reg.test(res.slip)) or
         (n.type is "regExpBody" and n.reg.test(res.message)) or
         (n.type is "name" and app.util.normalize(res.name).includes(n.word)) or
         (n.type is "mail" and app.util.normalize(res.mail).includes(n.word)) or
-        (n.type is "id" and articleDataId?.includes(n.word)) or
-        (n.type is "slip" and articleDataSlip?.includes(n.word)) or
+        (n.type is "id" and res.id?.includes(n.word)) or
+        (n.type is "slip" and res.slip?.includes(n.word)) or
         (n.type is "body" and app.util.normalize(res.message).includes(n.word)) or
         (n.type is "word" and tmpTxt2.includes(n.word))
       )

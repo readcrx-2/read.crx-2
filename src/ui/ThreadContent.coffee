@@ -408,6 +408,7 @@ class UI.ThreadContent
       for res in items
         resNum++
 
+        res.num = resNum
         res.class = []
 
         res = app.ReplaceStrTxt.do(@url, document.title, res)

@@ -863,17 +863,8 @@ app.boot "/view/thread.html", ->
     app.view_thread._setupHoverZoom(@)
     return
 
-  # 逆スクロール時の位置合わせ
+  # 逆スクロール時の処理
   $view.on "lazyload-load-reverse", ".thumbnail > a > img.image, .thumbnail > video", ->
-    if app.config.get("image_height_fix") is "off"
-      content = $content[0]
-      mediaHeight = @offsetHeight
-      switch @tagName
-        when "IMG"
-          mediaHeight -= 50   # loading.webp
-        when "VIDEO"
-          mediaHeight -= 150  # default Height
-      content.scrollTop += mediaHeight
     # マウスオーバーによるズームの設定
     app.view_thread._setupHoverZoom(@)
     return

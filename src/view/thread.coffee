@@ -226,7 +226,6 @@ app.boot "/view/thread.html", ->
       app.defer ->
         if getSelection().toString().length is 0
           $menu.find(".copy_selection").remove()
-          $menu.find(".add_selection_to_ngwords").remove()
           $menu.find(".search_selection").remove()
         return
 
@@ -314,11 +313,6 @@ app.boot "/view/thread.html", ->
 
       else if $this.hasClass("copy_trip")
         app.clipboardWrite($res.attr("data-trip"))
-
-      else if $this.hasClass("add_selection_to_ngwords")
-        selectedText = getSelection().toString()
-        if selectedText.length > 0
-          app.NG.add(selectedText)
 
       else if $this.hasClass("add_id_to_ngwords")
         app.NG.add($res.attr("data-id"))

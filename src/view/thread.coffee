@@ -226,7 +226,6 @@ app.boot "/view/thread.html", ->
       app.defer ->
         if getSelection().toString().length is 0
           $menu.find(".copy_selection").remove()
-          $menu.find(".add_selection_to_ngwords").remove()
           $menu.find(".search_selection").remove()
         return
 
@@ -314,11 +313,6 @@ app.boot "/view/thread.html", ->
 
       else if $this.hasClass("copy_trip")
         app.clipboardWrite($res.attr("data-trip"))
-
-      else if $this.hasClass("add_selection_to_ngwords")
-        selectedText = getSelection().toString()
-        if selectedText.length > 0
-          app.NG.add(selectedText)
 
       else if $this.hasClass("add_id_to_ngwords")
         app.NG.add($res.attr("data-id"))
@@ -863,17 +857,8 @@ app.boot "/view/thread.html", ->
     app.view_thread._setupHoverZoom(@)
     return
 
-  # 逆スクロール時の位置合わせ
+  # 逆スクロール時の処理
   $view.on "lazyload-load-reverse", ".thumbnail > a > img.image, .thumbnail > video", ->
-    if app.config.get("image_height_fix") is "off"
-      content = $content[0]
-      mediaHeight = @offsetHeight
-      switch @tagName
-        when "IMG"
-          mediaHeight -= 50   # loading.webp
-        when "VIDEO"
-          mediaHeight -= 150  # default Height
-      content.scrollTop += mediaHeight
     # マウスオーバーによるズームの設定
     app.view_thread._setupHoverZoom(@)
     return

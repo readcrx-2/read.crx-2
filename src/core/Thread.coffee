@@ -109,7 +109,7 @@ class app.Thread
                 noChangeFlg = true
                 thread = threadCache
               else
-                threadResponse = Thread.parse(@url, response.body)
+                threadResponse = Thread.parse(@url, response.body, +cache.res_length)
                 # 新しいレスがない場合は最後のレスのみ表示されるのでその場合はキャッシュを送る
                 if !readcgisixFlg and threadResponse.res.length is 1
                   noChangeFlg = true
@@ -233,9 +233,14 @@ class app.Thread
         if deltaFlg
           if @tsld in ["2ch.net", "bbspink.com"] and noChangeFlg is false
             if readcgisixFlg
-              before = response.body.indexOf("<div class=\"thread\">")+20
-              after = response.body.indexOf("</div></div></div>")+12
-              place = cache.data.indexOf("</div></div></div>")+12
+              if @tsld is "bbspink.com"
+                before = response.body.indexOf("</div><section class=\"thread\">")+30
+                after = response.body.indexOf("</dd></dl></section><div>")+10
+                place = cache.data.indexOf("</dd></dl></section><div>")+10
+              else
+                before = response.body.indexOf("<div class=\"thread\">")+20
+                after = response.body.indexOf("</div></div></div>")+12
+                place = cache.data.indexOf("</div></div></div>")+12
               cache.data = cache.data.slice(0, place) + response.body.slice(before, after) + cache.data.slice(place, cache.data.length)
             else
               # 1つのときは</dl>がなぜか存在しないので別処理
@@ -325,9 +330,10 @@ class app.Thread
   @static
   @param {String} url
   @param {String} text
+  @param {Number} resLength
   @return {null|Object}
   ###
-  @parse: (url, text) ->
+  @parse: (url, text, resLength) ->
     switch app.url.tsld(url)
       when ""
         null
@@ -341,7 +347,7 @@ class app.Thread
         else
           Thread._parseNet(text)
       when "bbspink.com"
-        Thread._parseNet(text)
+        Thread._parsePink(text, resLength)
       else
         Thread._parseCh(text)
 
@@ -511,6 +517,51 @@ class app.Thread
           mail: ""
           message: "データが破損しています"
           other: ""
+
+    if thread.res.length > 0 and thread.res.length > numberOfBroken
+      thread
+    else
+      null
+
+  ###*
+  @method _parsePink
+  @static
+  @private
+  @param {String} text
+  @param {Number} resLength
+  @return {null|Object}
+  ###
+  @_parsePink = (text, resLength) ->
+    # name, mail, other, message, thread_title
+    text = text.replace(/<\/h1>/, "</h1></dd></dl>")
+    reg = /^.*?<dl class="post".*><dt class=\"\"><span class="number">(\d+).* : <\/span><span class="name"><b>(?:<a href="mailto:([^<>]*)">|<font [^>]*>)?(.*?)(?:<\/a>|<\/font>)?<\/b><\/span><span class="date">(.*)<\/span><\/dt><dd class="thread_in"> ?(.*)$/
+    separator = "</dd></dl>"
+
+    titleReg = /<h1 .*?>(.*)\n?<\/h1>/;
+    numberOfBroken = 0
+    thread = res: []
+    first = true
+    resCount = if resLength? then resLength else 0
+
+    for line in text.split(separator)
+      title = titleReg.exec(line)
+      regRes = reg.exec(line)
+
+      if title
+        thread.title = app.util.decode_char_reference(title[1])
+        thread.title = app.util.removeNeedlessFromTitle(thread.title)
+      else if regRes
+        while ++resCount isnt +regRes[1]
+          thread.res.push
+            name: "あぼーん"
+            mail: "あぼーん"
+            message: "あぼーん"
+            other: "あぼーん"
+        thread.res.push
+          name: regRes[3]
+          mail: regRes[2] or ""
+          message: regRes[5]
+          other: regRes[4]
 
     if thread.res.length > 0 and thread.res.length > numberOfBroken
       thread

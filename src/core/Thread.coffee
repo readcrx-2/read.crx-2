@@ -239,8 +239,16 @@ class app.Thread
                 place = cache.data.indexOf("</dd></dl></section><div>")+10
               else
                 before = response.body.indexOf("<div class=\"thread\">")+20
-                after = response.body.indexOf("</div></div></div>")+12
-                place = cache.data.indexOf("</div></div></div>")+12
+                after = response.body.indexOf("</div></div></div><div class=\"cLength\">")
+                if after isnt -1
+                  after += 12
+                else
+                  after = response.body.indexOf("</div></div></div>")+12
+                place = cache.data.indexOf("</div></div></div><div class=\"cLength\">")
+                if place isnt -1
+                  place += 12
+                else
+                  place = cache.data.indexOf("</div></div></div>")+12
               cache.data = cache.data.slice(0, place) + response.body.slice(before, after) + cache.data.slice(place, cache.data.length)
             else
               # 1つのときは</dl>がなぜか存在しないので別処理

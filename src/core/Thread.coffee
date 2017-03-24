@@ -234,13 +234,29 @@ class app.Thread
           if @tsld in ["2ch.net", "bbspink.com"] and noChangeFlg is false
             if readcgisixFlg
               if @tsld is "bbspink.com"
-                before = response.body.indexOf("</div><section class=\"thread\">")+30
-                after = response.body.indexOf("</dd></dl></section><div>")+10
-                place = cache.data.indexOf("</dd></dl></section><div>")+10
+                before = response.body.indexOf("</h1><dl class=\"post\"")+5
+                after = response.body.indexOf("</dd></dl></section><div>")
+                if after isnt -1
+                  after += 10
+                else
+                  after = response.body.indexOf("</dd></dl></section>")+10
+                place = cache.data.indexOf("</dd></dl></section><div>")
+                if place isnt -1
+                  place +=10
+                else
+                  place = cache.data.indexOf("</dd></dl></section>")
               else
                 before = response.body.indexOf("<div class=\"thread\">")+20
-                after = response.body.indexOf("</div></div></div>")+12
-                place = cache.data.indexOf("</div></div></div>")+12
+                after = response.body.indexOf("</div></div></div><div class=\"cLength\">")
+                if after isnt -1
+                  after += 12
+                else
+                  after = response.body.indexOf("</div></div></div>")+12
+                place = cache.data.indexOf("</div></div></div><div class=\"cLength\">")
+                if place isnt -1
+                  place += 12
+                else
+                  place = cache.data.indexOf("</div></div></div>")+12
               cache.data = cache.data.slice(0, place) + response.body.slice(before, after) + cache.data.slice(place, cache.data.length)
             else
               # 1つのときは</dl>がなぜか存在しないので別処理

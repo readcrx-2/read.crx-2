@@ -511,7 +511,8 @@ class UI.ThreadContent
         tmp = (
           res.message
             #imgタグ変換
-            .replace(/<img src="(.*?)".*?>/ig, "$1")
+            .replace(/<img src="([\w]+):\/\/(.*?)".*?>/ig, "$1://$2")
+            .replace(/<img src="\/\/(.*?)".*?>/ig, "http://$1")
             #Rock54
             .replace(/(?:<small.*?>&#128064;|<i>&#128064;<\/i>)<br>Rock54: (Caution|Warning)\((.+?)\) ?.*?(?:<\/small>)?/ig, "<div class=\"rock54\">&#128064; Rock54: $1($2)</div>")
             #SLIPが変わったという表示

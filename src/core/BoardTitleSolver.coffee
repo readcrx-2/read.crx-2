@@ -43,8 +43,12 @@ class app.BoardTitleSolver
   ###
   @searchFromBBSMenu: (url) ->
     @getBBSMenu().then((bbsmenu) => $.Deferred (d) =>
+      # スキーム違いについても確認をする
+      url2 = app.url.changeScheme(url)
       if bbsmenu[url]?
         d.resolve(bbsmenu[url])
+      else if bbsmenu[url2]?
+        d.resolve(bbsmenu[url2])
       else
         d.reject()
       return
@@ -58,7 +62,10 @@ class app.BoardTitleSolver
   ###
   @searchFromBookmark: (url) ->
     $.Deferred((d) ->
-      if bookmark = app.bookmark.get(url)
+      # スキーム違いについても確認をする
+      url2 = app.url.changeScheme(url)
+      bookmark = app.bookmark.get(url) ? app.bookmark.get(url2)
+      if bookmark
         if app.url.tsld(bookmark.url) is "2ch.net"
           d.resolve(bookmark.title.replace("＠2ch掲示板", ""))
         else
@@ -113,7 +120,8 @@ class app.BoardTitleSolver
   ###
   @searchFromJbbsAPI: (url) ->
     tmp = url.split("/")
-    ajax_path = "http://jbbs.shitaraba.net/bbs/api/setting.cgi/#{tmp[3]}/#{tmp[4]}/"
+    scheme = app.url.getScheme(url)
+    ajax_path = "#{scheme}://jbbs.shitaraba.net/bbs/api/setting.cgi/#{tmp[3]}/#{tmp[4]}/"
 
     $.Deferred (d) ->
       request = new app.HTTP.Request("GET", ajax_path, {

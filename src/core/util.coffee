@@ -71,7 +71,7 @@ do ->
     #htmlから移転を判定
     .then (html) ->
       $.Deferred (deferred) ->
-        res = ///location\.href="(http://\w+\.2ch\.net/\w*/)"///.exec(html)
+        res = ///location\.href="(https?://\w+\.2ch\.net/\w*/)"///.exec(html)
 
         if res and res[1] isnt old_board_url
           deferred.resolve(res[1])

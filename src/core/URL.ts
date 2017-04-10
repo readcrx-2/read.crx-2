@@ -3,21 +3,21 @@
 
 namespace app {
   export namespace URL {
-    export const CH_BOARD_REG = /^(http:\/\/[\w\.]+\/test\/read\.cgi\/\w+\/\d+).*?$/;
-    export const MACHI_BOARD_REG = /^(http:\/\/\w+\.machi\.to\/bbs\/read\.cgi\/\w+\/\d+).*?$/;
-    export const SHITARABA_BOARD_REG = /^http:\/\/jbbs\.(?:livedoor\.jp|shitaraba\.net)\/(bbs\/read\.cgi\/\w+\/\d+\/\d+).*?$/;
-    export const CH_THREAD_REG = /^(http:\/\/[\w\.]+\/\w+\/)(?:#.*)?$/;
-    export const SHITARABA_THREAD_REG = /^http:\/\/jbbs\.(?:livedoor\.jp|shitaraba\.net)\/(\w+\/\d+\/)(?:#.*)?$/;
+    export const CH_BOARD_REG = /^(https?:\/\/[\w\.]+\/test\/read\.cgi\/\w+\/\d+).*?$/;
+    export const MACHI_BOARD_REG = /^(https?:\/\/\w+\.machi\.to\/bbs\/read\.cgi\/\w+\/\d+).*?$/;
+    export const SHITARABA_BOARD_REG = /^(https?):\/\/jbbs\.(?:livedoor\.jp|shitaraba\.net)\/(bbs\/read\.cgi\/\w+\/\d+\/\d+).*?$/;
+    export const CH_THREAD_REG = /^(https?:\/\/[\w\.]+\/\w+\/)(?:#.*)?$/;
+    export const SHITARABA_THREAD_REG = /^(https?):\/\/jbbs\.(?:livedoor\.jp|shitaraba\.net)\/(\w+\/\d+\/)(?:#.*)?$/;
     export function fix (url:string):string {
       return (
         url
           // スレ系 誤爆する事は考えられないので、パラメータ部分をバッサリ切ってしまう
           .replace(CH_BOARD_REG, "$1/")
           .replace(MACHI_BOARD_REG, "$1/")
-          .replace(SHITARABA_BOARD_REG, "http://jbbs.shitaraba.net/$1/")
+          .replace(SHITARABA_BOARD_REG, "$1://jbbs.shitaraba.net/$2/")
           // 板系 完全に誤爆を少しでも減らすために、パラメータ形式も限定する
           .replace(CH_THREAD_REG, "$1")
-          .replace(SHITARABA_THREAD_REG, "http://jbbs.shitaraba.net/$1")
+          .replace(SHITARABA_THREAD_REG, "$1://jbbs.shitaraba.net/$2")
       );
     }
 
@@ -28,25 +28,25 @@ namespace app {
     export function guessType (url:string):GuessResult {
       url = fix(url);
 
-      if (/^http:\/\/jbbs\.shitaraba\.net\/bbs\/read\.cgi\/\w+\/\d+\/\d+\/$/.test(url)) {
+      if (/^https?:\/\/jbbs\.shitaraba\.net\/bbs\/read\.cgi\/\w+\/\d+\/\d+\/$/.test(url)) {
         return {type: "thread", bbsType: "jbbs"};
       }
-      else if (/^http:\/\/jbbs\.shitaraba\.net\/\w+\/\d+\/$/.test(url)) {
+      else if (/^https?:\/\/jbbs\.shitaraba\.net\/\w+\/\d+\/$/.test(url)) {
         return {type: "board", bbsType: "jbbs"};
       }
-      else if (/^http:\/\/\w+\.machi\.to\/bbs\/read\.cgi\/\w+\/\d+\/$/.test(url)) {
+      else if (/^https?:\/\/\w+\.machi\.to\/bbs\/read\.cgi\/\w+\/\d+\/$/.test(url)) {
         return {type: "thread", bbsType: "machi"};
       }
-      else if (/^http:\/\/\w+\.machi\.to\/\w+\/$/.test(url)) {
+      else if (/^https?:\/\/\w+\.machi\.to\/\w+\/$/.test(url)) {
         return {type: "board", bbsType: "machi"};
       }
-      else if (/^http:\/\/[\w\.]+\/test\/read\.cgi\/\w+\/\d+\/$/.test(url)) {
+      else if (/^https?:\/\/[\w\.]+\/test\/read\.cgi\/\w+\/\d+\/$/.test(url)) {
         return {type: "thread", bbsType: "2ch"};
       }
-      else if (/^http:\/\/(?:find|info|p2|ninja)\.2ch\.net\/\w+\/$/.test(url)) {
+      else if (/^https?:\/\/(?:find|info|p2|ninja)\.2ch\.net\/\w+\/$/.test(url)) {
         return {type: "unknown", bbsType: "unknown"};
       }
-      else if (/^http:\/\/[\w\.]+\/\w+\/$/.test(url)) {
+      else if (/^https?:\/\/[\w\.]+\/\w+\/$/.test(url)) {
         return {type: "board", bbsType: "2ch"};
       }
       else {
@@ -69,11 +69,28 @@ namespace app {
       return splited.length > 1 ? splited[2] : "";
     }
 
+    export function getScheme (url: string): string {
+      var scheme: string[];
+
+      scheme = /^([\w]+):\/\/.*/.exec(url);
+      return scheme ? scheme[1] : null;
+    }
+
+    export function changeScheme (url: string): string {
+      var tmp: string[];
+      var scheme: string;
+
+      tmp = /^(https?):\/\/(.*)/.exec(url);
+      scheme = tmp[1] === "http" ? "https" : "http";
+
+      return tmp ? scheme + "://" + tmp[2] : null;
+    }
+
     export function threadToBoard (url:string):string {
       return (
         fix(url)
-          .replace(/^http:\/\/([\w\.]+)\/(?:test|bbs)\/read\.cgi\/(\w+)\/\d+\/$/, "http://$1/$2/")
-          .replace(/^http:\/\/jbbs\.shitaraba\.net\/bbs\/read\.cgi\/(\w+)\/(\d+)\/\d+\/$/, "http://jbbs.shitaraba.net/$1/$2/")
+          .replace(/^(https?):\/\/([\w\.]+)\/(?:test|bbs)\/read\.cgi\/(\w+)\/\d+\/$/, "$1://$2/$3/")
+          .replace(/^(https?):\/\/jbbs\.shitaraba\.net\/bbs\/read\.cgi\/(\w+)\/(\d+)\/\d+\/$/, "$1://jbbs.shitaraba.net/$2/$3/")
       );
     }
 
@@ -183,6 +200,8 @@ namespace app {
 
     export var tsld = app.URL.tsld;
     export var getDomain = app.URL.getDomain;
+    export var getScheme = app.URL.getScheme;
+    export var changeScheme = app.URL.changeScheme;
     export var thread_to_board = app.URL.threadToBoard;
     export var parse_query = app.URL.parseQuery;
     export var parse_hashquery = app.URL.parseHashQuery;

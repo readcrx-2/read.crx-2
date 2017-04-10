@@ -28,8 +28,8 @@ app.boot "/write/write.html", ->
         is_same_origin = req.requestHeaders.some((header) -> header.name is "Origin" and (header.value is origin or header.value is "null"))
         if req.method is "POST" and is_same_origin
           if (
-            ///^http://\w+\.(2ch\.net|bbspink\.com|2ch\.sc|open2ch\.net)/test/bbs\.cgi ///.test(req.url) or
-            ///^http://jbbs\.shitaraba\.net/bbs/write\.cgi/ ///.test(req.url)
+            ///^https?://\w+\.(2ch\.net|bbspink\.com|2ch\.sc|open2ch\.net)/test/bbs\.cgi ///.test(req.url) or
+            ///^https?://jbbs\.shitaraba\.net/bbs/write\.cgi/ ///.test(req.url)
           )
             req.requestHeaders.push(name: "Referer", value: arg.url)
 
@@ -47,11 +47,11 @@ app.boot "/write/write.html", ->
         tabId: tab.id
         types: ["sub_frame"]
         urls: [
-          "http://*.2ch.net/test/bbs.cgi*"
-          "http://*.bbspink.com/test/bbs.cgi*"
-          "http://*.2ch.sc/test/bbs.cgi*"
-          "http://*.open2ch.net/test/bbs.cgi*"
-          "http://jbbs.shitaraba.net/bbs/write.cgi/*"
+          "*://*.2ch.net/test/bbs.cgi*"
+          "*://*.bbspink.com/test/bbs.cgi*"
+          "*://*.2ch.sc/test/bbs.cgi*"
+          "*://*.open2ch.net/test/bbs.cgi*"
+          "*://jbbs.shitaraba.net/bbs/write.cgi/*"
         ]
       }
       ["requestHeaders", "blocking"]
@@ -174,6 +174,7 @@ app.boot "/write/write.html", ->
 
   document.title = arg.title
   $view.find("h1").text(arg.title)
+  $view.find("h1").addClass("https") if app.url.getScheme(arg.url) is "https"
   $view.find(".name").val(arg.name)
   $view.find(".mail").val(arg.mail)
   $view.find(".message").val(arg.message)
@@ -192,13 +193,14 @@ app.boot "/write/write.html", ->
 
     $iframe = $("<iframe>", src: "/view/empty.html")
     $iframe.one "load", ->
+      scheme = app.url.getScheme(arg.url)
       #2ch
       if guess_res.bbs_type is "2ch"
         #open2ch
         if app.url.tsld(arg.url) is "open2ch.net"
           tmp = arg.url.split("/")
           form_data =
-            action: "http://#{tmp[2]}/test/bbs.cgi"
+            action: "#{scheme}://#{tmp[2]}/test/bbs.cgi"
             charset: "UTF-8"
             input:
               submit: "書"
@@ -211,7 +213,7 @@ app.boot "/write/write.html", ->
         else
           tmp = arg.url.split("/")
           form_data =
-            action: "http://#{tmp[2]}/test/bbs.cgi"
+            action: "#{scheme}://#{tmp[2]}/test/bbs.cgi"
             charset: "Shift_JIS"
             input:
               submit: "書きこむ"
@@ -226,7 +228,7 @@ app.boot "/write/write.html", ->
       else if guess_res.bbs_type is "jbbs"
         tmp = arg.url.split("/")
         form_data =
-          action: "http://jbbs.shitaraba.net/bbs/write.cgi/#{tmp[5]}/#{tmp[6]}/#{tmp[7]}/"
+          action: "#{scheme}://jbbs.shitaraba.net/bbs/write.cgi/#{tmp[5]}/#{tmp[6]}/#{tmp[7]}/"
           charset: "EUC-JP"
           input:
             TIME: Math.floor(Date.now() / 1000) - 60

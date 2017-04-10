@@ -190,9 +190,9 @@ class app.Thread
         app.util.ch_server_move_detect(app.url.thread_to_board(@url))
           #移転検出時
           .done (newBoardURL) =>
-            tmp = ///^http://(\w+)\.2ch\.net/ ///.exec(newBoardURL)[1]
+            tmp = ///^https?://(\w+)\.2ch\.net/ ///.exec(newBoardURL)[1]
             newURL = @url.replace(
-              ///^(http://)\w+(\.2ch\.net/test/read\.cgi/\w+/\d+/)$///,
+              ///^(https?://)\w+(\.2ch\.net/test/read\.cgi/\w+/\d+/)$///,
               ($0, $1, $2) -> $1 + tmp + $2
             )
 
@@ -316,20 +316,20 @@ class app.Thread
   @return {null|Object}
   ###
   @_getXhrInfo = (url) ->
-    tmp = ///^http://((?:\w+\.)?(\w+\.\w+))/(?:test|bbs)/read\.cgi/
+    tmp = ///^(https?)://((?:\w+\.)?(\w+\.\w+))/(?:test|bbs)/read\.cgi/
       (\w+)/(\d+)/(?:(\d+)/)?$///.exec(url)
     unless tmp then return null
-    switch tmp[2]
+    switch tmp[3]
       when "machi.to"
-        path: "http://#{tmp[1]}/bbs/offlaw.cgi/#{tmp[3]}/#{tmp[4]}/",
+        path: "#{tmp[1]}://#{tmp[2]}/bbs/offlaw.cgi/#{tmp[4]}/#{tmp[5]}/",
         charset: "Shift_JIS"
       when "shitaraba.net"
-        path: "http://jbbs.shitaraba.net/" +
-            "bbs/rawmode.cgi/#{tmp[3]}/#{tmp[4]}/#{tmp[5]}/",
+        path: "#{tmp[1]}://jbbs.shitaraba.net/" +
+            "bbs/rawmode.cgi/#{tmp[4]}/#{tmp[5]}/#{tmp[6]}/",
         charset: "EUC-JP"
       when "2ch.net"
         if app.config.get("format_2chnet") is "dat"
-          path: "http://#{tmp[1]}/#{tmp[3]}/dat/#{tmp[4]}.dat",
+          path: "#{tmp[1]}//#{tmp[2]}/#{tmp[4]}/dat/#{tmp[5]}.dat",
           charset: "Shift_JIS"
         else
           path: tmp[0],
@@ -338,7 +338,7 @@ class app.Thread
         path: tmp[0],
         charset: "Shift_JIS"
       else
-        path: "http://#{tmp[1]}/#{tmp[3]}/dat/#{tmp[4]}.dat",
+        path: "#{tmp[1]}://#{tmp[2]}/#{tmp[4]}/dat/#{tmp[5]}.dat",
         charset: "Shift_JIS"
 
   ###*

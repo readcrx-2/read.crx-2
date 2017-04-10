@@ -167,18 +167,18 @@ class app.Board
   @return {Object | null} xhr_info
   ###
   @_get_xhr_info: (board_url) ->
-    tmp = ///^http://((?:\w+\.)?(\w+\.\w+))/(\w+)/(?:(\d+)/)?$///.exec(board_url)
+    tmp = ///^(https?)://((?:\w+\.)?(\w+\.\w+))/(\w+)/(?:(\d+)/)?$///.exec(board_url)
     unless tmp
       return null
-    switch tmp[2]
+    switch tmp[3]
       when "machi.to"
-        path: "http://#{tmp[1]}/bbs/offlaw.cgi/#{tmp[3]}/"
+        path: "#{tmp[1]}://#{tmp[2]}/bbs/offlaw.cgi/#{tmp[4]}/"
         charset: "Shift_JIS"
       when "livedoor.jp", "shitaraba.net"
-        path: "http://jbbs.shitaraba.net/#{tmp[3]}/#{tmp[4]}/subject.txt"
+        path: "#{tmp[1]}://jbbs.shitaraba.net/#{tmp[4]}/#{tmp[5]}/subject.txt"
         charset: "EUC-JP"
       else
-        path: "http://#{tmp[1]}/#{tmp[3]}/subject.txt"
+        path: "#{tmp[1]}://#{tmp[2]}/#{tmp[4]}/subject.txt"
         charset: "Shift_JIS"
 
   ###*
@@ -189,20 +189,20 @@ class app.Board
   @return {Array | null} board
   ###
   @parse: (url, text) ->
-    tmp = /^http:\/\/((?:\w+\.)?(\w+\.\w+))\/(\w+)\/(\w+)?/.exec(url)
-    switch tmp[2]
+    tmp = /^(https?):\/\/((?:\w+\.)?(\w+\.\w+))\/(\w+)\/(\w+)?/.exec(url)
+    switch tmp[3]
       when "machi.to"
         bbs_type = "machi"
         reg = /^\d+<>(\d+)<>(.+)\((\d+)\)$/gm
-        base_url = "http://#{tmp[1]}/bbs/read.cgi/#{tmp[3]}/"
+        base_url = "#{tmp[1]}://#{tmp[2]}/bbs/read.cgi/#{tmp[4]}/"
       when "shitaraba.net"
         bbs_type = "jbbs"
         reg = /^(\d+)\.cgi,(.+)\((\d+)\)$/gm
-        base_url = "http://jbbs.shitaraba.net/bbs/read.cgi/#{tmp[3]}/#{tmp[4]}/"
+        base_url = "#{tmp[1]}://jbbs.shitaraba.net/bbs/read.cgi/#{tmp[4]}/#{tmp[5]}/"
       else
         bbs_type = "2ch"
         reg = /^(\d+)\.dat<>(.+) \((\d+)\)$/gm
-        base_url = "http://#{tmp[1]}/test/read.cgi/#{tmp[3]}/"
+        base_url = "#{tmp[1]}://#{tmp[2]}/test/read.cgi/#{tmp[4]}/"
 
     board = []
     while (reg_res = reg.exec(text))

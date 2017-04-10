@@ -125,6 +125,7 @@ app.boot "/view/bookmark.html", ->
           expired: a.expired
           board_url: boardUrl
           board_title: boardName
+          is_https: (app.url.getScheme(a.url) is "https")
         )
         return
       )

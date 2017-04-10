@@ -14,6 +14,7 @@ $color-pending: #7F7F7F;
 $color-loading: #AC7239;
 $color-success: #339933;
 $color-error: #BF3F3F;
+$color-https: #109020;
 
 @mixin common {
   button, input, select, textarea {
@@ -312,6 +313,7 @@ $color-error: #BF3F3F;
       $icon-color: "333",
       $active-icon-color: "007fff",
       $search-icon-color: "777",
+      $https-icon-color: "182",
       $color: #111,
       $tool-menu-hover-background: hsl(210, 50%, 95%)
     );
@@ -329,6 +331,7 @@ $color-error: #BF3F3F;
       $icon-color: "ddd",
       $active-icon-color: "f93",
       $search-icon-color: "aaa",
+      $https-icon-color: "3a5",
       $color: #eee,
       $tool-menu-hover-background: hsl(30, 100%, 40%)
     );
@@ -352,6 +355,7 @@ $color-error: #BF3F3F;
   $icon-color,
   $active-icon-color,
   $search-icon-color,
+  $https-icon-color,
   $color,
   $tool-menu-hover-background
 ) {
@@ -383,6 +387,12 @@ $color-error: #BF3F3F;
       }
       &.button_write {
         background-image: url(/img/pencil_19x19_#{$icon-color}.webp);
+      }
+      &.button_scheme {
+        background-image: url(/img/unlock_19x19_#{$icon-color}.webp);
+        &.https {
+          background-image: url(/img/lock_19x19_#{$https-icon-color}.webp);
+        }
       }
       &.button_tool {
         background-image: url(/img/menu_19x19_#{$icon-color}.webp);

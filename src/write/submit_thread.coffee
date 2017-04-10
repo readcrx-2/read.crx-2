@@ -28,8 +28,8 @@ app.boot "/write/submit_thread.html", ->
         is_same_origin = req.requestHeaders.some((header) -> header.name is "Origin" and (header.value is origin or header.value is "null"))
         if req.method is "POST" and is_same_origin
           if (
-            ///^http://\w+\.(2ch\.net|bbspink\.com|2ch\.sc|open2ch\.net)/test/bbs\.cgi ///.test(req.url) or
-            ///^http://jbbs\.shitaraba\.net/bbs/write\.cgi/ ///.test(req.url)
+            ///^https?://\w+\.(2ch\.net|bbspink\.com|2ch\.sc|open2ch\.net)/test/bbs\.cgi ///.test(req.url) or
+            ///^https?://jbbs\.shitaraba\.net/bbs/write\.cgi/ ///.test(req.url)
           )
             req.requestHeaders.push(name: "Referer", value: arg.url)
 
@@ -47,11 +47,11 @@ app.boot "/write/submit_thread.html", ->
         tabId: tab.id
         types: ["sub_frame"]
         urls: [
-          "http://*.2ch.net/test/bbs.cgi*"
-          "http://*.bbspink.com/test/bbs.cgi*"
-          "http://*.2ch.sc/test/bbs.cgi*"
-          "http://*.open2ch.net/test/bbs.cgi*"
-          "http://jbbs.shitaraba.net/bbs/write.cgi/*"
+          "*://*.2ch.net/test/bbs.cgi*"
+          "*://*.bbspink.com/test/bbs.cgi*"
+          "*://*.2ch.sc/test/bbs.cgi*"
+          "*://*.open2ch.net/test/bbs.cgi*"
+          "*://jbbs.shitaraba.net/bbs/write.cgi/*"
         ]
       }
       ["requestHeaders", "blocking"]
@@ -130,8 +130,8 @@ app.boot "/write/submit_thread.html", ->
           if !keys?
             $view.find(".notice").text("書き込み失敗 - 不明な転送場所")
           else
-            server = arg.url.match(/^http:\/\/(\w+\.(?:2ch\.net|2ch\.sc|bbspink\.com|open2ch\.net)).*/)[1]
-            url = "http://#{server}/test/read.cgi/#{keys[1]}/#{keys[2]}"
+            server = arg.url.match(/^(https?:\/\/\w+\.(?:2ch\.net|2ch\.sc|bbspink\.com|open2ch\.net)).*/)[1]
+            url = "#{server}/test/read.cgi/#{keys[1]}/#{keys[2]}"
             chrome.runtime.sendMessage(type: "written", kind: "own", url: arg.url, thread_url: url, mes: mes, name: name, mail: mail, title: title)
         else if app.url.tsld(arg.url) is "shitaraba.net"
           chrome.runtime.sendMessage(type: "written", kind: "board", url: arg.url, mes: mes, name: name, mail: mail, title: title)
@@ -161,6 +161,7 @@ app.boot "/write/submit_thread.html", ->
 
   document.title = arg.title + "板"
   $view.find("h1").text(arg.title + "板")
+  $view.find("h1").addClass("https") if app.url.getScheme(arg.url) is "https"
   $view.find(".name").val(arg.name)
   $view.find(".mail").val(arg.mail)
   $view.find(".message").val(arg.message)
@@ -171,6 +172,7 @@ app.boot "/write/submit_thread.html", ->
     $view.find("input, textarea").attr("disabled", true)
 
     guess_res = app.url.guess_type(arg.url)
+    scheme = app.url.getScheme(arg.url)
 
     iframe_arg =
       rcrx_name: $view.find(".name").val()
@@ -186,7 +188,7 @@ app.boot "/write/submit_thread.html", ->
         if app.url.tsld(arg.url) is "open2ch.net"
           tmp = arg.url.split("/")
           form_data =
-            action: "http://#{tmp[2]}/test/bbs.cgi"
+            action: "#{scheme}://#{tmp[2]}/test/bbs.cgi"
             charset: "UTF-8"
             input:
               submit: "新規スレッド作成"
@@ -199,7 +201,7 @@ app.boot "/write/submit_thread.html", ->
         else
           tmp = arg.url.split("/")
           form_data =
-            action: "http://#{tmp[2]}/test/bbs.cgi"
+            action: "#{scheme}://#{tmp[2]}/test/bbs.cgi"
             charset: "Shift_JIS"
             input:
               submit: "新規スレッド作成"
@@ -214,7 +216,7 @@ app.boot "/write/submit_thread.html", ->
       else if guess_res.bbs_type is "jbbs"
         tmp = arg.url.split("/")
         form_data =
-          action: "http://jbbs.shitaraba.net/bbs/write.cgi/#{tmp[3]}/#{tmp[4]}/new/"
+          action: "#{scheme}://jbbs.shitaraba.net/bbs/write.cgi/#{tmp[3]}/#{tmp[4]}/new/"
           charset: "EUC-JP"
           input:
             submit: "新規スレッド作成"
@@ -275,4 +277,3 @@ app.boot "/write/submit_thread.html", ->
       return
     return
   return
-

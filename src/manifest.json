@@ -35,22 +35,22 @@
   "content_scripts" : [
     {
       "matches" : [
-        "http://*.2ch.net/*",
-        "http://jbbs.shitaraba.net/*",
-        "http://*.machi.to/*",
-        "http://*.open2ch.net/*",
-        "http://*.2ch.sc/*",
-        "http://*.bbspink.com/*"
+        "*://*.2ch.net/*",
+        "*://jbbs.shitaraba.net/*",
+        "*://*.machi.to/*",
+        "*://*.open2ch.net/*",
+        "*://*.2ch.sc/*",
+        "*://*.bbspink.com/*"
       ],
       "js" : ["/cs_addlink.js"]
     },
     {
       "matches" : [
-        "http://*.2ch.net/test/bbs.cgi*",
-        "http://*.bbspink.com/test/bbs.cgi*",
-        "http://*.2ch.sc/test/bbs.cgi*",
-        "http://*.open2ch.net/test/bbs.cgi*",
-        "http://jbbs.shitaraba.net/bbs/write.cgi/*"
+        "*://*.2ch.net/test/bbs.cgi*",
+        "*://*.bbspink.com/test/bbs.cgi*",
+        "*://*.2ch.sc/test/bbs.cgi*",
+        "*://*.open2ch.net/test/bbs.cgi*",
+        "*://jbbs.shitaraba.net/bbs/write.cgi/*"
       ],
       "js" : ["/write/cs_write.js"],
       "run_at" : "document_end",

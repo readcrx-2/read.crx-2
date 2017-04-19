@@ -466,8 +466,7 @@ class app.view.TabContentView extends app.view.PaneContentView
       if e.which isnt 3
         $this = $(@)
         howToOpen = app.util.get_how_to_open(e)
-        newTab = app.config.get("always_new_tab") is "on"
-        newTab or= howToOpen.new_tab or howToOpen.new_window
+        newTab = howToOpen.new_tab or howToOpen.new_window
         background = howToOpen.background
 
         if not $this.is(".disabled")

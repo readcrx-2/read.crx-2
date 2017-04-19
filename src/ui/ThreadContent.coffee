@@ -208,6 +208,20 @@ class UI.ThreadContent
           max = Math.max(to-change, to+change)
           requestAnimationFrame(_scrollInterval = =>
             before = @container.scrollTop
+            # 画像のロードによる座標変更時の補正
+            if to isnt target.offsetTop + offset
+              to = target.offsetTop + offset
+              min = Math.min(to-change, to+change)
+              max = Math.max(to-change, to+change)
+            # 例外発生時の停止処理
+            if (
+              (change > 0 and @container.scrollTop > max) or
+              (change < 0 and @container.scrollTop < min)
+            )
+              @container.scrollTop = to
+              @_$container.trigger("scrollfinish")
+              return
+            # 正常時の処理
             if min <= @container.scrollTop <= max
               @container.scrollTop = to
               @_$container.trigger("scrollfinish")

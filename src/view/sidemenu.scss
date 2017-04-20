@@ -43,6 +43,11 @@ a {
   cursor: pointer;
 }
 
+a.https::before {
+  content: url(/img/lock_12x12_3a5.webp);
+  vertical-align: middle;
+}
+
 .search {
   display: flex;
   padding: 2px;

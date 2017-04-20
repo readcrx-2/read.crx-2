@@ -27,6 +27,11 @@ tbody:empty {
   }
 }
 
+tr.https td:first-child:before {
+  content: url(/img/lock_12x12_3a5.webp);
+  vertical-align: middle;
+}
+
 tr.expired td:first-child:before {
   content: "[dat落ち] ";
   color: $color-error;

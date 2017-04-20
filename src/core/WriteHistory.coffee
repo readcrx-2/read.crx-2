@@ -110,7 +110,9 @@ class app.WriteHistory
               key = 0
               length = result.rows.length
               while key < length
-                data.push(result.rows.item(key))
+                item = result.rows.item(key)
+                item.is_https = (app.url.getScheme(item.url) is "https")
+                data.push(item)
                 key++
               d.resolve(data)
               return

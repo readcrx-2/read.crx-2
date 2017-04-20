@@ -35,6 +35,10 @@ app.boot "/view/board.html", ->
   else
     $view.find(".button_write").remove()
 
+  # 現状ではしたらばはhttpsに対応していないので切り替えボタンを隠す
+  if app.url.tsld(url) is "shitaraba.net"
+    $view.find(".button_scheme").remove()
+
   $view
     .find("table")
       .each ->

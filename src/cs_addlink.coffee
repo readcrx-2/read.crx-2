@@ -1,10 +1,10 @@
 regs = [
-  ///^http://(?!find|info|p2)\w+(?:\.2ch\.net|\.2ch\.sc|\.open2ch\.net)/\w+/(?:index\.html)?(?:#\d+)?$///
-  ///^http://(?!itest)\w+(?:\.2ch\.net|\.2ch\.sc|\.open2ch\.net|\.bbspink\.com)/test/read\.cgi/\w+/\d+///
-  ///^http://jbbs\.shitaraba\.net/\w+/\d+/(?:index\.html)?(?:#\d+)?$///
-  ///^http://jbbs\.shitaraba\.net/bbs/read\.cgi/\w+/\d+/\d+///
-  ///^http://\w+\.machi\.to/\w+/(?:index\.html)?(?:#\d+)?$///
-  ///^http://\w+\.machi\.to/bbs/read\.cgi/\w+/\d+///
+  ///^https?://(?!find|info|p2)\w+(?:\.2ch\.net|\.2ch\.sc|\.open2ch\.net)/\w+/(?:index\.html)?(?:#\d+)?$///
+  ///^https?://(?!itest)\w+(?:\.2ch\.net|\.2ch\.sc|\.open2ch\.net|\.bbspink\.com)/test/read\.cgi/\w+/\d+///
+  ///^https?://jbbs\.shitaraba\.net/\w+/\d+/(?:index\.html)?(?:#\d+)?$///
+  ///^https?://jbbs\.shitaraba\.net/bbs/read\.cgi/\w+/\d+/\d+///
+  ///^https?://\w+\.machi\.to/\w+/(?:index\.html)?(?:#\d+)?$///
+  ///^https?://\w+\.machi\.to/bbs/read\.cgi/\w+/\d+///
 ]
 
 open_button_id = "36e5cda5"

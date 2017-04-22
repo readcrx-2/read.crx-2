@@ -45,7 +45,7 @@ app.boot "/view/config.html", ["cache", "bbsmenu"], (Cache, BBSMenu) ->
         @value = app.config.get(@name) or "0"
         null
       .on "input", ->
-        app.config.set(@name, if not Number.isInteger(@value) then @value else "0")
+        app.config.set(@name, if Number.isInteger(+@value) then @value else "0")
         return
 
   $view

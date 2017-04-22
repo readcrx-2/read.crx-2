@@ -62,28 +62,19 @@ namespace app {
       return res ? res[1] : "";
     }
 
-    export function getDomain (url:string):string {
-      var splited:string[];
-
-      splited = url.split("/");
-      return splited.length > 1 ? splited[2] : "";
+    export function getDomain (urlstr: string):string {
+      return (new window.URL(urlstr)).hostname;
     }
 
-    export function getScheme (url: string): string {
-      var scheme: string[];
-
-      scheme = /^([\w]+):\/\/.*/.exec(url);
-      return scheme ? scheme[1] : null;
+    export function getScheme (urlstr: string): string {
+      return (new window.URL(urlstr)).protocol.slice(0, -1);
     }
 
-    export function changeScheme (url: string): string {
-      var tmp: string[];
-      var scheme: string;
+    export function changeScheme (urlstr: string): string {
+      var url = new window.URL(urlstr);
+      url.protocol = (url.protocol == "http:") ? "https:" : "http";
 
-      tmp = /^(https?):\/\/(.*)/.exec(url);
-      scheme = tmp[1] === "http" ? "https" : "http";
-
-      return tmp ? scheme + "://" + tmp[2] : null;
+      return url.toString();
     }
 
     export function threadToBoard (url:string):string {
@@ -94,58 +85,33 @@ namespace app {
       );
     }
 
-    function _parseQuery (query:string):{[index:string]:any;} {
-      var data:{[index:string]:any;};
+    export function parseQuery (urlstr:string, fromSearch:boolean = true):{[index:string]:any;} {
+      var searchStr:string;
 
-      data = {};
+      searchStr = fromSearch ? urlstr : (new window.URL(urlstr)).search;
 
-      for(var segment of query.split("&")) {
-        var tmp:any;
-
-        tmp = segment.split("=");
-
-        if (typeof tmp[1] === "string") {
-          data[decodeURIComponent(tmp[0])] = decodeURIComponent(tmp[1]);
-        }
-        else {
-          data[decodeURIComponent(tmp[0])] = true;
-        }
-      }
-
-      return data;
-    }
-
-    export function parseQuery (url:string):{[index:string]:any;} {
-      var tmp;
-
-      tmp = /\?([^#]+)(:?\#.*)?$/.exec(url);
-      return tmp ? _parseQuery(tmp[1]) : {};
+      return new URLSearchParams(searchStr.slice(1))
     }
 
     export function parseHashQuery (url:string):{[index:string]:any;} {
       var tmp;
 
       tmp = /#(.+)$/.exec(url);
-      return tmp ? _parseQuery(tmp[1]) : {};
+
+      return tmp ? new URLSearchParams(tmp[1]) : new URLSearchParams();
     }
 
     export function buildQueryString (data:{[index:string]:any;}) {
-      var str:string, key:string, val:any;
+      var param, key:string, val:any;
 
-      str = "";
+      param = new URLSearchParams();
 
       for (key in data) {
         val = data[key];
-
-        if (val === true) {
-          str += `&${encodeURIComponent(key)}`;
-        }
-        else {
-          str += `&${encodeURIComponent(key)}=${encodeURIComponent(val)}`;
-        }
+        param.append(key, val);
       }
 
-      return str.slice(1);
+      return param.toString();
     }
 
     export const SHORT_URL_REG = /^h?ttps?:\/\/(?:amba\.to|amzn\.to|bit\.ly|buff\.ly|cas\.st|dlvr\.it|fb\.me|g\.co|goo\.gl|htn\.to|ift\.tt|is\.gd|itun\.es|j\.mp|jump\.cx|ow\.ly|p\.tl|prt\.nu|redd\.it|snipurl\.com|spoti\.fi|t\.co|tiny\.cc|tinyurl\.com|tl\.gd|tr\.im|trib\.al|url\.ie|urx\.nu|urx2\.nu|urx3\.nu|ur0\.pw|wk\.tk|xrl\.us)\/.+/;
@@ -202,10 +168,10 @@ namespace app {
     export var getDomain = app.URL.getDomain;
     export var getScheme = app.URL.getScheme;
     export var changeScheme = app.URL.changeScheme;
-    export var thread_to_board = app.URL.threadToBoard;
-    export var parse_query = app.URL.parseQuery;
-    export var parse_hashquery = app.URL.parseHashQuery;
-    export var build_param = app.URL.buildQueryString;
+    export var threadToBoard = app.URL.threadToBoard;
+    export var parseQuery = app.URL.parseQuery;
+    export var parseHashQuery = app.URL.parseHashQuery;
+    export var buildQuery = app.URL.buildQueryString;
     export const SHORT_URL_REG = app.URL.SHORT_URL_REG;
     export var expandShortURL = app.URL.expandShortURL;
   }

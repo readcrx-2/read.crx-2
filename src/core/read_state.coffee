@@ -46,7 +46,7 @@ app.read_state.set = (read_state) ->
 
   url = app.read_state._url_filter(read_state.url)
   read_state.url = url.replaced
-  board_url = app.url.thread_to_board(url.original)
+  board_url = app.url.threadToBoard(url.original)
   read_state.board_url = app.read_state._url_filter(board_url).replaced
 
   app.read_state._db_open

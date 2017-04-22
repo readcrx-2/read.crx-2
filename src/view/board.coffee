@@ -1,6 +1,9 @@
 app.boot "/view/board.html", ->
-  url = app.url.parse_query(location.href).q
-  (alert("不正な引数です"); return) unless url?
+  try
+    url = app.url.parseQuery(location.search).get("q")
+  catch
+    alert("不正な引数です")
+    return
   url = app.url.fix(url)
   opened_at = Date.now()
 
@@ -23,7 +26,7 @@ app.boot "/view/board.html", ->
     param.title = document.title
     param.url = url
     open(
-      "/write/submit_thread.html?#{app.url.build_param(param)}"
+      "/write/submit_thread.html?#{app.url.buildQuery(param)}"
       undefined
       'width=600,height=400'
     )

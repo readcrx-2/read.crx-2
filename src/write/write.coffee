@@ -14,12 +14,13 @@ do ->
   return
 
 app.boot "/write/write.html", ->
-  arg = app.url.parse_query(location.href)
-  arg.url = app.url.fix(arg.url)
-  arg.title or= arg.url
-  arg.name or= app.config.get("default_name")
-  arg.mail or= app.config.get("default_mail")
-  arg.message or= ""
+  param = app.url.parseQuery(location.search)
+  arg = {}
+  arg.url = app.url.fix(param.get("url"))
+  arg.title = param.get("title") ? param.get("url")
+  arg.name = param.get("name") ? app.config.get("default_name")
+  arg.mail = param.get("mail") ? app.config.get("default_mail")
+  arg.message = param.get("message") ? ""
 
   chrome.tabs.getCurrent (tab) ->
     chrome.webRequest.onBeforeSendHeaders.addListener(

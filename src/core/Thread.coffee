@@ -187,7 +187,7 @@ class app.Thread
 
       #2chでrejectされてる場合は移転を疑う
       if @tsld is "2ch.net" and response
-        app.util.ch_server_move_detect(app.url.thread_to_board(@url))
+        app.util.ch_server_move_detect(app.url.threadToBoard(@url))
           #移転検出時
           .done (newBoardURL) =>
             tmp = ///^https?://(\w+)\.2ch\.net/ ///.exec(newBoardURL)[1]

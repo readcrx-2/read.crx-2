@@ -150,7 +150,7 @@ do ->
   app.util.search_next_thread = (thread_url, thread_title) ->
     $.Deferred (d) ->
       thread_url = app.url.fix(thread_url)
-      board_url = app.url.thread_to_board(thread_url)
+      board_url = app.url.threadToBoard(thread_url)
       thread_title = app.util.normalize(thread_title)
 
       app.board.get board_url, (res) ->

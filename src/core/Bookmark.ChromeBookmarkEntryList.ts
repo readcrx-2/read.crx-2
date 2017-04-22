@@ -87,7 +87,7 @@ module app.Bookmark {
         };
       }
 
-      if (arg.get("expired") === true) {
+      if (arg.get("expired") === "true") {
         entry.expired = true;
       }
 

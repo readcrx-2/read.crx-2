@@ -88,7 +88,7 @@ do ->
             for category in result.data
               for board in category.board
                 m = board.url.match(boardUrlReg)
-                if m? and match[1] is m[1]
+                if m? and match[1] is m[1] and match[0] isnt m[0]
                   d.resolve(m[0])
                   break
             d.reject()

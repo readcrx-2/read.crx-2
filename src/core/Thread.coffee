@@ -37,6 +37,7 @@ class app.Thread
     cache = new app.Cache(xhrPath)
     deltaFlg = false
     readcgisixFlg = false
+    readcgiSevenFlg = false
     noChangeFlg = false
 
     #キャッシュ取得
@@ -69,6 +70,10 @@ class app.Thread
             deltaFlg = true
             if cache.data.includes("<div class=\"footer push\">read.cgi ver 06")
               readcgisixFlg = true
+              xhrPath += (+cache.res_length + 1) + "-n"
+            else if cache.data.includes("<div class=\"footer push\">read.cgi ver 07")
+              readcgisixFlg = true
+              readcgiSevenFlg = true
               xhrPath += (+cache.res_length + 1) + "-n"
             else
               xhrPath += (+cache.res_length) + "-n"
@@ -232,7 +237,7 @@ class app.Thread
 
         if deltaFlg
           if @tsld in ["2ch.net", "bbspink.com"] and noChangeFlg is false
-            if readcgisixFlg
+            if readcgisixFlg or readcgiSevenFlg
               if @tsld is "bbspink.com"
                 before = response.body.indexOf("</h1><dl class=\"post\"")+5
                 after = response.body.indexOf("</dd></dl></section><div>")
@@ -245,6 +250,18 @@ class app.Thread
                   place +=10
                 else
                   place = cache.data.indexOf("</dd></dl></section>")
+              else if readcgiSevenFlg
+                before = response.body.indexOf("<div class=\"thread\">")+20
+                after = response.body.indexOf("</span></div></div></div>")
+                if after isnt -1
+                  after += 19
+                else
+                  after = response.body.indexOf("</span></div></div>")+19
+                place = cache.data.indexOf("</span></div></div></div>")
+                if place isnt -1
+                  place += 19
+                else
+                  place = cache.data.indexOf("</span></div></div>")+19
               else
                 before = response.body.indexOf("<div class=\"thread\">")+20
                 after = response.body.indexOf("</div></div></div><div class=\"cLength\">")
@@ -379,6 +396,10 @@ class app.Thread
     if text.includes("<div class=\"footer push\">read.cgi ver 06")
       text = text.replace(/<\/h1>/, "</h1></div></div>")
       reg = /^.*?<div class="post".*><div class="number">\d+.* : <\/div><div class="name"><b>(?:<a href="mailto:([^<>]*)">|<font [^>]*>)?(.*?)(?:<\/a>|<\/font>)?<\/b><\/div><div class="date">(.*)<\/div><div class="message"> ?(.*)$/
+      separator = "</div></div>"
+    else if text.includes("<div class=\"footer push\">read.cgi ver 07")
+      text = text.replace(/<\/h1>/, "</h1></div></div>")
+      reg = /^.*?<div class="post".*><div class="meta"><span class="number">\d+<\/span><span class="name"><b>(?:<a href="mailto:([^<>]*)">|<font [^>]*>)?(.*?)(?:<\/a>|<\/font>)?<\/b><\/span><span class="date">(.*)<\/span><\/div><div class="message"> ?(.*)$/
       separator = "</div></div>"
     else
       reg = /^(?:<\/?div.*?(?:<br><br>)?)?<dt>\d+.*：(?:<a href="mailto:([^<>]*)">|<font [^>]*>)?<b>(.*)<\/b>.*：(.*)<dd> ?(.*)<br><br>$/

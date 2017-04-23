@@ -230,7 +230,7 @@ class app.Board
   @return {Promise}
   ###
   @get_cached_res_count: (thread_url) ->
-    board_url = app.url.thread_to_board(thread_url)
+    board_url = app.url.threadToBoard(thread_url)
     xhr_path = Board._get_xhr_info(board_url)?.path
 
     unless xhr_path?

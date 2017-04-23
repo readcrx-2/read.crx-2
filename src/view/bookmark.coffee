@@ -43,7 +43,7 @@ app.boot "/view/bookmark.html", ->
     board_list = new Set()
     board_thread_table = new Map()
     for bookmark in app.bookmarkEntryList.getAllThreads()
-      board_url = app.url.thread_to_board(bookmark.url)
+      board_url = app.url.threadToBoard(bookmark.url)
       board_list.add(board_url)
       if board_thread_table.has(board_url)
         board_thread_table.get(board_url).push(bookmark.url)
@@ -114,7 +114,7 @@ app.boot "/view/bookmark.html", ->
 
   for a in app.bookmarkEntryList.getAllThreads()
     do (a) ->
-      boardUrl = app.url.thread_to_board(a.url)
+      boardUrl = app.url.threadToBoard(a.url)
       app.BoardTitleSolver.ask(boardUrl).done((boardName) ->
         threadList.addItem(
           title: a.title

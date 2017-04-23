@@ -274,8 +274,7 @@ class app.view.Index extends app.view.View
     return
 
 app.boot "/view/index.html", ->
-  arg = app.url.parse_query(location.href)
-  query = arg.q
+  query = app.url.parseQuery(location.search).get("q")
 
   get_current = $.Deferred (deferred) ->
     chrome.tabs.getCurrent (current_tab) ->
@@ -393,13 +392,13 @@ app.main = ->
       url: "bookmark_source_selector"
       modal: true
     else if res = /^search:(.+)$/.exec(url)
-      src: "/view/search.html?#{app.url.build_param(query: res[1])}"
+      src: "/view/search.html?#{app.url.buildQuery(query: res[1])}"
       url: url
     else if guessResult.type is "board"
-      src: "/view/board.html?#{app.url.build_param(q: url)}"
+      src: "/view/board.html?#{app.url.buildQuery(q: url)}"
       url: url
     else if guessResult.type is "thread"
-      src: "/view/thread.html?#{app.url.build_param(q: url)}"
+      src: "/view/thread.html?#{app.url.buildQuery(q: url)}"
       url: url
     else
       null
@@ -408,9 +407,9 @@ app.main = ->
     if res = ///^/view/(\w+)\.html$///.exec(src)
       res[1]
     else if res = ///^/view/search\.html(\?.+)$///.exec(src)
-      app.url.parse_query(res[1]).query
+      app.url.parseQuery(res[1], true).get("query")
     else if res = ///^/view/(?:thread|board)\.html(\?.+)$///.exec(src)
-      app.url.parse_query(res[1]).q
+      app.url.parseQuery(res[1], true).get("q")
     else
       null
 

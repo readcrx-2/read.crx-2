@@ -726,7 +726,7 @@ class UI.ThreadContent
               thumbnailFavicon = document.createElement("img")
               thumbnailFavicon.className = "favicon"
               thumbnailFavicon.src = "/img/dummy_1x1.webp"
-              thumbnailFavicon.setAttribute("data-src", "https://www.google.com/s2/favicons?domain=#{app.url.getDomain(sourceA.href)}")
+              thumbnailFavicon.setAttribute("data-src", "https://www.google.com/s2/favicons?domain=#{sourceA.hostname}")
               thumbnailLink.appendChild(thumbnailFavicon)
 
             when "audio", "video"

@@ -39,8 +39,11 @@ do ->
 app.view_thread = {}
 
 app.boot "/view/thread.html", ->
-  view_url = app.url.parse_query(location.href).q
-  return alert("不正な引数です") unless view_url
+  try
+    view_url = app.url.parseQuery(location.search).get("q")
+  catch
+    alert("不正な引数です")
+    return
   view_url = app.url.fix(view_url)
 
   $view = $(document.documentElement)
@@ -67,7 +70,7 @@ app.boot "/view/thread.html", ->
     param.url = view_url
     param.title = document.title
     open(
-      "/write/write.html?#{app.url.build_param(param)}"
+      "/write/write.html?#{app.url.buildQuery(param)}"
       undefined
       'width=600,height=300'
     )
@@ -468,7 +471,7 @@ app.boot "/view/thread.html", ->
         board_url = app.url.fix(@href)
         after = ""
       else if tmp.type is "thread"
-        board_url = app.url.thread_to_board(@href)
+        board_url = app.url.threadToBoard(@href)
         after = "のスレ"
       else
         return
@@ -869,7 +872,7 @@ app.boot "/view/thread.html", ->
 
   #パンくずリスト表示
   do ->
-    board_url = app.url.thread_to_board(view_url)
+    board_url = app.url.threadToBoard(view_url)
     app.BoardTitleSolver.ask(board_url).always (title) ->
       $view
         .find(".breadcrumb > li > a")
@@ -943,7 +946,7 @@ app.view_thread._draw = ($view, force_update, beforeAdd) ->
 
 app.view_thread._read_state_manager = ($view) ->
   view_url = $view.attr("data-url")
-  board_url = app.url.thread_to_board(view_url)
+  board_url = app.url.threadToBoard(view_url)
   $content = $($view.find(".content"))
   content = $content[0]
   readStateAttached = false

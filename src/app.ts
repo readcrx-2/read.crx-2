@@ -7,9 +7,10 @@ namespace app {
 
   export function criticalError (message:string):void {
     new Notification(
-      "",
       "深刻なエラーが発生したのでread.crxを終了します",
-      `詳細 : ${message}`
+      {
+        body: `詳細 : ${message}`
+      }
     )
 
     parent.chrome.tabs.getCurrent( (tab): void => {

@@ -6,8 +6,8 @@ namespace UI {
     private lastMouseWheel = Date.now();
     private interval: number;
 
-    constructor (private element: Element, private threshold: number = 120) {
-      this.element.addEventListener("mousewheel", this.onMouseWheel.bind(this));
+    constructor (private element: Element, private threshold: number = 100) {
+      this.element.addEventListener("wheel", this.onMouseWheel.bind(this));
       this.interval = setInterval(this.onInterval.bind(this), 500);
     }
 
@@ -20,7 +20,7 @@ namespace UI {
     private onMouseWheel (e: any): void {
       var event: any;
 
-      this.wheelDelta += e.wheelDelta;
+      this.wheelDelta += e.deltaY;
       this.lastMouseWheel = Date.now();
 
       while (Math.abs(this.wheelDelta) >= this.threshold) {

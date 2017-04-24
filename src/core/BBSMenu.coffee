@@ -24,7 +24,7 @@ class app.BBSMenu
   ###
   @parse: (html) ->
     reg_category = ///<b>(.+?)</b>(?:.*[\r\n]+<a\s.*?>.+?</a>)+///gi
-    reg_board = ///<a\shref=(http://(?!info\.2ch\.net/|headline\.bbspink\.com)
+    reg_board = ///<a\shref=(https?://(?!info\.2ch\.net/|headline\.bbspink\.com)
       \w+\.(?:2ch\.net|machi\.to|open2ch\.net|2ch\.sc|bbspink\.com)/\w+/)(?:\s.*?)?>(.+?)</a>///gi
 
     menu = []

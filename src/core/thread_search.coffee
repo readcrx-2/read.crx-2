@@ -5,13 +5,14 @@ app.module "thread_search", [], (callback) ->
 
     _parse = (x) ->
       def = $.Deferred()
-      app.BoardTitleSolver.ask("http://#{x.server}/#{x.ita}/").done((boardName) ->
+      scheme = app.url.getScheme(x.url)
+      app.BoardTitleSolver.ask("#{scheme}://#{x.server}/#{x.ita}/").done((boardName) ->
         def.resolve(
           url: x.url
           created_at: new Date x.key * 1000
           title: x.subject
           res_count: +x.resno
-          board_url: "http://#{x.server}/#{x.ita}/"
+          board_url: "#{scheme}://#{x.server}/#{x.ita}/"
           board_title: boardName
         )
         return

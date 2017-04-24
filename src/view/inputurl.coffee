@@ -7,8 +7,8 @@ app.boot "/view/inputurl.html", ->
     e.preventDefault()
 
     url = @url.value
-    url = url.replace(/// ^ttp:// ///, "http://")
-    unless /// ^h?ttp:// ///.test(url)
+    url = url.replace(/// ^(ttps?):// ///, "h$1://")
+    unless /// ^h?ttps?:// ///.test(url)
       url = "http://" + url
     guess_res = app.url.guess_type(url)
     if guess_res.type is "thread" or guess_res.type is "board"

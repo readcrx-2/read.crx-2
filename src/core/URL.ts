@@ -3,21 +3,21 @@
 
 namespace app {
   export namespace URL {
-    export const CH_BOARD_REG = /^(http:\/\/[\w\.]+\/test\/read\.cgi\/\w+\/\d+).*?$/;
-    export const MACHI_BOARD_REG = /^(http:\/\/\w+\.machi\.to\/bbs\/read\.cgi\/\w+\/\d+).*?$/;
-    export const SHITARABA_BOARD_REG = /^http:\/\/jbbs\.(?:livedoor\.jp|shitaraba\.net)\/(bbs\/read\.cgi\/\w+\/\d+\/\d+).*?$/;
-    export const CH_THREAD_REG = /^(http:\/\/[\w\.]+\/\w+\/)(?:#.*)?$/;
-    export const SHITARABA_THREAD_REG = /^http:\/\/jbbs\.(?:livedoor\.jp|shitaraba\.net)\/(\w+\/\d+\/)(?:#.*)?$/;
+    export const CH_BOARD_REG = /^(https?:\/\/[\w\.]+\/test\/read\.cgi\/\w+\/\d+).*?$/;
+    export const MACHI_BOARD_REG = /^(https?:\/\/\w+\.machi\.to\/bbs\/read\.cgi\/\w+\/\d+).*?$/;
+    export const SHITARABA_BOARD_REG = /^(https?):\/\/jbbs\.(?:livedoor\.jp|shitaraba\.net)\/(bbs\/read\.cgi\/\w+\/\d+\/\d+).*?$/;
+    export const CH_THREAD_REG = /^(https?:\/\/[\w\.]+\/\w+\/)(?:#.*)?$/;
+    export const SHITARABA_THREAD_REG = /^(https?):\/\/jbbs\.(?:livedoor\.jp|shitaraba\.net)\/(\w+\/\d+\/)(?:#.*)?$/;
     export function fix (url:string):string {
       return (
         url
           // スレ系 誤爆する事は考えられないので、パラメータ部分をバッサリ切ってしまう
           .replace(CH_BOARD_REG, "$1/")
           .replace(MACHI_BOARD_REG, "$1/")
-          .replace(SHITARABA_BOARD_REG, "http://jbbs.shitaraba.net/$1/")
+          .replace(SHITARABA_BOARD_REG, "$1://jbbs.shitaraba.net/$2/")
           // 板系 完全に誤爆を少しでも減らすために、パラメータ形式も限定する
           .replace(CH_THREAD_REG, "$1")
-          .replace(SHITARABA_THREAD_REG, "http://jbbs.shitaraba.net/$1")
+          .replace(SHITARABA_THREAD_REG, "$1://jbbs.shitaraba.net/$2")
       );
     }
 
@@ -28,25 +28,25 @@ namespace app {
     export function guessType (url:string):GuessResult {
       url = fix(url);
 
-      if (/^http:\/\/jbbs\.shitaraba\.net\/bbs\/read\.cgi\/\w+\/\d+\/\d+\/$/.test(url)) {
+      if (/^https?:\/\/jbbs\.shitaraba\.net\/bbs\/read\.cgi\/\w+\/\d+\/\d+\/$/.test(url)) {
         return {type: "thread", bbsType: "jbbs"};
       }
-      else if (/^http:\/\/jbbs\.shitaraba\.net\/\w+\/\d+\/$/.test(url)) {
+      else if (/^https?:\/\/jbbs\.shitaraba\.net\/\w+\/\d+\/$/.test(url)) {
         return {type: "board", bbsType: "jbbs"};
       }
-      else if (/^http:\/\/\w+\.machi\.to\/bbs\/read\.cgi\/\w+\/\d+\/$/.test(url)) {
+      else if (/^https?:\/\/\w+\.machi\.to\/bbs\/read\.cgi\/\w+\/\d+\/$/.test(url)) {
         return {type: "thread", bbsType: "machi"};
       }
-      else if (/^http:\/\/\w+\.machi\.to\/\w+\/$/.test(url)) {
+      else if (/^https?:\/\/\w+\.machi\.to\/\w+\/$/.test(url)) {
         return {type: "board", bbsType: "machi"};
       }
-      else if (/^http:\/\/[\w\.]+\/test\/read\.cgi\/\w+\/\d+\/$/.test(url)) {
+      else if (/^https?:\/\/[\w\.]+\/test\/read\.cgi\/\w+\/\d+\/$/.test(url)) {
         return {type: "thread", bbsType: "2ch"};
       }
-      else if (/^http:\/\/(?:find|info|p2|ninja)\.2ch\.net\/\w+\/$/.test(url)) {
+      else if (/^https?:\/\/(?:find|info|p2|ninja)\.2ch\.net\/\w+\/$/.test(url)) {
         return {type: "unknown", bbsType: "unknown"};
       }
-      else if (/^http:\/\/[\w\.]+\/\w+\/$/.test(url)) {
+      else if (/^https?:\/\/[\w\.]+\/\w+\/$/.test(url)) {
         return {type: "board", bbsType: "2ch"};
       }
       else {
@@ -62,73 +62,56 @@ namespace app {
       return res ? res[1] : "";
     }
 
-    export function getDomain (url:string):string {
-      var splited:string[];
+    export function getDomain (urlstr: string):string {
+      return (new window.URL(urlstr)).hostname;
+    }
 
-      splited = url.split("/");
-      return splited.length > 1 ? splited[2] : "";
+    export function getScheme (urlstr: string): string {
+      return (new window.URL(urlstr)).protocol.slice(0, -1);
+    }
+
+    export function changeScheme (urlstr: string): string {
+      var url = new window.URL(urlstr);
+      url.protocol = (url.protocol == "http:") ? "https:" : "http";
+
+      return url.toString();
     }
 
     export function threadToBoard (url:string):string {
       return (
         fix(url)
-          .replace(/^http:\/\/([\w\.]+)\/(?:test|bbs)\/read\.cgi\/(\w+)\/\d+\/$/, "http://$1/$2/")
-          .replace(/^http:\/\/jbbs\.shitaraba\.net\/bbs\/read\.cgi\/(\w+)\/(\d+)\/\d+\/$/, "http://jbbs.shitaraba.net/$1/$2/")
+          .replace(/^(https?):\/\/([\w\.]+)\/(?:test|bbs)\/read\.cgi\/(\w+)\/\d+\/$/, "$1://$2/$3/")
+          .replace(/^(https?):\/\/jbbs\.shitaraba\.net\/bbs\/read\.cgi\/(\w+)\/(\d+)\/\d+\/$/, "$1://jbbs.shitaraba.net/$2/$3/")
       );
     }
 
-    function _parseQuery (query:string):{[index:string]:any;} {
-      var data:{[index:string]:any;};
+    export function parseQuery (urlstr:string, fromSearch:boolean = true):{[index:string]:any;} {
+      var searchStr:string;
 
-      data = {};
+      searchStr = fromSearch ? urlstr : (new window.URL(urlstr)).search;
 
-      for(var segment of query.split("&")) {
-        var tmp:any;
-
-        tmp = segment.split("=");
-
-        if (typeof tmp[1] === "string") {
-          data[decodeURIComponent(tmp[0])] = decodeURIComponent(tmp[1]);
-        }
-        else {
-          data[decodeURIComponent(tmp[0])] = true;
-        }
-      }
-
-      return data;
-    }
-
-    export function parseQuery (url:string):{[index:string]:any;} {
-      var tmp;
-
-      tmp = /\?([^#]+)(:?\#.*)?$/.exec(url);
-      return tmp ? _parseQuery(tmp[1]) : {};
+      return new URLSearchParams(searchStr.slice(1))
     }
 
     export function parseHashQuery (url:string):{[index:string]:any;} {
       var tmp;
 
       tmp = /#(.+)$/.exec(url);
-      return tmp ? _parseQuery(tmp[1]) : {};
+
+      return tmp ? new URLSearchParams(tmp[1]) : new URLSearchParams();
     }
 
     export function buildQueryString (data:{[index:string]:any;}) {
-      var str:string, key:string, val:any;
+      var param, key:string, val:any;
 
-      str = "";
+      param = new URLSearchParams();
 
       for (key in data) {
         val = data[key];
-
-        if (val === true) {
-          str += `&${encodeURIComponent(key)}`;
-        }
-        else {
-          str += `&${encodeURIComponent(key)}=${encodeURIComponent(val)}`;
-        }
+        param.append(key, val);
       }
 
-      return str.slice(1);
+      return param.toString();
     }
 
     export const SHORT_URL_REG = /^h?ttps?:\/\/(?:amba\.to|amzn\.to|bit\.ly|buff\.ly|cas\.st|dlvr\.it|fb\.me|g\.co|goo\.gl|htn\.to|ift\.tt|is\.gd|itun\.es|j\.mp|jump\.cx|ow\.ly|p\.tl|prt\.nu|redd\.it|snipurl\.com|spoti\.fi|t\.co|tiny\.cc|tinyurl\.com|tl\.gd|tr\.im|trib\.al|url\.ie|urx\.nu|urx2\.nu|urx3\.nu|ur0\.pw|wk\.tk|xrl\.us)\/.+/;
@@ -183,10 +166,12 @@ namespace app {
 
     export var tsld = app.URL.tsld;
     export var getDomain = app.URL.getDomain;
-    export var thread_to_board = app.URL.threadToBoard;
-    export var parse_query = app.URL.parseQuery;
-    export var parse_hashquery = app.URL.parseHashQuery;
-    export var build_param = app.URL.buildQueryString;
+    export var getScheme = app.URL.getScheme;
+    export var changeScheme = app.URL.changeScheme;
+    export var threadToBoard = app.URL.threadToBoard;
+    export var parseQuery = app.URL.parseQuery;
+    export var parseHashQuery = app.URL.parseHashQuery;
+    export var buildQuery = app.URL.buildQueryString;
     export const SHORT_URL_REG = app.URL.SHORT_URL_REG;
     export var expandShortURL = app.URL.expandShortURL;
   }

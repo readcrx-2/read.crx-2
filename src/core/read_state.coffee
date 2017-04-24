@@ -2,13 +2,14 @@ app.read_state = {}
 
 app.read_state._url_filter = (original_url) ->
   original_url = app.url.fix(original_url)
+  scheme = app.url.getScheme(original_url)
 
   original: original_url
   replaced: original_url
-    .replace(/// ^http://\w+\.2ch\.net/ ///, "http://*.2ch.net/")
+    .replace(/// ^https?://\w+\.2ch\.net/ ///, "#{scheme}://*.2ch.net/")
   original_origin: original_url
-    .replace(/// ^(http://\w+\.2ch\.net)/.* ///, "$1")
-  replaced_origin: "http://*.2ch.net"
+    .replace(/// ^(https?://\w+\.2ch\.net)/.* ///, "$1")
+  replaced_origin: "#{scheme}://*.2ch.net"
 
 do ->
   app.read_state._db_open = $.Deferred (deferred) ->
@@ -45,7 +46,7 @@ app.read_state.set = (read_state) ->
 
   url = app.read_state._url_filter(read_state.url)
   read_state.url = url.replaced
-  board_url = app.url.thread_to_board(url.original)
+  board_url = app.url.threadToBoard(url.original)
   read_state.board_url = app.read_state._url_filter(board_url).replaced
 
   app.read_state._db_open

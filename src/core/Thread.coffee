@@ -37,6 +37,7 @@ class app.Thread
     cache = new app.Cache(xhrPath)
     deltaFlg = false
     readcgisixFlg = false
+    readcgiSevenFlg = false
     noChangeFlg = false
 
     #キャッシュ取得
@@ -69,6 +70,10 @@ class app.Thread
             deltaFlg = true
             if cache.data.includes("<div class=\"footer push\">read.cgi ver 06")
               readcgisixFlg = true
+              xhrPath += (+cache.res_length + 1) + "-n"
+            else if cache.data.includes("<div class=\"footer push\">read.cgi ver 07")
+              readcgisixFlg = true
+              readcgiSevenFlg = true
               xhrPath += (+cache.res_length + 1) + "-n"
             else
               xhrPath += (+cache.res_length) + "-n"
@@ -187,12 +192,12 @@ class app.Thread
 
       #2chでrejectされてる場合は移転を疑う
       if @tsld is "2ch.net" and response
-        app.util.ch_server_move_detect(app.url.thread_to_board(@url))
+        app.util.ch_server_move_detect(app.url.threadToBoard(@url))
           #移転検出時
           .done (newBoardURL) =>
-            tmp = ///^http://(\w+)\.2ch\.net/ ///.exec(newBoardURL)[1]
+            tmp = ///^https?://(\w+)\.2ch\.net/ ///.exec(newBoardURL)[1]
             newURL = @url.replace(
-              ///^(http://)\w+(\.2ch\.net/test/read\.cgi/\w+/\d+/)$///,
+              ///^(https?://)\w+(\.2ch\.net/test/read\.cgi/\w+/\d+/)$///,
               ($0, $1, $2) -> $1 + tmp + $2
             )
 
@@ -232,7 +237,7 @@ class app.Thread
 
         if deltaFlg
           if @tsld in ["2ch.net", "bbspink.com"] and noChangeFlg is false
-            if readcgisixFlg
+            if readcgisixFlg or readcgiSevenFlg
               if @tsld is "bbspink.com"
                 before = response.body.indexOf("</h1><dl class=\"post\"")+5
                 after = response.body.indexOf("</dd></dl></section><div>")
@@ -245,6 +250,18 @@ class app.Thread
                   place +=10
                 else
                   place = cache.data.indexOf("</dd></dl></section>")
+              else if readcgiSevenFlg
+                before = response.body.indexOf("<div class=\"thread\">")+20
+                after = response.body.indexOf("</span></div></div></div>")
+                if after isnt -1
+                  after += 19
+                else
+                  after = response.body.indexOf("</span></div></div>")+19
+                place = cache.data.indexOf("</span></div></div></div>")
+                if place isnt -1
+                  place += 19
+                else
+                  place = cache.data.indexOf("</span></div></div>")+19
               else
                 before = response.body.indexOf("<div class=\"thread\">")+20
                 after = response.body.indexOf("</div></div></div><div class=\"cLength\">")
@@ -316,20 +333,20 @@ class app.Thread
   @return {null|Object}
   ###
   @_getXhrInfo = (url) ->
-    tmp = ///^http://((?:\w+\.)?(\w+\.\w+))/(?:test|bbs)/read\.cgi/
+    tmp = ///^(https?)://((?:\w+\.)?(\w+\.\w+))/(?:test|bbs)/read\.cgi/
       (\w+)/(\d+)/(?:(\d+)/)?$///.exec(url)
     unless tmp then return null
-    switch tmp[2]
+    switch tmp[3]
       when "machi.to"
-        path: "http://#{tmp[1]}/bbs/offlaw.cgi/#{tmp[3]}/#{tmp[4]}/",
+        path: "#{tmp[1]}://#{tmp[2]}/bbs/offlaw.cgi/#{tmp[4]}/#{tmp[5]}/",
         charset: "Shift_JIS"
       when "shitaraba.net"
-        path: "http://jbbs.shitaraba.net/" +
-            "bbs/rawmode.cgi/#{tmp[3]}/#{tmp[4]}/#{tmp[5]}/",
+        path: "#{tmp[1]}://jbbs.shitaraba.net/" +
+            "bbs/rawmode.cgi/#{tmp[4]}/#{tmp[5]}/#{tmp[6]}/",
         charset: "EUC-JP"
       when "2ch.net"
         if app.config.get("format_2chnet") is "dat"
-          path: "http://#{tmp[1]}/#{tmp[3]}/dat/#{tmp[4]}.dat",
+          path: "#{tmp[1]}//#{tmp[2]}/#{tmp[4]}/dat/#{tmp[5]}.dat",
           charset: "Shift_JIS"
         else
           path: tmp[0],
@@ -338,7 +355,7 @@ class app.Thread
         path: tmp[0],
         charset: "Shift_JIS"
       else
-        path: "http://#{tmp[1]}/#{tmp[3]}/dat/#{tmp[4]}.dat",
+        path: "#{tmp[1]}://#{tmp[2]}/#{tmp[4]}/dat/#{tmp[5]}.dat",
         charset: "Shift_JIS"
 
   ###*
@@ -379,6 +396,10 @@ class app.Thread
     if text.includes("<div class=\"footer push\">read.cgi ver 06")
       text = text.replace(/<\/h1>/, "</h1></div></div>")
       reg = /^.*?<div class="post".*><div class="number">\d+.* : <\/div><div class="name"><b>(?:<a href="mailto:([^<>]*)">|<font [^>]*>)?(.*?)(?:<\/a>|<\/font>)?<\/b><\/div><div class="date">(.*)<\/div><div class="message"> ?(.*)$/
+      separator = "</div></div>"
+    else if text.includes("<div class=\"footer push\">read.cgi ver 07")
+      text = text.replace(/<\/h1>/, "</h1></div></div>")
+      reg = /^.*?<div class="post".*><div class="meta"><span class="number">\d+<\/span><span class="name"><b>(?:<a href="mailto:([^<>]*)">|<font [^>]*>)?(.*?)(?:<\/a>|<\/font>)?<\/b><\/span><span class="date">(.*)<\/span><\/div><div class="message"> ?(.*)$/
       separator = "</div></div>"
     else
       reg = /^(?:<\/?div.*?(?:<br><br>)?)?<dt>\d+.*：(?:<a href="mailto:([^<>]*)">|<font [^>]*>)?<b>(.*)<\/b>.*：(.*)<dd> ?(.*)<br><br>$/

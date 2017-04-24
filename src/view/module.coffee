@@ -396,6 +396,7 @@ class app.view.TabContentView extends app.view.PaneContentView
     @_setupNavButton()
     @_setupBookmarkButton()
     @_setupSortItemSelector()
+    @_setupSchemeButton()
     @_setupToolMenu()
     return
 
@@ -466,8 +467,7 @@ class app.view.TabContentView extends app.view.PaneContentView
       if e.which isnt 3
         $this = $(@)
         howToOpen = app.util.get_how_to_open(e)
-        newTab = app.config.get("always_new_tab") is "on"
-        newTab or= howToOpen.new_tab or howToOpen.new_window
+        newTab = howToOpen.new_tab or howToOpen.new_window
         background = howToOpen.background
 
         if not $this.is(".disabled")
@@ -489,7 +489,7 @@ class app.view.TabContentView extends app.view.PaneContentView
     if $button.length is 1
       url = @$element.attr("data-url")
 
-      if ///^http://\w///.test(url)
+      if ///^https?://\w///.test(url)
         if app.bookmark.get(url)
           $button.addClass("bookmarked")
         else
@@ -555,6 +555,32 @@ class app.view.TabContentView extends app.view.PaneContentView
 
       $table.table_sort("update", config)
       return
+    return
+
+  ###*
+  @method _setupSchemeButton
+  @private
+  ###
+  _setupSchemeButton: ->
+    $button = @$element.find(".button_scheme")
+
+    if $button.length is 1
+      url = @$element.attr("data-url")
+
+      if ///^https?://\w///.test(url)
+        if app.url.getScheme(url) is "https"
+          $button.addClass("https")
+        else
+          $button.removeClass("https")
+
+        $button.on "click", =>
+          app.message.send "open", {
+            url: app.url.changeScheme(url),
+            new_tab: app.config.get("button_change_scheme_newtab") is "on"
+          }
+          return
+      else
+        $button.remove()
     return
 
   ###*
@@ -631,7 +657,7 @@ class app.view.TabContentView extends app.view.PaneContentView
       return
 
     # 2ch.net/2ch.scに切り替え
-    reg = /http:\/\/\w+\.2ch\.(net|sc)\/\w+\/(.*?)/
+    reg = /https?:\/\/\w+\.2ch\.(net|sc)\/\w+\/(.*?)/
     url = @$element.attr("data-url")
     mode = reg.exec(url)
     if mode

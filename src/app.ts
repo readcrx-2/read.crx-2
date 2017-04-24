@@ -7,9 +7,10 @@ namespace app {
 
   export function criticalError (message:string):void {
     new Notification(
-      "",
       "深刻なエラーが発生したのでread.crxを終了します",
-      `詳細 : ${message}`
+      {
+        body: `詳細 : ${message}`
+      }
     )
 
     parent.chrome.tabs.getCurrent( (tab): void => {
@@ -240,6 +241,7 @@ namespace app {
       ["theme_id", "default"],
       ["always_new_tab", "on"],
       ["button_change_netsc_newtab", "off"],
+      ["button_change_scheme_newtab", "off"],
       ["open_all_unread_lazy", "on"],
       ["dblclick_reload", "on"],
       ["auto_load_second", "0"],

@@ -71,7 +71,7 @@ do ->
     #htmlから移転を判定
     .then (html) ->
       $.Deferred (deferred) ->
-        res = ///location\.href="(http://\w+\.2ch\.net/\w*/)"///.exec(html)
+        res = ///location\.href="(https?://\w+\.2ch\.net/\w*/)"///.exec(html)
 
         if res and res[1] isnt old_board_url
           deferred.resolve(res[1])
@@ -88,7 +88,7 @@ do ->
             for category in result.data
               for board in category.board
                 m = board.url.match(boardUrlReg)
-                if m? and match[1] is m[1]
+                if m? and match[1] is m[1] and match[0] isnt m[0]
                   d.resolve(m[0])
                   break
             d.reject()
@@ -150,7 +150,7 @@ do ->
   app.util.search_next_thread = (thread_url, thread_title) ->
     $.Deferred (d) ->
       thread_url = app.url.fix(thread_url)
-      board_url = app.url.thread_to_board(thread_url)
+      board_url = app.url.threadToBoard(thread_url)
       thread_title = app.util.normalize(thread_title)
 
       app.board.get board_url, (res) ->

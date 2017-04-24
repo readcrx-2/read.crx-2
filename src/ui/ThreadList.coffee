@@ -124,7 +124,7 @@ class UI.ThreadList
 
       if @_flg.bookmarkAddRm
         if msg.type is "added"
-          boardUrl = app.url.thread_to_board(msg.bookmark.url)
+          boardUrl = app.url.threadToBoard(msg.bookmark.url)
           app.BoardTitleSolver.ask(boardUrl).done((boardName) =>
             @addItem(
               title: msg.bookmark.title
@@ -134,6 +134,7 @@ class UI.ThreadList
               created_at: /\/(\d+)\/$/.exec(msg.bookmark.url)[1] * 1000
               board_url: boardUrl
               board_title: boardName
+              is_https: (app.url.getScheme(msg.bookmark.url) is "https")
             )
             return
           )
@@ -350,6 +351,8 @@ class UI.ThreadList
         trClassName += " ng_thread"
       if item.is_net
         trClassName += " net"
+      if item.is_https
+        trClassName += " https"
       if item.expired and app.config.get("bookmark_show_dat") is "off"
         trClassName += " hidden"
 

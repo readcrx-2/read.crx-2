@@ -1,7 +1,7 @@
 app.boot "/view/search.html", ["thread_search"], (ThreadSearch) ->
-  query = app.url.parse_query(location.href).query
-
-  unless query?
+  try
+    query = app.url.parseQuery(location.search).get("query")
+  catch
     alert("不正な引数です")
     return
 

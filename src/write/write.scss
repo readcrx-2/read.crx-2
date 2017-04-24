@@ -28,6 +28,11 @@ header {
     flex-grow: 1;
     font-size: 18px;
     margin: 0;
+    &.https::before {
+      content: url(/img/lock_19x19_3a5.webp);
+      vertical-align: middle;
+      margin-right: 5px;
+    }
   }
 }
 

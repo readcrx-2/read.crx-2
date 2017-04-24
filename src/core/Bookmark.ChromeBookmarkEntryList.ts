@@ -70,24 +70,24 @@ module app.Bookmark {
       };
 
       reg = /^\d+$/
-      if (reg.test(arg.res_count)) {
-        entry.resCount = +arg.res_count;
+      if (reg.test(arg.get("res_count"))) {
+        entry.resCount = +arg.get("res_count");
       }
 
       if (
-        reg.test(arg.received) &&
-        reg.test(arg.read) &&
-        reg.test(arg.last)
+        reg.test(arg.get("received")) &&
+        reg.test(arg.get("read")) &&
+        reg.test(arg.get("last"))
       ) {
         entry.readState = {
           url: fixedURL,
-          received: +arg.received,
-          read: +arg.read,
-          last: + arg.last
+          received: +arg.get("received"),
+          read: +arg.get("read"),
+          last: + arg.get("last")
         };
       }
 
-      if (arg.expired === true) {
+      if (arg.get("expired") === "true") {
         entry.expired = true;
       }
 

@@ -208,6 +208,20 @@ class UI.ThreadContent
           max = Math.max(to-change, to+change)
           requestAnimationFrame(_scrollInterval = =>
             before = @container.scrollTop
+            # 画像のロードによる座標変更時の補正
+            if to isnt target.offsetTop + offset
+              to = target.offsetTop + offset
+              min = Math.min(to-change, to+change)
+              max = Math.max(to-change, to+change)
+            # 例外発生時の停止処理
+            if (
+              (change > 0 and @container.scrollTop > max) or
+              (change < 0 and @container.scrollTop < min)
+            )
+              @container.scrollTop = to
+              @_$container.trigger("scrollfinish")
+              return
+            # 正常時の処理
             if min <= @container.scrollTop <= max
               @container.scrollTop = to
               @_$container.trigger("scrollfinish")
@@ -410,6 +424,7 @@ class UI.ThreadContent
 
         res.num = resNum
         res.class = []
+        scheme = app.url.getScheme(@url)
 
         res = app.ReplaceStrTxt.do(@url, document.title, res)
 
@@ -462,7 +477,7 @@ class UI.ThreadContent
         tmp = (
           res.other
             #be
-            .replace(/<\/div><div class="be .*?"><a href="(http:\/\/be\.2ch\.net\/user\/\d+?)".*?>(.*?)<\/a>/, "<a class=\"beid\" href=\"$1\" target=\"_blank\">$2</a>")
+            .replace(/<\/div><div class="be .*?"><a href="(https?:\/\/be\.2ch\.net\/user\/\d+?)".*?>(.*?)<\/a>/, "<a class=\"beid\" href=\"$1\" target=\"_blank\">$2</a>")
             #タグ除去
             .replace(/<(?!(?:a class="beid".*?|\/a)>).*?(?:>|$)/g, "")
             #.id
@@ -487,7 +502,7 @@ class UI.ThreadContent
             )
             #.beid
             .replace /(?:^| )(BE:(\d+)\-[A-Z\d]+\(\d+\))/,
-              """<a class="beid" href="http://be.2ch.net/test/p.php?i=$3" target="_blank">$1</a>"""
+              """<a class="beid" href="#{scheme}://be.2ch.net/test/p.php?i=$3" target="_blank">$1</a>"""
         )
         # slip追加
         if res.slip?
@@ -512,7 +527,7 @@ class UI.ThreadContent
           res.message
             #imgタグ変換
             .replace(/<img src="([\w]+):\/\/(.*?)".*?>/ig, "$1://$2")
-            .replace(/<img src="\/\/(.*?)".*?>/ig, "http://$1")
+            .replace(/<img src="\/\/(.*?)".*?>/ig, "#{scheme}://$1")
             #Rock54
             .replace(/(?:<small.*?>&#128064;|<i>&#128064;<\/i>)<br>Rock54: (Caution|Warning)\((.+?)\) ?.*?(?:<\/small>)?/ig, "<div class=\"rock54\">&#128064; Rock54: $1($2)</div>")
             #SLIPが変わったという表示
@@ -525,13 +540,13 @@ class UI.ThreadContent
             #Beアイコン埋め込み表示
             .replace ///^(?:\s*sssp|https?)://(img\.2ch\.net/(?:ico|premium)/[\w\-_]+\.gif)\s*<br>///, ($0, $1) =>
               if app.url.tsld(@url) in ["2ch.net", "bbspink.com", "2ch.sc"]
-                """<img class="beicon" src="/img/dummy_1x1.webp" data-src="http://#{$1}"><br>"""
+                """<img class="beicon" src="/img/dummy_1x1.webp" data-src="#{scheme}://#{$1}"><br>"""
               else
                 $0
             #エモーティコン埋め込み表示
             .replace ///(?:\s*sssp|https?)://(img\.2ch\.net/emoji/[\w\-_]+\.gif)\s*///g, ($0, $1) =>
               if app.url.tsld(@url) in ["2ch.net", "bbspink.com", "2ch.sc"]
-                """<img class="beicon emoticon" src="/img/dummy_1x1.webp" data-src="http://#{$1}">"""
+                """<img class="beicon emoticon" src="/img/dummy_1x1.webp" data-src="#{scheme}://#{$1}">"""
               else
                 $0
             #アンカーリンク
@@ -711,7 +726,7 @@ class UI.ThreadContent
               thumbnailFavicon = document.createElement("img")
               thumbnailFavicon.className = "favicon"
               thumbnailFavicon.src = "/img/dummy_1x1.webp"
-              thumbnailFavicon.setAttribute("data-src", "https://www.google.com/s2/favicons?domain=#{app.url.getDomain(sourceA.href)}")
+              thumbnailFavicon.setAttribute("data-src", "https://www.google.com/s2/favicons?domain=#{sourceA.hostname}")
               thumbnailLink.appendChild(thumbnailFavicon)
 
             when "audio", "video"

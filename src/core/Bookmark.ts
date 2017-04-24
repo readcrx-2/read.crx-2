@@ -205,7 +205,7 @@ namespace app {
           this.add(entry);
         }
 
-        reg = /^http:\/\/[\w\.]+\//
+        reg = /^https?:\/\/[\w\.]+\//
         tmp = reg.exec(to)[0];
         // スレブックマーク移行
         for(var entry of this.getThreadsByBoardURL(from)) {

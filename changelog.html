@@ -36,7 +36,13 @@
         <h2>v1.15.0 (2017-04-24)</h2>
         <ul>
           <li>read.cgi ver 07.0.0に対応（Thank you, <a href="https://github.com/awazi">awazi</a>）</li>
-          <li>httpsでのスレッドオープンに対応（Thank you, <a href="https://github.com/awazi">awazi</a>）</li>
+          <li>※反映させるためには、該当スレッドのキャッシュを削除する必要があります。設定画面を開いてデータ→キャッシュから削除を行ってください。</li>
+          <li>
+            httpsでのスレッドオープンに対応（Thank you, <a href="https://github.com/awazi">awazi</a>）
+            <ul>
+              <li style="color: red;">この機能には、net/scの切り替えと併用した場合の<a href="https://github.com/readcrx-2/read.crx-2/issues/270">既知のバグ</a>があります。</li>
+            </ul>
+          </li>
           <li>ブックマークのdat落ち表示がされてなかったのを修正</li>
           <li>
             戻る/進むボタンの挙動を変更（Thank you, <a href="https://github.com/awazi">awazi</a>）

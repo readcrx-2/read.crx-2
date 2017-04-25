@@ -252,7 +252,7 @@ namespace app {
       ["auto_bookmark_notify", "on"],
       ["image_blur", "off"],
       ["image_blur_length", "4"],
-      ["image_blur_word", ".*[^ァ-ヺ^ー]グロ([^ァ-ヺ^ー].*|$)|.*死ね.*"],
+      ["image_blur_word", ".{1,5}[^ァ-ヺ^ー]グロ([^ァ-ヺ^ー].{1,5}|$)|.{1,5}死ね.{1,5}"],
       ["image_width", "150"],
       ["image_height", "100"],
       ["audio_supported", "off"],

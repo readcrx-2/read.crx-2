@@ -959,7 +959,7 @@ app.view_thread._read_state_manager = ($view) ->
       read_state = bookmark.read_state
       deferred.resolve({read_state, read_state_updated})
     else
-      app.read_state.get(view_url).always (_read_state) ->
+      app.read_state.get(view_url).then (_read_state) ->
         read_state = _read_state or {received: 0, read: 0, last: 0, url: view_url}
         deferred.resolve({read_state, read_state_updated})
   .promise()

@@ -80,7 +80,7 @@ app.boot "/view/board.html", ->
 
     deferred_get_read_state = app.read_state.get_by_board(url)
 
-    deferred_board_get = $.Deferred (deferred) ->
+    deferred_board_get = new Promise( (resolve, reject) ->
       app.board.get url, (res) ->
         $message_bar = $view.find(".message_bar")
         if res.status is "error"
@@ -89,14 +89,15 @@ app.boot "/view/board.html", ->
           $message_bar.removeClass("error").empty()
 
         if res.data?
-          deferred.resolve(res.data)
+          resolve(res.data)
         else
-          deferred.reject()
+          reject()
         return
       return
+    )
 
-    $.when(deferred_get_read_state, deferred_board_get)
-      .done (array_of_read_state, board) ->
+    Promise.all([deferred_get_read_state, deferred_board_get])
+      .then ([array_of_read_state, board]) ->
         read_state_index = {}
         for read_state, key in array_of_read_state
           read_state_index[read_state.url] = key
@@ -132,7 +133,9 @@ app.boot "/view/board.html", ->
         $view.find("table").table_sort("update")
         return
 
-      .always ->
+      .catch ->
+        return
+      .then ->
         $view.removeClass("loading")
         $view.trigger("view_loaded")
 

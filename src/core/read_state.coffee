@@ -12,25 +12,24 @@ app.read_state._url_filter = (original_url) ->
   replaced_origin: "#{scheme}://*.2ch.net"
 
 do ->
-  app.read_state._db_open = $.Deferred (deferred) ->
-    db = openDatabase("ReadState", "", "Read State", 0)
-    db.transaction(
-      (transaction) ->
-        transaction.executeSql """
-          CREATE TABLE IF NOT EXISTS ReadState(
-            url TEXT NOT NULL PRIMARY KEY,
-            board_url TEXT NOT NULL,
-            last INTEGER NOT NULL,
-            read INTEGER NOT NULL,
-            received INTEGER NOT NULL
-          )
-        """
-      -> deferred.reject()
-      -> deferred.resolve(db)
-    )
-  .promise()
-  .fail ->
-    app.critical_error("既読情報管理システムの起動に失敗しました")
+  app.read_state._openDB = new Promise( (resolve, reject) ->
+    req = indexedDB.open("ReadState", 1)
+    req.onerror = (e) ->
+      app.critical_error("既読情報管理システムの起動に失敗しました")
+      reject(e)
+      return
+    req.onupgradeneeded = (e) ->
+      db = e.target.result
+      objStore = db.createObjectStore("ReadState", keyPath: "url")
+      objStore.createIndex("board_url", "board_url", unique: false)
+      e.target.transaction.oncomplete = ->
+        resolve(db)
+      return
+    req.onsuccess = (e) ->
+      resolve(e.target.result)
+      return
+    return
+  )
 
 app.read_state.set = (read_state) ->
   if not read_state? or
@@ -40,7 +39,7 @@ app.read_state.set = (read_state) ->
       not Number.isFinite(read_state.read) or
       not Number.isFinite(read_state.received)
     app.log("error", "app.read_state.set: 引数が不正です", arguments)
-    return $.Deferred().reject().promise()
+    return Promise.reject()
 
   read_state = app.deep_copy(read_state)
 
@@ -49,153 +48,134 @@ app.read_state.set = (read_state) ->
   board_url = app.url.threadToBoard(url.original)
   read_state.board_url = app.read_state._url_filter(board_url).replaced
 
-  app.read_state._db_open
-
-    .then (db) ->
-      $.Deferred (deferred) ->
-        db.transaction(
-          (transaction) ->
-            transaction.executeSql(
-              "INSERT OR REPLACE INTO ReadState values(?, ?, ?, ?, ?)"
-              [
-                read_state.url
-                read_state.board_url
-                read_state.last
-                read_state.read
-                read_state.received
-              ]
-            )
-          -> deferred.reject()
-          -> deferred.resolve()
-        )
-
-    .always ->
-      delete read_state.board_url
-      read_state.url = read_state.url.replace(url.replaced, url.original)
-      app.message.send("read_state_updated", {board_url, read_state})
-
-    .promise()
+  return app.read_state._openDB.then( (db) =>
+    return new Promise( (resolve, reject) =>
+      req = db
+        .transaction("ReadState", "readwrite")
+        .objectStore("ReadState")
+        .put(read_state)
+      req.onsuccess = (e) ->
+        delete read_state.board_url
+        read_state.url = read_state.url.replace(url.replaced, url.original)
+        app.message.send("read_state_updated", {board_url, read_state})
+        resolve()
+        return
+      req.onerror = (e) ->
+        app.log("error", "app.read_state.set: トランザクション失敗")
+        reject(e)
+        return
+      return
+    )
+  )
 
 app.read_state.get = (url) ->
   if app.assert_arg("app.read_state.get", ["string"], arguments)
-    return $.Deferred().reject().promise()
+    return Promise.reject()
 
   url = app.read_state._url_filter(url)
 
-  app.read_state._db_open
+  return app.read_state._openDB.then( (db) =>
+    new Promise( (resolve, reject) =>
+      req = db
+        .transaction("ReadState")
+        .objectStore("ReadState")
+        .get(url.replaced)
+      req.onsuccess = (e) =>
+        data = app.deep_copy(e.target.result)
+        data.url = url.original
+        resolve(data)
+        return
+      req.onerror = (e) ->
+        app.log("error", "app.read_state.get: トランザクション中断")
+        reject(e)
+        return
+      return
+    )
+  )
 
-    .then (db) ->
-      $.Deferred (deferred) ->
-        db.transaction (transaction) ->
-          transaction.executeSql("""
-              SELECT url, last, read, received FROM ReadState
-                WHERE url = ?
-            """
-            [url.replaced]
-            (transaction, result) ->
-              if result.rows.length is 1
-                data = app.deep_copy(result.rows.item(0))
-                data.url = url.original
-                deferred.resolve(data)
-              else
-                deferred.reject()
-          )
-        , ->
-          app.log("error", "app.read_state.get: トランザクション中断")
-          deferred.reject()
-
-    .promise()
-
-app.read_state.get_all = ->
-  app.read_state._db_open
-
-    .then (db) ->
-      $.Deferred (deferred) ->
-        db.transaction (transaction) ->
-          transaction.executeSql(
-            "SELECT * FROM ReadState"
-            []
-            (transaction, result) ->
-              deferred.resolve(result.rows)
-          )
-        , ->
-          app.log("error", "app.read_state.get_all: トランザクション中断")
-          deferred.reject()
-
-    .promise()
+app.read_state.getAll = ->
+  return app.read_state._openDB.then( (db) ->
+    return new Promise( (resolve, reject) ->
+      req = db
+        .transaction("ReadState")
+        .objectStore("ReadState")
+        .getAll()
+      req.onsuccess = (e) ->
+        resolve(event.target.result)
+        return
+      req.onerror = (e) ->
+        app.log("error", "app.read_state.getAll: トランザクション中断")
+        reject(e)
+        return
+      return
+    )
+  )
 
 app.read_state.get_by_board = (url) ->
   if app.assert_arg("app.read_state.get_by_board", ["string"], arguments)
-    return $.Deferred().reject().promise()
+    return Promise.reject()
 
   url = app.read_state._url_filter(url)
 
-  app.read_state._db_open
-
-    .then (db) ->
-      $.Deferred (deferred) ->
-        db.transaction (transaction) ->
-          transaction.executeSql("""
-              SELECT url, last, read, received FROM ReadState
-                WHERE board_url = ?
-            """
-            [url.replaced]
-            (transaction, result) ->
-              data = []
-              key = 0
-              length = result.rows.length
-              while key < length
-                tmp = app.deep_copy(result.rows.item(key))
-                tmp.url =
-                  tmp.url.replace(url.replaced_origin, url.original_origin)
-                data.push(tmp)
-                key++
-              deferred.resolve(data)
-          )
-        , ->
-          app.log("error", "app.read_state.get: トランザクション中断")
-          deferred.reject()
-
-    .promise()
+  return app.read_state._openDB.then( (db) ->
+    return new Promise( (resolve, reject) ->
+      req = db
+        .transaction("ReadState")
+        .objectStore("ReadState")
+        .index("board_url")
+        .getAll(IDBKeyRange.only(url.replaced))
+      req.onsuccess = (e) ->
+        data = e.target.result
+        for key, val of data
+          data[key].url = val.url.replace(url.replaced_origin, url.original_origin)
+        resolve(data)
+        return
+      req.onerror = (e) ->
+        app.log("error", "app.read_state.get_by_board: トランザクション中断")
+        reject(e)
+        return
+      return
+    )
+  )
 
 app.read_state.remove = (url) ->
   if app.assert_arg("app.read_state.remove", ["string"], arguments)
-    return $.Deferred().reject().promise()
+    return Promise.reject()
 
   url = app.read_state._url_filter(url)
 
-  app.read_state._db_open
-
-    .then (db) ->
-      $.Deferred (deferred) ->
-        db.transaction (transaction) ->
-          transaction.executeSql("""
-            DELETE FROM ReadState
-              WHERE url = ?
-          """, [url.replaced])
-        , ->
-          app.log("error", "app.read_state.remove: トランザクション失敗")
-          deferred.reject()
-        , ->
-          deferred.resolve()
-
-    .done ->
-      app.message.send("read_state_removed", url: url.original)
+  return app.read_state._openDB.then( (db) ->
+    return new Promise( (resolve, reject) ->
+      req = db
+        .transaction("ReadState", "readwrite")
+        .objectStore("ReadState")
+        .delete(url.repalced)
+      req.onsuccess = (e) ->
+        app.message.send("read_state_removed", url: url.original)
+        resolve()
+        return
+      req.onerror = (e) ->
+        app.log("error", "app.read_state.remove: トランザクション中断")
+        reject(e)
+        return
       return
-
-    .promise()
+    )
+  )
 
 app.read_state.clear = ->
-  app.read_state._db_open
-
-    .then (db) ->
-      $.Deferred (deferred) ->
-        db.transaction (transaction) ->
-          transaction.executeSql("DELETE FROM ReadState")
-        , ->
-          app.log("error", "app.read_state.clear: トランザクション中断")
-          deferred.reject()
-        , ->
-          deferred.resolve()
-
-    .promise()
+  return app.read_state._openDB.then( (db) ->
+    return new Promise( (resolve, reject) ->
+      req = db
+        .transaction("ReadState", "readwrite")
+        .objectStore("ReadState")
+        .clear()
+      req.onsuccess = (e) ->
+        resolve()
+        return
+      req.onerror = (e) ->
+        app.log("error", "app.read_state.clear: トランザクション中断")
+        reject(e)
+        return
+      return
+    )
+  )

@@ -458,19 +458,22 @@ app.main = ->
     UI.Animate.fadeIn(div[0])
 
   #前回起動時のバージョンと違うバージョンだった場合、アップデート通知を送出
-  chrome.runtime.onInstalled.addListener( ({reason, previousVersion}) ->
-    if reason is "update"
-      app.message.send "notify", {
-        html: """
-          #{app.manifest.name} が #{previousVersion} から
-          #{app.manifest.version} にアップデートされました。
-           <a href="http://readcrx-2.github.io/read.crx-2/changelog.html" target="_blank">更新履歴</a>
-        """
-        background_color: "green"
-      }
-      app.config.set("last_version", app.manifest.version)
+  do ->
+    last_version = app.config.get("last_version")
+    if last_version?
+      if app.manifest.version isnt last_version
+        app.message.send "notify", {
+          html: """
+            #{app.manifest.name} が #{last_version} から
+            #{app.manifest.version} にアップデートされました。
+             <a href="http://readcrx-2.github.io/read.crx-2/changelog.html" target="_blank">更新履歴</a>
+          """
+          background_color: "green"
+        }
+      else
+        return
+    app.config.set("last_version", app.manifest.version)
     return
-  )
 
   #更新通知
   chrome.runtime.onUpdateAvailable.addListener( ({version}) ->

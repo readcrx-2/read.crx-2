@@ -244,6 +244,7 @@ app.boot "/write/submit_thread.html", ->
         textarea.name = key
         textarea.textContent = val
         form.appendChild(textarea)
+      @contentDocument.body.appendChild(form)
       form.__proto__.submit.call(form)
       return
     $iframe.appendTo(".iframe_container")

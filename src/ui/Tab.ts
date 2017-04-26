@@ -30,7 +30,7 @@ namespace UI {
 
               e.preventDefault();
 
-              if ((<any>e.originalEvent).wheelDelta > 0) {
+              if ((<any>e.originalEvent).wheelDelta < 0) {
                 tmp = "previousSibling";
               }
               else {

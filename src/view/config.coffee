@@ -347,7 +347,7 @@ app.boot "/view/config.html", ["cache", "bbsmenu"], (Cache, BBSMenu) ->
       return $.Deferred().resolve().promise()
   , ->
     d = $.Deferred()
-    app.WriteHistory.get_all().done( (data) ->
+    app.WriteHistory.getAll().done( (data) ->
       d.resolve({"writehistory": Array.from(data)})
       return
     )

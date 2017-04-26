@@ -4,30 +4,26 @@
 ###
 class app.WriteHistory
   @_openDB: ->
-    unless @_openDBPromise?
-      @_openDBPromise = $.Deferred((d) ->
-        db = openDatabase("WriteHistory", "", "WriteHistory", 0)
-        db.transaction(
-          (transaction) ->
-            transaction.executeSql """
-              CREATE TABLE IF NOT EXISTS WriteHistory(
-                url TEXT NOT NULL,
-                res INTEGER NOT NULL,
-                title TEXT NOT NULL,
-                name TEXT,
-                mail TEXT,
-                input_name TEXT,
-                input_mail TEXT,
-                message TEXT,
-                date INTEGER NOT NULL
-              )
-            """
-            return
-          -> d.reject(); return
-          -> d.resolve(db); return
-        )
-      ).promise()
-    @_openDBPromise
+    return new Promise( (resolve, reject) ->
+      req = indexedDB.open("WriteHistory", 1)
+      req.onerror = (e) ->
+        reject(e)
+        return
+      req.onupgradeneeded = (e) ->
+        db = e.target.result
+        objStore = db.createObjectStore("WriteHistory", keyPath: "id", autoIncrement: true)
+        objStore.createIndex("url", "url", unique: false)
+        objStore.createIndex("res", "res", unique: false)
+        objStore.createIndex("title", "title", unique: false)
+        objStore.createIndex("date", "date", unique: false)
+        e.target.transaction.oncomplete = ->
+          resolve(db)
+        return
+      req.onsuccess = (e) ->
+        resolve(e.target.result)
+        return
+      return
+    )
 
   ###*
   @method add
@@ -42,25 +38,34 @@ class app.WriteHistory
   ###
   @add: (url, res, title, name, mail, input_name, input_mail, message, date) ->
     if app.assert_arg("WriteHistory.add", ["string", "number", "string", "string", "string", "string", "string", "string", "number"], arguments)
-      return $.Deferred().reject().promise()
+      return Promise.reject()
 
-    @_openDB().then((db) -> $.Deferred (d) ->
-      db.transaction(
-        (transaction) ->
-          transaction.executeSql(
-            "INSERT INTO WriteHistory values(?, ?, ?, ?, ?, ?, ?, ?, ?)"
-            [url, res, title, name, mail, input_name, input_mail, message, date]
-          )
+    return @_openDB().then( (db) ->
+      return new Promise( (resolve, reject) ->
+        req = db
+          .transaction("WriteHistory", "readwrite")
+          .objectStore("WriteHistory")
+          .put({
+            url
+            res
+            title
+            name
+            mail
+            input_name
+            input_mail
+            message
+            date
+          })
+        req.onsuccess = (e) ->
+          resolve()
           return
-        ->
+        req.onerror = (e) ->
           app.log("error", "WriteHistory.add: データの格納に失敗しました")
-          d.reject()
+          reject(e)
           return
-        -> d.resolve(); return
+        return
       )
-      return
     )
-    .promise()
 
   ###*
   @method remove
@@ -70,24 +75,31 @@ class app.WriteHistory
   ###
   @remove: (url, res) ->
     if app.assert_arg("WriteHistory.remove", ["string", "number"], arguments)
-      return $.Deferred().reject().promise()
+      return Promise.reject()
 
-    @_openDB().then((db) -> $.Deferred (d) ->
-      db.transaction(
-        (transaction) ->
-          transaction.executeSql("DELETE FROM WriteHistory WHERE url = ? AND res = ?", [url, res])
+    return @_openDB().then( (db) ->
+      return new Promise( (resolve, reject) ->
+        req = db
+          .transaction("WriteHistory", "readwrite")
+          .objectStore("WriteHistory")
+          .index("url")
+          .openCursor(IDBKeyRange.only(url))
+        req.onsuccess = (e) ->
+          cursor = e.target.result
+          if cursor
+            if cursor.value.res is res
+              cursor.delete()
+            cursor.continue()
+          else
+            resolve()
           return
-        ->
+        req.onerror = (e) ->
           app.log("error", "WriteHistory.remove: トランザクション中断")
-          d.reject()
+          reject(e)
           return
-        ->
-          d.resolve()
-          return
+        return
       )
-      return
     )
-    .promise()
 
   ###*
   @method get
@@ -97,34 +109,38 @@ class app.WriteHistory
   ###
   @get: (offset = -1, limit = -1) ->
     if app.assert_arg("WriteHistory.get", ["number", "number"], [offset, limit])
-      return $.Deferred().reject().promise()
+      return Promise.reject()
 
-    @_openDB().then((db) -> $.Deferred (d) ->
-      db.readTransaction(
-        (transaction) ->
-          transaction.executeSql(
-            "SELECT * FROM WriteHistory ORDER BY date DESC LIMIT ? OFFSET ?"
-            [limit, offset]
-            (transaction, result) ->
-              data = []
-              key = 0
-              length = result.rows.length
-              while key < length
-                item = result.rows.item(key)
-                item.is_https = (app.url.getScheme(item.url) is "https")
-                data.push(item)
-                key++
-              d.resolve(data)
-              return
-          )
+    return @_openDB().then( (db) ->
+      return new Promise( (resolve, reject) ->
+        req = db
+          .transaction("WriteHistory")
+          .objectStore("WriteHistory")
+          .openCursor()
+        advanced = false
+        histories = []
+        req.onsuccess = (e) ->
+          cursor = e.target.result
+          if cursor and (limit is -1 or histories.length < limit)
+            if !advanced
+              advanced = true
+              if offset isnt -1
+                cursor.advance(offset)
+                return
+            value = cursor.value
+            value.is_https = (app.url.getScheme(value.url) is "https")
+            histories.unshift(value)
+            cursor.continue()
+          else
+            resolve(histories)
           return
-        ->
+        req.onerror = (e) ->
           app.log("error", "WriteHistory.get: トランザクション中断")
-          d.reject()
+          reject(e)
           return
+        return
       )
     )
-    .promise()
 
   ###*
   @method getByUrl
@@ -133,109 +149,106 @@ class app.WriteHistory
   ###
   @getByUrl: (url) ->
     if app.assert_arg("WriteHistory.getByUrl", ["string"], arguments)
-      return $.Deferred().reject().promise()
+      return Promise.reject()
 
-    @_openDB().then((db) -> $.Deferred (d) ->
-      db.readTransaction(
-        (transaction) ->
-          transaction.executeSql(
-            "SELECT * FROM WriteHistory WHERE url = ? ORDER BY date"
-            [url]
-            (transaction, result) ->
-              data = []
-              key = 0
-              length = result.rows.length
-              while key < length
-                data.push(result.rows.item(key))
-                key++
-              d.resolve(data)
-              return
-          )
+    return @_openDB().then( (db) ->
+      return new Promise( (resolve, reject) ->
+        req = db
+          .transaction("WriteHistory")
+          .objectStore("WriteHistory")
+          .index("url")
+          .getAll(IDBKeyRange.only(url))
+        req.onsuccess = (e) ->
+          resolve(e.target.result)
           return
-        ->
-          app.log("error", "WriteHistory.getByUrl: トランザクション中断")
-          d.reject()
+        req.onerror = (e) ->
+          app.log("error", "WriteHistory.remove: トランザクション中断")
+          reject(e)
           return
+        return
       )
     )
-    .promise()
 
   ###*
-  @method get_all
+  @method getAll
   @return {Promise}
   ###
-  @get_all: () ->
-    @_openDB().then((db) -> $.Deferred (d) ->
-      db.readTransaction(
-        (transaction) ->
-          transaction.executeSql(
-            "SELECT * FROM WriteHistory"
-            []
-            (transaction, result) ->
-              d.resolve(result.rows)
-              return
-          )
+  @getAll: () ->
+    return @_openDB().then( (db) ->
+      return new Promise( (resolve, reject) ->
+        req = db
+          .transaction("WriteHistory")
+          .objectStore("WriteHistory")
+          .getAll()
+        req.onsuccess = (e) ->
+          resolve(event.target.result.reverse())
           return
-        ->
-          app.log("error", "WriteHistory.get_all: トランザクション中断")
-          d.reject()
+        req.onerror = (e) ->
+          app.log("error", "WriteHistory.getAll: トランザクション中断")
+          reject(e)
           return
+        return
       )
     )
-    .promise()
 
   ###*
   @method count
   @return {Promise}
   ###
   @count: ->
-    @_openDB().then((db) -> $.Deferred (d) ->
-      db.readTransaction(
-        (transaction) ->
-          transaction.executeSql(
-            "SELECT count() FROM WriteHistory"
-            []
-            (transaction, result) ->
-              d.resolve(result.rows.item(0)["count()"])
-              return
-          )
+    return @_openDB().then( (db) ->
+      return new Promise( (resolve, reject) ->
+        req = db
+          .transaction("WriteHistory")
+          .objectStore("WriteHistory")
+          .count()
+        req.onsuccess = (e) ->
+          resolve(event.target.result)
           return
-        ->
+        req.onerror = (e) ->
           app.log("error", "WriteHistory.count: トランザクション中断")
-          d.reject()
+          reject(e)
           return
+        return
       )
     )
-    .promise()
 
   ###*
   @method clear
   @param {Number} offset
   @return {Promise}
   ###
-  @clear = (offset) ->
-    if offset? and app.assert_arg("WriteHistory.clear", ["number"], arguments)
-      return $.Deferred().reject().promise()
+  @clear = (offset = -1) ->
+    if app.assert_arg("WriteHistory.clear", ["number"], [offset])
+      return Promise.reject()
 
-    @_openDB().then((db) -> $.Deferred (d) ->
-      db.transaction(
-        (transaction) ->
-          if typeof offset is "number"
-            transaction.executeSql("DELETE FROM WriteHistory WHERE rowid < (SELECT rowid FROM WriteHistory ORDER BY date DESC LIMIT 1 OFFSET ?)", [offset - 1])
+    return @_openDB().then( (db) ->
+      return new Promise( (resolve, reject) ->
+        req = db
+          .transaction("WriteHistory", "readwrite")
+          .objectStore("WriteHistory")
+          .openCursor()
+        advanced = false
+        req.onsuccess = (e) ->
+          cursor = e.target.result
+          if cursor
+            if !advanced
+              advanced = true
+              if offset isnt -1
+                cursor.advance(offset)
+                return
+            cursor.delete()
+            cursor.continue()
           else
-            transaction.executeSql("DELETE FROM WriteHistory")
+            resolve()
           return
-        ->
+        req.onerror = (e) ->
           app.log("error", "WriteHistory.clear: トランザクション中断")
-          d.reject()
+          reject(e)
           return
-        ->
-          d.resolve()
-          return
+        return
       )
-      return
     )
-    .promise()
 
   ###*
   @method clearRange
@@ -244,22 +257,28 @@ class app.WriteHistory
   ###
   @clearRange = (day) ->
     if app.assert_arg("WriteHistory.clearRange", ["number"], arguments)
-      return $.Deferred().reject().promise()
+      return Promise.reject()
 
-    @_openDB().then((db) -> $.Deferred (d) ->
-      db.transaction(
-        (transaction) ->
-          dayUnix = Date.now()-86400000*day
-          transaction.executeSql("DELETE FROM WriteHistory WHERE date < ?", [dayUnix])
+    return @_openDB().then( (db) ->
+      return new Promise( (resolve, reject) ->
+        dayUnix = Date.now()-86400000*day
+        req = db
+          .transaction("WriteHistory", "readwrite")
+          .objectStore("WriteHistory")
+          .index("date")
+          .openCursor(IDBKeyRange.upperBound(dayUnix, true))
+        req.onsuccess = (e) ->
+          cursor = e.target.result
+          if cursor
+            cursor.delete()
+            cursor.continue()
+          else
+            resolve()
           return
-        ->
+        req.onerror = (e) ->
           app.log("error", "WriteHistory.clearRange: トランザクション中断")
-          d.reject()
+          reject(e)
           return
-        ->
-          d.resolve()
-          return
+        return
       )
-      return
     )
-    .promise()

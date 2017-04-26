@@ -92,7 +92,7 @@ class UI.ThreadContent
   ###
   getWrittenRes: ->
     d = $.Deferred()
-    app.WriteHistory.getByUrl(@url).done( (data) ->
+    app.WriteHistory.getByUrl(@url).then( (data) ->
       d.resolve(data)
       return
     )

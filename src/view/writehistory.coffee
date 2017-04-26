@@ -18,7 +18,7 @@ app.boot "/view/writehistory.html", ->
 
     $view.addClass("loading")
 
-    app.WriteHistory.get(undefined, 500).done (data) ->
+    app.WriteHistory.get(undefined, 500).then (data) ->
       threadList.empty()
       threadList.addItem(data)
       $view.removeClass("loading")
@@ -41,7 +41,7 @@ app.boot "/view/writehistory.html", ->
       label_no: "いいえ"
     }).done (res) ->
       if res
-        app.WriteHistory.clear().done(load)
+        app.WriteHistory.clear().then(load)
       return
     return
   return

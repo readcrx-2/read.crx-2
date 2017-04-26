@@ -327,7 +327,7 @@ app.boot "/view/config.html", ["cache", "bbsmenu"], (Cache, BBSMenu) ->
     d = $.Deferred()
     $.when(
       app.read_state.get_all(),
-      app.History.get_all()
+      app.History.getAll()
     ).done( (read_state_res, history_res) ->
       d.resolve({"read_state": Array.from(read_state_res), "history": Array.from(history_res)})
       return

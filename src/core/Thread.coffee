@@ -252,16 +252,16 @@ class app.Thread
                   place = cache.data.indexOf("</dd></dl></section>")
               else if readcgiSevenFlg
                 before = response.body.indexOf("<div class=\"thread\">")+20
-                after = response.body.indexOf("</span></div></div></div>")
+                after = response.body.indexOf("</span></div></div><br></div>")
                 if after isnt -1
-                  after += 19
+                  after += 23
                 else
-                  after = response.body.indexOf("</span></div></div>")+19
-                place = cache.data.indexOf("</span></div></div></div>")
+                  after = response.body.indexOf("</span></div></div><br>")+23
+                place = cache.data.indexOf("</span></div></div><br></div>")
                 if place isnt -1
-                  place += 19
+                  place += 23
                 else
-                  place = cache.data.indexOf("</span></div></div>")+19
+                  place = cache.data.indexOf("</span></div></div><br>")+23
               else
                 before = response.body.indexOf("<div class=\"thread\">")+20
                 after = response.body.indexOf("</div></div></div><div class=\"cLength\">")
@@ -398,9 +398,9 @@ class app.Thread
       reg = /^.*?<div class="post".*><div class="number">\d+.* : <\/div><div class="name"><b>(?:<a href="mailto:([^<>]*)">|<font [^>]*>)?(.*?)(?:<\/a>|<\/font>)?<\/b><\/div><div class="date">(.*)<\/div><div class="message"> ?(.*)$/
       separator = "</div></div>"
     else if text.includes("<div class=\"footer push\">read.cgi ver 07")
-      text = text.replace(/<\/h1>/, "</h1></div></div>")
+      text = text.replace(/<\/h1>/, "</h1></div></div><br>")
       reg = /^.*?<div class="post".*><div class="meta"><span class="number">\d+<\/span><span class="name"><b>(?:<a href="mailto:([^<>]*)">|<font [^>]*>)?(.*?)(?:<\/a>|<\/font>)?<\/b><\/span><span class="date">(.*)<\/span><\/div><div class="message">(?:<span class="escaped">)? ?(.*)$/
-      separator = "</div></div>"
+      separator = "</div></div><br>"
     else
       reg = /^(?:<\/?div.*?(?:<br><br>)?)?<dt>\d+.*：(?:<a href="mailto:([^<>]*)">|<font [^>]*>)?<b>(.*)<\/b>.*：(.*)<dd> ?(.*)<br><br>$/
       separator = "\n"

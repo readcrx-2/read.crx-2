@@ -21,29 +21,32 @@ class app.Thread
     xhrPath = xhrInfo.path
     xhrCharset = xhrInfo.charset
 
-    getCachedInfo = $.Deferred (d) =>
+    getCachedInfo = new Promise( (resolve, reject) =>
       if @tsld in ["shitaraba.net", "machi.to"]
-        app.Board.get_cached_res_count(@url)
-          .done (res) ->
-            d.resolve(res)
-            return
-          .fail ->
-            d.reject()
-            return
+        app.Board.get_cached_res_count(@url).then( (res) ->
+          resolve(res)
+          return
+        , ->
+          reject()
+          return
+        )
+        return
       else
-        d.reject()
+        reject()
       return
+    )
 
     cache = new app.Cache(xhrPath)
+    hasCache = false
     deltaFlg = false
     readcgisixFlg = false
     readcgiSevenFlg = false
     noChangeFlg = false
 
     #キャッシュ取得
-    promiseCacheGet = cache.get()
-    promiseCacheGet.then =>
-      $.Deferred (d) =>
+    cache.get().then =>
+      return new Promise( (resolve, reject) =>
+        hasCache = true
         if forceUpdate or Date.now() - cache.last_updated > 1000 * 3
           #通信が生じる場合のみ、notifyでキャッシュを送出する
           app.defer =>
@@ -53,20 +56,21 @@ class app.Thread
             @title = tmp.title
             resDeferred.notify()
             return
-          d.reject()
+          reject()
         else
-          d.resolve()
+          resolve()
         return
+      )
     #通信
-    .then null, =>
-      $.Deferred (d) =>
+    .catch =>
+      return new Promise( (resolve, reject) =>
         if @tsld in ["shitaraba.net", "machi.to"]
-          if promiseCacheGet.state() is "resolved"
+          if hasCache
             deltaFlg = true
             xhrPath += (+cache.res_length + 1) + "-"
         # 2ch.netは差分を-nで取得
         else if (app.config.get("format_2chnet") isnt "dat" and @tsld is "2ch.net") or @tsld is "bbspink.com"
-          if promiseCacheGet.state() is "resolved"
+          if hasCache
             deltaFlg = true
             if cache.data.includes("<div class=\"footer push\">read.cgi ver 06")
               readcgisixFlg = true
@@ -82,7 +86,7 @@ class app.Thread
           mimeType: "text/plain; charset=#{xhrCharset}"
         })
 
-        if promiseCacheGet.state() is "resolved"
+        if hasCache
           if cache.last_modified?
             request.headers["If-Modified-Since"] =
               new Date(cache.last_modified).toUTCString()
@@ -91,17 +95,19 @@ class app.Thread
 
         request.send (response) ->
           if response.status is 200
-            d.resolve(response)
+            resolve(response)
           else if response.status is 500 and readcgisixFlg
-            d.resolve(response)
-          else if promiseCacheGet.state() is "resolved" and response.status is 304
-            d.resolve(response)
+            resolve(response)
+          else if hasCache and response.status is 304
+            resolve(response)
           else
-            d.reject(response)
-
+            reject(response)
+          return
+        return
+      )
     #パース
-    .then((fn = (response) =>
-      $.Deferred (d) =>
+    .then( (response) =>
+      return new Promise( (resolve, reject) =>
         guessRes = app.url.guess_type(@url)
 
         if response?.status is 200 or (readcgisixFlg and response?.status is 500)
@@ -130,11 +136,11 @@ class app.Thread
             thread = Thread.parse(@url, response.body)
         #2ch系BBSのdat落ち
         else if guessRes.bbs_type is "2ch" and response?.status is 203
-          if promiseCacheGet.state() is "resolved"
+          if hasCache
             thread = Thread.parse(@url, cache.data)
           else
             thread = Thread.parse(@url, response.body)
-        else if promiseCacheGet.state() is "resolved"
+        else if hasCache
           thread = Thread.parse(@url, cache.data)
 
         #パース成功
@@ -146,48 +152,56 @@ class app.Thread
               #通信成功（2ch read.cgi ver6の差分更新なし）
               (readcgisixFlg and response?.status is 500) or
               #キャッシュが期限内だった場合
-              (not response and promiseCacheGet.state() is "resolved")
-            d.resolve(response, thread)
+              (not response and hasCache)
+            resolve({response, thread})
           #2ch系BBSのdat落ち
           else if guessRes.bbs_type is "2ch" and response?.status is 203
-            d.reject(response, thread)
+            reject({response, thread})
           else
-            d.reject(response, thread)
+            reject({response, thread})
         #パース失敗
         else
-          d.reject(response)
-    ), fn)
-
+          reject({response})
+        return
+      )
+    )
     #したらば/まちBBS最新レス削除対策
-    .then (response, thread) ->
-      $.Deferred (d) ->
+    .then ({response, thread}) ->
+      return new Promise( (resolve, reject) ->
         getCachedInfo
-          .done (cachedInfo) ->
+          .then( (cachedInfo) ->
             while thread.res.length < cachedInfo.res_count
               thread.res.push
                 name: "あぼーん"
                 mail: "あぼーん"
                 message: "あぼーん"
                 other: "あぼーん"
-            d.resolve(response, thread)
+            resolve({response, thread})
             return
-          .fail ->
-            d.resolve(response, thread)
+          , ->
+            resolve({response, thread})
             return
+          )
         return
+      )
 
     #コールバック
-    .always (response, thread) =>
+    .then(({response, thread}) =>
       if thread
         @title = thread.title
         @res = thread.res
-      return
+      return Promise.resolve({response, thread})
+    , ({response, thread}) =>
+      if thread
+        @title = thread.title
+        @res = thread.res
+      return Promise.reject({response, thread})
+    )
 
-    .done (response, thread) =>
+    .then ({response, thread}) =>
       resDeferred.resolve()
-      return
-
-    .fail (response, thread) =>
+      return {response, thread}
+    , ({response, thread}) =>
       @message = ""
 
       #2chでrejectされてる場合は移転を疑う
@@ -216,21 +230,21 @@ class app.Thread
               @message += "スレッドの読み込みに失敗しました。"
             return
           .always =>
-            if promiseCacheGet.state() is "resolved" and thread
+            if hasCache and thread
               @message += "キャッシュに残っていたデータを表示します。"
             resDeferred.reject()
             return
       else
         @message += "スレッドの読み込みに失敗しました。"
 
-        if promiseCacheGet.state() is "resolved" and thread
+        if hasCache and thread
           @message += "キャッシュに残っていたデータを表示します。"
 
         resDeferred.reject()
-      return
+      return {response, thread}
 
     #キャッシュ更新部
-    .done (response, thread) =>
+    .then ({response, thread}) =>
       #通信に成功した場合
       if response?.status is 200 or (readcgisixFlg and response?.status is 500)
         cache.last_updated = Date.now()
@@ -307,19 +321,19 @@ class app.Thread
         cache.put()
 
       #304だった場合はアップデート時刻のみ更新
-      else if promiseCacheGet.state() is "resolved" and response?.status is 304
+      else if hasCache and response?.status is 304
         cache.last_updated = Date.now()
         cache.put()
-      return
+      return {response, thread}
 
     #ブックマーク更新部
-    .always (response, thread) =>
+    .then ({response, thread}) =>
       if thread?
         app.bookmark.update_res_count(@url, thread.res.length)
-      return
+      return {response, thread}
 
     #dat落ち検出
-    .fail (response, thread) =>
+    .then ({response, thread}) =>
       if response?.status is 203
         app.bookmark.update_expired(@url, true)
       return

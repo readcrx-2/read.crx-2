@@ -360,7 +360,7 @@ app.boot "/view/config.html", ["cache", "bbsmenu"], (Cache, BBSMenu) ->
     $status = $view.find(".cache_status")
 
     cache = new Cache("*")
-    cache.count().done (count) ->
+    cache.count().then (count) ->
       $status.text("#{count}件")
       return
 
@@ -369,10 +369,10 @@ app.boot "/view/config.html", ["cache", "bbsmenu"], (Cache, BBSMenu) ->
       $status.text("削除中")
 
       cache.delete()
-        .done ->
+        .then ->
           $status.text("削除完了")
           return
-        .fail ->
+        .catch ->
           $status.text("削除失敗")
           return
       return
@@ -382,10 +382,10 @@ app.boot "/view/config.html", ["cache", "bbsmenu"], (Cache, BBSMenu) ->
       $status.text("範囲指定削除中")
 
       cache.clearRange(parseInt($view.find(".cache_date_range")[0].value))
-        .done ->
+        .then ->
           $status.text("削除完了")
           return
-        .fail ->
+        .catch ->
           $status.text("削除失敗")
           return
       return

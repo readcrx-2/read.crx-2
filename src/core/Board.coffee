@@ -35,24 +35,27 @@ class app.Board
     xhr_path = tmp.path
     xhr_charset = tmp.charset
 
+    hasCache = false
+
     #キャッシュ取得
     cache = new app.Cache(xhr_path)
-    cache_get_promise = cache.get()
-    cache_get_promise.then ->
-      $.Deferred (d) ->
+    cache.get().then ->
+      return new Promise( (resolve, reject) ->
+        hasCache = true
         if Date.now() - cache.last_updated < 1000 * 3
-          d.resolve()
+          resolve()
         else
-          d.reject()
+          reject()
         return
+      )
     #通信
-    .then null, =>
-      $.Deferred (d) ->
+    .catch =>
+      return new Promise( (resolve, reject) ->
         request = new app.HTTP.Request("GET", xhr_path, {
           mimeType: "text/plain; charset=#{xhr_charset}"
         })
 
-        if cache_get_promise.state() is "resolved"
+        if hasCache
           if cache.last_modified?
             request.headers["If-Modified-Since"] =
               new Date(cache.last_modified).toUTCString()
@@ -61,36 +64,37 @@ class app.Board
 
         request.send (response) ->
           if response.status is 200
-            d.resolve(response)
-          else if cache_get_promise.state() is "resolved" and response.status is 304
-            d.resolve(response)
+            resolve(response)
+          else if hasCache and response.status is 304
+            resolve(response)
           else
-            d.reject(response)
+            reject(response)
         return
+      )
     #パース
-    .then((fn = (response) =>
-      $.Deferred (d) =>
+    .then( (response) =>
+      return new Promise( (resolve, reject) =>
         if response?.status is 200
           thread_list = Board.parse(@url, response.body)
-        else if cache_get_promise.state() is "resolved"
+        else if hasCache
           thread_list = Board.parse(@url, cache.data)
 
         if thread_list?
-          if response?.status is 200 or response?.status is 304 or (not response? and cache_get_promise.state() is "resolved")
-            d.resolve(response, thread_list)
+          if response?.status is 200 or response?.status is 304 or (not response? and hasCache)
+            resolve({response, thread_list})
           else
-            d.reject(response, thread_list)
+            reject({response, thread_list})
         else
-          d.reject(response)
+          reject({response})
         return
-    ), fn)
+      )
+    )
     #コールバック
-    .done (response, thread_list) =>
+    .then ({response, thread_list}) =>
       @thread = thread_list
       res_deferred.resolve()
-      return
-
-    .fail (response, thread_list) =>
+      return {response, thread_list}
+    , ({response, thread_list}) =>
       @message = "板の読み込みに失敗しました。"
 
       #2chでrejectされている場合は移転を疑う
@@ -105,21 +109,21 @@ class app.Board
             </a>)
             """
           .always =>
-            if cache_get_promise.state() is "resolved" and thread_list?
+            if hasCache and thread_list?
               @message += "キャッシュに残っていたデータを表示します。"
 
             if thread_list
               @thread = thread_list
       else
-        if cache_get_promise.state() is "resolved" and thread_list?
+        if hasCache and thread_list?
           @message += "キャッシュに残っていたデータを表示します。"
 
         if thread_list?
           @thread = thread_list
       res_deferred.reject()
-      return
+      return {response, thread_list}
     #キャッシュ更新部
-    .done (response, thread_list) ->
+    .then ({response, thread_list}) ->
       if response?.status is 200
         cache.data = response.body
         cache.last_updated = Date.now()
@@ -139,12 +143,12 @@ class app.Board
         for thread in thread_list
           app.bookmark.update_res_count(thread.url, thread.res_count)
 
-      else if cache_get_promise.state() is "resolved" and response?.status is 304
+      else if hasCache and response?.status is 304
         cache.last_updated = Date.now()
         cache.put()
-      return
+      return {response, thread_list}
     #dat落ちスキャン
-    .done (response, thread_list) =>
+    .then ({response, thread_list}) =>
       if thread_list
         dict = {}
         for bookmark in app.bookmark.get_by_board(@url) when bookmark.type is "thread"
@@ -157,7 +161,7 @@ class app.Board
         for thread_url of dict
           app.bookmark.update_expired(thread_url, true)
       return
-    res_deferred.promise()
+    return res_deferred.promise()
 
   ###*
   @method _get_xhr_info
@@ -234,20 +238,20 @@ class app.Board
     xhr_path = Board._get_xhr_info(board_url)?.path
 
     unless xhr_path?
-      return $.Deferred().reject().promise()
+      return Promise.reject()
 
     cache = new app.Cache(xhr_path)
-    cache.get().then =>
-      $.Deferred (d) =>
+    return cache.get().then =>
+      return new Promise( (resolve, reject) =>
         last_modified = cache.last_modified
         for thread in Board.parse(board_url, cache.data) when thread.url is thread_url
-          d.resolve
+          resolve
             res_count: thread.res_count
             modified: last_modified
           return
-        d.reject()
+        reject()
         return
-    .promise()
+      )
 
 app.module "board", [], (callback) ->
   callback(app.Board)
@@ -272,10 +276,11 @@ app.board =
 
   get_cached_res_count: (thread_url, callback) ->
     app.Board.get_cached_res_count(thread_url)
-      .done (res) ->
+      .then( (res) ->
         callback(res)
         return
-      .fail ->
+      , ->
         callback(null)
         return
+      )
     return

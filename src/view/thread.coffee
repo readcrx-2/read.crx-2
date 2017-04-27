@@ -959,7 +959,7 @@ app.view_thread._read_state_manager = ($view) ->
       read_state = bookmark.read_state
       deferred.resolve({read_state, read_state_updated})
     else
-      app.read_state.get(view_url).then (_read_state) ->
+      app.ReadState.get(view_url).then (_read_state) ->
         read_state = _read_state or {received: 0, read: 0, last: 0, url: view_url}
         deferred.resolve({read_state, read_state_updated})
   .promise()
@@ -1059,7 +1059,7 @@ app.view_thread._read_state_manager = ($view) ->
     scan_and_save = ->
       scan()
       if read_state_updated
-        app.read_state.set(read_state)
+        app.ReadState.set(read_state)
         app.bookmark.update_read_state(read_state)
         read_state_updated = false
 

@@ -4,7 +4,7 @@
 ///<reference path="Bookmark.ChromeBookmarkEntryList.ts" />
 
 declare namespace app {
-  var read_state: any;
+  var ReadState: any;
 }
 
 namespace app.Bookmark {
@@ -119,7 +119,7 @@ namespace app.Bookmark {
 
       entry.title = title;
 
-      app.read_state.get(entry.url).always((readState:ReadState) => {
+      app.ReadState.get(entry.url).then((readState:ReadState) => {
         if (readState) {
           entry.readState = readState;
         }

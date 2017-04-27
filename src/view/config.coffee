@@ -311,7 +311,7 @@ app.boot "/view/config.html", ["cache", "bbsmenu"], (Cache, BBSMenu) ->
     return
 
   setupHistory("history", app.History, ->
-    return Promise.all(app.History.clear(), app.read_state.clear())
+    return Promise.all(app.History.clear(), app.ReadState.clear())
   , (day) ->
     return app.History.clearRange(day)
   , (inputObj) ->
@@ -319,13 +319,13 @@ app.boot "/view/config.html", ["cache", "bbsmenu"], (Cache, BBSMenu) ->
       inputObj.history.map( (his) ->
         return app.History.add(his.url, his.title, his.date)
       ).concat(inputObj.read_state.map( (rs) ->
-        return app.read_state.set(rs)
+        return app.ReadState.set(rs)
       ))
     )
   , ->
     return new Promise( (resolve, reject) ->
       Promise.all(
-        app.read_state.getAll(),
+        app.ReadState.getAll(),
         app.History.getAll()
       ).then( ([read_state_res, history_res]) ->
         resolve({"read_state": read_state_res, "history": history_res})

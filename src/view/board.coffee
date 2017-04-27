@@ -78,7 +78,7 @@ app.boot "/view/board.html", ->
   load = (ex) ->
     $view.addClass("loading")
 
-    deferred_get_read_state = app.read_state.get_by_board(url)
+    deferred_get_read_state = app.ReadState.getByBoard(url)
 
     deferred_board_get = new Promise( (resolve, reject) ->
       app.board.get url, (res) ->

@@ -255,7 +255,7 @@ class UI.ThreadList
             app.WriteHistory.remove(threadURL, threadWrittenRes)
             $tr.remove()
           else if $this.hasClass("del_read_state")
-            app.read_state.remove(threadURL)
+            app.ReadState.remove(threadURL)
 
           $this.parent().remove()
           return

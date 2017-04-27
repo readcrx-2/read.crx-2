@@ -210,7 +210,7 @@ app.boot "/view/config.html", ["cache", "bbsmenu"], (Cache, BBSMenu) ->
     $status = $view.find(".#{name}_status")
 
     #履歴件数表示
-    mainClass.count().done (count) ->
+    mainClass.count().then (count) ->
       $status.text("#{count}件")
       return
 
@@ -220,13 +220,13 @@ app.boot "/view/config.html", ["cache", "bbsmenu"], (Cache, BBSMenu) ->
       $status.text("削除中")
 
       cleanFunc()
-        .done ->
+        .then ->
           $status.text("削除完了")
           parent.$("iframe[src=\"/view/#{name}.html\"]").each ->
             @contentWindow.$(".view").trigger("request_reload")
-        .fail ->
+        , ->
           $status.text("削除失敗")
-        .always ->
+        .then ->
           $clear_button.removeClass("hidden")
       return
 
@@ -236,13 +236,13 @@ app.boot "/view/config.html", ["cache", "bbsmenu"], (Cache, BBSMenu) ->
       $status.text("範囲指定削除中")
 
       cleanRangeFunc(parseInt($view.find(".#{name}_date_range")[0].value))
-        .done ->
+        .then ->
           $status.text("範囲指定削除完了")
           parent.$("iframe[src=\"view/#{name}.html\"]").each ->
             @contentWindow.$(".view").trigger("request_reload")
-        .fail ->
+        , ->
           $status.text("範囲指定削除失敗")
-        .always ->
+        .then ->
           $clear_range_button.removeClass("hidden")
       return
 
@@ -276,13 +276,13 @@ app.boot "/view/config.html", ["cache", "bbsmenu"], (Cache, BBSMenu) ->
         importFunc(JSON.parse(historyFile))#適応処理
         .then () ->
           mainClass.count()
-        .done (count) ->
+        .then (count) ->
           $status
             .addClass("done")
             .text("#{count}件 インポート完了")
           $clear_button.removeClass("hidden")
           return
-        .fail ->
+        , ->
           $status
             .addClass("fail")
             .text("インポート失敗")
@@ -295,7 +295,7 @@ app.boot "/view/config.html", ["cache", "bbsmenu"], (Cache, BBSMenu) ->
 
     #履歴エクスポート
     $view.find(".#{name}_export").on "click", ->
-      outputFunc().done( (data) ->
+      outputFunc().then( (data) ->
         outputText = JSON.stringify(data)
         blob = new Blob([outputText],{type:"text/plain"})
         $a = $("<a>")
@@ -311,28 +311,27 @@ app.boot "/view/config.html", ["cache", "bbsmenu"], (Cache, BBSMenu) ->
     return
 
   setupHistory("history", app.History, ->
-    return $.when(app.History.clear(), app.read_state.clear())
+    return Promise.all(app.History.clear(), app.read_state.clear())
   , (day) ->
     return app.History.clearRange(day)
   , (inputObj) ->
-    deferred_add_func_array = []
-    if inputObj.history
-      for his in inputObj.history
-        deferred_add_func_array.push(app.History.add(his.url, his.title, his.date))
-    if inputObj.read_state
-      for rs in inputObj.read_state
-        deferred_add_func_array.push(app.read_state.set(rs))
-    return $.when(deferred_add_func_array...)
-  , ->
-    d = $.Deferred()
-    $.when(
-      app.read_state.get_all(),
-      app.History.getAll()
-    ).done( (read_state_res, history_res) ->
-      d.resolve({"read_state": Array.from(read_state_res), "history": Array.from(history_res)})
-      return
+    return Promise.all(
+      inputObj.history.map( (his) ->
+        return app.History.add(his.url, his.title, his.date)
+      ).concat(inputObj.read_state.map( (rs) ->
+        return app.read_state.set(rs)
+      ))
     )
-    return d.promise()
+  , ->
+    return new Promise( (resolve, reject) ->
+      Promise.all(
+        app.read_state.getAll(),
+        app.History.getAll()
+      ).then( ([read_state_res, history_res]) ->
+        resolve({"read_state": read_state_res, "history": history_res})
+        return
+      )
+    )
   )
   setupHistory("writehistory", app.WriteHistory, ->
     return app.WriteHistory.clear()
@@ -340,18 +339,18 @@ app.boot "/view/config.html", ["cache", "bbsmenu"], (Cache, BBSMenu) ->
     return app.WriteHistory.clearRange(day)
   , (inputObj) ->
     if inputObj.writehistory
-      return app.util.concurrent(inputObj.writehistory, (whis) ->
+      return Promise.all(inputObj.writehistory.map( (whis) ->
         return app.WriteHistory.add(whis.url, whis.res, whis.title, whis.name, whis.mail, whis.input_name, whis.input_mail, whis.message, whis.date)
-      )
+      ))
     else
-      return $.Deferred().resolve().promise()
+      return Promise.resolve()
   , ->
-    d = $.Deferred()
-    app.WriteHistory.getAll().done( (data) ->
-      d.resolve({"writehistory": Array.from(data)})
-      return
+    return new Promise( (resolve, reject) ->
+      app.WriteHistory.getAll().then( (data) ->
+        resolve({"writehistory": data})
+        return
+      )
     )
-    return d.promise()
   )
 
   do ->

@@ -181,7 +181,7 @@ class app.WriteHistory
           .objectStore("WriteHistory")
           .getAll()
         req.onsuccess = (e) ->
-          resolve(event.target.result)
+          resolve(e.target.result)
           return
         req.onerror = (e) ->
           app.log("error", "WriteHistory.getAll: トランザクション中断")
@@ -203,7 +203,7 @@ class app.WriteHistory
           .objectStore("WriteHistory")
           .count()
         req.onsuccess = (e) ->
-          resolve(event.target.result)
+          resolve(e.target.result)
           return
         req.onerror = (e) ->
           app.log("error", "WriteHistory.count: トランザクション中断")

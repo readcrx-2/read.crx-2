@@ -130,7 +130,7 @@ class app.Cache
           .index("last_updated")
           .openCursor(IDBKeyRange.upperBound(dayUnix, true))
         req.onsuccess = (e) ->
-          resolve(event.target.result)
+          resolve(e.target.result)
           return
         req.onerror = (e) ->
           app.log("error", "Cache.clearRange: トランザクション中断")

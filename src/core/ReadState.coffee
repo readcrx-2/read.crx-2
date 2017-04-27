@@ -86,7 +86,8 @@ class app.ReadState
           .get(url.replaced)
         req.onsuccess = (e) ->
           data = app.deep_copy(e.target.result)
-          data.url = url.original
+          if data?
+            data.url = url.original
           resolve(data)
           return
         req.onerror = (e) ->

@@ -69,6 +69,78 @@ class app.Cache
     )
 
   ###*
+  @method count
+  @static
+  @return {Promise}
+  ###
+  @count: ->
+    return @_db_open.then( (db) ->
+      return new Promise( (resolve, reject) ->
+        req = db
+          .transaction("Cache")
+          .objectStore("Cache")
+          .count()
+        req.onsuccess = (e) ->
+          resolve(e.target.result)
+          return
+        req.onerror = (e) ->
+          app.log("error", "Cache.count: トランザクション中断")
+          reject(e)
+          return
+        return
+      )
+    )
+
+  ###*
+  @method delete
+  @static
+  @return {Promise}
+  ###
+  @delete: ->
+    return @_db_open.then( (db) =>
+      return new Promise( (resolve, reject) =>
+        req = db
+          .transaction("Cache", "readwrite")
+          .objectStore("Cache")
+          .clear()
+        req.onsuccess = (e) ->
+          resolve()
+          return
+        req.onerror = (e) ->
+          app.log("error", "Cache.delete: トランザクション中断")
+          reject(e)
+          return
+        return
+      )
+    )
+
+  ###*
+  @method clearRange
+  @param {Number} day
+  @static
+  @return {Promise}
+  ###
+  @clearRange: (day) ->
+    return @_db_open.then( (db) ->
+      return new Promise( (resolve, reject) ->
+        dayUnix = Date.now()-86400000*day
+        req = db
+          .transaction("Cache", "readwrite")
+          .objectStore("Cache")
+          .index("last_updated")
+          .openCursor(IDBKeyRange.upperBound(dayUnix, true))
+        req.onsuccess = (e) ->
+          resolve(event.target.result)
+          return
+        req.onerror = (e) ->
+          app.log("error", "Cache.clearRange: トランザクション中断")
+          reject(e)
+          return
+        return
+      )
+    )
+
+  ###*
   @method get
   @return {Promise}
   ###
@@ -91,32 +163,6 @@ class app.Cache
           return
         req.onerror = (e) ->
           app.log("error", "Cache::remove: トランザクション中断")
-          reject(e)
-          return
-        return
-      )
-    )
-
-  ###*
-  @method count
-  @return {Promise}
-  ###
-  count: ->
-    unless @key is "*"
-      app.log("error", "Cache::count: 未実装")
-      return Promise.reject()
-
-    return Cache._db_open.then( (db) ->
-      return new Promise( (resolve, reject) ->
-        req = db
-          .transaction("Cache")
-          .objectStore("Cache")
-          .count()
-        req.onsuccess = (e) ->
-          resolve(event.target.result)
-          return
-        req.onerror = (e) ->
-          app.log("error", "Cache::count: トランザクション中断")
           reject(e)
           return
         return
@@ -173,45 +219,12 @@ class app.Cache
         req = db
           .transaction("Cache", "readwrite")
           .objectStore("Cache")
-        if @key is "*"
-          req.clear()
-        else
-          req.delete(url)
+          .delete(url)
         req.onsuccess = (e) ->
           resolve()
           return
         req.onerror = (e) ->
           app.log("error", "Cache::delete: トランザクション中断")
-          reject(e)
-          return
-        return
-      )
-    )
-
-  ###*
-  @method clearRange
-  @param {Number} day
-  @return {Promise}
-  ###
-  clearRange: (day) ->
-    return Cache._db_open.then( (db) ->
-      return new Promise( (resolve, reject) ->
-        dayUnix = Date.now()-86400000*day
-        req = db
-          .transaction("Cache", "readwrite")
-          .objectStore("Cache")
-          .index("last_updated")
-          .openCursor(IDBKeyRange.upperBound(dayUnix, true))
-        req.onsuccess = (e) ->
-          cursor = e.target.result
-          if cursor
-            cursor.delete()
-            cursor.continue()
-          else
-            resolve()
-          return
-        req.onerror = (e) ->
-          app.log("error", "History.clearRange: トランザクション中断")
           reject(e)
           return
         return

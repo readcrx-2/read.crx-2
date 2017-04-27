@@ -358,8 +358,7 @@ app.boot "/view/config.html", ["cache", "bbsmenu"], (Cache, BBSMenu) ->
     $clear_button = $view.find(".cache_clear")
     $status = $view.find(".cache_status")
 
-    cache = new Cache("*")
-    cache.count().then (count) ->
+    Cache.count().then (count) ->
       $status.text("#{count}件")
       return
 
@@ -367,7 +366,7 @@ app.boot "/view/config.html", ["cache", "bbsmenu"], (Cache, BBSMenu) ->
       $clear_button.remove()
       $status.text("削除中")
 
-      cache.delete()
+      Cache.delete()
         .then ->
           $status.text("削除完了")
           return
@@ -380,7 +379,7 @@ app.boot "/view/config.html", ["cache", "bbsmenu"], (Cache, BBSMenu) ->
     $clear_range_button.on "click", ->
       $status.text("範囲指定削除中")
 
-      cache.clearRange(parseInt($view.find(".cache_date_range")[0].value))
+      Cache.clearRange(parseInt($view.find(".cache_date_range")[0].value))
         .then ->
           $status.text("削除完了")
           return

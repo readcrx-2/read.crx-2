@@ -181,7 +181,7 @@ class app.WriteHistory
           .objectStore("WriteHistory")
           .getAll()
         req.onsuccess = (e) ->
-          resolve(event.target.result.reverse())
+          resolve(event.target.result)
           return
         req.onerror = (e) ->
           app.log("error", "WriteHistory.getAll: トランザクション中断")

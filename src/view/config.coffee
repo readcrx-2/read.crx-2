@@ -646,4 +646,97 @@ app.boot "/view/config.html", ["cache", "bbsmenu"], (Cache, BBSMenu) ->
     )
     return
 
+  $replacestr_status = $view.find(".history_from_1151_status")
+  #過去の履歴をインポート
+  $view.find(".history_from_1151").on "click", ->
+    $replacestr_status
+      .removeClass("done fail")
+      .addClass("loading")
+      .text("インポート中")
+    hisPro = new Promise( (resolve, reject) ->
+      openDatabase("History", "", "History", 0).transaction( (tx) ->
+        tx.executeSql("SELECT * FROM History", [], (t, his) ->
+          h = Array.from(his.rows)
+          h.map( (a) ->
+            return app.History.add(a.url, a.title, a.date)
+          )
+          Promise.all(h).then( ->
+            t.executeSql("drop table History", [])
+            resolve()
+            return
+          , (e) ->
+            reject(e)
+            return
+          )
+          return
+        , (e) ->
+          if e.code?
+            reject(e)
+          else
+            resolve()
+          return
+        )
+      )
+    )
+    whisPro = new Promise( (resolve, reject) ->
+      openDatabase("WriteHistory", "", "WriteHistory", 0).transaction( (tx) ->
+        tx.executeSql("SELECT * FROM WriteHistory", [], (t, whis) ->
+          w = Array.from(whis.rows)
+          w.map( (a) ->
+            return app.WriteHistory.add(a.url, a.res, a.title, a.name, a.mail, a.input_name, a.mail, a.message, a.date)
+          )
+          Promise.all(w).then( ->
+            t.executeSql("drop table WriteHistory", [])
+            resolve()
+            return
+          , (e) ->
+            reject(e)
+            return
+          )
+          return
+        , (e) ->
+          if e.code?
+            reject(e)
+          else
+            resolve()
+          return
+        )
+      )
+    )
+    rsPro = new Promise( (resolve, reject) ->
+      openDatabase("ReadState", "", "Read State", 0).transaction( (tx) ->
+        tx.executeSql("SELECT * FROM ReadState", [], (t, rs) ->
+          r = Array.from(rs.rows)
+          r.map( (a) ->
+            return app.ReadState.set(a)
+          )
+          Promise.all(r).then( ->
+            t.executeSql("drop table ReadState", [])
+            resolve()
+            return
+          , (e) ->
+            reject(e)
+            return
+          )
+          return
+        , (e) ->
+          if e.code?
+            reject(e)
+          else
+            resolve()
+          return
+        )
+      )
+    )
+    Promise.all([hisPro, whisPro, rsPro]).then( ->
+      $replacestr_status
+        .addClass("done")
+        .text("インポート完了")
+    , (e) ->
+      $replacestr_status
+        .addClass("fail")
+        .text("インポート失敗 - #{e}")
+    )
+    return
+
   return

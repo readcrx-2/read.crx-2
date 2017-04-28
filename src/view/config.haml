@@ -410,11 +410,6 @@
 
           %br
 
-          %button.import_bookmark 初代read.crxからのブックマークのインポート
-          %span.import_bookmark_status
-
-          %br
-
           %button.bbsmenu_reload(type="button") 板一覧の更新
           %span.bbsmenu_reload_status
 
@@ -444,6 +439,12 @@
           %label
             UserAgent
             %input.direct.useragent(type="text" name="useragent")
+            
+      %section
+        %h2 過去バージョンからの移行
+        %div
+          %button.import_bookmark 初代read.crxからのブックマークのインポート
+          %span.import_bookmark_status
           %br
           書込履歴テーブル:
           %button.writehistory_delete_table(type="button") 削除

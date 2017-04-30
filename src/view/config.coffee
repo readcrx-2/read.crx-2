@@ -406,20 +406,23 @@ app.boot "/view/config.html", ["cache", "bbsmenu"], (Cache, BBSMenu) ->
     $button.attr("disabled", true)
     $status.text("インポート中")
 
-    $.Deferred (deferred) ->
+    new Promise( (resolve, reject) ->
       parent.chrome.runtime.sendMessage rcrx_webstore, req, (res) ->
         if res
-          deferred.resolve(res)
+          resolve(res)
         else
-          deferred.reject()
-    .then null, ->
-      $.Deferred (deferred) ->
+          reject()
+      return
+    ).catch( ->
+      return new Promise( (resolve, reject) ->
         parent.chrome.runtime.sendMessage rcrx_debug, req, (res) ->
           if res
-            deferred.resolve(res)
+            resolve(res)
           else
-            deferred.reject()
-    .done (res) ->
+            reject()
+        return
+      )
+    ).then( (res) ->
       for url, bookmark of res.bookmark
         if typeof(url) is typeof(bookmark.title) is "string"
           app.bookmark.add(url, bookmark.title)
@@ -427,10 +430,14 @@ app.boot "/view/config.html", ["cache", "bbsmenu"], (Cache, BBSMenu) ->
         if typeof(url) is typeof(bookmark.title) is "string"
           app.bookmark.add(url, bookmark.title)
       $status.text("インポート完了")
-    .fail ->
+      return
+    , ->
       $status.text("インポートに失敗しました。read.crx v0.73以降がインストールされている事を確認して下さい。")
-    .always ->
+      return
+    ).then( ->
       $button.attr("disabled", false)
+      return
+    )
 
   #「テーマなし」設定
   if app.config.get("theme_id") is "none"
@@ -490,20 +497,21 @@ app.boot "/view/config.html", ["cache", "bbsmenu"], (Cache, BBSMenu) ->
         .removeClass("done fail select")
         .addClass("loading")
         .text("更新中")
-      $.Deferred (d) ->
+      new Promise( (resolve, reject) ->
         jsonConfig = JSON.parse(configFile)
         keySet(jsonConfig)
-        d.resolve()
-      .done ->
+        resolve()
+      ).then( ->
         $cfg_status
           .addClass("done")
           .text("インポート完了")
         return
-      .fail ->
+      , ->
         $cfg_status
           .addClass("fail")
           .text("インポート失敗")
         return
+      )
     else
       $cfg_status
         .addClass("fail")
@@ -577,16 +585,17 @@ app.boot "/view/config.html", ["cache", "bbsmenu"], (Cache, BBSMenu) ->
         .removeClass("done fail select")
         .addClass("loading")
         .text("更新中")
-      $.Deferred (d) ->
+      new Promise( (resolve, reject) ->
         datDom = $view.find("textarea[name=\"image_replace_dat\"]")
         datDom[0].value = datFile
         datDom.trigger("input")
-        d.resolve()
-      .done ->
+        resolve()
+      ).then( ->
         $dat_status
           .addClass("done")
           .text("インポート完了")
         return
+      )
     else
       $dat_status
         .addClass("fail")
@@ -621,16 +630,17 @@ app.boot "/view/config.html", ["cache", "bbsmenu"], (Cache, BBSMenu) ->
         .removeClass("done fail select")
         .addClass("loading")
         .text("更新中")
-      $.Deferred (d) ->
+      new Promise( (resolve, reject) ->
         replacestrDom = $view.find("textarea[name=\"replace_str_txt\"]")
         replacestrDom[0].value = replacestrFile
         replacestrDom.trigger("input")
-        d.resolve()
-      .done ->
+        resolve()
+      ).then( ->
         $replacestr_status
           .addClass("done")
           .text("インポート完了")
         return
+      )
     else
       $replacestr_status
         .addClass("fail")

@@ -78,9 +78,9 @@ app.boot "/view/board.html", ->
   load = (ex) ->
     $view.addClass("loading")
 
-    deferred_get_read_state = app.ReadState.getByBoard(url)
+    get_read_state_promise = app.ReadState.getByBoard(url)
 
-    deferred_board_get = new Promise( (resolve, reject) ->
+    board_get_promise = new Promise( (resolve, reject) ->
       app.board.get url, (res) ->
         $message_bar = $view.find(".message_bar")
         if res.status is "error"
@@ -96,7 +96,7 @@ app.boot "/view/board.html", ->
       return
     )
 
-    Promise.all([deferred_get_read_state, deferred_board_get])
+    Promise.all([get_read_state_promise, board_get_promise])
       .then ([array_of_read_state, board]) ->
         read_state_index = {}
         for read_state, key in array_of_read_state

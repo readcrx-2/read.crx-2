@@ -276,16 +276,21 @@ class app.view.Index extends app.view.View
 app.boot "/view/index.html", ->
   query = app.url.parseQuery(location.search).get("q")
 
-  get_current = $.Deferred (deferred) ->
+  get_current = new Promise( (resolve, reject) ->
     chrome.tabs.getCurrent (current_tab) ->
-      deferred.resolve(current_tab)
-
-  get_all = $.Deferred (deferred) ->
+      resolve(current_tab)
+      return
+    return
+  )
+  get_all = new Promise( (resolve, reject) ->
     chrome.windows.getAll {populate: true}, (windows) ->
-      deferred.resolve(windows)
+      resolve(windows)
+      return
+    return
+  )
 
-  $.when(get_current, get_all)
-    .done (current_tab, windows) ->
+  Promise.all([get_current, get_all])
+    .then ([current_tab, windows]) ->
       app_path = chrome.extension.getURL("/view/index.html")
       for win in windows
         for tab in win.tabs

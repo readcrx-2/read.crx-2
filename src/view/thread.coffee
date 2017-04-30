@@ -912,7 +912,7 @@ app.view_thread._draw = ($view, force_update, beforeAdd) ->
 
     document.title = thread.title
 
-    $view.data("threadContent").addItem(thread.res.slice(content.children.length)).done( ->
+    $view.data("threadContent").addItem(thread.res.slice(content.children.length)).then( ->
       $view.data("lazyload").scan()
 
       $view.trigger("view_loaded")

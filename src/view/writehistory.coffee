@@ -44,7 +44,7 @@ app.boot "/view/writehistory.html", ->
       message: "履歴を削除しますか？"
       label_ok: "はい"
       label_no: "いいえ"
-    }).done (res) ->
+    }).then (res) ->
       if res
         app.WriteHistory.clear().then(load)
       return

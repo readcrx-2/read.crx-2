@@ -162,7 +162,7 @@ app.boot "/view/config.html", ["cache", "bbsmenu"], (Cache, BBSMenu) ->
         message: "本当に削除しますか？"
         label_ok: "はい"
         label_no: "いいえ"
-      }).done (result) ->
+      }).then (result) ->
         if result
           app.Ninja.deleteBackup(siteId)
           updateNinjaInfo()

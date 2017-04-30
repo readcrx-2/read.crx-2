@@ -4,49 +4,52 @@ app.module "thread_search", [], (callback) ->
       return
 
     _parse = (x) ->
-      def = $.Deferred()
-      scheme = app.url.getScheme(x.url)
-      app.BoardTitleSolver.ask("#{scheme}://#{x.server}/#{x.ita}/").done((boardName) ->
-        def.resolve(
-          url: x.url
-          created_at: new Date x.key * 1000
-          title: x.subject
-          res_count: +x.resno
-          board_url: "#{scheme}://#{x.server}/#{x.ita}/"
-          board_title: boardName
+      return new Promise( (resolve, reject) ->
+        scheme = app.url.getScheme(x.url)
+        app.BoardTitleSolver.ask("#{scheme}://#{x.server}/#{x.ita}/").then( (boardName) ->
+          resolve(
+            url: x.url
+            created_at: new Date x.key * 1000
+            title: x.subject
+            res_count: +x.resno
+            board_url: "#{scheme}://#{x.server}/#{x.ita}/"
+            board_title: boardName
+          )
+          return
+        , ->
+          reject()
+          return
         )
-        return
-      ).fail(->
-        def.reject()
       )
-      return def.promise()
 
     read: ->
-      $.Deferred (d) =>
+      return new Promise( (resolve, reject) =>
         request = new app.HTTP.Request("GET", "http://dig.2ch.net/?keywords=#{encodeURI(@query)}&maxResult=500&json=1", {
           cache: false
         })
         request.send (response) ->
           if response.status is 200
-            d.resolve(response.body)
+            resolve(response.body)
           else
-            d.reject(response.body)
+            reject(response.body)
           return
         return
-      .then(((responseText) => $.Deferred (d) =>
-        try
-          result = JSON.parse(responseText)
-        catch
-          d.reject(message: "通信エラー（JSONパースエラー）")
-          return
-
-        app.util.concurrent(result.result, _parse).done( (res) ->
-          d.resolve(res)
+      ).then( (responseText) ->
+        return new Promise( (resolve, reject) ->
+          try
+            result = JSON.parse(responseText)
+          catch
+            reject(message: "通信エラー（JSONパースエラー）")
+            return
+          res = result.result
+          Promise.all(res.map(_parse)).then( (r) ->
+            resolve(r)
+          )
           return
         )
-        return
-      ), (=> $.Deferred (d) => d.reject(message: "通信エラー"); return))
-      .promise()
+      , ->
+        reject(message: "通信エラー")
+      )
 
   callback(ThreadSearch)
   return

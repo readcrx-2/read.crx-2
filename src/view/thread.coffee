@@ -476,7 +476,7 @@ app.boot "/view/thread.html", ->
       else
         return
 
-      app.BoardTitleSolver.ask(board_url).done (title) =>
+      app.BoardTitleSolver.ask(board_url).then (title) =>
         popup_helper @, e, =>
           $("<div>", {class: "popup_linkinfo"})
             .append($("<div>", text: title + after))
@@ -873,7 +873,9 @@ app.boot "/view/thread.html", ->
   #パンくずリスト表示
   do ->
     board_url = app.url.threadToBoard(view_url)
-    app.BoardTitleSolver.ask(board_url).always (title) ->
+    app.BoardTitleSolver.ask(board_url).catch ->
+      return
+    .then (title) ->
       $view
         .find(".breadcrumb > li > a")
           .attr("href", board_url)
@@ -921,16 +923,19 @@ app.view_thread._draw = ($view, force_update, beforeAdd) ->
 
   thread = new app.Thread($view.attr("data-url"))
   threadGetDeferred = null
-  promiseThreadGet = thread.get(force_update)
   readStateAttached = false
+  promiseThreadGet = thread.get(force_update, ->
+    threadGetDeferred = fn(thread, false)
+    return
+  )
+  promiseThreadGetState = true
   promiseThreadGet
-    .progress ->
-      threadGetDeferred = fn(thread, false)
+    .catch ->
+      promiseThreadGetState = false
       return
-    .always ->
+    .then ->
       threadGetDeferred = $.Deferred().resolve() unless threadGetDeferred
       threadGetDeferred.always ->
-        promiseThreadGetState = promiseThreadGet.state() is "resolved"
         beforeAdd?(thread) if promiseThreadGetState
         threadGetDeferred = fn(thread, not promiseThreadGetState)
         .always ->

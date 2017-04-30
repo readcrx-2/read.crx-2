@@ -68,7 +68,7 @@ app.boot "/view/board.html", ->
 
   new app.view.TabContentView(document.documentElement)
 
-  app.BoardTitleSolver.ask(url).always (title) ->
+  app.BoardTitleSolver.ask(url).then (title) ->
     if title
       document.title = title
     if app.config.get("no_history") is "off"

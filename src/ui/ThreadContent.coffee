@@ -839,10 +839,10 @@ class UI.ThreadContent
           if app.config.get("expand_short_url") isnt "none"
             if app.url.SHORT_URL_REG.test(a.href)
               # 短縮URLの展開
-              app.url.expandShortURL(a, a.href).done( (a, finalUrl) ->
+              app.url.expandShortURL(a.href).then( (finalUrl) ->
                 newLink = addExpandedURL(a, finalUrl)
                 if finalUrl
-                  d2.resolve(newLink, newLink.href)
+                  d2.resolve(a, newLink.href)
                 else
                   d2.resolve(a, a.href)
                 return
@@ -853,12 +853,10 @@ class UI.ThreadContent
             d2.resolve(a, a.href)
           return d2.promise()
 
-        app.util.concurrent(@container.querySelectorAll(
-          ".message > a:not(.thumbnail):not(.has_thumbnail):not(.expandedURL):not(.has_expandedURL)"
-          ), (a) ->
-          checkUrl(a).then( (a, link) ->
+        replace = (a) ->
+          return checkUrl(a).then( (a, link) ->
             return app.ImageReplaceDat.do(a, link)
-          ).then( (a, res, err) ->
+          ).then( ({a, res, err}) ->
             # MediaTypeの設定
             unless err?
               href = res.text
@@ -868,12 +866,18 @@ class UI.ThreadContent
               mediaType = getMediaType(href, null)
             # サムネイルの追加
             addThumbnail(a, href, mediaType, res.referrer, res.cookie) if mediaType
+            return
           )
-        ).always(=>
+
+        aList = @container.querySelectorAll(
+          ".message > a:not(.thumbnail):not(.has_thumbnail):not(.expandedURL):not(.has_expandedURL)"
+        )
+        Promise.all(Array.from(aList).map(replace)).catch( ->
+          return
+        ).then( ->
           d.resolve()
           return
         )
-
         return
       return
     )

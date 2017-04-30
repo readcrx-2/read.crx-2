@@ -48,62 +48,60 @@ do ->
   #検出出来なかった場合はrejectする
   #htmlを渡す事で通信をスキップする事が出来る
   app.util.ch_server_move_detect = (old_board_url, html) ->
-    $.Deferred (deferred) ->
+    return new Promise( (resolve, reject) ->
       if typeof html is "string"
-        deferred.resolve(html)
+        resolve(html)
       else
-        deferred.reject()
-
+        reject()
+    )
     #htmlが渡されなかった場合は通信する
-    .then null, ->
-      $.Deferred (deferred) ->
+    .catch ->
+      return new Promise( (resolve, reject) ->
         request = new app.HTTP.Request("GET", old_board_url, {
           mimeType: "text/html; charset=Shift_JIS"
           cache: false
         })
         request.send (response) ->
           if response.status is 200
-            deferred.resolve(response.body)
+            resolve(response.body)
           else
-            deferred.reject()
+            reject()
           return
         return
+      )
     #htmlから移転を判定
     .then (html) ->
-      $.Deferred (deferred) ->
+      return new Promise( (resolve, reject) ->
         res = ///location\.href="(https?://\w+\.2ch\.net/\w*/)"///.exec(html)
 
         if res and res[1] isnt old_board_url
-          deferred.resolve(res[1])
+          resolve(res[1])
         else
-          deferred.reject()
+          reject()
+      )
     #bbsmenuから検索
-    .then null, ->
-      return $.Deferred((d) =>
-        app.BBSMenu.get (result) =>
+    .catch ->
+      return new Promise( (resolve, reject) ->
+        app.BBSMenu.get (result) ->
           if result.data?
             match = old_board_url.match(boardUrlReg)
-            console.log match
-            d.reject() unless match.length > 0
+            reject() unless match.length > 0
             for category in result.data
               for board in category.board
                 m = board.url.match(boardUrlReg)
                 if m? and match[1] is m[1] and match[0] isnt m[0]
-                  d.resolve(m[0])
+                  resolve(m[0])
                   break
-            d.reject()
+            reject()
           else
-            d.reject()
+            reject()
           return
         return
       )
-
     #移転を検出した場合は移転検出メッセージを送出
-    .done (new_board_url) ->
+    .then (new_board_url) ->
       app.message.send("detected_ch_server_move",
         {before: old_board_url, after: new_board_url})
-
-    .promise()
 
   #文字参照をデコード
   span = document.createElement("span")
@@ -148,7 +146,7 @@ do ->
       return def
 
   app.util.search_next_thread = (thread_url, thread_title) ->
-    $.Deferred (d) ->
+    return new Promise( (resolve, reject) ->
       thread_url = app.url.fix(thread_url)
       board_url = app.url.threadToBoard(thread_url)
       thread_title = app.util.normalize(thread_title)
@@ -166,12 +164,12 @@ do ->
             }
           tmp.sort (a, b) ->
             a.score - b.score
-          d.resolve(tmp[0...5])
+          resolve(tmp[0...5])
         else
-          d.reject()
+          reject()
         return
       return
-    .promise()
+    )
 
   wideSlimReg = ///[
     \uff10-\uff19 #０-９
@@ -280,17 +278,3 @@ do ->
     title2 = title.replace(titleReg,"")
     title = if title2 is "" then title else title2
     return title.replace(markReg, "")
-
-  # 配列のDeferredを平行処理
-  # array: 処理する配列
-  # func: 実行する処理
-  app.util.concurrent = (array, func) ->
-    d = $.Deferred()
-    deferArray = []
-    for a in array
-      deferArray.push(func(a))
-    $.when(deferArray...).done( (res...) ->
-      d.resolve(res)
-      return
-    )
-    return d.promise()

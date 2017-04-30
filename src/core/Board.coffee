@@ -27,141 +27,143 @@ class app.Board
   @return {Promise}
   ###
   get: ->
-    res_deferred = $.Deferred()
-
-    tmp = Board._get_xhr_info(@url)
-    unless tmp
-      return res_deferred.reject().promise()
-    xhr_path = tmp.path
-    xhr_charset = tmp.charset
-
-    hasCache = false
-
-    #キャッシュ取得
-    cache = new app.Cache(xhr_path)
-    cache.get().then ->
-      return new Promise( (resolve, reject) ->
-        hasCache = true
-        if Date.now() - cache.last_updated < 1000 * 3
-          resolve()
-        else
-          reject()
+    return new Promise( (resolve, reject) =>
+      tmp = Board._get_xhr_info(@url)
+      unless tmp
+        reject()
         return
-      )
-    #通信
-    .catch =>
-      return new Promise( (resolve, reject) ->
-        request = new app.HTTP.Request("GET", xhr_path, {
-          mimeType: "text/plain; charset=#{xhr_charset}"
-        })
+      xhr_path = tmp.path
+      xhr_charset = tmp.charset
 
-        if hasCache
-          if cache.last_modified?
-            request.headers["If-Modified-Since"] =
-              new Date(cache.last_modified).toUTCString()
-          if cache.etag?
-            request.headers["If-None-Match"] = cache.etag
+      hasCache = false
 
-        request.send (response) ->
-          if response.status is 200
-            resolve(response)
-          else if hasCache and response.status is 304
-            resolve(response)
+      #キャッシュ取得
+      cache = new app.Cache(xhr_path)
+      cache.get().then ->
+        return new Promise( (resolve, reject) ->
+          hasCache = true
+          if Date.now() - cache.last_updated < 1000 * 3
+            resolve()
           else
-            reject(response)
-        return
+            reject()
+          return
+        )
+      #通信
+      .catch =>
+        return new Promise( (resolve, reject) ->
+          request = new app.HTTP.Request("GET", xhr_path, {
+            mimeType: "text/plain; charset=#{xhr_charset}"
+          })
+          if hasCache
+            if cache.last_modified?
+              request.headers["If-Modified-Since"] =
+                new Date(cache.last_modified).toUTCString()
+            if cache.etag?
+              request.headers["If-None-Match"] = cache.etag
+
+          request.send (response) ->
+            if response.status is 200
+              resolve(response)
+            else if hasCache and response.status is 304
+              resolve(response)
+            else
+              reject(response)
+          return
+        )
+      #パース
+      .then( (response) =>
+        return new Promise( (resolve, reject) =>
+          if response?.status is 200
+            thread_list = Board.parse(@url, response.body)
+          else if hasCache
+            thread_list = Board.parse(@url, cache.data)
+
+          if thread_list?
+            if response?.status is 200 or response?.status is 304 or (not response? and hasCache)
+              resolve({response, thread_list})
+            else
+              reject({response, thread_list})
+          else
+            reject({response})
+          return
+        )
       )
-    #パース
-    .then( (response) =>
-      return new Promise( (resolve, reject) =>
+      #コールバック
+      .then ({response, thread_list}) =>
+        @thread = thread_list
+        resolve()
+        return {response, thread_list}
+      , ({response, thread_list}) =>
+        @message = "板の読み込みに失敗しました。"
+
+        #2chでrejectされている場合は移転を疑う
+        if app.url.tsld(@url) is "2ch.net" and response?
+          app.util.ch_server_move_detect(@url)
+            #移転検出時
+            .then (new_board_url) =>
+              @message += """
+              サーバーが移転している可能性が有ります
+              (<a href="#{app.escape_html(app.safe_href(new_board_url))}"
+              class="open_in_rcrx">#{app.escape_html(new_board_url)}
+              </a>)
+              """
+            .catch ->
+              return
+            .then =>
+              if hasCache and thread_list?
+                @message += "キャッシュに残っていたデータを表示します。"
+
+              if thread_list
+                @thread = thread_list
+        else
+          if hasCache and thread_list?
+            @message += "キャッシュに残っていたデータを表示します。"
+
+          if thread_list?
+            @thread = thread_list
+        reject()
+        return {response, thread_list}
+      #キャッシュ更新部
+      .then ({response, thread_list}) ->
         if response?.status is 200
-          thread_list = Board.parse(@url, response.body)
-        else if hasCache
-          thread_list = Board.parse(@url, cache.data)
+          cache.data = response.body
+          cache.last_updated = Date.now()
 
-        if thread_list?
-          if response?.status is 200 or response?.status is 304 or (not response? and hasCache)
-            resolve({response, thread_list})
-          else
-            reject({response, thread_list})
-        else
-          reject({response})
+          last_modified = new Date(
+            response.headers["Last-Modified"] or "dummy"
+          ).getTime()
+
+          if Number.isFinite(last_modified)
+            cache.last_modified = last_modified
+
+          if etag = response.headers["ETag"]
+            cache.etag = etag
+
+          cache.put()
+
+          for thread in thread_list
+            app.bookmark.update_res_count(thread.url, thread.res_count)
+
+        else if hasCache and response?.status is 304
+          cache.last_updated = Date.now()
+          cache.put()
+        return {response, thread_list}
+      #dat落ちスキャン
+      .then ({response, thread_list}) =>
+        if thread_list
+          dict = {}
+          for bookmark in app.bookmark.get_by_board(@url) when bookmark.type is "thread"
+            dict[bookmark.url] = true
+
+          for thread in thread_list when dict[thread.url]?
+            delete dict[thread.url]
+            app.bookmark.update_expired(thread.url, false)
+
+          for thread_url of dict
+            app.bookmark.update_expired(thread_url, true)
         return
-      )
-    )
-    #コールバック
-    .then ({response, thread_list}) =>
-      @thread = thread_list
-      res_deferred.resolve()
-      return {response, thread_list}
-    , ({response, thread_list}) =>
-      @message = "板の読み込みに失敗しました。"
-
-      #2chでrejectされている場合は移転を疑う
-      if app.url.tsld(@url) is "2ch.net" and response?
-        app.util.ch_server_move_detect(@url)
-          #移転検出時
-          .done (new_board_url) =>
-            @message += """
-            サーバーが移転している可能性が有ります
-            (<a href="#{app.escape_html(app.safe_href(new_board_url))}"
-            class="open_in_rcrx">#{app.escape_html(new_board_url)}
-            </a>)
-            """
-          .always =>
-            if hasCache and thread_list?
-              @message += "キャッシュに残っていたデータを表示します。"
-
-            if thread_list
-              @thread = thread_list
-      else
-        if hasCache and thread_list?
-          @message += "キャッシュに残っていたデータを表示します。"
-
-        if thread_list?
-          @thread = thread_list
-      res_deferred.reject()
-      return {response, thread_list}
-    #キャッシュ更新部
-    .then ({response, thread_list}) ->
-      if response?.status is 200
-        cache.data = response.body
-        cache.last_updated = Date.now()
-
-        last_modified = new Date(
-          response.headers["Last-Modified"] or "dummy"
-        ).getTime()
-
-        if Number.isFinite(last_modified)
-          cache.last_modified = last_modified
-
-        if etag = response.headers["ETag"]
-          cache.etag = etag
-
-        cache.put()
-
-        for thread in thread_list
-          app.bookmark.update_res_count(thread.url, thread.res_count)
-
-      else if hasCache and response?.status is 304
-        cache.last_updated = Date.now()
-        cache.put()
-      return {response, thread_list}
-    #dat落ちスキャン
-    .then ({response, thread_list}) =>
-      if thread_list
-        dict = {}
-        for bookmark in app.bookmark.get_by_board(@url) when bookmark.type is "thread"
-          dict[bookmark.url] = true
-
-        for thread in thread_list when dict[thread.url]?
-          delete dict[thread.url]
-          app.bookmark.update_expired(thread.url, false)
-
-        for thread_url of dict
-          app.bookmark.update_expired(thread_url, true)
       return
-    return res_deferred.promise()
+    )
 
   ###*
   @method _get_xhr_info
@@ -261,10 +263,10 @@ app.board =
   get: (url, callback) ->
     board = new app.Board(url)
     board.get()
-      .done ->
+      .then( ->
         callback(status: "success", data: board.thread)
         return
-      .fail ->
+      , ->
         tmp = {status: "error"}
         if board.message?
           tmp.message = board.message
@@ -272,6 +274,7 @@ app.board =
           tmp.data = board.thread
         callback(tmp)
         return
+      )
     return
 
   get_cached_res_count: (thread_url, callback) ->

@@ -39,7 +39,7 @@ app.boot "/view/search.html", ["thread_search"], (ThreadSearch) ->
     $button_reload.addClass("disabled")
     $view.find(".more").text("検索中")
     thread_search.read()
-      .done (result) ->
+      .then (result) ->
         $message_bar.removeClass("error").empty()
 
         threadList.addItem(result)
@@ -51,11 +51,11 @@ app.boot "/view/search.html", ["thread_search"], (ThreadSearch) ->
 
         $view.removeClass("loading")
         return
-      .fail (res) ->
+      , (res) ->
         $message_bar.addClass("error").text(res.message)
         $view.removeClass("loading")
         return
-      .always ->
+      .then ->
         $view.find(".more").addClass("hidden")
         setTimeout((-> $button_reload.removeClass("disabled"); return), 5000)
         return

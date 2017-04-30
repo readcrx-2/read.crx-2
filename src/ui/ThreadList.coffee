@@ -125,7 +125,7 @@ class UI.ThreadList
       if @_flg.bookmarkAddRm
         if msg.type is "added"
           boardUrl = app.url.threadToBoard(msg.bookmark.url)
-          app.BoardTitleSolver.ask(boardUrl).done((boardName) =>
+          app.BoardTitleSolver.ask(boardUrl).then( (boardName) =>
             @addItem(
               title: msg.bookmark.title
               url: msg.bookmark.url

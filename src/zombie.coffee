@@ -6,7 +6,7 @@ app.boot "/zombie.html", ->
       new app.Bookmark.ChromeBookmarkEntryList(app.config.get("bookmark_id"))
     )
 
-    app.bookmark.promise_first_scan.done ->
+    app.bookmark.promise_first_scan.then ->
       count = 0
       countdown = ->
         if --count is 0

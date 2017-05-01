@@ -38,8 +38,7 @@ class app.Thread
       cache = new app.Cache(xhrPath)
       hasCache = false
       deltaFlg = false
-      readcgisixFlg = false
-      readcgiSevenFlg = false
+      readcgiVer = 5
       noChangeFlg = false
 
       #キャッシュ取得
@@ -71,12 +70,8 @@ class app.Thread
           else if (app.config.get("format_2chnet") isnt "dat" and @tsld is "2ch.net") or @tsld is "bbspink.com"
             if hasCache
               deltaFlg = true
-              if cache.data.includes("<div class=\"footer push\">read.cgi ver 06")
-                readcgisixFlg = true
-                xhrPath += (+cache.res_length + 1) + "-n"
-              else if cache.data.includes("<div class=\"footer push\">read.cgi ver 07")
-                readcgisixFlg = true
-                readcgiSevenFlg = true
+              readcgiVer = parseInt(cache.data.substr(cache.data.indexOf("<div class=\"footer push\">read.cgi ver "), 2))
+              if readcgiVer >= 6
                 xhrPath += (+cache.res_length + 1) + "-n"
               else
                 xhrPath += (+cache.res_length) + "-n"
@@ -95,7 +90,7 @@ class app.Thread
           request.send (response) ->
             if response.status is 200
               resolve(response)
-            else if response.status is 500 and readcgisixFlg
+            else if response.status is 500 and readcgiVer >= 6
               resolve(response)
             else if hasCache and response.status is 304
               resolve(response)
@@ -109,23 +104,23 @@ class app.Thread
         return new Promise( (resolve, reject) =>
           guessRes = app.url.guess_type(@url)
 
-          if response?.status is 200 or (readcgisixFlg and response?.status is 500)
+          if response?.status is 200 or (readcgiVer >= 6 and response?.status is 500)
             if deltaFlg
               # 2ch.netなら-nを使って前回取得したレスの後のレスからのものを取得する
               if @tsld in ["2ch.net", "bbspink.com"]
                 threadCache = Thread.parse(@url, cache.data)
-                # readcgi ver6だと変更がないと500が帰ってくる
-                if readcgisixFlg and response.status is 500
+                # readcgi ver6,7だと変更がないと500が帰ってくる
+                if readcgiVer >= 6 and response.status is 500
                   noChangeFlg = true
                   thread = threadCache
                 else
                   threadResponse = Thread.parse(@url, response.body, +cache.res_length)
                   # 新しいレスがない場合は最後のレスのみ表示されるのでその場合はキャッシュを送る
-                  if !readcgisixFlg and threadResponse.res.length is 1
+                  if readcgiVer < 6 and threadResponse.res.length is 1
                     noChangeFlg = true
                     thread = threadCache
                   else
-                    unless readcgisixFlg
+                    if readcgiVer < 6
                       threadResponse.res.splice(0, 1)
                     thread = threadResponse
                     thread.res = threadCache.res.concat(threadResponse.res)
@@ -148,8 +143,8 @@ class app.Thread
             if response?.status is 200 or
                 #通信成功（更新なし）
                 response?.status is 304 or
-                #通信成功（2ch read.cgi ver6の差分更新なし）
-                (readcgisixFlg and response?.status is 500) or
+                #通信成功（2ch read.cgi ver6,7の差分更新なし）
+                (readcgiVer >= 6 and response?.status is 500) or
                 #キャッシュが期限内だった場合
                 (not response and hasCache)
               resolve({response, thread})
@@ -242,12 +237,12 @@ class app.Thread
       #キャッシュ更新部
       .then ({response, thread}) =>
         #通信に成功した場合
-        if response?.status is 200 or (readcgisixFlg and response?.status is 500)
+        if response?.status is 200 or (readcgiVer >= 6 and response?.status is 500)
           cache.last_updated = Date.now()
 
           if deltaFlg
             if @tsld in ["2ch.net", "bbspink.com"] and noChangeFlg is false
-              if readcgisixFlg or readcgiSevenFlg
+              if readcgiVer >= 6
                 if @tsld is "bbspink.com"
                   before = response.body.indexOf("</h1><dl class=\"post\"")+5
                   after = response.body.indexOf("</dd></dl></section><div>")
@@ -260,7 +255,7 @@ class app.Thread
                     place +=10
                   else
                     place = cache.data.indexOf("</dd></dl></section>")
-                else if readcgiSevenFlg
+                else if readcgiVer >= 7
                   before = response.body.indexOf("<div class=\"thread\">")+20
                   after = response.body.indexOf("</span></div></div><br></div>")
                   if after isnt -1

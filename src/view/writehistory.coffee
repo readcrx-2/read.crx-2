@@ -18,7 +18,12 @@ app.boot "/view/writehistory.html", ->
 
     $view.addClass("loading")
 
-    app.WriteHistory.get(undefined, 500).done (data) ->
+    app.WriteHistory.get(undefined, 500).then (data) ->
+      data.sort( (a, b) ->
+        if a.date > b.date then return -1
+        if a.date < b.date then return 1
+        return 0
+      )
       threadList.empty()
       threadList.addItem(data)
       $view.removeClass("loading")
@@ -39,9 +44,9 @@ app.boot "/view/writehistory.html", ->
       message: "履歴を削除しますか？"
       label_ok: "はい"
       label_no: "いいえ"
-    }).done (res) ->
+    }).then (res) ->
       if res
-        app.WriteHistory.clear().done(load)
+        app.WriteHistory.clear().then(load)
       return
     return
   return

@@ -14,7 +14,7 @@ do ($ = jQuery) ->
   """
 
   $.dialog = (method, prop) ->
-    $.Deferred (deferred) ->
+    return new Promise( (resolve, reject) ->
       #prop.message, prop.label_ok, prop.label_no
       if method is "confirm"
         $(template_confirm)
@@ -25,15 +25,15 @@ do ($ = jQuery) ->
             .text(prop.label_ok)
             .on "click", ->
               $(@).closest(".dialog").remove()
-              deferred.resolve(true)
+              resolve(true)
           .end()
           .find(".dialog_no")
             .text(prop.label_no)
             .on "click", ->
               $(@).closest(".dialog").remove()
-              deferred.resolve(false)
+              resolve(false)
           .end()
           .appendTo("body")
       else
-        deferred.reject()
-    .promise()
+        reject()
+    )

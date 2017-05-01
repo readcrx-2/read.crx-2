@@ -1,13 +1,13 @@
 do ->
   return if /windows/i.test(navigator.userAgent)
-  $.Deferred (d) ->
+  new Promise( (resolve, reject) ->
     if "textar_font" of localStorage
-      d.resolve()
+      resolve()
     else
-      d.reject()
+      reject()
     return
-  .then null, ->
-    $.Deferred (d) ->
+  ).catch( ->
+    return new Promise( (resolve, reject) ->
       xhr = new XMLHttpRequest()
       xhr.open("GET", "http://readcrx-2.github.io/read.crx-2/textar-min.woff")
       xhr.responseType = "arraybuffer"
@@ -18,11 +18,12 @@ do ->
           for a in buffer
             s += String.fromCharCode(a)
           localStorage.textar_font = "data:application/x-font-woff;base64," + btoa(s)
-          d.resolve()
+          resolve()
         return
       xhr.send()
       return
-  .done ->
+    )
+  ).then( ->
     $ ->
       style = document.createElement("style")
       style.textContent = """
@@ -34,6 +35,7 @@ do ->
       document.head.appendChild(style)
       return
     return
+  )
   return
 
 app.view_thread = {}
@@ -179,7 +181,9 @@ app.boot "/view/thread.html", ->
             res_num = $view.find("article:last-child").index() + 1
             threadContent.scrollTo(res_num, true) if typeof res_num is "number"
 
-    app.view_thread._draw($view).always ->
+    app.view_thread._draw($view).catch ->
+      return
+    .then ->
       if app.config.get("no_history") is "off"
         app.History.add(view_url, document.title, opened_at)
       return
@@ -476,7 +480,7 @@ app.boot "/view/thread.html", ->
       else
         return
 
-      app.BoardTitleSolver.ask(board_url).done (title) =>
+      app.BoardTitleSolver.ask(board_url).then (title) =>
         popup_helper @, e, =>
           $("<div>", {class: "popup_linkinfo"})
             .append($("<div>", text: title + after))
@@ -873,7 +877,9 @@ app.boot "/view/thread.html", ->
   #パンくずリスト表示
   do ->
     board_url = app.url.threadToBoard(view_url)
-    app.BoardTitleSolver.ask(board_url).always (title) ->
+    app.BoardTitleSolver.ask(board_url).catch ->
+      return
+    .then (title) ->
       $view
         .find(".breadcrumb > li > a")
           .attr("href", board_url)
@@ -891,8 +897,6 @@ app.boot "/view/thread.html", ->
 readStateAttached = false
 
 app.view_thread._draw = ($view, force_update, beforeAdd) ->
-  deferred = $.Deferred()
-
   $view.addClass("loading")
   $view.css("cursor", "wait")
   $reload_button = $view.find(".button_reload")
@@ -900,49 +904,63 @@ app.view_thread._draw = ($view, force_update, beforeAdd) ->
   content = $view.find(".content")[0]
 
   fn = (thread, error) ->
-    d = $.Deferred()
-    if error
-      $view.find(".message_bar").addClass("error").html(thread.message)
-    else
-      $view.find(".message_bar").removeClass("error").empty()
+    return new Promise( (resolve, reject) ->
+      if error
+        $view.find(".message_bar").addClass("error").html(thread.message)
+      else
+        $view.find(".message_bar").removeClass("error").empty()
 
-    (d.reject(); return d.promise()) unless thread.res?
+      unless thread.res?
+        reject()
+        return
 
-    document.title = thread.title
+      document.title = thread.title
 
-    $view.data("threadContent").addItem(thread.res.slice(content.children.length)).done( ->
-      $view.data("lazyload").scan()
+      $view.data("threadContent").addItem(thread.res.slice(content.children.length)).then( ->
+        $view.data("lazyload").scan()
 
-      $view.trigger("view_loaded")
+        $view.trigger("view_loaded")
 
-      d.resolve(thread)
-    )
-    return d.promise()
-
-  thread = new app.Thread($view.attr("data-url"))
-  threadGetDeferred = null
-  promiseThreadGet = thread.get(force_update)
-  readStateAttached = false
-  promiseThreadGet
-    .progress ->
-      threadGetDeferred = fn(thread, false)
+        resolve(thread)
+        return
+      )
       return
-    .always ->
-      threadGetDeferred = $.Deferred().resolve() unless threadGetDeferred
-      threadGetDeferred.always ->
-        promiseThreadGetState = promiseThreadGet.state() is "resolved"
-        beforeAdd?(thread) if promiseThreadGetState
-        threadGetDeferred = fn(thread, not promiseThreadGetState)
-        .always ->
-          $view.removeClass("loading")
-          $view.css("cursor", "auto")
-          setTimeout((-> $reload_button.removeClass("disabled")), 1000 * 5)
-          if threadGetDeferred.state() is "resolved" then deferred.resolve() else deferred.reject()
+    )
+
+  return new Promise( (resolve, reject) ->
+    readStateAttached = false
+    thread = new app.Thread($view.attr("data-url"))
+    threadSetPromise = null
+    threadGetPromise = app.util.promiseWithState(thread.get(force_update, ->
+      threadSetPromise = app.util.promiseWithState(fn(thread, false))
+      return
+    ))
+    threadGetPromise.promise
+      .catch ->
+        return
+      .then ->
+        threadSetPromise = app.util.promiseWithState(Promise.resolve()) unless threadSetPromise
+        threadSetPromise.promise.catch(->
           return
+        ).then( ->
+          threadGetPromiseState = threadGetPromise.isResolved()
+          beforeAdd?(thread) if threadGetPromiseState
+          threadSetPromise = app.util.promiseWithState(fn(thread, not threadGetPromiseState))
+          threadSetPromise.promise.catch( ->
+            return
+          ).then( ->
+            $view.removeClass("loading")
+            $view.css("cursor", "auto")
+            setTimeout((-> $reload_button.removeClass("disabled")), 1000 * 5)
+            if threadSetPromise.isResolved() then resolve() else reject()
+            return
+          )
+          return
+        )
         return
       return
-
-  return deferred.promise()
+    return
+  )
 
 app.view_thread._read_state_manager = ($view) ->
   view_url = $view.attr("data-url")
@@ -953,16 +971,17 @@ app.view_thread._read_state_manager = ($view) ->
   attachedReadState = {last: 0, read: 0, received: 0}
 
   #read_stateの取得
-  get_read_state = $.Deferred (deferred) ->
+  get_read_state = new Promise( (resolve, reject) ->
     read_state_updated = false
     if (bookmark = app.bookmark.get(view_url))?.read_state?
       read_state = bookmark.read_state
-      deferred.resolve({read_state, read_state_updated})
+      resolve({read_state, read_state_updated})
     else
-      app.read_state.get(view_url).always (_read_state) ->
+      app.ReadState.get(view_url).then (_read_state) ->
         read_state = _read_state or {received: 0, read: 0, last: 0, url: view_url}
-        deferred.resolve({read_state, read_state_updated})
-  .promise()
+        resolve({read_state, read_state_updated})
+    return
+  )
 
   #スレの描画時に、read_state関連のクラスを付与する
   $view.on "view_loaded", ->
@@ -982,7 +1001,7 @@ app.view_thread._read_state_manager = ($view) ->
       $view.triggerHandler("read_state_attached")
       return
     # 初回の処理
-    get_read_state.done ({read_state, read_state_updated}) ->
+    get_read_state.then ({read_state, read_state_updated}) ->
       content.querySelector(".last")?.classList.remove("last")
       content.querySelector(".read")?.classList.remove("read")
       content.querySelector(".received")?.classList.remove("received")
@@ -1010,7 +1029,7 @@ app.view_thread._read_state_manager = ($view) ->
       $view.triggerHandler("read_state_attached")
     return
 
-  get_read_state.done ({read_state, read_state_updated}) ->
+  get_read_state.then ({read_state, read_state_updated}) ->
     scan = ->
       received = content.children.length
       #onbeforeunload内で呼び出された時に、この値が0になる場合が有る
@@ -1059,7 +1078,7 @@ app.view_thread._read_state_manager = ($view) ->
     scan_and_save = ->
       scan()
       if read_state_updated
-        app.read_state.set(read_state)
+        app.ReadState.set(read_state)
         app.bookmark.update_read_state(read_state)
         read_state_updated = false
 

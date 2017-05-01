@@ -859,7 +859,7 @@ class UI.ThreadContent
             )
 
           aList = @container.querySelectorAll(
-            ".message > a:not(.thumbnail):not(.has_thumbnail):not(.expandedURL):not(.has_expandedURL)"
+            ".message > a:not(.anchor):not(.thumbnail):not(.has_thumbnail):not(.expandedURL):not(.has_expandedURL)"
           )
           Promise.all(Array.from(aList).map(replace)).catch( ->
             return

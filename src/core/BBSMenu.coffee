@@ -53,71 +53,73 @@ class app.BBSMenu
     #キャッシュ取得
     cache = new app.Cache(url)
     cache.get()
-      .then(-> $.Deferred (d) ->
+      .then( ->
         if force_reload
-          d.reject()
+          return Promise.reject()
         else if Date.now() - cache.last_updated < 1000 * 60 * 60 * 12
-          d.resolve()
-        else
-          d.reject()
-        return
+          return Promise.resolve()
+        return Promise.reject()
       )
       #通信
-      .then(null, -> $.Deferred (d) ->
-        request = new app.HTTP.Request("GET", url, {
-          mimeType: "text/plain; charset=Shift_JIS"
-        })
+      .catch( ->
+        return new Promise( (resolve, reject) ->
+          request = new app.HTTP.Request("GET", url, {
+            mimeType: "text/plain; charset=Shift_JIS"
+          })
 
-        if cache.last_modified?
-          request.headers["If-Modified-Since"] = new Date(cache.last_modified).toUTCString()
+          if cache.last_modified?
+            request.headers["If-Modified-Since"] = new Date(cache.last_modified).toUTCString()
 
-        if cache.etag?
-          request.headers["If-None-Match"] = cache.etag
+          if cache.etag?
+            request.headers["If-None-Match"] = cache.etag
 
-        request.send (response) ->
-          if response.status is 200
-            d.resolve(response)
-          else if cache.data? and response.status is 304
-            d.resolve(response)
-          else
-            d.reject(response)
+          request.send (response) ->
+            if response.status is 200
+              resolve(response)
+            else if cache.data? and response.status is 304
+              resolve(response)
+            else
+              reject(response)
+            return
           return
-        return
+        )
       )
       #パース
-      .then((fn = (response) -> $.Deferred (d) ->
-        if response?.status is 200
-          menu = BBSMenu.parse(response.body)
-        else if cache.data?
-          menu = BBSMenu.parse(cache.data)
+      .then((fn = (response) ->
+        return new Promise( (resolve, reject) ->
+          if response?.status is 200
+            menu = BBSMenu.parse(response.body)
+          else if cache.data?
+            menu = BBSMenu.parse(cache.data)
 
-        if menu?.length > 0
-          if response?.status is 200 or response?.status is 304 or (not response and cache.data?)
-            d.resolve(response, menu)
+          if menu?.length > 0
+            if response?.status is 200 or response?.status is 304 or (not response and cache.data?)
+              resolve({response, menu})
+            else
+              reject({response, menu})
           else
-            d.reject(response, menu)
-        else
-          d.reject(response)
-        return
+            reject({response})
+          return
+        )
       ), fn)
       #コールバック
-      .done (response, menu) ->
+      .then ({response, menu}) ->
         BBSMenu._callbacks.call(status: "success", data: menu)
-        return
-      .fail (response, menu) ->
+        return {response, menu}
+      , ({response, menu}) ->
         message = "板一覧の取得に失敗しました。"
         if menu?
           message += "キャッシュに残っていたデータを表示します。"
           BBSMenu._callbacks.call({status: "error", data: menu, message})
         else
           BBSMenu._callbacks.call({status: "error", message})
-        return
-      .always ->
+        return {response, menu}
+      .then (arg) ->
         BBSMenu._updating = false
         BBSMenu._callbacks.destroy()
-        return
+        return arg
       #キャッシュ更新
-      .done (response, menu) ->
+      .then ({response, menu}) ->
         if response?.status is 200
           cache.data = response.body
           cache.last_updated = Date.now()

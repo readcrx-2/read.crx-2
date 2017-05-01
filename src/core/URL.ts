@@ -116,34 +116,37 @@ namespace app {
 
     export const SHORT_URL_REG = /^h?ttps?:\/\/(?:amba\.to|amzn\.to|bit\.ly|buff\.ly|cas\.st|dlvr\.it|fb\.me|g\.co|goo\.gl|htn\.to|ift\.tt|is\.gd|itun\.es|j\.mp|jump\.cx|ow\.ly|p\.tl|prt\.nu|redd\.it|snipurl\.com|spoti\.fi|t\.co|tiny\.cc|tinyurl\.com|tl\.gd|tr\.im|trib\.al|url\.ie|urx\.nu|urx2\.nu|urx3\.nu|ur0\.pw|wk\.tk|xrl\.us)\/.+/;
 
-    export function expandShortURL (a: HTMLElement, shortUrl: string): any {
-      var dfd = $.Deferred();
-      var finalUrl: string = "";
+    export function expandShortURL (shortUrl: string): any {
+      return new Promise( (resolve, reject) => {
+        var finalUrl: string = "";
 
-      var req = new app.HTTP.Request("HEAD", shortUrl);
-      req.timeout = parseInt(app.config.get("expand_short_url_timeout"));
+        var req = new app.HTTP.Request("HEAD", shortUrl);
+        req.timeout = parseInt(app.config.get("expand_short_url_timeout"));
 
-      req.send((res) => {
-        if (res.status === 0 || res.status >= 400) {
-          return dfd.resolve(a, null);
-        }
-        finalUrl = res.responseURL;
-        // 無限ループの防止
-        if (finalUrl === shortUrl) {
-          return dfd.resolve(a, null);
-        }
-        // 取得したURLが短縮URLだった場合は再帰呼出しする
-        if (SHORT_URL_REG.test(finalUrl)) {
-          expandShortURL(a, finalUrl).done( (a, finalUrl) => {
-            return dfd.resolve(a, finalUrl);
-          });
-        // 短縮URL以外なら終了
-        } else {
-          return dfd.resolve(a, finalUrl);
-        }
+        req.send( (res) => {
+          if (res.status === 0 || res.status >= 400) {
+            resolve(null);
+            return
+          }
+          finalUrl = res.responseURL;
+          // 無限ループの防止
+          if (finalUrl === shortUrl) {
+            resolve(null);
+            return
+          }
+          // 取得したURLが短縮URLだった場合は再帰呼出しする
+          if (SHORT_URL_REG.test(finalUrl)) {
+            expandShortURL(finalUrl).then( (finalUrl) => {
+              resolve(finalUrl);
+              return
+            });
+          // 短縮URL以外なら終了
+          } else {
+            resolve(finalUrl);
+            return
+          }
+        });
       });
-
-      return dfd.promise();
     }
   }
 }

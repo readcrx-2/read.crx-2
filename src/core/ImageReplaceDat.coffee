@@ -52,32 +52,35 @@ class app.ImageReplaceDat
       return
 
   _getCookie = (string, dat) ->
-    def = $.Deferred()
-    req = new app.HTTP.Request("GET", string.replace(dat.baseUrl, dat.referrerUrl))
-    #req.headers["Referer"] = string.replace(dat.baseUrl, dat.param.referrerUrl)
-    if dat.userAgent isnt "" then req.headers["User-Agent"] = dat.userAgent
-    req.send((res) ->
-      if res.status is 200
-        cookieStr = dat.header["Set-Cookie"]
-        def.resolve(cookieStr)
-      def.reject()
+    return new Promise( (resolve, reject) ->
+      req = new app.HTTP.Request("GET", string.replace(dat.baseUrl, dat.referrerUrl))
+      #req.headers["Referer"] = string.replace(dat.baseUrl, dat.param.referrerUrl)
+      if dat.userAgent isnt "" then req.headers["User-Agent"] = dat.userAgent
+      req.send( (res) ->
+        if res.status is 200
+          cookieStr = dat.header["Set-Cookie"]
+          resolve(cookieStr)
+        else
+          reject()
+        return
+      )
       return
     )
-    return def.promise()
 
   _getExtract = (string, dat) ->
-    def = $.Deferred()
-    req = new app.HTTP.Request("GET", string.replace(dat.baseUrlReg, dat.referrerUrl))
-    req.headers["Content-Type"] = "text/html"
-    #req.headers["Referer"] = string.replace(dat.baseUrlReg, dat.param.referrerUrl)
-    if dat.userAgent isnt "" then req.headers["User-Agent"] = dat.userAgent
-    req.send((res) ->
-      if res.status is 200
-        def.resolve(res.body.match(dat.param.patternReg))
-      def.reject()
-      return
+    return new Promise( (resolve, reject) ->
+      req = new app.HTTP.Request("GET", string.replace(dat.baseUrlReg, dat.referrerUrl))
+      req.headers["Content-Type"] = "text/html"
+      #req.headers["Referer"] = string.replace(dat.baseUrlReg, dat.param.referrerUrl)
+      if dat.userAgent isnt "" then req.headers["User-Agent"] = dat.userAgent
+      req.send( (res) ->
+        if res.status is 200
+          resolve(res.body.match(dat.param.patternReg))
+        else
+          reject()
+        return
+      )
     )
-    return def.promise()
 
   ###*
   @method get
@@ -141,49 +144,48 @@ class app.ImageReplaceDat
   @return {Object}
   ###
   @do: (a, string) ->
-    def = $.Deferred()
-    dat = @get()
-    doing = false
-    for d from dat
-      continue if d.baseUrl is _INVALID_URL
-      continue if !d.baseUrlReg.test(string)
-      if d.replaceUrl is ""
-        def.resolve(a, string, "No parsing")
-        break
-
-      doing = true
-      res = {}
-      res.referrer = string.replace(d.baseUrl, d.referrerUrl)
-      extractReg = /\$EXTRACT(\d+)?/g
-      if d.param? and d.param.type is "extract"
-        _getExtract(string, d).done((exMatch) ->
-          res.text = string
-            .replace(d.baseUrlReg, d.replaceUrl)
-            .replace(extractReg, (str, num) ->
-              if num?
-                return exMatch[num]
-              else
-                return exMatch[1]
-            )
-          def.resolve(a, res)
-          return
-        ).fail(->
-          def.resolve(a, string, "Fail getExtract")
-          return
-        )
-      else
-        res.text = string.replace(d.baseUrlReg, d.replaceUrl)
-        if d.param? and d.param.type is "cookie"
-          _getCookie(string, d).done((cookieStr) ->
-            res.cookie = cookieStr
-            def.resolve(a, res)
+    return new Promise( (resolve, reject) =>
+      dat = @get()
+      doing = false
+      for d from dat
+        continue if d.baseUrl is _INVALID_URL
+        continue if !d.baseUrlReg.test(string)
+        if d.replaceUrl is ""
+          resolve({a, res: string, err: "No parsing"})
+          break
+        doing = true
+        res = {}
+        res.referrer = string.replace(d.baseUrl, d.referrerUrl)
+        extractReg = /\$EXTRACT(\d+)?/g
+        if d.param? and d.param.type is "extract"
+          _getExtract(string, d).then( (exMatch) ->
+            res.text = string
+              .replace(d.baseUrlReg, d.replaceUrl)
+              .replace(extractReg, (str, num) ->
+                if num?
+                  return exMatch[num]
+                else
+                  return exMatch[1]
+              )
+            resolve({a, res})
             return
-          ).fail(->
-            def.resolve(a, string, "Fail getCookie")
+          , ->
+            resolve({a, res: string, "Fail getExtract"})
             return
           )
         else
-          def.resolve(a, res)
-      break
-    def.resolve(a, string, "Fail noBaseUrlReg") unless doing
-    return def.promise()
+          res.text = string.replace(d.baseUrlReg, d.replaceUrl)
+          if d.param? and d.param.type is "cookie"
+            _getCookie(string, d).then( (cookieStr) ->
+              res.cookie = cookieStr
+              resolve({a, res})
+              return
+            , ->
+              resolve({a, res: string, err: "Fail getCookie"})
+              return
+            )
+          else
+            resolve({a, res})
+        break
+      resolve({a, res: string, err: "Fail noBaseUrlReg"}) unless doing
+    )

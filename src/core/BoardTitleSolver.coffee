@@ -18,9 +18,9 @@ class app.BoardTitleSolver
   @return {Promise}
   ###
   @getBBSMenu: ->
-    $.Deferred((d) =>
+    return new Promise( (resolve, reject) =>
       if @_bbsmenu?
-        d.resolve(@_bbsmenu)
+        resolve(@_bbsmenu)
       else
         app.BBSMenu.get (result) =>
           if result.data?
@@ -28,13 +28,12 @@ class app.BoardTitleSolver
             for category in result.data
               for board in category.board
                 @_bbsmenu[board.url] = board.title
-            d.resolve(@_bbsmenu)
+            resolve(@_bbsmenu)
           else
-            d.reject()
+            reject()
           return
       return
     )
-    .promise()
 
   ###*
   @method searchFromBBSMenu
@@ -42,18 +41,20 @@ class app.BoardTitleSolver
   @return {Promise}
   ###
   @searchFromBBSMenu: (url) ->
-    @getBBSMenu().then((bbsmenu) => $.Deferred (d) =>
-      # スキーム違いについても確認をする
-      url2 = app.url.changeScheme(url)
-      if bbsmenu[url]?
-        d.resolve(bbsmenu[url])
-      else if bbsmenu[url2]?
-        d.resolve(bbsmenu[url2])
-      else
-        d.reject()
+    return @getBBSMenu().then( (bbsmenu) ->
+      return new Promise( (resolve, reject) ->
+        # スキーム違いについても確認をする
+        url2 = app.url.changeScheme(url)
+        if bbsmenu[url]?
+          resolve(bbsmenu[url])
+        else if bbsmenu[url2]?
+          resolve(bbsmenu[url2])
+        else
+          reject()
+        return
+      )
       return
     )
-    .promise()
 
   ###*
   @method searchFromBookmark
@@ -61,20 +62,19 @@ class app.BoardTitleSolver
   @return {Promise}
   ###
   @searchFromBookmark: (url) ->
-    $.Deferred((d) ->
+    return new Promise( (resolve, reject) ->
       # スキーム違いについても確認をする
       url2 = app.url.changeScheme(url)
       bookmark = app.bookmark.get(url) ? app.bookmark.get(url2)
       if bookmark
         if app.url.tsld(bookmark.url) is "2ch.net"
-          d.resolve(bookmark.title.replace("＠2ch掲示板", ""))
+          resolve(bookmark.title.replace("＠2ch掲示板", ""))
         else
-          d.resolve(bookmark.title)
+          resolve(bookmark.title)
       else
-        d.reject()
+        reject()
       return
     )
-    .promise()
 
   ###*
   @method searchFromSettingTXT
@@ -82,36 +82,36 @@ class app.BoardTitleSolver
   @return {Promise}
   ###
   @searchFromSettingTXT: (url) ->
-    $.Deferred (d) ->
+    return new Promise( (resolve, reject) ->
       request = new app.HTTP.Request("GET", url + "SETTING.TXT", {
         mimeType: "text/plain; charset=Shift_JIS"
         timeout: 1000 * 10
       })
       request.send (response) ->
         if response.status is 200
-          d.resolve(response.body)
+          resolve(response.body)
         else
-          d.reject(response.body)
+          reject(response.body)
         return
       return
-    .then(
-      (text) ->
-        $.Deferred (d) ->
-          if res = /^BBS_TITLE=(.+)$/m.exec(text)
-            title = res[1].replace("＠2ch掲示板", "")
-            tsld = app.url.tsld(url)
-            if tsld is "2ch.sc"
-              title += "_sc"
-            else if tsld is "open2ch.net"
-              title += "_op"
-            d.resolve(title)
-          else
-            d.reject()
-          return
-      ->
-        $.Deferred().reject()
+    ).then( (text) ->
+      return new Promise( (resolve, reject) ->
+        if res = /^BBS_TITLE=(.+)$/m.exec(text)
+          title = res[1].replace("＠2ch掲示板", "")
+          tsld = app.url.tsld(url)
+          if tsld is "2ch.sc"
+            title += "_sc"
+          else if tsld is "open2ch.net"
+            title += "_op"
+          resolve(title)
+        else
+          reject()
+        return
+      )
+    , ->
+      Promise.reject()
+      return
     )
-    .promise()
 
   ###*
   @method searchFromJbbsAPI
@@ -123,30 +123,30 @@ class app.BoardTitleSolver
     scheme = app.url.getScheme(url)
     ajax_path = "#{scheme}://jbbs.shitaraba.net/bbs/api/setting.cgi/#{tmp[3]}/#{tmp[4]}/"
 
-    $.Deferred (d) ->
+    return new Promise( (resolve, reject) ->
       request = new app.HTTP.Request("GET", ajax_path, {
         mimeType: "text/plain; charset=EUC-JP"
         timeout: 1000 * 10
       })
       request.send (response) ->
         if response.status is 200
-          d.resolve(response.body)
+          resolve(response.body)
         else
-          d.reject(response.body)
+          reject(response.body)
         return
       return
-    .then(
-      (text) ->
-        $.Deferred (d) ->
-          if res = /^BBS_TITLE=(.+)$/m.exec(text)
-            d.resolve(res[1])
-          else
-            d.reject()
-          return
-      ->
-        $.Deferred().reject()
+    ).then( (text) ->
+      return new Promise( (resolve, reject) ->
+        if res = /^BBS_TITLE=(.+)$/m.exec(text)
+          resolve(res[1])
+        else
+          reject()
+        return
+      )
+    , ->
+      Promise.reject()
+      return
     )
-    .promise()
 
   ###*
   @method ask
@@ -157,24 +157,25 @@ class app.BoardTitleSolver
     url = app.url.fix(url)
 
     #bbsmenu内を検索
-    @searchFromBBSMenu(url)
+    return @searchFromBBSMenu(url)
       #ブックマーク内を検索
-      .then(null, => @searchFromBookmark(url))
+      .catch( =>
+        return @searchFromBookmark(url)
+      )
       #SETTING.TXTからの取得を試みる
-      .then(null, =>
+      .catch( =>
         if app.url.guess_type(url).bbs_type is "2ch"
-          @searchFromSettingTXT(url)
+          return @searchFromSettingTXT(url)
         else
-          $.Deferred().reject()
+          return Promise.reject()
       )
       #したらばのAPIから取得を試みる
-      .then(null, =>
+      .catch( =>
         if app.url.guess_type(url).bbs_type is"jbbs"
-          @searchFromJbbsAPI(url)
+          return @searchFromJbbsAPI(url)
         else
-          $.Deferred().reject()
+          return Promise.reject()
       )
-      .promise()
 
 app.module "board_title_solver", [], (callback) ->
   app.BoardTitleSolver.getBBSMenu()

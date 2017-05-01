@@ -96,7 +96,7 @@ class app.BBSMenu
             if response?.status is 200 or response?.status is 304 or (not response and cache.data?)
               resolve({response, menu})
             else
-              resolve({response, menu})
+              reject({response, menu})
           else
             reject({response})
           return

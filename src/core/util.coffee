@@ -278,3 +278,22 @@ do ->
     title2 = title.replace(titleReg,"")
     title = if title2 is "" then title else title2
     return title.replace(markReg, "")
+
+  app.util.promiseWithState = (promise) ->
+    state = "pending"
+    promise.then( ->
+      state = "resolved"
+      return
+    , ->
+      state = "rejected"
+      return
+    )
+    return {
+      isResolved: ->
+        return state is "resolved"
+      isRejected: ->
+        return state is "rejected"
+      getState: ->
+        return state
+      promise: promise
+    }

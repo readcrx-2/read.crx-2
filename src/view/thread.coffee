@@ -931,30 +931,30 @@ app.view_thread._draw = ($view, force_update, beforeAdd) ->
     readStateAttached = false
     thread = new app.Thread($view.attr("data-url"))
     threadSetPromise = null
-    threadGetPromise = thread.get(force_update, ->
-      threadSetPromise = fn(thread, false).catch( ->
-        return
-      )
+    threadGetPromise = app.util.promiseWithState(thread.get(force_update, ->
+      threadSetPromise = app.util.promiseWithState(fn(thread, false))
       return
-    )
-    threadGetState = true
-    threadSetState = true
-    threadGetPromise
+    ))
+    threadGetPromise.promise
       .catch ->
-        threadGetState = false
         return
       .then ->
-        threadSetPromise = Promise.resolve() unless threadSetPromise
-        threadSetPromise.then( ->
-          beforeAdd?(thread) if threadGetPromiseState
-          return threadSetPromise = fn(thread, not threadGetState)
-        ).catch( ->
-          threadSetState = false
+        threadSetPromise = app.util.promiseWithState(Promise.resolve()) unless threadSetPromise
+        threadSetPromise.promise.catch(->
+          return
         ).then( ->
-          $view.removeClass("loading")
-          $view.css("cursor", "auto")
-          setTimeout((-> $reload_button.removeClass("disabled")), 1000 * 5)
-          if threadSetState then resolve() else reject()
+          threadGetPromiseState = threadGetPromise.isResolved()
+          beforeAdd?(thread) if threadGetPromiseState
+          threadSetPromise = app.util.promiseWithState(fn(thread, not threadGetPromiseState))
+          threadSetPromise.promise.catch( ->
+            return
+          ).then( ->
+            $view.removeClass("loading")
+            $view.css("cursor", "auto")
+            setTimeout((-> $reload_button.removeClass("disabled")), 1000 * 5)
+            if threadSetPromise.isResolved() then resolve() else reject()
+            return
+          )
           return
         )
         return

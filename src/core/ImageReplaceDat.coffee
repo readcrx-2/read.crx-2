@@ -56,7 +56,7 @@ class app.ImageReplaceDat
       req = new app.HTTP.Request("GET", string.replace(dat.baseUrl, dat.referrerUrl))
       #req.headers["Referer"] = string.replace(dat.baseUrl, dat.param.referrerUrl)
       if dat.userAgent isnt "" then req.headers["User-Agent"] = dat.userAgent
-      req.send(b(res) ->
+      req.send( (res) ->
         if res.status is 200
           cookieStr = dat.header["Set-Cookie"]
           resolve(cookieStr)

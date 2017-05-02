@@ -6,11 +6,11 @@
     %title 閲覧履歴
     %link(rel="stylesheet" href="/ui.css?v=#{MANIFEST["version"]}")
     %link(rel="stylesheet" href="history.css?v=#{MANIFEST["version"]}")
-    %script(src="/lib/jshortquery.min.js?v=#{MANIFEST["version"]}")
-    %script(src="/ui.js?v=#{MANIFEST["version"]}")
-    %script(src="/app.js?v=#{MANIFEST["version"]}")
-    %script(src="module.js?v=#{MANIFEST["version"]}")
-    %script(src="history.js?v=#{MANIFEST["version"]}")
+    %script(src="/lib/jshortquery.min.js?v=#{MANIFEST["version"]}" defer=true)
+    %script(src="/ui.js?v=#{MANIFEST["version"]}" defer=true)
+    %script(src="/app.js?v=#{MANIFEST["version"]}" defer=true)
+    %script(src="module.js?v=#{MANIFEST["version"]}" defer=true)
+    %script(src="history.js?v=#{MANIFEST["version"]}" defer=true)
   %body
     %nav.nav_bar
       %label

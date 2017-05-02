@@ -5,10 +5,10 @@
     %meta(name="referrer" content="never")
     %title ブックマークフォルダの設定
     %link(rel="stylesheet" href="bookmark_source_selector.css?v=#{MANIFEST["version"]}")
-    %script(src="/lib/jshortquery.min.js?v=#{MANIFEST["version"]}")
-    %script(src="/app.js?v=#{MANIFEST["version"]}")
-    %script(src="module.js?v=#{MANIFEST["version"]}")
-    %script(src="bookmark_source_selector.js?v=#{MANIFEST["version"]}")
+    %script(src="/lib/jshortquery.min.js?v=#{MANIFEST["version"]}" defer=true)
+    %script(src="/app.js?v=#{MANIFEST["version"]}" defer=true)
+    %script(src="module.js?v=#{MANIFEST["version"]}" defer=true)
+    %script(src="bookmark_source_selector.js?v=#{MANIFEST["version"]}" defer=true)
   %body
     %p read.crxのブックマークの保存先として使用するフォルダを指定して下さい
     .node_list

@@ -48,7 +48,10 @@ class app.Thread
           if forceUpdate or Date.now() - cache.last_updated > 1000 * 3
             #通信が生じる場合のみ、notifyでキャッシュを送出する
             app.defer =>
-              tmp = Thread.parse(@url, cache.data)
+              if cache.parsed?
+                tmp = cache.parsed
+              else
+                tmp = Thread.parse(@url, cache.data)
               return unless tmp?
               @res = tmp.res
               @title = tmp.title
@@ -70,7 +73,7 @@ class app.Thread
           else if (app.config.get("format_2chnet") isnt "dat" and @tsld is "2ch.net") or @tsld is "bbspink.com"
             if hasCache
               deltaFlg = true
-              readcgiVer = parseInt(cache.data.substr(cache.data.indexOf("<div class=\"footer push\">read.cgi ver "), 2))
+              readcgiVer = cache.readcgi_ver
               if readcgiVer >= 6
                 xhrPath += (+cache.res_length + 1) + "-n"
               else
@@ -108,7 +111,7 @@ class app.Thread
             if deltaFlg
               # 2ch.netなら-nを使って前回取得したレスの後のレスからのものを取得する
               if @tsld in ["2ch.net", "bbspink.com"]
-                threadCache = Thread.parse(@url, cache.data)
+                threadCache = cache.parsed
                 # readcgi ver6,7だと変更がないと500が帰ってくる
                 if readcgiVer >= 6 and response.status is 500
                   noChangeFlg = true
@@ -131,7 +134,10 @@ class app.Thread
           #2ch系BBSのdat落ち
           else if guessRes.bbs_type is "2ch" and response?.status is 203
             if hasCache
-              thread = Thread.parse(@url, cache.data)
+              if deltaFlg and @tsld in ["2ch.net", "bbspink.com"]
+                thread = cache.parsed
+              else
+                thread = Thread.parse(@url, cache.data)
             else
               thread = Thread.parse(@url, response.body)
           else if hasCache
@@ -240,63 +246,29 @@ class app.Thread
         if response?.status is 200 or (readcgiVer >= 6 and response?.status is 500)
           cache.last_updated = Date.now()
 
+          html2ch = false
+          if (app.config.get("format_2chnet") isnt "dat" and @tsld is "2ch.net") or @tsld is "bbspink.com"
+            readcgiPlace = response.body.indexOf("<div class=\"footer push\">read.cgi ver ")
+            if readcgiPlace isnt -1
+              readcgiVer = parseInt(response.body.substr(readcgiPlace+38, 2))
+            else
+              readcgiVer = 5
+            html2ch = true
+
           if deltaFlg
             if @tsld in ["2ch.net", "bbspink.com"] and noChangeFlg is false
-              if readcgiVer >= 6
-                if @tsld is "bbspink.com"
-                  before = response.body.indexOf("</h1><dl class=\"post\"")+5
-                  after = response.body.indexOf("</dd></dl></section><div>")
-                  if after isnt -1
-                    after += 10
-                  else
-                    after = response.body.indexOf("</dd></dl></section>")+10
-                  place = cache.data.indexOf("</dd></dl></section><div>")
-                  if place isnt -1
-                    place +=10
-                  else
-                    place = cache.data.indexOf("</dd></dl></section>")
-                else if readcgiVer >= 7
-                  before = response.body.indexOf("<div class=\"thread\">")+20
-                  after = response.body.indexOf("</span></div></div><br></div>")
-                  if after isnt -1
-                    after += 23
-                  else
-                    after = response.body.indexOf("</span></div></div><br>")+23
-                  place = cache.data.indexOf("</span></div></div><br></div>")
-                  if place isnt -1
-                    place += 23
-                  else
-                    place = cache.data.indexOf("</span></div></div><br>")+23
-                else
-                  before = response.body.indexOf("<div class=\"thread\">")+20
-                  after = response.body.indexOf("</div></div></div><div class=\"cLength\">")
-                  if after isnt -1
-                    after += 12
-                  else
-                    after = response.body.indexOf("</div></div></div>")+12
-                  place = cache.data.indexOf("</div></div></div><div class=\"cLength\">")
-                  if place isnt -1
-                    place += 12
-                  else
-                    place = cache.data.indexOf("</div></div></div>")+12
-                cache.data = cache.data.slice(0, place) + response.body.slice(before, after) + cache.data.slice(place, cache.data.length)
-              else
-                # 1つのときは</dl>がなぜか存在しないので別処理
-                if cache.res_length is 1
-                  cache.data = response.body
-                else
-                  beforeCacheFinalRes = cache.data.indexOf("<dt>#{cache.res_length} ：")
-                  afterCacheFinalRes = cache.data.indexOf("</dl>")
-                  beforeResponseFirstRes = response.body.indexOf("<dt>#{cache.res_length} ：")
-                  afterResponseFinalRes = response.body.indexOf("</dl>")
-                  cache.data = cache.data.slice(0, beforeCacheFinalRes) + response.body.slice(beforeResponseFirstRes, afterResponseFinalRes) + cache.data.slice(afterCacheFinalRes, cache.data.length)
-              cache.res_length = thread.res.length
+              cache.parsed = thread
+              cache.readcgi_ver = readcgiVer
             else if noChangeFlg is false
-              cache.res_length = thread.res.length
               cache.data += response.body
-          else
             cache.res_length = thread.res.length
-            cache.data = response.body
+          else
+            if html2ch
+              cache.parsed = thread
+              cache.readcgi_ver = readcgiVer
+            else
+              cache.data = response.body
+            cache.res_length = thread.res.length
 
           lastModified = new Date(
             response.headers["Last-Modified"] or "dummy"

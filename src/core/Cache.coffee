@@ -14,6 +14,12 @@ class app.Cache
     @data = null
 
     ###*
+    @property parsed
+    @type Object
+    ###
+    @parsed = null
+
+    ###*
     @property last_updated
     @type Number
     ###
@@ -42,6 +48,12 @@ class app.Cache
     @type Number
     ###
     @dat_size = null
+
+    ###*
+    @property readcgi_ver
+    @type Number
+    ###
+    @readcgi_ver = null
 
   ###*
   @property _db_open
@@ -175,12 +187,13 @@ class app.Cache
   ###
   put: ->
     unless typeof @key is "string" and
-        typeof @data is "string" and
+        ((@data? and typeof @data is "string") or (@parsed? and @parsed instanceof Object)) and
         typeof @last_updated is "number" and
         (not @last_modified? or typeof @last_modified is "number") and
         (not @etag? or typeof @etag is "string") and
         (not @res_length? or Number.isFinite(@res_length)) and
-        (not @dat_size? or Number.isFinite(@dat_size))
+        (not @dat_size? or Number.isFinite(@dat_size)) and
+        (not @readcgi_ver? or Number.isFinite(@readcgi_ver))
       app.log("error", "Cache::put: データが不正です", @)
       return Promise.reject()
 
@@ -191,12 +204,14 @@ class app.Cache
           .objectStore("Cache")
           .put(
             url: @key
-            data: @data.replace(/\u0000/g, "\u0020")
+            data: if @data? then @data.replace(/\u0000/g, "\u0020") else null
+            parsed: @parsed or null
             last_updated: @last_updated
             last_modified: @last_modified or null
             etag: @etag or null
             res_length: @res_length or null
             dat_size: @dat_size or null
+            readcgi_ver: @readcgi_ver or null
           )
         req.onsuccess = (e) ->
           resolve()

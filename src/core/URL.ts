@@ -63,18 +63,21 @@ namespace app {
     }
 
     export function getDomain (urlstr: string):string {
-      return (new window.URL(urlstr)).hostname;
+      var start = urlstr.indexOf("://")+3;
+      return urlstr.slice(start, urlstr.indexOf("/", start));
     }
 
     export function getScheme (urlstr: string): string {
-      return (new window.URL(urlstr)).protocol.slice(0, -1);
+      return urlstr.slice(0, urlstr.indexOf("://"));
     }
 
     export function changeScheme (urlstr: string): string {
-      var url = new window.URL(urlstr);
-      url.protocol = (url.protocol == "http:") ? "https:" : "http";
+      var split, protocol;
 
-      return url.toString();
+      split = urlstr.indexOf("://")
+      protocol = (urlstr.slice(0, split) == "http") ? "https" : "http";
+
+      return protocol + "://" + urlstr.slice(split+3);
     }
 
     export function threadToBoard (url:string):string {

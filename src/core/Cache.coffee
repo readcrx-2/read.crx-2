@@ -174,7 +174,7 @@ class app.Cache
             reject()
           return
         req.onerror = (e) ->
-          app.log("error", "Cache::remove: トランザクション中断")
+          app.log("error", "Cache::get: トランザクション中断")
           reject(e)
           return
         return

@@ -932,7 +932,8 @@ app.view_thread._draw = ($view, force_update, beforeAdd) ->
     thread = new app.Thread($view.attr("data-url"))
     threadSetPromise = null
     threadGetPromise = app.util.promiseWithState(thread.get(force_update, ->
-      threadSetPromise = app.util.promiseWithState(fn(thread, false))
+      unless threadGetPromise.isResolved()
+        threadSetPromise = app.util.promiseWithState(fn(thread, false))
       return
     ))
     threadGetPromise.promise

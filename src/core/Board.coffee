@@ -236,24 +236,30 @@ class app.Board
   @return {Promise}
   ###
   @get_cached_res_count: (thread_url) ->
-    board_url = app.url.threadToBoard(thread_url)
-    xhr_path = Board._get_xhr_info(board_url)?.path
+    return new Promise( (resolve, reject) ->
+      board_url = app.url.threadToBoard(thread_url)
+      xhr_path = Board._get_xhr_info(board_url)?.path
 
-    unless xhr_path?
-      return Promise.reject()
-
-    cache = new app.Cache(xhr_path)
-    return cache.get().then =>
-      return new Promise( (resolve, reject) =>
-        last_modified = cache.last_modified
-        for thread in Board.parse(board_url, cache.data) when thread.url is thread_url
-          resolve
-            res_count: thread.res_count
-            modified: last_modified
-          return
+      unless xhr_path?
         reject()
         return
-      )
+
+      cache = new app.Cache(xhr_path)
+      cache.get()
+        .then( ->
+          last_modified = cache.last_modified
+          for thread in Board.parse(board_url, cache.data) when thread.url is thread_url
+            resolve
+              res_count: thread.res_count
+              modified: last_modified
+            return
+          reject()
+          return
+        , ->
+          reject()
+          return
+        )
+    )
 
 app.module "board", [], (callback) ->
   callback(app.Board)

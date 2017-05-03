@@ -141,7 +141,10 @@ class app.Thread
             else
               thread = Thread.parse(@url, response.body)
           else if hasCache
-            thread = Thread.parse(@url, cache.data)
+            if (app.config.get("format_2chnet") isnt "dat" and @tsld is "2ch.net") or @tsld is "bbspink.com"
+              thread = cache.parsed
+            else
+              thread = Thread.parse(@url, cache.data)
 
           #パース成功
           if thread

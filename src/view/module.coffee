@@ -16,7 +16,7 @@ do ->
       "Ninja"
       "NG"
       "notification"
-      "read_state"
+      "ReadState"
       "url"
       "util"
     ]

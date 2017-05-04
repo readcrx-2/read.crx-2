@@ -34,7 +34,7 @@ namespace UI {
       this.$element.find(".status").text("検索中");
 
       app.util.search_next_thread(url, title)
-        .done((res) => {
+        .then( (res) => {
           for(var thread of res) {
             var $li = $("<li>", {
               class: "open_in_rcrx",
@@ -49,7 +49,7 @@ namespace UI {
 
           this.$element.find(".status").text("");
         })
-        .fail(() => {
+        .catch( () => {
           this.$element.find(".status").text("次スレ検索に失敗しました");
         });
     }

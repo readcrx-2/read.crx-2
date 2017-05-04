@@ -6,11 +6,11 @@
     %title sidemenu
     %link(rel="stylesheet" href="/ui.css?v=#{MANIFEST["version"]}")
     %link(rel="stylesheet" href="sidemenu.css?v=#{MANIFEST["version"]}")
-    %script(src="/lib/jshortquery.min.js?v=#{MANIFEST["version"]}")
-    %script(src="/ui.js?v=#{MANIFEST["version"]}")
-    %script(src="/app.js?v=#{MANIFEST["version"]}")
-    %script(src="module.js?v=#{MANIFEST["version"]}")
-    %script(src="sidemenu.js?v=#{MANIFEST["version"]}")
+    %script(src="/lib/jshortquery.min.js?v=#{MANIFEST["version"]}" defer=true)
+    %script(src="/ui.js?v=#{MANIFEST["version"]}" defer=true)
+    %script(src="/app.js?v=#{MANIFEST["version"]}" defer=true)
+    %script(src="module.js?v=#{MANIFEST["version"]}" defer=true)
+    %script(src="sidemenu.js?v=#{MANIFEST["version"]}" defer=true)
   %body.content(tabindex="0")
     %form.search
       %input(type="search" name="q" placeholder="スレッド検索")

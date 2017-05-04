@@ -95,7 +95,7 @@ app.boot "/write/write.html", ->
       $view.find(".mail").prop("disabled", false)
     return
 
-  app.WriteHistory.getByUrl(arg.url).done( (data) ->
+  app.WriteHistory.getByUrl(arg.url).then( (data) ->
     names = []
     mails = []
     for d in data

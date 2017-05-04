@@ -5,9 +5,9 @@
     %meta(name="referrer" content="never")
     %title
     %link(rel="stylesheet" href="/write/write.css?v=#{MANIFEST["version"]}")
-    %script(src="/lib/jshortquery.min.js?v=#{MANIFEST["version"]}")
-    %script(src="/app.js?v=#{MANIFEST["version"]}")
-    %script(src="/write/write.js?v=#{MANIFEST["version"]}")
+    %script(src="/lib/jshortquery.min.js?v=#{MANIFEST["version"]}" defer=true)
+    %script(src="/app.js?v=#{MANIFEST["version"]}" defer=true)
+    %script(src="/write/write.js?v=#{MANIFEST["version"]}" defer=true)
   %body.view_write
     %form
       %header

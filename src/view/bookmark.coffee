@@ -115,7 +115,7 @@ app.boot "/view/bookmark.html", ->
   for a in app.bookmarkEntryList.getAllThreads()
     do (a) ->
       boardUrl = app.url.threadToBoard(a.url)
-      app.BoardTitleSolver.ask(boardUrl).done((boardName) ->
+      app.BoardTitleSolver.ask(boardUrl).then( (boardName) ->
         threadList.addItem(
           title: a.title
           url: a.url

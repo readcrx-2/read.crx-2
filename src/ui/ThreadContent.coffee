@@ -470,7 +470,7 @@ class UI.ThreadContent
               #タグ除去
               .replace(/<(?!(?:a class="beid".*?|\/a)>).*?(?:>|$)/g, "")
               #.id
-              .replace(/(?:^| )(ID:(?!\?\?\?)[^ <>"']+|発信元:\d+.\d+.\d+.\d+)/, ($0, $1) =>
+              .replace(/(?:^| \d)(ID:(?!\?\?\?)[^ <>"']+|発信元:\d+.\d+.\d+.\d+)/, ($0, $1) =>
                 fixedId = $1.replace(/\u25cf$/, "") #末尾●除去
 
                 res.id = fixedId

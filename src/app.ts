@@ -389,49 +389,48 @@ namespace app {
     }
 
     set (key:string, val:string) {
-      var deferred = $.Deferred(),
-        tmp = {};
+      return new Promise( (resolve, reject) => {
+        var tmp = {};
 
-      if (
-        typeof key !== "string" ||
-        !(typeof val === "string" || typeof val === "number")
-      ) {
-        log("error", "app.Config::setに不適切な値が渡されました",
-          arguments);
-        return deferred.reject();
-      }
-
-      tmp["config_" + key] = val;
-
-      chrome.storage.local.set(tmp, () => {
-        if (chrome.runtime.lasterror) {
-          deferred.reject(chrome.runtime.lasterror.message);
-        } else {
-          deferred.resolve();
+        if (
+          typeof key !== "string" ||
+          !(typeof val === "string" || typeof val === "number")
+        ) {
+          log("error", "app.Config::setに不適切な値が渡されました",
+            arguments);
+          reject();
+          return;
         }
-      });
 
-      return deferred.promise();
+        tmp["config_" + key] = val;
+
+        chrome.storage.local.set(tmp, () => {
+          if (chrome.runtime.lasterror) {
+            reject(chrome.runtime.lasterror.message);
+          } else {
+            resolve();
+          }
+        });
+      });
     }
 
     del (key:string) {
-      var deferred = $.Deferred();
-
-      if (typeof key !== "string") {
-        log("error", "app.Config::delにstring以外の値が渡されました",
-          arguments);
-        return deferred.reject();
-      }
-
-      chrome.storage.local.remove("config_" + key, () => {
-        if (chrome.runtime.lasterror) {
-          deferred.reject(chrome.runtime.lasterror.message);
-        } else {
-          deferred.resolve();
+      return new Promise( (resolve, reject) => {
+        if (typeof key !== "string") {
+          log("error", "app.Config::delにstring以外の値が渡されました",
+            arguments);
+          reject();
+          return;
         }
-      });
 
-      return deferred.promise();
+        chrome.storage.local.remove("config_" + key, () => {
+          if (chrome.runtime.lasterror) {
+            reject(chrome.runtime.lasterror.message);
+          } else {
+            resolve();
+          }
+        });
+      });
     }
 
     destroy ():void {

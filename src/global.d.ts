@@ -10,3 +10,6 @@ declare var chrome: any;
 declare namespace UI {
   var Animate: any;
 }
+declare namespace app {
+  var Cache: any;
+}

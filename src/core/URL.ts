@@ -1,5 +1,6 @@
 ///<reference path="HTTP.ts" />
 ///<reference path="../app.ts" />
+///<reference path="../global.d.ts" />
 
 namespace app {
   export namespace URL {
@@ -121,34 +122,51 @@ namespace app {
 
     export function expandShortURL (shortUrl: string): any {
       return new Promise( (resolve, reject) => {
-        var finalUrl: string = "";
+        var cache = new app.Cache(shortUrl);
 
-        var req = new app.HTTP.Request("HEAD", shortUrl);
-        req.timeout = parseInt(app.config.get("expand_short_url_timeout"));
+        cache.get()
+          .then( () => {
+            return Promise.resolve({data: cache.data, url: null});
+          })
+          .catch( () => {
+            return new Promise( (resolve, reject) => {
+              var resUrl: string;
+              var req = new app.HTTP.Request("HEAD", shortUrl);
+              req.timeout = parseInt(app.config.get("expand_short_url_timeout"));
 
-        req.send( (res) => {
-          if (res.status === 0 || res.status >= 400) {
-            resolve(null);
-            return
-          }
-          finalUrl = res.responseURL;
-          // 無限ループの防止
-          if (finalUrl === shortUrl) {
-            resolve(null);
-            return
-          }
-          // 取得したURLが短縮URLだった場合は再帰呼出しする
-          if (SHORT_URL_REG.test(finalUrl)) {
-            expandShortURL(finalUrl).then( (finalUrl) => {
-              resolve(finalUrl);
-              return
+              req.send( (res) => {
+                if (res.status === 0 || res.status >= 400) {
+                  return resolve({data: null, url: null});
+                }
+                resUrl = res.responseURL;
+                // 無限ループの防止
+                if (resUrl === shortUrl) {
+                  return resolve({data: null, url: null});
+                }
+                // 取得したURLが短縮URLだった場合は再帰呼出しする
+                if (SHORT_URL_REG.test(resUrl)) {
+                  expandShortURL(resUrl).then( (reslUrl) => {
+                    return resolve({data: null, url: resUrl});
+                  });
+                // 短縮URL以外なら終了
+                } else {
+                  return resolve({data: null, url: resUrl});
+                }
+              });
             });
-          // 短縮URL以外なら終了
-          } else {
-            resolve(finalUrl);
-            return
-          }
-        });
+          })
+          .then( (res) => {
+            var finalUrl: string = "";
+            if (res.data === null && res.url !== null) {
+              cache.last_updated = Date.now();
+              cache.data = res.url;
+              cache.put();
+              finalUrl = res.url;
+            } else if (res.data !== null && res.url === null) {
+              finalUrl = res.data;
+            }
+            return resolve(finalUrl);
+          });
       });
     }
   }

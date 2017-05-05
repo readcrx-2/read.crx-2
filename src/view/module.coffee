@@ -10,6 +10,7 @@ do ->
       "bookmarkEntryList"
       "config"
       "contextMenus"
+      "HTTP"
       "ImageReplaceDat"
       "module"
       "ReplaceStrTxt"

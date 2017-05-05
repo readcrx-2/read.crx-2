@@ -1,5 +1,6 @@
 ///<reference path="../global.d.ts" />
 ///<reference path="../app.ts" />
+///<reference path="../core/HTTP.ts" />
 
 namespace UI {
   "use strict";
@@ -20,6 +21,17 @@ namespace UI {
     private updateInterval: number = null;
     private pause: boolean = false;
     private lastScrollTop: number = -1;
+    private noNeedAttrs: string[] = [
+      "data-src",
+      "data-type",
+      "data-extract",
+      "data-extract-referrer",
+      "data-pattern",
+      "data-cookie",
+      "data-cookie-referrer",
+      "data-referrer",
+      "data-user-agent"
+    ];
 
     constructor (container: HTMLElement) {
       this.container = container;
@@ -86,7 +98,7 @@ namespace UI {
       if (imgFlg && !faviconFlg) {
         attrs = <Attr[]>Array.from(media.attributes)
         for (attr of attrs) {
-          if (attr.name !== "data-src") {
+          if (!this.noNeedAttrs.includes(attr.name)) {
             newImg.setAttribute(attr.name, attr.value);
           }
         }
@@ -117,9 +129,32 @@ namespace UI {
         }
       });
 
+      var mdata = media.dataset;
       if (imgFlg && !faviconFlg) {
         media.src = "/img/loading.webp";
-        newImg.src = media.getAttribute("data-src");
+        switch (mdata.type) {
+          case "default":
+            newImg.src = mdata.src;
+            break;
+          case "referrer":
+            newImg.src = this.getWithReferrer(mdata.src, mdata.referrer, mdata.userAgent);
+            break;
+          case "extract":
+            this.getWithExtract(mdata.src, mdata.extract, mdata.pattern, mdata.extractReferrer, mdata.userAgent).then( (imgstr) => {
+              newImg.src = imgstr;
+            }).catch( () => {
+              newImg.src = "";
+            });
+            break;
+          case "cookie":
+            this.getWithCookie(mdata.src, mdata.cookie, mdata.cookieReferrer, mdata.userAgent).then( (imgstr) => {
+              newImg.src = imgstr;
+            }).catch( () => {
+              newImg.src = "";
+            });
+            break;
+          default: newImg.src = mdata.src;
+        }
       } else {
         media.src = media.getAttribute("data-src");
       }
@@ -176,6 +211,55 @@ namespace UI {
         this.mediaPlaceTable.set(media, pos);
       }
       return pos;
+    }
+
+    private getWithReferrer (link: string, referrer: string, userAgent: string, cookie: string = ""): string {
+      //TODO: use chrome.webRequest
+      //if(referrer !== ""){ req.setRequestHeader("Referer", referrer); }
+      //if(userAgent !== ""){ req.setRequestHeader("User-Agent", userAgent); }
+      //if(cookie !== ""){ req.setRequestHeader("Set-Cookie", cookie); }
+      return link;
+    }
+
+    private getWithCookie (link: string, cookieLink: string, referrer: string, userAgent: string): Promise<string> {
+      return new Promise( (resolve, reject) => {
+        var req = new app.HTTP.Request("GET", cookieLink)
+        //TODO: use chrome.webRequest
+        //if(referrer !== ""){ req.headers["Referer"] = referrer); }
+        //if(userAgent !== ""){ req.headers["User-Agent"] = userAgent; }
+        req.send( (res) => {
+          if (res.status === 200) {
+            var cookie = res.headers["Set-Cookie"];
+            resolve(this.getWithReferrer(link, "", userAgent, cookie));
+          } else {
+            reject();
+          }
+        });
+      });
+    }
+
+    private getWithExtract (link: string, extractLink: string, pattern: string, referrer: string, userAgent: string): Promise<string> {
+      return new Promise( (resolve, reject) => {
+        var req = new app.HTTP.Request("GET", extractLink)
+        //TODO: use chrome.webRequest
+        //if(referrer !== ""){ req.headers["Referer"] = referrer); }
+        //if(userAgent !== ""){ req.headers["User-Agent"] = userAgent; }
+        req.send( (res) => {
+          if (res.status === 200) {
+            var m = res.body.match(new RegExp(pattern));
+            if (m !== null) {
+              var replaced = link.replace(/\$EXTRACT(\d+)?/g, (str, n) => {
+                return (n === null) ? m[1] : m[n];
+              });
+              resolve(replaced);
+            } else {
+              reject();
+            }
+          } else {
+            reject();
+          }
+        });
+      });
     }
 
     update (): void {

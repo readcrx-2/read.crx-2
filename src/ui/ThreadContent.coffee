@@ -678,7 +678,7 @@ class UI.ThreadContent
 
         #サムネイル追加処理
         do =>
-          addThumbnail = (sourceA, thumbnailPath, mediaType = "image", referrer, cookieStr) ->
+          addThumbnail = (sourceA, thumbnailPath, mediaType = "image", res) ->
             sourceA.classList.add("has_thumbnail")
 
             thumbnail = document.createElement("div")
@@ -705,12 +705,18 @@ class UI.ThreadContent
                 thumbnailImg = document.createElement("img")
                 thumbnailImg.className = "image"
                 thumbnailImg.src = "/img/dummy_1x1.webp"
-                thumbnailImg.setAttribute("data-src", thumbnailPath)
                 thumbnailImg.style.WebkitFilter = webkitFilter
                 thumbnailImg.style.maxWidth = app.config.get("image_width") + "px"
                 thumbnailImg.style.maxHeight = app.config.get("image_height") + "px"
-                if referrer? then thumbnailImg.setAttribute("data-referrer", referrer)
-                if cookieStr? then thumbnailImg.setAttribute("data-cookie", cookieStr)
+                thumbnailImg.dataset.src = thumbnailPath
+                thumbnailImg.dataset.type = res.type
+                if res.extract? then thumbnailImg.dataset.extract = res.extract
+                if res.extractReferrer? then thumbnailImg.dataset.extractReferrer = res.extractReferrer
+                if res.pattern? then thumbnailImg.dataset.pattern = res.pattern
+                if res.cookie? then thumbnailImg.dataset.cookie = res.cookie
+                if res.cookieReferrer? then thumbnailImg.dataset.cookieReferrer = res.cookieReferrer
+                if res.referrer? then thumbnailImg.dataset.referrer = res.referrer
+                if res.userAgent? then thumbnailImg.dataset.userAgent = res.userAgent
                 thumbnailLink.appendChild(thumbnailImg)
 
                 thumbnailFavicon = document.createElement("img")
@@ -844,8 +850,7 @@ class UI.ThreadContent
 
           replace = (a) ->
             return checkUrl(a).then( ({a, link}) ->
-              return app.ImageReplaceDat.do(a, link)
-            ).then( ({a, res, err}) ->
+              {res, err} = app.ImageReplaceDat.do(link)
               # MediaTypeの設定
               unless err?
                 href = res.text
@@ -854,7 +859,7 @@ class UI.ThreadContent
                 href = a.href
                 mediaType = getMediaType(href, null)
               # サムネイルの追加
-              addThumbnail(a, href, mediaType, res.referrer, res.cookie) if mediaType
+              addThumbnail(a, href, mediaType, res) if mediaType
               return
             )
 

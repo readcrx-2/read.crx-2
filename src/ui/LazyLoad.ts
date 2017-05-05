@@ -180,7 +180,7 @@ namespace UI {
     }
 
     scan (): void {
-      this.medias = Array.prototype.slice.call(this.container.querySelectorAll("img[data-src], audio[data-src], video[data-src]"));
+      this.medias = Array.from(this.container.querySelectorAll("img[data-src], audio[data-src], video[data-src]"));
       if (this.medias.length > 0) {
         this.update();
         this.watch();

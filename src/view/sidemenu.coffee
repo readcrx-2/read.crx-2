@@ -69,12 +69,32 @@ app.boot "/view/sidemenu.html", ["bbsmenu"], (BBSMenu) ->
             .find("li.bookmark > a[href=\"#{message.entry.url}\"]")
               .text(message.entry.title)
 
+  checkNetSc = (url) ->
+    res = {net: false, sc: false}
+    tmp = ///http://kita.jikkyo.org/cbm/cbm.cgi/([\w\d\.]+)(?:/-all|-live2324)?(?:/=[\d\w=!&$()[\]{}]+)?/bbsmenuk?2?.html///.exec(url)
+    if tmp
+      param = tmp[1].split(".")
+      for mode in param
+        if mode in ["20","2r"]
+          res.net = true
+        else if mode is "sc"
+          res.sc = true
+    return res
+
   #板覧関連
   do ->
     load = ->
       $view.addClass("loading")
+      # 表示用板一覧の取得
       BBSMenu.get (res) ->
-        $view.find("h3:not(:first-of-type), ul:not(:first-of-type)").remove()
+        # 2ch.netと2ch.scの存在確認
+        modeFlag = checkNetSc(res.url)
+        menuUpdate = (res.url is app.config.get("bbsmenu"))
+        boardNet = []
+        boardSc = []
+
+        if menuUpdate
+          $view.find("h3:not(:first-of-type), ul:not(:first-of-type)").remove()
 
         if res.message?
           app.message.send("notify", {
@@ -92,10 +112,45 @@ app.boot "/view/sidemenu.html", ["bbsmenu"], (BBSMenu) ->
             ul = document.createElement("ul")
             for board in category.board
               ul.appendChild(board_to_li(board))
+              if modeFlag.net and /// https?://\w+\.2ch\.net/\w+/.*? ///.test(board.url)
+                boardNet.push(board)
+              if modeFlag.sc and /// https?://\w+\.2ch\.sc/\w+/.*? ///.test(board.url)
+                boardSc.push(board)
             frag.appendChild(ul)
 
-        $view.find("body").append(frag)
-        accordion.update()
+        # 2ch.netと2ch.scの板・サーバー情報の登録
+        app.url.pushBoardToServerInfo(boardNet, boardSc)
+        boardNet = []   # メモリ解放用
+        boardSc = []    # 　　〃
+
+        if menuUpdate
+          $view.find("body").append(frag)
+          accordion.update()
+
+        # 2ch.netと2ch.scの切替用情報の取得
+        if !modeFlag.net or !modeFlag.sc
+          loopCount = 0
+          intervalID = setInterval( ->
+            # 一旦待機させるため1回目をスキップ
+            return if loopCount++ is 1
+            # メニューの更新が終了するまで待機
+            unless $view.hasClass("loading")
+              clearInterval(intervalID)
+              # 2ch.netと2ch.scの板情報の追加取得
+              if !modeFlag.net and !modeFlag.sc
+                param = "20.sc"
+              else if !modeFlag.net
+                param = "20.99"
+              else
+                param = "sc.99"
+              otherUrl = "http://kita.jikkyo.org/cbm/cbm.cgi/#{param}/-all/bbsmenu.html"
+              BBSMenu.get((res) ->
+                # 表示用一覧取得時のコールバックが実行されるので何もしない
+                return
+              , false, otherUrl)
+            return
+          , 1000)
+
         $view.removeClass("loading")
         return
       return

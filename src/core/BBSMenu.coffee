@@ -7,14 +7,21 @@
 ###
 class app.BBSMenu
   ###*
+  @property _forceReloadFlag
+  @private
+  @type Boolean
+  ###
+  @_forceReloadFlag: false
+
+  ###*
   @method get
   @param {Function} Callback
   @param {Boolean} [ForceReload=false]
   ###
-  @get: (callback, forceReload = false) ->
+  @get: (callback, forceReload = false, otherUrl = null) ->
     BBSMenu._callbacks.add(callback)
     unless BBSMenu._updating
-      BBSMenu._update(forceReload)
+      BBSMenu._update(forceReload, otherUrl)
     return
 
   ###*
@@ -46,17 +53,25 @@ class app.BBSMenu
 
   @_callbacks: new app.Callbacks({persistent: true})
   @_updating: false
-  @_update: (force_reload) ->
+  @_update: (force_reload, otherUrl) ->
     BBSMenu._updating = true
+    if force_reload and !@_forceReloadFlag
+      @_forceReloadFlag = true
 
-    url = app.config.get("bbsmenu")
+    if otherUrl
+      url = otherUrl
+      if @_forceReloadFlag
+        force_reload = true
+        @_forceReloadFlag = false
+    else
+      url = app.config.get("bbsmenu")
     #キャッシュ取得
     cache = new app.Cache(url)
     cache.get()
       .then( ->
         if force_reload
           return Promise.reject()
-        else if Date.now() - cache.last_updated < 1000 * 60 * 60 * 12
+        else if Date.now() - cache.last_updated < 1000 * 86400 * +app.config.get("bbsmenu_update_interval")
           return Promise.resolve()
         return Promise.reject()
       )
@@ -104,15 +119,15 @@ class app.BBSMenu
       ), fn)
       #コールバック
       .then ({response, menu}) ->
-        BBSMenu._callbacks.call(status: "success", data: menu)
+        BBSMenu._callbacks.call(status: "success", data: menu, url: url)
         return {response, menu}
       , ({response, menu}) ->
         message = "板一覧の取得に失敗しました。"
         if menu?
           message += "キャッシュに残っていたデータを表示します。"
-          BBSMenu._callbacks.call({status: "error", data: menu, message})
+          BBSMenu._callbacks.call({status: "error", data: menu, url: url, message})
         else
-          BBSMenu._callbacks.call({status: "error", message})
+          BBSMenu._callbacks.call({status: "error", url: url, message})
         return {response, menu}
       .then (arg) ->
         BBSMenu._updating = false

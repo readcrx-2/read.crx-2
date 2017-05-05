@@ -169,6 +169,70 @@ namespace app {
           });
       });
     }
+
+    var serverNet = new Map<string, string>();
+    var serverSc = new Map<string, string>();
+
+    export function pushBoardToServerInfo (boardInfoNet: any, boardInfoSc: any): void {
+      var item: any;
+      var tmp: string[];
+
+      if (boardInfoNet.length > 0) {
+        serverNet.clear();
+      }
+      for (item of boardInfoNet) {
+        tmp = /https?:\/\/(\w+)\.2ch\.net\/(\w+)\//.exec(item.url);
+        if (tmp === null) {
+          continue;
+        }
+        if (serverNet.has(tmp[2]) === false) {
+          serverNet.set(tmp[2], tmp[1]);
+        }
+      }
+
+      if (boardInfoSc.length > 0) {
+        serverSc.clear();
+      }
+      for (item of boardInfoSc) {
+        tmp = /https?:\/\/(\w+)\.2ch\.sc\/(\w+)\//.exec(item.url);
+        if (tmp === null) {
+          continue;
+        }
+        if (serverSc.has(tmp[2]) === false) {
+          serverSc.set(tmp[2], tmp[1]);
+        }
+      }
+      return;
+    }
+
+    export function exchangeNetSc (url: string): string {
+      var mode: string[];
+      var server: string = null;
+      var target: string = null;
+      var resUrl: string = null;
+
+      mode = /(https?):\/\/(\w+)\.2ch\.(net|sc)\/test\/read\.cgi\/(\w+)\/(\d+)\//.exec(url);
+      if (mode === null) {
+        return null;
+      }
+
+      if (mode[3] === "net") {
+        if (serverSc.has(mode[4]) === true) {
+          server = serverSc.get(mode[4]);
+          target = "sc";
+        }
+      } else {
+        if (serverNet.has(mode[4]) === true) {
+          server = serverNet.get(mode[4]);
+          target = "net";
+        }
+      }
+
+      if (server !== null) {
+        resUrl = mode[1] + "://" + server + ".2ch." + target + "/test/read.cgi/" + mode[4] + "/" + mode[5] + "/";
+      }
+      return resUrl;
+    }
   }
 }
 
@@ -198,5 +262,7 @@ namespace app {
     export var buildQuery = app.URL.buildQueryString;
     export const SHORT_URL_REG = app.URL.SHORT_URL_REG;
     export var expandShortURL = app.URL.expandShortURL;
+    export var pushBoardToServerInfo = app.URL.pushBoardToServerInfo;
+    export var exchangeNetSc = app.URL.exchangeNetSc;
   }
 }

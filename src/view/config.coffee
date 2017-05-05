@@ -189,10 +189,7 @@ app.boot "/view/config.html", ["cache", "bbsmenu"], (Cache, BBSMenu) ->
           .addClass("done")
           .text("更新完了")
 
-        iframe = parent.document.querySelector("iframe[src^=\"/view/sidemenu.html\"]")
-        if iframe
-          tmp = JSON.stringify(type: "request_reload")
-          iframe.contentWindow.postMessage(tmp, location.origin)
+        # sidemenuの表示時に設定されたコールバックが実行されるので、特別なことはしない
 
         #TODO [board_title_solver]も更新するよう変更
       else
@@ -456,6 +453,7 @@ app.boot "/view/config.html", ["cache", "bbsmenu"], (Cache, BBSMenu) ->
   resetBBSMenu = ->
     app.config.del("bbsmenu").then ->
       $view.find(".direct.bbsmenu").val(app.config.get("bbsmenu"))
+      $(".bbsmenu_reload").trigger("click")
 
   if $view.find(".direct.bbsmenu").val() is ""
     resetBBSMenu()
@@ -463,6 +461,8 @@ app.boot "/view/config.html", ["cache", "bbsmenu"], (Cache, BBSMenu) ->
   $view.find(".direct.bbsmenu").on "change", ->
     if $view.find(".direct.bbsmenu").val() isnt ""
       $(".bbsmenu_reload").trigger("click")
+    else
+      resetBBSMenu()
     return
 
   $view.find(".bbsmenu_reset").on "click", ->

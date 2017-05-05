@@ -1,5 +1,6 @@
 ///<reference path="HTTP.ts" />
 ///<reference path="../app.ts" />
+///<reference path="../global.d.ts" />
 
 namespace app {
   export namespace URL {
@@ -117,38 +118,55 @@ namespace app {
       return param.toString();
     }
 
-    export const SHORT_URL_REG = /^h?ttps?:\/\/(?:amba\.to|amzn\.to|bit\.ly|buff\.ly|cas\.st|dlvr\.it|fb\.me|g\.co|goo\.gl|htn\.to|ift\.tt|is\.gd|itun\.es|j\.mp|jump\.cx|ow\.ly|p\.tl|prt\.nu|redd\.it|snipurl\.com|spoti\.fi|t\.co|tiny\.cc|tinyurl\.com|tl\.gd|tr\.im|trib\.al|url\.ie|urx\.nu|urx2\.nu|urx3\.nu|ur0\.pw|wk\.tk|xrl\.us)\/.+/;
+    export const SHORT_URL_REG = /^h?ttps?:\/\/(?:amba\.to|amzn\.to|bit\.ly|buff\.ly|cas\.st|cos\.lv|dlvr\.it|fb\.me|g\.co|goo\.gl|htn\.to|ift\.tt|is\.gd|itun\.es|j\.mp|jump\.cx|kkbox\.fm|ow\.ly|p\.tl|prt\.nu|redd\.it|snipurl\.com|spoti\.fi|t\.co|tiny\.cc|tinyurl\.com|tl\.gd|tr\.im|trib\.al|ur0\.biz|ur0\.work|url\.ie|urx\.nu|urx\.red|urx2\.nu|urx3\.nu|ur0\.pw|ur2\.link|ustre\.am|wk\.tk|xrl\.us)\/.+/;
 
     export function expandShortURL (shortUrl: string): any {
       return new Promise( (resolve, reject) => {
-        var finalUrl: string = "";
+        var cache = new app.Cache(shortUrl);
 
-        var req = new app.HTTP.Request("HEAD", shortUrl);
-        req.timeout = parseInt(app.config.get("expand_short_url_timeout"));
+        cache.get()
+          .then( () => {
+            return Promise.resolve({data: cache.data, url: null});
+          })
+          .catch( () => {
+            return new Promise( (resolve, reject) => {
+              var resUrl: string;
+              var req = new app.HTTP.Request("HEAD", shortUrl);
+              req.timeout = parseInt(app.config.get("expand_short_url_timeout"));
 
-        req.send( (res) => {
-          if (res.status === 0 || res.status >= 400) {
-            resolve(null);
-            return
-          }
-          finalUrl = res.responseURL;
-          // 無限ループの防止
-          if (finalUrl === shortUrl) {
-            resolve(null);
-            return
-          }
-          // 取得したURLが短縮URLだった場合は再帰呼出しする
-          if (SHORT_URL_REG.test(finalUrl)) {
-            expandShortURL(finalUrl).then( (finalUrl) => {
-              resolve(finalUrl);
-              return
+              req.send( (res) => {
+                if (res.status === 0 || res.status >= 400) {
+                  return resolve({data: null, url: null});
+                }
+                resUrl = res.responseURL;
+                // 無限ループの防止
+                if (resUrl === shortUrl) {
+                  return resolve({data: null, url: null});
+                }
+                // 取得したURLが短縮URLだった場合は再帰呼出しする
+                if (SHORT_URL_REG.test(resUrl)) {
+                  expandShortURL(resUrl).then( (reslUrl) => {
+                    return resolve({data: null, url: resUrl});
+                  });
+                // 短縮URL以外なら終了
+                } else {
+                  return resolve({data: null, url: resUrl});
+                }
+              });
             });
-          // 短縮URL以外なら終了
-          } else {
-            resolve(finalUrl);
-            return
-          }
-        });
+          })
+          .then( (res) => {
+            var finalUrl: string = "";
+            if (res.data === null && res.url !== null) {
+              cache.last_updated = Date.now();
+              cache.data = res.url;
+              cache.put();
+              finalUrl = res.url;
+            } else if (res.data !== null && res.url === null) {
+              finalUrl = res.data;
+            }
+            return resolve(finalUrl);
+          });
       });
     }
   }

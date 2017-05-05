@@ -100,6 +100,13 @@ app.boot "/view/thread.html", ->
   else
     $view.find(".button_write").remove()
 
+  # 過去ログであることが自明の場合は書き込みボタンを隠す
+  if (
+    app.url.tsld(view_url) is "shitaraba.net" and
+    view_url.includes("/read_archive.cgi/")
+  )
+    $view.find(".button_write").remove()
+
   # 現状ではしたらばはhttpsに対応していないので切り替えボタンを隠す
   if app.url.tsld(view_url) is "shitaraba.net"
     $view.find(".button_scheme").remove()

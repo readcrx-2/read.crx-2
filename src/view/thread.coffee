@@ -118,18 +118,6 @@ app.boot "/view/thread.html", ->
       return if $view.hasClass("loading")
       return if $view.find(".button_reload").hasClass("disabled")
 
-      $view
-        .find(".content")
-          .removeClass("searching")
-          .removeAttr("data-res_search_hit_count")
-        .end()
-        .find(".searchbox")
-          .val("")
-        .end()
-        .find(".hit_count")
-          .addClass("hidden")
-          .text("")
-
       app.view_thread._draw($view, ex?.force_update, (thread) ->
         if ex?.mes? and app.config.get("no_writehistory") is "off"
           i = thread.res.length - 1
@@ -197,14 +185,19 @@ app.boot "/view/thread.html", ->
 
   #自動更新
   do ->
+    $button_pause = $view.find(".button_pause")
+
     auto_load = ->
       second = parseInt(app.config.get("auto_load_second"))
       if second >= 5000
+        $button_pause.removeClass("hidden")
         return setInterval( ->
           if app.config.get("auto_load_all") is "on" or $(".tab_container", parent.document).find("iframe[data-url=\"#{view_url}\"]").hasClass("tab_selected")
-            $view.trigger "request_reload" unless $view.find(".content").hasClass("searching")
+            $view.trigger "request_reload"
           return
         , second)
+      else
+        $button_pause.addClass("hidden")
       return
 
     auto_load_interval = auto_load()
@@ -214,6 +207,14 @@ app.boot "/view/thread.html", ->
         clearInterval auto_load_interval
         auto_load_interval = auto_load()
       return
+
+    $view.on("togglePause", ->
+      if $button_pause.hasClass("pause")
+        clearInterval auto_load_interval
+      else
+        auto_load_interval = auto_load()
+      return
+    )
 
     window.addEventListener "view_unload", ->
       clearInterval(auto_load_interval)
@@ -925,6 +926,9 @@ app.view_thread._draw = ($view, force_update, beforeAdd) ->
 
       $view.data("threadContent").addItem(thread.res.slice(content.children.length)).then( ->
         $view.data("lazyload").scan()
+
+        if $view.find(".content").hasClass("searching")
+          $view.find(".searchbox")[0].dispatchEvent(new Event("input"))
 
         $view.trigger("view_loaded")
 

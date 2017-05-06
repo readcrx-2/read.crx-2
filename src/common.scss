@@ -314,6 +314,7 @@ $color-https: #109020;
       $active-icon-color: "007fff",
       $search-icon-color: "777",
       $https-icon-color: "182",
+      $pause-icon-color: "811",
       $color: #111,
       $tool-menu-hover-background: hsl(210, 50%, 95%)
     );
@@ -332,6 +333,7 @@ $color-https: #109020;
       $active-icon-color: "f93",
       $search-icon-color: "aaa",
       $https-icon-color: "3a5",
+      $pause-icon-color: "a33",
       $color: #eee,
       $tool-menu-hover-background: hsl(30, 100%, 40%)
     );
@@ -356,6 +358,7 @@ $color-https: #109020;
   $active-icon-color,
   $search-icon-color,
   $https-icon-color,
+  $pause-icon-color,
   $color,
   $tool-menu-hover-background
 ) {
@@ -392,6 +395,12 @@ $color-https: #109020;
         background-image: url(/img/unlock_19x19_#{$icon-color}.webp);
         &.https {
           background-image: url(/img/lock_19x19_#{$https-icon-color}.webp);
+        }
+      }
+      &.button_pause {
+        background-image: url(/img/pause_19x19_#{$icon-color}.webp);
+        &.pause {
+          background-image: url(/img/pause_19x19_#{$pause-icon-color}.webp);
         }
       }
       &.button_tool {

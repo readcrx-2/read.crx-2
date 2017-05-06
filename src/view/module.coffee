@@ -398,6 +398,7 @@ class app.view.TabContentView extends app.view.PaneContentView
     @_setupBookmarkButton()
     @_setupSortItemSelector()
     @_setupSchemeButton()
+    @_setupAutoReloadPauseButton()
     @_setupToolMenu()
     return
 
@@ -579,6 +580,27 @@ class app.view.TabContentView extends app.view.PaneContentView
             url: app.url.changeScheme(url),
             new_tab: app.config.get("button_change_scheme_newtab") is "on"
           }
+          return
+      else
+        $button.remove()
+    return
+
+  ###*
+  @method _setupAutoReloadPauseButton
+  @private
+  ###
+  _setupAutoReloadPauseButton: ->
+    $button = @$element.find(".button_pause")
+
+    if $button.length is 1
+      if (
+        @$element.hasClass("view_thread") or
+        @$element.hasClass("view_board") or
+        @$element.hasClass("view_bookmark")
+      )
+        $button.on "click", =>
+          $button.toggleClass("pause")
+          @$element.trigger "togglePause"
           return
       else
         $button.remove()

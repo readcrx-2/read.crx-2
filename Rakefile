@@ -231,6 +231,8 @@ namespace :img do
     "debug/img/menu_19x19_333.webp",
     "debug/img/lock_19x19_182.webp",
     "debug/img/unlock_19x19_333.webp",
+    "debug/img/pause_19x19_333.webp",
+    "debug/img/pause_19x19_811.webp",
 
     "debug/img/arrow_19x19_ddd_r90.webp",
     "debug/img/arrow_19x19_ddd_r-90.webp",
@@ -241,7 +243,9 @@ namespace :img do
     "debug/img/pencil_19x19_ddd.webp",
     "debug/img/menu_19x19_ddd.webp",
     "debug/img/lock_19x19_3a5.webp",
-    "debug/img/unlock_19x19_ddd.webp"
+    "debug/img/unlock_19x19_ddd.webp",
+    "debug/img/pause_19x19_aaa.webp",
+    "debug/img/pause_19x19_a33.webp"
   ]
 
   directory "debug/img"

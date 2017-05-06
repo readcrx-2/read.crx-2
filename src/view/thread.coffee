@@ -185,14 +185,19 @@ app.boot "/view/thread.html", ->
 
   #自動更新
   do ->
+    $button_pause = $view.find(".button_pause")
+
     auto_load = ->
       second = parseInt(app.config.get("auto_load_second"))
       if second >= 5000
+        $button_pause.removeClass("hidden")
         return setInterval( ->
           if app.config.get("auto_load_all") is "on" or $(".tab_container", parent.document).find("iframe[data-url=\"#{view_url}\"]").hasClass("tab_selected")
             $view.trigger "request_reload"
           return
         , second)
+      else
+        $button_pause.addClass("hidden")
       return
 
     auto_load_interval = auto_load()
@@ -202,6 +207,14 @@ app.boot "/view/thread.html", ->
         clearInterval auto_load_interval
         auto_load_interval = auto_load()
       return
+
+    $view.on("togglePause", ->
+      if $button_pause.hasClass("pause")
+        clearInterval auto_load_interval
+      else
+        auto_load_interval = auto_load()
+      return
+    )
 
     window.addEventListener "view_unload", ->
       clearInterval(auto_load_interval)

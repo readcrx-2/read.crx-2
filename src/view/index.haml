@@ -7,12 +7,12 @@
     %link(rel="shortcut icon" href="/img/favicon.ico")
     %link(rel="stylesheet" href="/ui.css?v=#{MANIFEST["version"]}")
     %link(rel="stylesheet" href="index.css?v=#{MANIFEST["version"]}")
-    %script(src="/lib/jshortquery.min.js?v=#{MANIFEST["version"]}")
-    %script(src="/ui.js?v=#{MANIFEST["version"]}")
-    %script(src="/app.js?v=#{MANIFEST["version"]}")
-    %script(src="/app_core.js?v=#{MANIFEST["version"]}")
-    %script(src="module.js?v=#{MANIFEST["version"]}")
-    %script(src="index.js?v=#{MANIFEST["version"]}")
+    %script(src="/lib/jshortquery.min.js?v=#{MANIFEST["version"]}" defer=true)
+    %script(src="/ui.js?v=#{MANIFEST["version"]}" defer=true)
+    %script(src="/app.js?v=#{MANIFEST["version"]}" defer=true)
+    %script(src="/app_core.js?v=#{MANIFEST["version"]}" defer=true)
+    %script(src="module.js?v=#{MANIFEST["version"]}" defer=true)
+    %script(src="index.js?v=#{MANIFEST["version"]}" defer=true)
   %body
     #app_notice_container
     #body

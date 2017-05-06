@@ -68,7 +68,7 @@ app.boot "/view/board.html", ->
 
   new app.view.TabContentView(document.documentElement)
 
-  app.BoardTitleSolver.ask(url).always (title) ->
+  app.BoardTitleSolver.ask(url).then (title) ->
     if title
       document.title = title
     if app.config.get("no_history") is "off"
@@ -78,9 +78,9 @@ app.boot "/view/board.html", ->
   load = (ex) ->
     $view.addClass("loading")
 
-    deferred_get_read_state = app.read_state.get_by_board(url)
+    get_read_state_promise = app.ReadState.getByBoard(url)
 
-    deferred_board_get = $.Deferred (deferred) ->
+    board_get_promise = new Promise( (resolve, reject) ->
       app.board.get url, (res) ->
         $message_bar = $view.find(".message_bar")
         if res.status is "error"
@@ -89,14 +89,15 @@ app.boot "/view/board.html", ->
           $message_bar.removeClass("error").empty()
 
         if res.data?
-          deferred.resolve(res.data)
+          resolve(res.data)
         else
-          deferred.reject()
+          reject()
         return
       return
+    )
 
-    $.when(deferred_get_read_state, deferred_board_get)
-      .done (array_of_read_state, board) ->
+    Promise.all([get_read_state_promise, board_get_promise])
+      .then ([array_of_read_state, board]) ->
         read_state_index = {}
         for read_state, key in array_of_read_state
           read_state_index[read_state.url] = key
@@ -132,8 +133,14 @@ app.boot "/view/board.html", ->
         $view.find("table").table_sort("update")
         return
 
-      .always ->
+      .catch ->
+        return
+      .then ->
         $view.removeClass("loading")
+
+        if $view.find("table").hasClass("table_search")
+          $view.find(".searchbox")[0].dispatchEvent(new Event("input"))
+
         $view.trigger("view_loaded")
 
         $button = $view.find(".button_reload")
@@ -152,14 +159,19 @@ app.boot "/view/board.html", ->
 
   #自動更新
   do ->
+    $button_pause = $view.find(".button_pause")
+
     auto_load = ->
       second = parseInt(app.config.get("auto_load_second_board"))
       if second >= 20000
+        $button_pause.removeClass("hidden")
         return setInterval( ->
           if app.config.get("auto_load_all") is "on" or $(".tab_container", parent.document).find("iframe[data-url=\"#{url}\"]").hasClass("tab_selected")
-            $view.trigger "request_reload" unless $view.find(".content").hasClass("searching")
+            $view.trigger "request_reload"
           return
         , second)
+      else
+        $button_pause.addClass("hidden")
       return
 
     auto_load_interval = auto_load()
@@ -169,6 +181,14 @@ app.boot "/view/board.html", ->
         clearInterval auto_load_interval
         auto_load_interval = auto_load()
       return
+
+    $view.on("togglePause", ->
+      if $button_pause.hasClass("pause")
+        clearInterval auto_load_interval
+      else
+        auto_load_interval = auto_load()
+      return
+    )
 
     window.addEventListener "view_unload", ->
       clearInterval(auto_load_interval)

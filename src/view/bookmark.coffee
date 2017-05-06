@@ -115,7 +115,7 @@ app.boot "/view/bookmark.html", ->
   for a in app.bookmarkEntryList.getAllThreads()
     do (a) ->
       boardUrl = app.url.threadToBoard(a.url)
-      app.BoardTitleSolver.ask(boardUrl).done((boardName) ->
+      app.BoardTitleSolver.ask(boardUrl).then( (boardName) ->
         threadList.addItem(
           title: a.title
           url: a.url
@@ -137,13 +137,18 @@ app.boot "/view/bookmark.html", ->
 
   #自動更新
   do ->
+    $button_pause = $view.find(".button_pause")
+
     auto_load = ->
       second = parseInt(app.config.get("auto_load_second_bookmark"))
       if second >= 20000
+        $button_pause.removeClass("hidden")
         return setInterval( ->
-          $view.trigger("request_reload", true) unless $view.find(".content").hasClass("searching")
+          $view.trigger("request_reload", true)
           return
         , second)
+      else
+        $button_pause.addClass("hidden")
       return
 
     auto_load_interval = auto_load()
@@ -153,6 +158,14 @@ app.boot "/view/bookmark.html", ->
         clearInterval auto_load_interval
         auto_load_interval = auto_load()
       return
+
+    $view.on("togglePause", ->
+      if $button_pause.hasClass("pause")
+        clearInterval auto_load_interval
+      else
+        auto_load_interval = auto_load()
+      return
+    )
 
     window.addEventListener "view_unload", ->
       clearInterval(auto_load_interval)

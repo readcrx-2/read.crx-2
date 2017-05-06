@@ -6,11 +6,11 @@
     %title search
     %link(rel="stylesheet" href="/ui.css?v=#{MANIFEST["version"]}")
     %link(rel="stylesheet" href="search.css?v=#{MANIFEST["version"]}")
-    %script(src="/lib/jshortquery.min.js?v=#{MANIFEST["version"]}")
-    %script(src="/ui.js?v=#{MANIFEST["version"]}")
-    %script(src="/app.js?v=#{MANIFEST["version"]}")
-    %script(src="module.js?v=#{MANIFEST["version"]}")
-    %script(src="search.js?v=#{MANIFEST["version"]}")
+    %script(src="/lib/jshortquery.min.js?v=#{MANIFEST["version"]}" defer=true)
+    %script(src="/ui.js?v=#{MANIFEST["version"]}" defer=true)
+    %script(src="/app.js?v=#{MANIFEST["version"]}" defer=true)
+    %script(src="module.js?v=#{MANIFEST["version"]}" defer=true)
+    %script(src="search.js?v=#{MANIFEST["version"]}" defer=true)
   %body
     .message_bar
     %nav.nav_bar

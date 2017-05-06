@@ -14,6 +14,12 @@ class app.Cache
     @data = null
 
     ###*
+    @property parsed
+    @type Object
+    ###
+    @parsed = null
+
+    ###*
     @property last_updated
     @type Number
     ###
@@ -43,90 +49,137 @@ class app.Cache
     ###
     @dat_size = null
 
+    ###*
+    @property readcgi_ver
+    @type Number
+    ###
+    @readcgi_ver = null
+
   ###*
   @property _db_open
   @type Promise
   @static
   @private
   ###
-  @_db_open: $.Deferred (d) ->
-    db = openDatabase("Cache", "", "Cache", 0)
-    db.transaction(
-      (tr) ->
-        tr.executeSql """
-          CREATE TABLE IF NOT EXISTS Cache(
-            url TEXT NOT NULL PRIMARY KEY,
-            data TEXT NOT NULL,
-            last_updated INTEGER NOT NULL,
-            last_modified INTEGER,
-            etag TEXT,
-            res_length INTEGER,
-            dat_size INTEGER
-          )
-        """
+  @_db_open: new Promise( (resolve, reject) ->
+      req = indexedDB.open("Cache", 1)
+      req.onerror = (e) ->
+        reject(e)
         return
-      -> d.reject(); return
-      -> d.resolve(db); return
+      req.onupgradeneeded = (e) ->
+        db = e.target.result
+        objStore = db.createObjectStore("Cache", keyPath: "url")
+        objStore.createIndex("last_updated", "last_updated", unique: false)
+        objStore.createIndex("last_modified", "last_modified", unique: false)
+        e.target.transaction.oncomplete = ->
+          resolve(db)
+        return
+      req.onsuccess = (e) ->
+        resolve(e.target.result)
+        return
+      return
     )
-    return
+
+  ###*
+  @method count
+  @static
+  @return {Promise}
+  ###
+  @count: ->
+    return @_db_open.then( (db) ->
+      return new Promise( (resolve, reject) ->
+        req = db
+          .transaction("Cache")
+          .objectStore("Cache")
+          .count()
+        req.onsuccess = (e) ->
+          resolve(e.target.result)
+          return
+        req.onerror = (e) ->
+          app.log("error", "Cache.count: トランザクション中断")
+          reject(e)
+          return
+        return
+      )
+    )
+
+  ###*
+  @method delete
+  @static
+  @return {Promise}
+  ###
+  @delete: ->
+    return @_db_open.then( (db) =>
+      return new Promise( (resolve, reject) =>
+        req = db
+          .transaction("Cache", "readwrite")
+          .objectStore("Cache")
+          .clear()
+        req.onsuccess = (e) ->
+          resolve()
+          return
+        req.onerror = (e) ->
+          app.log("error", "Cache.delete: トランザクション中断")
+          reject(e)
+          return
+        return
+      )
+    )
+
+  ###*
+  @method clearRange
+  @param {Number} day
+  @static
+  @return {Promise}
+  ###
+  @clearRange: (day) ->
+    return @_db_open.then( (db) ->
+      return new Promise( (resolve, reject) ->
+        dayUnix = Date.now()-86400000*day
+        req = db
+          .transaction("Cache", "readwrite")
+          .objectStore("Cache")
+          .index("last_updated")
+          .openCursor(IDBKeyRange.upperBound(dayUnix, true))
+        req.onsuccess = (e) ->
+          resolve(e.target.result)
+          return
+        req.onerror = (e) ->
+          app.log("error", "Cache.clearRange: トランザクション中断")
+          reject(e)
+          return
+        return
+      )
+    )
 
   ###*
   @method get
   @return {Promise}
   ###
   get: ->
-    Cache._db_open.then (db) => $.Deferred (d) =>
-      db.transaction(
-        (tr) =>
-          tr.executeSql(
-            "SELECT * FROM Cache WHERE url = ?"
-            [@key]
-            (tr, result) =>
-              if result.rows.length is 1
-                data = app.deep_copy(result.rows.item(0))
-                for key, val of data
-                  @[key] = if val? then val else null
-                d.resolve()
-              else
-                d.reject()
-              return
-          )
+    Cache._db_open.then( (db) =>
+      new Promise( (resolve, reject) =>
+        req = db
+          .transaction("Cache")
+          .objectStore("Cache")
+          .get(@key)
+        req.onsuccess = (e) =>
+          res = e.target.result
+          if res?
+            data = app.deep_copy(e.target.result)
+            for key, val of data
+              @[key] = if val? then val else null
+            resolve()
+          else
+            reject()
           return
-        ->
-          app.log("error", "Cache::get トランザクション中断")
-          d.reject()
+        req.onerror = (e) ->
+          app.log("error", "Cache::get: トランザクション中断")
+          reject(e)
           return
+        return
       )
-      return
-    .promise()
-
-  ###*
-  @method count
-  @return {Promise}
-  ###
-  count: ->
-    unless @key is "*"
-      app.log("error", "Cache::count 未実装")
-      return $.Deferred().reject().promise()
-
-    Cache._db_open.then (db) => $.Deferred (d) ->
-      db.transaction(
-        (tr) ->
-          tr.executeSql(
-            "SELECT count() FROM Cache"
-            []
-            (tr, result) ->
-              d.resolve(result.rows.item(0)["count()"])
-              return
-          )
-          return
-        ->
-          app.log("error", "Cache::count トランザクション中断")
-          d.reject()
-          return
-      )
-      return
-    .promise()
+    )
 
   ###*
   @method put
@@ -134,90 +187,64 @@ class app.Cache
   ###
   put: ->
     unless typeof @key is "string" and
-        typeof @data is "string" and
+        ((@data? and typeof @data is "string") or (@parsed? and @parsed instanceof Object)) and
         typeof @last_updated is "number" and
         (not @last_modified? or typeof @last_modified is "number") and
         (not @etag? or typeof @etag is "string") and
         (not @res_length? or Number.isFinite(@res_length)) and
-        (not @dat_size? or Number.isFinite(@dat_size))
-      app.log("error", "Cache::put データが不正です", @)
-      return $.Deferred().reject().promise()
+        (not @dat_size? or Number.isFinite(@dat_size)) and
+        (not @readcgi_ver? or Number.isFinite(@readcgi_ver))
+      app.log("error", "Cache::put: データが不正です", @)
+      return Promise.reject()
 
-    Cache._db_open.then (db) => $.Deferred (d) =>
-      db.transaction(
-        (tr) =>
-          @data = @data.replace(/\u0000/g, "\u0020")
-
-          tr.executeSql(
-            "INSERT OR REPLACE INTO Cache values(?, ?, ?, ?, ?, ?, ?)"
-            [
-              @key
-              @data
-              @last_updated
-              @last_modified or null
-              @etag or null
-              @res_length or null
-              @dat_size or null
-            ]
+    return Cache._db_open.then( (db) =>
+      return new Promise( (resolve, reject) =>
+        req = db
+          .transaction("Cache", "readwrite")
+          .objectStore("Cache")
+          .put(
+            url: @key
+            data: if @data? then @data.replace(/\u0000/g, "\u0020") else null
+            parsed: @parsed or null
+            last_updated: @last_updated
+            last_modified: @last_modified or null
+            etag: @etag or null
+            res_length: @res_length or null
+            dat_size: @dat_size or null
+            readcgi_ver: @readcgi_ver or null
           )
+        req.onsuccess = (e) ->
+          resolve()
           return
-        ->
-          app.log("error", "Cache::put トランザクション失敗")
-          d.reject()
+        req.onerror = (e) ->
+          app.log("error", "Cache::put: トランザクション失敗")
+          reject(e)
           return
-        ->
-          d.resolve()
-          return
+        return
       )
-      return
-    .promise()
+    )
 
   ###*
   @method delete
   @return {Promise}
   ###
   delete: ->
-    Cache._db_open.then (db) => $.Deferred (d) =>
-      db.transaction(
-        (tr) =>
-          if @key is "*"
-            tr.executeSql("DELETE FROM Cache")
-          else
-            tr.executeSql("DELETE FROM Cache WHERE url = ?", [@key])
+    return Cache._db_open.then( (db) =>
+      return new Promise( (resolve, reject) =>
+        req = db
+          .transaction("Cache", "readwrite")
+          .objectStore("Cache")
+          .delete(url)
+        req.onsuccess = (e) ->
+          resolve()
           return
-        ->
+        req.onerror = (e) ->
           app.log("error", "Cache::delete: トランザクション中断")
-          d.reject()
+          reject(e)
           return
-        ->
-          d.resolve()
-          return
+        return
       )
-      return
-    .promise()
-
-  ###*
-  @method clearRange
-  @param {Number} day
-  @return {Promise}
-  ###
-  clearRange: (day) ->
-    Cache._db_open.then (db) => $.Deferred (d) =>
-      db.transaction(
-        (tr) =>
-          dayUnix = Date.now()-86400000*day
-          tr.executeSql("DELETE FROM Cache WHERE last_updated < ?", [dayUnix])
-          return
-        ->
-          app.log("error", "Cache.clearRange: トランザクション中断")
-          d.reject()
-          return
-        ->
-          d.resolve()
-          return
-      )
-      return
-    .promise()
+    )
 
 app.module "cache", [], (callback) ->
   callback(app.Cache)

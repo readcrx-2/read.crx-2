@@ -24,19 +24,6 @@ class app.ImageReplaceDat
           background_color: "red"
         }
         d.baseUrl = _INVALID_URL
-
-      try
-        if d.param? and d.param.type is "extract"
-          d.param.patternReg = new RegExp(d.param.pattern, "i")
-      catch e
-        app.message.send "notify", {
-          html: """
-            ImageViewURLReplace.datのスクレイピング一致場所の正規表現(#{d.param.pattern})を読み込むのに失敗しました
-            この行は無効化されます
-          """
-          background_color: "red"
-        }
-        d.baseUrl = _INVALID_URL
     return
 
   _config =
@@ -50,34 +37,6 @@ class app.ImageReplaceDat
     setString: (str) ->
       app.config.set(_configStringName, str)
       return
-
-  _getCookie = (string, dat) ->
-    def = $.Deferred()
-    req = new app.HTTP.Request("GET", string.replace(dat.baseUrl, dat.referrerUrl))
-    #req.headers["Referer"] = string.replace(dat.baseUrl, dat.param.referrerUrl)
-    if dat.userAgent isnt "" then req.headers["User-Agent"] = dat.userAgent
-    req.send((res) ->
-      if res.status is 200
-        cookieStr = dat.header["Set-Cookie"]
-        def.resolve(cookieStr)
-      def.reject()
-      return
-    )
-    return def.promise()
-
-  _getExtract = (string, dat) ->
-    def = $.Deferred()
-    req = new app.HTTP.Request("GET", string.replace(dat.baseUrlReg, dat.referrerUrl))
-    req.headers["Content-Type"] = "text/html"
-    #req.headers["Referer"] = string.replace(dat.baseUrlReg, dat.param.referrerUrl)
-    if dat.userAgent isnt "" then req.headers["User-Agent"] = dat.userAgent
-    req.send((res) ->
-      if res.status is 200
-        def.resolve(res.body.match(dat.param.patternReg))
-      def.reject()
-      return
-    )
-    return def.promise()
 
   ###*
   @method get
@@ -136,54 +95,38 @@ class app.ImageReplaceDat
 
   ###
   @method replace
-  @param {HTMLElement} a
   @param {String} string
   @return {Object}
   ###
-  @do: (a, string) ->
-    def = $.Deferred()
+  @do: (string) ->
     dat = @get()
-    doing = false
+    res = {}
     for d from dat
       continue if d.baseUrl is _INVALID_URL
       continue if !d.baseUrlReg.test(string)
       if d.replaceUrl is ""
-        def.resolve(a, string, "No parsing")
-        break
-
-      doing = true
-      res = {}
-      res.referrer = string.replace(d.baseUrl, d.referrerUrl)
-      extractReg = /\$EXTRACT(\d+)?/g
+        return {res, err: "No parsing"}
       if d.param? and d.param.type is "extract"
-        _getExtract(string, d).done((exMatch) ->
-          res.text = string
-            .replace(d.baseUrlReg, d.replaceUrl)
-            .replace(extractReg, (str, num) ->
-              if num?
-                return exMatch[num]
-              else
-                return exMatch[1]
-            )
-          def.resolve(a, res)
-          return
-        ).fail(->
-          def.resolve(a, string, "Fail getExtract")
-          return
-        )
-      else
+        res.type = "extract"
         res.text = string.replace(d.baseUrlReg, d.replaceUrl)
-        if d.param? and d.param.type is "cookie"
-          _getCookie(string, d).done((cookieStr) ->
-            res.cookie = cookieStr
-            def.resolve(a, res)
-            return
-          ).fail(->
-            def.resolve(a, string, "Fail getCookie")
-            return
-          )
-        else
-          def.resolve(a, res)
-      break
-    def.resolve(a, string, "Fail noBaseUrlReg") unless doing
-    return def.promise()
+        res.extract = string.replace(d.baseUrlReg, d.referrerUrl)
+        res.extractReferrer = d.param.referrerUrl
+        res.pattern = d.param.pattern
+        res.userAgent = d.userAgent
+        return {res}
+      else if d.param? and d.param.type is "cookie"
+        res.type = "cookie"
+        res.text = string.replace(d.baseUrlReg, d.replaceUrl)
+        res.cookie = string.replace(d.baseUrlReg, d.referrerUrl)
+        res.cookieReferrer = d.param.referrerUrl
+        res.userAgent = d.userAgent
+        return {res}
+      else
+        res.type = "default"
+        res.text = string.replace(d.baseUrlReg, d.replaceUrl)
+        if d.referrerUrl isnt "" or d.userAgent isnt ""
+          res.type = "referrer"
+          res.referrer = string.replace(d.baseUrlReg, d.referrerUrl)
+          res.userAgent = d.userAgent
+        return {res}
+    return {res, err: "Fail noBaseUrlReg"}

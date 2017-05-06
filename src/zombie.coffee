@@ -6,7 +6,7 @@ app.boot "/zombie.html", ->
       new app.Bookmark.ChromeBookmarkEntryList(app.config.get("bookmark_id"))
     )
 
-    app.bookmark.promise_first_scan.done ->
+    app.bookmark.promise_first_scan.then ->
       count = 0
       countdown = ->
         if --count is 0
@@ -15,8 +15,8 @@ app.boot "/zombie.html", ->
 
       for read_state in array_of_read_state
         count += 2
-        app.read_state.set(read_state).always(countdown)
-        app.bookmark.update_read_state(read_state).always(countdown)
+        app.ReadState.set(read_state).then(countdown)
+        app.bookmark.update_read_state(read_state).then(countdown)
 
       return
 

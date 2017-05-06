@@ -6,11 +6,11 @@
     %title board
     %link(rel="stylesheet" href="/ui.css?v=#{MANIFEST["version"]}")
     %link(rel="stylesheet" href="board.css?v=#{MANIFEST["version"]}")
-    %script(src="/lib/jshortquery.min.js?v=#{MANIFEST["version"]}")
-    %script(src="/ui.js?v=#{MANIFEST["version"]}")
-    %script(src="/app.js?v=#{MANIFEST["version"]}")
-    %script(src="module.js?v=#{MANIFEST["version"]}")
-    %script(src="board.js?v=#{MANIFEST["version"]}")
+    %script(src="/lib/jshortquery.min.js?v=#{MANIFEST["version"]}" defer=true)
+    %script(src="/ui.js?v=#{MANIFEST["version"]}" defer=true)
+    %script(src="/app.js?v=#{MANIFEST["version"]}" defer=true)
+    %script(src="module.js?v=#{MANIFEST["version"]}" defer=true)
+    %script(src="board.js?v=#{MANIFEST["version"]}" defer=true)
   %body
     .message_bar
     %nav.nav_bar
@@ -23,6 +23,7 @@
       .button.button_bookmark(title="ブックマークする")
       .button.button_write(title="書き込む")
       .button.button_scheme(title="http/httpsの切り替え")
+      .button.button_pause(title="自動更新一時停止")
       .button.button_tool(title="メニュー")
         %ul.hidden
           %li.button_link

@@ -162,7 +162,7 @@ app.boot "/view/config.html", ["cache", "bbsmenu"], (Cache, BBSMenu) ->
         message: "本当に削除しますか？"
         label_ok: "はい"
         label_no: "いいえ"
-      }).done (result) ->
+      }).then (result) ->
         if result
           app.Ninja.deleteBackup(siteId)
           updateNinjaInfo()
@@ -189,10 +189,7 @@ app.boot "/view/config.html", ["cache", "bbsmenu"], (Cache, BBSMenu) ->
           .addClass("done")
           .text("更新完了")
 
-        iframe = parent.document.querySelector("iframe[src^=\"/view/sidemenu.html\"]")
-        if iframe
-          tmp = JSON.stringify(type: "request_reload")
-          iframe.contentWindow.postMessage(tmp, location.origin)
+        # sidemenuの表示時に設定されたコールバックが実行されるので、特別なことはしない
 
         #TODO [board_title_solver]も更新するよう変更
       else
@@ -210,7 +207,7 @@ app.boot "/view/config.html", ["cache", "bbsmenu"], (Cache, BBSMenu) ->
     $status = $view.find(".#{name}_status")
 
     #履歴件数表示
-    mainClass.count().done (count) ->
+    mainClass.count().then (count) ->
       $status.text("#{count}件")
       return
 
@@ -220,13 +217,13 @@ app.boot "/view/config.html", ["cache", "bbsmenu"], (Cache, BBSMenu) ->
       $status.text("削除中")
 
       cleanFunc()
-        .done ->
+        .then ->
           $status.text("削除完了")
           parent.$("iframe[src=\"/view/#{name}.html\"]").each ->
             @contentWindow.$(".view").trigger("request_reload")
-        .fail ->
+        , ->
           $status.text("削除失敗")
-        .always ->
+        .then ->
           $clear_button.removeClass("hidden")
       return
 
@@ -236,13 +233,13 @@ app.boot "/view/config.html", ["cache", "bbsmenu"], (Cache, BBSMenu) ->
       $status.text("範囲指定削除中")
 
       cleanRangeFunc(parseInt($view.find(".#{name}_date_range")[0].value))
-        .done ->
+        .then ->
           $status.text("範囲指定削除完了")
           parent.$("iframe[src=\"view/#{name}.html\"]").each ->
             @contentWindow.$(".view").trigger("request_reload")
-        .fail ->
+        , ->
           $status.text("範囲指定削除失敗")
-        .always ->
+        .then ->
           $clear_range_button.removeClass("hidden")
       return
 
@@ -276,13 +273,13 @@ app.boot "/view/config.html", ["cache", "bbsmenu"], (Cache, BBSMenu) ->
         importFunc(JSON.parse(historyFile))#適応処理
         .then () ->
           mainClass.count()
-        .done (count) ->
+        .then (count) ->
           $status
             .addClass("done")
             .text("#{count}件 インポート完了")
           $clear_button.removeClass("hidden")
           return
-        .fail ->
+        , ->
           $status
             .addClass("fail")
             .text("インポート失敗")
@@ -295,7 +292,7 @@ app.boot "/view/config.html", ["cache", "bbsmenu"], (Cache, BBSMenu) ->
 
     #履歴エクスポート
     $view.find(".#{name}_export").on "click", ->
-      outputFunc().done( (data) ->
+      outputFunc().then( (data) ->
         outputText = JSON.stringify(data)
         blob = new Blob([outputText],{type:"text/plain"})
         $a = $("<a>")
@@ -311,28 +308,27 @@ app.boot "/view/config.html", ["cache", "bbsmenu"], (Cache, BBSMenu) ->
     return
 
   setupHistory("history", app.History, ->
-    return $.when(app.History.clear(), app.read_state.clear())
+    return Promise.all(app.History.clear(), app.ReadState.clear())
   , (day) ->
     return app.History.clearRange(day)
   , (inputObj) ->
-    deferred_add_func_array = []
-    if inputObj.history
-      for his in inputObj.history
-        deferred_add_func_array.push(app.History.add(his.url, his.title, his.date))
-    if inputObj.read_state
-      for rs in inputObj.read_state
-        deferred_add_func_array.push(app.read_state.set(rs))
-    return $.when(deferred_add_func_array...)
-  , ->
-    d = $.Deferred()
-    $.when(
-      app.read_state.get_all(),
-      app.History.get_all()
-    ).done( (read_state_res, history_res) ->
-      d.resolve({"read_state": Array.from(read_state_res), "history": Array.from(history_res)})
-      return
+    return Promise.all(
+      inputObj.history.map( (his) ->
+        return app.History.add(his.url, his.title, his.date)
+      ).concat(inputObj.read_state.map( (rs) ->
+        return app.ReadState.set(rs)
+      ))
     )
-    return d.promise()
+  , ->
+    return new Promise( (resolve, reject) ->
+      Promise.all(
+        app.ReadState.getAll(),
+        app.History.getAll()
+      ).then( ([read_state_res, history_res]) ->
+        resolve({"read_state": read_state_res, "history": history_res})
+        return
+      )
+    )
   )
   setupHistory("writehistory", app.WriteHistory, ->
     return app.WriteHistory.clear()
@@ -340,18 +336,18 @@ app.boot "/view/config.html", ["cache", "bbsmenu"], (Cache, BBSMenu) ->
     return app.WriteHistory.clearRange(day)
   , (inputObj) ->
     if inputObj.writehistory
-      return app.util.concurrent(inputObj.writehistory, (whis) ->
+      return Promise.all(inputObj.writehistory.map( (whis) ->
         return app.WriteHistory.add(whis.url, whis.res, whis.title, whis.name, whis.mail, whis.input_name, whis.input_mail, whis.message, whis.date)
-      )
+      ))
     else
-      return $.Deferred().resolve().promise()
+      return Promise.resolve()
   , ->
-    d = $.Deferred()
-    app.WriteHistory.get_all().done( (data) ->
-      d.resolve({"writehistory": Array.from(data)})
-      return
+    return new Promise( (resolve, reject) ->
+      app.WriteHistory.getAll().then( (data) ->
+        resolve({"writehistory": data})
+        return
+      )
     )
-    return d.promise()
   )
 
   do ->
@@ -359,8 +355,7 @@ app.boot "/view/config.html", ["cache", "bbsmenu"], (Cache, BBSMenu) ->
     $clear_button = $view.find(".cache_clear")
     $status = $view.find(".cache_status")
 
-    cache = new Cache("*")
-    cache.count().done (count) ->
+    Cache.count().then (count) ->
       $status.text("#{count}件")
       return
 
@@ -368,11 +363,11 @@ app.boot "/view/config.html", ["cache", "bbsmenu"], (Cache, BBSMenu) ->
       $clear_button.remove()
       $status.text("削除中")
 
-      cache.delete()
-        .done ->
+      Cache.delete()
+        .then ->
           $status.text("削除完了")
           return
-        .fail ->
+        .catch ->
           $status.text("削除失敗")
           return
       return
@@ -381,11 +376,11 @@ app.boot "/view/config.html", ["cache", "bbsmenu"], (Cache, BBSMenu) ->
     $clear_range_button.on "click", ->
       $status.text("範囲指定削除中")
 
-      cache.clearRange(parseInt($view.find(".cache_date_range")[0].value))
-        .done ->
+      Cache.clearRange(parseInt($view.find(".cache_date_range")[0].value))
+        .then ->
           $status.text("削除完了")
           return
-        .fail ->
+        .catch ->
           $status.text("削除失敗")
           return
       return
@@ -408,20 +403,23 @@ app.boot "/view/config.html", ["cache", "bbsmenu"], (Cache, BBSMenu) ->
     $button.attr("disabled", true)
     $status.text("インポート中")
 
-    $.Deferred (deferred) ->
+    new Promise( (resolve, reject) ->
       parent.chrome.runtime.sendMessage rcrx_webstore, req, (res) ->
         if res
-          deferred.resolve(res)
+          resolve(res)
         else
-          deferred.reject()
-    .then null, ->
-      $.Deferred (deferred) ->
+          reject()
+      return
+    ).catch( ->
+      return new Promise( (resolve, reject) ->
         parent.chrome.runtime.sendMessage rcrx_debug, req, (res) ->
           if res
-            deferred.resolve(res)
+            resolve(res)
           else
-            deferred.reject()
-    .done (res) ->
+            reject()
+        return
+      )
+    ).then( (res) ->
       for url, bookmark of res.bookmark
         if typeof(url) is typeof(bookmark.title) is "string"
           app.bookmark.add(url, bookmark.title)
@@ -429,10 +427,14 @@ app.boot "/view/config.html", ["cache", "bbsmenu"], (Cache, BBSMenu) ->
         if typeof(url) is typeof(bookmark.title) is "string"
           app.bookmark.add(url, bookmark.title)
       $status.text("インポート完了")
-    .fail ->
+      return
+    , ->
       $status.text("インポートに失敗しました。read.crx v0.73以降がインストールされている事を確認して下さい。")
-    .always ->
+      return
+    ).then( ->
       $button.attr("disabled", false)
+      return
+    )
 
   #「テーマなし」設定
   if app.config.get("theme_id") is "none"
@@ -451,6 +453,7 @@ app.boot "/view/config.html", ["cache", "bbsmenu"], (Cache, BBSMenu) ->
   resetBBSMenu = ->
     app.config.del("bbsmenu").then ->
       $view.find(".direct.bbsmenu").val(app.config.get("bbsmenu"))
+      $(".bbsmenu_reload").trigger("click")
 
   if $view.find(".direct.bbsmenu").val() is ""
     resetBBSMenu()
@@ -458,6 +461,8 @@ app.boot "/view/config.html", ["cache", "bbsmenu"], (Cache, BBSMenu) ->
   $view.find(".direct.bbsmenu").on "change", ->
     if $view.find(".direct.bbsmenu").val() isnt ""
       $(".bbsmenu_reload").trigger("click")
+    else
+      resetBBSMenu()
     return
 
   $view.find(".bbsmenu_reset").on "click", ->
@@ -492,20 +497,21 @@ app.boot "/view/config.html", ["cache", "bbsmenu"], (Cache, BBSMenu) ->
         .removeClass("done fail select")
         .addClass("loading")
         .text("更新中")
-      $.Deferred (d) ->
+      new Promise( (resolve, reject) ->
         jsonConfig = JSON.parse(configFile)
         keySet(jsonConfig)
-        d.resolve()
-      .done ->
+        resolve()
+      ).then( ->
         $cfg_status
           .addClass("done")
           .text("インポート完了")
         return
-      .fail ->
+      , ->
         $cfg_status
           .addClass("fail")
           .text("インポート失敗")
         return
+      )
     else
       $cfg_status
         .addClass("fail")
@@ -579,16 +585,17 @@ app.boot "/view/config.html", ["cache", "bbsmenu"], (Cache, BBSMenu) ->
         .removeClass("done fail select")
         .addClass("loading")
         .text("更新中")
-      $.Deferred (d) ->
+      new Promise( (resolve, reject) ->
         datDom = $view.find("textarea[name=\"image_replace_dat\"]")
         datDom[0].value = datFile
         datDom.trigger("input")
-        d.resolve()
-      .done ->
+        resolve()
+      ).then( ->
         $dat_status
           .addClass("done")
           .text("インポート完了")
         return
+      )
     else
       $dat_status
         .addClass("fail")
@@ -623,16 +630,17 @@ app.boot "/view/config.html", ["cache", "bbsmenu"], (Cache, BBSMenu) ->
         .removeClass("done fail select")
         .addClass("loading")
         .text("更新中")
-      $.Deferred (d) ->
+      new Promise( (resolve, reject) ->
         replacestrDom = $view.find("textarea[name=\"replace_str_txt\"]")
         replacestrDom[0].value = replacestrFile
         replacestrDom.trigger("input")
-        d.resolve()
-      .done ->
+        resolve()
+      ).then( ->
         $replacestr_status
           .addClass("done")
           .text("インポート完了")
         return
+      )
     else
       $replacestr_status
         .addClass("fail")
@@ -645,6 +653,99 @@ app.boot "/view/config.html", ["cache", "bbsmenu"], (Cache, BBSMenu) ->
       tx.executeSql("drop table WriteHistory", [])
       $view.find(".writehistory_delete_table").text("テーブル削除(完了)")
       return
+    )
+    return
+
+  $replacestr_status = $view.find(".history_from_1151_status")
+  #過去の履歴をインポート
+  $view.find(".history_from_1151").on "click", ->
+    $replacestr_status
+      .removeClass("done fail")
+      .addClass("loading")
+      .text("インポート中")
+    hisPro = new Promise( (resolve, reject) ->
+      openDatabase("History", "", "History", 0).transaction( (tx) ->
+        tx.executeSql("SELECT * FROM History", [], (t, his) ->
+          h = Array.from(his.rows)
+          h.map( (a) ->
+            return app.History.add(a.url, a.title, a.date)
+          )
+          Promise.all(h).then( ->
+            t.executeSql("drop table History", [])
+            resolve()
+            return
+          , (e) ->
+            reject(e)
+            return
+          )
+          return
+        , (e) ->
+          if e.code?
+            reject(e)
+          else
+            resolve()
+          return
+        )
+      )
+    )
+    whisPro = new Promise( (resolve, reject) ->
+      openDatabase("WriteHistory", "", "WriteHistory", 0).transaction( (tx) ->
+        tx.executeSql("SELECT * FROM WriteHistory", [], (t, whis) ->
+          w = Array.from(whis.rows)
+          w.map( (a) ->
+            return app.WriteHistory.add(a.url, a.res, a.title, a.name, a.mail, a.input_name, a.mail, a.message, a.date)
+          )
+          Promise.all(w).then( ->
+            t.executeSql("drop table WriteHistory", [])
+            resolve()
+            return
+          , (e) ->
+            reject(e)
+            return
+          )
+          return
+        , (e) ->
+          if e.code?
+            reject(e)
+          else
+            resolve()
+          return
+        )
+      )
+    )
+    rsPro = new Promise( (resolve, reject) ->
+      openDatabase("ReadState", "", "Read State", 0).transaction( (tx) ->
+        tx.executeSql("SELECT * FROM ReadState", [], (t, rs) ->
+          r = Array.from(rs.rows)
+          r.map( (a) ->
+            return app.ReadState.set(a)
+          )
+          Promise.all(r).then( ->
+            t.executeSql("drop table ReadState", [])
+            resolve()
+            return
+          , (e) ->
+            reject(e)
+            return
+          )
+          return
+        , (e) ->
+          if e.code?
+            reject(e)
+          else
+            resolve()
+          return
+        )
+      )
+    )
+    Promise.all([hisPro, whisPro, rsPro]).then( ->
+      $replacestr_status
+        .addClass("done")
+        .text("インポート完了")
+    , (e) ->
+      $replacestr_status
+        .addClass("fail")
+        .text("インポート失敗 - #{e}")
     )
     return
 

@@ -2,7 +2,8 @@ regs = [
   ///^https?://(?!find|info|p2)\w+(?:\.2ch\.net|\.2ch\.sc|\.open2ch\.net)/\w+/(?:index\.html)?(?:#\d+)?$///
   ///^https?://(?!itest)\w+(?:\.2ch\.net|\.2ch\.sc|\.open2ch\.net|\.bbspink\.com)/test/read\.cgi/\w+/\d+///
   ///^https?://jbbs\.shitaraba\.net/\w+/\d+/(?:index\.html)?(?:#\d+)?$///
-  ///^https?://jbbs\.shitaraba\.net/bbs/read\.cgi/\w+/\d+/\d+///
+  ///^https?://jbbs\.shitaraba\.net/bbs/read(?:_archive)?\.cgi/\w+/\d+/\d+///
+  ///^https?://jbbs\.shitaraba\.net/\w+/\d+/storage/\d+\.html///
   ///^https?://\w+\.machi\.to/\w+/(?:index\.html)?(?:#\d+)?$///
   ///^https?://\w+\.machi\.to/bbs/read\.cgi/\w+/\d+///
 ]

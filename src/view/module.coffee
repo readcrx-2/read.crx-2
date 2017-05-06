@@ -10,13 +10,14 @@ do ->
       "bookmarkEntryList"
       "config"
       "contextMenus"
+      "HTTP"
       "ImageReplaceDat"
       "module"
       "ReplaceStrTxt"
       "Ninja"
       "NG"
       "notification"
-      "read_state"
+      "ReadState"
       "url"
       "util"
     ]
@@ -397,6 +398,7 @@ class app.view.TabContentView extends app.view.PaneContentView
     @_setupBookmarkButton()
     @_setupSortItemSelector()
     @_setupSchemeButton()
+    @_setupAutoReloadPauseButton()
     @_setupToolMenu()
     return
 
@@ -584,6 +586,27 @@ class app.view.TabContentView extends app.view.PaneContentView
     return
 
   ###*
+  @method _setupAutoReloadPauseButton
+  @private
+  ###
+  _setupAutoReloadPauseButton: ->
+    $button = @$element.find(".button_pause")
+
+    if $button.length is 1
+      if (
+        @$element.hasClass("view_thread") or
+        @$element.hasClass("view_board") or
+        @$element.hasClass("view_bookmark")
+      )
+        $button.on "click", =>
+          $button.toggleClass("pause")
+          @$element.trigger "togglePause"
+          return
+      else
+        $button.remove()
+    return
+
+  ###*
   @method _setupToolMenu
   @private
   ###
@@ -662,12 +685,12 @@ class app.view.TabContentView extends app.view.PaneContentView
     mode = reg.exec(url)
     if mode
       @$element.find(".button_change_netsc").on "click", =>
-        from = ".2ch." + mode[1] + "/"
-        to = ".2ch." + (if mode[1] is 'net' then 'sc' else 'net') + "/"
-        app.message.send "open", {
-          url: url.replace(from, to),
-          new_tab: app.config.get("button_change_netsc_newtab") is "on"
-        }
+        newUrl = app.url.exchangeNetSc(url)
+        if newUrl
+          app.message.send "open", {
+            url: newUrl,
+            new_tab: app.config.get("button_change_netsc_newtab") is "on"
+          }
         return
     else
       @$element.find(".button_change_netsc").remove()

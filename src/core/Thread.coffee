@@ -235,6 +235,16 @@ class app.Thread
                 @message += "キャッシュに残っていたデータを表示します。"
               reject()
               return
+        else if @tsld is "shitaraba.net" and @url.includes("/read.cgi/")
+          newURL = @url.replace("/read.cgi/", "/read_archive.cgi/")
+          @message += """
+          スレッドの読み込みに失敗しました。
+          過去ログの可能性が有ります
+          (<a href="#{app.escape_html(app.safe_href(newURL))}"
+            class="open_in_rcrx">#{app.escape_html(newURL)}</a>)
+          """
+          reject()
+          return
         else
           @message += "スレッドの読み込みに失敗しました。"
 
@@ -312,7 +322,7 @@ class app.Thread
   @return {null|Object}
   ###
   @_getXhrInfo = (url) ->
-    tmp = ///^(https?)://((?:\w+\.)?(\w+\.\w+))/(?:test|bbs)/read\.cgi/
+    tmp = ///^(https?)://((?:\w+\.)?(\w+\.\w+))/(?:test|bbs)/read(?:_archive)?\.cgi/
       (\w+)/(\d+)/(?:(\d+)/)?$///.exec(url)
     unless tmp then return null
     switch tmp[3]
@@ -320,9 +330,13 @@ class app.Thread
         path: "#{tmp[1]}://#{tmp[2]}/bbs/offlaw.cgi/#{tmp[4]}/#{tmp[5]}/",
         charset: "Shift_JIS"
       when "shitaraba.net"
-        path: "#{tmp[1]}://jbbs.shitaraba.net/" +
+        if url.includes("/read_archive.cgi/")
+          path: tmp[0],
+          charset: "EUC-JP"
+        else
+          path: "#{tmp[1]}://jbbs.shitaraba.net/" +
             "bbs/rawmode.cgi/#{tmp[4]}/#{tmp[5]}/#{tmp[6]}/",
-        charset: "EUC-JP"
+          charset: "EUC-JP"
       when "2ch.net"
         if app.config.get("format_2chnet") is "dat"
           path: "#{tmp[1]}//#{tmp[2]}/#{tmp[4]}/dat/#{tmp[5]}.dat",
@@ -352,7 +366,10 @@ class app.Thread
       when "machi.to"
         Thread._parseMachi(text)
       when "shitaraba.net"
-        Thread._parseJbbs(text)
+        if url.includes("/read_archive.cgi/")
+          Thread._parseJbbsArchive(text)
+        else
+          Thread._parseJbbs(text)
       when "2ch.net"
         if app.config.get("format_2chnet") is "dat"
           Thread._parseCh(text)
@@ -533,6 +550,42 @@ class app.Thread
           mail: ""
           message: "データが破損しています"
           other: ""
+
+    if thread.res.length > 0 and thread.res.length > numberOfBroken
+      thread
+    else
+      null
+
+  ###*
+  @method _parseJbbsArchive
+  @static
+  @private
+  @param {String} text
+  @return {null|Object}
+  ###
+  @_parseJbbsArchive = (text) ->
+    # name, mail, other, message, thread_title
+    text = text.replace(/<dl><dt>/, "<dl>\n<dt>")
+    reg = /^<dt><a.*>\d+<\/a> ：(?:<a href="mailto:([^<>]*)">|<font [^>]*>)?<b>(.*)<\/b>.*：(.*)<dd> ?(.*)<br><br>$/
+    separator = "\n"
+
+    titleReg = /<font size=.*?>(.*)\n?<\/font><\/b>/;
+    numberOfBroken = 0
+    thread = res: []
+    first = true
+
+    for line in text.split(separator)
+      title = titleReg.exec(line)
+      regRes = reg.exec(line)
+
+      if title
+        thread.title = app.util.decode_char_reference(title[1])
+      else if regRes
+        thread.res.push
+          name: regRes[2]
+          mail: regRes[1] or ""
+          message: regRes[4]
+          other: regRes[3]
 
     if thread.res.length > 0 and thread.res.length > numberOfBroken
       thread

@@ -199,11 +199,6 @@ class UI.ThreadList
 
       _isComposing = false
       $searchbox
-        .closest(".view")
-          .on "request_reload", ->
-            $(option.searchbox).val("").triggerHandler("input")
-            return
-        .end()
         .on "compositionstart", ->
           _isComposing = true
           return

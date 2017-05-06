@@ -137,6 +137,10 @@ app.boot "/view/board.html", ->
         return
       .then ->
         $view.removeClass("loading")
+
+        if $view.find("table").hasClass("table_search")
+          $view.find(".searchbox")[0].dispatchEvent(new Event("input"))
+
         $view.trigger("view_loaded")
 
         $button = $view.find(".button_reload")
@@ -160,7 +164,7 @@ app.boot "/view/board.html", ->
       if second >= 20000
         return setInterval( ->
           if app.config.get("auto_load_all") is "on" or $(".tab_container", parent.document).find("iframe[data-url=\"#{url}\"]").hasClass("tab_selected")
-            $view.trigger "request_reload" unless $view.find(".content").hasClass("searching")
+            $view.trigger "request_reload"
           return
         , second)
       return

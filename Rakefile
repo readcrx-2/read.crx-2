@@ -360,6 +360,5 @@ namespace :write do
 end
 
 task :jquery do
-  mkdir_p "debug/lib/jquery"
   sh "cat node_modules/jquery/dist/jquery.slim.min.js node_modules/ShortQuery.js/bin/shortQuery.chrome.min.js > debug/lib/jshortquery.min.js"
 end

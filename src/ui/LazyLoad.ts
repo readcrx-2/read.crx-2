@@ -214,7 +214,7 @@ namespace UI {
     }
 
     private getWithReferrer (link: string, referrer: string, userAgent: string, cookie: string = ""): string {
-      //TODO: use chrome.webRequest
+      //TODO: use chrome.webRequest, chrome.cookies
       //if(referrer !== ""){ req.setRequestHeader("Referer", referrer); }
       //if(userAgent !== ""){ req.setRequestHeader("User-Agent", userAgent); }
       //if(cookie !== ""){ req.setRequestHeader("Set-Cookie", cookie); }

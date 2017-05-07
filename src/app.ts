@@ -21,7 +21,7 @@ namespace app {
 
   export function log (level:string, ...data:any[]) {
     if (logLevels.includes(level)) {
-      console[level].apply(console, data);
+      console[level](...data);
     }
     else {
       log("error", "app.log: 引数levelが不正な値です", arguments);
@@ -82,7 +82,7 @@ namespace app {
 
     add (callback:Function):void {
       if (!this._config.persistent && this._latestCallArg) {
-        callback.apply(null, deepCopy(this._latestCallArg));
+        callback(...deepCopy(this._latestCallArg));
       }
       else {
         this._callbackStore.add(callback);
@@ -115,7 +115,7 @@ namespace app {
 
         for (callback of tmpCallbackStore) {
           if (this._callbackStore.has(callback)) {
-            callback.apply(null, deepCopy(arg));
+            callback(...deepCopy(arg));
           }
         }
 
@@ -505,12 +505,12 @@ namespace app {
           dependencies
         });
         defer( () => {
-          definition.apply(null, dep_modules.concat(callback));
+          definition(...dep_modules.concat(callback));
         });
       }
       else {
         defer( () => {
-          definition.apply(null, dep_modules);
+          definition(...dep_modules);
         });
       }
     };

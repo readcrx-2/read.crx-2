@@ -154,7 +154,7 @@ class app.ReadState
         req = db
           .transaction("ReadState", "readwrite")
           .objectStore("ReadState")
-          .delete(url.repalced)
+          .delete(url.replaced)
         req.onsuccess = (e) ->
           app.message.send("read_state_removed", url: url.original)
           resolve()

@@ -579,7 +579,7 @@ namespace app {
         location.reload(true);
       }
       else {
-        $(() => {
+        document.addEventListener("DOMContentLoaded", () => {
           app.config.ready(() => {
             if (requirements) {
               app.module(null, requirements, fn);

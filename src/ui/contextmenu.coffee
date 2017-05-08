@@ -32,6 +32,6 @@ do ($ = jQuery) ->
           $this.css(left: "", right: "0")
 
         if window.innerHeight < this_pos.top + $this.outerHeight()
-          $this.css("top", "#{this_pos.top - $this.outerHeight()}px")
+          $this.css("top", "#{Math.max(this_pos.top - $this.outerHeight(), 0)}px")
 
         null

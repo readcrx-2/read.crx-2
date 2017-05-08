@@ -1,10 +1,10 @@
 app.boot "/view/board.html", ->
   try
-    url = app.url.parseQuery(location.search).get("q")
+    url = app.URL.parseQuery(location.search).get("q")
   catch
     alert("不正な引数です")
     return
-  url = app.url.fix(url)
+  url = app.URL.fix(url)
   opened_at = Date.now()
 
   $view = $(document.documentElement)
@@ -26,12 +26,12 @@ app.boot "/view/board.html", ->
     param.title = document.title
     param.url = url
     open(
-      "/write/submit_thread.html?#{app.url.buildQuery(param)}"
+      "/write/submit_thread.html?#{app.URL.buildQuery(param)}"
       undefined
       'width=600,height=400'
     )
 
-  if app.url.tsld(url) in ["2ch.net", "shitaraba.net", "bbspink.com", "2ch.sc", "open2ch.net"]
+  if app.URL.tsld(url) in ["2ch.net", "shitaraba.net", "bbspink.com", "2ch.sc", "open2ch.net"]
     $view.find(".button_write").on "click", ->
       write()
       return
@@ -39,7 +39,7 @@ app.boot "/view/board.html", ->
     $view.find(".button_write").remove()
 
   # 現状ではしたらばはhttpsに対応していないので切り替えボタンを隠す
-  if app.url.tsld(url) is "shitaraba.net"
+  if app.URL.tsld(url) is "shitaraba.net"
     $view.find(".button_scheme").remove()
 
   $view

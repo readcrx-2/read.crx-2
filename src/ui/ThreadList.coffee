@@ -124,7 +124,7 @@ class UI.ThreadList
 
       if @_flg.bookmarkAddRm
         if msg.type is "added"
-          boardUrl = app.url.threadToBoard(msg.bookmark.url)
+          boardUrl = app.URL.threadToBoard(msg.bookmark.url)
           app.BoardTitleSolver.ask(boardUrl).then( (boardName) =>
             @addItem(
               title: msg.bookmark.title
@@ -134,7 +134,7 @@ class UI.ThreadList
               created_at: /\/(\d+)\/$/.exec(msg.bookmark.url)[1] * 1000
               board_url: boardUrl
               board_title: boardName
-              is_https: (app.url.getScheme(msg.bookmark.url) is "https")
+              is_https: (app.URL.getScheme(msg.bookmark.url) is "https")
             )
             return
           )

@@ -15,9 +15,9 @@ do ->
   return
 
 app.boot "/write/write.html", ->
-  param = app.url.parseQuery(location.search)
+  param = app.URL.parseQuery(location.search)
   arg = {}
-  arg.url = app.url.fix(param.get("url"))
+  arg.url = app.URL.fix(param.get("url"))
   arg.title = param.get("title") ? param.get("url")
   arg.name = param.get("name") ? app.config.get("default_name")
   arg.mail = param.get("mail") ? app.config.get("default_mail")
@@ -192,7 +192,7 @@ app.boot "/write/write.html", ->
   document.title = arg.title
   $h1 = $view.T("h1")[0]
   $h1.textContent = arg.title
-  $h1.addClass("https") if app.url.getScheme(arg.url) is "https"
+  $h1.addClass("https") if app.URL.getScheme(arg.url) is "https"
   $view.C("name")[0].value = arg.name
   $view.C("mail")[0].value = arg.mail
   $view.C("message")[0].value = arg.message
@@ -203,7 +203,7 @@ app.boot "/write/write.html", ->
     for dom from $view.$$("input, textarea")
       dom.disabled = true
 
-    guess_res = app.url.guess_type(arg.url)
+    guess_res = app.URL.guessType(arg.url)
 
     iframe_arg =
       rcrx_name: $view.C("name")[0].value
@@ -215,11 +215,11 @@ app.boot "/write/write.html", ->
     $iframe.on("load", fn = ->
       $iframe.off("load", fn)
 
-      scheme = app.url.getScheme(arg.url)
+      scheme = app.URL.getScheme(arg.url)
       #2ch
-      if guess_res.bbs_type is "2ch"
+      if guess_res.bbsType is "2ch"
         #open2ch
-        if app.url.tsld(arg.url) is "open2ch.net"
+        if app.URL.tsld(arg.url) is "open2ch.net"
           tmp = arg.url.split("/")
           form_data =
             action: "#{scheme}://#{tmp[2]}/test/bbs.cgi"
@@ -247,7 +247,7 @@ app.boot "/write/write.html", ->
             textarea:
               MESSAGE: iframe_arg.rcrx_message
       #したらば
-      else if guess_res.bbs_type is "jbbs"
+      else if guess_res.bbsType is "jbbs"
         tmp = arg.url.split("/")
         form_data =
           action: "#{scheme}://jbbs.shitaraba.net/bbs/write.cgi/#{tmp[5]}/#{tmp[6]}/#{tmp[7]}/"
@@ -290,7 +290,7 @@ app.boot "/write/write.html", ->
 
   # 忍法帳関連処理
   do ->
-    return if app.url.tsld(arg.url) isnt "2ch.net"
+    return if app.URL.tsld(arg.url) isnt "2ch.net"
 
     app.Ninja.getCookie (cookies) ->
       backup = app.Ninja.getBackup()

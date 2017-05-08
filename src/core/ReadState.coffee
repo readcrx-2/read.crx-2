@@ -23,8 +23,8 @@ class app.ReadState
   )
 
   @_url_filter = (original_url) ->
-    original_url = app.url.fix(original_url)
-    scheme = app.url.getScheme(original_url)
+    original_url = app.URL.fix(original_url)
+    scheme = app.URL.getScheme(original_url)
 
     return {
       original: original_url
@@ -49,7 +49,7 @@ class app.ReadState
 
     url = @_url_filter(read_state.url)
     read_state.url = url.replaced
-    board_url = app.url.threadToBoard(url.original)
+    board_url = app.URL.threadToBoard(url.original)
     read_state.board_url = @_url_filter(board_url).replaced
 
     return @_openDB.then( (db) =>

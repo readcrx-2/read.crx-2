@@ -15,9 +15,9 @@ do ->
   return
 
 app.boot "/write/submit_thread.html", ->
-  param = app.url.parseQuery(location.search)
+  param = app.URL.parseQuery(location.search)
   arg = {}
-  arg.url = app.url.fix(param.get("url"))
+  arg.url = app.URL.fix(param.get("url"))
   arg.title = param.get("title") ? param.get("url")
   arg.name = param.get("name") ? app.config.get("default_name")
   arg.mail = param.get("mail") ? app.config.get("default_mail")
@@ -141,7 +141,7 @@ app.boot "/write/submit_thread.html", ->
         name = $view.C("name")[0].value
         mail = $view.C("mail")[0].value
         title = $view.C("title")[0].value
-        if app.url.tsld(arg.url) in ["2ch.net", "2ch.sc", "bbspink.com", "open2ch.net"]
+        if app.URL.tsld(arg.url) in ["2ch.net", "2ch.sc", "bbspink.com", "open2ch.net"]
           keys = message.key.match(/.*\/test\/read\.cgi\/(\w+?)\/(\d+)\/l\d+/)
           if !keys?
             $notice.textContent = "書き込み失敗 - 不明な転送場所"
@@ -149,7 +149,7 @@ app.boot "/write/submit_thread.html", ->
             server = arg.url.match(/^(https?:\/\/\w+\.(?:2ch\.net|2ch\.sc|bbspink\.com|open2ch\.net)).*/)[1]
             url = "#{server}/test/read.cgi/#{keys[1]}/#{keys[2]}"
             chrome.runtime.sendMessage(type: "written", kind: "own", url: arg.url, thread_url: url, mes: mes, name: name, mail: mail, title: title)
-        else if app.url.tsld(arg.url) is "shitaraba.net"
+        else if app.URL.tsld(arg.url) is "shitaraba.net"
           chrome.runtime.sendMessage(type: "written", kind: "board", url: arg.url, mes: mes, name: name, mail: mail, title: title)
         chrome.tabs.getCurrent (tab) ->
           chrome.tabs.remove(tab.id)
@@ -175,7 +175,7 @@ app.boot "/write/submit_thread.html", ->
   document.title = arg.title + "板"
   $h1 = $view.T("h1")[0]
   $h1.textContent = arg.title + "板"
-  $h1.addClass("https") if app.url.getScheme(arg.url) is "https"
+  $h1.addClass("https") if app.URL.getScheme(arg.url) is "https"
   $view.C("name")[0].value = arg.name
   $view.C("mail")[0].value = arg.mail
   $view.C("message")[0].value = arg.message
@@ -186,8 +186,8 @@ app.boot "/write/submit_thread.html", ->
     for dom from $view.$$("input, textarea")
       dom.disabled = true
 
-    guess_res = app.url.guess_type(arg.url)
-    scheme = app.url.getScheme(arg.url)
+    guess_res = app.URL.guessType(arg.url)
+    scheme = app.URL.getScheme(arg.url)
 
     iframe_arg =
       rcrx_name: $view.C("name")[0].value
@@ -201,9 +201,9 @@ app.boot "/write/submit_thread.html", ->
       $iframe.off("load", fn)
 
       #2ch
-      if guess_res.bbs_type is "2ch"
+      if guess_res.bbsType is "2ch"
         #open2ch
-        if app.url.tsld(arg.url) is "open2ch.net"
+        if app.URL.tsld(arg.url) is "open2ch.net"
           tmp = arg.url.split("/")
           form_data =
             action: "#{scheme}://#{tmp[2]}/test/bbs.cgi"
@@ -231,7 +231,7 @@ app.boot "/write/submit_thread.html", ->
             textarea:
               MESSAGE: iframe_arg.rcrx_message
       #したらば
-      else if guess_res.bbs_type is "jbbs"
+      else if guess_res.bbsType is "jbbs"
         tmp = arg.url.split("/")
         form_data =
           action: "#{scheme}://jbbs.shitaraba.net/bbs/write.cgi/#{tmp[3]}/#{tmp[4]}/new/"
@@ -275,7 +275,7 @@ app.boot "/write/submit_thread.html", ->
 
   # 忍法帳関連処理
   do ->
-    return if app.url.tsld(arg.url) isnt "2ch.net"
+    return if app.URL.tsld(arg.url) isnt "2ch.net"
 
     app.Ninja.getCookie (cookies) ->
       backup = app.Ninja.getBackup()

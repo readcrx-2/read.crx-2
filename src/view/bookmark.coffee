@@ -43,7 +43,7 @@ app.boot "/view/bookmark.html", ->
     board_list = new Set()
     board_thread_table = new Map()
     for bookmark in app.bookmarkEntryList.getAllThreads()
-      board_url = app.url.threadToBoard(bookmark.url)
+      board_url = app.URL.threadToBoard(bookmark.url)
       board_list.add(board_url)
       if board_thread_table.has(board_url)
         board_thread_table.get(board_url).push(bookmark.url)
@@ -60,7 +60,7 @@ app.boot "/view/bookmark.html", ->
 
     fn = (res) ->
       if res?
-        delete loadingServer[app.url.getDomain(@prev)]
+        delete loadingServer[app.URL.getDomain(@prev)]
         count.loading--
         status = if res.status is "success" then "success" else "error"
         count[status]++
@@ -93,7 +93,7 @@ app.boot "/view/bookmark.html", ->
         keys = board_list.values()
         while !(board = keys.next()).done
           current = board.value
-          server = app.url.getDomain(current)
+          server = app.URL.getDomain(current)
           continue if loadingServer[server]
           loadingServer[server] = true
           board_list.delete(current)
@@ -114,7 +114,7 @@ app.boot "/view/bookmark.html", ->
 
   for a in app.bookmarkEntryList.getAllThreads()
     do (a) ->
-      boardUrl = app.url.threadToBoard(a.url)
+      boardUrl = app.URL.threadToBoard(a.url)
       app.BoardTitleSolver.ask(boardUrl).then( (boardName) ->
         threadList.addItem(
           title: a.title
@@ -125,7 +125,7 @@ app.boot "/view/bookmark.html", ->
           expired: a.expired
           board_url: boardUrl
           board_title: boardName
-          is_https: (app.url.getScheme(a.url) is "https")
+          is_https: (app.URL.getScheme(a.url) is "https")
         )
         return
       )

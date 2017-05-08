@@ -413,7 +413,7 @@ class UI.ThreadContent
 
           res.num = resNum
           res.class = []
-          scheme = app.url.getScheme(@url)
+          scheme = app.URL.getScheme(@url)
 
           res = app.ReplaceStrTxt.do(@url, document.title, res)
 
@@ -528,13 +528,13 @@ class UI.ThreadContent
                 '<a href="h$2" target="_blank">$1$2</a>')
               #Beアイコン埋め込み表示
               .replace ///^(?:\s*sssp|https?)://(img\.2ch\.net/(?:ico|premium)/[\w\-_]+\.gif)\s*<br>///, ($0, $1) =>
-                if app.url.tsld(@url) in ["2ch.net", "bbspink.com", "2ch.sc"]
+                if app.URL.tsld(@url) in ["2ch.net", "bbspink.com", "2ch.sc"]
                   """<img class="beicon" src="/img/dummy_1x1.webp" data-src="#{scheme}://#{$1}"><br>"""
                 else
                   $0
               #エモーティコン埋め込み表示
               .replace ///(?:\s*sssp|https?)://(img\.2ch\.net/emoji/[\w\-_]+\.gif)\s*///g, ($0, $1) =>
-                if app.url.tsld(@url) in ["2ch.net", "bbspink.com", "2ch.sc"]
+                if app.URL.tsld(@url) in ["2ch.net", "bbspink.com", "2ch.sc"]
                   """<img class="beicon emoticon" src="/img/dummy_1x1.webp" data-src="#{scheme}://#{$1}">"""
                 else
                   $0
@@ -833,9 +833,9 @@ class UI.ThreadContent
           checkUrl = (a) ->
             return new Promise( (resolve, reject) ->
               if app.config.get("expand_short_url") isnt "none"
-                if app.url.SHORT_URL_REG.test(a.href)
+                if app.URL.SHORT_URL_REG.test(a.href)
                   # 短縮URLの展開
-                  app.url.expandShortURL(a.href).then( (finalUrl) ->
+                  app.URL.expandShortURL(a.href).then( (finalUrl) ->
                     newLink = addExpandedURL(a, finalUrl)
                     if finalUrl
                       resolve({a, link: newLink.href})

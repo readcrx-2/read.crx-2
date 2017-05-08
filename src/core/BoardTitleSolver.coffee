@@ -44,7 +44,7 @@ class app.BoardTitleSolver
     return @getBBSMenu().then( (bbsmenu) ->
       return new Promise( (resolve, reject) ->
         # スキーム違いについても確認をする
-        url2 = app.url.changeScheme(url)
+        url2 = app.URL.changeScheme(url)
         if bbsmenu[url]?
           resolve(bbsmenu[url])
         else if bbsmenu[url2]?
@@ -64,10 +64,10 @@ class app.BoardTitleSolver
   @searchFromBookmark: (url) ->
     return new Promise( (resolve, reject) ->
       # スキーム違いについても確認をする
-      url2 = app.url.changeScheme(url)
+      url2 = app.URL.changeScheme(url)
       bookmark = app.bookmark.get(url) ? app.bookmark.get(url2)
       if bookmark
-        if app.url.tsld(bookmark.url) is "2ch.net"
+        if app.URL.tsld(bookmark.url) is "2ch.net"
           resolve(bookmark.title.replace("＠2ch掲示板", ""))
         else
           resolve(bookmark.title)
@@ -98,7 +98,7 @@ class app.BoardTitleSolver
       return new Promise( (resolve, reject) ->
         if res = /^BBS_TITLE=(.+)$/m.exec(text)
           title = res[1].replace("＠2ch掲示板", "")
-          tsld = app.url.tsld(url)
+          tsld = app.URL.tsld(url)
           if tsld is "2ch.sc"
             title += "_sc"
           else if tsld is "open2ch.net"
@@ -120,7 +120,7 @@ class app.BoardTitleSolver
   ###
   @searchFromJbbsAPI: (url) ->
     tmp = url.split("/")
-    scheme = app.url.getScheme(url)
+    scheme = app.URL.getScheme(url)
     ajax_path = "#{scheme}://jbbs.shitaraba.net/bbs/api/setting.cgi/#{tmp[3]}/#{tmp[4]}/"
 
     return new Promise( (resolve, reject) ->
@@ -154,7 +154,7 @@ class app.BoardTitleSolver
   @return Promise
   ###
   @ask: (url) ->
-    url = app.url.fix(url)
+    url = app.URL.fix(url)
 
     #bbsmenu内を検索
     return @searchFromBBSMenu(url)
@@ -164,14 +164,14 @@ class app.BoardTitleSolver
       )
       #SETTING.TXTからの取得を試みる
       .catch( =>
-        if app.url.guess_type(url).bbs_type is "2ch"
+        if app.URL.guessType(url).bbsType is "2ch"
           return @searchFromSettingTXT(url)
         else
           return Promise.reject()
       )
       #したらばのAPIから取得を試みる
       .catch( =>
-        if app.url.guess_type(url).bbs_type is"jbbs"
+        if app.URL.guessType(url).bbsType is"jbbs"
           return @searchFromJbbsAPI(url)
         else
           return Promise.reject()

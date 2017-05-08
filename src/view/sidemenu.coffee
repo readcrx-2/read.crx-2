@@ -13,7 +13,7 @@ app.boot "/view/sidemenu.html", ["bbsmenu"], (BBSMenu) ->
     a.title = board.title
     a.textContent = board.title
     a.href = app.safe_href(board.url)
-    a.classList.add("https") if app.url.getScheme(board.url) is "https"
+    a.classList.add("https") if app.URL.getScheme(board.url) is "https"
     li.appendChild(a)
     li
 
@@ -119,7 +119,7 @@ app.boot "/view/sidemenu.html", ["bbsmenu"], (BBSMenu) ->
             frag.appendChild(ul)
 
         # 2ch.netと2ch.scの板・サーバー情報の登録
-        app.url.pushBoardToServerInfo(boardNet, boardSc)
+        app.URL.pushBoardToServerInfo(boardNet, boardSc)
         boardNet = []   # メモリ解放用
         boardSc = []    # 　　〃
 

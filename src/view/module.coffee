@@ -18,7 +18,7 @@ do ->
       "NG"
       "notification"
       "ReadState"
-      "url"
+      "URL"
       "util"
     ]
 
@@ -570,14 +570,14 @@ class app.view.TabContentView extends app.view.PaneContentView
       url = @$element.attr("data-url")
 
       if ///^https?://\w///.test(url)
-        if app.url.getScheme(url) is "https"
+        if app.URL.getScheme(url) is "https"
           $button.addClass("https")
         else
           $button.removeClass("https")
 
         $button.on "click", =>
           app.message.send "open", {
-            url: app.url.changeScheme(url),
+            url: app.URL.changeScheme(url),
             new_tab: app.config.get("button_change_scheme_newtab") is "on"
           }
           return
@@ -685,7 +685,7 @@ class app.view.TabContentView extends app.view.PaneContentView
     mode = reg.exec(url)
     if mode
       @$element.find(".button_change_netsc").on "click", =>
-        newUrl = app.url.exchangeNetSc(url)
+        newUrl = app.URL.exchangeNetSc(url)
         if newUrl
           app.message.send "open", {
             url: newUrl,
@@ -696,7 +696,7 @@ class app.view.TabContentView extends app.view.PaneContentView
       @$element.find(".button_change_netsc").remove()
 
     #2ch.scでscの投稿だけ表示(スレ&レス)
-    if app.url.tsld(url) is "2ch.sc"
+    if app.URL.tsld(url) is "2ch.sc"
       @$element.find(".button_only_sc").on "click", =>
         @$element.find(".net").toggleClass("hidden")
         return

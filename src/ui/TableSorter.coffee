@@ -13,7 +13,7 @@ class UI.TableSorter
   constructor: (@table) ->
     @table.classList.add("table_sort")
     @table.addEventListener "click", (e) =>
-      return if e.target.nodeName isnt "TH"
+      return if e.target.tagName isnt "TH"
 
       th = e.target
       order = if th.classList.contains("table_sort_desc") then "asc" else "desc"
@@ -71,7 +71,7 @@ class UI.TableSorter
       data = {}
       for td in @table.querySelectorAll("td:nth-child(#{param.sortIndex + 1})")
         data[td.textContent] or= []
-        data[td.textContent].push(td.parentNode)
+        data[td.textContent].push(td.parentElement)
     else if param.sortAttribute?
       for tmp in @table.querySelectorAll(".table_sort_asc, .table_sort_desc")
         tmp.classList.remove("table_sort_asc")

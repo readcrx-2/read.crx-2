@@ -636,7 +636,7 @@ app.boot "/view/thread.html", ->
           app.contextMenus.update("add_link_to_ngwords", {
             enabled: true,
             onclick: (info, tab) =>
-              app.NG.add(@parentNode.href)
+              app.NG.add(@parentElement.href)
               return
           })
         when "VIDEO"

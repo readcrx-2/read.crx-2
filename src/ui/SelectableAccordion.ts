@@ -31,10 +31,10 @@ namespace UI {
 
       this.clearSelect();
 
-      if (target.nodeName === "H3") {
+      if (target.tagName === "H3") {
         this.close(target);
       }
-      else if (target.nodeName === "A") {
+      else if (target.tagName === "A") {
         targetHeader = <HTMLElement>target.parentElement.parentElement.previousElementSibling;
         if (!targetHeader.classList.contains("accordion_open")) {
           this.open(targetHeader);
@@ -66,11 +66,11 @@ namespace UI {
         for (key = 0; key < repeat; key++) {
           prevCurrent = current;
 
-          if (current.nodeName === "A" && current.parentElement.nextElementSibling) {
+          if (current.tagName === "A" && current.parentElement.nextElementSibling) {
             current = <HTMLElement>current.parentElement.nextElementSibling.firstElementChild;
           }
           else {
-            if (current.nodeName === "A") {
+            if (current.tagName === "A") {
               currentH3 = <HTMLElement>current.parentElement.parentElement.previousElementSibling;
             }
             else {
@@ -78,7 +78,7 @@ namespace UI {
             }
 
             nextH3 = <HTMLElement>currentH3.nextElementSibling;
-            while (nextH3 && nextH3.nodeName !== "H3") {
+            while (nextH3 && nextH3.tagName !== "H3") {
               nextH3 = <HTMLElement>nextH3.nextElementSibling;
             }
 
@@ -118,11 +118,11 @@ namespace UI {
         for (key = 0; key < repeat; key++) {
           prevCurrent = current;
 
-          if (current.nodeName === "A" && current.parentElement.previousElementSibling) {
+          if (current.tagName === "A" && current.parentElement.previousElementSibling) {
             current = <HTMLElement>current.parentElement.previousElementSibling.firstElementChild;
           }
           else {
-            if (current.nodeName === "A") {
+            if (current.tagName === "A") {
               currentH3 = <HTMLElement>current.parentElement.parentElement.previousElementSibling;
             }
             else {
@@ -130,7 +130,7 @@ namespace UI {
             }
 
             prevH3 = <HTMLElement>currentH3.previousElementSibling;
-            while (prevH3 && prevH3.nodeName !== "H3") {
+            while (prevH3 && prevH3.tagName !== "H3") {
               prevH3 = <HTMLElement>prevH3.previousElementSibling;
             }
 

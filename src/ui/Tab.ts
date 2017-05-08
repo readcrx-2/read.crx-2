@@ -48,7 +48,7 @@ namespace UI {
             if (e.which === 3) {
               return;
             }
-            if ((<HTMLElement>e.target).nodeName === "IMG") {
+            if ((<HTMLElement>e.target).tagName === "IMG") {
               return;
             }
 
@@ -63,7 +63,7 @@ namespace UI {
             e.preventDefault();
           })
           .on("click", "img", function () {
-            tab.remove(this.parentNode.getAttribute("data-tabid"));
+            tab.remove(this.parentElement.getAttribute("data-tabid"));
           });
 
       new UI.VirtualNotch(this.element.querySelector(".tab_tabbar"));

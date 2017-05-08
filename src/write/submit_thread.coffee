@@ -78,7 +78,7 @@ app.boot "/write/submit_thread.html", ->
     $button.addClass("close_preview")
     $button.textContent = "戻る"
     $button.on("click", ->
-      @.parentNode.remove()
+      @parentElement.remove()
     )
     $div.append($button)
     document.body.append($div)
@@ -98,7 +98,7 @@ app.boot "/write/submit_thread.html", ->
     $sage.checked = true
     $mail.disabled = true
   $view.C("sage")[0].on("change", ->
-    if @.checked
+    if @checked
       app.config.set("sage_flag", "on")
       $mail.disabled = true
     else

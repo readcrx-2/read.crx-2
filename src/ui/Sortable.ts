@@ -91,7 +91,7 @@ namespace UI {
           target.style.left = "initial";
           target.style.top = "initial";
           target = null;
-          this.parentNode.removeChild(this);
+          this.parentElement.removeChild(this);
         }
       };
 
@@ -114,8 +114,8 @@ namespace UI {
 
         if(clicks === 1) {
           target = e.target;
-          while (target.parentNode !== container) {
-            target = target.parentNode;
+          while (target.parentElement !== container) {
+            target = target.parentElement;
           }
 
           target.classList.add("sortable_dragging");

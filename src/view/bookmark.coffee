@@ -19,7 +19,7 @@ app.boot "/view/bookmark.html", ->
   trUpdatedObserver = new MutationObserver (records) ->
     for record in records
       if record.target.webkitMatchesSelector("tr.updated")
-        record.target.parentNode.appendChild(record.target)
+        record.target.parentElement.appendChild(record.target)
     return
 
   #リロード時処理
@@ -76,7 +76,7 @@ app.boot "/view/bookmark.html", ->
             .find(".table_sort_desc, .table_sort_asc")
               .removeClass("table_sort_desc table_sort_asc")
           for tr in $view[0].querySelectorAll("tr:not(.updated)")
-            tr.parentNode.appendChild(tr)
+            tr.parentElement.appendChild(tr)
           trUpdatedObserver.disconnect()
           $view.removeClass("loading")
           if app.config.get("auto_bookmark_notify") is "on" and auto

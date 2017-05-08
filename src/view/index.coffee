@@ -456,7 +456,7 @@ app.main = ->
       .one "click", "a, div:last-child", (e) ->
         UI.Animate.fadeOut(e.delegateTarget).on("finish", =>
           t = e.delegateTarget
-          t.parentNode.removeChild(t)
+          t.parentElement.removeChild(t)
         )
         return
       .appendTo("#app_notice_container")

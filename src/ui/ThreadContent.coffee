@@ -758,12 +758,12 @@ class UI.ThreadContent
             while true
               pre = sib
               sib = pre.nextSibling
-              if !sib? or sib.nodeName is "BR"
+              if !sib? or sib.tagName is "BR"
                 if sib?.nextSibling?.classList?.contains("thumbnail")
                   continue
                 if not pre.classList?.contains("thumbnail")
-                  sourceA.parentNode.insertBefore(document.createElement("br"), sib)
-                sourceA.parentNode.insertBefore(thumbnail, sib)
+                  sourceA.parentElement.insertBefore(document.createElement("br"), sib)
+                sourceA.parentElement.insertBefore(thumbnail, sib)
                 break
             return
 
@@ -791,12 +791,12 @@ class UI.ThreadContent
             while true
               pre = sib
               sib = pre.nextSibling
-              if !sib? or sib.nodeName is "BR"
+              if !sib? or sib.tagName is "BR"
                 if sib?.nextSibling?.classList?.contains("expandedURL")
                   continue
                 if not pre.classList?.contains("expandedURL")
-                  sourceA.parentNode.insertBefore(document.createElement("br"), sib)
-                sourceA.parentNode.insertBefore(expandedURL, sib)
+                  sourceA.parentElement.insertBefore(document.createElement("br"), sib)
+                sourceA.parentElement.insertBefore(expandedURL, sib)
                 break
 
             return expandedURLLink

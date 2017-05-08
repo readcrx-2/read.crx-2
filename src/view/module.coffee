@@ -231,20 +231,20 @@ class app.view.IframeView extends app.view.View
         return
 
       # Windows版ChromeでのBackSpace誤爆対策
-      if e.which is 8 and not (e.target.nodeName in ["INPUT", "TEXTAREA"])
+      if e.which is 8 and not (e.target.tagName in ["INPUT", "TEXTAREA"])
         e.preventDefault()
 
       # Esc (空白の入力欄に入力された場合)
       else if (
         e.which is 27 and
-        e.target.nodeName in ["INPUT", "TEXTAREA"] and
+        e.target.tagName in ["INPUT", "TEXTAREA"] and
         e.target.value is "" and
         not e.target.classList.contains("command")
       )
         @$element.find(".content").focus()
 
       # 入力欄内では発動しない系
-      else if not (e.target.nodeName in ["INPUT", "TEXTAREA"])
+      else if not (e.target.tagName in ["INPUT", "TEXTAREA"])
         switch (e.which)
           # Enter
           when 13
@@ -366,7 +366,7 @@ class app.view.PaneContentView extends app.view.IframeView
           type: "request_focus"
           focus: true
 
-        if e.target.nodeName in ["INPUT", "TEXTAREA"]
+        if e.target.tagName in ["INPUT", "TEXTAREA"]
           message.focus = false
 
         parent.postMessage(JSON.stringify(message), location.origin)

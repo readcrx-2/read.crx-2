@@ -1,4 +1,5 @@
 ///<reference path="../node_modules/@types/jquery/index.d.ts" />
+///<reference path="./shortQuery.d.ts" />
 
 interface Window {
   chrome: any;

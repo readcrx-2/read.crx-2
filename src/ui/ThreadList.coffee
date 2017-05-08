@@ -62,45 +62,47 @@ class UI.ThreadList
 
     that = @
 
-    table = @table
-    $table = $(table)
-    $thead = $("<thead>").appendTo($table)
-    $table.append("<tbody>")
-    $tr = $("<tr>").appendTo($thead)
+    $table = @table
+    $thead = $__("thead")
+    $table.append($thead)
+    $table.append($__("tbody"))
+    $tr = $__("tr")
+    $thead.append($tr)
 
     #項目のツールチップ表示
-    $table
-      .on "mouseenter", "td", ->
-        app.defer =>
-          @title = @textContent
+    $table.on("mouseenter", (e) ->
+      if e.target.tagName is "TD"
+        app.defer( ->
+          e.target.title = e.target.textContent
           return
-        return
-      .on "mouseleave", "td", ->
-        @removeAttribute("title")
-        return
+        )
+      return
+    )
+    $table.on("mouseleave", (e) ->
+      if e.target.tagName is "TD"
+        e.target.removeAttr("title")
+      return
+    )
 
+    selector = {}
+    column = {}
+    i = 0
     for key in Object.keys(keyToLabel) when key in option.th
-      $("<th>",
-        class: key.replace(/([A-Z])/g, ($0, $1) -> "_" + $1.toLowerCase()),
-        text: keyToLabel[key]
-      ).appendTo($tr)
+      i++
+      $th = $__("th")
+      $th.setClass(key.replace(/([A-Z])/g, ($0, $1) -> "_" + $1.toLowerCase()))
+      $th.textContent = keyToLabel[key]
+      $tr.append($th)
       @_flg[key] = true
-
-    selector =
-      bookmark: "td:nth-child(#{$table.find("th.bookmark").index() + 1})"
-      title: "td:nth-child(#{$table.find("th.title").index() + 1})"
-      res: "td:nth-child(#{$table.find("th.res").index() + 1})"
-      unread: "td:nth-child(#{$table.find("th.unread").index() + 1})"
-      heat: "td:nth-child(#{$table.find("th.heat").index() + 1})"
-      writtenRes: "td:nth-child(#{$table.find("th.written_res").index() + 1})"
-      viewedDate: "td:nth-child(#{$table.find("th.viewed_date").index() + 1})"
+      selector[key] = "td:nth-child(#{i})"
+      column[key] = i
 
     #ブックマーク更新時処理
     app.message.add_listener "bookmark_updated", (msg) =>
       return if msg.bookmark.type isnt "thread"
 
       if msg.type is "expired"
-        $tr = $table.find("tr[data-href=\"#{msg.bookmark.url}\"]")
+        $tr = $table.$("tr[data-href=\"#{msg.bookmark.url}\"]")
         if msg.bookmark.expired
           $tr.addClass("expired")
           if app.config.get("bookmark_show_dat") is "off"
@@ -111,16 +113,16 @@ class UI.ThreadList
           $tr.removeClass("expired")
 
       if msg.type is "errored"
-        $tr = $table.find("tr[data-href=\"#{msg.bookmark.url}\"]")
+        $tr = $table.$("tr[data-href=\"#{msg.bookmark.url}\"]")
         $tr.addClass("errored")
 
       if @_flg.bookmark
         if msg.type is "added"
-          $tr = $table.find("tr[data-href=\"#{msg.bookmark.url}\"]")
-          $tr.find(selector.bookmark).text("★")
+          $tr = $table.$("tr[data-href=\"#{msg.bookmark.url}\"]")
+          $tr.$(selector.bookmark).textContent = "★"
         else if msg.type is "removed"
-          $tr = $table.find("tr[data-href=\"#{msg.bookmark.url}\"]")
-          $tr.find(selector.bookmark).text("")
+          $tr = $table.$("tr[data-href=\"#{msg.bookmark.url}\"]")
+          $tr.$(selector.bookmark).textContent = ""
 
       if @_flg.bookmarkAddRm
         if msg.type is "added"
@@ -139,26 +141,26 @@ class UI.ThreadList
             return
           )
         else if msg.type is "removed"
-          $table.find("tr[data-href=\"#{msg.bookmark.url}\"]").remove()
+          $table.$("tr[data-href=\"#{msg.bookmark.url}\"]").remove()
 
       if @_flg.res and msg.type is "res_count"
-        tr = table.querySelector("tr[data-href=\"#{msg.bookmark.url}\"]")
+        tr = $table.$("tr[data-href=\"#{msg.bookmark.url}\"]")
         if tr
-          td = tr.querySelector(selector.res)
+          td = tr.$(selector.res)
           old_res_count = +td.textContent
           td.textContent = msg.bookmark.res_count
           td.setAttr("data-beforeres", old_res_count)
           if @_flg.unread
-            td = tr.querySelector(selector.unread)
+            td = tr.$(selector.unread)
             old_unread = +td.textContent
             unread = old_unread + (msg.bookmark.res_count - old_res_count)
             td.textContent = unread or ""
             if unread > 0
-              tr.classList.add("updated")
+              tr.addClass("updated")
             else
-              tr.classList.remove("updated")
+              tr.removeClass("updated")
           if @_flg.heat
-            td = tr.querySelector(selector.heat)
+            td = tr.$(selector.heat)
             td.textContent = ThreadList._calcHeat(
               Date.now()
               /\/(\d+)\/$/.exec(msg.bookmark.url)[1] * 1000
@@ -166,131 +168,134 @@ class UI.ThreadList
             )
 
       if @_flg.title and msg.type is "title"
-        $tr = $table.find("tr[data-href=\"#{msg.bookmark.url}\"]")
-        $tr.find(selector.title).text(msg.bookmark.title)
+        $tr = $table.$("tr[data-href=\"#{msg.bookmark.url}\"]")
+        $tr.$(selector.title).textContent = msg.bookmark.title
       return
 
     #未読数更新
     if @_flg.unread
       app.message.add_listener "read_state_updated", (msg) ->
-        tr = table.querySelector("tr[data-href=\"#{msg.read_state.url}\"]")
+        tr = $table.$("tr[data-href=\"#{msg.read_state.url}\"]")
         if tr
-          res = tr.querySelector(selector.res)
-          unread = tr.querySelector(selector.unread)
+          res = tr.$(selector.res)
+          unread = tr.$(selector.unread)
           unreadCount = Math.max(+res.textContent - msg.read_state.read, 0)
           unread.textContent = unreadCount or ""
           if unreadCount > 0
-            tr.classList.add("updated")
+            tr.addClass("updated")
           else
-            tr.classList.remove("updated")
+            tr.removeClass("updated")
         return
 
       app.message.add_listener "read_state_removed", (msg) ->
-        tr = table.querySelector("tr[data-href=\"#{msg.url}\"]")
+        tr = $table.$("tr[data-href=\"#{msg.url}\"]")
         if tr
-          tr.querySelector(selector.unread).textContent = ""
-          tr.classList.remove("updated")
+          tr.$(selector.unread).textContent = ""
+          tr.removeClass("updated")
         return
 
     #リスト内検索
     if typeof option.searchbox is "object"
-      title_index = $table.find("th.title").index()
-      $searchbox = $(option.searchbox)
+      title_index = column.title
+      $searchbox = option.searchbox
 
       _isComposing = false
-      $searchbox
-        .on "compositionstart", ->
-          _isComposing = true
-          return
-        .on "compositionend", ->
-          _isComposing = false
-          $(@).triggerHandler("input")
-          return
-        .on "input", ->
-          return if _isComposing
-          if @value isnt ""
-            $table.table_search("search", {
-              query: @value, target_col: title_index})
-            hitCount = $table.attr("data-table_search_hit_count")
-            $(@).siblings(".hit_count").text(hitCount + "hit").removeClass("hidden")
-          else
-            $table.table_search("clear")
-            $(@).siblings(".hit_count").text("").addClass("hidden")
-          return
-        .on "keyup", (e) ->
-          if e.which is 27 #Esc
-            @value = ""
-            $(@).triggerHandler("input")
-          return
+      $searchbox.on("compositionstart", ->
+        _isComposing = true
+        return
+      )
+      $searchbox.on("compositionend", ->
+        _isComposing = false
+        @dispatchEvent(new Event("input"))
+        return
+      )
+      $searchbox.on("input", ->
+        return if _isComposing
+        if @value isnt ""
+          UI.table_search($table, "search", {
+            query: @value, target_col: title_index})
+          hitCount = $table.getAttr("data-table_search_hit_count")
+          for dom in @child() when dom.hasClass("hit_count")
+            dom.textContent = hitCount + "hit"
+            dom.removeClass("hidden")
+        else
+          UI.table_search($table, "clear")
+          for dom in @child() when dom.hasClass("hit_count")
+            dom.textContent = ""
+            dom.addClass("hidden")
+        return
+      )
+      $searchbox.on("keyup", (e) ->
+        if e.which is 27 #Esc
+          @value = ""
+          @dispatchEvent(new Event("input"))
+        return
+      )
 
     #コンテキストメニュー
     if @_flg.bookmark or @_flg.bookmarkAddRm or @_flg.writtenRes or @_flg.viewedDate
       do ->
-        onClick= ->
-          $this = $(@)
-          $tr = $($this.parent().data("contextmenu_source"))
+        $table.on("contextmenu", (e) ->
+          return unless e.matches("tbody > tr")
+          if e.type is "contextmenu"
+            e.preventDefault()
 
-          threadURL = $tr.attr("data-href")
-          threadTitle = $tr.find(selector.title).text()
-          threadRes = $tr.find(selector.res).text()
-          threadWrittenRes = parseInt($tr.find(selector.writtenRes).text())
-          date = $tr.find(selector.viewedDate).text()
-          if date? and date isnt ""
-            date_ = /(\d{4})\/(\d\d)\/(\d\d) (\d\d):(\d\d)/.exec(date)
-            threadViewedDate = new Date(date_[1], date_[2]-1, date_[3], date_[4], date_[5]).valueOf()
+          app.defer( =>
+            $menu = $$.I("template_thread_list_contextmenu").content.$("thread_list_contextmenu").cloneNode(true)
+            $menu.dataset.contextmenu_source = @
+            $table.closest(".view").append($menu)
 
-          if $this.hasClass("add_bookmark")
-            app.bookmark.add(threadURL, threadTitle, threadRes)
-          else if $this.hasClass("del_bookmark")
-            app.bookmark.remove(threadURL)
-          else if $this.hasClass("del_history")
-            app.History.remove(threadURL, threadViewedDate)
-            $tr.remove()
-          else if $this.hasClass("del_writehistory")
-            app.WriteHistory.remove(threadURL, threadWrittenRes)
-            $tr.remove()
-          else if $this.hasClass("del_read_state")
-            app.ReadState.remove(threadURL)
+            url = @getAttr("data-href")
 
-          $this.parent().remove()
-          return
+            if app.bookmark.get(url)
+              $menu.C("add_bookmark")[0].remove()
+            else
+              $menu.C("del_bookmark")[0].remove()
 
-        $table
-          .on "contextmenu", "tbody > tr", (e) ->
-            if e.type is "contextmenu"
-              e.preventDefault()
+            if (
+              not that._flg.unread or
+              not /^\d+$/.test(@$(selector.unread).textContent) or
+              app.bookmark.get(url)?
+            )
+              $menu.C("del_read_state")[0].remove()
 
-            app.defer =>
-              $menu = $(
-                $("#template_thread_list_contextmenu")
-                  .prop("content")
-                    .querySelector(".thread_list_contextmenu")
-              ).clone()
+            $menu.on("click", fn = (e) ->
+              return if e.target.tagName isnt "LI"
+              $menu.off("click", fn)
 
-              $menu
-                .data("contextmenu_source", @)
-                .appendTo($table.closest(".view"))
+              $tr = @dataset.contextmenu_source
 
-              url = @getAttribute("data-href")
+              threadURL = $tr.getAttr("data-href")
+              threadTitle = $tr.$(selector.title).textContent
+              threadRes = $tr.$(selector.res).textContent
+              threadWrittenRes = parseInt($tr.$(selector.writtenRes).textContent)
+              date = $tr.$(selector.viewedDate).textContent
+              if date? and date isnt ""
+                date_ = /(\d{4})\/(\d\d)\/(\d\d) (\d\d):(\d\d)/.exec(date)
+                threadViewedDate = new Date(date_[1], date_[2]-1, date_[3], date_[4], date_[5]).valueOf()
 
-              if app.bookmark.get(url)
-                $menu.find(".add_bookmark").remove()
-              else
-                $menu.find(".del_bookmark").remove()
+              if e.target.hasClass("add_bookmark")
+                app.bookmark.add(threadURL, threadTitle, threadRes)
+              else if e.target.hasClass("del_bookmark")
+                app.bookmark.remove(threadURL)
+              else if e.target.hasClass("del_history")
+                app.History.remove(threadURL, threadViewedDate)
+                $tr.remove()
+              else if e.target.hasClass("del_writehistory")
+                app.WriteHistory.remove(threadURL, threadWrittenRes)
+                $tr.remove()
+              else if e.target.hasClass("del_read_state")
+                app.ReadState.remove(threadURL)
 
-              if (
-                not that._flg.unread or
-                not /^\d+$/.test(@querySelector(selector.unread).textContent) or
-                app.bookmark.get(url)?
-              )
-                $menu.find(".del_read_state").remove()
-
-              $menu.one("click", "li", onClick)
-
-              $.contextmenu($menu, e.clientX, e.clientY)
+              @remove()
               return
+            )
+            UI.contextmenu($menu, e.clientX, e.clientY)
             return
+          )
           return
+        )
+      return
     return
 
   ###*
@@ -333,7 +338,7 @@ class UI.ThreadList
   addItem: (arg) ->
     unless Array.isArray(arg) then arg = [arg]
 
-    tbody = @table.querySelector("tbody")
+    $tbody = @table.$("tbody")
     now = Date.now()
 
     html = ""
@@ -440,14 +445,14 @@ class UI.ThreadList
 
       html += "<tr class=\"#{trClassName}\"" + tmpHTML + "</tr>"
 
-    tbody.insertAdjacentHTML("BeforeEnd", html)
+    $tbody.insertAdjacentHTML("BeforeEnd", html)
     return
 
   ###*
   @method empty
   ###
   empty: ->
-    $(@table).find("tbody").empty()
+    @table.$("tbody").innerHTML = ""
     return
 
   ###*
@@ -455,7 +460,7 @@ class UI.ThreadList
   @return {Element|null}
   ###
   getSelected: ->
-    @table.querySelector("tr.selected")
+    @table.$("tr.selected")
 
   ###*
   @method select
@@ -465,12 +470,12 @@ class UI.ThreadList
     @clearSelect()
 
     if typeof target is "number"
-      target = @table.querySelector("tbody > tr:nth-child(#{target}), tbody > tr:last-child")
+      target = @table.$("tbody > tr:nth-child(#{target}), tbody > tr:last-child")
 
     unless target
       return
 
-    target.classList.add("selected")
+    target.addClass("selected")
     target.scrollIntoViewIfNeeded()
     return
 
@@ -484,16 +489,16 @@ class UI.ThreadList
     if current
       for [0...repeat]
         prevCurrent = current
-        current = current.nextElementSibling
+        current = current.next()
 
         while current and current.offsetHeight is 0
-          current = current.nextElementSibling
+          current = current.next()
 
         if not current
           current = prevCurrent
           break
     else
-      current = @table.querySelector("tbody > tr")
+      current = @table.$("tbody > tr")
 
     if current
       @select(current)
@@ -509,16 +514,16 @@ class UI.ThreadList
     if current
       for [0...repeat]
         prevCurrent = current
-        current = current.previousElementSibling
+        current = current.prev()
 
         while current and current.offsetHeight is 0
-          current = current.previousElementSibling
+          current = current.prev()
 
         if not current
           current = prevCurrent
           break
     else
-      current = @table.querySelector("tbody > tr")
+      current = @table.$("tbody > tr")
 
     if current
       @select(current)
@@ -528,5 +533,5 @@ class UI.ThreadList
   @method clearSelect
   ###
   clearSelect: ->
-    @getSelected()?.classList.remove("selected")
+    @getSelected()?.removeClass("selected")
     return

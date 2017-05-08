@@ -17,7 +17,8 @@ app.boot "/view/board.html", ->
   })
   $view.data("threadList", threadList)
   $view.data("selectableItemList", threadList)
-  $table.table_sort()
+  tableSorter = new UI.TableSorter($table[0])
+  $table.data("tableSorter", tableSorter)
   $table.find("th.res, th.unread, th.heat").attr("data-table_sort_type", "num")
   $table.appendTo(".content")
 
@@ -47,10 +48,10 @@ app.boot "/view/board.html", ->
       .each ->
         tmp = app.config.get("last_board_sort_config")
         if tmp?
-          $(@).table_sort("update", JSON.parse(tmp))
+          tableSorter.updateSnake(JSON.parse(tmp))
         return
-      .on "table_sort_updated", (e, ex) ->
-        app.config.set("last_board_sort_config", JSON.stringify(ex))
+      .on "table_sort_updated", ({detail}) ->
+        app.config.set("last_board_sort_config", JSON.stringify(detail))
         return
       #.sort_item_selectorが非表示の時、各種項目のソート切り替えを
       #降順ソート→昇順ソート→標準ソートとする
@@ -58,11 +59,11 @@ app.boot "/view/board.html", ->
         return if $view.find(".sort_item_selector").is(":visible")
         $(@).closest("table").one "table_sort_before_update", (e) ->
           e.preventDefault()
-          $(@).table_sort("update", {
-            sort_attribute: "data-thread_number"
-            sort_order: "asc"
-            sort_type: "num"
-          })
+          tableSorter.update(
+            sortAttribute: "data-thread_number"
+            sortOrder: "asc"
+            sortType: "num"
+          )
           return
         return
 
@@ -130,7 +131,7 @@ app.boot "/view/board.html", ->
                 app.message.send("open", url: thread.url, new_tab: true)
                 break
 
-        $view.find("table").table_sort("update")
+        tableSorter.update()
         return
 
       .catch ->

@@ -12,7 +12,8 @@ app.boot "/view/bookmark.html", ->
   $table.appendTo(".content")
   $table.find("th.res, th.unread, th.heat").attr("data-table_sort_type", "num")
   $table.find("th.unread").addClass("table_sort_desc")
-  $table.table_sort()
+  tableSorter = new UI.TableSorter($table[0])
+  $table.data("tableSorter", tableSorter)
 
   new app.view.TabContentView(document.documentElement)
 
@@ -131,7 +132,7 @@ app.boot "/view/bookmark.html", ->
       )
 
   app.message.send("request_update_read_state", {})
-  $table.table_sort("update")
+  tableSorter.update()
 
   $view.trigger("view_loaded")
 

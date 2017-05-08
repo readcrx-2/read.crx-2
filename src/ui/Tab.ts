@@ -14,59 +14,63 @@ namespace UI {
       return "tabId" + ++Tab.idSeed;
     }
 
-    constructor (private element: Element) {
+    constructor (private $element: Element) {
       var tab = this;
 
-      $(this.element)
-        .addClass("tab")
-        .append(
-          $("<ul>", {class: "tab_tabbar"}),
-          $("<div>", {class: "tab_container"})
-        )
-        .find(".tab_tabbar")
-          .on("notchedmousewheel", (e) => {
-            if (app.config.get("mousewheel_change_tab") === "on") {
-              var tmp: string, next: Element;
+      var $ele = this.$element;
+      $ele.addClass("tab");
+      var $ul = $__("ul");
+      $ul.addClass("tab_tabbar");
+      $ul.on("notchedmousewheel", (e) => {
+        if (app.config.get("mousewheel_change_tab") === "on") {
+          var tmp: string, next: HTMLElement;
 
-              e.preventDefault();
+          e.preventDefault();
 
-              if ((<any>e.originalEvent).wheelDelta < 0) {
-                tmp = "previousSibling";
-              }
-              else {
-                tmp = "nextSibling";
-              }
+          if ((<any>e.originalEvent).wheelDelta < 0) {
+            tmp = "prev";
+          }
+          else {
+            tmp = "next";
+          }
 
-              next = (tab.element.querySelector("li.tab_selected") || {})[tmp];
+          next = (tab.$element.$("li.tab_selected") || {})[tmp]();
 
-              if (next) {
-                tab.update(next.getAttribute("data-tabid"), {selected: true});
-              }
-            }
-          })
-          .on("mousedown", "li", function (e) {
-            if (e.which === 3) {
-              return;
-            }
-            if ((<HTMLElement>e.target).tagName === "IMG") {
-              return;
-            }
+          if (next) {
+            tab.update(next.dataset.tabid, {selected: true});
+          }
+        }
+      });
+      $ul.on("mousedown", function (e) {
+        if ((<HTMLElement>e.target).tagName === "IMG") {
+          e.preventDefault();
+          return;
+        }
+        if ((<HTMLElement>e.target).tagName !== "LI") {
+          return;
+        }
+        if (e.which === 3) {
+          return;
+        }
 
-            if (e.which === 2 && !this.classList.contains("tab_locked")) {
-              tab.remove(this.getAttribute("data-tabid"));
-            }
-            else {
-              tab.update(this.getAttribute("data-tabid"), {selected: true});
-            }
-          })
-          .on("mousedown", "img", (e) => {
-            e.preventDefault();
-          })
-          .on("click", "img", function () {
-            tab.remove(this.parentElement.getAttribute("data-tabid"));
-          });
-
-      new UI.VirtualNotch(this.element.querySelector(".tab_tabbar"));
+        if (e.which === 2 && !this.hasClass("tab_locked")) {
+          tab.remove(this.dataset.tabid);
+        }
+        else {
+          tab.update(this.dataset.tabid, {selected: true});
+         }
+      });
+      $ul.on("click", function (e) {
+        var target = <HTMLElement>e.target;
+        if (target.tagName === "IMG") {
+          tab.remove(target.parent().dataset.tabid);
+        }
+      });
+      new UI.VirtualNotch($ul);
+      $ele.append($ul);
+      var $div = $__("div");
+      $div.addClass("tab_container");
+      $ele.append($div);
 
       window.addEventListener("message", (e) => {
         var message, tabId: string, history;
@@ -85,11 +89,11 @@ namespace UI {
           return;
         }
 
-        if (!(<HTMLElement>this.element).contains(<HTMLElement>e.source.frameElement)) {
+        if (!(<HTMLElement>this.$element).contains(<HTMLElement>e.source.frameElement)) {
           return;
         }
 
-        tabId = e.source.frameElement.getAttribute("data-tabid");
+        tabId = (<HTMLElement>e.source.frameElement).dataset.tabid;
         history = this.historyStore[tabId];
 
         if (message.type === "requestTabHistory") {
@@ -141,15 +145,15 @@ namespace UI {
     getAll (): any {
       var li: HTMLLIElement, tmp, res = [];
 
-      tmp = Array.from(this.element.querySelectorAll("li"));
+      tmp = Array.from(this.$element.$$("li"));
 
       for (li of tmp) {
         res.push({
-          tabId: li.getAttribute("data-tabid"),
-          url: li.getAttribute("data-tabsrc"),
+          tabId: li.dataset.tabid,
+          url: li.dataset.tabsrc,
           title: li.title,
-          selected: li.classList.contains("tab_selected"),
-          locked: li.classList.contains("tab_locked")
+          selected: li.hasClass("tab_selected"),
+          locked: li.hasClass("tab_locked")
         });
       }
 
@@ -159,13 +163,13 @@ namespace UI {
     getSelected (): Object {
       var li: HTMLLIElement;
 
-      if (li = <HTMLLIElement>this.element.querySelector("li.tab_selected")) {
+      if (li = <HTMLLIElement>this.$element.$("li.tab_selected")) {
         return {
-          tabId: li.getAttribute("data-tabid"),
-          url: li.getAttribute("data-tabsrc"),
+          tabId: li.dataset.tabid,
+          url: li.dataset.tabsrc,
           title: li.title,
           selected: true,
-          locked: li.classList.contains("tab_locked")
+          locked: li.hasClass("tab_locked")
         };
       }
       else {
@@ -193,24 +197,25 @@ namespace UI {
       };
 
       // 既存のタブが一つも無い場合、強制的にselectedオン
-      if (!this.element.querySelector(".tab_tabbar > li")) {
+      if (!this.$element.$(".tab_tabbar > li")) {
         param.selected = true;
       }
 
-      $("<li>")
-        .attr({"data-tabid": tabId, "data-tabsrc": url})
-        .append(
-          $("<span>"),
-          $("<img>", {src: "/img/close_16x16.webp", title: "閉じる"})
-        )
-        .appendTo(this.element.querySelector(".tab_tabbar"));
+      var $li = $__("li");
+      $li.dataset.tabid = tabId;
+      $li.dataset.tabsrc = url;
+      $li.append($__("span"));
+      var $img = $__("img");
+      $img.src = "/img/close_16x16.webp";
+      $img.title = "閉じる";
+      $li.append($img);
+      this.$element.$(".tab_tabbar").append($li);
 
-      $("<iframe>", {
-          src: param.lazy ? "/view/empty.html" : url,
-          class: "tab_content",
-          "data-tabid": tabId
-        })
-        .appendTo(this.element.querySelector(".tab_container"));
+      var $iframe = $__("iframe");
+      $iframe.src = param.lazy ? "/view/empty.html" : url;
+      $iframe.addClass("tab_content");
+      $iframe.dataset.tabid = tabId;
+      this.$element.$(".tab_container").append($iframe);
 
       this.update(tabId, {title: param.title, selected: param.selected, locked: param.locked});
 
@@ -227,7 +232,7 @@ namespace UI {
         _internal?: boolean;
       }
     ): void {
-      var history, $iframe: JQuery, tmp;
+      var history, $tmptab, $iframe, tmp;
 
       if (typeof param.url === "string") {
         if (!param._internal) {
@@ -237,37 +242,33 @@ namespace UI {
           history.current++;
         }
 
-        $(this.element)
-          .find(`li[data-tabid=\"${tabId}\"]`)
-            .attr("data-tabsrc", param.url)
-          .end()
-          .find(`iframe[data-tabid=\"${tabId}\"]`)
-            .trigger("tab_beforeurlupdate")
-            .attr("src", param.url)
-            .trigger("tab_urlupdated");
+        this.$element.$(`li[data-tabid=\"${tabId}\"]`).dataset.tabsrc = param.url
+        $tmptab = this.$element.$(`iframe[data-tabid=\"${tabId}\"]`)
+        $tmptab.dispatchEvent(new CustomEvent("tab_beforeurlupdate"))
+        $tmptab.src = param.url
+        $tmptab.dispatchEvent(new CustomEvent("tab_urlupdated"))
       }
 
       if (typeof param.title === "string") {
         tmp = this.historyStore[tabId];
         tmp.stack[tmp.current].title = param.title;
 
-        $(this.element)
-          .find(`li[data-tabid=\"${tabId}\"]`)
-            .attr("title", param.title)
-            .find("span")
-              .text(param.title);
+        $tmptab = this.$element.$(`li[data-tabid=\"${tabId}\"]`);
+        $tmptab.setAttr("title", param.title);
+        $tmptab.T("span")[0].textContent = param.title;
       }
 
       if (param.selected) {
-        $iframe = (
-          $(this.element)
-            .find(".tab_selected")
-              .removeClass("tab_selected")
-            .end()
-            .find(`[data-tabid=\"${tabId}\"]`)
-              .addClass("tab_selected")
-              .filter(".tab_content")
-        );
+        var $selected = this.$element.C("tab_selected")
+        if ($selected.length > 0) {
+          $selected[0].removeClass("tab_selected");
+        }
+        for (var dom of this.$element.$$(`[data-tabid=\"${tabId}\"]`)) {
+          dom.addClass("tab_selected");
+          if (dom.hasClass("tab_content")) {
+            $iframe = dom;
+          }
+        }
 
         // 遅延ロード指定のタブをロードする
         // 連続でlazy指定のタブがaddされた時のために非同期処理
@@ -275,71 +276,64 @@ namespace UI {
           var selectedTab, iframe: HTMLIFrameElement;
 
           if (selectedTab = this.getSelected()) {
-            iframe = <HTMLIFrameElement>this.element.querySelector(`iframe[data-tabid=\"${selectedTab.tabId}\"]`);
-            if (iframe.getAttribute("src") !== selectedTab.url) {
+            iframe = <HTMLIFrameElement>this.$element.$(`iframe[data-tabid=\"${selectedTab.tabId}\"]`);
+            if (iframe.getAttr("src") !== selectedTab.url) {
               iframe.src = selectedTab.url;
             }
           }
         });
 
-        $iframe.trigger("tab_selected");
+        $iframe.dispatchEvent(new CustomEvent("tab_selected"));
       }
       if (param.locked) {
-        $(this.element)
-          .find(`li[data-tabid=\"${tabId}\"]`)
-            .addClass("tab_locked")
-            .find("img")
-              .addClass("hidden");
+        $tmptab = this.$element.$(`li[data-tabid=\"${tabId}\"]`);
+        $tmptab.addClass("tab_locked");
+        $tmptab.T("img")[0].addClass("hidden");
       } else if (!(param.locked === void 0 || param.locked === null)) {
-        $(this.element)
-          .find(`li[data-tabid=\"${tabId}\"].tab_locked`)
-            .removeClass("tab_locked")
-            .find("img")
-              .removeClass("hidden");
+        $tmptab = this.$element.$(`li[data-tabid=\"${tabId}\"].tab_locked`);
+        if ($tmptab !== null) {
+          $tmptab.removeClass("tab_locked");
+          $tmptab.T("img")[0].removeClass("hidden");
+        }
       }
     }
 
     remove (tabId: string): void {
-      var tab;
+      var tab, $tmptab, $tmptabcon, tabsrc: string, tmp, key, next;
 
       tab = this;
 
-      $(this.element)
-        .find(`li[data-tabid=\"${tabId}\"]`)
-          .each(function () {
-            var tabsrc: string, tmp, key, next;
+      $tmptab = this.$element.$(`li[data-tabid=\"${tabId}\"]`)
+      tabsrc = $tmptab.dataset.tabsrc;
 
-            tabsrc = this.getAttribute("data-tabsrc");
+      for (tmp of tab.recentClosed) {
+        if (tmp.url === tabsrc) {
+          tab.recentClosed.splice(key, 1);
+        }
+      }
 
-            for (tmp of tab.recentClosed) {
-              if (tmp.url === tabsrc) {
-                tab.recentClosed.splice(key, 1);
-              }
-            }
+      tab.recentClosed.push({
+        tabId: $tmptab.dataset.tabid,
+        url: tabsrc,
+        title: $tmptab.title,
+        locked: $tmptab.hasClass("tab_locked")
+      });
 
-            tab.recentClosed.push({
-              tabId: this.getAttribute("data-tabid"),
-              url: tabsrc,
-              title: this.title,
-              locked: this.classList.contains("tab_locked")
-            });
+      if (tab.recentClosed.length > 50) {
+        tmp = tab.recentClosed.shift();
+        delete tab.historyStore[tmp.tabId];
+      }
 
-            if (tab.recentClosed.length > 50) {
-              tmp = tab.recentClosed.shift();
-              delete tab.historyStore[tmp.tabId];
-            }
+      if ($tmptab.hasClass("tab_selected")) {
+        if (next = $tmptab.next() || $tmptab.prev()) {
+          tab.update(next.dataset.tabid, {selected: true});
+        }
+      }
+      $tmptab.remove()
 
-            if (this.classList.contains("tab_selected")) {
-              if (next = this.nextElementSibling || this.previousElementSibling) {
-                tab.update(next.getAttribute("data-tabid"), {selected: true});
-              }
-            }
-          })
-          .remove()
-        .end()
-        .find(`iframe[data-tabid=\"${tabId}\"]`)
-          .trigger("tab_removed")
-        .remove();
+      $tmptabcon = this.$element.$(`iframe[data-tabid=\"${tabId}\"]`)
+      $tmptabcon.dispatchEvent(new CustomEvent("tab_removed"))
+      $tmptabcon.remove();
     }
 
     getRecentClosed (): any {
@@ -360,8 +354,8 @@ namespace UI {
     }
 
     isLocked (tabId: string): boolean {
-      var tab = $(this.element).find(`li[data-tabid=\"${tabId}\"]`)
-      return tab.length > 0 && tab[0].classList.contains("tab_locked");
+      var tab = this.$element.$$(`li[data-tabid=\"${tabId}\"]`)
+      return tab.length > 0 && tab[0].hasClass("tab_locked");
     }
   }
 }

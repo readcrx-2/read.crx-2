@@ -1,4 +1,4 @@
-///<reference path="../../node_modules/@types/jquery/index.d.ts" />
+///<reference path="../global.d.ts" />
 
 namespace UI {
   "use strict";
@@ -15,16 +15,16 @@ namespace UI {
 
       this.container = container;
 
-      this.container.classList.add("sortable");
+      this.container.addClass("sortable");
 
-      overlay = document.createElement("div")
-      overlay.classList.add("sortable_overlay");
+      overlay = $__("div")
+      overlay.addClass("sortable_overlay");
 
-      overlay.addEventListener("contextmenu", (e) => {
+      overlay.on("contextmenu", (e) => {
         e.preventDefault();
       });
 
-      overlay.addEventListener("mousemove", (e) => {
+      overlay.on("mousemove", (e) => {
         var targetCenter: {x: number; y: number},
           tmp: HTMLElement,
           cacheX: number,
@@ -87,23 +87,23 @@ namespace UI {
         sorting = false;
 
         if (target) {
-          target.classList.remove("sortable_dragging");
+          target.removeClass("sortable_dragging");
           target.style.left = "initial";
           target.style.top = "initial";
           target = null;
-          this.parentElement.removeChild(this);
+          this.remove();
         }
       };
 
-      overlay.addEventListener("mouseup", <any>onHoge);
-      overlay.addEventListener("mouseout", <any>onHoge);
+      overlay.on("mouseup", <any>onHoge);
+      overlay.on("mouseout", <any>onHoge);
 
       var clicks = 1;
       var timer = null;
-      this.container.addEventListener("mousedown", (e) => {
+      this.container.on("mousedown", (e) => {
         if (e.target === container) return;
         if (e.which !== 1) return;
-        if (option.exclude && (<Element>e.target).webkitMatchesSelector(option.exclude)) return;
+        if (option.exclude && (<Element>e.target).matches(option.exclude)) return;
 
         clearTimeout(timer);
 
@@ -114,12 +114,12 @@ namespace UI {
 
         if(clicks === 1) {
           target = e.target;
-          while (target.parentElement !== container) {
-            target = target.parentElement;
+          while (target.parent() !== container) {
+            target = target.parent();
           }
 
-          target.classList.add("sortable_dragging");
-          document.body.appendChild(overlay);
+          target.addClass("sortable_dragging");
+          document.body.append(overlay);
 
           clicks = 1;
         }else if(clicks === 2) {
@@ -130,13 +130,3 @@ namespace UI {
     }
   }
 }
-
-(function ($) {
-  $.fn.sortable = function (option) {
-    $(this).each(function () {
-      new UI.Sortable(this, option);
-    });
-
-    return this;
-  };
-})(jQuery);

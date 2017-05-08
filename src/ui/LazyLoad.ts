@@ -36,13 +36,13 @@ namespace UI {
     constructor (container: HTMLElement) {
       this.container = container;
 
-      $(this.container).on("scroll", this.onScroll.bind(this));
-      $(this.container).on("resize", this.onResize.bind(this));
-      $(this.container).on("scrollstart", this.onScrollStart.bind(this));
-      $(this.container).on("scrollfinish", this.onScrollFinish.bind(this));
-      $(this.container).on("searchstart", this.onSearchStart.bind(this));
-      $(this.container).on("searchfinish", this.onSearchFinish.bind(this));
-      $(this.container).on("immediateload", "img, video", this.onImmediateLoad.bind(this));
+      this.container.on("scroll", this.onScroll.bind(this));
+      this.container.on("resize", this.onResize.bind(this));
+      this.container.on("scrollstart", this.onScrollStart.bind(this));
+      this.container.on("scrollfinish", this.onScrollFinish.bind(this));
+      this.container.on("searchstart", this.onSearchStart.bind(this));
+      this.container.on("searchfinish", this.onSearchFinish.bind(this));
+      this.container.on("immediateload", this.onImmediateLoad.bind(this));
       this.scan();
     }
 
@@ -56,7 +56,7 @@ namespace UI {
 
     public immediateLoad (media: HTMLMediaElement): void {
       if (media.tagName === "IMG" || media.tagName === "VIDEO") {
-        if (media.getAttribute("data-src") === null) return;
+        if (media.dataset.src === null) return;
         this.load(media);
       }
     }
@@ -88,43 +88,43 @@ namespace UI {
     private load (media: HTMLMediaElement, reverse: boolean = false): void {
       var newImg: HTMLImageElement, attr: Attr, attrs: Attr[];
       var imgFlg: boolean = (media.tagName === "IMG");
-      var faviconFlg: boolean = media.classList.contains("favicon");
+      var faviconFlg: boolean = media.hasClass("favicon");
 
       // immediateLoadにて処理済みのものを除外する
-      if (media.getAttribute("data-src") === null) return;
+      if (media.dataset.src === null) return;
 
-      newImg = document.createElement("img");
+      newImg = $__("img");
 
       if (imgFlg && !faviconFlg) {
-        attrs = <Attr[]>Array.from(media.attributes)
+        attrs = <Attr[]>Array.from(media.attributes);
         for (attr of attrs) {
           if (!this.noNeedAttrs.includes(attr.name)) {
-            newImg.setAttribute(attr.name, attr.value);
+            newImg.setAttr(attr.name, attr.value);
           }
         }
       }
 
       $(newImg).one("load error", function (e) {
-        $(media).replaceWith(this);
+        media.parent().replaceChild(this, media);
 
         if (e.type === "load") {
           if (reverse === false) {
-            $(this).trigger("lazyload-load");
+            this.dispatchEvent(new CustomEvent("lazyload-load"));
           } else {
-            $(this).trigger("lazyload-load-reverse");
+            this.dispatchEvent(new CustomEvent("lazyload-load-reverse"));
           }
           UI.Animate.fadeIn(this);
         }
       });
       $(media).one("loadedmetadata error", function (e) {
-        if (imgFlg && (faviconFlg || media.classList.contains("loading"))) {
+        if (imgFlg && (faviconFlg || media.hasClass("loading"))) {
           return;
         }
         if (e.type !== "error") {
           if (reverse === false) {
-            $(this).trigger("lazyload-load");
+            this.dispatchEvent(new CustomEvent("lazyload-load"));
           } else {
-            $(this).trigger("lazyload-load-reverse");
+            this.dispatchEvent(new CustomEvent("lazyload-load-reverse"));
           }
         }
       });
@@ -156,9 +156,9 @@ namespace UI {
           default: newImg.src = mdata.src;
         }
       } else {
-        media.src = media.getAttribute("data-src");
+        media.src = mdata.src;
       }
-      media.removeAttribute("data-src");
+      media.removeAttr("data-src");
     }
 
     private watch (): void {
@@ -180,7 +180,7 @@ namespace UI {
     }
 
     scan (): void {
-      this.medias = <HTMLMediaElement[]>Array.from(this.container.querySelectorAll("img[data-src], audio[data-src], video[data-src]"));
+      this.medias = <HTMLMediaElement[]>Array.from(this.container.$$("img[data-src], audio[data-src], video[data-src]"));
       if (this.medias.length > 0) {
         this.update();
         this.watch();
@@ -191,7 +191,7 @@ namespace UI {
     }
 
     private getMediaPosition (media: HTMLMediaElement): MediaPosition {
-      var current: HTMLMediaElement;
+      var current: HTMLElement;
       var pos: MediaPosition = {top: 0, offsetHeight: 0};
 
       // 高さが固定の場合のみテーブルの値を使用する
@@ -205,7 +205,7 @@ namespace UI {
         current = media;
         while (current !== null && current !== this.container) {
           pos.top += current.offsetTop;
-          current = <HTMLMediaElement>current.offsetParent;
+          current = <HTMLElement>current.offsetParent;
         }
         pos.offsetHeight = media.offsetHeight;
         this.mediaPlaceTable.set(media, pos);
@@ -277,7 +277,7 @@ namespace UI {
       }
       this.lastScrollTop = scrollTop;
 
-      this.medias = this.medias.filter((media: HTMLMediaElement) => {
+      this.medias = this.medias.filter( (media: HTMLMediaElement) => {
 
         // 逆スクロール時の範囲チェック(lazyload-load-reverseを優先させるため先に実行)
         if (reverseMode === true) {

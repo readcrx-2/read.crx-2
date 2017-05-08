@@ -11,13 +11,6 @@ window.UI ?= {}
 class UI.ThreadContent
   constructor: (@url, @container) ->
     ###*
-    @property _$container
-    @type Object
-    @private
-    ###
-    @_$container = $(@container)
-
-    ###*
     @property idIndex
     @type Object
     ###
@@ -114,14 +107,14 @@ class UI.ThreadContent
     # 遅延ロードの解除
     loadImageByElement = (targetElement) =>
       qStr = if checkOnly then "img, video" else "img[data-src], video[data-src]"
-      for media in targetElement.querySelectorAll(qStr)
+      for media in targetElement.$$(qStr)
         loadFlag = true
-        continue if checkOnly or media.getAttribute("data-src") is null
-        if media.classList.contains("favicon")
-          media.src = media.getAttribute("data-src")
-          media.removeAttribute("data-src")
+        continue if checkOnly or media.getAttr("data-src") is null
+        if media.hasClass("favicon")
+          media.src = media.getAttr("data-src")
+          media.removeAttr("data-src")
         else
-          $(media).trigger("immediateload")
+          media.dispatchEvent(new CustomEvent("immediateload"))
       return
 
     # 表示範囲内の要素をスキャンする
@@ -131,14 +124,14 @@ class UI.ThreadContent
     while tmpTarget?.offsetTop + tmpTarget?.offsetHeight > viewTop and tmpResNum > 0
       loadImageByElement(tmpTarget)
       tmpResNum--
-      tmpTarget = @container.children[tmpResNum - 1] if tmpResNum > 0
+      tmpTarget = @container.child()[tmpResNum - 1] if tmpResNum > 0
     # (下方)
     tmpResNum = resNum + 1
-    tmpTarget = @container.children[resNum]
+    tmpTarget = @container.child()[resNum]
     while tmpTarget?.offsetTop < viewBottom and tmpTarget
       loadImageByElement(tmpTarget)
       tmpResNum++
-      tmpTarget = @container.children[tmpResNum - 1]
+      tmpTarget = @container.child()[tmpResNum - 1]
 
     # 遅延スクロールの設定
     if loadFlag or @_timeoutID isnt 0
@@ -164,15 +157,25 @@ class UI.ThreadContent
     @_lastScrollInfo.offset = offset
     loadFlag = false
 
-    target = @container.children[resNum - 1]
+    target = @container.child()[resNum - 1]
 
     # 検索中で、ターゲットが非ヒット項目で非表示の場合、スクロールを中断
-    if target and @container.classList.contains("searching") and not target.classList.contains("search_hit")
+    if target and @container.hasClass("searching") and not target.hasClass("search_hit")
       target = null
 
     # もしターゲットがNGだった場合、その直前/直後の非NGレスをターゲットに変更する
-    if target and target.classList.contains("ng")
-      target = $(target).prevAll(":not(.ng)")[0] or $(target).nextAll(":not(.ng)")[0]
+    if target and target.hasClass("ng")
+      replaced = target
+      while (replaced = replaced.prev())
+        if !replaced.hasClass("ng")
+          target = replaced
+          break
+        if !replaced?
+          replaced = target
+          while (replaced = replaced.next())
+            if !replaced.hasClass("ng")
+              target = replaced
+              break
 
     if target
       # 可変サイズの画像が存在している場合は画像を事前にロードする
@@ -188,7 +191,7 @@ class UI.ThreadContent
       # スクロールの実行
       if animate
         do =>
-          @_$container.trigger("scrollstart")
+          @container.dispatchEvent(new CustomEvent("scrollstart"))
 
           to = target.offsetTop + offset
           change = (to - @container.scrollTop)/15
@@ -207,17 +210,17 @@ class UI.ThreadContent
               (change < 0 and @container.scrollTop < min)
             )
               @container.scrollTop = to
-              @_$container.trigger("scrollfinish")
+              @container.dispatchEvent(new CustomEvent("scrollfinish"))
               return
             # 正常時の処理
             if min <= @container.scrollTop <= max
               @container.scrollTop = to
-              @_$container.trigger("scrollfinish")
+              @container.dispatchEvent(new CustomEvent("scrollfinish"))
               return
             else
               @container.scrollTop += change
             if @container.scrollTop is before
-              @_$container.trigger("scrollfinish")
+              @container.dispatchEvent(new CustomEvent("scrollfinish"))
               return
             requestAnimationFrame(_scrollInterval)
             return
@@ -232,8 +235,8 @@ class UI.ThreadContent
   ###
   getRead: ->
     containerBottom = @container.scrollTop + @container.clientHeight
-    read = @container.children.length
-    for res, key in @container.children when res.offsetTop > containerBottom
+    read = @container.child().length
+    for res, key in @container.child() when res.offsetTop > containerBottom
       read = key - 1
       break
 
@@ -248,7 +251,7 @@ class UI.ThreadContent
   @return {Element|null}
   ###
   getSelected: ->
-    @container.querySelector("article.selected")
+    @container.$("article.selected")
 
   ###*
   @method select
@@ -256,24 +259,24 @@ class UI.ThreadContent
   @param {bool} [preventScroll = false]
   ###
   select: (target, preventScroll = false) ->
-    @container.querySelector("article.selected")?.classList.remove("selected")
+    @container.$("article.selected")?.removeClass("selected")
 
     if typeof target is "number"
-      target = @container.querySelector("article:nth-child(#{target}), article:last-child")
+      target = @container.$("article:nth-child(#{target}), article:last-child")
 
     unless target
       return
 
-    target.classList.add("selected")
+    target.addClass("selected")
     if not preventScroll
-      @scrollTo(+target.querySelector(".num").textContent)
+      @scrollTo(+target.$(".num").textContent)
     return
 
   ###*
   @method clearSelect
   ###
   clearSelect: ->
-    @getSelected()?.classList.remove("selected")
+    @getSelected()?.removeClass("selected")
     return
 
   ###*
@@ -294,7 +297,7 @@ class UI.ThreadContent
       current = null
 
     unless current
-      @select(@container.children[@getRead() - 1], true)
+      @select(@container.child()[@getRead() - 1], true)
     else
       target = current
 
@@ -306,12 +309,12 @@ class UI.ThreadContent
             target.offsetTop + target.offsetHeight <=
             @container.scrollTop + @container.offsetHeight
           ) and
-          target.nextElementSibling
+          target.next()
         )
-          target = target.nextElementSibling
+          target = target.next()
 
           while target and target.offsetHeight is 0
-            target = target.nextElementSibling
+            target = target.next()
 
         if not target
           target = prevTarget
@@ -330,7 +333,7 @@ class UI.ThreadContent
               target.offsetHeight +
               10
             )
-        else if not target.nextElementSibling
+        else if not target.next()
           @container.scrollTop += @container.offsetHeight * 0.5
           if target is prevTarget
             break
@@ -357,7 +360,7 @@ class UI.ThreadContent
       current = null
 
     unless current
-      @select(@container.children[@getRead() - 1], true)
+      @select(@container.child()[@getRead() - 1], true)
     else
       target = current
 
@@ -366,12 +369,12 @@ class UI.ThreadContent
 
         if (
           @container.scrollTop <= target.offsetTop and
-          target.previousElementSibling
+          target.prev()
         )
-          target = target.previousElementSibling
+          target = target.prev()
 
           while target and target.offsetHeight is 0
-            target = target.previousElementSibling
+            target = target.prev()
 
         if not target
           target = prevTarget
@@ -403,7 +406,7 @@ class UI.ThreadContent
         resolve()
         return
 
-      resNum = @container.children.length
+      resNum = @container.child().length
 
       app.WriteHistory.getByUrl(@url).then( (writtenRes) =>
         html = ""
@@ -596,14 +599,14 @@ class UI.ThreadContent
           for id, index of @idIndex
             idCount = index.length
             for resNum in index
-              elm = @container.children[resNum - 1].getElementsByClassName("id")[0]
+              elm = @container.child()[resNum - 1].C("id")[0]
               elmFirst = elm.firstChild
               elmFirst.textContent = elmFirst.textContent.replace(numbersReg, "(#{idCount})")
               if idCount >= 5
-                elm.classList.remove("link")
-                elm.classList.add("freq")
+                elm.removeClass("link")
+                elm.addClass("freq")
               else if idCount >= 2
-                elm.classList.add("link")
+                elm.addClass("link")
           return
 
         #slipカウント, .freq/.link更新
@@ -611,14 +614,14 @@ class UI.ThreadContent
           for slip, index of @slipIndex
             slipCount = index.length
             for resNum in index
-              elm = @container.children[resNum - 1].getElementsByClassName("slip")[0]
+              elm = @container.child()[resNum - 1].C("slip")[0]
               elmFirst = elm.firstChild
               elmFirst.textContent = elmFirst.textContent.replace(numbersReg, "(#{slipCount})")
               if slipCount >= 5
-                elm.classList.remove("link")
-                elm.classList.add("freq")
+                elm.removeClass("link")
+                elm.addClass("freq")
               else if slipCount >= 2
-                elm.classList.add("link")
+                elm.addClass("link")
           return
 
         #tripカウント, .freq/.link更新
@@ -626,71 +629,71 @@ class UI.ThreadContent
           for trip, index of @tripIndex
             tripCount = index.length
             for resNum in index
-              elm = @container.children[resNum - 1].getElementsByClassName("trip")[0]
+              elm = @container.child()[resNum - 1].C("trip")[0]
               elmFirst = elm.firstChild
               elmFirst.textContent = elmFirst.textContent.replace(numbersReg, "(#{tripCount})")
               if tripCount >= 5
-                elm.classList.remove("link")
-                elm.classList.add("freq")
+                elm.removeClass("link")
+                elm.addClass("freq")
               else if tripCount >= 2
-                elm.classList.add("link")
+                elm.addClass("link")
           return
 
         #harmImg更新
         do =>
           for res in @harmImgIndex
-            elm = @container.children[res - 1]
+            elm = @container.child()[res - 1]
             continue unless elm
-            elm.classList.add("has_blur_word")
-            if elm.classList.contains("has_image") and app.config.get("image_blur") is "on"
-              for thumb in elm.querySelectorAll(".thumbnail:not(.image_blur)")
+            elm.addClass("has_blur_word")
+            if elm.hasClass("has_image") and app.config.get("image_blur") is "on"
+              for thumb in elm.$$(".thumbnail:not(.image_blur)")
                 @setImageBlur(thumb, true)
           return
 
         #参照関係再構築
         do =>
           for resKey, index of @repIndex
-            res = @container.children[resKey - 1]
+            res = @container.child()[resKey - 1]
             if res
               resCount = index.length
-              if elm = res.getElementsByClassName("rep")[0]
+              if elm = res.C("rep")[0]
                 newFlg = false
               else
                 newFlg = true
-                elm = document.createElement("span")
+                elm = $__("span")
               elm.textContent = "返信 (#{resCount})"
               elm.className = if resCount >= 5 then "rep freq" else "rep link"
-              res.setAttribute("data-rescount", [1..resCount].join(" "))
+              res.setAttr("data-rescount", [1..resCount].join(" "))
               if newFlg
-                res.getElementsByClassName("other")[0].appendChild(
+                res.C("other")[0].append(
                   document.createTextNode(" ")
                 )
-                res.getElementsByClassName("other")[0].appendChild(elm)
+                res.C("other")[0].append(elm)
               #連鎖NG
-              if app.config.get("chain_ng") is "on" and res.classList.contains("ng")
+              if app.config.get("chain_ng") is "on" and res.hasClass("ng")
                 for r in index
-                  @container.children[r - 1].classList.add("ng")
+                  @container.child()[r - 1].addClass("ng")
               #自分に対してのレス
-              if res.classList.contains("written")
+              if res.hasClass("written")
                 for r in index
-                  @container.children[r - 1].classList.add("to_written")
+                  @container.child()[r - 1].addClass("to_written")
           return
 
         #サムネイル追加処理
         do =>
           addThumbnail = (sourceA, thumbnailPath, mediaType = "image", res) ->
-            sourceA.classList.add("has_thumbnail")
+            sourceA.addClass("has_thumbnail")
 
-            thumbnail = document.createElement("div")
-            thumbnail.className = "thumbnail"
-            thumbnail.setAttribute("media-type", mediaType)
+            thumbnail = $__("div")
+            thumbnail.addClass("thumbnail")
+            thumbnail.setAttr("media-type", mediaType)
 
             if mediaType in ["image", "video"]
               article = sourceA.closest("article")
-              article.classList.add("has_image")
+              article.addClass("has_image")
               # グロ画像に対するぼかし処理
               if article.hasClass("has_blur_word") and app.config.get("image_blur") is "on"
-                thumbnail.className += " image_blur"
+                thumbnail.addClass("image_blur")
                 v = app.config.get("image_blur_length")
                 webkitFilter = "blur(#{v}px)"
               else
@@ -698,12 +701,12 @@ class UI.ThreadContent
 
             switch mediaType
               when "image"
-                thumbnailLink = document.createElement("a")
+                thumbnailLink = $__("a")
                 thumbnailLink.href = app.safe_href(sourceA.href)
                 thumbnailLink.target = "_blank"
 
-                thumbnailImg = document.createElement("img")
-                thumbnailImg.className = "image"
+                thumbnailImg = $__("img")
+                thumbnailImg.addClass("image")
                 thumbnailImg.src = "/img/dummy_1x1.webp"
                 thumbnailImg.style.WebkitFilter = webkitFilter
                 thumbnailImg.style.maxWidth = app.config.get("image_width") + "px"
@@ -717,31 +720,31 @@ class UI.ThreadContent
                 if res.cookieReferrer? then thumbnailImg.dataset.cookieReferrer = res.cookieReferrer
                 if res.referrer? then thumbnailImg.dataset.referrer = res.referrer
                 if res.userAgent? then thumbnailImg.dataset.userAgent = res.userAgent
-                thumbnailLink.appendChild(thumbnailImg)
+                thumbnailLink.append(thumbnailImg)
 
-                thumbnailFavicon = document.createElement("img")
-                thumbnailFavicon.className = "favicon"
+                thumbnailFavicon = $__("img")
+                thumbnailFavicon.addClass("favicon")
                 thumbnailFavicon.src = "/img/dummy_1x1.webp"
-                thumbnailFavicon.setAttribute("data-src", "https://www.google.com/s2/favicons?domain=#{sourceA.hostname}")
-                thumbnailLink.appendChild(thumbnailFavicon)
+                thumbnailFavicon.setAttr("data-src", "https://www.google.com/s2/favicons?domain=#{sourceA.hostname}")
+                thumbnailLink.append(thumbnailFavicon)
 
               when "audio", "video"
-                thumbnailLink = document.createElement(mediaType)
+                thumbnailLink = $__(mediaType)
                 thumbnailLink.src = ""
-                thumbnailLink.setAttribute("data-src", thumbnailPath)
+                thumbnailLink.setAttr("data-src", thumbnailPath)
                 thumbnailLink.preload = "metadata"
                 switch mediaType
                   when "audio"
                     thumbnailLink.style.width = app.config.get("audio_width") + "px"
-                    thumbnailLink.setAttribute("controls", "")
+                    thumbnailLink.setAttr("controls", "")
                   when "video"
                     thumbnailLink.style.WebkitFilter = webkitFilter
                     thumbnailLink.style.maxWidth = app.config.get("video_width") + "px"
                     thumbnailLink.style.maxHeight = app.config.get("video_height") + "px"
                     if app.config.get("video_controls") is "on"
-                      thumbnailLink.setAttribute("controls", "")
+                      thumbnailLink.setAttr("controls", "")
 
-            thumbnail.appendChild(thumbnailLink)
+            thumbnail.append(thumbnailLink)
 
             # 高さ固定の場合
             if app.config.get("image_height_fix") is "on"
@@ -762,29 +765,29 @@ class UI.ThreadContent
                 if sib?.nextSibling?.classList?.contains("thumbnail")
                   continue
                 if not pre.classList?.contains("thumbnail")
-                  sourceA.parentElement.insertBefore(document.createElement("br"), sib)
-                sourceA.parentElement.insertBefore(thumbnail, sib)
+                  sourceA.parent().insertBefore($__("br"), sib)
+                sourceA.parent().insertBefore(thumbnail, sib)
                 break
             return
 
           # 展開URL追加処理
           addExpandedURL = (sourceA, finalUrl) ->
-            sourceA.classList.add("has_expandedURL")
+            sourceA.addClass("has_expandedURL")
 
-            expandedURL = document.createElement("div")
-            expandedURL.className = "expandedURL"
-            expandedURL.setAttribute("short-url", sourceA.href)
+            expandedURL = $__("div")
+            expandedURL.addClass("expandedURL")
+            expandedURL.setAttr("short-url", sourceA.href)
             if app.config.get("expand_short_url") is "popup"
-              expandedURL.classList.add("hide_data")
+              expandedURL.addClass("hide_data")
 
             if finalUrl
-              expandedURLLink = document.createElement("a")
+              expandedURLLink = $__("a")
               expandedURLLink.textContent = finalUrl
               expandedURLLink.href = app.safe_href(finalUrl)
               expandedURLLink.target = "_blank"
-              expandedURL.appendChild(expandedURLLink)
+              expandedURL.append(expandedURLLink)
             else
-              expandedURL.classList.add("expand_error")
+              expandedURL.addClass("expand_error")
               expandedURLLink = null
 
             sib = sourceA
@@ -795,8 +798,8 @@ class UI.ThreadContent
                 if sib?.nextSibling?.classList?.contains("expandedURL")
                   continue
                 if not pre.classList?.contains("expandedURL")
-                  sourceA.parentElement.insertBefore(document.createElement("br"), sib)
-                sourceA.parentElement.insertBefore(expandedURL, sib)
+                  sourceA.parent().insertBefore($__("br"), sib)
+                sourceA.parent().insertBefore(expandedURL, sib)
                 break
 
             return expandedURLLink
@@ -863,7 +866,7 @@ class UI.ThreadContent
               return
             )
 
-          aList = @container.querySelectorAll(
+          aList = @container.$$(
             ".message > a:not(.anchor):not(.thumbnail):not(.has_thumbnail):not(.expandedURL):not(.has_expandedURL)"
           )
           Promise.all(Array.from(aList).map(replace)).catch( ->
@@ -883,13 +886,13 @@ class UI.ThreadContent
   @parm {Boolean} blurMode
   ###
   setImageBlur: (thumbnail, blurMode) ->
-    media = thumbnail.querySelector("a > img.image, video")
+    media = thumbnail.$("a > img.image, video")
     if blurMode
       v = app.config.get("image_blur_length")
-      thumbnail.classList.add("image_blur")
+      thumbnail.addClass("image_blur")
       media.style.WebkitFilter = "blur(#{v}px)"
     else
-      thumbnail.classList.remove("image_blur")
+      thumbnail.removeClass("image_blur")
       media.style.WebkitFilter = "none"
     return
 
@@ -900,8 +903,8 @@ class UI.ThreadContent
   ###
   addClassWithOrg: ($res, className) ->
     $res.addClass(className)
-    resnum = parseInt($res.find(".num").text())
-    @container.children[resnum-1].classList.add("written")
+    resnum = parseInt($res.C("num")[0].textContent)
+    @container.child()[resnum-1].addClass("written")
     return
 
   ###*
@@ -911,8 +914,8 @@ class UI.ThreadContent
   ###
   removeClassWithOrg: ($res, className) ->
     $res.removeClass("written")
-    resnum = parseInt($res.find(".num").text())
-    @container.children[resnum-1].classList.remove("written")
+    resnum = parseInt($res.C("num")[0].textContent)
+    @container.child()[resnum-1].removeClass("written")
     return
 
   ###*
@@ -920,11 +923,11 @@ class UI.ThreadContent
   @param {Element} $res
   ###
   addWriteHistory: ($res) ->
-    resnum = parseInt($res.find(".num").text())
-    name = $res.find(".name").text()
-    mail = $res.find(".mail").text()
-    message = $res.find(".message").text()
-    date = @stringToDate($res.find(".other").text())
+    resnum = parseInt($res.C("num")[0].textContent)
+    name = $res.C("name")[0].textContent
+    mail = $res.C("mail")[0].textContent
+    message = $res.C("message")[0].textContent
+    date = @stringToDate($res.C("other")[0].textContent)
     if date?
       app.WriteHistory.add(@url, resnum, document.title, name, mail, name, mail, message, date.valueOf())
     return
@@ -934,7 +937,7 @@ class UI.ThreadContent
   @param {Element} $res
   ###
   removeWriteHistory: ($res) ->
-    resnum = parseInt($res.find(".num").text())
+    resnum = parseInt($res.C("num")[0].textContent)
     app.WriteHistory.remove(@url, resnum)
     return
 

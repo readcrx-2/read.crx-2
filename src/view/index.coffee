@@ -555,7 +555,8 @@ app.main = ->
   $("#tab_a").data("tab", tabA)
   tabB = new UI.Tab(document.querySelector("#tab_b"))
   $("#tab_b").data("tab", tabB)
-  $(".tab .tab_tabbar").sortable(exclude: "img")
+  for dom in $(".tab .tab_tabbar")
+    new UI.Sortable(dom, exclude: "img")
   adjustWindowSize.add(app.view_setup_resizer)
 
   $view.on "tab_urlupdated", "iframe", ->
@@ -862,7 +863,7 @@ app.main = ->
       return
     app.defer ->
       $menu.appendTo(document.body)
-      $.contextmenu($menu, e.clientX, e.clientY)
+      UI.contextmenu($menu[0], e.clientX, e.clientY)
       return
     return
 

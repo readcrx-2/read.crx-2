@@ -293,7 +293,7 @@ app.boot "/view/thread.html", ->
 
       app.defer ->
         $menu.removeClass("hidden")
-        $.contextmenu($menu, e.clientX, e.clientY)
+        UI.contextmenu($menu[0], e.clientX, e.clientY)
         return
       return
 
@@ -352,12 +352,12 @@ app.boot "/view/thread.html", ->
         """)
 
       else if $this.hasClass("add_writehistory")
-        threadContent.addWriteHistory($res)
-        threadContent.addClassWithOrg($res, "written")
+        threadContent.addWriteHistory($res[0])
+        threadContent.addClassWithOrg($res[0], "written")
 
       else if $this.hasClass("del_writehistory")
-        threadContent.removeWriteHistory($res)
-        threadContent.removeClassWithOrg($res, "written")
+        threadContent.removeWriteHistory($res[0])
+        threadContent.removeClassWithOrg($res[0], "written")
 
       else if $this.hasClass("toggle_aa_mode")
         $res.toggleClass("aa")

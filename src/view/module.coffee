@@ -531,12 +531,12 @@ class app.view.TabContentView extends app.view.PaneContentView
     $table = @$element.find(".table_sort")
     $selector = @$element.find(".sort_item_selector")
 
-    $table.on "table_sort_updated", (e, ex) ->
+    $table.on "table_sort_updated", ({detail}) ->
       $selector
         .find("option")
           .attr("selected", false)
           .filter(->
-            String(ex.sort_attribute or ex.sort_index) is @textContent
+            String(detail.sort_attribute or detail.sort_index) is @textContent
           )
           .attr("selected", true)
       return
@@ -555,7 +555,7 @@ class app.view.TabContentView extends app.view.PaneContentView
       if (tmp = selected.getAttribute("data-sort_type"))?
         config.sort_type = tmp
 
-      $table.table_sort("update", config)
+      $table.data("tableSorter").updateSnake(config)
       return
     return
 

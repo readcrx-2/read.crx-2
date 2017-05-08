@@ -158,7 +158,7 @@ app.boot "/view/config.html", ["cache", "bbsmenu"], (Cache, BBSMenu) ->
     $ninjaInfo.on "click", ".ninja_item_backup_available > button", ->
       siteId = $(@).closest(".ninja_item").attr("data-siteid")
 
-      $.dialog("confirm", {
+      UI.dialog("confirm", {
         message: "本当に削除しますか？"
         label_ok: "はい"
         label_no: "いいえ"

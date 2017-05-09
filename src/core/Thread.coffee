@@ -339,7 +339,7 @@ class app.Thread
           charset: "EUC-JP"
       when "2ch.net"
         if app.config.get("format_2chnet") is "dat"
-          path: "#{tmp[1]}//#{tmp[2]}/#{tmp[4]}/dat/#{tmp[5]}.dat",
+          path: "#{tmp[1]}://#{tmp[2]}/#{tmp[4]}/dat/#{tmp[5]}.dat",
           charset: "Shift_JIS"
         else
           path: tmp[0],

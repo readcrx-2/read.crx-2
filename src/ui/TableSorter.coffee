@@ -36,7 +36,7 @@ class UI.TableSorter
     @param {String} [param.sortType]
   ###
   update: (param = {}) ->
-    event = new CustomEvent("table_sort_before_update")
+    event = new Event("table_sort_before_update")
     @table.dispatchEvent(event)
     if event.defaultPrevented
       return

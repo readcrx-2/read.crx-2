@@ -114,7 +114,7 @@ class UI.ThreadContent
           media.src = media.getAttr("data-src")
           media.removeAttr("data-src")
         else
-          media.dispatchEvent(new CustomEvent("immediateload"))
+          media.dispatchEvent(new Event("immediateload"))
       return
 
     # 表示範囲内の要素をスキャンする
@@ -191,7 +191,7 @@ class UI.ThreadContent
       # スクロールの実行
       if animate
         do =>
-          @container.dispatchEvent(new CustomEvent("scrollstart"))
+          @container.dispatchEvent(new Event("scrollstart"))
 
           to = target.offsetTop + offset
           change = (to - @container.scrollTop)/15
@@ -210,17 +210,17 @@ class UI.ThreadContent
               (change < 0 and @container.scrollTop < min)
             )
               @container.scrollTop = to
-              @container.dispatchEvent(new CustomEvent("scrollfinish"))
+              @container.dispatchEvent(new Event("scrollfinish"))
               return
             # 正常時の処理
             if min <= @container.scrollTop <= max
               @container.scrollTop = to
-              @container.dispatchEvent(new CustomEvent("scrollfinish"))
+              @container.dispatchEvent(new Event("scrollfinish"))
               return
             else
               @container.scrollTop += change
             if @container.scrollTop is before
-              @container.dispatchEvent(new CustomEvent("scrollfinish"))
+              @container.dispatchEvent(new Event("scrollfinish"))
               return
             requestAnimationFrame(_scrollInterval)
             return

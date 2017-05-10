@@ -25,8 +25,7 @@ namespace UI {
       this.lastMouseWheel = Date.now();
 
       while (Math.abs(this.wheelDelta) >= this.threshold) {
-        event = document.createEvent("MouseEvents");
-        event.initEvent("notchedmousewheel");
+        event = new MouseEvent("notchedmousewheel");
         event.wheelDelta = this.threshold * (this.wheelDelta > 0 ? 1 : -1);
         this.wheelDelta -= event.wheelDelta;
         this.element.dispatchEvent(event);

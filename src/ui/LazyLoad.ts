@@ -56,7 +56,7 @@ namespace UI {
 
     public immediateLoad (media: HTMLMediaElement): void {
       if (media.tagName === "IMG" || media.tagName === "VIDEO") {
-        if (media.dataset.src === null) return;
+        if (media.getAttr("data-src") === null) return;
         this.load(media);
       }
     }
@@ -85,27 +85,29 @@ namespace UI {
       this.immediateLoad(e.target);
     }
 
-    private load (media: HTMLMediaElement, reverse: boolean = false): void {
-      var newImg: HTMLImageElement, attr: Attr, attrs: Attr[];
-      var imgFlg: boolean = (media.tagName === "IMG");
-      var faviconFlg: boolean = media.hasClass("favicon");
+    private load ($media: HTMLMediaElement, reverse: boolean = false): void {
+      var $newImg: HTMLImageElement, attr: Attr, attrs: Attr[];
+      var imgFlg: boolean = ($media.tagName === "IMG");
+      var faviconFlg: boolean = $media.hasClass("favicon");
 
       // immediateLoadにて処理済みのものを除外する
-      if (media.dataset.src === null) return;
+      if ($media.getAttr("data-src") === null) return;
 
-      newImg = $__("img");
+      $newImg = $__("img");
 
       if (imgFlg && !faviconFlg) {
-        attrs = <Attr[]>Array.from(media.attributes);
+        attrs = <Attr[]>Array.from($media.attributes);
         for (attr of attrs) {
           if (!this.noNeedAttrs.includes(attr.name)) {
-            newImg.setAttr(attr.name, attr.value);
+            $newImg.setAttr(attr.name, attr.value);
           }
         }
       }
 
-      $(newImg).one("load error", function (e) {
-        media.parent().replaceChild(this, media);
+      var load = function (e) {
+        $newImg.off("load", load);
+        $newImg.off("error", load);
+        $media.parent().replaceChild(this, $media);
 
         if (e.type === "load") {
           if (reverse === false) {
@@ -115,11 +117,16 @@ namespace UI {
           }
           UI.Animate.fadeIn(this);
         }
-      });
-      $(media).one("loadedmetadata error", function (e) {
-        if (imgFlg && (faviconFlg || media.hasClass("loading"))) {
+      };
+      $newImg.on("load", load);
+      $newImg.on("error", load);
+
+      var loadmetadata = function (e) {
+        if (imgFlg && (faviconFlg || $media.hasClass("loading"))) {
           return;
         }
+        $media.off("loadedmetadata", loadmetadata);
+        $media.off("error", loadmetadata);
         if (e.type !== "error") {
           if (reverse === false) {
             this.dispatchEvent(new CustomEvent("lazyload-load"));
@@ -127,38 +134,40 @@ namespace UI {
             this.dispatchEvent(new CustomEvent("lazyload-load-reverse"));
           }
         }
-      });
+      };
+      $media.on("loadedmetadata", loadmetadata);
+      $media.on("error", loadmetadata);
 
-      var mdata = media.dataset;
+      var mdata = $media.dataset;
       if (imgFlg && !faviconFlg) {
-        media.src = "/img/loading.webp";
+        $media.src = "/img/loading.webp";
         switch (mdata.type) {
           case "default":
-            newImg.src = mdata.src;
+            $newImg.src = $media.getAttr("data-src");
             break;
           case "referrer":
-            newImg.src = this.getWithReferrer(mdata.src, mdata.referrer, mdata.userAgent);
+            $newImg.src = this.getWithReferrer(mdata.src, mdata.referrer, mdata.userAgent);
             break;
           case "extract":
             this.getWithExtract(mdata.src, mdata.extract, mdata.pattern, mdata.extractReferrer, mdata.userAgent).then( (imgstr) => {
-              newImg.src = imgstr;
+              $newImg.src = imgstr;
             }).catch( () => {
-              newImg.src = "";
+              $newImg.src = "";
             });
             break;
           case "cookie":
             this.getWithCookie(mdata.src, mdata.cookie, mdata.cookieReferrer, mdata.userAgent).then( (imgstr) => {
-              newImg.src = imgstr;
+              $newImg.src = imgstr;
             }).catch( () => {
-              newImg.src = "";
+              $newImg.src = "";
             });
             break;
-          default: newImg.src = mdata.src;
+          default: $newImg.src = mdata.src;
         }
       } else {
-        media.src = mdata.src;
+        $media.src = $media.getAttr("data-src");
       }
-      media.removeAttr("data-src");
+      $media.removeAttr("data-src");
     }
 
     private watch (): void {

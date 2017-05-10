@@ -243,11 +243,11 @@ namespace UI {
           history.current++;
         }
 
-        this.$element.$(`li[data-tabid=\"${tabId}\"]`).dataset.tabsrc = param.url
-        $tmptab = this.$element.$(`iframe[data-tabid=\"${tabId}\"]`)
-        $tmptab.dispatchEvent(new Event("tab_beforeurlupdate"))
-        $tmptab.src = param.url
-        $tmptab.dispatchEvent(new Event("tab_urlupdated"))
+        this.$element.$(`li[data-tabid=\"${tabId}\"]`).dataset.tabsrc = param.url;
+        $tmptab = this.$element.$(`iframe[data-tabid=\"${tabId}\"]`);
+        $tmptab.dispatchEvent(new Event("tab_beforeurlupdate", {"bubbles": true}));
+        $tmptab.src = param.url;
+        $tmptab.dispatchEvent(new Event("tab_urlupdated", {"bubbles": true}));
       }
 
       if (typeof param.title === "string") {
@@ -284,7 +284,7 @@ namespace UI {
           }
         });
 
-        $iframe.dispatchEvent(new Event("tab_selected"));
+        $iframe.dispatchEvent(new Event("tab_selected", {"bubbles": true}));
       }
       if (param.locked) {
         $tmptab = this.$element.$(`li[data-tabid=\"${tabId}\"]`);
@@ -304,7 +304,7 @@ namespace UI {
 
       tab = this;
 
-      $tmptab = this.$element.$(`li[data-tabid=\"${tabId}\"]`)
+      $tmptab = this.$element.$(`li[data-tabid=\"${tabId}\"]`);
       tabsrc = $tmptab.dataset.tabsrc;
 
       for (tmp of tab.recentClosed) {
@@ -330,10 +330,10 @@ namespace UI {
           tab.update(next.dataset.tabid, {selected: true});
         }
       }
-      $tmptab.remove()
+      $tmptab.remove();
 
-      $tmptabcon = this.$element.$(`iframe[data-tabid=\"${tabId}\"]`)
-      $tmptabcon.dispatchEvent(new Event("tab_removed"))
+      $tmptabcon = this.$element.$(`iframe[data-tabid=\"${tabId}\"]`);
+      $tmptabcon.dispatchEvent(new Event("tab_removed", {"bubbles": true}));
       $tmptabcon.remove();
     }
 

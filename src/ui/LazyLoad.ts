@@ -111,9 +111,9 @@ namespace UI {
 
         if (e.type === "load") {
           if (reverse === false) {
-            this.dispatchEvent(new CustomEvent("lazyload-load"));
+            this.dispatchEvent(new Event("lazyload-load", {"bubbles": true}));
           } else {
-            this.dispatchEvent(new CustomEvent("lazyload-load-reverse"));
+            this.dispatchEvent(new Event("lazyload-load-reverse", {"bubbles": true}));
           }
           UI.Animate.fadeIn(this);
         }
@@ -129,9 +129,9 @@ namespace UI {
         $media.off("error", loadmetadata);
         if (e.type !== "error") {
           if (reverse === false) {
-            this.dispatchEvent(new CustomEvent("lazyload-load"));
+            this.dispatchEvent(new Event("lazyload-load", {"bubbles": true}));
           } else {
-            this.dispatchEvent(new CustomEvent("lazyload-load-reverse"));
+            this.dispatchEvent(new Event("lazyload-load-reverse", {"bubbles": true}));
           }
         }
       };

@@ -4,64 +4,64 @@ namespace UI {
   "use strict";
 
   export class Accordion {
-    element: HTMLElement;
-    $element: JQuery;
+    $element: HTMLElement;
 
-    constructor (element: HTMLElement) {
-      var accordion: Accordion;
+    constructor ($element: HTMLElement) {
+      var accordion: Accordion, openAccordions;
 
-      this.element = element;
-      this.$element = $(element);
+      this.$element = $element;
 
       accordion = this;
 
       this.$element.addClass("accordion");
 
-      this.$element.find(".accordion_open").removeClass(".accordion_open");
+      openAccordions = this.$element.C("accordion_open");
+      for (var i = openAccordions.length - 1; i >= 0; i--) {
+        openAccordions[i].removeClass(".accordion_open");
+      }
 
-      this.$element.on("click", "> h3", function () {
-        if (this.classList.contains("accordion_open")) {
-          accordion.close(this);
-        }
-        else {
-          accordion.open(this);
+      this.$element.on("click", (e) => {
+        var target = <HTMLElement>e.target;
+        if (target.parent() === this.$element && target.tagName === "H3") {
+          if (target.hasClass("accordion_open")) {
+            accordion.close(target);
+          } else {
+            accordion.open(target);
+          }
         }
       });
     }
 
     update (): void {
-      this.$element.find("h3 + *").each(function () {
-        this.addClass("hidden");
-      });
-      this.setOpen(this.element.querySelector("h3"));
+      for (var dom of this.$element.$$("h3 + *")) {
+        dom.addClass("hidden");
+      }
+      this.setOpen(this.$element.$("h3"));
     }
 
-    setOpen (header: HTMLElement): void {
-      var $header = $(header)
-      $header.addClass("accordion_open")
-      $header.next().removeClass("hidden")
+    setOpen ($header: HTMLElement): void {
+      $header.addClass("accordion_open");
+      $header.next().removeClass("hidden");
     }
 
-    open (header: HTMLElement): void {
+    open ($header: HTMLElement): void {
       var accordion: Accordion;
 
       accordion = this;
 
-      var $header = $(header)
-      $header.addClass("accordion_open")
-      UI.Animate.slideDown($header.next()[0])
+      $header.addClass("accordion_open");
+      UI.Animate.slideDown($header.next());
 
-      $header
-        .siblings(".accordion_open")
-          .each(function () {
-            accordion.close(this);
-          });
+      for (var dom of $header.parent().child()) {
+        if (dom !== $header && dom.hasClass("accordion_open")) {
+          accordion.close(dom);
+        }
+      }
     }
 
-    close (header: HTMLElement): void {
-      var $header = $(header)
+    close ($header: HTMLElement): void {
       $header.removeClass("accordion_open")
-      UI.Animate.slideUp($header.next()[0])
+      UI.Animate.slideUp($header.next())
     }
   }
 }

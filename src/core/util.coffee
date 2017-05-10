@@ -147,8 +147,8 @@ do ->
 
   app.util.search_next_thread = (thread_url, thread_title) ->
     return new Promise( (resolve, reject) ->
-      thread_url = app.url.fix(thread_url)
-      board_url = app.url.threadToBoard(thread_url)
+      thread_url = app.URL.fix(thread_url)
+      board_url = app.URL.threadToBoard(thread_url)
       thread_title = app.util.normalize(thread_title)
 
       app.board.get board_url, (res) ->

@@ -10,7 +10,7 @@ app.boot "/view/inputurl.html", ->
     url = url.replace(/// ^(ttps?):// ///, "h$1://")
     unless /// ^h?ttps?:// ///.test(url)
       url = "http://" + url
-    guess_res = app.url.guess_type(url)
+    guess_res = app.URL.guessType(url)
     if guess_res.type is "thread" or guess_res.type is "board"
       app.message.send("open", {url, new_tab: true})
       parent.postMessage(JSON.stringify(type: "request_killme"), location.origin)

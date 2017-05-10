@@ -21,7 +21,7 @@ class UI.PopupView
     @type Object
     @private
     ###
-    @_popupArea = @defaultParent.querySelector(".popup_area")
+    @_popupArea = @defaultParent.$(".popup_area")
 
     ###*
     @property _popupStyle
@@ -91,7 +91,7 @@ class UI.PopupView
     # sourceがpopup内のものならば、兄弟ノードの削除
     # それ以外は、全てのノードを削除
     if @source.closest(".popup")
-      @source.closest(".popup").classList.add("active")
+      @source.closest(".popup").addClass("active")
       @_remove(false)
     else
       @_remove(true)
@@ -104,15 +104,16 @@ class UI.PopupView
     # 表示位置の決定
     setDispPosition = (popupNode) =>
       margin = 20
-      viewTop = @defaultParent.querySelector(".nav_bar").offsetHeight
-      viewHeight = document.body.offsetHeight - viewTop
+      viewTop = @defaultParent.$(".nav_bar").offsetHeight
+      bodyHeight = document.body.offsetHeight
+      viewHeight = bodyHeight - viewTop
 
       # カーソルの上下左右のスペースを測定
       space =
         left: @mouseX
         right: document.body.offsetWidth - @mouseX
         top: @mouseY
-        bottom: document.body.offsetHeight - @mouseY
+        bottom: bodyHeight - @mouseY
 
       # 通常はカーソル左か右のスペースを用いるが、そのどちらもが狭い場合は上下に配置する
       if Math.max(space.left, space.right) > 400
@@ -149,7 +150,7 @@ class UI.PopupView
     if @_popupStack.length is 0
       @_currentX = @mouseX
       @_currentY = @mouseY
-      @defaultParent.addEventListener("mousemove", (e) => @_onMouseMove(e))
+      @defaultParent.on("mousemove", (e) => @_onMouseMove(e))
 
     # 新規ノードの設定
     setupNewNode = (sourceNode, popupNode) =>
@@ -157,14 +158,14 @@ class UI.PopupView
       setDispPosition(popupNode)
 
       # ノードの設定
-      sourceNode.classList.add("popup_source")
-      sourceNode.setAttribute("stack-index", @_popupStack.length)
-      sourceNode.addEventListener("mouseenter", (e) => @_onMouseEnter(e.currentTarget))
-      sourceNode.addEventListener("mouseleave", (e) => @_onMouseLeave(e.currentTarget))
-      popupNode.classList.add("popup")
-      popupNode.setAttribute("stack-index", @_popupStack.length)
-      popupNode.addEventListener("mouseenter", (e) => @_onMouseEnter(e.currentTarget))
-      popupNode.addEventListener("mouseleave", (e) => @_onMouseLeave(e.currentTarget))
+      sourceNode.addClass("popup_source")
+      sourceNode.setAttr("stack-index", @_popupStack.length)
+      sourceNode.on("mouseenter", (e) => @_onMouseEnter(e.currentTarget))
+      sourceNode.on("mouseleave", (e) => @_onMouseLeave(e.currentTarget))
+      popupNode.addClass("popup")
+      popupNode.setAttr("stack-index", @_popupStack.length)
+      popupNode.on("mouseenter", (e) => @_onMouseEnter(e.currentTarget))
+      popupNode.on("mouseleave", (e) => @_onMouseLeave(e.currentTarget))
 
       # リンク情報の保管
       popupInfo =
@@ -179,7 +180,7 @@ class UI.PopupView
       # 新規ノードの設定
       setupNewNode(@source, @popup)
       # popupの表示
-      @_popupArea.appendChild(@popup)
+      @_popupArea.append(@popup)
       # ノードのアクティブ化
       app.defer =>
         @_activateNode()
@@ -196,9 +197,9 @@ class UI.PopupView
             # 新規ノードの設定
             setupNewNode(sourceNode, popupNode)
             # ノードのアクティブ化
-            sourceNode.classList.add("active")
+            sourceNode.addClass("active")
             # popupの表示
-            @_popupArea.appendChild(popupNode)
+            @_popupArea.append(popupNode)
         , @_delayTime)
         return
 
@@ -215,23 +216,23 @@ class UI.PopupView
       break if (
         !forceRemove and
         (
-          popupInfo.source.classList.contains("active") or
-          popupInfo.popup.classList.contains("active")
+          popupInfo.source.hasClass("active") or
+          popupInfo.popup.hasClass("active")
         )
       )
       # 該当ノードの除去
-      popupInfo.source.removeEventListener("mouseenter", (e) => @_onMouseEnter(e.currentTarget))
-      popupInfo.source.removeEventListener("mouseleave", (e) => @_onMouseLeave(e.currentTarget))
-      popupInfo.popup.removeEventListener("mouseenter", (e) => @_onMouseEnter(e.currentTarget))
-      popupInfo.popup.removeEventListener("mouseleave", (e) => @_onMouseLeave(e.currentTarget))
-      popupInfo.source.classList.remove("popup_source")
-      popupInfo.source.removeAttribute("stack-index")
+      popupInfo.source.off("mouseenter", (e) => @_onMouseEnter(e.currentTarget))
+      popupInfo.source.off("mouseleave", (e) => @_onMouseLeave(e.currentTarget))
+      popupInfo.popup.off("mouseenter", (e) => @_onMouseEnter(e.currentTarget))
+      popupInfo.popup.off("mouseleave", (e) => @_onMouseLeave(e.currentTarget))
+      popupInfo.source.removeClass("popup_source")
+      popupInfo.source.removeAttr("stack-index")
       @_popupArea.removeChild(popupInfo.popup)
       @_popupStack.pop()
 
     # マウス座標の監視終了
     if @_popupStack.length is 0
-      @defaultParent.removeEventListener("mousemove", (e) => @_onMouseMove(e))
+      @defaultParent.off("mousemove", (e) => @_onMouseMove(e))
     return
 
   ###*
@@ -251,17 +252,17 @@ class UI.PopupView
   @param {Object} target
   ###
   _onMouseEnter: (target) ->
-    target.classList.add("active")
+    target.addClass("active")
     # ペア・ノードの非アクティブ化
-    stackIndex = target.getAttribute("stack-index")
-    if target.classList.contains("popup")
-      @_popupStack[stackIndex].source.classList.remove("active")
-    else if target.classList.contains("popup_source")
-      @_popupStack[stackIndex].popup.classList.remove("active")
+    stackIndex = target.getAttr("stack-index")
+    if target.hasClass("popup")
+      @_popupStack[stackIndex].source.removeClass("active")
+    else if target.hasClass("popup_source")
+      @_popupStack[stackIndex].popup.removeClass("active")
     # 末端ノードの非アクティブ化
     if @_popupStack.length - 1 > stackIndex
-      @_popupStack[@_popupStack.length - 1].source.classList.remove("active")
-      @_popupStack[@_popupStack.length - 1].popup.classList.remove("active")
+      @_popupStack[@_popupStack.length - 1].source.removeClass("active")
+      @_popupStack[@_popupStack.length - 1].popup.removeClass("active")
       @_delayRemove(false)
     return
 
@@ -270,7 +271,7 @@ class UI.PopupView
   @param {Object} target
   ###
   _onMouseLeave: (target) ->
-    target.classList.remove("active")
+    target.removeClass("active")
     @_delayRemove(false)
     return
 
@@ -289,16 +290,16 @@ class UI.PopupView
   _activateNode: ->
     elm = document.elementFromPoint(@_currentX, @_currentY)
     if Object.is(elm, @source)
-      @source.classList.add("active")
+      @source.addClass("active")
     else if Object.is(elm, @popup) or Object.is(elm.closest(".popup"), @popup)
-      @popup.classList.add("active")
-    else if elm.classList.contains("popup_source") or elm.classList.contains("popup")
-      elm.classList.add("active")
+      @popup.addClass("active")
+    else if elm.hasClass("popup_source") or elm.hasClass("popup")
+      elm.addClass("active")
     else if elm.closest(".popup")
-      elm.closest(".popup").classList.add("active")
+      elm.closest(".popup").addClass("active")
     else
-      @source.classList.remove("active")
-      @popup.classList.remove("active")
+      @source.removeClass("active")
+      @popup.removeClass("active")
       @_delayRemove(false)
     return
 
@@ -311,7 +312,7 @@ class UI.PopupView
   _getOuterHeight: (elm, margin = false) ->
     # 下層に表示してoffsetHeightを取得する
     elm.style.zIndex = "-1"
-    @_popupArea.appendChild(elm)
+    @_popupArea.append(elm)
     outerHeight = elm.offsetHeight
     @_popupArea.removeChild(elm)
     elm.style.zIndex = "3"    # ソースでは"3"だが、getComputedStyleでは"0"になるため

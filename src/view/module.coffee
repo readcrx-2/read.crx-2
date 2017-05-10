@@ -18,7 +18,7 @@ do ->
       "NG"
       "notification"
       "ReadState"
-      "url"
+      "URL"
       "util"
     ]
 
@@ -231,20 +231,20 @@ class app.view.IframeView extends app.view.View
         return
 
       # Windows版ChromeでのBackSpace誤爆対策
-      if e.which is 8 and not (e.target.nodeName in ["INPUT", "TEXTAREA"])
+      if e.which is 8 and not (e.target.tagName in ["INPUT", "TEXTAREA"])
         e.preventDefault()
 
       # Esc (空白の入力欄に入力された場合)
       else if (
         e.which is 27 and
-        e.target.nodeName in ["INPUT", "TEXTAREA"] and
+        e.target.tagName in ["INPUT", "TEXTAREA"] and
         e.target.value is "" and
         not e.target.classList.contains("command")
       )
         @$element.find(".content").focus()
 
       # 入力欄内では発動しない系
-      else if not (e.target.nodeName in ["INPUT", "TEXTAREA"])
+      else if not (e.target.tagName in ["INPUT", "TEXTAREA"])
         switch (e.which)
           # Enter
           when 13
@@ -366,7 +366,7 @@ class app.view.PaneContentView extends app.view.IframeView
           type: "request_focus"
           focus: true
 
-        if e.target.nodeName in ["INPUT", "TEXTAREA"]
+        if e.target.tagName in ["INPUT", "TEXTAREA"]
           message.focus = false
 
         parent.postMessage(JSON.stringify(message), location.origin)
@@ -531,12 +531,12 @@ class app.view.TabContentView extends app.view.PaneContentView
     $table = @$element.find(".table_sort")
     $selector = @$element.find(".sort_item_selector")
 
-    $table.on "table_sort_updated", (e, ex) ->
+    $table.on "table_sort_updated", ({detail}) ->
       $selector
         .find("option")
           .attr("selected", false)
           .filter(->
-            String(ex.sort_attribute or ex.sort_index) is @textContent
+            String(detail.sort_attribute or detail.sort_index) is @textContent
           )
           .attr("selected", true)
       return
@@ -555,7 +555,7 @@ class app.view.TabContentView extends app.view.PaneContentView
       if (tmp = selected.getAttribute("data-sort_type"))?
         config.sort_type = tmp
 
-      $table.table_sort("update", config)
+      $table.data("tableSorter").updateSnake(config)
       return
     return
 
@@ -570,14 +570,14 @@ class app.view.TabContentView extends app.view.PaneContentView
       url = @$element.attr("data-url")
 
       if ///^https?://\w///.test(url)
-        if app.url.getScheme(url) is "https"
+        if app.URL.getScheme(url) is "https"
           $button.addClass("https")
         else
           $button.removeClass("https")
 
         $button.on "click", =>
           app.message.send "open", {
-            url: app.url.changeScheme(url),
+            url: app.URL.changeScheme(url),
             new_tab: app.config.get("button_change_scheme_newtab") is "on"
           }
           return
@@ -685,7 +685,7 @@ class app.view.TabContentView extends app.view.PaneContentView
     mode = reg.exec(url)
     if mode
       @$element.find(".button_change_netsc").on "click", =>
-        newUrl = app.url.exchangeNetSc(url)
+        newUrl = app.URL.exchangeNetSc(url)
         if newUrl
           app.message.send "open", {
             url: newUrl,
@@ -696,7 +696,7 @@ class app.view.TabContentView extends app.view.PaneContentView
       @$element.find(".button_change_netsc").remove()
 
     #2ch.scでscの投稿だけ表示(スレ&レス)
-    if app.url.tsld(url) is "2ch.sc"
+    if app.URL.tsld(url) is "2ch.sc"
       @$element.find(".button_only_sc").on "click", =>
         @$element.find(".net").toggleClass("hidden")
         return

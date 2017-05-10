@@ -6,51 +6,49 @@ namespace UI {
   declare var app: any;
 
   export class SearchNextThread {
-    private element:HTMLElement;
-    private $element:JQuery;
+    private $element:HTMLElement;
 
-    constructor (element:HTMLElement) {
-      this.element = element;
-      this.$element = $(element);
+    constructor ($element:HTMLElement) {
+      this.$element = $element;
 
-      this.$element.find(".close").on("click", () => {
+      this.$element.C("close")[0].on("click", () => {
         this.hide();
       });
     }
 
     show ():void {
-      UI.Animate.fadeIn(this.element);
+      UI.Animate.fadeIn(this.$element);
     }
 
     hide ():void {
-      UI.Animate.fadeOut(this.element);
+      UI.Animate.fadeOut(this.$element);
     }
 
     search (url:string, title:string):void {
-      var $ol = this.$element.find("ol");
+      var $ol = this.$element.T("ol")[0];
 
-      $ol.empty();
-      this.$element.find(".current").text(title);
-      this.$element.find(".status").text("検索中");
+      $ol.innerHTML = "";
+      this.$element.C("current")[0].textContent = title;
+      this.$element.C("status")[0].textContent = "検索中";
 
       app.util.search_next_thread(url, title)
         .then( (res) => {
           for(var thread of res) {
-            var $li = $("<li>", {
-              class: "open_in_rcrx",
-              text: thread.title,
-              "data-href": thread.url
-            }).appendTo($ol);
+            var $li = $__("li")
+            $li.addClass("open_in_rcrx")
+            $li.textContent = thread.title
+            $li.dataset.href = thread.url
+            $ol.append($li)
 
             if (app.bookmark.get(thread.url)) {
               $li.addClass("bookmarked");
             }
           }
 
-          this.$element.find(".status").text("");
+          this.$element.C("status")[0].textContent = "";
         })
         .catch( () => {
-          this.$element.find(".status").text("次スレ検索に失敗しました");
+          this.$element.C("status")[0].textContent = "次スレ検索に失敗しました";
         });
     }
   }

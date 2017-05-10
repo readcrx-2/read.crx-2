@@ -21,7 +21,7 @@ if (regs.some (a) -> a.test(location.href))
       event = new MouseEvent("click", {button: e.button ,ctrlKey: e.ctrlKey, shiftKey: e.shiftKey})
       a.dispatchEvent(event)
     else if e.target.id is close_button_id
-      @removeChild(e.target.parentNode)
+      @removeChild(e.target.parentElement)
     return
 
   container = document.createElement("div")

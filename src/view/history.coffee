@@ -40,7 +40,7 @@ app.boot "/view/history.html", ->
   load()
 
   $view.find(".button_history_clear").on "click", ->
-    $.dialog("confirm", {
+    UI.dialog("confirm", {
       message: "履歴を削除しますか？"
       label_ok: "はい"
       label_no: "いいえ"

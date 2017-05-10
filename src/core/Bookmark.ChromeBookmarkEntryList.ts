@@ -43,7 +43,7 @@ module app.Bookmark {
         param.expired = true;
       }
 
-      hash = app.URL.buildQueryString(param);
+      hash = app.URL.buildQuery(param);
 
       return url + (hash ? "#" + hash : "");
     }

@@ -1,4 +1,3 @@
-///<reference path="../../node_modules/@types/jquery/index.d.ts" />
 ///<reference path="Accordion.ts" />
 
 /*
@@ -14,16 +13,19 @@ namespace UI {
   "use strict";
 
   export class SelectableAccordion extends Accordion {
-    constructor (element: HTMLElement) {
-      super(element);
+    constructor ($element: HTMLElement) {
+      super($element);
 
       this.$element.on("click", () => {
-        this.$element.find(".selected").removeClass("selected");
+        var selected = this.$element.C("selected");
+        if (selected.length > 0) {
+          selected[0].removeClass("selected");
+        }
       });
     }
 
     getSelected (): HTMLElement {
-      return <HTMLElement>this.element.querySelector("h3.selected, a.selected") || null;
+      return <HTMLElement>this.$element.$("h3.selected, a.selected") || null;
     }
 
     select (target: HTMLElement): void {
@@ -31,17 +33,17 @@ namespace UI {
 
       this.clearSelect();
 
-      if (target.nodeName === "H3") {
+      if (target.tagName === "H3") {
         this.close(target);
       }
-      else if (target.nodeName === "A") {
-        targetHeader = <HTMLElement>target.parentElement.parentElement.previousElementSibling;
-        if (!targetHeader.classList.contains("accordion_open")) {
+      else if (target.tagName === "A") {
+        targetHeader = <HTMLElement>target.parent().parent().prev();
+        if (!targetHeader.hasClass("accordion_open")) {
           this.open(targetHeader);
         }
       }
 
-      target.classList.add("selected");
+      target.addClass("selected");
       target.scrollIntoViewIfNeeded();
     }
 
@@ -51,7 +53,7 @@ namespace UI {
       selected = this.getSelected();
 
       if (selected) {
-        selected.classList.remove("selected");
+        selected.removeClass("selected");
       }
     }
 
@@ -66,25 +68,25 @@ namespace UI {
         for (key = 0; key < repeat; key++) {
           prevCurrent = current;
 
-          if (current.nodeName === "A" && current.parentElement.nextElementSibling) {
-            current = <HTMLElement>current.parentElement.nextElementSibling.firstElementChild;
+          if (current.tagName === "A" && current.parent().next()) {
+            current = <HTMLElement>current.parent().next().firstElementChild;
           }
           else {
-            if (current.nodeName === "A") {
-              currentH3 = <HTMLElement>current.parentElement.parentElement.previousElementSibling;
+            if (current.tagName === "A") {
+              currentH3 = <HTMLElement>current.parent().parent().prev();
             }
             else {
               currentH3 = current;
             }
 
-            nextH3 = <HTMLElement>currentH3.nextElementSibling;
-            while (nextH3 && nextH3.nodeName !== "H3") {
-              nextH3 = <HTMLElement>nextH3.nextElementSibling;
+            nextH3 = <HTMLElement>currentH3.next();
+            while (nextH3 && nextH3.tagName !== "H3") {
+              nextH3 = <HTMLElement>nextH3.next();
             }
 
             if (nextH3) {
-              if (nextH3.classList.contains("accordion_open")) {
-                current = <HTMLElement>nextH3.nextElementSibling.querySelector("li > a");
+              if (nextH3.hasClass("accordion_open")) {
+                current = <HTMLElement>nextH3.next().$("li > a");
               }
               else {
                 current = nextH3;
@@ -98,8 +100,8 @@ namespace UI {
         }
       }
       else {
-        current = <HTMLElement>this.element.querySelector(".accordion_open + ul a");
-        current = current || <HTMLElement>this.element.querySelector("h3");
+        current = <HTMLElement>this.$element.$(".accordion_open + ul a");
+        current = current || <HTMLElement>this.$element.$("h3");
       }
 
       if (current && current !== this.getSelected()) {
@@ -118,25 +120,25 @@ namespace UI {
         for (key = 0; key < repeat; key++) {
           prevCurrent = current;
 
-          if (current.nodeName === "A" && current.parentElement.previousElementSibling) {
-            current = <HTMLElement>current.parentElement.previousElementSibling.firstElementChild;
+          if (current.tagName === "A" && current.parent().prev()) {
+            current = <HTMLElement>current.parent().prev().firstElementChild;
           }
           else {
-            if (current.nodeName === "A") {
-              currentH3 = <HTMLElement>current.parentElement.parentElement.previousElementSibling;
+            if (current.tagName === "A") {
+              currentH3 = <HTMLElement>current.parent().parent().prev();
             }
             else {
               currentH3 = current;
             }
 
-            prevH3 = <HTMLElement>currentH3.previousElementSibling;
-            while (prevH3 && prevH3.nodeName !== "H3") {
-              prevH3 = <HTMLElement>prevH3.previousElementSibling;
+            prevH3 = <HTMLElement>currentH3.prev();
+            while (prevH3 && prevH3.tagName !== "H3") {
+              prevH3 = <HTMLElement>prevH3.prev();
             }
 
             if (prevH3) {
-              if (prevH3.classList.contains("accordion_open")) {
-                current = <HTMLElement>prevH3.nextElementSibling.querySelector("li:last-child > a");
+              if (prevH3.hasClass("accordion_open")) {
+                current = <HTMLElement>prevH3.next().$("li:last-child > a");
               }
               else {
                 current = prevH3;
@@ -150,8 +152,8 @@ namespace UI {
         }
       }
       else {
-        current = <HTMLElement>this.element.querySelector(".accordion_open + ul a");
-        current = current || <HTMLElement>this.element.querySelector("h3");
+        current = <HTMLElement>this.$element.$(".accordion_open + ul a");
+        current = current || <HTMLElement>this.$element.$("h3");
       }
 
       if (current && current !== this.getSelected()) {

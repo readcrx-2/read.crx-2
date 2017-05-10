@@ -12,14 +12,15 @@ app.boot "/view/bookmark.html", ->
   $table.appendTo(".content")
   $table.find("th.res, th.unread, th.heat").attr("data-table_sort_type", "num")
   $table.find("th.unread").addClass("table_sort_desc")
-  $table.table_sort()
+  tableSorter = new UI.TableSorter($table[0])
+  $table.data("tableSorter", tableSorter)
 
   new app.view.TabContentView(document.documentElement)
 
   trUpdatedObserver = new MutationObserver (records) ->
     for record in records
       if record.target.webkitMatchesSelector("tr.updated")
-        record.target.parentNode.appendChild(record.target)
+        record.target.parentElement.appendChild(record.target)
     return
 
   #リロード時処理
@@ -43,7 +44,7 @@ app.boot "/view/bookmark.html", ->
     board_list = new Set()
     board_thread_table = new Map()
     for bookmark in app.bookmarkEntryList.getAllThreads()
-      board_url = app.url.threadToBoard(bookmark.url)
+      board_url = app.URL.threadToBoard(bookmark.url)
       board_list.add(board_url)
       if board_thread_table.has(board_url)
         board_thread_table.get(board_url).push(bookmark.url)
@@ -60,7 +61,7 @@ app.boot "/view/bookmark.html", ->
 
     fn = (res) ->
       if res?
-        delete loadingServer[app.url.getDomain(@prev)]
+        delete loadingServer[app.URL.getDomain(@prev)]
         count.loading--
         status = if res.status is "success" then "success" else "error"
         count[status]++
@@ -76,7 +77,7 @@ app.boot "/view/bookmark.html", ->
             .find(".table_sort_desc, .table_sort_asc")
               .removeClass("table_sort_desc table_sort_asc")
           for tr in $view[0].querySelectorAll("tr:not(.updated)")
-            tr.parentNode.appendChild(tr)
+            tr.parentElement.appendChild(tr)
           trUpdatedObserver.disconnect()
           $view.removeClass("loading")
           if app.config.get("auto_bookmark_notify") is "on" and auto
@@ -93,7 +94,7 @@ app.boot "/view/bookmark.html", ->
         keys = board_list.values()
         while !(board = keys.next()).done
           current = board.value
-          server = app.url.getDomain(current)
+          server = app.URL.getDomain(current)
           continue if loadingServer[server]
           loadingServer[server] = true
           board_list.delete(current)
@@ -114,7 +115,7 @@ app.boot "/view/bookmark.html", ->
 
   for a in app.bookmarkEntryList.getAllThreads()
     do (a) ->
-      boardUrl = app.url.threadToBoard(a.url)
+      boardUrl = app.URL.threadToBoard(a.url)
       app.BoardTitleSolver.ask(boardUrl).then( (boardName) ->
         threadList.addItem(
           title: a.title
@@ -125,13 +126,13 @@ app.boot "/view/bookmark.html", ->
           expired: a.expired
           board_url: boardUrl
           board_title: boardName
-          is_https: (app.url.getScheme(a.url) is "https")
+          is_https: (app.URL.getScheme(a.url) is "https")
         )
         return
       )
 
   app.message.send("request_update_read_state", {})
-  $table.table_sort("update")
+  tableSorter.update()
 
   $view.trigger("view_loaded")
 

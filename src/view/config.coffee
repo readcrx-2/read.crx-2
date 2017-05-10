@@ -321,10 +321,10 @@ app.boot "/view/config.html", ["cache", "bbsmenu"], (Cache, BBSMenu) ->
     )
   , ->
     return new Promise( (resolve, reject) ->
-      Promise.all(
+      Promise.all([
         app.ReadState.getAll(),
         app.History.getAll()
-      ).then( ([read_state_res, history_res]) ->
+      ]).then( ([read_state_res, history_res]) ->
         resolve({"read_state": read_state_res, "history": history_res})
         return
       )

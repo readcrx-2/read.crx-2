@@ -6,11 +6,11 @@
 ###
 class app.Thread
   constructor: (url) ->
-    @url = app.url.fix(url)
+    @url = app.URL.fix(url)
     @title = null
     @res = null
     @message = null
-    @tsld = app.url.tsld(@url)
+    @tsld = app.URL.tsld(@url)
     return
 
   get: (forceUpdate, progress) ->
@@ -105,7 +105,7 @@ class app.Thread
       #パース
       .then( (response) =>
         return new Promise( (resolve, reject) =>
-          guessRes = app.url.guess_type(@url)
+          guessRes = app.URL.guessType(@url)
 
           if response?.status is 200 or (readcgiVer >= 6 and response?.status is 500)
             if deltaFlg
@@ -132,7 +132,7 @@ class app.Thread
             else
               thread = Thread.parse(@url, response.body)
           #2ch系BBSのdat落ち
-          else if guessRes.bbs_type is "2ch" and response?.status is 203
+          else if guessRes.bbsType is "2ch" and response?.status is 203
             if hasCache
               if deltaFlg and @tsld in ["2ch.net", "bbspink.com"]
                 thread = cache.parsed
@@ -158,7 +158,7 @@ class app.Thread
                 (not response and hasCache)
               resolve({response, thread})
             #2ch系BBSのdat落ち
-            else if guessRes.bbs_type is "2ch" and response?.status is 203
+            else if guessRes.bbsType is "2ch" and response?.status is 203
               reject({response, thread})
             else
               reject({response, thread})
@@ -207,7 +207,7 @@ class app.Thread
 
         #2chでrejectされてる場合は移転を疑う
         if @tsld is "2ch.net" and response
-          app.util.ch_server_move_detect(app.url.threadToBoard(@url))
+          app.util.ch_server_move_detect(app.URL.threadToBoard(@url))
             #移転検出時
             .then (newBoardURL) =>
               tmp = ///^https?://(\w+)\.2ch\.net/ ///.exec(newBoardURL)[1]
@@ -339,7 +339,7 @@ class app.Thread
           charset: "EUC-JP"
       when "2ch.net"
         if app.config.get("format_2chnet") is "dat"
-          path: "#{tmp[1]}//#{tmp[2]}/#{tmp[4]}/dat/#{tmp[5]}.dat",
+          path: "#{tmp[1]}://#{tmp[2]}/#{tmp[4]}/dat/#{tmp[5]}.dat",
           charset: "Shift_JIS"
         else
           path: tmp[0],
@@ -360,7 +360,7 @@ class app.Thread
   @return {null|Object}
   ###
   @parse: (url, text, resLength) ->
-    switch app.url.tsld(url)
+    switch app.URL.tsld(url)
       when ""
         null
       when "machi.to"

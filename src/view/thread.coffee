@@ -42,11 +42,11 @@ app.view_thread = {}
 
 app.boot "/view/thread.html", ->
   try
-    view_url = app.url.parseQuery(location.search).get("q")
+    view_url = app.URL.parseQuery(location.search).get("q")
   catch
     alert("不正な引数です")
     return
-  view_url = app.url.fix(view_url)
+  view_url = app.URL.fix(view_url)
 
   $view = $(document.documentElement)
   $view.attr("data-url", view_url)
@@ -72,7 +72,7 @@ app.boot "/view/thread.html", ->
     param.url = view_url
     param.title = document.title
     open(
-      "/write/write.html?#{app.url.buildQuery(param)}"
+      "/write/write.html?#{app.URL.buildQuery(param)}"
       undefined
       'width=600,height=300'
     )
@@ -93,7 +93,7 @@ app.boot "/view/thread.html", ->
       popupView.show($popup[0], e.clientX, e.clientY, that)
       return
 
-  if app.url.tsld(view_url) in ["2ch.net", "shitaraba.net", "bbspink.com", "2ch.sc", "open2ch.net"]
+  if app.URL.tsld(view_url) in ["2ch.net", "shitaraba.net", "bbspink.com", "2ch.sc", "open2ch.net"]
     $view.find(".button_write").on "click", ->
       write()
       return
@@ -102,13 +102,13 @@ app.boot "/view/thread.html", ->
 
   # 過去ログであることが自明の場合は書き込みボタンを隠す
   if (
-    app.url.tsld(view_url) is "shitaraba.net" and
+    app.URL.tsld(view_url) is "shitaraba.net" and
     view_url.includes("/read_archive.cgi/")
   )
     $view.find(".button_write").remove()
 
   # 現状ではしたらばはhttpsに対応していないので切り替えボタンを隠す
-  if app.url.tsld(view_url) is "shitaraba.net"
+  if app.URL.tsld(view_url) is "shitaraba.net"
     $view.find(".button_scheme").remove()
 
   #リロード処理
@@ -267,7 +267,7 @@ app.boot "/view/thread.html", ->
       unless $article.attr("data-trip")?
         $menu.find(".copy_trip").remove()
 
-      unless app.url.tsld(view_url) in ["2ch.net", "bbspink.com", "shitaraba.net"]
+      unless app.URL.tsld(view_url) in ["2ch.net", "bbspink.com", "shitaraba.net"]
         $menu.find(".res_to_this, .res_to_this2").remove()
 
       if $article.hasClass("written")
@@ -293,7 +293,7 @@ app.boot "/view/thread.html", ->
 
       app.defer ->
         $menu.removeClass("hidden")
-        $.contextmenu($menu, e.clientX, e.clientY)
+        UI.contextmenu($menu[0], e.clientX, e.clientY)
         return
       return
 
@@ -352,12 +352,12 @@ app.boot "/view/thread.html", ->
         """)
 
       else if $this.hasClass("add_writehistory")
-        threadContent.addWriteHistory($res)
-        threadContent.addClassWithOrg($res, "written")
+        threadContent.addWriteHistory($res[0])
+        threadContent.addClassWithOrg($res[0], "written")
 
       else if $this.hasClass("del_writehistory")
-        threadContent.removeWriteHistory($res)
-        threadContent.removeClassWithOrg($res, "written")
+        threadContent.removeWriteHistory($res[0])
+        threadContent.removeClassWithOrg($res[0], "written")
 
       else if $this.hasClass("toggle_aa_mode")
         $res.toggleClass("aa")
@@ -453,20 +453,20 @@ app.boot "/view/thread.html", ->
 
       #read.crxで開けるURLかどうかを判定
       flg = false
-      tmp = app.url.guess_type(target_url)
+      tmp = app.URL.guessType(target_url)
       #スレのURLはほぼ確実に判定できるので、そのままok
       if tmp.type is "thread"
         flg = true
       #2chタイプ以外の板urlもほぼ確実に判定できる
-      else if tmp.type is "board" and tmp.bbs_type isnt "2ch"
+      else if tmp.type is "board" and tmp.bbsType isnt "2ch"
         flg = true
       #2chタイプの板は誤爆率が高いので、もう少し細かく判定する
-      else if tmp.type is "board" and tmp.bbs_type is "2ch"
+      else if tmp.type is "board" and tmp.bbsType is "2ch"
         #2ch自体の場合の判断はguess_typeを信じて板判定
-        if app.url.tsld(target_url) is "2ch.net"
+        if app.URL.tsld(target_url) is "2ch.net"
           flg = true
         #ブックマークされている場合も板として判定
-        else if app.bookmark.get(app.url.fix(target_url))
+        else if app.bookmark.get(app.URL.fix(target_url))
           flg = true
       #read.crxで開ける板だった場合は.open_in_rcrxを付与して再度クリックイベント送出
       if flg
@@ -478,12 +478,12 @@ app.boot "/view/thread.html", ->
 
     #リンク先情報ポップアップ
     .on "mouseenter", ".message a:not(.anchor)", (e) ->
-      tmp = app.url.guess_type(@href)
+      tmp = app.URL.guessType(@href)
       if tmp.type is "board"
-        board_url = app.url.fix(@href)
+        board_url = app.URL.fix(@href)
         after = ""
       else if tmp.type is "thread"
-        board_url = app.url.threadToBoard(@href)
+        board_url = app.URL.threadToBoard(@href)
         after = "のスレ"
       else
         return
@@ -636,7 +636,7 @@ app.boot "/view/thread.html", ->
           app.contextMenus.update("add_link_to_ngwords", {
             enabled: true,
             onclick: (info, tab) =>
-              app.NG.add(@parentNode.href)
+              app.NG.add(@parentElement.href)
               return
           })
         when "VIDEO"
@@ -884,7 +884,7 @@ app.boot "/view/thread.html", ->
 
   #パンくずリスト表示
   do ->
-    board_url = app.url.threadToBoard(view_url)
+    board_url = app.URL.threadToBoard(view_url)
     app.BoardTitleSolver.ask(board_url).catch ->
       return
     .then (title) ->
@@ -976,7 +976,7 @@ app.view_thread._draw = ($view, force_update, beforeAdd) ->
 
 app.view_thread._read_state_manager = ($view) ->
   view_url = $view.attr("data-url")
-  board_url = app.url.threadToBoard(view_url)
+  board_url = app.URL.threadToBoard(view_url)
   $content = $($view.find(".content"))
   content = $content[0]
   readStateAttached = false

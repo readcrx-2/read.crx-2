@@ -1,8 +1,8 @@
 do ->
   return if /windows/i.test(navigator.userAgent)
   if "textar_font" of localStorage
-    $ ->
-      style = document.createElement("style")
+    document.on("DOMContentLoaded", ->
+      style = $__("style")
       style.textContent = """
         @font-face {
           font-family: "Textar";
@@ -11,12 +11,13 @@ do ->
       """
       document.head.appendChild(style)
       return
+    )
   return
 
 app.boot "/write/submit_thread.html", ->
-  param = app.url.parseQuery(location.search)
+  param = app.URL.parseQuery(location.search)
   arg = {}
-  arg.url = app.url.fix(param.get("url"))
+  arg.url = app.URL.fix(param.get("url"))
   arg.title = param.get("title") ? param.get("url")
   arg.name = param.get("name") ? app.config.get("default_name")
   arg.mail = param.get("mail") ? app.config.get("default_mail")
@@ -59,50 +60,64 @@ app.boot "/write/submit_thread.html", ->
     )
     return
 
-  $view = $(".view_write")
+  $view = $$.C("view_write")[0]
 
-  $view.find(".preview_button").on "click", (e) ->
+  $view.C("preview_button")[0].on("click", (e) ->
     e.preventDefault()
 
-    text = $view.find("textarea").val()
+    text = $view.T("textarea")[0].value
     #行頭のスペースは削除される。複数のスペースは一つに纏められる。
     text = text.replace(/^\u0020*/g, "").replace(/\u0020+/g, " ")
 
-    $("<div>", class: "preview")
-      .append($("<pre>", {text}))
-      .append(
-        $("<button>", class: "close_preview", text: "戻る").on "click", ->
-          $(@).parent().remove()
-          return
-      )
-      .appendTo(document.body)
+    $div = $__("div")
+    $div.addClass("preview")
+    $pre = $__("pre")
+    $pre.textContent = text
+    $div.append($pre)
+    $button = $__("button")
+    $button.addClass("close_preview")
+    $button.textContent = "戻る"
+    $button.on("click", ->
+      @parentElement.remove()
+    )
+    $div.append($button)
+    document.body.append($div)
     return
+  )
 
-  $view.find(".message").on "keyup", (e) ->
+  $view.C("message")[0].on("keyup", ->
     line = @value.split(/\n/).length
-    $view.find(".notice").text("#{@value.length}文字 #{line}行")
+    $view.C("notice")[0].textContent = "#{@value.length}文字 #{line}行"
     return
+  )
+
+  $sage = $view.C("sage")[0]
+  $mail = $view.C("mail")[0]
 
   if app.config.get("sage_flag") is "on"
-    $view.find(".sage").prop("checked", true)
-    $view.find(".mail").prop("disabled", true)
-  $view.find(".sage").on "change", ->
-    if $(@).prop("checked")
+    $sage.checked = true
+    $mail.disabled = true
+  $view.C("sage")[0].on("change", ->
+    if @checked
       app.config.set("sage_flag", "on")
-      $view.find(".mail").prop("disabled", true)
+      $mail.disabled = true
     else
       app.config.set("sage_flag", "off")
-      $view.find(".mail").prop("disabled", false)
+      $mail.disabled = false
     return
+  )
 
+  $notice = $view.C("notice")[0]
   on_error = (message) ->
-    $view.find("form input, form textarea").removeAttr("disabled")
+    for dom from $view.$$("form input, form textarea")
+      dom.disabled = false
 
     if message
-      $view.find(".notice").text("書き込み失敗 - #{message}")
+      $notice.textContent = "書き込み失敗 - #{message}"
     else
-      $view.find(".notice").text("")
-      UI.Animate.fadeOut($view.find(".iframe_container")[0])
+      $notice.textContent = ""
+      UI.Animate.fadeIn($view.C("iframe_container")[0])
+    return
 
   write_timer =
     wake: ->
@@ -120,73 +135,75 @@ app.boot "/write/submit_thread.html", ->
       e.source.postMessage("write_iframe_pong:thread", "*")
       write_timer.wake()
     else if message.type is "success"
-      $view.find(".notice").text("書き込み成功")
+      $notice.textContent = "書き込み成功"
       setTimeout ->
-        mes = $view.find(".message").val()
-        name = $view.find(".name").val()
-        mail = $view.find(".mail").val()
-        title = $view.find(".title").val()
-        if app.url.tsld(arg.url) in ["2ch.net", "2ch.sc", "bbspink.com", "open2ch.net"]
+        message = $view.C("message")[0].value
+        name = $view.C("name")[0].value
+        mail = $view.C("mail")[0].value
+        title = $view.C("title")[0].value
+        if app.URL.tsld(arg.url) in ["2ch.net", "2ch.sc", "bbspink.com", "open2ch.net"]
           keys = message.key.match(/.*\/test\/read\.cgi\/(\w+?)\/(\d+)\/l\d+/)
           if !keys?
-            $view.find(".notice").text("書き込み失敗 - 不明な転送場所")
+            $notice.textContent = "書き込み失敗 - 不明な転送場所"
           else
             server = arg.url.match(/^(https?:\/\/\w+\.(?:2ch\.net|2ch\.sc|bbspink\.com|open2ch\.net)).*/)[1]
             url = "#{server}/test/read.cgi/#{keys[1]}/#{keys[2]}"
             chrome.runtime.sendMessage(type: "written", kind: "own", url: arg.url, thread_url: url, mes: mes, name: name, mail: mail, title: title)
-        else if app.url.tsld(arg.url) is "shitaraba.net"
+        else if app.URL.tsld(arg.url) is "shitaraba.net"
           chrome.runtime.sendMessage(type: "written", kind: "board", url: arg.url, mes: mes, name: name, mail: mail, title: title)
         chrome.tabs.getCurrent (tab) ->
           chrome.tabs.remove(tab.id)
       , 2000
       write_timer.kill()
     else if message.type is "confirm"
-      UI.Animate.fadeIn($view.find(".iframe_container")[0])
+      UI.Animate.fadeIn($view.C("iframe_container")[0])
       write_timer.kill()
     else if message.type is "error"
       on_error(message.message)
       write_timer.kill()
     return
 
-  $view.find(".hide_iframe").on "click", ->
+  $view.C("hide_iframe")[0].on "click", ->
     write_timer.kill()
-    UI.Animate.fadeOut($view[0])
-    $view
-      .find(".iframe_container")
-        .find("iframe")
-          .remove()
-        .end()
-    $view.find("input, textarea").removeAttr("disabled")
-    $view.find(".notice").text("")
+    UI.Animate.fadeOut($view)
+    $view.C("iframe_container")[0].C("iframe")[0].remove()
+    for dom from $view.$$("input, textarea")
+      dom.disabled = false
+    $notice.textContent = ""
     return
 
   document.title = arg.title + "板"
-  $view.find("h1").text(arg.title + "板")
-  $view.find("h1").addClass("https") if app.url.getScheme(arg.url) is "https"
-  $view.find(".name").val(arg.name)
-  $view.find(".mail").val(arg.mail)
-  $view.find(".message").val(arg.message)
+  $h1 = $view.T("h1")[0]
+  $h1.textContent = arg.title + "板"
+  $h1.addClass("https") if app.URL.getScheme(arg.url) is "https"
+  $view.C("name")[0].value = arg.name
+  $view.C("mail")[0].value = arg.mail
+  $view.C("message")[0].value = arg.message
 
-  $view.find("form").on "submit", (e) ->
+  $view.T("form")[0].on("submit", (e) ->
     e.preventDefault()
 
-    $view.find("input, textarea").attr("disabled", true)
+    for dom from $view.$$("input, textarea")
+      dom.disabled = true
 
-    guess_res = app.url.guess_type(arg.url)
-    scheme = app.url.getScheme(arg.url)
+    guess_res = app.URL.guessType(arg.url)
+    scheme = app.URL.getScheme(arg.url)
 
     iframe_arg =
-      rcrx_name: $view.find(".name").val()
-      rcrx_mail: if $view.find(".sage").prop("checked") then "sage" else $view.find(".mail").val()
-      rcrx_title: $view.find(".title").val()
-      rcrx_message: $view.find(".message").val()
+      rcrx_name: $view.C("name")[0].value
+      rcrx_mail: if $view.C("sage")[0].checked then "sage" else $view.C("mail").value
+      rcrx_title: $view.C("title").value
+      rcrx_message: $view.C("message").value
 
-    $iframe = $("<iframe>", src: "/view/empty.html")
-    $iframe.one "load", ->
+    $iframe = $__("iframe")
+    $iframe.src = "/view/empty.html"
+    $iframe.on("load", fn = ->
+      $iframe.off("load", fn)
+
       #2ch
-      if guess_res.bbs_type is "2ch"
+      if guess_res.bbsType is "2ch"
         #open2ch
-        if app.url.tsld(arg.url) is "open2ch.net"
+        if app.URL.tsld(arg.url) is "open2ch.net"
           tmp = arg.url.split("/")
           form_data =
             action: "#{scheme}://#{tmp[2]}/test/bbs.cgi"
@@ -214,7 +231,7 @@ app.boot "/write/submit_thread.html", ->
             textarea:
               MESSAGE: iframe_arg.rcrx_message
       #したらば
-      else if guess_res.bbs_type is "jbbs"
+      else if guess_res.bbsType is "jbbs"
         tmp = arg.url.split("/")
         form_data =
           action: "#{scheme}://jbbs.shitaraba.net/bbs/write.cgi/#{tmp[3]}/#{tmp[4]}/new/"
@@ -230,32 +247,35 @@ app.boot "/write/submit_thread.html", ->
           textarea:
             MESSAGE: iframe_arg.rcrx_message
       #フォーム生成
-      form = @contentWindow.document.createElement("form")
+      form = @contentDocument.createElement("form")
       form.setAttribute("accept-charset", form_data.charset)
       form.action = form_data.action
       form.method = "POST"
       for key, val of form_data.input
-        input = @contentWindow.document.createElement("input")
+        input = @contentDocument.createElement("input")
         input.name = key
         input.setAttribute("value", val)
         form.appendChild(input)
       for key, val of form_data.textarea
-        textarea = @contentWindow.document.createElement("textarea")
+        textarea = @contentDocument.createElement("textarea")
         textarea.name = key
         textarea.textContent = val
-        form.appendChild(textarea)
-      @contentDocument.body.appendChild(form)
-      form.__proto__.submit.call(form)
+        form.append(textarea)
+      @contentDocument.body.append(form)
+      Object.getPrototypeOf(form).submit.call(form)
       return
-    $iframe.appendTo(".iframe_container")
+    )
+    $$.C("iframe_container")[0].append($iframe)
 
     write_timer.wake()
 
-    $view.find(".notice").text("書き込み中")
+    $notice.textContent = "書き込み中"
+    return
+  )
 
   # 忍法帳関連処理
   do ->
-    return if app.url.tsld(arg.url) isnt "2ch.net"
+    return if app.URL.tsld(arg.url) isnt "2ch.net"
 
     app.Ninja.getCookie (cookies) ->
       backup = app.Ninja.getBackup()
@@ -264,17 +284,17 @@ app.boot "/write/submit_thread.html", ->
       availableBackup = backup.some((info) -> info.site.siteId is "2ch")
 
       if (not availableCookie) and availableBackup
-        $view.find(".notice").html("""
+        $notice.innerHTML = """
           忍法帳クッキーが存在しませんが、バックアップが利用可能です。
           <button class="ninja_restore">バックアップから復元</button>
-        """)
+        """
       return
 
     $view.on "click", ".ninja_restore", (e) ->
       e.preventDefault()
-      $view.find(".notice").text("復元中です。")
+      $notice.textContent = "復元中です。"
       app.Ninja.restore "2ch", ->
-        $view.find(".notice").text("忍法帳クッキーの復元が完了しました。")
+        $notice.textContent = "忍法帳クッキーの復元が完了しました。"
         return
       return
     return

@@ -97,7 +97,7 @@ class app.Board
         @message = "板の読み込みに失敗しました。"
 
         #2chでrejectされている場合は移転を疑う
-        if app.url.tsld(@url) is "2ch.net" and response?
+        if app.URL.tsld(@url) is "2ch.net" and response?
           app.util.ch_server_move_detect(@url)
             #移転検出時
             .then (new_board_url) =>
@@ -237,7 +237,7 @@ class app.Board
   ###
   @get_cached_res_count: (thread_url) ->
     return new Promise( (resolve, reject) ->
-      board_url = app.url.threadToBoard(thread_url)
+      board_url = app.URL.threadToBoard(thread_url)
       xhr_path = Board._get_xhr_info(board_url)?.path
 
       unless xhr_path?

@@ -107,7 +107,7 @@ namespace app {
       return tmp ? new URLSearchParams(tmp[1]) : new URLSearchParams();
     }
 
-    export function buildQueryString (data:{[index:string]:any;}) {
+    export function buildQuery (data:{[index:string]:any;}) {
       var param, key:string, val:any;
 
       param = new URLSearchParams();
@@ -235,36 +235,5 @@ namespace app {
       }
       return resUrl;
     }
-  }
-}
-
-// 互換性確保部分
-namespace app {
-  export namespace url {
-    export var fix = app.URL.fix;
-
-    export function guess_type (url):{type: string; bbs_type: string;} {
-      var tmp:app.URL.GuessResult;
-
-      tmp = app.URL.guessType(url);
-
-      return {
-        type: tmp.type,
-        bbs_type: tmp.bbsType
-      };
-    }
-
-    export var tsld = app.URL.tsld;
-    export var getDomain = app.URL.getDomain;
-    export var getScheme = app.URL.getScheme;
-    export var changeScheme = app.URL.changeScheme;
-    export var threadToBoard = app.URL.threadToBoard;
-    export var parseQuery = app.URL.parseQuery;
-    export var parseHashQuery = app.URL.parseHashQuery;
-    export var buildQuery = app.URL.buildQueryString;
-    export const SHORT_URL_REG = app.URL.SHORT_URL_REG;
-    export var expandShortURL = app.URL.expandShortURL;
-    export var pushBoardToServerInfo = app.URL.pushBoardToServerInfo;
-    export var exchangeNetSc = app.URL.exchangeNetSc;
   }
 }

@@ -274,7 +274,7 @@ class app.view.Index extends app.view.View
     return
 
 app.boot "/view/index.html", ->
-  query = app.url.parseQuery(location.search).get("q")
+  query = app.URL.parseQuery(location.search).get("q")
 
   get_current = new Promise( (resolve, reject) ->
     chrome.tabs.getCurrent (current_tab) ->
@@ -374,8 +374,8 @@ app.view_setup_resizer = ->
 
 app.main = ->
   urlToIframeInfo = (url) ->
-    url = app.url.fix(url)
-    guessResult = app.url.guess_type(url)
+    url = app.URL.fix(url)
+    guessResult = app.URL.guessType(url)
     if url is "config"
       src: "/view/config.html"
       url: "config"
@@ -397,13 +397,13 @@ app.main = ->
       url: "bookmark_source_selector"
       modal: true
     else if res = /^search:(.+)$/.exec(url)
-      src: "/view/search.html?#{app.url.buildQuery(query: res[1])}"
+      src: "/view/search.html?#{app.URL.buildQuery(query: res[1])}"
       url: url
     else if guessResult.type is "board"
-      src: "/view/board.html?#{app.url.buildQuery(q: url)}"
+      src: "/view/board.html?#{app.URL.buildQuery(q: url)}"
       url: url
     else if guessResult.type is "thread"
-      src: "/view/thread.html?#{app.url.buildQuery(q: url)}"
+      src: "/view/thread.html?#{app.URL.buildQuery(q: url)}"
       url: url
     else
       null
@@ -412,9 +412,9 @@ app.main = ->
     if res = ///^/view/(\w+)\.html$///.exec(src)
       res[1]
     else if res = ///^/view/search\.html(\?.+)$///.exec(src)
-      app.url.parseQuery(res[1], true).get("query")
+      app.URL.parseQuery(res[1], true).get("query")
     else if res = ///^/view/(?:thread|board)\.html(\?.+)$///.exec(src)
-      app.url.parseQuery(res[1], true).get("q")
+      app.URL.parseQuery(res[1], true).get("q")
     else
       null
 
@@ -456,7 +456,7 @@ app.main = ->
       .one "click", "a, div:last-child", (e) ->
         UI.Animate.fadeOut(e.delegateTarget).on("finish", =>
           t = e.delegateTarget
-          t.parentNode.removeChild(t)
+          t.parentElement.removeChild(t)
         )
         return
       .appendTo("#app_notice_container")
@@ -555,7 +555,8 @@ app.main = ->
   $("#tab_a").data("tab", tabA)
   tabB = new UI.Tab(document.querySelector("#tab_b"))
   $("#tab_b").data("tab", tabB)
-  $(".tab .tab_tabbar").sortable(exclude: "img")
+  for dom in $(".tab .tab_tabbar")
+    new UI.Sortable(dom, exclude: "img")
   adjustWindowSize.add(app.view_setup_resizer)
 
   $view.on "tab_urlupdated", "iframe", ->
@@ -575,7 +576,7 @@ app.main = ->
           iframe = document.querySelector("iframe[data-tabid=\"#{tmp.tabId}\"]")
           tmpURL = iframe.getAttribute("data-url")
 
-          if app.url.guess_type(tmpURL).type is "thread"
+          if app.URL.guessType(tmpURL).type is "thread"
             app.message.send "open", {
               new_tab: true
               lazy: true
@@ -862,7 +863,7 @@ app.main = ->
       return
     app.defer ->
       $menu.appendTo(document.body)
-      $.contextmenu($menu, e.clientX, e.clientY)
+      UI.contextmenu($menu[0], e.clientX, e.clientY)
       return
     return
 

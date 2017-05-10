@@ -1,37 +1,40 @@
-do ($ = jQuery) ->
+window.UI ?= {}
+do ->
   cleanup = ->
-    $(".contextmenu_menu").remove()
+    $$.C("contextmenu_menu")[0]?.remove()
+    return
 
-  $(document.documentElement)
-    .on "mousedown keydown contextmenu", (e) ->
-      if e.type is "keydown" and e.which isnt 27
-        return
-
-      if (e.type is "mousedown" or e.type is "contextmenu") and
-          $(e.target).is(".contextmenu_menu, .contextmenu_menu *")
-        return
-
-      cleanup()
+  eventFn = (e) ->
+    if e.target.hasClass("contextmenu_menu") or e.target.parent().hasClass("contextmenu_menu")
       return
-
-  $(window).on "blur", ->
     cleanup()
     return
 
-  $.contextmenu = (menu, x, y) ->
+  doc = document.documentElement
+  doc.on("keydown", (e) ->
+    if e.which is 27
+      cleanup()
+    return
+  )
+  doc.on("mousedown", eventFn)
+  doc.on("contextmenu", eventFn)
+
+  window.on("blur", ->
+    cleanup()
+    return
+  )
+
+  UI.contextmenu = ($menu, x, y) ->
     cleanup()
 
-    $(menu)
-      .addClass("contextmenu_menu")
-      .css(position: "fixed", left: x, top: y)
-      .each ->
-        $this = $(@)
-        this_pos = $this.position()
+    $menu.addClass("contextmenu_menu")
+    $menu.style.position = "fixed"
+    $menu.style.left = "#{x}px"
+    $menu.style.top = "#{y}px"
 
-        if window.innerWidth < this_pos.left + $this.outerWidth()
-          $this.css(left: "", right: "0")
-
-        if window.innerHeight < this_pos.top + $this.outerHeight()
-          $this.css("top", "#{this_pos.top - $this.outerHeight()}px")
-
-        null
+    if window.innerWidth < $menu.offsetLeft + $menu.offsetWidth
+      $menu.style.left = ""
+      $menu.style.right = "0px"
+    if window.innerHeight < $menu.offsetTop + $menu.offsetHeight
+      $menu.style.top = "#{$menu.offsetTop - $menu.offsetHeight}px"
+    return

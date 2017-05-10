@@ -5,7 +5,7 @@ app.module "thread_search", [], (callback) ->
 
     _parse = (x) ->
       return new Promise( (resolve, reject) ->
-        scheme = app.url.getScheme(x.url)
+        scheme = app.URL.getScheme(x.url)
         app.BoardTitleSolver.ask("#{scheme}://#{x.server}/#{x.ita}/").then( (boardName) ->
           resolve(
             url: x.url

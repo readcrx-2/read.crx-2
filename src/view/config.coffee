@@ -647,15 +647,6 @@ app.boot "/view/config.html", ["cache", "bbsmenu"], (Cache, BBSMenu) ->
         .text("ファイルを選択してください")
     return
 
-  #書込履歴テーブル削除
-  $view.find(".writehistory_delete_table").on "click", ->
-    openDatabase("WriteHistory", "", "WriteHistory", 0).transaction( (tx) ->
-      tx.executeSql("drop table WriteHistory", [])
-      $view.find(".writehistory_delete_table").text("テーブル削除(完了)")
-      return
-    )
-    return
-
   $replacestr_status = $view.find(".history_from_1151_status")
   #過去の履歴をインポート
   $view.find(".history_from_1151").on "click", ->

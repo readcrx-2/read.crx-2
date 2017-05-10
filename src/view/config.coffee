@@ -308,7 +308,7 @@ app.boot "/view/config.html", ["cache", "bbsmenu"], (Cache, BBSMenu) ->
     return
 
   setupHistory("history", app.History, ->
-    return Promise.all(app.History.clear(), app.ReadState.clear())
+    return Promise.all([app.History.clear(), app.ReadState.clear()])
   , (day) ->
     return app.History.clearRange(day)
   , (inputObj) ->

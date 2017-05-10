@@ -245,9 +245,9 @@ namespace UI {
 
         this.$element.$(`li[data-tabid=\"${tabId}\"]`).dataset.tabsrc = param.url
         $tmptab = this.$element.$(`iframe[data-tabid=\"${tabId}\"]`)
-        $tmptab.dispatchEvent(new CustomEvent("tab_beforeurlupdate"))
+        $tmptab.dispatchEvent(new Event("tab_beforeurlupdate"))
         $tmptab.src = param.url
-        $tmptab.dispatchEvent(new CustomEvent("tab_urlupdated"))
+        $tmptab.dispatchEvent(new Event("tab_urlupdated"))
       }
 
       if (typeof param.title === "string") {
@@ -284,7 +284,7 @@ namespace UI {
           }
         });
 
-        $iframe.dispatchEvent(new CustomEvent("tab_selected"));
+        $iframe.dispatchEvent(new Event("tab_selected"));
       }
       if (param.locked) {
         $tmptab = this.$element.$(`li[data-tabid=\"${tabId}\"]`);
@@ -333,7 +333,7 @@ namespace UI {
       $tmptab.remove()
 
       $tmptabcon = this.$element.$(`iframe[data-tabid=\"${tabId}\"]`)
-      $tmptabcon.dispatchEvent(new CustomEvent("tab_removed"))
+      $tmptabcon.dispatchEvent(new Event("tab_removed"))
       $tmptabcon.remove();
     }
 

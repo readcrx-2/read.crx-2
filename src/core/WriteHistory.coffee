@@ -116,7 +116,8 @@ class app.WriteHistory
         req = db
           .transaction("WriteHistory")
           .objectStore("WriteHistory")
-          .openCursor()
+          .index("date")
+          .openCursor(null, "prev")
         advanced = false
         histories = []
         req.onsuccess = (e) ->
@@ -129,7 +130,7 @@ class app.WriteHistory
                 return
             value = cursor.value
             value.is_https = (app.URL.getScheme(value.url) is "https")
-            histories.unshift(value)
+            histories.push(value)
             cursor.continue()
           else
             resolve(histories)

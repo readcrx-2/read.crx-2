@@ -1,3 +1,4 @@
+///<reference path="../global.d.ts" />
 namespace UI {
   "use strict";
 
@@ -7,7 +8,7 @@ namespace UI {
     private interval: number;
 
     constructor (private element: Element, private threshold: number = 100) {
-      this.element.addEventListener("wheel", this.onMouseWheel.bind(this));
+      this.element.on("wheel", this.onMouseWheel.bind(this));
       this.interval = setInterval(this.onInterval.bind(this), 500);
     }
 

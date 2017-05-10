@@ -27,7 +27,7 @@ namespace UI {
 
           e.preventDefault();
 
-          if ((<any>e.originalEvent).wheelDelta < 0) {
+          if ((<any>e).wheelDelta < 0) {
             tmp = "prev";
           }
           else {
@@ -46,18 +46,19 @@ namespace UI {
           e.preventDefault();
           return;
         }
-        if ((<HTMLElement>e.target).tagName !== "LI") {
+        var target = (<HTMLElement>(<HTMLElement>e.target).closest("li"))
+        if (target === null) {
           return;
         }
         if (e.which === 3) {
           return;
         }
 
-        if (e.which === 2 && !this.hasClass("tab_locked")) {
-          tab.remove(this.dataset.tabid);
+        if (e.which === 2 && !target.hasClass("tab_locked")) {
+          tab.remove(target.dataset.tabid);
         }
         else {
-          tab.update(this.dataset.tabid, {selected: true});
+          tab.update(target.dataset.tabid, {selected: true});
          }
       });
       $ul.on("click", function (e) {
@@ -259,9 +260,9 @@ namespace UI {
       }
 
       if (param.selected) {
-        var $selected = this.$element.C("tab_selected")
-        if ($selected.length > 0) {
-          $selected[0].removeClass("tab_selected");
+        var $selected = this.$element.C("tab_selected");
+        for (var i = $selected.length-1; i >= 0; i--) {
+          $selected[i].removeClass("tab_selected");
         }
         for (var dom of this.$element.$$(`[data-tabid=\"${tabId}\"]`)) {
           dom.addClass("tab_selected");

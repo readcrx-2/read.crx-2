@@ -602,9 +602,13 @@ class app.Thread
   ###
   @_parsePink = (text, resLength) ->
     # name, mail, other, message, thread_title
-    text = text.replace(/<\/h1>/, "</h1></dd></dl>")
-    reg = /^.*?<dl class="post".*><dt class=\"\"><span class="number">(\d+).* : <\/span><span class="name"><b>(?:<a href="mailto:([^<>]*)">|<font [^>]*>)?(.*?)(?:<\/a>|<\/font>)?<\/b><\/span><span class="date">(.*)<\/span><\/dt><dd class="thread_in"> ?(.*)$/
-    separator = "</dd></dl>"
+    if text.includes("<div class=\"footer push\">read.cgi ver 06")
+      text = text.replace(/<\/h1>/, "</h1></dd></dl>")
+      reg = /^.*?<dl class="post".*><dt class=\"\"><span class="number">(\d+).* : <\/span><span class="name"><b>(?:<a href="mailto:([^<>]*)">|<font [^>]*>)?(.*?)(?:<\/a>|<\/font>)?<\/b><\/span><span class="date">(.*)<\/span><\/dt><dd class="thread_in"> ?(.*)$/
+      separator = "</dd></dl>"
+    else
+      reg = /^(?:<\/?div.*?(?:<br><br>)?)?<dt>(\d+).*：(?:<a href="mailto:([^<>]*)">|<font [^>]*>)?<b>(.*)<\/b>.*：(.*)<dd> ?(.*)<br><br>$/
+      separator = "\n"
 
     titleReg = /<h1 .*?>(.*)\n?<\/h1>/;
     numberOfBroken = 0
@@ -620,7 +624,7 @@ class app.Thread
         thread.title = app.util.decode_char_reference(title[1])
         thread.title = app.util.removeNeedlessFromTitle(thread.title)
       else if regRes
-        while ++resCount isnt +regRes[1]
+        while ++resCount < +regRes[1]
           thread.res.push
             name: "あぼーん"
             mail: "あぼーん"

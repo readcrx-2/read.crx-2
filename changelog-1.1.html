@@ -1,0 +1,501 @@
+<!doctype html>
+<html>
+  <head>
+    <meta charset="utf-8">
+    <meta http-equiv="X-UA-Compatible" content="chrome=1">
+    <title>read.crx 2 | changelog</title>
+    <link rel="stylesheet" href="stylesheets/styles.css">
+    <link rel="stylesheet" href="stylesheets/pygment_trac.css">
+    <script src="javascripts/scale.fix.js"></script>
+    <meta name="viewport" content="width=device-width, initial-scale=1, user-scalable=no">
+    <!--[if lt IE 9]>
+    <script src="//html5shiv.googlecode.com/svn/trunk/html5.js"></script>
+    <![endif]-->
+    <script>
+      (function(i,s,o,g,r,a,m){i['GoogleAnalyticsObject']=r;i[r]=i[r]||function(){
+      (i[r].q=i[r].q||[]).push(arguments)},i[r].l=1*new Date();a=s.createElement(o),
+      m=s.getElementsByTagName(o)[0];a.async=1;a.src=g;m.parentNode.insertBefore(a,m)
+      })(window,document,'script','//www.google-analytics.com/analytics.js','ga');
+
+      ga('create', 'UA-37231225-3', 'auto');
+      ga('send', 'pageview');
+    </script>
+  </head>
+  <body>
+    <div class="wrapper">
+      <header>
+        <h1 class="header">read.crx 2</h1>
+        <p class="header">Chromeアプリな2chブラウザ</p>
+        <ul>
+          <li><a class="buttons github" href="https://github.com/readcrx-2/read.crx-2">View On GitHub</a></li>
+        </ul>
+        <p class="header">This project is maintained by <a class="header name" href="https://github.com/readcrx-2">readcrx-2</a> team</p>
+      </header>
+      <section>
+        <h4><a href="changelog.html">&#x2190; Changes after v1.10.0</a></h4>
+        <h2>v1.9.3 (2016-09-19)</h2>
+        <ul>
+          <li>ポップアップ内の画像読み込み時にローディング表示がされないのを修正 (Thank you, <a href="https://github.com/awazi">awazi</a>）</li>
+          <li>自動更新時に読み込み中のまま更新できない場合があるのを修正</li>
+        </ul>
+        <h2>v1.9.2 (2016-09-16)</h2>
+        <ul>
+          <li>「グロ」「死ね」レスのある画像にぼかし設定に依らずかかってしまうのを修正 (Thank you, <a href="https://github.com/awazi">awazi</a>）</li>
+          <li>一部のスレッドが読み込み中のままになるのを修正</li>
+        </ul>
+        <h2>v1.9.1 (2016-09-15)</h2>
+        <ul>
+          <li>Windowsでオートスクロールが効くように</li>
+          <li>書込ウィンドウが正常に動作しないのを修正</li>
+        </ul>
+        <h2>v1.9.0 (2016-09-15)</h2>
+        <ul>
+          <li>「グロ」「死ね」レスのある画像にぼかしをかけるように (Thank you, <a href="https://github.com/awazi">awazi</a>）</li>
+          <li>2ch互換掲示板の一部が閲覧できないのを修正</li>
+          <li>ポップアップが特定条件下で表示されないのを修正</li>
+          <li>Developers information: ShortQuery.jsを導入</li>
+        </ul>
+        <h2>v1.8.4 (2016-09-13)</h2>
+        <ul>
+          <li>「書込履歴を保存しない」が機能しなかったのを修正</li>
+          <li>自動スクロール中に自動スクロールすると自動スクロールが止まらないのを修正</li>
+          <li>新着レスが少ないときに自動スクロールが止まらないのを修正</li>
+          <li>datをインポートしても保存されないのを修正</li>
+        </ul>
+        <h2>v1.8.3 (2016-09-12)</h2>
+        <ul>
+          <li>ImageReplaceDat関連エラーを修正
+            <ul>
+              <li>置き換え後URLが空のときに処理が止まるのを修正</li>
+              <li>空白行を無視できていなかったのを修正</li>
+              <li>どこかで失敗するとすべて失敗するのを修正</li>
+            </ul>
+          </li>
+          <li>Developers information: jQueryをslimバージョンに変更</li>
+        </ul>
+        <h2>v1.8.2 (2016-09-11)</h2>
+        <ul>
+          <li>本文中にBeのリンクがなぜかできるのを修正</li>
+        </ul>
+        <h2>v1.8.1 (2016-09-11)</h2>
+        <ul>
+          <li>未読ブックマークが表示されないのを修正</li>
+          <li>検索の板名を日本語に変更</li>
+          <li>検索で"検索中"が表示されないのを修正</li>
+          <li>2ch.sc/したらば/まちBBSのスレの読み込みを高速化</li>
+          <li>スレタイの&lt;mark&gt;を表示しないように</li>
+          <li>サムネイルのファビコンをどのURLでも表示するように</li>
+          <li>Beの表示がおかしいのを修正</li>
+        </ul>
+        <h2>v1.8.0 (2016-09-11)</h2>
+        <ul>
+          <li>ImageViewURLReplace.datに対応 <a href="https://github.com/readcrx-2/read.crx-2/wiki/ImageViewURLReplace.dat%E3%81%AE%E4%BB%95%E6%A7%98">表記方法の詳細はWikiのページ</a>を参照して下さい。</li>
+          <li>選択範囲を検索ボタンを追加</li>
+          <li>Ctrl+右クリックで既定のコンテキストメニューが出るように</li>
+          <li>open2chで投稿が失敗したのを取得できていなかったのを修正</li>
+          <li>スレ立て後に立てたスレを開かない/書込履歴に追加されないのを修正</li>
+          <li>NGの正規表現のミスを通知/無効化するように</li>
+          <li>IDや返信から書込履歴に何度も追加できるのを修正</li>
+        </ul>
+        <h2>v1.7.0 (2016-09-07)</h2>
+        <ul>
+          <li>ﾜｯﾁｮｲをNG指定できるように</li>
+          <li>選択範囲をNG指定できるように</li>
+          <li>連鎖NGができるように</li>
+          <li>自分への返信レスを強調するように</li>
+          <li>起動時に復帰した板/スレのタブに表示されるタイトルがおかしいのを修正</li>
+          <li>タブバーの何もないところを右クリックしても閉じたタブを開くが表示されなかったのを修正</li>
+          <li>既読情報削除ボタンを復元(以前と違い閲覧履歴は削除されず既読情報のみを削除します)</li>
+          <li>NG機能の高速化</li>
+          <li style="list-style: none;">※ (最終案内)1.3.0以前からの更新の場合、更新後に設定->データ->書込履歴->テーブル削除のボタンをクリックする必要があります</li>
+        </ul>
+        <h2>v1.6.1 (2016-09-05)</h2>
+        <ul>
+          <li>スレッドのタブをミドルクリックでの閉じるが効かないのを修正</li>
+          <li>したらばで板名が表示されないのを修正</li>
+          <li style="list-style: none;">※ 既知の不具合: <a href="https://github.com/readcrx-2/read.crx-2/issues/149">起動時に復帰した板/スレッドのタブに表示されるタイトルがおかしい</a></li>
+          <li style="list-style: none;">※ 1.3.0以前からの更新の場合、更新後に設定->データ->書込履歴->テーブル削除のボタンをクリックする必要があります</li>
+        </ul>
+        <h2>v1.6.0 (2016-09-04)</h2>
+        <ul>
+          <li>タブを固定できるように</li>
+          <li>SLIPが適応された表示(VIPQ2_EXTDAT～)のデザインを変更</li>
+          <li>閲覧書込履歴一覧から履歴が削除できるように</li>
+          <li>スレから書込履歴を削除できるように</li>
+          <li>範囲を指定して履歴を削除できるように</li>
+          <li>返信をクリックしてメニューが表示されないように</li>
+          <li>Rock54の判定をより正確に</li>
+          <li>2ch.scでもBeアイコン/エモーティコンを表示するように</li>
+          <li>スレにある閲覧履歴削除ボタンを削除</li>
+          <li>すべてのタブを閉じるが実行できないのを修正</li>
+          <li style="list-style: none;">※ 1.3.0以前からの更新の場合、更新後に設定->データ->書込履歴->テーブル削除のボタンをクリックする必要があります</li>
+        </ul>
+        <h2>v1.5.3 (2016-09-04)</h2>
+        <ul>
+          <li>SLIP/トリップをクリックしてメニューが表示されないように</li>
+          <li>スレの読込が完了しないのを修正</li>
+          <li>Chrome54以降で書き込みができないのを修正</li>
+          <li>Chromeで直接開くが動作しないのを修正</li>
+          <li>中クリックでスレが開けないのを修正</li>
+          <li>Developers information: Typescriptを1.5.0-betaから1.5.3にアップデート</li>
+          <li>Developers information: jQueryを2.2.4から3.1.0にアップデート</li>
+          <li style="list-style: none;">※ 1.3.0以前からの更新の場合、更新後に設定->データ->書込履歴->テーブル削除のボタンをクリックする必要があります</li>
+        </ul>
+        <h2>v1.5.2 (2016-08-30)</h2>
+        <ul>
+          <li>書き込み後にリロードしないのを修正</li>
+          <li style="list-style: none;">※ 1.3.0以前からの更新の場合、更新後に設定->データ->書込履歴->テーブル削除のボタンをクリックする必要があります</li>
+        </ul>
+        <h2>v1.5.1 (2016-08-30)</h2>
+        <ul>
+          <li>IPのポップアップが間違っているのを修正</li>
+          <li>ID/SLIPの表示の修正</li>
+          <li>書込履歴に後から追加したときに表示が即時に変わるように</li>
+          <li>dat落ち時に読み込み失敗するまで時間かかるのを修正</li>
+          <li style="list-style: none;">※ 1.3.0以前からの更新の場合、更新後に設定->データ->書込履歴->テーブル削除のボタンをクリックする必要があります</li>
+        </ul>
+        <h2>v1.5.0 (2016-08-30)</h2>
+        <ul>
+          <li>書込履歴を保存しないオプションを追加</li>
+          <li>ﾜｯﾁｮｲ/IPアドレス/トリップのポップアップに対応</li>
+          <li>右クリックからSLIP/トリップをコピーできるように</li>
+          <li>Rock54の表示を変更</li>
+          <li>書込履歴をインポートできないのを修正</li>
+          <li>書込履歴に手動で後から追加すると一ヶ月ずれるのを修正</li>
+          <li>設定のデザイン微調整</li>
+          <li style="list-style: none;">※ 1.3.0以前からの更新の場合、更新後に設定->データ->書込履歴->テーブル削除のボタンをクリックする必要があります</li>
+        </ul>
+        <h2>v1.4.0 (2016-08-11)</h2>
+        <ul>
+          <li>2ch.sc/open2chへの書き込み機能を追加</li>
+          <li>2ch.net/2ch.sc/BBS PINK/したらば/open2chへのスレ立て機能を追加</li>
+          <li>2ch/BBS PINKの高速化</li>
+          <li>open2chの板取得の高速化</li>
+          <li>マウスホイールでタブを切り替えるかどうかのオプションを追加</li>
+          <li>書込履歴を後から追加できるように</li>
+          <li>したらばの文字色変化に対応</li>
+          <li style="list-style: none;">※ 1.3.0以前からの更新の場合、更新後に設定->データ->書込履歴->テーブル削除のボタンをクリックする必要があります</li>
+        </ul>
+        <h2>v1.3.2 (2016-07-28)</h2>
+        <ul>
+          <li>2ch/BBS PINKの高速化</li>
+          <li>レスがずれるのを修正</li>
+          <li style="list-style: none;">※ 1.3.0以前からの更新の場合、更新後に設定->データ->書込履歴->テーブル削除のボタンをクリックする必要があります</li>
+        </ul>
+        <h2>v1.3.1 (2016-07-27)</h2>
+        <ul>
+          <li>書込履歴が日付順に並ばないのを修正</li>
+          <li>名前欄のsmallタグが効くように修正</li>
+          <li>トリップ付きの名前でもうまくプルダウンに表示されるように</li>
+          <li style="list-style: none;">※ 更新後に設定->データ->書込履歴->テーブル削除のボタンをクリックする必要があります</li>
+          <li>レスがずれるのを修正</li>
+          <li>Chrome53以降で真っ白になるのを修正</li>
+        </ul>
+        <h2>v1.3.0 (2016-07-26)</h2>
+        <ul>
+          <li>投稿のときに名前とメールアドレスをプルダウン選択できるように</li>
+          <li>書き込み日時が1ヶ月ずれるのを修正</li>
+          <li>レスが飛ぶのを修正(キャッシュが壊れるのを修正)</li>
+          <li>投稿したときの名前の一部に色がつかなかったのを修正</li>
+        </ul>
+        <h2>v1.2.2 (2016-05-20)</h2>
+        <ul>
+          <li>しおり/受信済み位置が、不正な値になる場合があるのを修正</li>
+          <li>スレッドのタブの中身が2重になる場合があるのを修正</li>
+        </ul>
+        <h2>v1.2.1 (2016-05-17)</h2>
+        <ul>
+          <li>書込履歴が保存されない場合があるのを修正</li>
+          <li>書込履歴のインポートに失敗するのを修正</li>
+        </ul>
+        <h2>v1.2.0 (2016-05-15)</h2>
+        <ul>
+          <li>それぞれのレスに返信数を"data-rescount"として付加、返信数によってcssを変更できるように</li>
+          <li style="list-style: none;">※ 使用例は<a href="https://github.com/readcrx-2/read.crx-2/wiki/%E3%83%A6%E3%83%BC%E3%82%B6%E3%83%BCCSS">wikiの(version >= 1.2.0)の部分を参考</a>にしてください</li>
+          <li>書込履歴の実装</li>
+          <li style="list-style: none;">※ リロード中など自己の書込だと判別できない場合は記録されません</li>
+          <li>自己の書込の強調表示</li>
+          <li>書込ウィンドウにsageのチェックボックスを追加</li>
+        </ul>
+        <h2>v1.1.0 (2016-05-13)</h2>
+        <ul>
+          <li>変更点
+            <ul>
+              <li>未読スレッドを全て開く場合の動作を遅延ロードに変更</li>
+              <li style="list-style: none;">※ タブを表示したタイミングで読み込むようになります。</li>
+              <li>上記の動作変更に伴い、「未読スレッドを全て開く際に遅延ロード」するかのオプションを追加</li>
+              <li>自動更新関連の設定について、再起動が不要になりました</li>
+            </ul>
+          </li>
+          <li>修正点
+            <ul>
+              <li>自動更新時のスクロール処理がおかしかったのを修正</li>
+              <li style="list-style: none;">※ 「新着」を使っていた場合の挙動が変わりますので、新着を使っていたユーザは、再設定をお願いします。</li>
+              <li>スレの自動更新間隔ミリ秒数が数値以外の時、最短でリロードし続けるのを修正</li>
+              <li>ユーザーCSSの詳細のリンクをWikiへ変更（元ページの記載内容についての転載許可を下さったawefさんに多謝）</li>
+            </ul>
+          </li>
+        </ul>
+        <h2>v1.0.0 (2016-05-11)</h2>
+        <ul>
+          <li>v1.0.0リリース！</li>
+          <li style="list-style: none;">※ 互換性に影響のある変更はありません。バージョン番号の管理を真面目に行うためのものです</li>
+          <li>書き込み時のUser-Agentを指定するオプションを追加（Thank you, <a href="https://github.com/m5219">m5219</a>）</li>
+          <li>スレッドの自動更新後のレス移動のオプションを追加</li>
+          <li>自動更新関連のオプションを更新のオプションから分離</li>
+        </ul>
+        <h2>v0.96.0 (2016-04-05)</h2>
+        <ul>
+          <li>ブックマーク、スレッド一覧のメニューに「未読があるスレッドを全て開く」ボタンを追加</li>
+          <li>書き込みウィンドウに文字数と行数の表示を追加</li>
+        </ul>
+        <h2>v0.95.7 (2016-04-02)</h2>
+        <ul>
+          <li>スレッド検索が正常に動作しないのを修正</li>
+          <li>スレッド検索のChromeで直接開くのリンク先をsearch.2ch.netから、dig.2ch.netへ変更</li>
+        </ul>
+        <h2>v0.95.6 (2016-04-01)</h2>
+        <ul>
+          <li>スレッド検索が正常に動作しないのを修正</li>
+        </ul>
+        <h2>v0.95.5 (2016-03-06)</h2>
+        <ul>
+          <li>スレ内検索中は自動更新しないように変更</li>
+        </ul>
+        <h2>v0.95.4 (2016-01-29)</h2>
+        <ul>
+          <li>BBSPINKの差分取得に対応</li>
+          <li>「浪人はこんなに便利」を既定非表示スレッドに</li>
+          <li>エモーティコンに対応</li>
+          <li>2chの検索ができないのを修正</li>
+          <li>備考: 更新urlをhttpsに</li>
+        </ul>
+        <h2>v0.95.3 (2016-01-09)</h2>
+        <ul>
+          <li>BBSPINKでbeアイコンが埋め込み表示になるよう修正</li>
+        </ul>
+        <h2>v0.95.2 (2016-01-09)</h2>
+        <ul>
+          <li>二つ以上画像がある場合、一つしか表示されないのを修正</li>
+          <li>2ch.netをhtml読み込み時にbeアイコンが埋め込み表示になるよう修正</li>
+        </ul>
+        <h2>v0.95.1 (2015-12-29)</h2>
+        <ul>
+          <li>!countryコマンドの表示を修正</li>
+        </ul>
+        <h2>v0.95.0 (2015-12-23)</h2>
+        <ul>
+          <li>2chmateのお絵かきに対応</li>
+        </ul>
+        <h2>v0.94.19 (2015-12-11)</h2>
+        <ul>
+          <li>一部板でレス番がずれるのを修正</li>
+        </ul>
+        <h2>v0.94.18 (2015-12-12)</h2>
+        <ul>
+          <li>NG除外機能を実装</li>
+          <li>しおりの位置がNG対象のレスのときに表示がずれるのを修正</li>
+          <li>BBSPINKのレス番をクリックしても返信メニューが出ないのを修正</li>
+        </ul>
+        <h2>v0.94.17 (2015-12-11)</h2>
+        <ul>
+          <li>BBSPINKの転載禁止に対応</li>
+          <li>BBSPINKでレス番がずれるのを修正</li>
+          <li>その他高速化/最適化</li>
+        </ul>
+        <h2>v0.94.16 (2015-12-11)</h2>
+        <ul>
+          <li>v0.94.15に問題があったため、v0.94.14をv0.94.16として改めてリリース</li>
+        </ul>
+        <h2><del>v0.94.15 (2015-12-11)</del></h2>
+        <ul>
+          <li><del>BBSPINKの転載禁止に対応</del></li>
+          <li><del>BBSPINKでレス番がずれるのを修正</del></li>
+        </ul>
+        <h2>v0.94.14 (2015-12-05)</h2>
+        <ul>
+          <li>2番レスが消えるのを修正</li>
+          <li>自動付加される「[無断転載禁止]」を取り除くように</li>
+        </ul>
+        <h2>v0.94.13 (2015-12-03)</h2>
+        <ul>
+          <li>一部のスレッドでしおり位置が&gt;&gt;1になるのを修正 (Thank you, <a href="http://jbbs.shitaraba.net/bbs/read.cgi/computer/42710/1427637506/688">read.crx総合 part7 &gt;&gt;688</a>）</li>
+        </ul>
+        <h2>v0.94.12 (2015-11-28)</h2>
+        <ul>
+          <li>スレッドタイトルに絵文字が含まれる場合に文字化けするのを修正</li>
+          <li style="list-style: none;">※ 絵文字に対応するフォントがない場合は当然文字化けします。</li>
+        </ul>
+        <h2>v0.94.11 (2015-11-15)</h2>
+        <ul>
+          <li>一部の板が二回目のときに読み込めなかったのを修正</li>
+          <li>一部の板の読み込みを高速化(?)</li>
+        </ul>
+        <h2>v0.94.10 (2015-11-14)</h2>
+        <ul>
+          <li>閲覧履歴を保存しないオプションを追加</li>
+          <li>一部の板を読み込めなかったのを修正（Thank you, <a href="http://jbbs.shitaraba.net/bbs/read.cgi/computer/42710/1427637506/624">read.crx総合 part7 &gt;&gt;624</a>）</li>
+        </ul>
+        <h2>v0.94.9 (2015-08-18)</h2>
+        <ul>
+          <li>閲覧履歴のインポート/エクスポート機能を追加</li>
+        </ul>
+        <h2>v0.94.8 (2015-08-04)</h2>
+        <ul>
+          <li>スレのタイトルにhtmlコードが入っていると正しくパースできないのを修正（Thank you, <a href="https://github.com/S--Minecraft">S</a>）</li>
+        </ul>
+        <h2>v0.94.7 (2015-07-29)</h2>
+        <ul>
+          <li>全てのタブ（スレッド）を自動更新するオプションが2ペイン以外の場合正常に動作しないのを修正（Thank you, <a href="https://github.com/S--Minecraft">S</a>）</li>
+        </ul>
+        <h2>v0.94.6 (2015-07-26)</h2>
+        <ul>
+          <li>全てのタブ（スレッド）を自動更新するオプションが2ペイン以外の場合正常に動作しないのを修正（Thank you, <a href="https://github.com/S--Minecraft">S</a>）</li>
+          <li>設定のインポート/エクスポート機能を修正＆非同期処理化（Thank you, <a href="https://github.com/S--Minecraft">S</a>）</li>
+        </ul>
+        <h2>v0.94.5 (2015-07-23)</h2>
+        <ul>
+          <li>全てのタブ（スレッド）を自動更新するをオプション化（Thank you, <a href="https://github.com/S--Minecraft">S</a>）</li>
+          <li>設定のインポート/エクスポート機能を追加（Thank you, <a href="https://github.com/S--Minecraft">S</a>）</li>
+          <li>レポジトリの移管をしました。</li>
+        </ul>
+        <h2>v0.94.4 (2015-07-22)</h2>
+        <ul>
+          <li>スレの自動更新を実装（Thank you, <a href="https://github.com/S--Minecraft">S</a>）</li>
+          <li style="list-style: none;">※ 設定画面内に、自動更新の間隔（ミリ秒 ※1000ミリ秒 = 1秒）が追加されています。0の時は自動更新無効、最短間隔は5000ミリ秒。開いてる全てのタブ（スレッド）で行われます</li>
+          <li>スレの何もないところをダブルクリックすると更新を実装（Thank you, <a href="https://github.com/S--Minecraft">S</a>）</li>
+          <li style="list-style: none;">※ 設定画面内に、この機能の有効/無効の切り替えが追加されています。</li>
+        </ul>
+        <h2>v0.94.3 (2015-07-20)</h2>
+        <ul>
+          <li>レス検索結果で0Hitの場合には、その旨を表示するように変更（Thank you, <a href="https://github.com/S--Minecraft">S</a>）</li>
+        </ul>
+        <h2>v0.94.2 (2015-07-18)</h2>
+        <ul>
+          <li>タブをダブルクリックでリロードする機能を追加（Thank you, <a href="https://github.com/S--Minecraft">S</a>）</li>
+        </ul>
+        <h2>v0.94.1 (2015-07-17)</h2>
+        <ul>
+          <li>NG機能を正規表現対応にしました。<a href="https://github.com/readcrx-2/read.crx-2/wiki/NG%E3%83%AF%E3%83%BC%E3%83%89%E3%81%AE%E4%BB%95%E6%A7%98">表記方法の詳細はWikiのページ</a>を参照して下さい。</li>
+          <li>レスのヘッダクリックのメニューに「IDをNG指定」を追加しました。</li>
+          <li style="list-style: none;">※ 既知の不具合: スレ表示時にしおり位置がNG対象のレスの場合に、>>1が表示されてしまう。また、スレッド表示右下のアンカーもレスがNG対象の場合動作しなくなります。</li>
+        </ul>
+        <h2>v0.93.1 (2015-07-16)</h2>
+        <ul>
+          <li>2ch.netの差分取得の先頭がsageでないときにキャッシュの保存に失敗するのを修正（Thank you, <a href="https://github.com/S--Minecraft">S</a>）</li>
+          <li>～の人気スレ・コンビニで浪人を購入する方法などを非表示にするオプションを追加（Thank you, <a href="https://github.com/S--Minecraft">S</a>）</li>
+          <li>scのリダイレクトされる板の板名が表示されるよう修正（Thank you, <a href="https://github.com/S--Minecraft">S</a>）</li>
+          <li>Developers information: ビルド時に出るapp.jsの削除をビルドファイルに記述</li>
+        </ul>
+        <h2>v0.93.0 (2015-07-15)</h2>
+        <ul>
+          <li>ブックマークでのdat落ち表示設定の動作を修正（Thank you, <a href="https://github.com/S--Minecraft">S</a>）</li>
+          <li>scのみのレスの表示の時間短縮（Thank you, <a href="https://github.com/S--Minecraft">S</a>）</li>
+          <li>2ch.netの差分取得に対応（Thank you, <a href="https://github.com/S--Minecraft">S</a>）</li>
+        </ul>
+        <h2>v0.92.3 (2015-07-10)</h2>
+        <ul>
+          <li>次スレ検索がうまくいかないのを修正（Thank you, <a href="https://github.com/S--Minecraft">S</a>）</li>
+          <li>ブックマークでdat落ちしたスレッドを表示ないオプションを追加（Thank you, <a href="https://github.com/S--Minecraft">S</a>）</li>
+          <li style="list-style: none;">※ 設定-&gt;上級者向け機能にオプションが追加されています。また、ブックマークのメニューにも同様の機能が追加されています。</li>
+          <li>2ch.scのscの投稿のみを表示するボタンを追加（Thank you, <a href="https://github.com/S--Minecraft">S</a>）</li>
+          <li style="list-style: none;">※ 2ch.scのスレッド表示時に、メニューに追加されています。</li>
+          <li>Developers information: ビルド用のモジュールを更新</li>
+        </ul>
+        <h2>v0.92.1 (2015-07-02)</h2>
+        <ul>
+          <li>スレタイから「転載禁止」などの不要な文字列を取り除くように変更（Thank you, <a href="https://github.com/S--Minecraft">S</a>）</li>
+          <li>板一覧のスレタイに対してもNGワードが適用されるように修正</li>
+        </ul>
+        <h2>v0.92.0 (2015-05-04)</h2>
+        <ul>
+          <li>BBSPINKの板読込に対応</li>
+          <li>BBSPINKのスレッド表示時に「read.crx 2で開く」を表示するように変更</li>
+          <li>BBSPINKの書込に対応</li>
+          <li style="list-style: none;">※ ユーザの良心にまかせて、デフォルトの板一覧URLの場合BBSPINKが表示されます。</li>
+        </ul>
+        <h2>v0.91.10 (2015-04-30)</h2>
+        <ul>
+          <li>Twitterなどのファイル名の後ろに:がついてる画像のサムネイル表示に対応（Thank you, <a href="http://jbbs.shitaraba.net/bbs/read.cgi/computer/42710/1427637506/150">read.crx総合 part7 &gt;&gt;150</a>）</li>
+        </ul>
+        <h2>v0.91.9 (2015-04-25)</h2>
+        <ul>
+          <li>2ch.netと2ch.scの切り替えメニューを該当スレッドにしか表示しないように修正（Thank you, <a href="https://github.com/S--Minecraft">S</a>）</li>
+        </ul>
+        <h2>v0.91.8 (2015-04-07)</h2>
+        <ul>
+          <li>関連モジュールの更新でブックマーク・スレタイ一覧でソートが効かなくなっていたのを修正</li>
+        </ul>
+        <h2>v0.91.7 (2015-04-06)</h2>
+        <ul>
+          <li>オプション画面表示時にbbsmenuのURLが空の場合に、デフォルト値を読み込むように修正（Thank you, <a href="https://github.com/S--Minecraft">S</a>）</li>
+          <li>bbsmenuのURLをデフォルト値に戻す、リセットボタンを追加</li>
+        </ul>
+        <h2>v0.91.6 (2015-03-31)</h2>
+        <ul>
+          <li>更新履歴へのリンクがこのページになるように変更</li>
+          <li>スレ表示右上メニューへ「2ch.net/2ch.scに切り替え」を追加</li>
+          <li>上記メニュー追加に対応して、「2ch netとscの切り替え時に新しいタブで開く」オプションを追加</li>
+          <li>bbsmenuのURLをオプション画面から変更できるように修正</li>
+        </ul>
+        <h2>v0.91.5 (2015-03-29)</h2>
+        <ul>
+          <li>
+            2ch.netで読み込み形式でhtml形式を使用している場合に、スレタイのhtmlエンティティがデコードされないのを修正
+            <ul>
+              <li><em>Tips</em>: ブックマーク一覧に表示されているタイトルがデコードされていない場合にはブックマークし直すことで解決します。</li>
+            </ul>
+          </li>
+        </ul>
+        <h2>v0.91.4 (2015-03-28)</h2>
+        <ul>
+          <li>open2chでスレタイ一覧が文字化けるのを修正</li>
+        </ul>
+        <h2>v0.91.3 (2015-03-25)</h2>
+        <ul>
+          <li>オプション画面へ<a href="http://readcrx-2.github.io/read.crx-2/">非公式サイト</a>へのリンクを追加</li>
+          <li>オプション画面、更新時の変更履歴のリンク先URLを変更</li>
+          <li>AA表示用のWebフォントの取得先URLの変更</li>
+        </ul>
+        <h2>v0.91.2 (2015-03-25)</h2>
+        <ul>
+          <li>README.md へ2ch.sc, open2ch.netへの対応、謝辞を追記</li>
+        </ul>
+        <h2>v0.91.1 (2015-03-24)</h2>
+        <ul>
+          <li>
+            <a href="http://jbbs.shitaraba.net/bbs/read.cgi/computer/42710/1418134797/">read.crx総合 part6</a>より、下記の修正を反映
+          </li>
+        </ul>
+        <pre><code>507 名無しさん [sage] 2015/03/13(金) 19:40:42 ID:WbSUlxxQ
+  板一覧に 2ch.sc, open2ch.net を追加
+
+663 名無しさん [sage] 2015/03/16(月) 00:09:34 ID:.3pfjtCA
+  スレッドの読み込みを .dat から .html に変更
+
+698 名無しさん [sage] 2015/03/16(月) 08:02:15 ID:AO1DwhNE
+  &gt;&gt;663 の修正を元に 2ch.sc, open2ch.net の読み込みに対応
+
+708 名無しさん [sage] 2015/03/16(月) 10:58:06 ID:QHLFGesU
+  &gt;&gt;507 の修正を元に open2ch.net のスレ一覧読み込みに対応
+
+773 名無しさん [sage] 2015/03/17(火) 00:53:38 ID:X7e/ybPU
+  &gt;&gt;663 でのコテハンが空白になる問題に対応
+
+780 名無しさん [] 2015/03/17(火) 01:17:31 ID:/ox8LTsI
+  2ch.sc, open2ch.net でも「read.crx 2で開く」を有効にする
+
+785 780 [] 2015/03/17(火) 01:39:21 ID:/ox8LTsI
+  &gt;&gt;780 の修正の簡素化
+
+835 名無しさん [sage] 2015/03/19(木) 06:14:36 ID:Ij2U6bD6
+  設定画面でhtmlとdatの切り替えを出来るように
+</code></pre>
+      </section>
+      <footer>
+        <p><small>Hosted on <a href="https://pages.github.com">GitHub Pages</a> using the Dinky theme</small></p>
+      </footer>
+    </div>
+    <!--[if !IE]><script>fixScale(document);</script><![endif]-->
+  </body>
+</html>

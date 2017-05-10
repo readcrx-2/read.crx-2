@@ -1,7 +1,7 @@
 <?xml version='1.0' encoding='UTF-8'?>
 <gupdate xmlns='http://www.google.com/update2/response' protocol='2.0'>
   <app appid='eaibgccboimjelecbmgfjhakekfdcpeh'>
-    <updatecheck codebase='https://readcrx-2.github.io/read.crx-2/read.crx_2.1.16.1.crx' version='2.1.16.1' />
+    <updatecheck codebase='https://readcrx-2.github.io/read.crx-2/read.crx_2.1.16.2.crx' version='2.1.16.2' />
   </app>
   <app appid='mglmonflpdcckjdpjnpenfdmkbmggmgm'>
     <updatecheck codebase='https://readcrx-2.github.io/read.crx-2/read.crx_2.0.94.9.2.crx' version='2.0.94.9.2' />

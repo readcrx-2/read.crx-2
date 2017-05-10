@@ -77,12 +77,12 @@ class UI.ThreadList
           return
         )
       return
-    )
+    , true)
     $table.on("mouseleave", (e) ->
       if e.target.tagName is "TD"
         e.target.removeAttr("title")
       return
-    )
+    , true)
 
     selector = {}
     column = {}
@@ -236,40 +236,40 @@ class UI.ThreadList
     if @_flg.bookmark or @_flg.bookmarkAddRm or @_flg.writtenRes or @_flg.viewedDate
       do ->
         $table.on("contextmenu", (e) ->
-          return unless e.matches("tbody > tr")
+          target = e.target.closest("tbody > tr")
+          return unless target
           if e.type is "contextmenu"
             e.preventDefault()
 
           app.defer( =>
-            $menu = $$.I("template_thread_list_contextmenu").content.$("thread_list_contextmenu").cloneNode(true)
-            $menu.dataset.contextmenu_source = @
+            $menu = $$.I("template_thread_list_contextmenu").content.querySelector(".thread_list_contextmenu").cloneNode(true)
             $table.closest(".view").append($menu)
 
-            url = @getAttr("data-href")
+            url = target.getAttr("data-href")
 
             if app.bookmark.get(url)
-              $menu.C("add_bookmark")[0].remove()
+              $menu.C("add_bookmark")[0]?.remove()
             else
-              $menu.C("del_bookmark")[0].remove()
+              $menu.C("del_bookmark")[0]?.remove()
 
             if (
               not that._flg.unread or
-              not /^\d+$/.test(@$(selector.unread).textContent) or
+              not /^\d+$/.test(target.$(selector.unread).textContent) or
               app.bookmark.get(url)?
             )
-              $menu.C("del_read_state")[0].remove()
+              $menu.C("del_read_state")[0]?.remove()
 
             $menu.on("click", fn = (e) ->
               return if e.target.tagName isnt "LI"
               $menu.off("click", fn)
 
-              $tr = @dataset.contextmenu_source
+              $tr = target
 
               threadURL = $tr.getAttr("data-href")
-              threadTitle = $tr.$(selector.title).textContent
-              threadRes = $tr.$(selector.res).textContent
-              threadWrittenRes = parseInt($tr.$(selector.writtenRes).textContent)
-              date = $tr.$(selector.viewedDate).textContent
+              threadTitle = $tr.$(selector.title)?.textContent
+              threadRes = $tr.$(selector.res)?.textContent
+              threadWrittenRes = parseInt($tr.$(selector.writtenRes)?.textContent ? 0)
+              date = $tr.$(selector.viewedDate)?.textContent
               if date? and date isnt ""
                 date_ = /(\d{4})\/(\d\d)\/(\d\d) (\d\d):(\d\d)/.exec(date)
                 threadViewedDate = new Date(date_[1], date_[2]-1, date_[3], date_[4], date_[5]).valueOf()

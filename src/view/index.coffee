@@ -770,8 +770,7 @@ app.main = ->
 
   $(document.documentElement)
     .on "tab_removed tab_beforeurlupdate", "iframe", ->
-      @contentWindow.___e = @contentDocument.createEvent("Event")
-      @contentWindow.___e.initEvent("view_unload", true, true)
+      @contentWindow.___e = new Event("view_unload", {bubbles: true})
       @contentWindow.dispatchEvent(@contentWindow.___e)
       return
 

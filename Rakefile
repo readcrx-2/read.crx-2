@@ -244,7 +244,7 @@ namespace :img do
     "debug/img/menu_19x19_ddd.webp",
     "debug/img/lock_19x19_3a5.webp",
     "debug/img/unlock_19x19_ddd.webp",
-    "debug/img/pause_19x19_aaa.webp",
+    "debug/img/pause_19x19_ddd.webp",
     "debug/img/pause_19x19_a33.webp"
   ]
 

@@ -38,7 +38,7 @@ namespace UI {
             $li.addClass("open_in_rcrx")
             $li.textContent = thread.title
             $li.dataset.href = thread.url
-            $ol.append($li)
+            $ol.addLast($li)
 
             if (app.bookmark.get(thread.url)) {
               $li.addClass("bookmarked");

@@ -180,7 +180,7 @@ class UI.PopupView
       # 新規ノードの設定
       setupNewNode(@source, @popup)
       # popupの表示
-      @_popupArea.append(@popup)
+      @_popupArea.addLast(@popup)
       # ノードのアクティブ化
       app.defer =>
         @_activateNode()
@@ -199,7 +199,7 @@ class UI.PopupView
             # ノードのアクティブ化
             sourceNode.addClass("active")
             # popupの表示
-            @_popupArea.append(popupNode)
+            @_popupArea.addLast(popupNode)
         , @_delayTime)
         return
 
@@ -312,7 +312,7 @@ class UI.PopupView
   _getOuterHeight: (elm, margin = false) ->
     # 下層に表示してoffsetHeightを取得する
     elm.style.zIndex = "-1"
-    @_popupArea.append(elm)
+    @_popupArea.addLast(elm)
     outerHeight = elm.offsetHeight
     @_popupArea.removeChild(elm)
     elm.style.zIndex = "3"    # ソースでは"3"だが、getComputedStyleでは"0"になるため

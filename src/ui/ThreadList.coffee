@@ -64,10 +64,10 @@ class UI.ThreadList
 
     $table = @table
     $thead = $__("thead")
-    $table.append($thead)
-    $table.append($__("tbody"))
+    $table.addLast($thead)
+    $table.addLast($__("tbody"))
     $tr = $__("tr")
-    $thead.append($tr)
+    $thead.addLast($tr)
 
     #項目のツールチップ表示
     $table.on("mouseenter", (e) ->
@@ -92,7 +92,7 @@ class UI.ThreadList
       $th = $__("th")
       $th.setClass(key.replace(/([A-Z])/g, ($0, $1) -> "_" + $1.toLowerCase()))
       $th.textContent = keyToLabel[key]
-      $tr.append($th)
+      $tr.addLast($th)
       @_flg[key] = true
       selector[key] = "td:nth-child(#{i})"
       column[key] = i
@@ -243,7 +243,7 @@ class UI.ThreadList
 
           app.defer( =>
             $menu = $$.I("template_thread_list_contextmenu").content.querySelector(".thread_list_contextmenu").cloneNode(true)
-            $table.closest(".view").append($menu)
+            $table.closest(".view").addLast($menu)
 
             url = target.getAttr("data-href")
 

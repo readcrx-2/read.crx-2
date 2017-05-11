@@ -665,10 +665,10 @@ class UI.ThreadContent
               elm.className = if resCount >= 5 then "rep freq" else "rep link"
               res.setAttr("data-rescount", [1..resCount].join(" "))
               if newFlg
-                res.C("other")[0].append(
+                res.C("other")[0].addLast(
                   document.createTextNode(" ")
                 )
-                res.C("other")[0].append(elm)
+                res.C("other")[0].addLast(elm)
               #連鎖NG
               if app.config.get("chain_ng") is "on" and res.hasClass("ng")
                 for r in index
@@ -720,13 +720,13 @@ class UI.ThreadContent
                 if res.cookieReferrer? then thumbnailImg.dataset.cookieReferrer = res.cookieReferrer
                 if res.referrer? then thumbnailImg.dataset.referrer = res.referrer
                 if res.userAgent? then thumbnailImg.dataset.userAgent = res.userAgent
-                thumbnailLink.append(thumbnailImg)
+                thumbnailLink.addLast(thumbnailImg)
 
                 thumbnailFavicon = $__("img")
                 thumbnailFavicon.addClass("favicon")
                 thumbnailFavicon.src = "/img/dummy_1x1.webp"
                 thumbnailFavicon.setAttr("data-src", "https://www.google.com/s2/favicons?domain=#{sourceA.hostname}")
-                thumbnailLink.append(thumbnailFavicon)
+                thumbnailLink.addLast(thumbnailFavicon)
 
               when "audio", "video"
                 thumbnailLink = $__(mediaType)
@@ -744,7 +744,7 @@ class UI.ThreadContent
                     if app.config.get("video_controls") is "on"
                       thumbnailLink.setAttr("controls", "")
 
-            thumbnail.append(thumbnailLink)
+            thumbnail.addLast(thumbnailLink)
 
             # 高さ固定の場合
             if app.config.get("image_height_fix") is "on"
@@ -785,7 +785,7 @@ class UI.ThreadContent
               expandedURLLink.textContent = finalUrl
               expandedURLLink.href = app.safe_href(finalUrl)
               expandedURLLink.target = "_blank"
-              expandedURL.append(expandedURLLink)
+              expandedURL.addLast(expandedURLLink)
             else
               expandedURL.addClass("expand_error")
               expandedURLLink = null

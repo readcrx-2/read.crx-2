@@ -24,10 +24,10 @@ app.boot "/zombie.html", ->
     return
 
   if localStorage.zombie_read_state?
-    script = document.createElement("script")
-    script.addEventListener("load", save)
-    script.src = "/app_core.js"
-    document.head.appendChild(script)
+    $script = $__("script")
+    $script.on("load", save)
+    $script.src = "/app_core.js"
+    document.head.addLast($script)
   else
     close()
   return

@@ -98,7 +98,7 @@ class UI.ThreadList
       column[key] = i
 
     #ブックマーク更新時処理
-    app.message.add_listener "bookmark_updated", (msg) =>
+    app.message.addListener "bookmark_updated", (msg) =>
       return if msg.bookmark.type isnt "thread"
 
       if msg.type is "expired"
@@ -174,7 +174,7 @@ class UI.ThreadList
 
     #未読数更新
     if @_flg.unread
-      app.message.add_listener "read_state_updated", (msg) ->
+      app.message.addListener "read_state_updated", (msg) ->
         tr = $table.$("tr[data-href=\"#{msg.read_state.url}\"]")
         if tr
           res = tr.$(selector.res)
@@ -187,7 +187,7 @@ class UI.ThreadList
             tr.removeClass("updated")
         return
 
-      app.message.add_listener "read_state_removed", (msg) ->
+      app.message.addListener "read_state_removed", (msg) ->
         tr = $table.$("tr[data-href=\"#{msg.url}\"]")
         if tr
           tr.$(selector.unread).textContent = ""
@@ -356,11 +356,11 @@ class UI.ThreadList
       if item.expired and app.config.get("bookmark_show_dat") is "off"
         trClassName += " hidden"
 
-      tmpHTML = " data-href=\"#{app.escape_html(item.url)}\""
-      tmpHTML += " data-title=\"#{app.escape_html(item.title)}\""
+      tmpHTML = " data-href=\"#{app.escapeHtml(item.url)}\""
+      tmpHTML += " data-title=\"#{app.escapeHtml(item.title)}\""
 
       if item.thread_number?
-        tmpHTML += " data-thread_number=\"#{app.escape_html(""+item.thread_number)}\""
+        tmpHTML += " data-thread_number=\"#{app.escapeHtml(""+item.thread_number)}\""
 
       tmpHTML += ">"
 
@@ -373,24 +373,24 @@ class UI.ThreadList
 
       #タイトル
       if @_flg.title
-        tmpHTML += "<td>#{app.escape_html(item.title)}</td>"
+        tmpHTML += "<td>#{app.escapeHtml(item.title)}</td>"
 
       #板名
       if @_flg.boardTitle
-        tmpHTML += "<td>#{app.escape_html(item.board_title)}</td>"
+        tmpHTML += "<td>#{app.escapeHtml(item.board_title)}</td>"
 
       #レス数
       if @_flg.res
         tmpHTML += "<td>"
         if item.res_count > 0
-          tmpHTML += app.escape_html(""+item.res_count)
+          tmpHTML += app.escapeHtml(""+item.res_count)
         tmpHTML += "</td>"
 
       #レス番号
       if @_flg.writtenRes
         tmpHTML += "<td>"
         if item.res > 0
-          tmpHTML += app.escape_html(""+item.res)
+          tmpHTML += app.escapeHtml(""+item.res)
         tmpHTML += "</td>"
 
       #未読数
@@ -398,49 +398,49 @@ class UI.ThreadList
         tmpHTML += "<td>"
         if item.read_state and item.res_count > item.read_state.read
           trClassName += " updated"
-          tmpHTML += app.escape_html(""+(item.res_count - item.read_state.read))
+          tmpHTML += app.escapeHtml(""+(item.res_count - item.read_state.read))
         tmpHTML += "</td>"
 
       #勢い
       if @_flg.heat
         tmpHTML += "<td>"
-        tmpHTML += app.escape_html(ThreadList._calcHeat(now, item.created_at, item.res_count))
+        tmpHTML += app.escapeHtml(ThreadList._calcHeat(now, item.created_at, item.res_count))
         tmpHTML += "</td>"
 
       #名前
       if @_flg.name
         tmpHTML += "<td>"
-        tmpHTML += app.escape_html(item.name)
+        tmpHTML += app.escapeHtml(item.name)
         tmpHTML += "</td>"
 
       #メール
       if @_flg.mail
         tmpHTML += "<td>"
-        tmpHTML += app.escape_html(item.mail)
+        tmpHTML += app.escapeHtml(item.mail)
         tmpHTML += "</td>"
 
       #本文
       if @_flg.message
         tmpHTML += "<td>"
-        tmpHTML += app.escape_html(item.message)
+        tmpHTML += app.escapeHtml(item.message)
         tmpHTML += "</td>"
 
       #作成日時
       if @_flg.createdDate
         tmpHTML += "<td>"
-        tmpHTML += app.escape_html(ThreadList._dateToString(new Date(item.created_at)))
+        tmpHTML += app.escapeHtml(ThreadList._dateToString(new Date(item.created_at)))
         tmpHTML += "</td>"
 
       #閲覧日時
       if @_flg.viewedDate
         tmpHTML += "<td>"
-        tmpHTML += app.escape_html(ThreadList._dateToString(new Date(item.date)))
+        tmpHTML += app.escapeHtml(ThreadList._dateToString(new Date(item.date)))
         tmpHTML += "</td>"
 
       #書込日時
       if @_flg.writtenDate
         tmpHTML += "<td>"
-        tmpHTML += app.escape_html(ThreadList._dateToString(new Date(item.date)))
+        tmpHTML += app.escapeHtml(ThreadList._dateToString(new Date(item.date)))
         tmpHTML += "</td>"
 
       html += "<tr class=\"#{trClassName}\"" + tmpHTML + "</tr>"

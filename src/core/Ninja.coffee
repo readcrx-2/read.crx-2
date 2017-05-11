@@ -51,7 +51,7 @@ class app.Ninja
 
     for siteId, site of @_siteInfo
       if value = app.config.get("ninja_backup_#{siteId}")
-        res.push(site: app.deep_copy(site), value: value)
+        res.push(site: app.deepCopy(site), value: value)
 
     res
 
@@ -76,7 +76,7 @@ class app.Ninja
   ###
   @restore: (siteId, callback) ->
     if value = app.config.get("ninja_backup_#{siteId}")
-      info = app.deep_copy(@_siteInfo[siteId].setCookieInfo)
+      info = app.deepCopy(@_siteInfo[siteId].setCookieInfo)
       info.value = value
       chrome.cookies.set info, ->
         callback?()

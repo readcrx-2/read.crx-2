@@ -32,7 +32,7 @@ class app.History
   @return {Promise}
   ###
   @add: (url, title, date) ->
-    if app.assert_arg("History.add", ["string", "string", "number"], arguments)
+    if app.assertArg("History.add", ["string", "string", "number"], arguments)
       return Promise.reject()
 
     return @_openDB().then( (db) ->
@@ -60,8 +60,8 @@ class app.History
   ###
   @remove: (url, date) ->
     if (
-      (date? and app.assert_arg("History.remove", ["string", "number"], arguments)) or
-      app.assert_arg("History.remove", ["string"], arguments)
+      (date? and app.assertArg("History.remove", ["string", "number"], arguments)) or
+      app.assertArg("History.remove", ["string"], arguments)
     )
       return Promise.reject()
 
@@ -100,7 +100,7 @@ class app.History
   @return {Promise}
   ###
   @get: (offset = -1, limit = -1) ->
-    if app.assert_arg("History.get", ["number", "number"], [offset, limit])
+    if app.assertArg("History.get", ["number", "number"], [offset, limit])
       return Promise.reject()
 
     return @_openDB().then( (db) ->
@@ -185,7 +185,7 @@ class app.History
   @return {Promise}
   ###
   @clear = (offset = -1) ->
-    if app.assert_arg("History.clear", ["number"], [offset])
+    if app.assertArg("History.clear", ["number"], [offset])
       return Promise.reject()
 
     return @_openDB().then( (db) ->
@@ -222,7 +222,7 @@ class app.History
   @return {Promise}
   ###
   @clearRange = (day) ->
-    if app.assert_arg("History.clearRange", ["number"], arguments)
+    if app.assertArg("History.clearRange", ["number"], arguments)
       return Promise.reject()
 
     return @_openDB().then( (db) ->

@@ -103,8 +103,8 @@ class app.Board
             .then (new_board_url) =>
               @message += """
               サーバーが移転している可能性が有ります
-              (<a href="#{app.escape_html(app.safe_href(new_board_url))}"
-              class="open_in_rcrx">#{app.escape_html(new_board_url)}
+              (<a href="#{app.escapeHtml(app.safeHref(new_board_url))}"
+              class="open_in_rcrx">#{app.escapeHtml(new_board_url)}
               </a>)
               """
             .catch ->

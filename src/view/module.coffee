@@ -642,7 +642,7 @@ class app.view.TabContentView extends app.view.PaneContentView
       else if /^search:/.test(url)
         return
       else
-        url = app.safe_href(url)
+        url = app.safeHref(url)
 
       @$element
         .find(".button_link > a")

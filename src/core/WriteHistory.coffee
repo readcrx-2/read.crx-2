@@ -37,7 +37,7 @@ class app.WriteHistory
   @return {Promise}
   ###
   @add: (url, res, title, name, mail, input_name, input_mail, message, date) ->
-    if app.assert_arg("WriteHistory.add", ["string", "number", "string", "string", "string", "string", "string", "string", "number"], arguments)
+    if app.assertArg("WriteHistory.add", ["string", "number", "string", "string", "string", "string", "string", "string", "number"], arguments)
       return Promise.reject()
 
     return @_openDB().then( (db) ->
@@ -74,7 +74,7 @@ class app.WriteHistory
   @return {Promise}
   ###
   @remove: (url, res) ->
-    if app.assert_arg("WriteHistory.remove", ["string", "number"], arguments)
+    if app.assertArg("WriteHistory.remove", ["string", "number"], arguments)
       return Promise.reject()
 
     return @_openDB().then( (db) ->
@@ -108,7 +108,7 @@ class app.WriteHistory
   @return {Promise}
   ###
   @get: (offset = -1, limit = -1) ->
-    if app.assert_arg("WriteHistory.get", ["number", "number"], [offset, limit])
+    if app.assertArg("WriteHistory.get", ["number", "number"], [offset, limit])
       return Promise.reject()
 
     return @_openDB().then( (db) ->
@@ -149,7 +149,7 @@ class app.WriteHistory
   @return {Promise}
   ###
   @getByUrl: (url) ->
-    if app.assert_arg("WriteHistory.getByUrl", ["string"], arguments)
+    if app.assertArg("WriteHistory.getByUrl", ["string"], arguments)
       return Promise.reject()
 
     return @_openDB().then( (db) ->
@@ -220,7 +220,7 @@ class app.WriteHistory
   @return {Promise}
   ###
   @clear = (offset = -1) ->
-    if app.assert_arg("WriteHistory.clear", ["number"], [offset])
+    if app.assertArg("WriteHistory.clear", ["number"], [offset])
       return Promise.reject()
 
     return @_openDB().then( (db) ->
@@ -257,7 +257,7 @@ class app.WriteHistory
   @return {Promise}
   ###
   @clearRange = (day) ->
-    if app.assert_arg("WriteHistory.clearRange", ["number"], arguments)
+    if app.assertArg("WriteHistory.clearRange", ["number"], arguments)
       return Promise.reject()
 
     return @_openDB().then( (db) ->

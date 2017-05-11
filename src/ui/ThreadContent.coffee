@@ -702,7 +702,7 @@ class UI.ThreadContent
             switch mediaType
               when "image"
                 thumbnailLink = $__("a")
-                thumbnailLink.href = app.safe_href(sourceA.href)
+                thumbnailLink.href = app.safeHref(sourceA.href)
                 thumbnailLink.target = "_blank"
 
                 thumbnailImg = $__("img")
@@ -783,7 +783,7 @@ class UI.ThreadContent
             if finalUrl
               expandedURLLink = $__("a")
               expandedURLLink.textContent = finalUrl
-              expandedURLLink.href = app.safe_href(finalUrl)
+              expandedURLLink.href = app.safeHref(finalUrl)
               expandedURLLink.target = "_blank"
               expandedURL.addLast(expandedURLLink)
             else

@@ -440,7 +440,7 @@ app.boot "/view/config.html", ["cache", "bbsmenu"], (Cache, BBSMenu) ->
   if app.config.get("theme_id") is "none"
     $view.find(".theme_none").attr("checked", true)
 
-  app.message.add_listener "config_updated", (message) ->
+  app.message.addListener "config_updated", (message) ->
     if message.key is "theme_id"
       $view.find(".theme_none").attr("checked", message.val is "none")
     return

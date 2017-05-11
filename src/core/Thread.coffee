@@ -231,7 +231,7 @@ class app.Thread
                 @message += "スレッドの読み込みに失敗しました。"
               return
             .then =>
-              if hasCache and thread
+              if hasCache and !thread
                 @message += "キャッシュに残っていたデータを表示します。"
               reject()
               return
@@ -248,7 +248,7 @@ class app.Thread
         else
           @message += "スレッドの読み込みに失敗しました。"
 
-          if hasCache and thread
+          if hasCache and !thread
             @message += "キャッシュに残っていたデータを表示します。"
 
           reject()
@@ -256,7 +256,7 @@ class app.Thread
       #キャッシュ更新部
       .then ({response, thread}) =>
         #通信に成功した場合
-        if response?.status is 200 or (readcgiVer >= 6 and response?.status is 500)
+        if (response?.status is 200 and thread) or (readcgiVer >= 6 and response?.status is 500)
           cache.last_updated = Date.now()
 
           html2ch = false
@@ -602,9 +602,13 @@ class app.Thread
   ###
   @_parsePink = (text, resLength) ->
     # name, mail, other, message, thread_title
-    text = text.replace(/<\/h1>/, "</h1></dd></dl>")
-    reg = /^.*?<dl class="post".*><dt class=\"\"><span class="number">(\d+).* : <\/span><span class="name"><b>(?:<a href="mailto:([^<>]*)">|<font [^>]*>)?(.*?)(?:<\/a>|<\/font>)?<\/b><\/span><span class="date">(.*)<\/span><\/dt><dd class="thread_in"> ?(.*)$/
-    separator = "</dd></dl>"
+    if text.includes("<div class=\"footer push\">read.cgi ver 06")
+      text = text.replace(/<\/h1>/, "</h1></dd></dl>")
+      reg = /^.*?<dl class="post".*><dt class=\"\"><span class="number">(\d+).* : <\/span><span class="name"><b>(?:<a href="mailto:([^<>]*)">|<font [^>]*>)?(.*?)(?:<\/a>|<\/font>)?<\/b><\/span><span class="date">(.*)<\/span><\/dt><dd class="thread_in"> ?(.*)$/
+      separator = "</dd></dl>"
+    else
+      reg = /^(?:<\/?div.*?(?:<br><br>)?)?<dt>(\d+).*：(?:<a href="mailto:([^<>]*)">|<font [^>]*>)?<b>(.*)<\/b>.*：(.*)<dd> ?(.*)<br><br>$/
+      separator = "\n"
 
     titleReg = /<h1 .*?>(.*)\n?<\/h1>/;
     numberOfBroken = 0
@@ -620,7 +624,7 @@ class app.Thread
         thread.title = app.util.decode_char_reference(title[1])
         thread.title = app.util.removeNeedlessFromTitle(thread.title)
       else if regRes
-        while ++resCount isnt +regRes[1]
+        while ++resCount < +regRes[1]
           thread.res.push
             name: "あぼーん"
             mail: "あぼーん"

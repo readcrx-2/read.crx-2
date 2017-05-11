@@ -110,7 +110,7 @@ app.boot "/write/submit_thread.html", ->
   $notice = $view.C("notice")[0]
   on_error = (message) ->
     for dom from $view.$$("form input, form textarea")
-      dom.disabled = false
+      dom.disabled = false unless dom.hasClass("mail") and app.config.get("sage_flag") is "on"
 
     if message
       $notice.textContent = "書き込み失敗 - #{message}"
@@ -168,7 +168,7 @@ app.boot "/write/submit_thread.html", ->
     UI.Animate.fadeOut($view)
     $view.C("iframe_container")[0].C("iframe")[0].remove()
     for dom from $view.$$("input, textarea")
-      dom.disabled = false
+      dom.disabled = false unless dom.hasClass("mail") and app.config.get("sage_flag") is "on"
     $notice.textContent = ""
     return
 
@@ -184,7 +184,7 @@ app.boot "/write/submit_thread.html", ->
     e.preventDefault()
 
     for dom from $view.$$("input, textarea")
-      dom.disabled = true
+      dom.disabled = true unless dom.hasClass("mail") and app.config.get("sage_flag") is "on"
 
     guess_res = app.URL.guessType(arg.url)
     scheme = app.URL.getScheme(arg.url)

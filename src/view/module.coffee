@@ -98,10 +98,15 @@ class app.view.View
 
           app.message.send("open", {url, new_tab: newTab, background, title})
         return
-    @element.addEventListener "click", (e) ->
-      if e.target? and e.target.classList.contains("open_in_rcrx")
-        e.preventDefault()
+    @element.on("click", (e) ->
+      e.preventDefault() if e.target?.hasClass("open_in_rcrx")
       return
+    )
+    @element.on("mouseup", (e) ->
+      return unless e.target?.hasClass("open_in_rcrx")
+      e.preventDefault() if e.which is 2
+      return
+    )
     return
 
 ###*

@@ -1,4 +1,3 @@
-///<reference path="../../node_modules/@types/jquery/index.d.ts" />
 ///<reference path="../app.ts" />
 ///<reference path="VirtualNotch.ts" />
 

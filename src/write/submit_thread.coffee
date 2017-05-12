@@ -255,13 +255,13 @@ app.boot "/write/submit_thread.html", ->
         input = @contentDocument.createElement("input")
         input.name = key
         input.setAttribute("value", val)
-        form.addLast(input)
+        form.appendChild(input)
       for key, val of form_data.textarea
         textarea = @contentDocument.createElement("textarea")
         textarea.name = key
         textarea.textContent = val
-        form.addLast(textarea)
-      @contentDocument.body.addLast(form)
+        form.appendChild(textarea)
+      @contentDocument.body.appendChild(form)
       Object.getPrototypeOf(form).submit.call(form)
       return
     )

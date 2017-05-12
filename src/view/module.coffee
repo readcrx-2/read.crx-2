@@ -130,6 +130,23 @@ class app.view.IframeView extends app.view.View
     )
     return
 
+  _write: (param) ->
+    if @$element.hasClass("view_thread")
+      htmlname = "write"
+      height = "300"
+    else if @$element.hasClass("view_board")
+      htmlname = "submit_thread"
+      height = "400"
+    param or= {}
+    param.title = document.title
+    param.url = @$element.attr("data-url")
+    open(
+      "/write/#{htmlname}.html?#{app.URL.buildQuery(param)}"
+      undefined
+      "width=600,height=#{height}"
+    )
+    return
+
   ###*
   @method execCommand
   @param {String} command
@@ -139,6 +156,19 @@ class app.view.IframeView extends app.view.View
     # 数値コマンド
     if /^\d+$/.test(command)
       @$element.data("selectableItemList")?.select(+command)
+
+    if @$element.hasClass("view_thread")
+      # 返信レス
+      if (m = /^w([1-9][0-9]?[0-9]?[0-9]?)$/.exec(command))
+        @_write(message: ">>#{m[1]}\n")
+      else if (m = /^w-([1-9][0-9]?[0-9]?[0-9]?)$/.exec(command))
+        @_write(message: """
+        >>#{m[1]}
+        #{@$element.find(".content").children()[m[1]-1].$(".message").innerText.replace(/^/gm, '>')}\n
+        """)
+    if @$element.hasClass("view_thread") or @$element.hasClass("view_board")
+      if command is "w"
+        @_write()
 
     switch command
       when "up"

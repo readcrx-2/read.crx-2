@@ -137,7 +137,7 @@ app.boot "/write/submit_thread.html", ->
     else if message.type is "success"
       $notice.textContent = "書き込み成功"
       setTimeout ->
-        message = $view.C("message")[0].value
+        mes = $view.C("message")[0].value
         name = $view.C("name")[0].value
         mail = $view.C("mail")[0].value
         title = $view.C("title")[0].value
@@ -165,8 +165,11 @@ app.boot "/write/submit_thread.html", ->
 
   $view.C("hide_iframe")[0].on "click", ->
     write_timer.kill()
-    UI.Animate.fadeOut($view)
-    $view.C("iframe_container")[0].C("iframe")[0].remove()
+    $iframeContainer = $view.C("iframe_container")[0]
+    UI.Animate.fadeOut($iframeContainer).on("finish", ->
+      $iframeContainer.T("iframe")[0].remove()
+      return
+    )
     for dom from $view.$$("input, textarea")
       dom.disabled = false unless dom.hasClass("mail") and app.config.get("sage_flag") is "on"
     $notice.textContent = ""
@@ -192,8 +195,8 @@ app.boot "/write/submit_thread.html", ->
     iframe_arg =
       rcrx_name: $view.C("name")[0].value
       rcrx_mail: if $view.C("sage")[0].checked then "sage" else $view.C("mail").value
-      rcrx_title: $view.C("title").value
-      rcrx_message: $view.C("message").value
+      rcrx_title: $view.C("title")[0].value
+      rcrx_message: $view.C("message")[0].value
 
     $iframe = $__("iframe")
     $iframe.src = "/view/empty.html"

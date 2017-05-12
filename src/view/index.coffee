@@ -615,6 +615,7 @@ app.main = ->
     #もし、タブが一つも復元されなかったらブックマークタブを開く
     unless is_restored
       app.message.send("open", url: "bookmark")
+    delete localStorage.tab_state
     return
 
   # コンテキストメニューの作成
@@ -622,12 +623,13 @@ app.main = ->
 
   #終了時にタブの状態を保存する
   window.addEventListener "unload", ->
-    data = for tab in tabA.getAll().concat(tabB.getAll())
-      url: document.querySelector("iframe[data-tabid=\"#{tab.tabId}\"]").getAttribute("data-url")
-      title: tab.title
-      selected: tab.selected
-      locked: tab.locked
-    localStorage.tab_state = JSON.stringify(data)
+    unless localStorage.tab_state?
+      data = for tab in tabA.getAll().concat(tabB.getAll())
+        url: document.querySelector("iframe[data-tabid=\"#{tab.tabId}\"]").getAttribute("data-url")
+        title: tab.title
+        selected: tab.selected
+        locked: tab.locked
+      localStorage.tab_state = JSON.stringify(data)
     #コンテキストメニューの削除
     app.contextMenus.removeAll()
     return

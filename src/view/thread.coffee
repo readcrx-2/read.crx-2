@@ -472,6 +472,8 @@ app.boot "/view/thread.html", ->
       if flg
         e.preventDefault()
         @classList.add("open_in_rcrx")
+        @dataset.href = @href
+        @href = "javascript:undefined;"
         app.defer =>
           $(@).trigger(e)
       return

@@ -89,7 +89,7 @@ class app.view.View
       .on "mousedown", ".open_in_rcrx", (e) ->
         e.preventDefault()
         if e.which isnt 3
-          url = @href or @getAttribute("data-href")
+          url = @getAttribute("data-href") or @href
           title = @getAttribute("data-title") or @textContent
           howToOpen = app.util.get_how_to_open(e)
           newTab = app.config.get("always_new_tab") is "on"
@@ -100,11 +100,6 @@ class app.view.View
         return
     @element.on("click", (e) ->
       e.preventDefault() if e.target?.hasClass("open_in_rcrx")
-      return
-    )
-    @element.on("mouseup", (e) ->
-      return unless e.target?.hasClass("open_in_rcrx")
-      e.preventDefault() if e.which is 2
       return
     )
     return

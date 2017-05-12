@@ -764,6 +764,7 @@ app.main = ->
   $(window)
     #データ保存等の後片付けを行なってくれるzombie.html起動
     .on "beforeunload", ->
+      window.dispatchEvent(new Event("beforezombie"))
       if localStorage.zombie_read_state?
         open("/zombie.html", undefined, "left=1,top=1,width=250,height=50")
       return

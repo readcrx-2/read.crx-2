@@ -260,8 +260,9 @@ class app.view.Index extends app.view.View
       .one "click keydown", =>
         @hideKeyboardHelp()
         return
-      .focus()
-    UI.Animate.fadeIn($help[0])
+    UI.Animate.fadeIn($help[0]).on("finish", ->
+      $help.focus()
+    )
     return
 
   ###*

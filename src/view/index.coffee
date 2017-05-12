@@ -443,7 +443,7 @@ app.main = ->
 
   app.Ninja.enableAutoBackup()
 
-  app.message.add_listener "notify", (message) ->
+  app.message.addListener "notify", (message) ->
     text = message.message
     html = message.html
     background_color = message.background_color or "#777"
@@ -563,7 +563,7 @@ app.main = ->
     @setAttribute("data-url", iframeSrcToUrl(@getAttribute("src")))
     return
 
-  app.message.add_listener "config_updated", (message) ->
+  app.message.addListener "config_updated", (message) ->
     if message.key is "layout"
       $("#body")
         .removeClass("pane-3 pane-3h pane-2")
@@ -639,7 +639,7 @@ app.main = ->
     return
 
   #openメッセージ受信部
-  app.message.add_listener "open", (message) ->
+  app.message.addListener "open", (message) ->
     iframe_info = urlToIframeInfo(message.url)
     return unless iframe_info
 

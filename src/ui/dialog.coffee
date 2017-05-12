@@ -28,7 +28,7 @@ do ->
           $dialog.remove()
           resolve(false)
         )
-        $$.T("body")[0].append($dialog)
+        $$.T("body")[0].addLast($dialog)
       else
         reject()
       return

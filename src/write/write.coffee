@@ -9,7 +9,7 @@ do ->
           src: url(#{localStorage.textar_font});
         }
       """
-      document.head.appendChild(style)
+      document.head.addLast(style)
       return
     )
   return
@@ -73,15 +73,15 @@ app.boot "/write/write.html", ->
     $div.addClass("preview")
     $pre = $__("pre")
     $pre.textContent = text
-    $div.append($pre)
+    $div.addLast($pre)
     $button = $__("button")
     $button.addClass("close_preview")
     $button.textContent = "戻る"
     $button.on("click", ->
       @parentElement.remove()
     )
-    $div.append($button)
-    document.body.append($div)
+    $div.addLast($button)
+    document.body.addLast($div)
     return
   )
 
@@ -132,7 +132,7 @@ app.boot "/write/write.html", ->
   $notice = $view.C("notice")[0]
   on_error = (message) ->
     for dom from $view.$$("form input, form textarea")
-      dom.disabled = false
+      dom.disabled = false unless dom.hasClass("mail") and app.config.get("sage_flag") is "on"
 
     if message
       $notice.textContent = "書き込み失敗 - #{message}"
@@ -185,7 +185,7 @@ app.boot "/write/write.html", ->
       return
     )
     for dom from $view.$$("input, textarea")
-      dom.disabled = false
+      dom.disabled = false unless dom.hasClass("mail") and app.config.get("sage_flag") is "on"
     $notice.textContent = ""
     return
 
@@ -201,7 +201,7 @@ app.boot "/write/write.html", ->
     e.preventDefault()
 
     for dom from $view.$$("input, textarea")
-      dom.disabled = true
+      dom.disabled = true unless dom.hasClass("mail") and app.config.get("sage_flag") is "on"
 
     guess_res = app.URL.guessType(arg.url)
 
@@ -270,17 +270,17 @@ app.boot "/write/write.html", ->
         input = @contentDocument.createElement("input")
         input.name = key
         input.setAttribute("value", val)
-        form.appendChild(input)
+        form.addLast(input)
       for key, val of form_data.textarea
         textarea = @contentDocument.createElement("textarea")
         textarea.name = key
         textarea.textContent = val
-        form.append(textarea)
-      @contentDocument.body.append(form)
+        form.addLast(textarea)
+      @contentDocument.body.addLast(form)
       Object.getPrototypeOf(form).submit.call(form)
       return
     )
-    $$.C("iframe_container")[0].append($iframe)
+    $$.C("iframe_container")[0].addLast($iframe)
 
     write_timer.wake()
 

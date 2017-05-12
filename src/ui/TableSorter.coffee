@@ -97,7 +97,7 @@ class UI.TableSorter
     $tbody.innerHTML = ""
     for key in dataKeys
       for $tr in data[key]
-        $tbody.append($tr)
+        $tbody.addLast($tr)
 
     exparam = {
       sort_order: param.sortOrder

@@ -12,7 +12,7 @@ app.boot "/view/sidemenu.html", ["bbsmenu"], (BBSMenu) ->
     a.className = "open_in_rcrx"
     a.title = board.title
     a.textContent = board.title
-    a.href = app.safe_href(board.url)
+    a.href = app.safeHref(board.url)
     a.classList.add("https") if app.URL.getScheme(board.url) is "https"
     li.appendChild(a)
     li
@@ -50,7 +50,7 @@ app.boot "/view/sidemenu.html", ["bbsmenu"], (BBSMenu) ->
       return
 
     #ブックマーク更新時処理
-    app.message.add_listener "bookmark_updated", (message) ->
+    app.message.addListener "bookmark_updated", (message) ->
       return if message.entry.type isnt "board"
 
       switch message.type

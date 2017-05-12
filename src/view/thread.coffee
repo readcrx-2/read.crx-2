@@ -202,7 +202,7 @@ app.boot "/view/thread.html", ->
 
     auto_load_interval = auto_load()
 
-    app.message.add_listener "config_updated", (message) ->
+    app.message.addListener "config_updated", (message) ->
       if message.key is "auto_load_second"
         clearInterval auto_load_interval
         auto_load_interval = auto_load()
@@ -363,7 +363,7 @@ app.boot "/view/thread.html", ->
         $res.toggleClass("aa")
 
       else if $this.hasClass("res_permalink")
-        open(app.safe_href(view_url + $res.find(".num").text()))
+        open(app.safeHref(view_url + $res.find(".num").text()))
 
       # 画像をぼかす
       else if $this.hasClass("set_image_blur")
@@ -811,7 +811,7 @@ app.boot "/view/thread.html", ->
             text = "未読ブックマーク: #{next.title}"
           if next.res_count?
             text += " (未読#{next.res_count - (next.read_state?.read or 0)}件)"
-          @_elm.href = app.safe_href(next.url)
+          @_elm.href = app.safeHref(next.url)
           @_elm.textContent = text
           @_elm.setAttribute("data-title", next.title)
           @_elm.classList.remove("hidden")
@@ -860,7 +860,7 @@ app.boot "/view/thread.html", ->
         searchNextThread.search(view_url, document.title)
         return
 
-    app.message.add_listener "bookmark_updated", (message) ->
+    app.message.addListener "bookmark_updated", (message) ->
       if scroll_left is 0
         next_unread.show()
       return
@@ -1094,7 +1094,7 @@ app.view_thread._read_state_manager = ($view) ->
         app.bookmark.update_read_state(read_state)
         read_state_updated = false
 
-    app.message.add_listener "request_update_read_state", (message) ->
+    app.message.addListener "request_update_read_state", (message) ->
       if not message.board_url? or message.board_url is board_url
         scan_and_save()
       return

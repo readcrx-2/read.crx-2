@@ -440,7 +440,7 @@ app.boot "/view/config.html", ["cache", "bbsmenu"], (Cache, BBSMenu) ->
   if app.config.get("theme_id") is "none"
     $view.find(".theme_none").attr("checked", true)
 
-  app.message.add_listener "config_updated", (message) ->
+  app.message.addListener "config_updated", (message) ->
     if message.key is "theme_id"
       $view.find(".theme_none").attr("checked", message.val is "none")
     return
@@ -645,15 +645,6 @@ app.boot "/view/config.html", ["cache", "bbsmenu"], (Cache, BBSMenu) ->
       $replacestr_status
         .addClass("fail")
         .text("ファイルを選択してください")
-    return
-
-  #書込履歴テーブル削除
-  $view.find(".writehistory_delete_table").on "click", ->
-    openDatabase("WriteHistory", "", "WriteHistory", 0).transaction( (tx) ->
-      tx.executeSql("drop table WriteHistory", [])
-      $view.find(".writehistory_delete_table").text("テーブル削除(完了)")
-      return
-    )
     return
 
   $replacestr_status = $view.find(".history_from_1151_status")

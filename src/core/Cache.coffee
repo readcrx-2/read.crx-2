@@ -166,7 +166,7 @@ class app.Cache
         req.onsuccess = (e) =>
           res = e.target.result
           if res?
-            data = app.deep_copy(e.target.result)
+            data = app.deepCopy(e.target.result)
             for key, val of data
               @[key] = if val? then val else null
             resolve()

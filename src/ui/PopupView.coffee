@@ -86,7 +86,7 @@ class UI.PopupView
     # 同一ソースからのポップアップが既に有る場合は、処理を中断
     if @_popupStack.length > 0
       popupInfo = @_popupStack[@_popupStack.length - 1]
-      return if Object.is(@source, popupInfo.source)
+      return if @source is popupInfo.source
 
     # sourceがpopup内のものならば、兄弟ノードの削除
     # それ以外は、全てのノードを削除
@@ -180,7 +180,7 @@ class UI.PopupView
       # 新規ノードの設定
       setupNewNode(@source, @popup)
       # popupの表示
-      @_popupArea.append(@popup)
+      @_popupArea.addLast(@popup)
       # ノードのアクティブ化
       app.defer =>
         @_activateNode()
@@ -193,13 +193,13 @@ class UI.PopupView
           @_delayTimeoutID = 0
           # マウス座標がポップアップ元のままの場合のみ実行する
           elm = document.elementFromPoint(@_currentX, @_currentY)
-          if Object.is(elm, sourceNode)
+          if elm is sourceNode
             # 新規ノードの設定
             setupNewNode(sourceNode, popupNode)
             # ノードのアクティブ化
             sourceNode.addClass("active")
             # popupの表示
-            @_popupArea.append(popupNode)
+            @_popupArea.addLast(popupNode)
         , @_delayTime)
         return
 
@@ -289,9 +289,9 @@ class UI.PopupView
   ###
   _activateNode: ->
     elm = document.elementFromPoint(@_currentX, @_currentY)
-    if Object.is(elm, @source)
+    if elm is @source
       @source.addClass("active")
-    else if Object.is(elm, @popup) or Object.is(elm.closest(".popup"), @popup)
+    else if (elm is @popup) or (elm.closest(".popup") is @popup)
       @popup.addClass("active")
     else if elm.hasClass("popup_source") or elm.hasClass("popup")
       elm.addClass("active")
@@ -312,7 +312,7 @@ class UI.PopupView
   _getOuterHeight: (elm, margin = false) ->
     # 下層に表示してoffsetHeightを取得する
     elm.style.zIndex = "-1"
-    @_popupArea.append(elm)
+    @_popupArea.addLast(elm)
     outerHeight = elm.offsetHeight
     @_popupArea.removeChild(elm)
     elm.style.zIndex = "3"    # ソースでは"3"だが、getComputedStyleでは"0"になるため

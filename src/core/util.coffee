@@ -132,9 +132,9 @@ do ->
     ["2falsetrue",  { new_tab: true,  new_window: false, background: true  }]
     ["2truetrue",   { new_tab: true,  new_window: false, background: false }]
   ])
-  app.util.get_how_to_open = (original_e) ->
-    e = {which, shiftKey, ctrlKey} = original_e
-    e.ctrlKey or= original_e.metaKey
+  app.util.get_how_to_open = ({which, shiftKey, ctrlKey, metaKey}) ->
+    e = {which, shiftKey, ctrlKey}
+    e.ctrlKey or= metaKey
     def = {new_tab: false, new_window: false, background: false}
     if e.type is "mousedown"
       key = "" + e.which + e.shiftKey + e.ctrlKey

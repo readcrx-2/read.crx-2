@@ -68,10 +68,10 @@ namespace UI {
         }
       });
       new UI.VirtualNotch($ul);
-      $ele.append($ul);
+      $ele.addLast($ul);
       var $div = $__("div");
       $div.addClass("tab_container");
-      $ele.append($div);
+      $ele.addLast($div);
 
       window.addEventListener("message", (e) => {
         var message, tabId: string, history;
@@ -205,18 +205,18 @@ namespace UI {
       var $li = $__("li");
       $li.dataset.tabid = tabId;
       $li.dataset.tabsrc = url;
-      $li.append($__("span"));
+      $li.addLast($__("span"));
       var $img = $__("img");
       $img.src = "/img/close_16x16.webp";
       $img.title = "閉じる";
-      $li.append($img);
-      this.$element.$(".tab_tabbar").append($li);
+      $li.addLast($img);
+      this.$element.$(".tab_tabbar").addLast($li);
 
       var $iframe = $__("iframe");
       $iframe.src = param.lazy ? "/view/empty.html" : url;
       $iframe.addClass("tab_content");
       $iframe.dataset.tabid = tabId;
-      this.$element.$(".tab_container").append($iframe);
+      this.$element.$(".tab_container").addLast($iframe);
 
       this.update(tabId, {title: param.title, selected: param.selected, locked: param.locked});
 

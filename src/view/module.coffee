@@ -166,10 +166,14 @@ class app.view.IframeView extends app.view.View
       when "openCommandBox"
         @_openCommandBox()
       when "enter"
-        @$element.find(".selected").trigger("click")
+        @$element.find(".selected").trigger("mousedown")
+        @$element.find(".selected").trigger("mouseup")
       when "shift+enter"
         @$element.find(".selected").trigger(
-          $.Event("click", shiftKey: true, which: 1)
+          $.Event("mousedown", shiftKey: true, which: 1)
+        )
+        @$element.find(".selected").trigger(
+          $.Event("mouseup", shiftKey: true, which: 1)
         )
       when "help"
         app.message.send("showKeyboardHelp", null, parent)

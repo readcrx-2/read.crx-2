@@ -599,12 +599,6 @@ app.main = ->
           tabB.remove(tmp.tabId)
     return
 
-  # #13対策
-  $view
-    .find(".tab_tabbar")
-      .on("mouseenter", "li", -> @classList.add("hover"))
-      .on("mouseleave", "li", -> @classList.remove("hover"))
-
   app.bookmarkEntryList.ready.add ->
     #タブ復元
     if localStorage.tab_state?

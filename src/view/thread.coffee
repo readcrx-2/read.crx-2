@@ -741,7 +741,6 @@ app.boot "/view/thread.html", ->
               .end()
               .find(".hit_count")
                 .text(hit_count + "hit")
-                .removeClass("hidden")
 
             if scrollTop is $content.scrollTop()
               $content.triggerHandler("scroll")
@@ -755,7 +754,6 @@ app.boot "/view/thread.html", ->
                 .end()
               .end()
               .find(".hit_count")
-                .addClass("hidden")
                 .text("")
 
             if typeof search_stored_scrollTop is "number"

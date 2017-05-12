@@ -5,7 +5,7 @@ do ->
     return
 
   eventFn = (e) ->
-    if e.target.hasClass("contextmenu_menu") or e.target.parent().hasClass("contextmenu_menu")
+    if e.target?.hasClass("contextmenu_menu") or e.target?.parent().hasClass("contextmenu_menu")
       return
     cleanup()
     return

@@ -119,7 +119,7 @@ namespace UI {
           }
 
           target.addClass("sortable_dragging");
-          document.body.append(overlay);
+          document.body.addLast(overlay);
 
           clicks = 1;
         }else if(clicks === 2) {

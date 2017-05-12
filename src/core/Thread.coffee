@@ -219,8 +219,8 @@ class app.Thread
               @message += """
               スレッドの読み込みに失敗しました。
               サーバーが移転している可能性が有ります
-              (<a href="#{app.escape_html(app.safe_href(newURL))}"
-                class="open_in_rcrx">#{app.escape_html(newURL)}</a>)
+              (<a href="#{app.escapeHtml(app.safeHref(newURL))}"
+                class="open_in_rcrx">#{app.escapeHtml(newURL)}</a>)
               """
               return
             #移転検出出来なかった場合
@@ -240,8 +240,8 @@ class app.Thread
           @message += """
           スレッドの読み込みに失敗しました。
           過去ログの可能性が有ります
-          (<a href="#{app.escape_html(app.safe_href(newURL))}"
-            class="open_in_rcrx">#{app.escape_html(newURL)}</a>)
+          (<a href="#{app.escapeHtml(app.safeHref(newURL))}"
+            class="open_in_rcrx">#{app.escapeHtml(newURL)}</a>)
           """
           reject()
           return

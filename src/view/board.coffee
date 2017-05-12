@@ -177,7 +177,7 @@ app.boot "/view/board.html", ->
 
     auto_load_interval = auto_load()
 
-    app.message.add_listener "config_updated", (message) ->
+    app.message.addListener "config_updated", (message) ->
       if message.key is "auto_load_second_board"
         clearInterval auto_load_interval
         auto_load_interval = auto_load()

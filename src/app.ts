@@ -17,7 +17,6 @@ namespace app {
       parent.chrome.tabs.remove(tab.id);
     });
   }
-  export var clitical_error = criticalError;
 
   export function log (level:string, ...data:any[]) {
     if (logLevels.includes(level)) {
@@ -48,13 +47,12 @@ namespace app {
 
     return copy;
   }
-  export var deep_copy = deepCopy;
 
   export function defer (fn:Function):void {
     requestIdleCallback(fn);
   }
 
-  export function assert_arg (name:string, rule:string[], arg:any[]):boolean {
+  export function assertArg (name:string, rule:string[], arg:any[]):boolean {
     var key:number, val:any;
 
     for ([key, val] of rule.entries()) {
@@ -232,8 +230,6 @@ namespace app {
     }
   }
   export var message = new Message();
-  (<any>message).add_listener = message.addListener;
-  (<any>message).remove_listener = message.removeListener;
 
   export class Config {
     private static _default = new Map<string, string>([
@@ -450,7 +446,7 @@ namespace app {
   export const GT_REG = />/g;
   export const QUOT_REG = /"/g;
   export const APOS_REG = /'/g;
-  export function escape_html (str:string):string {
+  export function escapeHtml (str:string):string {
     return str
       .replace(AMP_REG, "&amp;")
       .replace(LT_REG, "&lt;")
@@ -459,7 +455,7 @@ namespace app {
       .replace(APOS_REG, "&apos;");
   }
 
-  export function safe_href (url:string):string {
+  export function safeHref (url:string):string {
     return /^https?:\/\//.test(url) ? url : "/view/empty.html";
   }
 

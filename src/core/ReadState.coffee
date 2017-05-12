@@ -6,7 +6,7 @@ class app.ReadState
   @_openDB: new Promise( (resolve, reject) ->
     req = indexedDB.open("ReadState", 1)
     req.onerror = (e) ->
-      app.critical_error("既読情報管理システムの起動に失敗しました")
+      app.criticalError("既読情報管理システムの起動に失敗しました")
       reject(e)
       return
     req.onupgradeneeded = (e) ->
@@ -45,7 +45,7 @@ class app.ReadState
       app.log("error", "app.ReadState.set: 引数が不正です", arguments)
       return Promise.reject()
 
-    read_state = app.deep_copy(read_state)
+    read_state = app.deepCopy(read_state)
 
     url = @_url_filter(read_state.url)
     read_state.url = url.replaced
@@ -73,7 +73,7 @@ class app.ReadState
     )
 
   @get: (url) ->
-    if app.assert_arg("app.read_state.get", ["string"], arguments)
+    if app.assertArg("app.read_state.get", ["string"], arguments)
       return Promise.reject()
 
     url = @_url_filter(url)
@@ -85,7 +85,7 @@ class app.ReadState
           .objectStore("ReadState")
           .get(url.replaced)
         req.onsuccess = (e) ->
-          data = app.deep_copy(e.target.result)
+          data = app.deepCopy(e.target.result)
           if data?
             data.url = url.original
           resolve(data)
@@ -117,7 +117,7 @@ class app.ReadState
     )
 
   @getByBoard: (url) ->
-    if app.assert_arg("app.ReadState.getByBoard", ["string"], arguments)
+    if app.assertArg("app.ReadState.getByBoard", ["string"], arguments)
       return Promise.reject()
 
     url = @_url_filter(url)
@@ -144,7 +144,7 @@ class app.ReadState
     )
 
   @remove: (url) ->
-    if app.assert_arg("app.ReadState.remove", ["string"], arguments)
+    if app.assertArg("app.ReadState.remove", ["string"], arguments)
       return Promise.reject()
 
     url = @_url_filter(url)

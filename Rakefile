@@ -78,7 +78,7 @@ def haml(src, output)
 end
 
 def scss(src, output)
-  sh "bundle exec scss -E UTF-8 -t compressed #{src} #{output}"
+  sh "bundle exec scss -E UTF-8 --sourcemap=none -t compressed #{src} #{output}"
 end
 
 def coffee(src, output)

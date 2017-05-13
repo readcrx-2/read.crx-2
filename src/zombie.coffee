@@ -13,6 +13,11 @@ app.boot "/zombie.html", ->
     ).then( ->
       close()
       return
+    , (e) ->
+      $p = $__("p")
+      $p.textContent = "エラーが発生しました: #{e}"
+      $$.T("body")[0].addLast($p)
+      return
     )
 
     delete localStorage.zombie_read_state

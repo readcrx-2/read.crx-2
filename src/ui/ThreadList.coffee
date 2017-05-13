@@ -215,14 +215,12 @@ class UI.ThreadList
           UI.table_search($table, "search", {
             query: @value, target_col: title_index})
           hitCount = $table.getAttr("data-table_search_hit_count")
-          for dom in @child() when dom.hasClass("hit_count")
+          for dom in @parent().child() when dom.hasClass("hit_count")
             dom.textContent = hitCount + "hit"
-            dom.removeClass("hidden")
         else
           UI.table_search($table, "clear")
-          for dom in @child() when dom.hasClass("hit_count")
+          for dom in @parent().child() when dom.hasClass("hit_count")
             dom.textContent = ""
-            dom.addClass("hidden")
         return
       )
       $searchbox.on("keyup", (e) ->

@@ -132,12 +132,11 @@ do ->
     ["2falsetrue",  { new_tab: true,  new_window: false, background: true  }]
     ["2truetrue",   { new_tab: true,  new_window: false, background: false }]
   ])
-  app.util.get_how_to_open = ({which, shiftKey, ctrlKey, metaKey}) ->
-    e = {which, shiftKey, ctrlKey}
-    e.ctrlKey or= metaKey
+  app.util.get_how_to_open = ({type, which, shiftKey, ctrlKey, metaKey}) ->
+    ctrlKey or= metaKey
     def = {new_tab: false, new_window: false, background: false}
-    if e.type is "mousedown"
-      key = "" + e.which + e.shiftKey + e.ctrlKey
+    if type is "mousedown"
+      key = "" + which + shiftKey + ctrlKey
       if openMap.has(key)
         return openMap.get(key)
       else

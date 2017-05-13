@@ -149,17 +149,24 @@ $color-https: #109020;
     > label, > .button {
       float: left;
     }
-    > label > input, > .button, > .breadcrumb, > .sort_item_selector {
+    > .button, > .breadcrumb, > .sort_item_selector {
       border-width: 1px;
       border-style: solid;
       margin: 3px;
       height: 19px;
     }
     > label {
+      display: flex;
       position: relative;
+      margin: 3px;
+      padding: 0 0 0 19px;
+      height: 19px;
+      border-style: solid;
+      border-width: 1px;
       > input {
-        padding: 0 0 0 19px;
-        width: 150px;
+        width: 80px;
+        height: 100%;
+        border-style: none;
         -webkit-appearance: textfield;
         &[disabled] {
           visibility: hidden;
@@ -173,13 +180,15 @@ $color-https: #109020;
         &::-webkit-search-results-decoration {
           display: none;
         }
+        &:focus {
+          outline: 0;
+        }
       }
       > .hit_count {
-        position: absolute;
-        right: 3px;
-        top: 0;
         font-size: 14px;
-        padding: 3px;
+        width: 40px;
+        padding: 0 3px 0 3px;
+        text-align: right;
         -webkit-user-select: none;
       }
     }
@@ -365,12 +374,14 @@ $color-https: #109020;
   .nav_bar {
     background-color: $nav-bar-background-color;
     color: $nav-bar-color;
-    > .button:not(.disabled):hover, > label > input, > .sort_item_selector {
+    > .button:not(.disabled):hover, > label, > .sort_item_selector {
       border-color: $nav-bar-item-border-color;
     }
-    > label > input {
+    > label {
       background: url(/img/search2_19x19_#{$search-icon-color}.webp) no-repeat;
-      color: $color;
+      > input {
+        color: $color;
+      }
     }
     > .button {
       &.button_bookmark {

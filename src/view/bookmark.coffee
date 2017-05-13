@@ -69,6 +69,7 @@ app.boot "/view/bookmark.html", ->
           for board in board_thread_table.get(@prev)
             app.message.send("bookmark_updated", {type: "errored", bookmark: {type: "thread", url: board}, entry: {type: "thread"}})
 
+      maxCon = app.config.get("max_connection")
       if count.all is count.success + count.error
         #更新完了
         #ソート後にブックマークが更新されてしまう場合に備えて、少し待つ
@@ -90,7 +91,7 @@ app.boot "/view/bookmark.html", ->
         , 500)
       # 合計最大同時接続数: 2
       # 同一サーバーへの最大接続数: 1
-      else if count.loading < 2
+      else if count.loading < maxCon
         keys = board_list.values()
         while !(board = keys.next()).done
           current = board.value

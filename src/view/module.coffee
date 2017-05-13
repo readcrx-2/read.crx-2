@@ -89,7 +89,7 @@ class app.view.View
       .on "mousedown", ".open_in_rcrx", (e) ->
         e.preventDefault()
         if e.which isnt 3
-          url = @href or @getAttribute("data-href")
+          url = @getAttribute("data-href") or @href
           title = @getAttribute("data-title") or @textContent
           howToOpen = app.util.get_how_to_open(e)
           newTab = app.config.get("always_new_tab") is "on"
@@ -100,11 +100,6 @@ class app.view.View
         return
     @element.on("click", (e) ->
       e.preventDefault() if e.target?.hasClass("open_in_rcrx")
-      return
-    )
-    @element.on("mouseup", (e) ->
-      return unless e.target?.hasClass("open_in_rcrx")
-      e.preventDefault() if e.which is 2
       return
     )
     return
@@ -135,6 +130,23 @@ class app.view.IframeView extends app.view.View
     )
     return
 
+  _write: (param) ->
+    if @$element.hasClass("view_thread")
+      htmlname = "write"
+      height = "300"
+    else if @$element.hasClass("view_board")
+      htmlname = "submit_thread"
+      height = "400"
+    param or= {}
+    param.title = document.title
+    param.url = @$element.attr("data-url")
+    open(
+      "/write/#{htmlname}.html?#{app.URL.buildQuery(param)}"
+      undefined
+      "width=600,height=#{height}"
+    )
+    return
+
   ###*
   @method execCommand
   @param {String} command
@@ -144,6 +156,19 @@ class app.view.IframeView extends app.view.View
     # 数値コマンド
     if /^\d+$/.test(command)
       @$element.data("selectableItemList")?.select(+command)
+
+    if @$element.hasClass("view_thread")
+      # 返信レス
+      if (m = /^w([1-9][0-9]?[0-9]?[0-9]?)$/.exec(command))
+        @_write(message: ">>#{m[1]}\n")
+      else if (m = /^w-([1-9][0-9]?[0-9]?[0-9]?)$/.exec(command))
+        @_write(message: """
+        >>#{m[1]}
+        #{@$element.find(".content").children()[m[1]-1].$(".message").innerText.replace(/^/gm, '>')}\n
+        """)
+    if @$element.hasClass("view_thread") or @$element.hasClass("view_board")
+      if command is "w"
+        @_write()
 
     switch command
       when "up"
@@ -171,10 +196,14 @@ class app.view.IframeView extends app.view.View
       when "openCommandBox"
         @_openCommandBox()
       when "enter"
-        @$element.find(".selected").trigger("click")
+        @$element.find(".selected").trigger("mousedown")
+        @$element.find(".selected").trigger("mouseup")
       when "shift+enter"
         @$element.find(".selected").trigger(
-          $.Event("click", shiftKey: true, which: 1)
+          $.Event("mousedown", shiftKey: true, which: 1)
+        )
+        @$element.find(".selected").trigger(
+          $.Event("mouseup", shiftKey: true, which: 1)
         )
       when "help"
         app.message.send("showKeyboardHelp", null, parent)

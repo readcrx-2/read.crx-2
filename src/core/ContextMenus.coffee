@@ -80,5 +80,9 @@ class app.contextMenus
   @method removeAll
   ###
   @removeAll: ->
-    chrome.contextMenus.removeAll()
+    # removeAll()を使うとbackgroundのコンテキストメニューも削除されてしまうので個別に削除する
+    @remove("add_selection_to_ngwords")
+    @remove("add_link_to_ngwords")
+    @remove("add_media_to_ngwords")
+    @remove("open_link_with_res_number")
     return

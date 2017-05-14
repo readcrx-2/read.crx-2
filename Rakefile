@@ -78,7 +78,11 @@ def haml(src, output)
 end
 
 def scss(src, output)
-  sh "bundle exec scss -E UTF-8 --sourcemap=none -t compressed #{src} #{output}"
+  if RUBY_PLATFORM.include?("darwin") || RUBY_PLATFORM.include?("linux")
+    sh "node_modules/.bin/node-sass --sourcemap=none --output-style compressed #{src} #{output}"
+  else
+    sh "\"node_modules/.bin/node-sass\" --sourcemap=none --output-style compressed #{src} #{output}"
+  end
 end
 
 def coffee(src, output)

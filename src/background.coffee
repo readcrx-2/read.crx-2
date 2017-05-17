@@ -6,7 +6,7 @@ isCurrentTab = ->
       {active: true, lastFocusedWindow: true},
       (tabs) ->
         if tabs[0].url.startsWith("chrome-extension://#{id}")
-          return resolve()
+          return resolve(tabs[0])
         else
           return reject()
     )
@@ -28,6 +28,7 @@ searchRcrx = ->
 
 # アイコンクリック時の動作
 chrome.browserAction.onClicked.addListener( ->
+  # 開いているタブの確認
   isCurrentTab()
     # 現在のタブが自分自身である場合は何もしない
     .catch( ->
@@ -37,6 +38,7 @@ chrome.browserAction.onClicked.addListener( ->
         .then( (tab) ->
           chrome.windows.update(tab.windowId, {focused: true})
           chrome.tabs.update(tab.id, {highlighted: true})
+          return
         )
         # 存在しなければタブを作成する
         .catch( ->
@@ -44,6 +46,23 @@ chrome.browserAction.onClicked.addListener( ->
         )
     )
 )
+
+# 終了通知の受信
+chrome.runtime.onMessage.addListener (request) ->
+  if request.type is "exit_rcrx"
+    # zombie.htmlが動いているかもしれないので10秒待機
+    setTimeout( ->
+      # 実行中であるか確認
+      searchRcrx()
+        # 実行していなければ終結処理
+        .catch( ->
+          # メモリ解放のためにリロードを実行する
+          chrome.runtime.reload()
+          return
+        )
+      return
+    , 10000)
+  return
 
 # 対応URLのチェック
 isSupportedURL = (url) ->

@@ -128,7 +128,10 @@ app.boot "/view/sidemenu.html", ["bbsmenu"], (BBSMenu) ->
           accordion.update()
 
         # 2ch.netと2ch.scの切替用情報の取得
-        if !modeFlag.net or !modeFlag.sc
+        if (
+          res.url is app.config.get("bbsmenu") and
+          !modeFlag.net or !modeFlag.sc
+        )
           loopCount = 0
           intervalID = setInterval( ->
             # 一旦待機させるため1回目をスキップ

@@ -28,7 +28,7 @@ if (regs.some (a) -> a.test(location.href))
   style =
     position: "fixed"
     right: "10px"
-    top: "40px"
+    top: "60px"
     "background-color": "rgba(255,255,255,0.8)"
     color: "#000"
     border: "1px solid black"
@@ -36,6 +36,7 @@ if (regs.some (a) -> a.test(location.href))
     padding: "5px"
     "font-size": "14px"
     "font-weight": "normal"
+    "z-index": "255"
 
   for key, val of style
     container.style[key] = val

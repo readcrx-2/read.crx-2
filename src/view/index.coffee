@@ -481,6 +481,28 @@ app.main = ->
     app.config.set("last_version", app.manifest.version)
     return
 
+  # アップデート告知をを送出
+  do ->
+    lastInformation = parseInt(app.config.get("last_information"))
+    informationCount = parseInt(app.config.get("information_count"))
+    if (
+      app.util.compareVersion("2.0.0") < 0 and
+      Date.now() - lastInformation > 86400000 * 3 and
+      informationCount < 3
+    )
+      app.message.send "notify", {
+        html: """
+          バージョンアップに関する注意事項があります。
+          詳しくは
+           <a href="http://readcrx-2.github.io/read.crx-2/changelog.html#2017-05-20" target="_blank">注意事項</a>
+          をご覧ください。
+        """
+        background_color: "blue"
+      }
+      app.config.set("last_information", Date.now())
+      app.config.set("information_count", informationCount + 1)
+    return
+
   #更新通知
   chrome.runtime.onUpdateAvailable.addListener( ({version}) ->
     return if version is app.manifest.version

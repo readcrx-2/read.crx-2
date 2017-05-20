@@ -494,7 +494,7 @@ app.main = ->
         html: """
           バージョンアップに関する注意事項があります。
           詳しくは
-           <a href="http://readcrx-2.github.io/read.crx-2/changelog.html#2017-05-20" target="_blank">注意事項</a>
+           <a href="http://readcrx-2.github.io/read.crx-2/changelog.html#v1.17.0" target="_blank">注意事項</a>
           をご覧ください。
         """
         background_color: "blue"

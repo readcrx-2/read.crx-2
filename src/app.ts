@@ -301,8 +301,8 @@ namespace app {
       this.ready = ready.add.bind(ready);
 
       // localStorageからの移行処理
-      (() => {
-        var found:{[index:string]:string;} = {}, key:string, val:string;
+      {
+        let found:{[index:string]:string;} = {}, key:string, val:string;
 
         for (key in localStorage) {
           if (key.startsWith("config_")) {
@@ -317,7 +317,7 @@ namespace app {
         for (key in found) {
           localStorage.removeItem(key);
         }
-      })();
+      }
 
       chrome.storage.local.get(null, (res) => {
         var key:string, val:string;
@@ -462,15 +462,12 @@ namespace app {
 
   export var manifest: any;
 
-  (() => {
-    var xhr:XMLHttpRequest;
-    if (/^chrome-extension:\/\//.test(location.origin)) {
-      xhr = new XMLHttpRequest();
-      xhr.open("GET", "/manifest.json", false);
-      xhr.send();
-      manifest = JSON.parse(xhr.responseText);
-    }
-  })();
+  if (/^chrome-extension:\/\//.test(location.origin)) {
+    let xhr = new XMLHttpRequest();
+    xhr.open("GET", "/manifest.json", false);
+    xhr.send();
+    manifest = JSON.parse(xhr.responseText);
+  }
 
   export function clipboardWrite (str:string):void {
     var textarea:HTMLTextAreaElement;
@@ -484,10 +481,10 @@ namespace app {
   }
 
   export var module;
-  (() => {
-    var pending_modules = new Set<any>();
-    var ready_modules = new Map<string, any>();
-    var fire_definition, add_ready_module;
+  {
+    let pending_modules = new Set<any>();
+    let ready_modules = new Map<string, any>();
+    let fire_definition, add_ready_module;
 
     fire_definition = (module_id, dependencies, definition) => {
       var dep_modules = [], dep_module_id, callback;
@@ -551,7 +548,7 @@ namespace app {
         callback(window["jQuery"]);
       });
     }
-  })();
+  }
 
   export function boot (path:string, requirements, fn):void {
     var htmlVersion:string;

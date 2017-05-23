@@ -155,7 +155,7 @@ app.boot "/view/thread.html", ->
 
       #スクロールされなかった場合も余所の処理を走らすためにscrollを発火
       unless on_scroll
-        $content.triggerHandler("scroll")
+        $content[0].dispatchEvent(new Event("scroll"))
 
       #二度目以降のread_state_attached時
       $view.on "read_state_attached", ->
@@ -715,7 +715,7 @@ app.boot "/view/thread.html", ->
           return
         .on "input", ->
           return if _isComposing
-          $content.triggerHandler("searchstart")
+          $content[0].dispatchEvent(new Event("searchstart"))
           if @value isnt ""
             if typeof search_stored_scrollTop isnt "number"
               search_stored_scrollTop = $content.scrollTop()
@@ -743,7 +743,7 @@ app.boot "/view/thread.html", ->
                 .text(hit_count + "hit")
 
             if scrollTop is $content.scrollTop()
-              $content.triggerHandler("scroll")
+              $content[0].dispatchEvent(new Event("scroll"))
           else
             $view
               .find(".content")
@@ -760,7 +760,7 @@ app.boot "/view/thread.html", ->
               $content.scrollTop(search_stored_scrollTop)
               search_stored_scrollTop = null
 
-          $content.triggerHandler("searchfinish")
+          $content[0].dispatchEvent(new Event("searchfinish"))
           return
 
         .on "keyup", (e) ->
@@ -871,7 +871,7 @@ app.boot "/view/thread.html", ->
   $view.on "lazyload-load", ".thumbnail > a > img.image, .thumbnail > video", ->
     # Lazyloadを実行させるためにスクロールを発火
     if app.config.get("image_height_fix") is "off"
-      $content.triggerHandler("scroll")
+      $content[0].dispatchEvent(new Event("scroll"))
     # マウスオーバーによるズームの設定
     app.view_thread._setupHoverZoom(@)
     return

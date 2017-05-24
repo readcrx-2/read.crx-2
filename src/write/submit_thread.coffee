@@ -194,7 +194,7 @@ app.boot "/write/submit_thread.html", ->
 
     iframe_arg =
       rcrx_name: $view.C("name")[0].value
-      rcrx_mail: if $view.C("sage")[0].checked then "sage" else $view.C("mail").value
+      rcrx_mail: if $view.C("sage")[0].checked then "sage" else $view.C("mail")[0].value
       rcrx_title: $view.C("title")[0].value
       rcrx_message: $view.C("message")[0].value
 

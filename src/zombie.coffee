@@ -7,16 +7,11 @@ app.boot "/zombie.html", ->
     )
 
     app.bookmark.promise_first_scan.then( ->
-      rsarray = (app.ReadState.set(rs) for rs in arrayOfReadState)
-      bkarray = (app.bookmark.update_read_state(rs) for rs in arrayOfReadState)
+      rsarray = (app.ReadState.set(rs).catch() for rs in arrayOfReadState)
+      bkarray = (app.bookmark.update_read_state(rs).catch() for rs in arrayOfReadState)
       return Promise.all(rsarray.concat(bkarray))
     ).then( ->
       close()
-      return
-    , (e) ->
-      $p = $__("p")
-      $p.textContent = "エラーが発生しました: #{e}"
-      $$.T("body")[0].addLast($p)
       return
     )
 

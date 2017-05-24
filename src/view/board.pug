@@ -1,0 +1,49 @@
+doctype
+html.view.view_board(data-app-version=version tabindex="-1")
+  head
+    meta(charset="utf-8")
+    meta(name="referrer" content="never")
+    title board
+    link(rel="stylesheet" href=`/ui.css?v=${version}`)
+    link(rel="stylesheet" href=`board.css?v=${version}`)
+    script(src=`/lib/jshortquery.min.js?v=${version}` defer)
+    script(src=`/ui.js?v=${version}` defer)
+    script(src=`/app.js?v=${version}` defer)
+    script(src=`module.js?v=${version}` defer)
+    script(src=`board.js?v=${version}` defer)
+  body
+    .message_bar
+    nav.nav_bar
+      label
+        input.searchbox(type="search" placeholder="検索")
+        span.hit_count
+      .button.button_back.disabled(title="戻る")
+      .button.button_forward.disabled(title="進む")
+      .button.button_reload(title="再読み込み")
+      .button.button_bookmark(title="ブックマークする")
+      .button.button_write(title="新スレを立てる")
+      .button.button_scheme(title="http/httpsの切り替え")
+      .button.button_pause(title="自動更新一時停止")
+      .button.button_tool(title="メニュー")
+        ul.hidden
+          li.button_link
+            a(target="_blank") Chromeで直接開く
+          li.button_only_sc scのスレだけを表示する/両方表示する
+          li.button_open_updated 未読があるスレッドを全て開く
+      select.sort_item_selector
+        option(label="標準" data-sort_order="asc" data-sort_type="num") data-thread_number
+        option(label="ブックマーク") 0
+        option(label="タイトル") 1
+        option(label="レス数") 2
+        option(label="未読数") 3
+        option(label="勢い") 4
+        option(label="作成日時") 5
+    .content(tabindex="0")
+    footer.board_footer
+      .loading_indicator.hidden 読み込み中
+
+  template#template_thread_list_contextmenu
+    menu.thread_list_contextmenu
+      li.add_bookmark ブックマークに追加
+      li.del_bookmark ブックマークを解除
+      li.del_read_state 既読情報を削除

@@ -73,8 +73,12 @@ def debug_id
   hash[0...32].tr("0-9a-f", "a-p")
 end
 
-def haml(src, output)
-  sh "bundle exec haml -E UTF-8 -r ./haml_requirement.rb -q #{src} #{output}"
+def pug(src, output)
+  if RUBY_PLATFORM.include?("darwin") || RUBY_PLATFORM.include?("linux")
+    sh "cat #{src} | node_modules/.bin/pug -O ./src/manifest.json > #{output}"
+  else
+    sh "cat #{src} | \"node_modules/.bin/pug\" -O ./src/manifest.json > #{output}"
+  end
 end
 
 def scss(src, output)
@@ -151,8 +155,8 @@ def file_typescript(target, src)
   end
 end
 
-rule ".html" => "%{^debug/,src/}X.haml" do |t|
-  haml(t.prerequisites[0], t.name)
+rule ".html" => "%{^debug/,src/}X.pug" do |t|
+  pug(t.prerequisites[0], t.name)
 end
 
 rule ".css" => "%{^debug/,src/}X.scss" do |t|
@@ -295,8 +299,8 @@ namespace :view do
     "debug/view/module.js"
   ]
 
-  FileList["src/view/*.haml"].each {|x|
-    view.push(x.sub(/^src\//, "debug/").sub(/\.haml$/, ".html"))
+  FileList["src/view/*.pug"].each {|x|
+    view.push(x.sub(/^src\//, "debug/").sub(/\.pug$/, ".html"))
   }
 
   FileList["src/view/*.coffee"].each {|x|

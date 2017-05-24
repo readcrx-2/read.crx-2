@@ -1,0 +1,76 @@
+doctype
+html.view.view_thread(data-app-version=version)
+  head
+    meta(charset="utf-8")
+    meta(name="referrer" content="never")
+    title
+    link(rel="stylesheet" href=`/ui.css?v=${version}`)
+    link(rel="stylesheet" href=`thread.css?v=${version}`)
+    script(src=`/lib/jshortquery.min.js?v=${version}` defer)
+    script(src=`/ui.js?v=${version}` defer)
+    script(src=`/app.js?v=${version}` defer)
+    script(src=`module.js?v=${version}` defer)
+    script(src=`thread.js?v=${version}` defer)
+  body
+    .message_bar
+    nav.nav_bar
+      label
+        input.searchbox(type="search" placeholder="検索")
+        span.hit_count
+      .button.button_back.disabled(title="戻る")
+      .button.button_forward.disabled(title="進む")
+      .button.button_reload(title="再読み込み")
+      .button.button_bookmark(title="ブックマークする")
+      .button.button_write(title="書き込む")
+      .button.button_scheme(title="http/httpsの切り替え")
+      .button.button_pause(title="自動更新一時停止")
+      .button.button_tool(title="メニュー")
+        ul.hidden
+          li.button_link: a(target="_blank") Chromeで直接開く
+          li.button_copy_title スレッドのタイトルをコピー
+          li.button_copy_url スレッドのURLをコピー
+          li.button_copy_title_and_url スレッドのタイトルとURLをコピー
+          li.button_change_netsc 2ch.net/2ch.scに切り替え
+          li.button_only_sc scの投稿だけを表示する/両方表示する
+          li.button_tool_search_next_thread 次スレ検索
+      ul.breadcrumb: li: a.open_in_rcrx
+    .content(tabindex="0")
+    .popup_area
+    footer.thread_footer
+      .loading_indicator.hidden 読み込み中
+      a.next_unread.open_in_rcrx.hidden
+      button.search_next_thread.hidden 次スレ検索
+    ul.jump_panel
+      li.jump_one >>1
+      li.jump_last しおり
+      li.jump_not_read 未読
+      li.jump_new 新着
+      li.jump_newest 最後
+    .next_thread_list.hidden
+      img.close(src="/img/close_16x16.webp")
+      h1
+        |板内で最も
+        span.current
+        |と名前の似ているスレッド
+      ol
+      .status
+    .loading_overlay Loading...
+
+    template#template_res_menu
+      menu.res_menu
+        li.copy_selection 選択範囲をコピー
+        li.search_selection 選択範囲を検索
+        li.copy_id ID/IPをコピー
+        li.add_id_to_ngwords ID/IPをNG指定
+        li.copy_slip SLIPをコピー
+        li.add_slip_to_ngwords SLIPをNG指定
+        li.copy_trip トリップをコピー
+        li.jump_to_this このレスまでスクロール
+        li.res_to_this 返信
+        li.res_to_this2 引用して返信
+        li.add_writehistory 書込履歴に追加
+        li.del_writehistory 書込履歴から削除
+        li.toggle_aa_mode
+        li.set_image_blur 画像にぼかしをかける
+        li.reset_image_blur 画像のぼかしを解除する
+        li.res_permalink Chromeで開く

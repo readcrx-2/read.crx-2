@@ -6,5 +6,4 @@ group :development do
   gem "guard"
   gem "guard-rake"
   gem "rake"
-  gem "haml"
 end

@@ -6,6 +6,8 @@
     "coffee-script": "1.12.5",
     "jquery": "3.2.1",
     "node-sass": "^4.5.2",
+    "pug": "^2.0.0-rc.1",
+    "pug-cli": "^1.0.0-alpha6",
     "typescript": "2.3.2"
   },
   "repository": {

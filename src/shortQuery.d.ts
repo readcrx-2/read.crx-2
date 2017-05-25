@@ -49,7 +49,6 @@ interface Element {
   T: Element.getElementsByTagName;
   $: Element.querySelector;
   $$: Element.querySelectorAll;
-  append: Node.appendChild;
   addLast: Node.appendChild;
   addFirst<T extends Node>(newChild: T); T;
   addBefore<T extends Node>(newChild: T); T;

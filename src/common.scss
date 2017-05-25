@@ -168,6 +168,7 @@ $color-https: #109020;
         height: 100%;
         border-style: none;
         -webkit-appearance: textfield;
+        background: transparent;
         &[disabled] {
           visibility: hidden;
         }

@@ -472,7 +472,7 @@ app.main = ->
           html: """
             #{app.manifest.name} が #{last_version} から
             #{app.manifest.version} にアップデートされました。
-             <a href="http://readcrx-2.github.io/read.crx-2/changelog.html" target="_blank">更新履歴</a>
+             <a href="https://readcrx-2.github.io/read.crx-2/changelog.html" target="_blank">更新履歴</a>
           """
           background_color: "green"
         }
@@ -494,7 +494,7 @@ app.main = ->
         html: """
           バージョンアップに関する注意事項があります。
           詳しくは
-           <a href="http://readcrx-2.github.io/read.crx-2/changelog.html#v1.17.0" target="_blank">注意事項</a>
+           <a href="https://readcrx-2.github.io/read.crx-2/changelog.html#v1.17.0" target="_blank">注意事項</a>
           をご覧ください。
         """
         background_color: "blue"

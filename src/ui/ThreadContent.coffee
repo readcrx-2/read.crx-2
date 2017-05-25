@@ -947,7 +947,7 @@ class UI.ThreadContent
   @return {Date}
   ###
   stringToDate: (string) ->
-    date1 = string.match(/(\d+)\/(\d+)\/(\d+)\(.\) (\d+):(\d+):(\d+)(?:\.(\d+))?.*/)
+    date1 = string.match(/(\d+)\/(\d+)\/(\d+)\(.\)\s?(\d+):(\d+):(\d+)(?:\.(\d+))?.*/)
     if date1.length >= 6
       return new Date(date1[1], date1[2]-1, date1[3], date1[4], date1[5], date1[6])
     else if date1.length >= 5

@@ -81,11 +81,11 @@ do ->
       font = document.getElementsByTagName("font")
       text = document.title
       if font.length > 0 then text += font[0].innerText
-      if document.title.includes("書きこみました")
+      if text.includes("書きこみました")
         send_message_success()
-      else if document.title.includes("確認")
+      else if text.includes("確認")
         setTimeout(send_message_confirm , 1000 * 6)
-      else if document.title.includes("ＥＲＲＯＲ")
+      else if text.includes("ＥＲＲＯＲ")
         send_message_error()
 
   boot = ->

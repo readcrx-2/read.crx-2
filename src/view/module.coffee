@@ -91,12 +91,13 @@ class app.view.View
         if e.which isnt 3
           url = @getAttribute("data-href") or @href
           title = @getAttribute("data-title") or @textContent
+          writtenResNum = @getAttribute("data-written_res_num")
           howToOpen = app.util.get_how_to_open(e)
           newTab = app.config.get("always_new_tab") is "on"
           newTab or= howToOpen.new_tab or howToOpen.new_window
           background = howToOpen.background
 
-          app.message.send("open", {url, new_tab: newTab, background, title})
+          app.message.send("open", {url, new_tab: newTab, background, title, written_res_num: writtenResNum})
         return
     @element.on("click", (e) ->
       e.preventDefault() if e.target?.hasClass("open_in_rcrx")
@@ -385,7 +386,8 @@ class app.view.PaneContentView extends app.view.IframeView
             name: if message.name? then message.name else null,
             mail: if message.mail? then message.mail else null,
             title: if message.title? then message.title else null,
-            thread_url: if message.thread_url? then message.thread_url else null
+            thread_url: if message.thread_url? then message.thread_url else null,
+            written_res_num: if message.written_res_num? then message.written_res_num else null
           )
 
         # tab_selected(postMessage) -> tab_selected(event) 翻訳処理

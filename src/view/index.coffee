@@ -676,7 +676,10 @@ app.main = ->
       if $li.length
         $li.closest(".tab").data("tab").update($li.attr("data-tabid"), selected: true)
         if message.url isnt "bookmark" #ブックマーク更新は時間がかかるので例外扱い
-          tmp = JSON.stringify(type: "request_reload")
+          tmp = JSON.stringify({
+            type: "request_reload",
+            written_res_num: if message.written_res_num? then message.written_res_num else null
+          })
           $iframe = $view.find("iframe[data-tabid=\"#{$li.attr("data-tabid")}\"]")
           $iframe[0].contentWindow.postMessage(tmp, location.origin)
       else
@@ -700,9 +703,11 @@ app.main = ->
             selected: true
             locked: message.locked
           })
+        writtenResNum = if message.written_res_num? then message.written_res_num else ""
         $view
           .find("iframe[data-tabid=\"#{tabId}\"]")
             .attr("data-url", iframe_info.url)
+            .attr("data-written_res_num", writtenResNum)
     return
 
   #openリクエストの監視

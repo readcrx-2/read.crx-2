@@ -180,7 +180,23 @@ gulp.task "pack", (cb) ->
   )
 
 gulp.task "watch", ["default"], ->
-  gulp.watch("./src/**", ["default"])
+  gulp.watch([args.appTsPath, "./src/global.d.ts"], ["app.js"])
+  gulp.watch(args.csaddlinkCoffeePath, ["cs_addlink.js"])
+  gulp.watch([args.appCoreTsPath, args.appCoreCoffeePath], ["app_core.js"])
+  gulp.watch([args.uiTsPath, args.uiCoffeePath], ["ui.js"])
+  gulp.watch(args.viewCoffeePath, ["viewjs"])
+  gulp.watch(args.zobieCoffeePath, ["zombie.js"])
+  gulp.watch([args.writeCoffeePath.cs.ts, args.writeCoffeePath.cs.coffee], ["cs_write.js"])
+  gulp.watch([args.writeCoffeePath.write.ts, args.writeCoffeePath.write.coffee], ["write.js"])
+  gulp.watch([args.writeCoffeePath.submit_thread.ts, args.writeCoffeePath.submit_thread.coffee], ["submit_thread.js"])
+  gulp.watch("./src/**/*.scss", ["css"])
+  gulp.watch(args.viewHtmlPath, ["viewhtml"])
+  gulp.watch(args.zombieHtmlPath, ["zombie.html"])
+  gulp.watch(args.writeHtmlPath, ["writehtml"])
+  gulp.watch(args.webpSrcPath, ["img"])
+  gulp.watch(args.manifestPath, ["manifest"])
+  gulp.watch(args.jQueryPath, ["jQuery"])
+  gulp.watch(args.shortQueryPath, ["shortQuery"])
   return
 
 gulp.task "clean", ->

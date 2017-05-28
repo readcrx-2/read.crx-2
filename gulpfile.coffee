@@ -16,6 +16,8 @@ coffee = require "gulp-coffee"
 ts = require "gulp-typescript"
 sass = require "gulp-sass"
 pug = require "gulp-pug"
+sharp = require "sharp"
+toIco = require "to-ico"
 execSync = require("child_process").exec
 
 manifest = require "./src/manifest.json"
@@ -98,7 +100,7 @@ imgs = [
   "lock_12x12_3a5.webp"
 
   "arrow_19x19_333_r90.webp"
-  "arrow_19x19_333_r-90.webp"
+  "arrow_19x19_333_r270.webp"
   "search2_19x19_777.webp"
   "star_19x19_333.webp"
   "star_19x19_007fff.webp"
@@ -111,7 +113,7 @@ imgs = [
   "pause_19x19_811.webp"
 
   "arrow_19x19_ddd_r90.webp"
-  "arrow_19x19_ddd_r-90.webp"
+  "arrow_19x19_ddd_r270.webp"
   "search2_19x19_aaa.webp"
   "star_19x19_ddd.webp"
   "star_19x19_f93.webp"
@@ -378,30 +380,66 @@ gulp.task "webp&png", ->
   return fs.mkdirp(args.webpBinPath).then( ->
     promiseArray = []
     for img in imgs
-      m = img.match(/^(.+)_(\d+)x(\d+)(?:_([a-fA-F0-9]*))?(?:_r(\-?\d+))?\.(?:webp|png)$/)
-      src = "#{args.webpSrcPath}/#{m[1]}.svg"
-      bin = "#{args.webpBinPath}/#{img}"
-      command = "convert -background transparent"
-      command += " -fill ##{m[4]} -opaque #333" if m[4]?
-      command += " -rotate #{m[5]}" if m[5]?
-      command += " -resize #{m[2]}x#{m[3]} #{src} #{bin}"
-      promiseArray.push(exec(command))
+      do ->
+        m = img.match(/^(.+)_(\d+)x(\d+)(?:_([a-fA-F0-9]*))?(?:_r(\-?\d+))?\.(webp|png)$/)
+        src = "#{args.webpSrcPath}/#{m[1]}.svg"
+        bin = "#{args.webpBinPath}/#{img}"
+
+        promise = fs.readFile(src).then( (data) ->
+          buf = new Buffer(data)
+          if m[4]?
+            str = buf.toString("utf8").replace(/#333/g, "##{m[4]}")
+            buf = Buffer.from(str, "utf8")
+          sh = sharp(buf)
+          if m[5]?
+            sh.rotate(parseInt(m[5]))
+          sh.resize(parseInt(m[2]), parseInt(m[3]))
+          sh[m[6]]()
+          sh.toBuffer()
+          return sh.toFile(bin)
+        )
+        promiseArray.push(promise)
+        return
     return Promise.all(promiseArray)
   )
 
 gulp.task "ico", ->
   return fs.mkdirp(args.webpBinPath).then( ->
-    return exec("convert #{args.icoSrcPath} ( -clone 0 -resize 16x16 \) ( -clone 0 -resize 32x32 \) -delete 0 #{args.icoBinPath}")
+    return Promise.all([
+      sharp(args.icoSrcPath)
+        .resize(16, 16)
+        .png()
+        .toBuffer(),
+      sharp(args.icoSrcPath)
+        .resize(32, 32)
+        .png()
+        .toBuffer()
+    ]).then( (filebuf) ->
+      return toIco(filebuf)
+    ).then( (buf) ->
+      return fs.writeFile(args.icoBinPath, buf)
+    )
   )
 
 gulp.task "logo128", ->
   return fs.mkdirp(args.webpBinPath).then( ->
-    return exec("convert -background transparent -resize 96x96 -extent 128x128-16-16 #{args.logo128SrcPath} #{args.logo128BinPath}")
+    return sharp(null,
+      create:
+        width: 128
+        height: 128
+        channels: 4
+        background: { r: 0, g: 0, b: 0, alpha: 0}
+    ).overlayWith(args.logo128SrcPath,
+      top: 16
+      left: 16
+    ).toFile(args.logo128BinPath)
   )
 
 gulp.task "loading.webp", ->
   return fs.mkdirp(args.webpBinPath).then( ->
-    return exec("convert -background transparent -resize 100x100 #{args.loadingSrcPath} #{args.loadingBinPath}")
+    return sharp(args.loadingSrcPath)
+      .resize(100, 100)
+      .toFile(args.loadingBinPath)
   )
 
 ##manifest

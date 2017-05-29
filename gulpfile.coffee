@@ -84,6 +84,7 @@ args =
     skipLibCheck: true
     noUnusedLocals: true
     alwaysStrict: true
+    strictNullChecks: true
   sassOptions:
     outputStyle: "compressed"
   pugOptions:

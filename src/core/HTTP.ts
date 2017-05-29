@@ -4,7 +4,7 @@ namespace app.HTTP {
   export class Request {
     method: string;
     url: string;
-    mimeType: string;
+    mimeType: string|null;
     timeout: number;
     headers: {[index:string]: string;};
     preventCache: boolean;
@@ -115,8 +115,8 @@ namespace app.HTTP {
     constructor (
       public status:number,
       public headers:{[index:string]:string;} = {},
-      public body:string = null,
-      public responseURL: string = null
+      public body:string|null = null,
+      public responseURL: string|null = null
     ) {
     }
   }

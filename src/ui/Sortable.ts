@@ -8,8 +8,8 @@ namespace UI {
 
     constructor (container: HTMLElement, option: {exclude?: string} = {}) {
       var sorting = false,
-        start: {x: number; y: number} = {x: null, y: null},
-        target = null,
+        start: {x: number|null; y: number|null} = {x: null, y: null},
+        target: HTMLElement|null = null,
         overlay: HTMLDivElement,
         onHoge: Function;
 
@@ -36,50 +36,52 @@ namespace UI {
           sorting = true;
         }
 
-        targetCenter = {
-          x: target.offsetLeft + target.offsetWidth / 2,
-          y: target.offsetTop + target.offsetHeight / 2
-        };
+        if (target) {
+          targetCenter = {
+            x: target.offsetLeft + target.offsetWidth / 2,
+            y: target.offsetTop + target.offsetHeight / 2
+          };
 
-        tmp = <HTMLElement>this.container.firstElementChild;
+          tmp = <HTMLElement>this.container.firstElementChild;
 
-        while (tmp) {
-          if (tmp !== target && !(
-            targetCenter.x < tmp.offsetLeft ||
-            targetCenter.y < tmp.offsetTop ||
-            targetCenter.x > tmp.offsetLeft + tmp.offsetWidth ||
-            targetCenter.y > tmp.offsetTop + tmp.offsetHeight
-          )) {
-            if (
-              target.compareDocumentPosition(tmp) === 4 &&
-              (
-                targetCenter.x > tmp.offsetLeft + tmp.offsetWidth / 2 ||
-                targetCenter.y > tmp.offsetTop + tmp.offsetHeight / 2
-              )
-            ) {
-              cacheX = target.offsetLeft;
-              cacheY = target.offsetTop;
-              tmp.insertAdjacentElement("afterend", target);
-              start.x += target.offsetLeft - cacheX;
-              start.y += target.offsetTop - cacheY;
+          while (tmp) {
+            if (tmp !== target && !(
+              targetCenter.x < tmp.offsetLeft ||
+              targetCenter.y < tmp.offsetTop ||
+              targetCenter.x > tmp.offsetLeft + tmp.offsetWidth ||
+              targetCenter.y > tmp.offsetTop + tmp.offsetHeight
+            )) {
+              if (
+                target.compareDocumentPosition(tmp) === 4 &&
+                (
+                  targetCenter.x > tmp.offsetLeft + tmp.offsetWidth / 2 ||
+                  targetCenter.y > tmp.offsetTop + tmp.offsetHeight / 2
+                )
+              ) {
+                cacheX = target.offsetLeft;
+                cacheY = target.offsetTop;
+                tmp.insertAdjacentElement("afterend", target);
+                start.x = start.x! + target.offsetLeft - cacheX;
+                start.y = start.y! + target.offsetTop - cacheY;
+              }
+              else if (
+                targetCenter.x < tmp.offsetLeft + tmp.offsetWidth / 2 ||
+                targetCenter.y < tmp.offsetTop + tmp.offsetHeight / 2
+              ) {
+                cacheX = target.offsetLeft;
+                cacheY = target.offsetTop;
+                tmp.insertAdjacentElement("beforebegin", target);
+                start.x = start.x! + target.offsetLeft - cacheX;
+                start.y = start.y! + target.offsetTop - cacheY;
+              }
+              break;
             }
-            else if (
-              targetCenter.x < tmp.offsetLeft + tmp.offsetWidth / 2 ||
-              targetCenter.y < tmp.offsetTop + tmp.offsetHeight / 2
-            ) {
-              cacheX = target.offsetLeft;
-              cacheY = target.offsetTop;
-              tmp.insertAdjacentElement("beforebegin", target);
-              start.x += target.offsetLeft - cacheX;
-              start.y += target.offsetTop - cacheY;
-            }
-            break;
+            tmp = <HTMLElement>tmp.nextElementSibling;
           }
-          tmp = <HTMLElement>tmp.nextElementSibling;
-        }
 
-        target.style.left = (e.pageX - start.x) + "px";
-        target.style.top = (e.pageY - start.y) + "px";
+          target.style.left = (e.pageX - start.x!) + "px";
+          target.style.top = (e.pageY - start.y!) + "px";
+        }
       });
 
       onHoge = function () {
@@ -99,13 +101,13 @@ namespace UI {
       overlay.on("mouseout", <any>onHoge);
 
       var clicks = 1;
-      var timer = null;
+      var timer: number|null = null;
       this.container.on("mousedown", (e) => {
         if (e.target === container) return;
         if (e.which !== 1) return;
-        if (option.exclude && (<Element>e.target).matches(option.exclude)) return;
+        if (option.exclude && e.target!.matches(option.exclude)) return;
 
-        clearTimeout(timer);
+        clearTimeout(timer!);
 
         // 0.5秒待ってダブルクリックかシングルクリックか判定する
         timer = setTimeout( () => {
@@ -114,12 +116,14 @@ namespace UI {
 
         if(clicks === 1) {
           target = e.target;
-          while (target.parent() !== container) {
-            target = target.parent();
-          }
+          if(target) {
+            while (target.parent() !== container) {
+              target = target.parent();
+            }
 
-          target.addClass("sortable_dragging");
-          document.body.addLast(overlay);
+            target.addClass("sortable_dragging");
+            document.body.addLast(overlay);
+          }
 
           clicks = 1;
         }else if(clicks === 2) {

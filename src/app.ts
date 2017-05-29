@@ -71,7 +71,7 @@ namespace app {
   export class Callbacks {
     private _config: CallbacksConfiguration;
     private _callbackStore = new Set<Function>();
-    private _latestCallArg: any[] = null;
+    private _latestCallArg: any[]|null = null;
     wasCalled = false;
 
     constructor (config:CallbacksConfiguration = {}) {
@@ -308,7 +308,7 @@ namespace app {
 
         for (key in localStorage) {
           if (key.startsWith("config_")) {
-            val = localStorage.getItem(key);
+            val = localStorage.getItem(key)!;
             this._cache.set(key, val);
             found[key] = val;
           }
@@ -364,16 +364,14 @@ namespace app {
       chrome.storage.onChanged.addListener(this._onChanged);
     }
 
-    get (key:string):string {
+    get (key:string):string|null {
       if (this._cache.has("config_" + key)) {
-        return this._cache.get("config_" + key);
+        return this._cache.get("config_" + key)!;
       }
       else if (Config._default.has(key)) {
-        return Config._default.get(key);
+        return Config._default.get(key)!;
       }
-      else {
-        return undefined;
-      }
+      return null;
     }
 
     //設定の連想配列をjson文字列で渡す
@@ -489,7 +487,7 @@ namespace app {
     let fire_definition, add_ready_module;
 
     fire_definition = (module_id, dependencies, definition) => {
-      var dep_modules = [], dep_module_id, callback;
+      var dep_modules:any[] = [], dep_module_id, callback;
 
       for (dep_module_id of dependencies) {
         dep_modules.push(ready_modules.get(dep_module_id).module);
@@ -570,7 +568,7 @@ namespace app {
     }
 
     if (location.pathname === path) {
-      htmlVersion = document.documentElement.getAttribute("data-app-version");
+      htmlVersion = document.documentElement.getAttribute("data-app-version")!;
       if (manifest.version !== htmlVersion) {
         location.reload(true);
       }

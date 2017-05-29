@@ -92,12 +92,21 @@ class app.view.View
           url = @getAttribute("data-href") or @href
           title = @getAttribute("data-title") or @textContent
           writtenResNum = @getAttribute("data-written_res_num")
+          paramResNum = null
+          if (
+            (app.config.get("enable_link_with_res_number") is "on" and
+             @getAttribute("toggle_param_res_num") isnt "on") or
+            (app.config.get("enable_link_with_res_number") is "off" and
+             @getAttribute("toggle_param_res_num") is "on")
+          )
+            paramResNum = @getAttribute("data-param_res_num")
+          @removeAttribute("toggle_param_res_num")
           howToOpen = app.util.get_how_to_open(e)
           newTab = app.config.get("always_new_tab") is "on"
           newTab or= howToOpen.new_tab or howToOpen.new_window
           background = howToOpen.background
 
-          app.message.send("open", {url, new_tab: newTab, background, title, written_res_num: writtenResNum})
+          app.message.send("open", {url, new_tab: newTab, background, title, written_res_num: writtenResNum, param_res_num: paramResNum})
         return
     @element.on("click", (e) ->
       e.preventDefault() if e.target?.hasClass("open_in_rcrx")
@@ -387,7 +396,8 @@ class app.view.PaneContentView extends app.view.IframeView
             mail: if message.mail? then message.mail else null,
             title: if message.title? then message.title else null,
             thread_url: if message.thread_url? then message.thread_url else null,
-            written_res_num: if message.written_res_num? then message.written_res_num else null
+            written_res_num: if message.written_res_num? then message.written_res_num else null,
+            param_res_num: if message.param_res_num? then message.param_res_num else null
           )
 
         # tab_selected(postMessage) -> tab_selected(event) 翻訳処理

@@ -83,6 +83,25 @@ namespace app {
       return protocol + "://" + urlstr.slice(split+3);
     }
 
+    export function getResNumber (urlstr: string): string|null {
+      var tmp: string[]|null;
+
+      tmp = /^https?:\/\/[\w\.]+\/test\/read\.cgi\/\w+\/\d+\/(\d+).*?$/.exec(urlstr);
+      if (tmp !== null) {
+        return tmp[1];
+      }
+      tmp = /^https?:\/\/\w+\.machi\.to\/bbs\/read\.cgi\/\w+\/\d+\/(\d+).*?$/.exec(urlstr);
+      if (tmp !== null) {
+        return tmp[1];
+      }
+      tmp = /^https?:\/\/jbbs\.(?:livedoor\.jp|shitaraba\.net)\/bbs\/read(?:_archive)?\.cgi\/\w+\/\d+\/\d+\/(\d+).*?$/.exec(urlstr);
+      if (tmp !== null) {
+        return tmp[1];
+      }
+
+      return null;
+    }
+
     export function threadToBoard (url:string):string {
       return (
         fix(url)

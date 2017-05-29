@@ -51,6 +51,8 @@ app.boot "/view/thread.html", ->
   iframe = parent.document.querySelector("iframe[data-url=\"#{view_url}\"]")
   if iframe
     jumpResNum = +iframe.getAttribute("data-written_res_num")
+    if jumpResNum < 1
+      jumpResNum = +iframe.getAttribute("data-param_res_num")
 
   $view = $(document.documentElement)
   $view.attr("data-url", view_url)
@@ -121,6 +123,8 @@ app.boot "/view/thread.html", ->
     app.defer ->
       if ex?.written_res_num?
         jumpResNum = +ex.written_res_num
+      if ex?.param_res_num? and jumpResNum < 1
+        jumpResNum = +ex.param_res_num
       if (
         $view.hasClass("loading") or
         $view.find(".button_reload").hasClass("disabled")
@@ -500,7 +504,9 @@ app.boot "/view/thread.html", ->
         e.preventDefault()
         @classList.add("open_in_rcrx")
         @dataset.href = @href
-        @href = "javascript:undefined;"
+        if tmp.type is "thread"
+          paramResNum = app.URL.getResNumber(@href)
+          @setAttribute("data-param_res_num", paramResNum) if paramResNum
         app.defer =>
           $(@).trigger(e)
       return
@@ -646,12 +652,27 @@ app.boot "/view/thread.html", ->
 
     # リンクのコンテキストメニュー
     .on "contextmenu", ".message > a", (e) ->
-      enableFlg = !(@classList.contains("anchor") or @classList.contains("anchor_id"))
       # リンクアドレスをNG登録
+      enableFlg = !(@classList.contains("anchor") or @classList.contains("anchor_id"))
       app.contextMenus.update("add_link_to_ngwords", {
         enabled: enableFlg,
         onclick: (info, tab) =>
           app.NG.add(@href)
+          return
+      })
+      # レス番号を指定してリンクを開く
+      if app.config.get("enable_link_with_res_number") is "on"
+        menuTitle = "レス番号を無視してリンクを開く"
+      else
+        menuTitle = "レス番号を指定してリンクを開く"
+      enableFlg = (@classList.contains("open_in_rcrx") and @getAttribute("data-param_res_num") isnt null)
+      app.contextMenus.update("open_link_with_res_number", {
+        title: menuTitle,
+        enabled: enableFlg,
+        onclick: (info, tab) =>
+          @setAttribute("toggle_param_res_num", "on")
+          app.defer =>
+            $(@).trigger("mousedown")
           return
       })
       return

@@ -33,6 +33,22 @@ class app.contextMenus
       contexts: ["image", "video", "audio"],
       documentUrlPatterns: [viewThread]
     )
+    @create(
+      id: "open_link_with_res_number",
+      title: "レス番号を指定してリンクを開く",
+      contexts: ["link"],
+      enabled: false,
+      targetUrlPatterns: [
+        "*://*.2ch.net/*",
+        "*://*.2ch.sc/*",
+        "*://*.open2ch.net/*",
+        "*://*.bbspink.com/*",
+        "*://jbbs.shitaraba.net/*",
+        "*://jbbs.livedoor.jp/*",
+        "*://*.machi.to/*"
+      ],
+      documentUrlPatterns: [viewThread]
+    )
     return
 
   ###*

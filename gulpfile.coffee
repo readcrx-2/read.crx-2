@@ -242,7 +242,7 @@ gulp.task "js", ["app.js", "cs_addlink.js", "app_core.js", "ui.js", "viewjs", "z
 gulp.task "app.js", ->
   return gulp.src args.appTsPath
     .pipe(plumber(errorHandler: notify.onError("Error: <%= error.toString() %>")))
-    .pipe(ts(args.tsOptions, ts.reporter.defaultReporter()))
+    .pipe(ts(args.tsOptions, ts.reporter.nullReporter()))
     .pipe(gulp.dest(args.outputPath))
 
 gulp.task "cs_addlink.js", ->
@@ -256,7 +256,7 @@ gulp.task "app_core.js", ->
   return merge(
     gulp.src args.appCoreTsPath
       .pipe(plumber(errorHandler: notify.onError("Error: <%= error.toString() %>")))
-      .pipe(ts(args.tsOptions, ts.reporter.defaultReporter())),
+      .pipe(ts(args.tsOptions, ts.reporter.nullReporter())),
     gulp.src args.appCoreCoffeePath
       .pipe(plumber(errorHandler: notify.onError("Error: <%= error.toString() %>")))
       .pipe(coffee(args.coffeeOptions))
@@ -268,7 +268,7 @@ gulp.task "ui.js", ->
   return merge(
     gulp.src args.uiTsPath
       .pipe(plumber(errorHandler: notify.onError("Error: <%= error.toString() %>")))
-      .pipe(ts(args.tsOptions, ts.reporter.defaultReporter())),
+      .pipe(ts(args.tsOptions, ts.reporter.nullReporter())),
     gulp.src args.uiCoffeePath
       .pipe(plumber(errorHandler: notify.onError("Error: <%= error.toString() %>")))
       .pipe(coffee(args.coffeeOptions))
@@ -296,7 +296,7 @@ gulp.task "cs_write.js", ->
   return merge(
     gulp.src args.writeCoffeePath.cs.ts
       .pipe(plumber(errorHandler: notify.onError("Error: <%= error.toString() %>")))
-      .pipe(ts(args.tsOptions, ts.reporter.defaultReporter())),
+      .pipe(ts(args.tsOptions, ts.reporter.nullReporter())),
     gulp.src args.writeCoffeePath.cs.coffee
       .pipe(plumber(errorHandler: notify.onError("Error: <%= error.toString() %>")))
       .pipe(coffee(args.coffeeOptions))
@@ -308,7 +308,7 @@ gulp.task "write.js", ->
   return merge(
     gulp.src args.writeCoffeePath.write.ts
       .pipe(plumber(errorHandler: notify.onError("Error: <%= error.toString() %>")))
-      .pipe(ts(args.tsOptions, ts.reporter.defaultReporter())),
+      .pipe(ts(args.tsOptions, ts.reporter.nullReporter())),
     gulp.src args.writeCoffeePath.write.coffee
       .pipe(plumber(errorHandler: notify.onError("Error: <%= error.toString() %>")))
       .pipe(coffee(args.coffeeOptions))
@@ -320,7 +320,7 @@ gulp.task "submit_thread.js", ->
   return merge(
     gulp.src args.writeCoffeePath.submit_thread.ts
       .pipe(plumber(errorHandler: notify.onError("Error: <%= error.toString() %>")))
-      .pipe(ts(args.tsOptions, ts.reporter.defaultReporter())),
+      .pipe(ts(args.tsOptions, ts.reporter.nullReporter())),
     gulp.src args.writeCoffeePath.submit_thread.coffee
       .pipe(plumber(errorHandler: notify.onError("Error: <%= error.toString() %>")))
       .pipe(coffee(args.coffeeOptions))

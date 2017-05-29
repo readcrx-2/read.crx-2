@@ -18,6 +18,7 @@ sass = require "gulp-sass"
 pug = require "gulp-pug"
 sharp = require "sharp"
 toIco = require "to-ico"
+crx = require "crx"
 execSync = require("child_process").exec
 
 manifest = require "./src/manifest.json"
@@ -132,19 +133,6 @@ sortForExtend =
     return file1.path.split(".").length - file2.path.split(".").length
 exec = (command) ->
   return new Promise( (resolve, reject) ->
-    execSync(command, (err, stdout, stderr) ->
-      if err
-        console.error stderr
-        reject(err)
-      else
-        console.log stdout if stdout isnt ""
-        resolve()
-      return
-    )
-    return
-  )
-execWithLine = (command) ->
-  return new Promise( (resolve, reject) ->
     CP = execSync(command, (err, stdout, stderr) ->
       if err then reject(err) else resolve()
       return
@@ -174,9 +162,9 @@ gulp.task "default", ["js", "html", "css", "img", "manifest", "lib"]
 
 gulp.task "pack", (cb) ->
   return runSequence(
-    "clean",
-    "default",
-    "scan",
+    "clean"
+    "default"
+    "scan"
     "crx"
     cb
   )
@@ -208,31 +196,27 @@ gulp.task "clean", ->
   ])
 
 gulp.task "scan", ->
-  return execWithLine("freshclam").then( ->
-    return execWithLine("clamscan -ir debug")
+  return exec("freshclam").then( ->
+    return exec("clamscan -ir debug")
   )
 
 gulp.task "crx", (cb) ->
-  tmpDir = os.tmpdir()
-  return fs.copy(args.outputPath, path.join(tmpDir, "debug")).then( ->
+  tmpDir = path.join(os.tmpdir(), "debug")
+  return fs.copy(args.outputPath, tmpDir).then( ->
     if process.env["read.crx-2-pem-path"]?
       return Promise.resolve(process.env["read.crx-2-pem-path"])
     return putsPromise("秘密鍵のパスを入力して下さい: ")
   ).then( (pemPath) ->
-    osname = os.type().toLowerCase()
-    if osname.includes("darwin")
-      command = "\"/Applications/Google Chrome.app/Contents/MacOS/Google Chrome\" --pack-extension=#{tmpDir}/debug --pack-extension-key=#{pemPath}"
-    else if osname.includes("linux")
-      command = "google-chrome --pack-extension=#{tmpDir}/debug --pack-extension-key=#{pemPath}"
-    else
-      # Windowsの場合、Chromeの場所を環境変数から取得する(設定必)
-      chromePath = process.env["CHROME_LOCATION"]
-      command = "#{chromePath} --pack-extension=#{tmpDir}/debug --pack-extension-key=#{pemPath}"
-    return exec(command)
+    return fs.readFile(pemPath)
+  ).then( (pem) ->
+    rcrx = new crx(privateKey: pem)
+    return rcrx.load(tmpDir)
+  ).then( (rcrx) ->
+    return rcrx.pack()
+  ).then( (rcrxBuffer) ->
+    return fs.writeFile("./read.crx_2.#{manifest.version}.crx", rcrxBuffer)
   ).then( ->
-    return fs.rename(path.join(tmpDir,"debug.crx"), "read.crx_2.#{manifest.version}.crx")
-  ).then( ->
-    return fs.remove(path.join(tmpDir, "debug"))
+    return fs.remove(tmpDir)
   )
 
 #compile

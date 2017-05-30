@@ -97,7 +97,7 @@ imgs = [
   "lock_12x12_3a5.webp"
 
   "arrow_19x19_333_r90.webp"
-  "arrow_19x19_333_r270.webp"
+  "arrow_19x19_333_r-90.webp"
   "search2_19x19_777.webp"
   "star_19x19_333.webp"
   "star_19x19_007fff.webp"
@@ -110,7 +110,7 @@ imgs = [
   "pause_19x19_811.webp"
 
   "arrow_19x19_ddd_r90.webp"
-  "arrow_19x19_ddd_r270.webp"
+  "arrow_19x19_ddd_r-90.webp"
   "search2_19x19_aaa.webp"
   "star_19x19_ddd.webp"
   "star_19x19_f93.webp"
@@ -367,7 +367,9 @@ gulp.task "webp&png", ->
             buf = Buffer.from(str, "utf8")
           sh = sharp(buf)
           if m[5]?
-            sh.rotate(parseInt(m[5]))
+            degrees = parseInt(m[5])
+            degrees = 270 if degrees is -90
+            sh.rotate(degrees)
           sh.resize(parseInt(m[2]), parseInt(m[3]))
           sh[m[6]]()
           sh.toBuffer()

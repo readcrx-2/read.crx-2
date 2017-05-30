@@ -1,6 +1,9 @@
 {
   "name": "read.crx-2",
   "version": "0.0.0",
+  "engines": {
+    "node": ">=4.5"
+  },
   "devDependencies": {
     "ShortQuery.js": "S--Minecraft/ShortQuery.js#0.2.1",
     "coffee-script": "1.12.5",

@@ -9,7 +9,7 @@ do ->
   ).catch( ->
     return new Promise( (resolve, reject) ->
       xhr = new XMLHttpRequest()
-      xhr.open("GET", "http://readcrx-2.github.io/read.crx-2/textar-min.woff")
+      xhr.open("GET", "https://readcrx-2.github.io/read.crx-2/textar-min.woff")
       xhr.responseType = "arraybuffer"
       xhr.onload = ->
         if @status is 200

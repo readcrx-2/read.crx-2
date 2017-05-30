@@ -1,8 +1,8 @@
-# read.crx 2 [![GitHub version](https://badge.fury.io/gh/readcrx-2%2Fread.crx-2.svg)][repolink] ![David Badge](https://david-dm.org/readcrx-2/read.crx-2/dev-status.svg "David Badge")  
+# read.crx 2 [![GitHub version](https://badge.fury.io/gh/readcrx-2%2Fread.crx-2.svg)][repolink] ![David Badge](https://david-dm.org/readcrx-2/read.crx-2/dev-status.svg "David Badge")
 read.crx 2は[Google Chrome][chrome]アプリとして作られた2chブラウザです。
 [2ch.net][2ch.net]、[2ch.sc][2ch.sc]、[open2ch.net][open2ch.net]及びその互換BBS、[まちBBS][machi]、[したらば][jbbs]の閲覧に対応しています。
 
-一般の利用者向けの配布は[こちら](http://readcrx-2.github.io/read.crx-2/)
+一般の利用者向けの配布は[こちら](https://readcrx-2.github.io/read.crx-2/)
 
 # ビルド手順
 [npm][npm], [ClamAV][clamav]が予め導入されている必要が有ります。

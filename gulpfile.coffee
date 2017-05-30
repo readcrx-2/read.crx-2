@@ -44,8 +44,14 @@ args =
   viewHtmlPath: "./src/view/*.pug"
   zombieCoffeePath: "./src/zombie.coffee"
   zombieHtmlPath: "./src/zombie.pug"
-  writeCoffeePath:
+  writePath:
     cs:
+      ts: [
+        "./src/app.ts"
+        "./src/core/URL.ts"
+      ]
+      coffee: "./src/write/cs_write.coffee"
+    write:
       ts: "./src/core/URL.ts"
       coffee: [
         "./src/core/Ninja.coffee"
@@ -53,12 +59,6 @@ args =
         "./src/ui/Animate.coffee"
         "./src/write/write.coffee"
       ]
-    write:
-      ts: [
-        "./src/app.ts"
-        "./src/core/URL.ts"
-      ]
-      coffee: "./src/write/cs_write.coffee"
     submit_thread:
       ts: "./src/core/URL.ts"
       coffee:[
@@ -176,9 +176,9 @@ gulp.task "watch", ["default"], ->
   gulp.watch([args.uiTsPath, args.uiCoffeePath], ["ui.js"])
   gulp.watch(args.viewCoffeePath, ["viewjs"])
   gulp.watch(args.zobieCoffeePath, ["zombie.js"])
-  gulp.watch([args.writeCoffeePath.cs.ts, args.writeCoffeePath.cs.coffee], ["cs_write.js"])
-  gulp.watch([args.writeCoffeePath.write.ts, args.writeCoffeePath.write.coffee], ["write.js"])
-  gulp.watch([args.writeCoffeePath.submit_thread.ts, args.writeCoffeePath.submit_thread.coffee], ["submit_thread.js"])
+  gulp.watch([args.writePath.cs.ts, args.writePath.cs.coffee], ["cs_write.js"])
+  gulp.watch([args.writePath.write.ts, args.writePath.write.coffee], ["write.js"])
+  gulp.watch([args.writePath.submit_thread.ts, args.writePath.submit_thread.coffee], ["submit_thread.js"])
   gulp.watch("./src/**/*.scss", ["css"])
   gulp.watch(args.viewHtmlPath, ["viewhtml"])
   gulp.watch(args.zombieHtmlPath, ["zombie.html"])
@@ -278,10 +278,10 @@ gulp.task "writejs", ["cs_write.js", "write.js", "submit_thread.js"]
 
 gulp.task "cs_write.js", ->
   return merge(
-    gulp.src args.writeCoffeePath.cs.ts
+    gulp.src args.writePath.cs.ts
       .pipe(plumber(errorHandler: notify.onError("Error: <%= error.toString() %>")))
       .pipe(ts(args.tsOptions, ts.reporter.nullReporter())),
-    gulp.src args.writeCoffeePath.cs.coffee
+    gulp.src args.writePath.cs.coffee
       .pipe(plumber(errorHandler: notify.onError("Error: <%= error.toString() %>")))
       .pipe(coffee(args.coffeeOptions))
   ).pipe(sort(sortForExtend))
@@ -290,10 +290,10 @@ gulp.task "cs_write.js", ->
 
 gulp.task "write.js", ->
   return merge(
-    gulp.src args.writeCoffeePath.write.ts
+    gulp.src args.writePath.write.ts
       .pipe(plumber(errorHandler: notify.onError("Error: <%= error.toString() %>")))
       .pipe(ts(args.tsOptions, ts.reporter.nullReporter())),
-    gulp.src args.writeCoffeePath.write.coffee
+    gulp.src args.writePath.write.coffee
       .pipe(plumber(errorHandler: notify.onError("Error: <%= error.toString() %>")))
       .pipe(coffee(args.coffeeOptions))
   ).pipe(sort(sortForExtend))
@@ -302,10 +302,10 @@ gulp.task "write.js", ->
 
 gulp.task "submit_thread.js", ->
   return merge(
-    gulp.src args.writeCoffeePath.submit_thread.ts
+    gulp.src args.writePath.submit_thread.ts
       .pipe(plumber(errorHandler: notify.onError("Error: <%= error.toString() %>")))
       .pipe(ts(args.tsOptions, ts.reporter.nullReporter())),
-    gulp.src args.writeCoffeePath.submit_thread.coffee
+    gulp.src args.writePath.submit_thread.coffee
       .pipe(plumber(errorHandler: notify.onError("Error: <%= error.toString() %>")))
       .pipe(coffee(args.coffeeOptions))
   ).pipe(sort(sortForExtend))

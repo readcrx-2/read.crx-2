@@ -1,5 +1,5 @@
 <svg xmlns="http://www.w3.org/2000/svg" version="1.1" width="100" height="100">
 	<desc>Created with Raphaël</desc>
-	<path fill="#333333" stroke="none" d="M50,15L40,35L40,95L60,95L60,35Z" transform="translate(50 55) rotate(-135) translate(-50 -55)"></path>
-	<path fill="none" stroke="#ffffff" d="M40,40L60,40" style="stroke-width: 7.5px; " stroke-width="7.5" transform="translate(50 55) rotate(-135) translate(-50 -55)"></path>
+	<path fill="#333" stroke="none" d="M50,15L40,35L40,95L60,95L60,35Z" transform="translate(50 55) rotate(-135) translate(-50 -55)"></path>
+	<path fill="none" stroke="#fff" d="M40,40L60,40" style="stroke-width: 7.5px; " stroke-width="7.5" transform="translate(50 55) rotate(-135) translate(-50 -55)"></path>
 </svg>

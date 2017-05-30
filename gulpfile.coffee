@@ -85,6 +85,7 @@ args =
     noUnusedLocals: true
     alwaysStrict: true
     strictNullChecks: true
+    noImplicitThis: true
   sassOptions:
     outputStyle: "compressed"
   pugOptions:

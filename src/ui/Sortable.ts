@@ -84,7 +84,7 @@ namespace UI {
         }
       });
 
-      onHoge = function () {
+      onHoge = function (this:HTMLElement) {
         // removeするとmouseoutも発火するので二重に呼ばれる
         sorting = false;
 

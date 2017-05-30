@@ -104,7 +104,7 @@ namespace UI {
         }
       }
 
-      var load = function (e) {
+      var load = function (this:HTMLImageElement, e) {
         $newImg.off("load", load);
         $newImg.off("error", load);
         $media.parent().replaceChild(this, $media);
@@ -121,7 +121,7 @@ namespace UI {
       $newImg.on("load", load);
       $newImg.on("error", load);
 
-      var loadmetadata = function (e) {
+      var loadmetadata = function (this: HTMLMediaElement, e) {
         if (imgFlg && (faviconFlg || $media.hasClass("loading"))) {
           return;
         }

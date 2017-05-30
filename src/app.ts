@@ -509,7 +509,7 @@ namespace app {
       }
     };
 
-    add_ready_module = function (module) {
+    add_ready_module = function (this:{module_id: string, dependencies: string[]}, module) {
       ready_modules.set(this.module_id,{
         dependencies: this.dependencies,
         module: module

@@ -46,10 +46,6 @@ args =
   zombieHtmlPath: "./src/zombie.pug"
   writePath:
     cs:
-      ts: [
-        "./src/app.ts"
-        "./src/core/URL.ts"
-      ]
       coffee: "./src/write/cs_write.coffee"
     write:
       ts: "./src/core/URL.ts"
@@ -176,7 +172,7 @@ gulp.task "watch", ["default"], ->
   gulp.watch([args.uiTsPath, args.uiCoffeePath], ["ui.js"])
   gulp.watch(args.viewCoffeePath, ["viewjs"])
   gulp.watch(args.zobieCoffeePath, ["zombie.js"])
-  gulp.watch([args.writePath.cs.ts, args.writePath.cs.coffee], ["cs_write.js"])
+  gulp.watch(args.writePath.cs.coffee, ["cs_write.js"])
   gulp.watch([args.writePath.write.ts, args.writePath.write.coffee], ["write.js"])
   gulp.watch([args.writePath.submit_thread.ts, args.writePath.submit_thread.coffee], ["submit_thread.js"])
   gulp.watch("./src/**/*.scss", ["css"])
@@ -277,16 +273,11 @@ gulp.task "zombie.js", ->
 gulp.task "writejs", ["cs_write.js", "write.js", "submit_thread.js"]
 
 gulp.task "cs_write.js", ->
-  return merge(
-    gulp.src args.writePath.cs.ts
-      .pipe(plumber(errorHandler: notify.onError("Error: <%= error.toString() %>")))
-      .pipe(ts(args.tsOptions, ts.reporter.nullReporter())),
-    gulp.src args.writePath.cs.coffee
-      .pipe(plumber(errorHandler: notify.onError("Error: <%= error.toString() %>")))
-      .pipe(coffee(args.coffeeOptions))
-  ).pipe(sort(sortForExtend))
-  .pipe(concat("cs_write.js"))
-  .pipe(gulp.dest("#{args.outputPath}/write"))
+  return gulp.src args.writePath.cs.coffee
+    .pipe(plumber(errorHandler: notify.onError("Error: <%= error.toString() %>")))
+    .pipe(changed("#{args.outputPath}/write", extension: ".js"))
+    .pipe(coffee(args.coffeeOptions))
+    .pipe(gulp.dest("#{args.outputPath}/write"))
 
 gulp.task "write.js", ->
   return merge(

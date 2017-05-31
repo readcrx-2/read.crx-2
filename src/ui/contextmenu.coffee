@@ -36,5 +36,5 @@ do ->
       $menu.style.left = ""
       $menu.style.right = "0px"
     if window.innerHeight < $menu.offsetTop + $menu.offsetHeight
-      $menu.style.top = "#{$menu.offsetTop - $menu.offsetHeight}px"
+      $menu.style.top = "#{Math.max($menu.offsetTop - $menu.offsetHeight, 0)}px"
     return

@@ -3,7 +3,8 @@
 namespace app {
   "use strict";
 
-  var logLevels = ["log", "debug", "info", "warn", "error"];
+  type logLevel = "log" | "debug" | "info" | "warn" | "error";
+  var logLevels: logLevel[] = ["log", "debug", "info", "warn", "error"];
 
   export function criticalError (message:string):void {
     new Notification(
@@ -18,9 +19,9 @@ namespace app {
     });
   }
 
-  export function log (level:string, ...data:any[]) {
+  export function log (level:logLevel, ...data:any[]) {
     if (logLevels.includes(level)) {
-      console[level](...data);
+      console[<string>level](...data);
     }
     else {
       log("error", "app.log: 引数levelが不正な値です", arguments);

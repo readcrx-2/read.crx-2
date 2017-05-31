@@ -18,7 +18,7 @@ read.crx 2は[Google Chrome][chrome]アプリとして作られた2chブラウ�
     npm run pack
     npm run clean
 
-詳細 : [Windows][winbuild]  [OSX][osxbuild]  [Linux][linuxbuild]
+詳細 : [Windows][winbuild]  [macOS][macosbuild]  [Linux][linuxbuild]
 
 # 商用利用時の注意
 read.crx 2のソースコードはMITライセンスですが、read.crx 2がアクセスするサービスの中には商用利用に制限が存在する場合が有ります。ご注意下さい。
@@ -41,6 +41,6 @@ read.crx 2のソースコードはMITライセンスですが、read.crx 2がア
 [machi]: http://www.machi.to/
 [npm]: https://npmjs.org/
 [winbuild]: https://github.com/readcrx-2/read.crx-2/wiki/Windows%E3%81%A7%E3%81%AE%E3%83%93%E3%83%AB%E3%83%89%E6%96%B9%E6%B3%95
-[osxbuild]: https://github.com/readcrx-2/read.crx-2/wiki/OSX%E3%81%A7%E3%81%AE%E3%83%93%E3%83%AB%E3%83%89%E6%96%B9%E6%B3%95
+[macosbuild]: https://github.com/readcrx-2/read.crx-2/wiki/macOS%E3%81%A7%E3%81%AE%E3%83%93%E3%83%AB%E3%83%89%E6%96%B9%E6%B3%95
 [linuxbuild]: https://github.com/readcrx-2/read.crx-2/wiki/Linux%E3%81%A7%E3%81%AE%E3%83%93%E3%83%AB%E3%83%89%E6%96%B9%E6%B3%95
 [repolink]: http://badge.fury.io/gh/readcrx-2%2Fread.crx-2

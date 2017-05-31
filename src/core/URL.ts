@@ -134,7 +134,7 @@ namespace app {
             return new Promise( (resolve, reject) => {
               var resUrl: string;
               var req = new app.HTTP.Request("HEAD", shortUrl);
-              req.timeout = parseInt(app.config.get("expand_short_url_timeout"));
+              req.timeout = parseInt(app.config.get("expand_short_url_timeout")!);
 
               req.send( (res) => {
                 if (res.status === 0 || res.status >= 400) {
@@ -177,7 +177,7 @@ namespace app {
 
     export function pushBoardToServerInfo (boardInfoNet: any, boardInfoSc: any): void {
       var item: any;
-      var tmp: string[];
+      var tmp: string[]|null;
 
       if (boardInfoNet.length > 0) {
         serverNet.clear();
@@ -207,11 +207,11 @@ namespace app {
       return;
     }
 
-    export function exchangeNetSc (url: string): string {
-      var mode: string[];
-      var server: string = null;
-      var target: string = null;
-      var resUrl: string = null;
+    export function exchangeNetSc (url: string): string|null {
+      var mode: string[]|null;
+      var server: string|null = null;
+      var target: string|null = null;
+      var resUrl: string|null = null;
 
       mode = /(https?):\/\/(\w+)\.2ch\.(net|sc)\/test\/read\.cgi\/(\w+)\/(\d+)\//.exec(url);
       if (mode === null) {
@@ -220,12 +220,12 @@ namespace app {
 
       if (mode[3] === "net") {
         if (serverSc.has(mode[4]) === true) {
-          server = serverSc.get(mode[4]);
+          server = serverSc.get(mode[4])!;
           target = "sc";
         }
       } else {
         if (serverNet.has(mode[4]) === true) {
-          server = serverNet.get(mode[4]);
+          server = serverNet.get(mode[4])!;
           target = "net";
         }
       }

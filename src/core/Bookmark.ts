@@ -17,8 +17,8 @@ namespace app {
       title: string;
       type: string;
       bbsType: string;
-      resCount: number;
-      readState: ReadState;
+      resCount: number|null;
+      readState: ReadState|null;
       expired: boolean;
     }
 
@@ -27,8 +27,8 @@ namespace app {
       title: string;
       type: string;
       bbs_type: string;
-      res_count: number;
-      read_state: ReadState;
+      res_count: number|null;
+      read_state: ReadState|null;
       expired: boolean;
     }
 
@@ -45,7 +45,7 @@ namespace app {
         expired: legacy.expired === true
       };
 
-      if (Number.isFinite(legacy.res_count)) {
+      if (legacy.res_count !== null && Number.isFinite(legacy.res_count)) {
         entry.resCount = legacy.res_count;
       }
 
@@ -77,7 +77,7 @@ namespace app {
         expired: entry.expired === true
       };
 
-      if (Number.isFinite(entry.resCount)) {
+      if (entry.resCount !== null && Number.isFinite(entry.resCount)) {
         legacy.res_count = entry.resCount;
       }
 
@@ -96,8 +96,8 @@ namespace app {
       return legacy;
     }
 
-    export function newerEntry (a:Entry, b:Entry):Entry {
-      if (a.resCount !== b.resCount) {
+    export function newerEntry (a:Entry, b:Entry):Entry|null {
+      if (a.resCount !== null && b.resCount !== null && a.resCount !== b.resCount) {
         return a.resCount > b.resCount ? a : b;
       }
 
@@ -135,7 +135,7 @@ namespace app {
             if (!this.boardURLIndex.has(boardURL)) {
               this.boardURLIndex.set(boardURL, []);
             }
-            this.boardURLIndex.get(boardURL).push(entry.url);
+            this.boardURLIndex.get(boardURL)!.push(entry.url);
           }
           return true;
         }
@@ -160,12 +160,12 @@ namespace app {
         url = app.URL.fix(url);
 
         if (this.cache.has(url)) {
-          if (this.cache.get(url).type === "thread") {
+          if (this.cache.get(url)!.type === "thread") {
             boardURL = app.URL.threadToBoard(url);
             if (this.boardURLIndex.has(boardURL)) {
-              tmp = this.boardURLIndex.get(boardURL).indexOf(url);
+              tmp = this.boardURLIndex.get(boardURL)!.indexOf(url);
               if (tmp !== -1) {
-                this.boardURLIndex.get(boardURL).splice(tmp, 1);
+                this.boardURLIndex.get(boardURL)!.splice(tmp, 1);
               }
             }
           }
@@ -227,7 +227,7 @@ namespace app {
       }
 
       getAll ():Entry[] {
-        var res = [];
+        var res:Entry[] = [];
 
         for (var val of this.cache.values()) {
           res.push(val);
@@ -237,7 +237,7 @@ namespace app {
       }
 
       getAllThreads ():Entry[] {
-        var res = [];
+        var res:Entry[] = [];
 
         for (var val of this.cache.values()) {
           if (val.type === "thread") {
@@ -249,7 +249,7 @@ namespace app {
       }
 
       getAllBoards ():Entry[] {
-        var res = [];
+        var res:Entry[] = [];
 
         for (var val of this.cache.values()) {
           if (val.type === "board") {
@@ -261,12 +261,12 @@ namespace app {
       }
 
       getThreadsByBoardURL (url:string):Entry[] {
-        var res = [], threadURL:string;
+        var res:Entry[] = [], threadURL:string;
 
         url = app.URL.fix(url);
 
         if (this.boardURLIndex.has(url)) {
-          for (threadURL of this.boardURLIndex.get(url)) {
+          for (threadURL of this.boardURLIndex.get(url)!) {
             res.push(this.get(threadURL));
           }
         }

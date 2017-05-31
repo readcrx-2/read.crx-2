@@ -18,7 +18,7 @@ namespace UI {
     private scroll = false;
     private medias: HTMLMediaElement[] = [];
     private mediaPlaceTable = new Map<HTMLMediaElement, MediaPosition>();
-    private updateInterval: number = null;
+    private updateInterval: number|null = null;
     private pause: boolean = false;
     private lastScrollTop: number = -1;
     private noNeedAttrs: string[] = [
@@ -104,7 +104,7 @@ namespace UI {
         }
       }
 
-      var load = function (e) {
+      var load = function (this:HTMLImageElement, e) {
         $newImg.off("load", load);
         $newImg.off("error", load);
         $media.parent().replaceChild(this, $media);
@@ -121,7 +121,7 @@ namespace UI {
       $newImg.on("load", load);
       $newImg.on("error", load);
 
-      var loadmetadata = function (e) {
+      var loadmetadata = function (this: HTMLMediaElement, e) {
         if (imgFlg && (faviconFlg || $media.hasClass("loading"))) {
           return;
         }
@@ -146,23 +146,23 @@ namespace UI {
             $newImg.src = $media.getAttr("data-src");
             break;
           case "referrer":
-            $newImg.src = this.getWithReferrer(mdata.src, mdata.referrer, mdata.userAgent);
+            $newImg.src = this.getWithReferrer(mdata.src!, mdata.referrer!, mdata.userAgent!);
             break;
           case "extract":
-            this.getWithExtract(mdata.src, mdata.extract, mdata.pattern, mdata.extractReferrer, mdata.userAgent).then( (imgstr) => {
+            this.getWithExtract(mdata.src!, mdata.extract!, mdata.pattern!, mdata.extractReferrer!, mdata.userAgent!).then( (imgstr) => {
               $newImg.src = imgstr;
             }).catch( () => {
               $newImg.src = "";
             });
             break;
           case "cookie":
-            this.getWithCookie(mdata.src, mdata.cookie, mdata.cookieReferrer, mdata.userAgent).then( (imgstr) => {
+            this.getWithCookie(mdata.src!, mdata.cookie!, mdata.cookieReferrer!, mdata.userAgent!).then( (imgstr) => {
               $newImg.src = imgstr;
             }).catch( () => {
               $newImg.src = "";
             });
             break;
-          default: $newImg.src = mdata.src;
+          default: $newImg.src = mdata.src!;
         }
       } else {
         $media.src = $media.getAttr("data-src");
@@ -208,7 +208,7 @@ namespace UI {
         app.config.get("image_height_fix") === "on" &&
         this.mediaPlaceTable.has(media)
       ) {
-        pos = this.mediaPlaceTable.get(media);
+        pos = this.mediaPlaceTable.get(media)!;
       } else {
         pos.top = 0;
         current = media;
@@ -295,10 +295,10 @@ namespace UI {
           targetHeight = 0;
           switch (media.tagName) {
             case "IMG":
-              targetHeight = parseInt(app.config.get("image_height"));
+              targetHeight = parseInt(app.config.get("image_height")!);
               break;
             case "VIDEO":
-              targetHeight = parseInt(app.config.get("video_height"));
+              targetHeight = parseInt(app.config.get("video_height")!);
               break;
           }
 

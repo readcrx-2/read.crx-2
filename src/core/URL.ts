@@ -4,17 +4,19 @@
 
 namespace app {
   export namespace URL {
-    export const CH_BOARD_REG = /^(https?:\/\/[\w\.]+\/test\/read\.cgi\/\w+\/\d+).*$/;
+    export const CH_BOARD_REG = /^(https?:\/\/[\w\.]+\/(?:\w+\/)?test\/(?:read\.cgi|-)\/\w+\/\d+).*$/;
+    export const CH_BOARD_ULA_REG = /^(https?):\/\/ula\.2ch\.net\/2ch\/(\w+)\/([\w\.]+)\/(\d+).*$/;
     export const MACHI_BOARD_REG = /^(https?:\/\/\w+\.machi\.to\/bbs\/read\.cgi\/\w+\/\d+).*$/;
     export const SHITARABA_BOARD_REG = /^(https?):\/\/jbbs\.(?:livedoor\.jp|shitaraba\.net)\/(bbs\/read(?:_archive)?\.cgi\/\w+\/\d+\/\d+).*$/;
     export const SHITARABA_ARCHIVE_REG = /^(https?):\/\/jbbs\.(?:livedoor\.jp|shitaraba\.net)\/(\w+\/\d+)\/storage\/(\d+)\.html$/;
-    export const CH_THREAD_REG = /^(https?:\/\/[\w\.]+\/\w+\/)(?:#.*)?$/;
+    export const CH_THREAD_REG = /^(https?:\/\/[\w\.]+\/(?:subback\/|test\/-\/)?\w+\/)(?:#.*)?$/;
     export const SHITARABA_THREAD_REG = /^(https?):\/\/jbbs\.(?:livedoor\.jp|shitaraba\.net)\/(\w+\/\d+\/)(?:#.*)?$/;
     export function fix (url:string):string {
       return (
         url
           // スレ系 誤爆する事は考えられないので、パラメータ部分をバッサリ切ってしまう
           .replace(CH_BOARD_REG, "$1/")
+          .replace(CH_BOARD_ULA_REG, "$1://$3/test/read.cgi/$2/$4/")
           .replace(MACHI_BOARD_REG, "$1/")
           .replace(SHITARABA_BOARD_REG, "$1://jbbs.shitaraba.net/$2/")
           .replace(SHITARABA_ARCHIVE_REG, "$1://jbbs.shitaraba.net/bbs/read_archive.cgi/$2/$3/")
@@ -43,13 +45,13 @@ namespace app {
       else if (/^https?:\/\/\w+\.machi\.to\/\w+\/$/.test(url)) {
         return {type: "board", bbsType: "machi"};
       }
-      else if (/^https?:\/\/[\w\.]+\/test\/read\.cgi\/\w+\/\d+\/$/.test(url)) {
+      else if (/^https?:\/\/[\w\.]+\/(?:\w+\/)?test\/(?:read\.cgi|-)\/\w+\/\d+\/$/.test(url)) {
         return {type: "thread", bbsType: "2ch"};
       }
       else if (/^https?:\/\/(?:find|info|p2|ninja)\.2ch\.net\/\w+\/$/.test(url)) {
         return {type: "unknown", bbsType: "unknown"};
       }
-      else if (/^https?:\/\/[\w\.]+\/\w+\/$/.test(url)) {
+      else if (/^https?:\/\/\w+\.(?:2ch|open2ch|bbspink)\.\w+\/(?:subback\/|test\/-\/)?\w+\/?$/.test(url)) {
         return {type: "board", bbsType: "2ch"};
       }
       else {
@@ -86,15 +88,19 @@ namespace app {
     export function getResNumber (urlstr: string): string|null {
       var tmp: string[]|null;
 
-      tmp = /^https?:\/\/[\w\.]+\/test\/read\.cgi\/\w+\/\d+\/(\d+).*?$/.exec(urlstr);
+      tmp = /^https?:\/\/[\w\.]+\/(?:\w+\/)?test\/(?:read\.cgi|-)\/\w+\/\d+\/(?:i|g\?g=)?(\d+).*$/.exec(urlstr);
       if (tmp !== null) {
         return tmp[1];
       }
-      tmp = /^https?:\/\/\w+\.machi\.to\/bbs\/read\.cgi\/\w+\/\d+\/(\d+).*?$/.exec(urlstr);
+      tmp = /^https?:\/\/ula\.2ch\.net\/2ch\/\w+\/[\w\.]+\/\d+\/(\d+).*$/.exec(urlstr);
       if (tmp !== null) {
         return tmp[1];
       }
-      tmp = /^https?:\/\/jbbs\.(?:livedoor\.jp|shitaraba\.net)\/bbs\/read(?:_archive)?\.cgi\/\w+\/\d+\/\d+\/(\d+).*?$/.exec(urlstr);
+      tmp = /^https?:\/\/\w+\.machi\.to\/bbs\/read\.cgi\/\w+\/\d+\/(\d+).*$/.exec(urlstr);
+      if (tmp !== null) {
+        return tmp[1];
+      }
+      tmp = /^https?:\/\/jbbs\.(?:livedoor\.jp|shitaraba\.net)\/bbs\/read(?:_archive)?\.cgi\/\w+\/\d+\/\d+\/(\d+).*$/.exec(urlstr);
       if (tmp !== null) {
         return tmp[1];
       }
@@ -233,10 +239,92 @@ namespace app {
       });
     }
 
+    export function convertUrlFromPhone (url: string): string {
+      var regs: any[];
+      var tmp: string[]|null = [];
+      var mode: string;
+      var scheme: string = "";
+      var server: string|null = null;
+      var board: string|null = null;
+      var thread: string|null = null;
+      var resUrl: string = url;
+
+      function checkReg (value: any, index: number, array: any[]): boolean {
+        return (tmp = value.exec(url));
+      }
+
+      mode = tsld(url);
+      switch (mode) {
+        case "2ch.net":
+          regs = [
+            /(https?):\/\/itest\.2ch\.net\/(?:\w+\/)?test\/read\.cgi\/(\w+)\/(\d+)\//,
+            /(https?):\/\/itest\.2ch\.net\/(?:subback\/)?(\w+)(?:\/)?/,
+            /(https?):\/\/c\.2ch\.net\/test\/-\/(\w+)\/(\d+)\//,
+            /(https?):\/\/c\.2ch\.net\/test\/-\/(\w+)\//
+          ]
+          if (regs.some(checkReg)) {
+            scheme = tmp[1];
+            board = tmp[2];
+            thread = tmp[3] ? tmp[3] : null;
+            if (board !== null) {
+              if (serverNet.has(board) === true) {
+                server = serverNet.get(board)!;
+              // 携帯用bbspinkの可能性をチェック
+              } else if (serverBbspink.has(board) === true) {
+                server = serverBbspink.get(board)!;
+                mode = "bbspink.com";
+              }
+            }
+          }
+          break;
+
+        case "2ch.sc":
+          regs = [
+            /(https?):\/\/sp\.2ch\.sc\/(?:\w+\/)?test\/read\.cgi\/(\w+)\/(\d+)\//,
+            /(https?):\/\/sp\.2ch\.sc\/(?:subback\/)?(\w+)\//
+          ]
+          if (regs.some(checkReg)) {
+            scheme = tmp[1];
+            board = tmp[2];
+            thread = tmp[3] ? tmp[3] : null;
+            if (board !== null && serverSc.has(board) === true) {
+              server = serverSc.get(board)!;
+            }
+          }
+          break;
+
+        case "bbspink.com":
+          regs = [
+            /(https?):\/\/itest\.bbspink\.com\/(?:\w+\/)?test\/read\.cgi\/(\w+)\/(\d+)\//,
+            /(https?):\/\/itest\.bbspink\.com\/(?:subback\/)?(\w+)(?:\/)?/
+          ]
+          if (regs.some(checkReg)) {
+            scheme = tmp[1];
+            board = tmp[2];
+            thread = tmp[3] ? tmp[3] : null;
+            if (board !== null && serverBbspink.has(board) === true) {
+              server = serverBbspink.get(board)!;
+            }
+          }
+          break;
+      }
+
+      if (server !== null) {
+        if (thread !== null) {
+          resUrl = `${scheme}://${server}.${mode}/test/read.cgi/${board}/${thread}/`;
+        } else {
+          resUrl = `${scheme}://${server}.${mode}/${board}/`;
+        }
+      }
+
+      return resUrl;
+    }
+
     var serverNet = new Map<string, string>();
     var serverSc = new Map<string, string>();
+    var serverBbspink = new Map<string, string>();
 
-    export function pushBoardToServerInfo (boardInfoNet: any, boardInfoSc: any): void {
+    export function pushBoardToServerInfo (boardInfoNet: any, boardInfoSc: any, boardInfoBbspink: any): void {
       var item: any;
       var tmp: string[]|null;
 
@@ -265,6 +353,20 @@ namespace app {
           serverSc.set(tmp[2], tmp[1]);
         }
       }
+
+      if (boardInfoBbspink.length > 0) {
+        serverBbspink.clear();
+      }
+      for (item of boardInfoBbspink) {
+        tmp = /https?:\/\/(\w+)\.bbspink\.com\/(\w+)\//.exec(item.url);
+        if (tmp === null) {
+          continue;
+        }
+        if (serverBbspink.has(tmp[2]) === false) {
+          serverBbspink.set(tmp[2], tmp[1]);
+        }
+      }
+
       return;
     }
 

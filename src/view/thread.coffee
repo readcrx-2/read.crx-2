@@ -539,12 +539,14 @@ app.boot "/view/thread.html", ->
   $view.on("mouseenter", (e) ->
     target = e.target
     return unless target.matches(".message a:not(.anchor)")
-    tmp = app.URL.guessType(target.href)
+    # 携帯・スマホ用URLをPC用URLに変換
+    url = app.URL.convertUrlFromPhone(target.href)
+    tmp = app.URL.guessType(url)
     if tmp.type is "board"
-      board_url = app.URL.fix(target.href)
+      board_url = app.URL.fix(url)
       after = ""
     else if tmp.type is "thread"
-      board_url = app.URL.threadToBoard(target.href)
+      board_url = app.URL.threadToBoard(url)
       after = "のスレ"
     else
       return

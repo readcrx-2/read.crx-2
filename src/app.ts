@@ -110,7 +110,7 @@ namespace app {
 
         this._latestCallArg = deepCopy(arg);
 
-        tmpCallbackStore = new Set(this._callbackStore.keys());
+        tmpCallbackStore = new Set(this._callbackStore);
 
         for (callback of tmpCallbackStore) {
           if (this._callbackStore.has(callback)) {
@@ -364,8 +364,8 @@ namespace app {
     }
 
     get (key:string):string|null {
-      if (this._cache.has("config_" + key)) {
-        return this._cache.get("config_" + key)!;
+      if (this._cache.has(`config_${key}`)) {
+        return this._cache.get(`config_${key}`)!;
       }
       else if (Config._default.has(key)) {
         return Config._default.get(key)!;
@@ -377,7 +377,7 @@ namespace app {
     getAll ():string {
       var json = {};
       for(var [key, val] of Config._default) {
-        json["config_" + key] = val;
+        json[`config_${key}`] = val;
       }
       for(var [key, val] of this._cache) {
         json[key] = val;
@@ -399,7 +399,7 @@ namespace app {
           return;
         }
 
-        tmp["config_" + key] = val;
+        tmp[`config_${key}`] = val;
 
         chrome.storage.local.set(tmp, () => {
           if (chrome.runtime.lasterror) {

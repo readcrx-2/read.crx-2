@@ -13,10 +13,10 @@ read.crx 2は[Google Chrome][chrome]アプリとして作られた2chブラウ�
 
     npm install
 
-    gulp
-    gulp watch
-    gulp pack
-    gulp clean
+    npm run build
+    npm run watch
+    npm run pack
+    npm run clean
 
 詳細 : [Windows][winbuild]  [OSX][osxbuild]  [Linux][linuxbuild]
 

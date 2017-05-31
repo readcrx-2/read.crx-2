@@ -33,5 +33,11 @@
     "type": "git",
     "url": "https://github.com/readcrx-2/read.crx-2.git"
   },
-  "license": "MIT"
+  "license": "MIT",
+  "scripts": {
+    "build": "gulp",
+    "clean": "gulp clean",
+    "watch": "gulp watch",
+    "pack": "gulp pack"
+  }
 }

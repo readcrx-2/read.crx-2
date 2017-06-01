@@ -305,7 +305,9 @@ app.boot "/view/index.html", ->
       history.replaceState(null, null, "/view/index.html")
       app.main()
       if query
-        app.message.send("open", url: query, new_tab: true)
+        paramResNumFlag = (app.config.get("enable_link_with_res_number") is "on")
+        paramResNum = if paramResNumFlag then app.URL.getResNumber(query) else null
+        app.message.send("open", url: query, new_tab: true, param_res_num: paramResNum)
 
 app.view_setup_resizer = ->
   MIN_TAB_HEIGHT = 100
@@ -676,7 +678,11 @@ app.main = ->
       if $li.length
         $li.closest(".tab").data("tab").update($li.attr("data-tabid"), selected: true)
         if message.url isnt "bookmark" #ブックマーク更新は時間がかかるので例外扱い
-          tmp = JSON.stringify(type: "request_reload")
+          tmp = JSON.stringify({
+            type: "request_reload",
+            written_res_num: if message.written_res_num? then message.written_res_num else null,
+            param_res_num: if message.param_res_num? then message.param_res_num else null
+          })
           $iframe = $view.find("iframe[data-tabid=\"#{$li.attr("data-tabid")}\"]")
           $iframe[0].contentWindow.postMessage(tmp, location.origin)
       else
@@ -700,15 +706,21 @@ app.main = ->
             selected: true
             locked: message.locked
           })
+        writtenResNum = if message.written_res_num? then message.written_res_num else ""
+        paramResNum = if message.param_res_num? then message.param_res_num else ""
         $view
           .find("iframe[data-tabid=\"#{tabId}\"]")
             .attr("data-url", iframe_info.url)
+            .attr("data-written_res_num", writtenResNum)
+            .attr("data-param_res_num", paramResNum)
     return
 
   #openリクエストの監視
   chrome.runtime.onMessage.addListener (request) ->
     if request.type is "open"
-      app.message.send("open", url: request.query, new_tab: true)
+      paramResNumFlag = (app.config.get("enable_link_with_res_number") is "on")
+      paramResNum = if paramResNumFlag then app.URL.getResNumber(request.query) else null
+      app.message.send("open", url: request.query, new_tab: true, param_res_num: paramResNum)
 
   #書き込み完了メッセージの監視
   chrome.runtime.onMessage.addListener (request) ->

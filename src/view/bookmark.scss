@@ -74,12 +74,6 @@ td {
       content: "待機中: ";
     }
   }
-  > .loading {
-    color: $color-loading;
-    &::before {
-      content: "更新中: ";
-    }
-  }
   > .success {
     color: $color-success;
     &::before {

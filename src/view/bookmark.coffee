@@ -53,23 +53,20 @@ app.boot "/view/bookmark.html", ->
 
     count =
       all: board_list.size
-      loading: 0
       success: 0
       error: 0
 
-    loadingServer = {}
+    loadingServer = new Set()
 
     fn = (res) ->
       if res?
-        delete loadingServer[app.URL.getDomain(@prev)]
-        count.loading--
+        loadingServer.delete(app.URL.getDomain(@prev))
         status = if res.status is "success" then "success" else "error"
         count[status]++
         if status is "error"
           for board in board_thread_table.get(@prev)
             app.message.send("bookmark_updated", {type: "errored", bookmark: {type: "thread", url: board}, entry: {type: "thread"}})
 
-      maxCon = app.config.get("max_connection")
       if count.all is count.success + count.error
         #更新完了
         #ソート後にブックマークが更新されてしまう場合に備えて、少し待つ
@@ -89,26 +86,20 @@ app.boot "/view/bookmark.html", ->
           , 1000 * 10)
           return
         , 500)
-      # 合計最大同時接続数: 2
       # 同一サーバーへの最大接続数: 1
-      else if count.loading < maxCon
-        keys = board_list.values()
-        while !(board = keys.next()).done
-          current = board.value
-          server = app.URL.getDomain(current)
-          continue if loadingServer[server]
-          loadingServer[server] = true
-          board_list.delete(current)
-          count.loading++
-          app.board.get(current, fn.bind(prev: current))
-          fn()
-          break
+      for board from board_list.values()
+        server = app.URL.getDomain(board)
+        continue if loadingServer.has(server)
+        loadingServer.add(server)
+        board_list.delete(board)
+        app.board.get(board, fn.bind(prev: board))
+        fn()
+        break
 
       #ステータス表示更新
       $loading_overlay.find(".success").text(count.success)
       $loading_overlay.find(".error").text(count.error)
-      $loading_overlay.find(".loading").text(count.loading)
-      $loading_overlay.find(".pending").text(count.all - count.success - count.error - count.loading)
+      $loading_overlay.find(".pending").text(count.all - count.success - count.error)
       return
 
     fn()

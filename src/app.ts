@@ -461,7 +461,7 @@ namespace app {
 
   export var manifest: any;
 
-  if (/^chrome-extension:\/\//.test(location.origin)) {
+  if (location.origin.startsWith("chrome-extension://")) {
     let xhr = new XMLHttpRequest();
     xhr.open("GET", "/manifest.json", false);
     xhr.send();
@@ -567,7 +567,7 @@ namespace app {
     }
 
     if (location.pathname === path) {
-      htmlVersion = document.documentElement.getAttribute("data-app-version")!;
+      htmlVersion = document.documentElement.dataset.appVersion!;
       if (manifest.version !== htmlVersion) {
         location.reload(true);
       }

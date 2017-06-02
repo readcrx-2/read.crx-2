@@ -109,9 +109,9 @@ class UI.ThreadContent
       qStr = if checkOnly then "img, video" else "img[data-src], video[data-src]"
       for media in targetElement.$$(qStr)
         loadFlag = true
-        continue if checkOnly or media.getAttr("data-src") is null
+        continue if checkOnly or media.dataset.src is null
         if media.hasClass("favicon")
-          media.src = media.getAttr("data-src")
+          media.src = media.dataset.src
           media.removeAttr("data-src")
         else
           media.dispatchEvent(new Event("immediateload"))
@@ -568,7 +568,7 @@ class UI.ThreadContent
                       target++
 
                 "<a href=\"javascript:undefined;\" class=\"anchor" +
-                (if disabled then " disabled\" data-disabled_reason=\"#{disabledReason}\"" else "\"") +
+                (if disabled then " disabled\" data-disabled-reason=\"#{disabledReason}\"" else "\"") +
                 ">#{$0}</a>"
               #IDリンク
               .replace /id:(?:[a-hj-z\d_\+\/\.\!]|i(?!d:))+/ig, ($0) ->
@@ -663,7 +663,7 @@ class UI.ThreadContent
                 elm = $__("span")
               elm.textContent = "返信 (#{resCount})"
               elm.className = if resCount >= 5 then "rep freq" else "rep link"
-              res.setAttr("data-rescount", [1..resCount].join(" "))
+              res.dataset.rescount = [1..resCount].join(" ")
               if newFlg
                 res.C("other")[0].addLast(
                   document.createTextNode(" ")
@@ -709,8 +709,8 @@ class UI.ThreadContent
                 thumbnailImg.addClass("image")
                 thumbnailImg.src = "/img/dummy_1x1.webp"
                 thumbnailImg.style.WebkitFilter = webkitFilter
-                thumbnailImg.style.maxWidth = app.config.get("image_width") + "px"
-                thumbnailImg.style.maxHeight = app.config.get("image_height") + "px"
+                thumbnailImg.style.maxWidth = "#{app.config.get("image_width")}px"
+                thumbnailImg.style.maxHeight = "#{app.config.get("image_height")}px"
                 thumbnailImg.dataset.src = thumbnailPath
                 thumbnailImg.dataset.type = res.type
                 if res.extract? then thumbnailImg.dataset.extract = res.extract
@@ -725,13 +725,13 @@ class UI.ThreadContent
                 thumbnailFavicon = $__("img")
                 thumbnailFavicon.addClass("favicon")
                 thumbnailFavicon.src = "/img/dummy_1x1.webp"
-                thumbnailFavicon.setAttr("data-src", "https://www.google.com/s2/favicons?domain=#{sourceA.hostname}")
+                thumbnailFavicon.dataset.src = "https://www.google.com/s2/favicons?domain=#{sourceA.hostname}"
                 thumbnailLink.addLast(thumbnailFavicon)
 
               when "audio", "video"
                 thumbnailLink = $__(mediaType)
                 thumbnailLink.src = ""
-                thumbnailLink.setAttr("data-src", thumbnailPath)
+                thumbnailLink.dataset.src = thumbnailPath
                 thumbnailLink.preload = "metadata"
                 switch mediaType
                   when "audio"
@@ -739,8 +739,8 @@ class UI.ThreadContent
                     thumbnailLink.setAttr("controls", "")
                   when "video"
                     thumbnailLink.style.WebkitFilter = webkitFilter
-                    thumbnailLink.style.maxWidth = app.config.get("video_width") + "px"
-                    thumbnailLink.style.maxHeight = app.config.get("video_height") + "px"
+                    thumbnailLink.style.maxWidth = "#{app.config.get("video_width")}px"
+                    thumbnailLink.style.maxHeight = "#{app.config.get("video_height")}px"
                     if app.config.get("video_controls") is "on"
                       thumbnailLink.setAttr("controls", "")
 

@@ -22,7 +22,7 @@ header, body {
 
 .content {
   padding-bottom: 50px;
-  &[data-res_search_hit_count="0"]:after {
+  &[data-res-search-hit-count="0"]:after {
     display: block;
     position: absolute;
     width: 100%;
@@ -484,7 +484,7 @@ header {
     margin-top: 15px;
   }
 
-  .content[data-res_search_hit_count="0"]:after {
+  .content[data-res-search-hit-count="0"]:after {
     color: $no-hit-message-color;
   }
 

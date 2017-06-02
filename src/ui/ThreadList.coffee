@@ -103,26 +103,27 @@ class UI.ThreadList
 
       if msg.type is "expired"
         $tr = $table.$("tr[data-href=\"#{msg.bookmark.url}\"]")
-        if msg.bookmark.expired
-          $tr.addClass("expired")
-          if app.config.get("bookmark_show_dat") is "off"
-            $tr.addClass("hidden")
+        if $tr?
+          if msg.bookmark.expired
+            $tr.addClass("expired")
+            if app.config.get("bookmark_show_dat") is "off"
+              $tr.addClass("hidden")
+            else
+              $tr.removeClass("hidden")
           else
-            $tr.removeClass("hidden")
-        else
-          $tr.removeClass("expired")
+            $tr.removeClass("expired")
 
       if msg.type is "errored"
         $tr = $table.$("tr[data-href=\"#{msg.bookmark.url}\"]")
-        $tr.addClass("errored")
+        $tr?.addClass("errored")
 
       if @_flg.bookmark
         if msg.type is "added"
           $tr = $table.$("tr[data-href=\"#{msg.bookmark.url}\"]")
-          $tr.$(selector.bookmark).textContent = "★"
+          $tr?.$(selector.bookmark).textContent = "★"
         else if msg.type is "removed"
           $tr = $table.$("tr[data-href=\"#{msg.bookmark.url}\"]")
-          $tr.$(selector.bookmark).textContent = ""
+          $tr?.$(selector.bookmark).textContent = ""
 
       if @_flg.bookmarkAddRm
         if msg.type is "added"
@@ -149,7 +150,7 @@ class UI.ThreadList
           td = tr.$(selector.res)
           old_res_count = +td.textContent
           td.textContent = msg.bookmark.res_count
-          td.setAttr("data-beforeres", old_res_count)
+          td.dataset.beforeres = old_res_count
           if @_flg.unread
             td = tr.$(selector.unread)
             old_unread = +td.textContent
@@ -169,7 +170,7 @@ class UI.ThreadList
 
       if @_flg.title and msg.type is "title"
         $tr = $table.$("tr[data-href=\"#{msg.bookmark.url}\"]")
-        $tr.$(selector.title).textContent = msg.bookmark.title
+        $tr?.$(selector.title).textContent = msg.bookmark.title
       return
 
     #未読数更新
@@ -214,7 +215,7 @@ class UI.ThreadList
         if @value isnt ""
           UI.table_search($table, "search", {
             query: @value, target_col: title_index})
-          hitCount = $table.getAttr("data-table_search_hit_count")
+          hitCount = $table.dataset.tableSearchHitCount
           for dom in @parent().child() when dom.hasClass("hit_count")
             dom.textContent = hitCount + "hit"
         else
@@ -240,10 +241,10 @@ class UI.ThreadList
             e.preventDefault()
 
           app.defer( =>
-            $menu = $$.I("template_thread_list_contextmenu").content.querySelector(".thread_list_contextmenu").cloneNode(true)
+            $menu = $$.I("template_thread_list_contextmenu").content.$(".thread_list_contextmenu").cloneNode(true)
             $table.closest(".view").addLast($menu)
 
-            url = target.getAttr("data-href")
+            url = target.dataset.href
 
             if app.bookmark.get(url)
               $menu.C("add_bookmark")[0]?.remove()
@@ -263,7 +264,7 @@ class UI.ThreadList
 
               $tr = target
 
-              threadURL = $tr.getAttr("data-href")
+              threadURL = $tr.dataset.href
               threadTitle = $tr.$(selector.title)?.textContent
               threadRes = $tr.$(selector.res)?.textContent
               threadWrittenRes = parseInt($tr.$(selector.writtenRes)?.textContent ? 0)
@@ -358,9 +359,9 @@ class UI.ThreadList
       tmpHTML += " data-title=\"#{app.escapeHtml(item.title)}\""
 
       if item.thread_number?
-        tmpHTML += " data-thread_number=\"#{app.escapeHtml(""+item.thread_number)}\""
+        tmpHTML += " data-thread-number=\"#{app.escapeHtml(""+item.thread_number)}\""
       if @_flg.writtenRes and item.res > 0
-        tmpHTML += " data-written_res_num=\"#{item.res}\""
+        tmpHTML += " data-written-res-num=\"#{item.res}\""
 
       tmpHTML += ">"
 

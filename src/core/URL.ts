@@ -139,7 +139,49 @@ namespace app {
       return param.toString();
     }
 
-    export const SHORT_URL_REG = /^h?ttps?:\/\/(?:amba\.to|amzn\.to|bit\.ly|buff\.ly|cas\.st|cos\.lv|dlvr\.it|fb\.me|g\.co|goo\.gl|htn\.to|ift\.tt|is\.gd|itun\.es|j\.mp|jump\.cx|kkbox\.fm|ow\.ly|p\.tl|prt\.nu|redd\.it|snipurl\.com|spoti\.fi|t\.co|tiny\.cc|tinyurl\.com|tl\.gd|tr\.im|trib\.al|ur0\.biz|ur0\.work|url\.ie|urx\.nu|urx\.red|urx2\.nu|urx3\.nu|ur0\.pw|ur2\.link|ustre\.am|wk\.tk|xrl\.us)\/.+/;
+    export const SHORT_URL_LIST = new Set([
+      "amba.to",
+      "amzn.to",
+      "bit.ly",
+      "buff.ly",
+      "cas.st",
+      "cos.lv",
+      "dlvr.it",
+      "fb.me",
+      "g.co",
+      "goo.gl",
+      "htn.to",
+      "ift.tt",
+      "is.gd",
+      "itun.es",
+      "j.mp",
+      "jump.cx",
+      "kkbox.fm",
+      "ow.ly",
+      "p.tl",
+      "prt.nu",
+      "redd.it",
+      "snipurl.com",
+      "spoti.fi",
+      "t.co",
+      "tiny.cc",
+      "tinyurl.com",
+      "tl.gd",
+      "tr.im",
+      "trib.al",
+      "ur0.biz",
+      "ur0.work",
+      "url.ie",
+      "urx.nu",
+      "urx.red",
+      "urx2.nu",
+      "urx3.nu",
+      "ur0.pw",
+      "ur2.link",
+      "ustre.am",
+      "wk.tk",
+      "xrl.us"
+    ]);
 
     export function expandShortURL (shortUrl: string): any {
       return new Promise( (resolve, reject) => {
@@ -165,8 +207,8 @@ namespace app {
                   return resolve({data: null, url: null});
                 }
                 // 取得したURLが短縮URLだった場合は再帰呼出しする
-                if (SHORT_URL_REG.test(resUrl)) {
-                  expandShortURL(resUrl).then( (reslUrl) => {
+                if (SHORT_URL_LIST.has(getDomain(resUrl))) {
+                  expandShortURL(resUrl).then( (resUrl) => {
                     return resolve({data: null, url: resUrl});
                   });
                 // 短縮URL以外なら終了

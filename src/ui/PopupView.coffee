@@ -150,7 +150,7 @@ class UI.PopupView
     if @_popupStack.length is 0
       @_currentX = @mouseX
       @_currentY = @mouseY
-      @defaultParent.on("mousemove", (e) => @_onMouseMove(e))
+      @defaultParent.on("mousemove", @_onMouseMove)
 
     # 新規ノードの設定
     setupNewNode = (sourceNode, popupNode) =>
@@ -160,12 +160,12 @@ class UI.PopupView
       # ノードの設定
       sourceNode.addClass("popup_source")
       sourceNode.setAttr("stack-index", @_popupStack.length)
-      sourceNode.on("mouseenter", (e) => @_onMouseEnter(e.currentTarget))
-      sourceNode.on("mouseleave", (e) => @_onMouseLeave(e.currentTarget))
+      sourceNode.on("mouseenter", @_onMouseEnter)
+      sourceNode.on("mouseleave", @_onMouseLeave)
       popupNode.addClass("popup")
       popupNode.setAttr("stack-index", @_popupStack.length)
-      popupNode.on("mouseenter", (e) => @_onMouseEnter(e.currentTarget))
-      popupNode.on("mouseleave", (e) => @_onMouseLeave(e.currentTarget))
+      popupNode.on("mouseenter", @_onMouseEnter)
+      popupNode.on("mouseleave", @_onMouseLeave)
 
       # リンク情報の保管
       popupInfo =
@@ -221,10 +221,10 @@ class UI.PopupView
         )
       )
       # 該当ノードの除去
-      popupInfo.source.off("mouseenter", (e) => @_onMouseEnter(e.currentTarget))
-      popupInfo.source.off("mouseleave", (e) => @_onMouseLeave(e.currentTarget))
-      popupInfo.popup.off("mouseenter", (e) => @_onMouseEnter(e.currentTarget))
-      popupInfo.popup.off("mouseleave", (e) => @_onMouseLeave(e.currentTarget))
+      popupInfo.source.off("mouseenter", @_onMouseEnter)
+      popupInfo.source.off("mouseleave", @_onMouseLeave)
+      popupInfo.popup.off("mouseenter", @_onMouseEnter)
+      popupInfo.popup.off("mouseleave", @_onMouseLeave)
       popupInfo.source.removeClass("popup_source")
       popupInfo.source.removeAttr("stack-index")
       @_popupArea.removeChild(popupInfo.popup)
@@ -249,9 +249,10 @@ class UI.PopupView
 
   ###*
   @method _onMouseEnter
-  @param {Object} target
+  @param {Object} Event
   ###
-  _onMouseEnter: (target) ->
+  _onMouseEnter: (e) =>
+    target = e.currentTarget
     target.addClass("active")
     # ペア・ノードの非アクティブ化
     stackIndex = target.getAttr("stack-index")
@@ -268,9 +269,10 @@ class UI.PopupView
 
   ###*
   @method _onMouseLeave
-  @param {Object} target
+  @param {Object} Event
   ###
-  _onMouseLeave: (target) ->
+  _onMouseLeave: (e) =>
+    target = e.currentTarget
     target.removeClass("active")
     @_delayRemove(false)
     return
@@ -279,7 +281,7 @@ class UI.PopupView
   @method _onMouseMove
   @param {Object} Event
   ###
-  _onMouseMove: (e) ->
+  _onMouseMove: (e) =>
     @_currentX = e.clientX
     @_currentY = e.clientY
     return

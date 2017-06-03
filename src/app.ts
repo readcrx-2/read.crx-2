@@ -71,7 +71,7 @@ namespace app {
   export class Callbacks {
     private _config: CallbacksConfiguration;
     private _callbackStore = new Set<Function>();
-    private _latestCallArg: any[] = null;
+    private _latestCallArg: any[]|null = null;
     wasCalled = false;
 
     constructor (config:CallbacksConfiguration = {}) {
@@ -239,6 +239,7 @@ namespace app {
       ["button_change_netsc_newtab", "off"],
       ["button_change_scheme_newtab", "off"],
       ["open_all_unread_lazy", "on"],
+      ["enable_link_with_res_number", "on"],
       ["dblclick_reload", "on"],
       ["auto_load_second", "0"],
       ["auto_load_second_board", "0"],
@@ -288,10 +289,7 @@ namespace app {
       ["image_replace_dat_obj", "[]"],
       ["image_replace_dat", "^https?:\\/\\/(?:www\\.youtube\\.com\\/watch\\?(?:.+&)?v=|youtu\\.be\\/)([\\w\\-]+).*\thttps://img.youtube.com/vi/$1/default.jpg\nhttp:\\/\\/(?:www\\.)?nicovideon?\\.jp\\/(?:(?:watch|thumb)(?:_naisho)?(?:\\?v=|\\/)|\\?p=)(?!am|fz)[a-z]{2}(\\d+)\thttp://tn-skr.smilevideo.jp/smile?i=$1\n\\.(png|jpe?g|gif|bmp|webp)([\\?#:].*)?$\t.$1$2"],
       ["replace_str_txt_obj", "[]"],
-      ["replace_str_txt", ""],
-      ["max_connection", "4"],
-      ["last_information", "0"],
-      ["information_count", "0"]
+      ["replace_str_txt", ""]
     ]);
 
     private _cache = new Map<string, string>();
@@ -308,7 +306,7 @@ namespace app {
 
         for (key in localStorage) {
           if (key.startsWith("config_")) {
-            val = localStorage.getItem(key);
+            val = localStorage.getItem(key)!;
             this._cache.set(key, val);
             found[key] = val;
           }
@@ -364,16 +362,14 @@ namespace app {
       chrome.storage.onChanged.addListener(this._onChanged);
     }
 
-    get (key:string):string {
+    get (key:string):string|null {
       if (this._cache.has("config_" + key)) {
-        return this._cache.get("config_" + key);
+        return this._cache.get("config_" + key)!;
       }
       else if (Config._default.has(key)) {
-        return Config._default.get(key);
+        return Config._default.get(key)!;
       }
-      else {
-        return undefined;
-      }
+      return null;
     }
 
     //設定の連想配列をjson文字列で渡す
@@ -489,7 +485,7 @@ namespace app {
     let fire_definition, add_ready_module;
 
     fire_definition = (module_id, dependencies, definition) => {
-      var dep_modules = [], dep_module_id, callback;
+      var dep_modules:any[] = [], dep_module_id, callback;
 
       for (dep_module_id of dependencies) {
         dep_modules.push(ready_modules.get(dep_module_id).module);
@@ -511,7 +507,7 @@ namespace app {
       }
     };
 
-    add_ready_module = function (module) {
+    add_ready_module = function (this:{module_id: string, dependencies: string[]}, module) {
       ready_modules.set(this.module_id,{
         dependencies: this.dependencies,
         module: module
@@ -570,7 +566,7 @@ namespace app {
     }
 
     if (location.pathname === path) {
-      htmlVersion = document.documentElement.getAttribute("data-app-version");
+      htmlVersion = document.documentElement.getAttribute("data-app-version")!;
       if (manifest.version !== htmlVersion) {
         location.reload(true);
       }

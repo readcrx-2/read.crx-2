@@ -359,6 +359,8 @@ class UI.ThreadList
 
       if item.thread_number?
         tmpHTML += " data-thread_number=\"#{app.escapeHtml(""+item.thread_number)}\""
+      if @_flg.writtenRes and item.res > 0
+        tmpHTML += " data-written_res_num=\"#{item.res}\""
 
       tmpHTML += ">"
 

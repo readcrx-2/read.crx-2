@@ -36,7 +36,7 @@ namespace UI {
           next = (tab.$element.$("li.tab_selected") || {})[tmp]();
 
           if (next) {
-            tab.update(next.dataset.tabid, {selected: true});
+            tab.update(next.dataset.tabid!, {selected: true});
           }
         }
       });
@@ -54,16 +54,16 @@ namespace UI {
         }
 
         if (e.which === 2 && !target.hasClass("tab_locked")) {
-          tab.remove(target.dataset.tabid);
+          tab.remove(target.dataset.tabid!);
         }
         else {
-          tab.update(target.dataset.tabid, {selected: true});
+          tab.update(target.dataset.tabid!, {selected: true});
          }
       });
       $ul.on("click", function (e) {
         var target = <HTMLElement>e.target;
         if (target.tagName === "IMG") {
-          tab.remove(target.parent().dataset.tabid);
+          tab.remove(<string>target.parent().dataset.tabid);
         }
       });
       new UI.VirtualNotch($ul);
@@ -93,7 +93,7 @@ namespace UI {
           return;
         }
 
-        tabId = (<HTMLElement>e.source.frameElement).dataset.tabid;
+        tabId = (<HTMLElement>e.source.frameElement).dataset.tabid!;
         history = this.historyStore[tabId];
 
         if (message.type === "requestTabHistory") {
@@ -143,14 +143,14 @@ namespace UI {
     }
 
     getAll (): any {
-      var li: HTMLLIElement, tmp, res = [];
+      var li: HTMLLIElement, tmp, res:Object[] = [];
 
       tmp = Array.from(this.$element.$$("li"));
 
       for (li of tmp) {
         res.push({
-          tabId: li.dataset.tabid,
-          url: li.dataset.tabsrc,
+          tabId: li.dataset.tabid!,
+          url: li.dataset.tabsrc!,
           title: li.title,
           selected: li.hasClass("tab_selected"),
           locked: li.hasClass("tab_locked")
@@ -160,7 +160,7 @@ namespace UI {
       return res;
     }
 
-    getSelected (): Object {
+    getSelected (): Object|null {
       var li: HTMLLIElement;
 
       if (li = <HTMLLIElement>this.$element.$("li.tab_selected")) {
@@ -340,7 +340,7 @@ namespace UI {
       return app.deepCopy(this.recentClosed);
     }
 
-    restoreClosed (tabId: string): string {
+    restoreClosed (tabId: string): string|null {
       var tab, key;
 
       for (tab of this.recentClosed) {

@@ -305,7 +305,9 @@ app.boot "/view/index.html", ->
       history.replaceState(null, null, "/view/index.html")
       app.main()
       if query
-        app.message.send("open", url: query, new_tab: true)
+        paramResNumFlag = (app.config.get("enable_link_with_res_number") is "on")
+        paramResNum = if paramResNumFlag then app.URL.getResNumber(query) else null
+        app.message.send("open", url: query, new_tab: true, param_res_num: paramResNum)
 
 app.view_setup_resizer = ->
   MIN_TAB_HEIGHT = 100
@@ -472,35 +474,13 @@ app.main = ->
           html: """
             #{app.manifest.name} が #{last_version} から
             #{app.manifest.version} にアップデートされました。
-             <a href="http://readcrx-2.github.io/read.crx-2/changelog.html" target="_blank">更新履歴</a>
+             <a href="https://readcrx-2.github.io/read.crx-2/changelog.html#v#{app.manifest.version}" target="_blank">更新履歴</a>
           """
           background_color: "green"
         }
       else
         return
     app.config.set("last_version", app.manifest.version)
-    return
-
-  # アップデート告知をを送出
-  do ->
-    lastInformation = parseInt(app.config.get("last_information"))
-    informationCount = parseInt(app.config.get("information_count"))
-    if (
-      app.util.compareVersion("2.0.0") < 0 and
-      Date.now() - lastInformation > 86400000 * 3 and
-      informationCount < 3
-    )
-      app.message.send "notify", {
-        html: """
-          バージョンアップに関する注意事項があります。
-          詳しくは
-           <a href="http://readcrx-2.github.io/read.crx-2/changelog.html#v1.17.0" target="_blank">注意事項</a>
-          をご覧ください。
-        """
-        background_color: "blue"
-      }
-      app.config.set("last_information", Date.now())
-      app.config.set("information_count", informationCount + 1)
     return
 
   #更新通知
@@ -655,6 +635,8 @@ app.main = ->
       localStorage.tab_state = JSON.stringify(data)
     #コンテキストメニューの削除
     app.contextMenus.removeAll()
+    # 終了通知の送信
+    chrome.runtime.sendMessage({type: "exit_rcrx"})
     return
 
   #openメッセージ受信部
@@ -676,7 +658,11 @@ app.main = ->
       if $li.length
         $li.closest(".tab").data("tab").update($li.attr("data-tabid"), selected: true)
         if message.url isnt "bookmark" #ブックマーク更新は時間がかかるので例外扱い
-          tmp = JSON.stringify(type: "request_reload")
+          tmp = JSON.stringify({
+            type: "request_reload",
+            written_res_num: if message.written_res_num? then message.written_res_num else null,
+            param_res_num: if message.param_res_num? then message.param_res_num else null
+          })
           $iframe = $view.find("iframe[data-tabid=\"#{$li.attr("data-tabid")}\"]")
           $iframe[0].contentWindow.postMessage(tmp, location.origin)
       else
@@ -700,15 +686,21 @@ app.main = ->
             selected: true
             locked: message.locked
           })
+        writtenResNum = if message.written_res_num? then message.written_res_num else ""
+        paramResNum = if message.param_res_num? then message.param_res_num else ""
         $view
           .find("iframe[data-tabid=\"#{tabId}\"]")
             .attr("data-url", iframe_info.url)
+            .attr("data-written_res_num", writtenResNum)
+            .attr("data-param_res_num", paramResNum)
     return
 
   #openリクエストの監視
   chrome.runtime.onMessage.addListener (request) ->
     if request.type is "open"
-      app.message.send("open", url: request.query, new_tab: true)
+      paramResNumFlag = (app.config.get("enable_link_with_res_number") is "on")
+      paramResNum = if paramResNumFlag then app.URL.getResNumber(request.query) else null
+      app.message.send("open", url: request.query, new_tab: true, param_res_num: paramResNum)
 
   #書き込み完了メッセージの監視
   chrome.runtime.onMessage.addListener (request) ->

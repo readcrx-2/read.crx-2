@@ -17,7 +17,7 @@ $color-error: #BF3F3F;
 $color-https: #109020;
 
 @mixin common {
-  button, input, select, textarea {
+  header, body {
     font-family: inherit;
   }
 

@@ -9,7 +9,7 @@ do ->
   ).catch( ->
     return new Promise( (resolve, reject) ->
       xhr = new XMLHttpRequest()
-      xhr.open("GET", "http://readcrx-2.github.io/read.crx-2/textar-min.woff")
+      xhr.open("GET", "https://readcrx-2.github.io/read.crx-2/textar-min.woff")
       xhr.responseType = "arraybuffer"
       xhr.onload = ->
         if @status is 200
@@ -47,6 +47,12 @@ app.boot "/view/thread.html", ->
     alert("不正な引数です")
     return
   view_url = app.URL.fix(view_url)
+  jumpResNum = -1
+  iframe = parent.document.querySelector("iframe[data-url=\"#{view_url}\"]")
+  if iframe
+    jumpResNum = +iframe.getAttribute("data-written_res_num")
+    if jumpResNum < 1
+      jumpResNum = +iframe.getAttribute("data-param_res_num")
 
   $view = $(document.documentElement)
   $view.attr("data-url", view_url)
@@ -115,8 +121,19 @@ app.boot "/view/thread.html", ->
   $view.on "request_reload", (e, ex) ->
     #先にread_state更新処理を走らせるために、処理を飛ばす
     app.defer ->
-      return if $view.hasClass("loading")
-      return if $view.find(".button_reload").hasClass("disabled")
+      if ex?.written_res_num?
+        jumpResNum = +ex.written_res_num
+      if ex?.param_res_num? and jumpResNum < 1
+        jumpResNum = +ex.param_res_num
+      if (
+        $view.hasClass("loading") or
+        $view.find(".button_reload").hasClass("disabled")
+      )
+        if jumpResNum > 0
+          threadContent.scrollTo(jumpResNum, true, -60)
+          threadContent.select(jumpResNum, true)
+          jumpResNum = -1
+        return
 
       app.view_thread._draw($view, ex?.force_update, (thread) ->
         if ex?.mes? and app.config.get("no_writehistory") is "off"
@@ -130,6 +147,7 @@ app.boot "/view/thread.html", ->
                 app.WriteHistory.add(view_url, i+1, document.title, name, mail, ex.name, ex.mail, ex.mes, date.valueOf())
               break
             i--
+          jumpResNum = -1
         return
       )
     return
@@ -150,7 +168,13 @@ app.boot "/view/thread.html", ->
         threadContent.checkImageExists(true)
 
       $last = $content.find(".last")
-      if $last.length is 1
+      lastNum = +$content.children("article:last-child").find(".num").text()
+      # 指定レス番号へ
+      if jumpResNum > 0 and jumpResNum <= lastNum
+        threadContent.scrollTo(jumpResNum, true, -60)
+        threadContent.select(jumpResNum, true)
+      # 最終既読位置へ
+      else if $last.length is 1
         threadContent.scrollTo(+$last.find(".num").text())
 
       #スクロールされなかった場合も余所の処理を走らすためにscrollを発火
@@ -163,12 +187,17 @@ app.boot "/view/thread.html", ->
         move_mode = if parseInt(app.config.get("auto_load_second")) >= 5000 then app.config.get("auto_load_move") else "new"
         switch move_mode
           when "new"
-            $tmp = $content.children(".last.received + article")
-            # 新着が存在しない場合はスクロールを実行するためにレスを探す
-            $tmp = $content.children("article.last") unless $tmp.length is 1
-            $tmp = $content.children("article.read") unless $tmp.length is 1
-            $tmp = $content.children("article:last-child") unless $tmp.length is 1
-            threadContent.scrollTo(+$tmp.find(".num").text(), true, -100) if $tmp.length is 1
+            lastNum = +$content.children("article:last-child").find(".num").text()
+            if jumpResNum > 0 and jumpResNum <= lastNum
+              threadContent.scrollTo(jumpResNum, true, -60)
+              threadContent.select(jumpResNum, true)
+            else
+              $tmp = $content.children(".last.received + article")
+              # 新着が存在しない場合はスクロールを実行するためにレスを探す
+              $tmp = $content.children("article.last") unless $tmp.length is 1
+              $tmp = $content.children("article.read") unless $tmp.length is 1
+              $tmp = $content.children("article:last-child") unless $tmp.length is 1
+              threadContent.scrollTo(+$tmp.find(".num").text(), true, -100) if $tmp.length is 1
           when "surely_new"
             res_num = $view.find("article.received + article").index() + 1
             threadContent.scrollTo(res_num, true) if typeof res_num is "number"
@@ -177,10 +206,12 @@ app.boot "/view/thread.html", ->
             threadContent.scrollTo(res_num, true) if typeof res_num is "number"
 
     app.view_thread._draw($view).catch ->
+      jumpResNum = -1
       return
     .then ->
       if app.config.get("no_history") is "off"
         app.History.add(view_url, document.title, opened_at)
+      jumpResNum = -1
       return
 
   #自動更新
@@ -473,7 +504,9 @@ app.boot "/view/thread.html", ->
         e.preventDefault()
         @classList.add("open_in_rcrx")
         @dataset.href = @href
-        @href = "javascript:undefined;"
+        if tmp.type is "thread"
+          paramResNum = app.URL.getResNumber(@href)
+          @setAttribute("data-param_res_num", paramResNum) if paramResNum
         app.defer =>
           $(@).trigger(e)
       return
@@ -619,12 +652,27 @@ app.boot "/view/thread.html", ->
 
     # リンクのコンテキストメニュー
     .on "contextmenu", ".message > a", (e) ->
-      enableFlg = !(@classList.contains("anchor") or @classList.contains("anchor_id"))
       # リンクアドレスをNG登録
+      enableFlg = !(@classList.contains("anchor") or @classList.contains("anchor_id"))
       app.contextMenus.update("add_link_to_ngwords", {
         enabled: enableFlg,
         onclick: (info, tab) =>
           app.NG.add(@href)
+          return
+      })
+      # レス番号を指定してリンクを開く
+      if app.config.get("enable_link_with_res_number") is "on"
+        menuTitle = "レス番号を無視してリンクを開く"
+      else
+        menuTitle = "レス番号を指定してリンクを開く"
+      enableFlg = (@classList.contains("open_in_rcrx") and @getAttribute("data-param_res_num") isnt null)
+      app.contextMenus.update("open_link_with_res_number", {
+        title: menuTitle,
+        enabled: enableFlg,
+        onclick: (info, tab) =>
+          @setAttribute("toggle_param_res_num", "on")
+          app.defer =>
+            $(@).trigger("mousedown")
           return
       })
       return

@@ -29,7 +29,7 @@ module app.Bookmark {
 
       param = {};
 
-      if (Number.isFinite(entry.resCount)) {
+      if (entry.resCount !== null && Number.isFinite(entry.resCount)) {
         param.res_count = entry.resCount;
       }
 
@@ -48,7 +48,7 @@ module app.Bookmark {
       return url + (hash ? "#" + hash : "");
     }
 
-    static URLToEntry (url:string):Entry {
+    static URLToEntry (url:string):Entry|null {
       var fixedURL:string, guessRes:app.URL.GuessResult, arg, entry:Entry, reg;
 
       fixedURL = app.URL.fix(url);
@@ -102,7 +102,7 @@ module app.Bookmark {
     }
 
     private applyNodeAddToEntryList (node:BookmarkTreeNode):void {
-      var entry:Entry;
+      var entry:Entry|null;
 
       if (node.url && node.title) {
         entry = ChromeBookmarkEntryList.URLToEntry(node.url);
@@ -129,13 +129,13 @@ module app.Bookmark {
     }
 
     private applyNodeUpdateToEntryList (nodeId:string, changes):void {
-      var url:string, entry:Entry, newEntry:Entry;
+      var url:string|null, entry:Entry, newEntry:Entry;
 
       if (url = this.getURLFromNodeId(nodeId)) {
         entry = this.get(url);
 
         if (typeof changes.url === "string") {
-          newEntry = ChromeBookmarkEntryList.URLToEntry(changes.url);
+          newEntry = ChromeBookmarkEntryList.URLToEntry(changes.url)!;
           newEntry.title = (
             typeof changes.title === "string" ? changes.title : entry.title
           );
@@ -179,7 +179,7 @@ module app.Bookmark {
       }
     }
 
-    private getURLFromNodeId (nodeId:string):string {
+    private getURLFromNodeId (nodeId:string):string|null {
       for (var [url, id] of this.nodeIdStore) {
         if (id === nodeId) {
           return url;
@@ -303,7 +303,7 @@ module app.Bookmark {
       var id:string;
 
       if (this.nodeIdStore.has(newEntry.url)) {
-        id = this.nodeIdStore.get(newEntry.url)
+        id = this.nodeIdStore.get(newEntry.url)!;
         chrome.bookmarks.get(id, (res:BookmarkTreeNode[]) => {
           var changes:any = {},
             node = res[0],
@@ -368,7 +368,7 @@ module app.Bookmark {
               var entry:Entry;
 
               if (node.url && node.title) {
-                entry = ChromeBookmarkEntryList.URLToEntry(node.url);
+                entry = ChromeBookmarkEntryList.URLToEntry(node.url)!;
 
                 if (entry && entry.url === url) {
                   removeIdList.push(node.id);
@@ -464,6 +464,7 @@ module app.Bookmark {
         callback(false);
         return false;
       }
+      return false;
     }
   }
 }

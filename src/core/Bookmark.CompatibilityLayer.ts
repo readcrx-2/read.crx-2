@@ -73,7 +73,7 @@ namespace app.Bookmark {
 
     url_to_bookmark (url:string):LegacyEntry {
       return app.Bookmark.currentToLegacy(
-        app.Bookmark.ChromeBookmarkEntryList.URLToEntry(url)
+        app.Bookmark.ChromeBookmarkEntryList.URLToEntry(url)!
       );
     }
 
@@ -83,7 +83,7 @@ namespace app.Bookmark {
       );
     }
 
-    get (url:string):app.Bookmark.LegacyEntry {
+    get (url:string):app.Bookmark.LegacyEntry|null {
       var entry = this.cbel.get(url);
 
       if (entry) {
@@ -114,7 +114,7 @@ namespace app.Bookmark {
 
     add (url:string, title:string, resCount?:number) {
       return new Promise( (resolve, reject) => {
-        var entry = app.Bookmark.ChromeBookmarkEntryList.URLToEntry(url);
+        var entry = app.Bookmark.ChromeBookmarkEntryList.URLToEntry(url)!;
 
         entry.title = title;
 

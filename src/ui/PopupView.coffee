@@ -232,7 +232,7 @@ class UI.PopupView
 
     # マウス座標の監視終了
     if @_popupStack.length is 0
-      @defaultParent.off("mousemove", (e) => @_onMouseMove(e))
+      @defaultParent.off("mousemove", @_onMouseMove)
     return
 
   ###*

@@ -33,6 +33,31 @@
       </header>
       <section>
         <h4><a href="index.html">&#x2190; Back to top</a></h4>
+        <h2 id="v1.18.0">v1.18.0 (2017-06-03)</h2>
+        <ul>
+          <li>
+            ChromeアプリからChrome拡張へ変更（Thank you, <a href="https://github.com/awazi">awazi</a>）
+            <ul>
+              <li>アプリ一覧からread-crx2のアイコンが消え、アドレスバー横のツールアイコン群にread.crx2のアイコンが追加されます</li>
+              <li>キャッシュ・閲覧履歴・書込履歴・既読情報・ブックマークはそのまま引き継がれますが、設定の内容は初期化されます</li>
+              <li>以前から告知していた通り、エクスポートしていた設定をインポートすることにより、設定を引き継ぐことが出来ます</li>
+            </ul>
+          </li>
+          <li>open2chで書き込み・スレ立ての不具合を修正（Thank you, <a href="https://github.com/awazi">awazi</a>）</li>
+          <li>zombie.htmlが閉じないことがあるのを修正（再）</li>
+          <li>readcrx-2.github.ioへのリンクやリソースの読み込みをhttps化</li>
+          <li>ブックマーク更新の高速化</li>
+          <li>書込履歴から該当レスへジャンプできる機能を追加（Thank you, <a href="https://github.com/awazi">awazi</a>）</li>
+          <li>
+            URLからスレッド開く際にレス番号指定があった場合、その番号へジャンプした状態で開く機能を追加（Thank you, <a href="https://github.com/awazi">awazi</a>）
+            <ul>
+              <li>設定画面内の「リンク: URLで指定されたレス番号を有効にする(範囲指定は無視します)」からオプション指定可能です</li>
+              <li>デフォルトは、onになっています。特にonで問題を上げる人がいなければ将来的にオプションを廃止する予定です</li>
+            </ul>
+          </li>
+          <li>v1.17.0で追加したextensionへの以降告知機能を削除</li>
+          <li>Developers information: 依存関係からRuby(Bundler)がなくなり、Node.js(npm)のみになりました。</li>
+        </ul>
         <h2 id="v1.17.2">v1.17.2 (2017-05-25)</h2>
         <ul>
           <li>zombieが閉じないことがあるのを修正</li>

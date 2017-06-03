@@ -296,29 +296,3 @@ do ->
         return state
       promise: promise
     }
-
-  app.util.compareVersion = (version) ->
-    currentVersion = app.manifest.version
-    tmp = currentVersion.split(".")
-    currentVer = parseInt(tmp[0])
-    currentRev = parseInt(tmp[1])
-    currentMod = parseInt(tmp[2])
-    tmp = version.split(".")
-    ver = parseInt(tmp[0])
-    rev = parseInt(tmp[1])
-    mod = parseInt(tmp[2])
-
-    if currentVer < ver
-      return -1
-    else if currentVer > ver
-      return 1
-    else if currentRev < rev
-      return -1
-    else if currentRev > rev
-      return 1
-    else if currentMod < mod
-      return -1
-    else if currentMod > mod
-      return 1
-    else
-      return 0

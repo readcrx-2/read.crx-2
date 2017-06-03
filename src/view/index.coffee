@@ -657,6 +657,8 @@ app.main = ->
       localStorage.tab_state = JSON.stringify(data)
     #コンテキストメニューの削除
     app.contextMenus.removeAll()
+    # 終了通知の送信
+    chrome.runtime.sendMessage({type: "exit_rcrx"})
     return
 
   #openメッセージ受信部

@@ -33,6 +33,7 @@ args =
   outputPath: "./debug"
   manifestPath: "./src/manifest.json"
   appTsPath: "./src/app.ts"
+  backgroundCoffeePath: "./src/background.coffee"
   csaddlinkCoffeePath: "./src/cs_addlink.coffee"
   appCoreCoffeePath: "./src/core/*.coffee"
   appCoreTsPath: "./src/core/*.ts"
@@ -93,6 +94,8 @@ args =
     locals: manifest
 imgs = [
   "read.crx_48x48.png"
+  "read.crx_38x38.png"
+  "read.crx_19x19.png"
   "read.crx_16x16.png"
   "close_16x16.webp"
   "dummy_1x1.webp"
@@ -169,6 +172,7 @@ gulp.task "pack", (cb) ->
 
 gulp.task "watch", ["default"], ->
   gulp.watch([args.appTsPath, "./src/global.d.ts"], ["app.js"])
+  gulp.watch(args.backgroundCoffeePath, ["background.js"])
   gulp.watch(args.csaddlinkCoffeePath, ["cs_addlink.js"])
   gulp.watch([args.appCoreTsPath, args.appCoreCoffeePath], ["app_core.js"])
   gulp.watch([args.uiTsPath, args.uiCoffeePath], ["ui.js"])
@@ -219,12 +223,19 @@ gulp.task "crx", (cb) ->
 
 #compile
 ##js
-gulp.task "js", ["app.js", "cs_addlink.js", "app_core.js", "ui.js", "viewjs", "zombie.js", "writejs"]
+gulp.task "js", ["app.js", "background.js", "cs_addlink.js", "app_core.js", "ui.js", "viewjs", "zombie.js", "writejs"]
 
 gulp.task "app.js", ->
   return gulp.src args.appTsPath
     .pipe(plumber(errorHandler: notify.onError("Error: <%= error.toString() %>")))
     .pipe(ts(args.tsOptions, ts.reporter.nullReporter()))
+    .pipe(gulp.dest(args.outputPath))
+
+gulp.task "background.js", ->
+  return gulp.src args.backgroundCoffeePath
+    .pipe(plumber(errorHandler: notify.onError("Error: <%= error.toString() %>")))
+    .pipe(changed(args.outputPath, extension: ".js"))
+    .pipe(coffee(args.coffeeOptions))
     .pipe(gulp.dest(args.outputPath))
 
 gulp.task "cs_addlink.js", ->

@@ -836,7 +836,7 @@ class UI.ThreadContent
           checkUrl = (a) ->
             return new Promise( (resolve, reject) ->
               if app.config.get("expand_short_url") isnt "none"
-                if app.URL.SHORT_URL_REG.test(a.href)
+                if app.URL.SHORT_URL_LIST.has(app.URL.getDomain(a.href))
                   # 短縮URLの展開
                   app.URL.expandShortURL(a.href).then( (finalUrl) ->
                     newLink = addExpandedURL(a, finalUrl)

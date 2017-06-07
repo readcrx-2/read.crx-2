@@ -275,6 +275,7 @@ namespace app {
       ["ngwords", "RegExpTitle:.+\\.2ch\\.netの人気スレ\nTitle:【漫画あり】コンビニで浪人を購入する方法\nTitle:★★ ２ちゃんねる\(sc\)のご案内 ★★★\nTitle:浪人はこんなに便利\nTitle:2ちゃんねるの運営を支えるサポーター募集"],
       ["ngobj", "[{\"type\":\"regExpTitle\",\"word\":\".+\\\\.2ch\\\\.netの人気スレ\"},{\"type\":\"title\",\"word\":\"【漫画あり】こんびにで浪人を購入する方法\"},{\"type\":\"title\",\"word\":\"★★2ちゃんねる\\\\(sc\\\\)のご案内★★★\"},{\"type\":\"title\",\"word\":\"浪人はこんなに便利\"},{\"type\":\"title\",\"word\":\"2ちゃんねるの運営を支えるさぽーたー募集\"}]"],
       ["chain_ng", "off"],
+      ["display_ng", "off"],
       ["bookmark_show_dat", "on"],
       ["default_name", ""],
       ["default_mail", ""],

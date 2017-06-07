@@ -98,7 +98,8 @@ class UI.ThreadContent
     loadFlag = false
     target = @container.children[resNum - 1]
 
-    viewTop = target.offsetTop + offset
+    viewTop = target.offsetTop
+    viewTop += offset if offset < 0
     viewBottom = viewTop + @container.offsetHeight
     if viewBottom > @container.scrollHeight
       viewBottom = @container.scrollHeight
@@ -182,6 +183,10 @@ class UI.ThreadContent
       if app.config.get("image_height_fix") is "off" and not rerun
         loadFlag = @checkImageExists(false, resNum, offset)
 
+      # offsetが比率の場合はpxを求める
+      if offset > 0 and offset < 1
+        offset = Math.round(target.offsetHeight * offset)
+
       # 遅延スクロールの設定
       if loadFlag or @_timeoutID isnt 0
         @container.scrollTop = target.offsetTop + offset
@@ -245,6 +250,28 @@ class UI.ThreadContent
       read = 1
 
     read
+
+  ###*
+  @method getDisplay
+  @return {Object} 現在表示していると推測されるレスの番号とオフセット
+  ###
+  getDisplay: ->
+    containerTop = @container.scrollTop
+    containerBottom = containerTop + @container.clientHeight
+    resRead = {resNum: 1, offset: 0, bottom: false}
+
+    # 既に画面の一番下までスクロールしている場合
+    # (いつのまにか位置がずれていることがあるので余裕を設ける)
+    if containerBottom >= @container.scrollHeight - 60
+      resRead.bottom = true
+
+    # スクロール位置のレスを抽出
+    for res, key in @container.child() when res.offsetTop + res.offsetHeight >= containerTop
+      resRead.resNum = key + 1
+      resRead.offset = (containerTop - res.offsetTop) / res.offsetHeight
+      break
+
+    return resRead
 
   ###*
   @method getSelected

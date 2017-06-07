@@ -115,7 +115,7 @@ class UI.ThreadContent
           media.src = media.dataset.src
           media.removeAttr("data-src")
         else
-          media.dispatchEvent(new Event("immediateload"))
+          media.dispatchEvent(new Event("immediateload", {"bubbles": true}))
       return
 
     # 表示範囲内の要素をスキャンする

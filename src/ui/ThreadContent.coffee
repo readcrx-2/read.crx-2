@@ -135,7 +135,10 @@ class UI.ThreadContent
       tmpTarget = @container.child()[tmpResNum - 1]
 
     # 遅延スクロールの設定
-    if loadFlag or @_timeoutID isnt 0
+    if (
+      (loadFlag or @_timeoutID isnt 0) and
+      app.config.get("image_height_fix") is "off"
+    )
       clearTimeout(@_timeoutID) if @_timeoutID isnt 0
       delayScrollTime = parseInt(app.config.get("delay_scroll_time"))
       @_timeoutID = setTimeout( =>
@@ -179,8 +182,8 @@ class UI.ThreadContent
               break
 
     if target
-      # 可変サイズの画像が存在している場合は画像を事前にロードする
-      if app.config.get("image_height_fix") is "off" and not rerun
+      # 前後に存在する画像を事前にロードする
+      unless rerun
         loadFlag = @checkImageExists(false, resNum, offset)
 
       # offsetが比率の場合はpxを求める
@@ -188,7 +191,10 @@ class UI.ThreadContent
         offset = Math.round(target.offsetHeight * offset)
 
       # 遅延スクロールの設定
-      if loadFlag or @_timeoutID isnt 0
+      if (
+        (loadFlag or @_timeoutID isnt 0) and
+        app.config.get("image_height_fix") is "off"
+      )
         @container.scrollTop = target.offsetTop + offset
         return
       return if rerun and @container.scrollTop is target.offsetTop + offset

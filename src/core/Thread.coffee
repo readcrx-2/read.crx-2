@@ -403,7 +403,7 @@ class app.Thread
     titleReg = /<h1 [^<>]*>(.*)\n?<\/h1>/;
     numberOfBroken = 0
     thread = res: []
-    gotTitle = true
+    gotTitle = false
 
     for line in text.split(separator)
       title = if gotTitle then false else titleReg.exec(line)

@@ -12,12 +12,14 @@ declare namespace shortQuery {
     $: NodeSelector.querySelector;
     $$: NodeSelector.querySelectorAll;
     create: Document.createElement;
+    createFragment: Document.createDocumentFragment;
   }
 }
 
 declare var shortQuery: shortQuery.Static;
 declare var $$: shortQuery.Static;
 declare var $__: Document.createElement;
+declare var $_F: Document.createDocumentFragment;
 
 interface HTMLCollection {
   [Symbol.iterator](): IterableIterator<HTMLElement>;
@@ -35,6 +37,21 @@ interface Document {
   $: NodeSelector.querySelector;
   $$: NodeSelector.querySelectorAll;
   create: Document.createElement;
+  $__: Document.createElement;
+  createFragment: Document.createDocumentFragment;
+  $_F: Document.createDocumentFragment;
+}
+interface DocumentFragment {
+  id: Document.getElementById;
+  query: NodeSelector.querySelector;
+  queryAll: NodeSelector.querySelectorAll;
+  I: Document.getElementById;
+  $: NodeSelector.querySelector;
+  $$: NodeSelector.querySelectorAll;
+  addLast: Node.appendChild;
+  addFirst<T extends Node>(newChild: T); T;
+  removeChildren<T extends Node>(); T;
+  child(): HTMLCollection;
 }
 interface EventTarget {
   on: EventTarget.addEventListener

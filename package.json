@@ -20,7 +20,6 @@
     "gulp-sass": "^3.1.0",
     "gulp-sort": "^2.0.0",
     "gulp-typescript": "^3.1.7",
-    "jquery": "3.2.1",
     "merge2": "^1.0.3",
     "node-sass": "^4.5.2",
     "pug": "^2.0.0-rc.1",

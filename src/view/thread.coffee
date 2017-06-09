@@ -525,6 +525,7 @@ app.boot "/view/thread.html", ->
       e.preventDefault()
       target.classList.add("open_in_rcrx")
       target.dataset.href = target.href
+      target.href = "javascript:undefined;"
       if tmp.type is "thread"
         paramResNum = app.URL.getResNumber(target.href)
         target.dataset.paramResNum = paramResNum if paramResNum

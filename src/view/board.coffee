@@ -80,79 +80,87 @@ app.boot "/view/board.html", ->
 
   load = (ex) ->
     $view.addClass("loading")
+    app.message.send("request_update_read_state", {board_url: url})
 
-    get_read_state_promise = app.ReadState.getByBoard(url)
+    app.defer( ->
+      get_read_state_promise = app.ReadState.getByBoard(url)
 
-    board_get_promise = new Promise( (resolve, reject) ->
-      app.board.get url, (res) ->
-        $message_bar = $view.C("message_bar")[0]
-        if res.status is "error"
-          $message_bar.addClass("error")
-          $message_bar.innerHTML = res.message
-        else
-          $message_bar.removeClass("error")
-          $message_bar.removeChildren()
+      board_get_promise = new Promise( (resolve, reject) ->
+        app.board.get url, (res) ->
+          $message_bar = $view.C("message_bar")[0]
+          if res.status is "error"
+            $message_bar.addClass("error")
+            $message_bar.innerHTML = res.message
+          else
+            $message_bar.removeClass("error")
+            $message_bar.removeChildren()
 
-        if res.data?
-          resolve(res.data)
-        else
-          reject()
+          if res.data?
+            resolve(res.data)
+          else
+            reject()
+          return
         return
+      )
+
+      Promise.all([get_read_state_promise, board_get_promise])
+        .then ([array_of_read_state, board]) ->
+          read_state_index = {}
+          for read_state, key in array_of_read_state
+            read_state_index[read_state.url] = key
+
+          threadList.empty()
+          item = []
+          for thread, thread_number in board
+            readState = array_of_read_state[read_state_index[thread.url]]
+            if (bookmark = app.bookmark.get(thread.url))?.read_state?
+              readState = bookmark.read_state
+            item.push(
+              title: thread.title
+              url: thread.url
+              res_count: thread.res_count
+              created_at: thread.created_at
+              read_state: readState
+              thread_number: thread_number
+              ng: thread.ng
+              need_less: thread.need_less
+              is_net: thread.is_net
+            )
+          threadList.addItem(item)
+
+          if ex?
+            writeFlag = app.config.get("no_writehistory") is "off"
+            if ex.kind is "own"
+              if writeFlag
+                app.WriteHistory.add(ex.thread_url, 1, ex.title, ex.name, ex.mail, ex.name, ex.mail, ex.mes, Date.now().valueOf())
+              app.message.send("open", url: ex.thread_url, new_tab: true)
+            else
+              for thread in board
+                if thread.title.includes(ex.title)
+                  if writeFlag
+                    app.WriteHistory.add(thread.url, 1, ex.title, ex.name, ex.mail, ex.name, ex.mail, ex.mes, thread.created_at)
+                  app.message.send("open", url: thread.url, new_tab: true)
+                  break
+
+          tableSorter.update()
+          return
+
+        .catch ->
+          return
+        .then ->
+          $view.removeClass("loading")
+
+          if $table.hasClass("table_search")
+            $view.C("searchbox")[0].dispatchEvent(new Event("input"))
+
+          $view.dispatchEvent(new Event("view_loaded"))
+
+          $button = $view.C("button_reload")[0]
+          $button.addClass("disabled")
+          setTimeout((-> $button.removeClass("disabled")), 1000 * 5)
+          return
       return
     )
-
-    Promise.all([get_read_state_promise, board_get_promise])
-      .then ([array_of_read_state, board]) ->
-        read_state_index = {}
-        for read_state, key in array_of_read_state
-          read_state_index[read_state.url] = key
-
-        threadList.empty()
-        threadList.addItem(
-          for thread, thread_number in board
-            title: thread.title
-            url: thread.url
-            res_count: thread.res_count
-            created_at: thread.created_at
-            read_state: array_of_read_state[read_state_index[thread.url]]
-            thread_number: thread_number
-            ng: thread.ng
-            need_less: thread.need_less
-            is_net: thread.is_net
-        )
-
-        if ex?
-          writeFlag = app.config.get("no_writehistory") is "off"
-          if ex.kind is "own"
-            if writeFlag
-              app.WriteHistory.add(ex.thread_url, 1, ex.title, ex.name, ex.mail, ex.name, ex.mail, ex.mes, Date.now().valueOf())
-            app.message.send("open", url: ex.thread_url, new_tab: true)
-          else
-            for thread in board
-              if thread.title.includes(ex.title)
-                if writeFlag
-                  app.WriteHistory.add(thread.url, 1, ex.title, ex.name, ex.mail, ex.name, ex.mail, ex.mes, thread.created_at)
-                app.message.send("open", url: thread.url, new_tab: true)
-                break
-
-        tableSorter.update()
-        return
-
-      .catch ->
-        return
-      .then ->
-        $view.removeClass("loading")
-
-        if $table.hasClass("table_search")
-          $view.C("searchbox")[0].dispatchEvent(new Event("input"))
-
-        $view.dispatchEvent(new Event("view_loaded"))
-
-        $button = $view.C("button_reload")[0]
-        $button.addClass("disabled")
-        setTimeout((-> $button.removeClass("disabled")), 1000 * 5)
-        app.message.send("request_update_read_state", {board_url: url})
-        return
     return
 
   $view.on "request_reload", (e) ->

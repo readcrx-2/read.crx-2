@@ -172,10 +172,6 @@ app.boot "/view/thread.html", ->
         on_scroll = true
         return
 
-      # 可変サイズの画像が存在している場合は1ページ目の画像チェックを実行する
-      if app.config.get("image_height_fix") is "off"
-        threadContent.checkImageExists(true)
-
       $last = $content.C("last")[0]
       lastNum = 0
       for dom in $content.$$(":scope > article:last-child")
@@ -935,9 +931,6 @@ app.boot "/view/thread.html", ->
   $view.on "lazyload-load", (e) ->
     target = e.target.closest(".thumbnail > a > img.image, .thumbnail > video")
     return unless target?
-    # Lazyloadを実行させるためにスクロールを発火
-    if app.config.get("image_height_fix") is "off"
-      $view.C("content")[0].dispatchEvent(new Event("scroll"))
     # マウスオーバーによるズームの設定
     app.view_thread._setupHoverZoom(target)
     return

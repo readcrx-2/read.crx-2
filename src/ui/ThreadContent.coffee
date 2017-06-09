@@ -88,13 +88,12 @@ class UI.ThreadContent
     return
 
   ###*
-  @method checkImageExists
-  @param {Boolean} checkOnly
-  @param {Number} [resNum=1]
+  @method _loadNearlyImages
+  @param {Number}
   @param {Number} [offset=0]
   @return {Boolean} loadFlag
   ###
-  checkImageExists: (checkOnly, resNum = 1, offset = 0) ->
+  _loadNearlyImages: (resNum, offset = 0) ->
     loadFlag = false
     target = @container.children[resNum - 1]
 
@@ -107,10 +106,9 @@ class UI.ThreadContent
 
     # 遅延ロードの解除
     loadImageByElement = (targetElement) =>
-      qStr = if checkOnly then "img, video" else "img[data-src], video[data-src]"
-      for media in targetElement.$$(qStr)
+      for media in targetElement.$$("img[data-src], video[data-src]")
         loadFlag = true
-        continue if checkOnly or media.dataset.src is null
+        continue if media.dataset.src is null
         if media.hasClass("favicon")
           media.src = media.dataset.src
           media.removeAttr("data-src")
@@ -192,8 +190,7 @@ class UI.ThreadContent
 
     if target
       # 前後に存在する画像を事前にロードする
-      unless rerun
-        loadFlag = @checkImageExists(false, resNum, offset)
+      loadFlag = @_loadNearlyImages(resNum, offset) unless rerun
 
       # offsetが比率の場合はpxを求める
       if offset > 0 and offset < 1

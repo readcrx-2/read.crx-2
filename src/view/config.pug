@@ -151,7 +151,7 @@ html.view.view_config(data-app-version=version)
           button.dat_file_show(type="button") ファイル読み込み(UTF-8)
           input(type="file" class="dat_file_hide hidden" accept=".dat")
           button.dat_import_button(type="button") インポート
-          span#dat_import_status
+          span#dat_status
           br
           label
             input.direct(type="checkbox" name="image_blur")
@@ -325,8 +325,8 @@ html.view.view_config(data-app-version=version)
           br
           button.replacestr_file_show(type="button") ファイル読み込み(UTF-8)
           input(type="file" class="replacestr_file_hide hidden" accept=".txt")
-          button.replacestr_file_import_button(type="button") インポート
-          span#replacestr_file_import_status
+          button.replacestr_import_button(type="button") インポート
+          span#replacestr_file_status
 
       section
         h2
@@ -373,10 +373,10 @@ html.view.view_config(data-app-version=version)
           .history
             |閲覧履歴:
             button.history_clear(type="button") 削除
-            button.history_export(type="button") エクスポート
+            button.history_export_button(type="button") エクスポート
             button.history_file_show(type="button") ファイル読み込み
             input(type="file" class="history_file_hide hidden" accept=".json")
-            button.history_import(type="button") インポート
+            button.history_import_button(type="button") インポート
             span#history_status
             br
             input(type="number" class="history_date_range" min="1" value="7")
@@ -388,10 +388,10 @@ html.view.view_config(data-app-version=version)
           .writehistory
             |書込履歴:
             button.writehistory_clear(type="button") 削除
-            button.writehistory_export(type="button") エクスポート
+            button.writehistory_export_button(type="button") エクスポート
             button.writehistory_file_show(type="button") ファイル読み込み
             input(type="file" class="writehistory_file_hide hidden" accept=".json")
-            button.writehistory_import(type="button") インポート
+            button.writehistory_import_button(type="button") インポート
             span#writehistory_status
             br
             input(type="number" class="writehistory_date_range" min="1" value="7")
@@ -415,7 +415,7 @@ html.view.view_config(data-app-version=version)
             button.config_file_show(type="button") ファイル読み込み
             input(type="file" class="config_file_hide hidden" accept=".json")
             button.config_import_button(type="button") インポート
-            span#config_import_status
+            span#config_status
 
       section
         h2 2ch.netのスレッド読み込み形式

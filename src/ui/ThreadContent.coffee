@@ -64,6 +64,20 @@ class UI.ThreadContent
     ###
     @_timeoutID = 0
 
+    ###*
+    @property _existIdAtFirstRes
+    @type Boolean
+    @private
+    ###
+    @_existIdAtFirstRes = false
+
+    ###*
+    @property _existSlipAtFirstRes
+    @type Boolean
+    @private
+    ###
+    @_existSlipAtFirstRes = false
+
     try
       @harmfulReg = new RegExp(app.config.get("image_blur_word"))
       @findHarmfulFlag = true
@@ -519,6 +533,7 @@ class UI.ThreadContent
 
                 if resNum is 1
                   @oneId = fixedId
+                  @_existIdAtFirstRes = true
 
                 if fixedId is @oneId
                   res.class.push("one")
@@ -541,6 +556,8 @@ class UI.ThreadContent
               tmp = tmp.slice(0, index) + """<span class="slip">SLIP:#{res.slip}</span>""" + tmp.slice(index, tmp.length)
             else
               tmp += """<span class="slip">SLIP:#{res.slip}</span>"""
+            if resNum is 1
+              @_existSlipAtFirstRes = true
 
           articleHtml += """<span class="other">#{tmp}</span>"""
 
@@ -554,6 +571,25 @@ class UI.ThreadContent
           if ngType = app.NG.checkNGThread(res)
             res.class.push("ng")
             res.attr["ng-type"] = ngType
+          else
+            guessType = app.URL.guessType(@url)
+            if guessType.bbsType is "2ch" and resNum <= 1000
+              # idなしをNG
+              if (
+                app.config.get("nothing_id_ng") is "on" and !res.id? and
+                ((app.config.get("how_to_judgment_id") is "first_res" and @_existIdAtFirstRes) or
+                 (app.config.get("how_to_judgment_id") is "exists_once" and @idIndex.size isnt 0))
+              )
+                res.class.push("ng")
+                res.attr["ng-type"] = "IDなし"
+              # slipなしをNG
+              else if (
+                app.config.get("nothing_slip_ng") is "on" and !res.slip? and
+                ((app.config.get("how_to_judgment_id") is "first_res" and @_existSlipAtFirstRes) or
+                 (app.config.get("how_to_judgment_id") is "exists_once" and @slipIndex.size isnt 0))
+              )
+                res.class.push("ng")
+                res.attr["ng-type"] = "SLIPなし"
 
           tmp = (
             res.message

@@ -230,43 +230,6 @@ app.boot "/view/thread.html", ->
       jumpResNum = -1
       return
 
-  #自動更新
-  do ->
-    $button_pause = $view.C("button_pause")[0]
-
-    auto_load = ->
-      second = parseInt(app.config.get("auto_load_second"))
-      if second >= 5000
-        $button_pause.removeClass("hidden")
-        return setInterval( ->
-          if app.config.get("auto_load_all") is "on" or parent.$$.$(".tab_container > iframe[data-url=\"#{view_url}\"]").hasClass("tab_selected")
-            $view.dispatchEvent(new Event("request_reload"))
-          return
-        , second)
-      else
-        $button_pause.addClass("hidden")
-      return
-
-    auto_load_interval = auto_load()
-
-    app.message.addListener "config_updated", (message) ->
-      if message.key is "auto_load_second"
-        clearInterval auto_load_interval
-        auto_load_interval = auto_load()
-      return
-
-    $view.on("togglePause", ->
-      if $button_pause.hasClass("pause")
-        clearInterval auto_load_interval
-      else
-        auto_load_interval = auto_load()
-      return
-    )
-
-    window.on "view_unload", ->
-      clearInterval(auto_load_interval)
-      return
-
   #レスメニュー表示(ヘッダー上)
   onHeaderMenu = (e) ->
     target = e.target.closest("article > header")

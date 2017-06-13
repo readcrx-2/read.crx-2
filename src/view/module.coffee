@@ -445,7 +445,7 @@ class app.view.TabContentView extends app.view.PaneContentView
     @_setupBookmarkButton()
     @_setupSortItemSelector()
     @_setupSchemeButton()
-    @_setupAutoReloadPauseButton()
+    @_setupAutoReload()
     @_setupToolMenu()
     return
 
@@ -635,21 +635,73 @@ class app.view.TabContentView extends app.view.PaneContentView
   @method _setupAutoReloadPauseButton
   @private
   ###
-  _setupAutoReloadPauseButton: ->
+  _setupAutoReload: ->
     $button = @$element.C("button_pause")[0]
 
-    if $button
-      if (
-        @$element.hasClass("view_thread") or
-        @$element.hasClass("view_board") or
-        @$element.hasClass("view_bookmark")
-      )
-        $button.on "click", =>
-          $button.toggleClass("pause")
-          @$element.dispatchEvent(new Event("togglePause"))
-          return
+    unless (
+      @$element.hasClass("view_thread") or
+      @$element.hasClass("view_board") or
+      @$element.hasClass("view_bookmark")
+    )
+      $button.remove() if $button
+      return
+
+    switch true
+      when @$element.hasClass("view_thread")
+        cfgName = ""
+        minSeconds = 5000
+      when @$element.hasClass("view_board")
+        cfgName = "_board"
+        minSeconds = 20000
+      when @$element.hasClass("view_bookmark")
+        cfgName = "_bookmark"
+        minSeconds = 20000
+
+    auto_load = =>
+      second = parseInt(app.config.get("auto_load_second#{cfgName}"))
+      if second >= minSeconds
+        $button.removeClass("hidden")
+        if @$element.hasClass("view_bookmark")
+          return setInterval( =>
+            @$element.dispatchEvent(new CustomEvent("request_reload", detail: true))
+            return
+          , second)
+        else
+          return setInterval( =>
+            url = @$element.dataset.url
+            if (
+              app.config.get("auto_load_all") is "on" or
+              parent.$$.$(".tab_container > iframe[data-url=\"#{url}\"]").hasClass("tab_selected")
+            )
+              @$element.dispatchEvent(new Event("request_reload"))
+            return
+          , second)
       else
-        $button.remove()
+        $button.addClass("hidden")
+      return
+
+    auto_load_interval = auto_load()
+
+    app.message.addListener("config_updated", (message) ->
+      if message.key is "auto_load_second#{cfgName}"
+        clearInterval(auto_load_interval)
+        auto_load_interval = auto_load()
+      return
+    )
+
+    $button.on("click", ->
+      $button.toggleClass("pause")
+      if $button.hasClass("pause")
+        clearInterval(auto_load_interval)
+      else
+        auto_load_interval = auto_load()
+      return
+    )
+
+    window.on("view_unload", ->
+      clearInterval(auto_load_interval)
+      return
+    )
     return
 
   ###*

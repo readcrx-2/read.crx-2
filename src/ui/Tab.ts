@@ -72,7 +72,7 @@ namespace UI {
       $div.addClass("tab_container");
       $ele.addLast($div);
 
-      window.addEventListener("message", (e) => {
+      window.on("message", (e) => {
         var message, tabId: string, history;
 
         if (e.origin !== location.origin || typeof e.data !== "string") {

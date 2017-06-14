@@ -62,7 +62,7 @@ class SettingIO
     @$exportButton.on("click", =>
       blob = new Blob([@exportFunc()],{type:"text/plain"})
       $a = $__("a")
-      $a.href = window.URL.createObjectURL(blob)
+      $a.href = URL.createObjectURL(blob)
       $a.setAttr("target", "_blank")
       $a.setAttr("download", "read.crx-2_#{@name}.json")
       $a.click()
@@ -161,7 +161,7 @@ class HistoryIO extends SettingIO
         exportText = JSON.stringify(data)
         blob = new Blob([exportText], type: "text/plain")
         $a = $__("a")
-        $a.href = window.URL.createObjectURL(blob)
+        $a.href = URL.createObjectURL(blob)
         $a.setAttr("target", "_blank")
         $a.setAttr("download", "read.crx-2_#{@name}.json")
         $a.click()

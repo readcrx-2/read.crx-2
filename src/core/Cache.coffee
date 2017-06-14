@@ -168,7 +168,7 @@ class app.Cache
           if res?
             data = app.deepCopy(e.target.result)
             for key, val of data
-              @[key] = if val? then val else null
+              @[key] = val ? null
             resolve()
           else
             reject()

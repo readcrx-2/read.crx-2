@@ -129,7 +129,7 @@ app.boot "/write/submit_thread.html", ->
       clearTimeout(@timer)
       @timer = null
 
-  window.addEventListener "message", (e) ->
+  window.on "message", (e) ->
     message = JSON.parse(e.data)
     if message.type is "ping"
       e.source.postMessage("write_iframe_pong:thread", "*")

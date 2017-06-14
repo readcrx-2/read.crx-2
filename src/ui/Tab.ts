@@ -143,11 +143,9 @@ namespace UI {
     }
 
     getAll (): any {
-      var li: HTMLLIElement, tmp, res:Object[] = [];
+      var li: HTMLLIElement, res:Object[] = [];
 
-      tmp = Array.from(this.$element.$$("li"));
-
-      for (li of tmp) {
+      for (li of this.$element.$$("li")) {
         res.push({
           tabId: li.dataset.tabid!,
           url: li.dataset.tabsrc!,

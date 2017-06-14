@@ -395,7 +395,7 @@ class app.Thread
       separator = "</div></div>"
     else if text.includes("<div class=\"footer push\">read.cgi ver 07")
       text = text.replace("</h1>", "</h1></div></div><br>")
-      reg = /<div class="post"[^<>]*><div class="meta"><span class="number">\d+<\/span><span class="name"><b>(?:<a href="mailto:([^<>]*)">|<font [^<>]*>)?([^<>]*?)(?:<\/(?:a|font)>)?<\/b><\/span><span class="date">([^<>]*)<\/span><\/div><div class="message">(?:<span class="escaped">)? ?(.*)/
+      reg = /<div class="post"[^<>]*><div class="meta"><span class="number">\d+<\/span><span class="name"><b>(?:<a href="mailto:([^<>]*)">|<font [^<>]*>)?([^<>]*?)(?:<\/(?:a|font)>)?<\/b><\/span><span class="date">(.*)<\/span><\/div><div class="message">(?:<span class="escaped">)? ?(.*)/
       separator = "</div></div><br>"
     else
       reg = /^(?:<\/?div.*?(?:<br><br>)?)?<dt>\d+.*：(?:<a href="mailto:([^<>]*)">|<font [^>]*>)?<b>(.*)<\/b>.*：(.*)<dd> ?(.*)<br><br>$/

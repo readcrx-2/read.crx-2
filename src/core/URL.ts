@@ -296,5 +296,38 @@ namespace app {
       }
       return resUrl;
     }
+
+    export function convertNetSc (url: string): any {
+      return new Promise( (resolve, reject) => {
+        var resUrl: string;
+        var scheme: string;
+        var tmpUrl: string;
+        var tmp: string[]|null;
+
+        tmp = /(https?):\/\/(\w+)\.2ch\.net\/test\/read\.cgi\/(\w+\/\d+\/)/.exec(url);
+        if (tmp === null) {
+          return reject();
+        }
+        tmpUrl = `http://${tmp[2]}.2ch.sc/test/read.cgi/${tmp[3]}`;
+        scheme = tmp[1];
+
+        var req = new app.HTTP.Request("HEAD", tmpUrl);
+
+        req.send( (res) => {
+          if (res.status === 0 || res.status >= 400) {
+            return reject();
+          }
+          resUrl = res.responseURL;
+          tmp = /https?:\/\/(\w+)\.2ch\.sc\/test\/read\.cgi\/(\w+)\/(\d+)\//.exec(resUrl);
+          if (tmp !== null) {
+            if (serverSc.has(tmp[2]) === false) {
+              serverSc.set(tmp[2], tmp[1]);
+            }
+            resUrl = `${scheme}://${tmp[1]}.2ch.sc/test/read.cgi/${tmp[2]}/${tmp[3]}/`;
+          }
+          return resolve(resUrl);
+        });
+      });
+    }
   }
 }

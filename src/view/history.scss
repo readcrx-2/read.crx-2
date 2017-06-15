@@ -13,11 +13,11 @@
 .content {
   tbody:empty {
     display: block;
-    &:after {
+    &::after {
       content: "閲覧履歴は空です";
     }
   }
-  tr.https td:first-child:before {
+  tr.https td:first-child::before {
     content: url(/img/lock_12x12_3a5.webp);
     vertical-align: middle;
   }

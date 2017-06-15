@@ -495,7 +495,7 @@ $color-https: #109020;
   }
   table[data-table-search-hit-count="0"] > tbody:not(:empty) {
     display: block;
-    &:after {
+    &::after {
       content: "検索にヒットするスレッドが有りませんでした";
     }
   }
@@ -554,7 +554,7 @@ $color-https: #109020;
     background-color: $cell-hover-background-color;
   }
 
-  tbody:after {
+  tbody::after {
     color: $empty-message-color;
   }
 }

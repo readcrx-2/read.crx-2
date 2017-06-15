@@ -439,12 +439,7 @@ gulp.task "manifest", ->
     .pipe(gulp.dest(args.outputPath))
 
 ##lib
-gulp.task "lib", ["jQuery", "shortQuery"]
-
-gulp.task "jQuery", ->
-  return gulp.src args.jQueryPath
-    .pipe(concat("jshortquery.min.js"))
-    .pipe(gulp.dest("#{args.outputPath}/lib"))
+gulp.task "lib", ["shortQuery"]
 
 gulp.task "shortQuery", ->
   return gulp.src args.shortQueryPath

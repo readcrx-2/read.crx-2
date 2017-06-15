@@ -493,7 +493,7 @@ $color-https: #109020;
     text-align: center;
     font-size: 18px;
   }
-  table[data-table_search_hit_count="0"] > tbody:not(:empty) {
+  table[data-table-search-hit-count="0"] > tbody:not(:empty) {
     display: block;
     &:after {
       content: "検索にヒットするスレッドが有りませんでした";

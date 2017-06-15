@@ -56,7 +56,7 @@ namespace UI {
 
     public immediateLoad (media: HTMLMediaElement): void {
       if (media.tagName === "IMG" || media.tagName === "VIDEO") {
-        if (media.getAttr("data-src") === null) return;
+        if (media.dataset.src === undefined) return;
         this.load(media);
       }
     }
@@ -91,7 +91,7 @@ namespace UI {
       var faviconFlg: boolean = $media.hasClass("favicon");
 
       // immediateLoadにて処理済みのものを除外する
-      if ($media.getAttr("data-src") === null) return;
+      if ($media.dataset.src === undefined) return;
 
       $newImg = $__("img");
 
@@ -143,7 +143,7 @@ namespace UI {
         $media.src = "/img/loading.webp";
         switch (mdata.type) {
           case "default":
-            $newImg.src = $media.getAttr("data-src");
+            $newImg.src = mdata.src!;
             break;
           case "referrer":
             $newImg.src = this.getWithReferrer(mdata.src!, mdata.referrer!, mdata.userAgent!);
@@ -165,7 +165,7 @@ namespace UI {
           default: $newImg.src = mdata.src!;
         }
       } else {
-        $media.src = $media.getAttr("data-src");
+        $media.src = $media.dataset.src!;
       }
       $media.removeAttr("data-src");
     }

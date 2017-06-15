@@ -2,7 +2,7 @@ window.UI ?= {}
 do ->
   UI.table_search = ($table, method, prop) ->
     $table.addClass("hidden")
-    $table.removeAttr("data-table_search_hit_count")
+    $table.removeAttr("data-table-search-hit-count")
     for dom in $table.C("table_search_hit") by -1
       dom.removeClass("table_search_hit")
     for dom in $table.C("table_search_not_hit") by -1
@@ -20,7 +20,7 @@ do ->
           hit_count++
         else
           $tr.addClass("table_search_not_hit")
-      $table.setAttr("data-table_search_hit_count", hit_count)
+      $table.dataset.tableSearchHitCount = hit_count
     else if method is "clear"
       $table.removeClass("table_search")
 

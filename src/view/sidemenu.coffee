@@ -1,51 +1,49 @@
 app.boot "/view/sidemenu.html", ["bbsmenu"], (BBSMenu) ->
-  new app.view.PaneContentView(document.documentElement)
+  $view = document.documentElement
 
-  $view = $(document.documentElement)
+  new app.view.PaneContentView($view)
+
   accordion = new UI.SelectableAccordion(document.body)
-  $view.data("accordion", accordion)
-  $view.data("selectableItemList", accordion)
+  app.DOMData.set($view, "accordion", accordion)
+  app.DOMData.set($view, "selectableItemList", accordion)
 
   board_to_li = (board) ->
-    li = document.createElement("li")
-    a = document.createElement("a")
-    a.className = "open_in_rcrx"
-    a.title = board.title
-    a.textContent = board.title
-    a.href = app.safeHref(board.url)
-    a.classList.add("https") if app.URL.getScheme(board.url) is "https"
-    li.appendChild(a)
-    li
+    $li = $__("li")
+    $a = $__("a")
+    $a.setClass("open_in_rcrx")
+    $a.title = board.title
+    $a.textContent = board.title
+    $a.href = app.safeHref(board.url)
+    $a.classList.add("https") if app.URL.getScheme(board.url) is "https"
+    $li.addLast($a)
+    $li
 
   entry_to_li = (entry) ->
-    li = board_to_li(entry)
-    li.classList.add("bookmark")
-    li
+    $li = board_to_li(entry)
+    $li.addClass("bookmark")
+    $li
 
   #スレタイ検索ボックス
-  $view
-    .find(".search")
-      .on "keydown", (e) ->
-        if e.which is 27 #Esc
-          @q.value = ""
-        return
-
-      .on "submit", (e) ->
-        e.preventDefault()
-        app.message.send("open", {url: "search:#{@q.value}", new_tab: true})
-        @q.value = ""
-        return
+  $view.C("search")[0].on "keydown", (e) ->
+    if e.which is 27 #Esc
+      @q.value = ""
+    return
+  $view.C("search")[0].on "submit", (e) ->
+    e.preventDefault()
+    app.message.send("open", {url: "search:#{@q.value}", new_tab: true})
+    @q.value = ""
+    return
 
   #ブックマーク関連
   do ->
     #初回ブックマーク表示構築
     app.bookmarkEntryList.ready.add ->
-      frag = document.createDocumentFragment()
+      frag = $_F()
 
       for entry in app.bookmarkEntryList.getAllBoards()
-        frag.appendChild(entry_to_li(entry))
+        frag.addLast(entry_to_li(entry))
 
-      $view.find("ul:first-of-type").append(frag)
+      $view.$("ul:first-of-type").addLast(frag)
       accordion.update()
       return
 
@@ -53,21 +51,16 @@ app.boot "/view/sidemenu.html", ["bbsmenu"], (BBSMenu) ->
     app.message.addListener "bookmark_updated", (message) ->
       return if message.entry.type isnt "board"
 
+      $a = $view.$("li.bookmark > a[href=\"#{message.entry.url}\"]")
+
       switch message.type
         when "added"
-          if $view.find("li.bookmark > a[href=\"#{message.entry.url}\"]").length is 0
-            $view
-              .find("ul:first-of-type")
-                .append(entry_to_li(message.entry))
+          unless $a?
+            $view.$("ul:first-of-type").addLast(entry_to_li(message.entry))
         when "removed"
-          $view
-            .find("li.bookmark > a[href=\"#{message.entry.url}\"]")
-              .parent()
-                .remove()
+          $a.parent().remove()
         when "title"
-          $view
-            .find("li.bookmark > a[href=\"#{message.entry.url}\"]")
-              .text(message.entry.title)
+          $a.textContent = message.entry.title
 
   checkNetSc = (url) ->
     res = {net: false, sc: false}
@@ -94,7 +87,8 @@ app.boot "/view/sidemenu.html", ["bbsmenu"], (BBSMenu) ->
         boardSc = []
 
         if menuUpdate
-          $view.find("h3:not(:first-of-type), ul:not(:first-of-type)").remove()
+          for dom in $view.$$("h3:not(:first-of-type), ul:not(:first-of-type)")
+            dom.remove()
 
         if res.message?
           app.message.send("notify", {
@@ -103,28 +97,28 @@ app.boot "/view/sidemenu.html", ["bbsmenu"], (BBSMenu) ->
           })
 
         if res.data?
-          frag = document.createDocumentFragment()
+          frag = $_F()
           for category in res.data
-            h3 = document.createElement("h3")
-            h3.textContent = category.title
-            frag.appendChild(h3)
+            $h3 = $__("h3")
+            $h3.textContent = category.title
+            frag.addLast($h3)
 
-            ul = document.createElement("ul")
+            $ul = $__("ul")
             for board in category.board
-              ul.appendChild(board_to_li(board))
+              $ul.addLast(board_to_li(board))
               if modeFlag.net and /// https?://\w+\.2ch\.net/\w+/.*? ///.test(board.url)
                 boardNet.push(board)
               if modeFlag.sc and /// https?://\w+\.2ch\.sc/\w+/.*? ///.test(board.url)
                 boardSc.push(board)
-            frag.appendChild(ul)
+            frag.addLast($ul)
 
         # 2ch.netと2ch.scの板・サーバー情報の登録
         app.URL.pushBoardToServerInfo(boardNet, boardSc)
         boardNet = []   # メモリ解放用
-        boardSc = []    # 　　〃
+        boardSc = []    #     〃
 
         if menuUpdate
-          $view.find("body").append(frag)
+          document.body.addLast(frag)
           accordion.update()
 
         # 2ch.netと2ch.scの切替用情報の取得

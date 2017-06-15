@@ -27,11 +27,13 @@ do ->
 
   getOriginHeight = (ele) ->
     e = ele.cloneNode(true)
-    e.style.height = "auto"
-    e.style.width = ele.clientWidth
-    e.style.position = "absolute"
-    e.style.visibility = "hidden"
-    e.style.display = "block"
+    e.style.cssText = """
+      height: auto;
+      width: #{ele.clientWidth};
+      position: absolute;
+      visibility: hidden;
+      display: block;
+    """
     document.body.appendChild(e)
     height = e.clientHeight
     e.remove()

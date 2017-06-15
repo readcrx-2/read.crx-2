@@ -21,7 +21,7 @@ class UI.PopupView
     @type Object
     @private
     ###
-    @_popupArea = @defaultParent.$(".popup_area")
+    @_popupArea = @defaultParent.C("popup_area")[0]
 
     ###*
     @property _popupStyle

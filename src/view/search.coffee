@@ -7,56 +7,64 @@ app.boot "/view/search.html", ["thread_search"], (ThreadSearch) ->
 
   opened_at = Date.now()
 
-  $view = $(document.documentElement)
-  $view.attr("data-url", "search:#{query}")
+  $view = document.documentElement
+  $view.dataset.url = "search:#{query}"
 
-  $message_bar = $view.find(".message_bar")
-  $button_reload = $view.find(".button_reload")
+  $message_bar = $view.C("message_bar")[0]
+  $button_reload = $view.C("button_reload")[0]
 
-  new app.view.TabContentView(document.documentElement)
+  new app.view.TabContentView($view)
 
   document.title = "検索:#{query}"
   if app.config.get("no_history") is "off"
-    app.History.add($view.attr("data-url"), document.title, opened_at)
+    app.History.add($view.dataset.url, document.title, opened_at)
 
-  $view.find(".button_link > a").attr("href", "http://dig.2ch.net/search?maxResult=500&keywords=" + encodeURIComponent(query))
+  $view.$(".button_link > a").href = "http://dig.2ch.net/search?maxResult=500&keywords=#{encodeURIComponent(query)}"
 
-  $table = $("<table>")
-  threadList = new UI.ThreadList($table[0], {
+  $table = $__("table")
+  threadList = new UI.ThreadList($table, {
     th: ["bookmark", "title", "boardTitle", "res", "heat", "createdDate"]
-    searchbox: $view.find(".searchbox")[0]
+    searchbox: $view.C("searchbox")[0]
   })
-  $view.data("threadList", threadList)
-  $view.data("selectableItemList", threadList)
-  $table.prependTo(".content")
+  app.DOMData.set($view, "threadList", threadList)
+  app.DOMData.set($view, "selectableItemList", threadList)
+  $$.C("content")[0].addFirst($table)
 
   thread_search = new ThreadSearch(query)
-  $tbody = $view.find("tbody")
+  $tbody = $view.T("tbody")[0]
 
   load = ->
     return if $view.hasClass("loading")
     $view.addClass("loading")
     $button_reload.addClass("disabled")
-    $view.find(".more").text("検索中")
+    $view.C("more")[0].textContent = "検索中"
     thread_search.read()
       .then (result) ->
-        $message_bar.removeClass("error").empty()
+        $message_bar.removeClass("error")
+        $message_bar.removeChildren()
 
         threadList.addItem(result)
 
-        if $tbody.children().length is 0 or $tbody.children().css("display") is "none"
+        if $tbody.child().length is 0
           $tbody.addClass("body_empty")
         else
-          $tbody.removeClass("body_empty")
+          empty = false
+          for dom in $tbody.child() when dom.style.display is "none"
+            empty = true
+          if empty
+            $tbody.addClass("body_empty")
+          else
+            $tbody.removeClass("body_empty")
 
         $view.removeClass("loading")
         return
       , (res) ->
-        $message_bar.addClass("error").text(res.message)
+        $message_bar.addClass("error")
+        $message_bar.textContent = res.message
         $view.removeClass("loading")
         return
       .then ->
-        $view.find(".more").addClass("hidden")
+        $view.C("more")[0].addClass("hidden")
         setTimeout((-> $button_reload.removeClass("disabled"); return), 5000)
         return
     return

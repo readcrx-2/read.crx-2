@@ -1,93 +1,78 @@
 app.boot "/view/config.html", ["cache", "bbsmenu"], (Cache, BBSMenu) ->
-  new app.view.IframeView(document.documentElement)
+  $view = document.documentElement
 
-  $view = $(document.documentElement)
+  new app.view.IframeView($view)
 
   whenClose = ->
     #NG設定
-    app.NG.set($view.find("textarea[name=\"ngwords\"]")[0].value)
+    app.NG.set($view.$("textarea[name=\"ngwords\"]").value)
     #ImageReplaceDat設定
-    app.ImageReplaceDat.set($view.find("textarea[name=\"image_replace_dat\"]")[0].value)
+    app.ImageReplaceDat.set($view.$("textarea[name=\"image_replace_dat\"]").value)
     #ReplaceStrTxt設定
-    app.ReplaceStrTxt.set($view.find("textarea[name=\"replace_str_txt\"]")[0].value)
+    app.ReplaceStrTxt.set($view.$("textarea[name=\"replace_str_txt\"]").value)
     return
 
   #閉じるボタン
-  $view.find(".button_close").on "click", ->
+  $view.C("button_close")[0].on "click", ->
     if frameElement
       tmp = type: "request_killme"
       parent.postMessage(JSON.stringify(tmp), location.origin)
     whenClose()
     return
 
-  window.addEventListener "unload", ->
+  window.on "unload", ->
     whenClose()
     return
 
   #掲示板を開いたときに閉じる
-  $view.find(".open_in_rcrx").on "click", ->
-    $view.find(".button_close").click()
-    return
+  for dom in $view.C("open_in_rcrx")
+    dom.on "click", ->
+      $view.C("button_close")[0].click()
+      return
 
   #汎用設定項目
-  $view
-    .find("input.direct[type=\"text\"], textarea.direct")
-      .each ->
-        @value = app.config.get(@name) or ""
-        null
-      .on "input", ->
-        app.config.set(@name, @value)
-        return
+  for dom in $view.$$("input.direct[type=\"text\"], textarea.direct")
+    dom.value = app.config.get(dom.name) or ""
+    dom.on "input", ->
+      app.config.set(@name, @value)
+      return
 
-  $view
-    .find("input.direct[type=\"number\"]")
-      .each ->
-        @value = app.config.get(@name) or "0"
-        null
-      .on "input", ->
-        app.config.set(@name, if Number.isInteger(+@value) then @value else "0")
-        return
+  for dom in $view.$$("input.direct[type=\"number\"]")
+    dom.value = app.config.get(dom.name) or "0"
+    dom.on "input", ->
+      app.config.set(@name, if Number.isInteger(+@value) then @value else "0")
+      return
 
-  $view
-    .find("input.direct[type=\"checkbox\"]")
-      .each ->
-        @checked = app.config.get(@name) is "on"
-        null
-      .on "change", ->
-        app.config.set(@name, if @checked then "on" else "off")
-        return
+  for dom in $view.$$("input.direct[type=\"checkbox\"]")
+    dom.checked = app.config.get(dom.name) is "on"
+    dom.on "change", ->
+      app.config.set(@name, if @checked then "on" else "off")
+      return
 
-  $view
-    .find("input.direct[type=\"radio\"]")
-      .each ->
-        if @value is app.config.get(@name)
-          @checked = true
-        return
-      .on "change", ->
-        val = $view.find("""input[name="#{@name}"]:checked""").val()
-        app.config.set(@name, val)
-        return
+  for dom in $view.$$("input.direct[type=\"radio\"]")
+    if dom.value is app.config.get(dom.name)
+      dom.checked = true
+    dom.on "change", ->
+      val = $view.$("""input[name="#{@name}"]:checked""").value
+      app.config.set(@name, val)
+      return
 
-  $view
-    .find("input.direct[type=\"range\"]")
-      .each ->
-        @value = app.config.get(@name) or "0"
-        $view.find(".#{@name}_text").text(@value)
-        null
-      .on "input", ->
-        $view.find(".#{@name}_text").text(@value)
-        app.config.set(@name, @value)
-        return
+  for dom in $view.$$("input.direct[type=\"range\"]")
+    dom.value = app.config.get(dom.name) or "0"
+    $view.C("#{dom.name}_text")[0].textContent = dom.value
+    dom.on "input", ->
+      $view.C("#{@name}_text")[0].textContent = @value
+      app.config.set(@name, @value)
+      return
 
   #バージョン情報表示
-  $view.find(".version_text")
-    .text("#{app.manifest.name} v#{app.manifest.version} + #{navigator.userAgent}")
+  $view.C("version_text")[0].textContent = "#{app.manifest.name} v#{app.manifest.version} + #{navigator.userAgent}"
 
-  $view.find(".version_copy").on "click", ->
-    app.clipboardWrite($(".version_text").text())
+  $view.C("version_copy")[0].on "click", ->
+    app.clipboardWrite($$.C("version_text")[0].textContent)
     return
 
-  $view.find(".keyboard_help").on "click", (e) ->
+  $view.C("keyboard_help")[0].on "click", (e) ->
     e.preventDefault()
 
     app.message.send("showKeyboardHelp", null, parent)
@@ -95,11 +80,11 @@ app.boot "/view/config.html", ["cache", "bbsmenu"], (Cache, BBSMenu) ->
 
   #忍法帖関連機能
   do ->
-    $ninjaInfo = $view.find(".ninja_info")
+    $ninjaInfo = $view.C("ninja_info")[0]
 
     updateNinjaInfo = ->
       app.Ninja.getCookie (cookies) ->
-        $ninjaInfo.empty()
+        $ninjaInfo.removeChildren()
 
         backup = app.Ninja.getBackup()
 
@@ -121,14 +106,10 @@ app.boot "/view/config.html", ["cache", "bbsmenu"], (Cache, BBSMenu) ->
               hasBackup: true
 
         for siteId, item of data
-          $div = $(
-            $("#template_ninja_item")
-              .prop("content")
-                .querySelector(".ninja_item")
-          ).clone()
+          $div = $$.I("template_ninja_item").content.$(".ninja_item").cloneNode(true)
 
-          $div.attr("data-siteid", item.site.siteId)
-          $div.find(".site_name").text(item.site.siteName)
+          $div.dataset.siteid = item.site.siteId
+          $div.C("site_name")[0].textContent = item.site.siteName
 
           if item.hasCookie
             $div.addClass("ninja_item_cookie_found")
@@ -136,28 +117,30 @@ app.boot "/view/config.html", ["cache", "bbsmenu"], (Cache, BBSMenu) ->
           if item.hasBackup
             $div.addClass("ninja_item_backup_available")
 
-          $div.appendTo($ninjaInfo)
+          $ninjaInfo.addLast($div)
         return
       return
 
     updateNinjaInfo()
 
     # 「Cookieを削除」ボタン
-    $ninjaInfo.on "click", ".ninja_item_cookie_found > button", ->
-      siteId = $(@).closest(".ninja_item").attr("data-siteid")
+    $ninjaInfo.on "click", (e) ->
+      return unless e.target.matches(".ninja_item_cookie_found > button")
+      siteId = e.target.closest(".ninja_item").dataset.siteid
       app.Ninja.deleteCookie(siteId, updateNinjaInfo)
       return
 
     # 「バックアップから復元」ボタン
-    $ninjaInfo.on "click", ".ninja_item_cookie_notfound > button", ->
-      siteId = $(@).closest(".ninja_item").attr("data-siteid")
+    $ninjaInfo.on "click", (e) ->
+      return unless e.target.matches(".ninja_item_cookie_notfound > button")
+      siteId = e.target.closest(".ninja_item").dataset.siteid
       app.Ninja.restore(siteId, updateNinjaInfo)
       return
 
     # 「バックアップを削除」ボタン
-    $ninjaInfo.on "click", ".ninja_item_backup_available > button", ->
-      siteId = $(@).closest(".ninja_item").attr("data-siteid")
-
+    $ninjaInfo.on "click", (e) ->
+      return unless e.target.matches(".ninja_item_backup_available > button")
+      siteId = e.target.closest(".ninja_item").dataset.siteid
       UI.dialog("confirm", {
         message: "本当に削除しますか？"
         label_ok: "はい"
@@ -171,58 +154,52 @@ app.boot "/view/config.html", ["cache", "bbsmenu"], (Cache, BBSMenu) ->
     return
 
   #板覧更新ボタン
-  $view.find(".bbsmenu_reload").on "click", ->
-    $button = $(@)
-    $status = $view.find(".bbsmenu_reload_status")
+  $view.C("bbsmenu_reload")[0].on "click", (e) ->
+    $button = e.currentTarget
+    $status = $$.I("bbsmenu_reload_status")
 
-    $button.attr("disabled", true)
-    $status
-      .removeClass("done fail")
-      .addClass("loading")
-      .text("更新中")
+    $button.disabled = true
+    $status.setClass("loading")
+    $status.textContent = "更新中"
 
-    BBSMenu.get((res) ->
+    BBSMenu.get( (res) ->
       $button.removeAttr("disabled")
-      $status.removeClass("loading")
       if res.status is "success"
-        $status
-          .addClass("done")
-          .text("更新完了")
+        $status.setClass("done")
+        $status.textContent = "更新完了"
 
         # sidemenuの表示時に設定されたコールバックが実行されるので、特別なことはしない
 
         #TODO [board_title_solver]も更新するよう変更
       else
-        $status
-          .addClass("fail")
-          .text("更新失敗")
+        $status.setClass("fail")
+        $status.textContent = "更新失敗"
       return
     , true)
     return
 
   #履歴
   setupHistory = (name, mainClass, cleanFunc, cleanRangeFunc, importFunc, outputFunc) ->
-    $clear_button = $view.find(".#{name}_clear")
-    $clear_range_button = $view.find(".#{name}_range_clear")
-    $status = $view.find(".#{name}_status")
+    $clear_button = $view.C("#{name}_clear")[0]
+    $clear_range_button = $view.C("#{name}_range_clear")[0]
+    $status = $$.I("#{name}_status")
 
     #履歴件数表示
     mainClass.count().then (count) ->
-      $status.text("#{count}件")
+      $status.textContent = "#{count}件"
       return
 
     #履歴削除ボタン
     $clear_button.on "click", ->
       $clear_button.addClass("hidden")
-      $status.text("削除中")
+      $status.textContent = "削除中"
 
       cleanFunc()
         .then ->
-          $status.text("削除完了")
-          parent.$("iframe[src=\"/view/#{name}.html\"]").each ->
-            @contentWindow.$(".view").trigger("request_reload")
+          $status.textContent = "削除完了"
+          parent.$$.$("iframe[src=\"/view/#{name}.html\"]")?.contentWindow.C("view")[0].dispatchEvent(new Event("request_reload"))
         , ->
-          $status.text("削除失敗")
+          $status.textContent = "削除失敗"
         .then ->
           $clear_button.removeClass("hidden")
       return
@@ -230,78 +207,69 @@ app.boot "/view/config.html", ["cache", "bbsmenu"], (Cache, BBSMenu) ->
     #履歴範囲削除ボタン
     $clear_range_button.on "click", ->
       $clear_range_button.addClass("hidden")
-      $status.text("範囲指定削除中")
+      $status.textContent = "範囲指定削除中"
 
-      cleanRangeFunc(parseInt($view.find(".#{name}_date_range")[0].value))
+      cleanRangeFunc(parseInt($view.C("#{name}_date_range")[0].value))
         .then ->
-          $status.text("範囲指定削除完了")
-          parent.$("iframe[src=\"view/#{name}.html\"]").each ->
-            @contentWindow.$(".view").trigger("request_reload")
+          $status.textContent = "範囲指定削除完了"
+          parent.$$.$("iframe[src=\"/view/#{name}.html\"]")?.contentWindow.C("view")[0].dispatchEvent(new Event("request_reload"))
         , ->
-          $status.text("範囲指定削除失敗")
+          $status.textContent = "範囲指定削除失敗"
         .then ->
           $clear_range_button.removeClass("hidden")
       return
 
     #履歴ファイルインポート
-    $(".#{name}_file_show").on "click", ->
-      $status.removeClass("done fail select")
-      $(".#{name}_file_hide").click()
+    $$.C("#{name}_file_show")[0].on "click", ->
+      $status.setClass("")
+      $$.C("#{name}_file_hide")[0].click()
       return
 
     historyFile = "";
-    $(".#{name}_file_hide").change((e) ->
+    $$.C("#{name}_file_hide")[0].on("change", (e) ->
       file = e.target.files
       reader = new FileReader()
       reader.readAsText(file[0])
       reader.onload = ->
         historyFile = reader.result
-        $status
-          .addClass("select")
-          .text("ファイル選択完了")
+        $status.setClass("select")
+        $status.textContent = "ファイル選択完了"
         return
       return
     )
 
     #履歴インポート
-    $view.find(".#{name}_import").on "click", ->
+    $view.C("#{name}_import")[0].on "click", ->
       if historyFile isnt ""
-        $status
-          .removeClass("done fail select")
-          .addClass("loading")
-          .text("更新中")
-        importFunc(JSON.parse(historyFile))#適応処理
+        $status.setClass("loading")
+        $status.textContent = "更新中"
+        importFunc(JSON.parse(historyFile)) #適応処理
         .then () ->
-          mainClass.count()
+          return mainClass.count()
         .then (count) ->
-          $status
-            .addClass("done")
-            .text("#{count}件 インポート完了")
+          $status.setClass("done")
+          $status.textContent = "#{count}件 インポート完了"
           $clear_button.removeClass("hidden")
           return
         , ->
-          $status
-            .addClass("fail")
-            .text("インポート失敗")
+          $status.setClass("fail")
+          $status.textContent = "インポート失敗"
           return
       else
-        $status
-          .addClass("fail")
-          .text("ファイルを選択してください")
+        $status.setClass("fail")
+        $status.textContent = "ファイルを選択してください"
       return
 
     #履歴エクスポート
-    $view.find(".#{name}_export").on "click", ->
+    $view.C("#{name}_export")[0].on "click", ->
       outputFunc().then( (data) ->
         outputText = JSON.stringify(data)
         blob = new Blob([outputText],{type:"text/plain"})
-        $a = $("<a>")
-        $a.attr({
-          href: window.URL.createObjectURL(blob),
-          target: "_blank",
-          download: "read.crx-2_#{name}.json"
-        })
-        $a[0].click()
+        $a = $__("a")
+        $a.href = window.URL.createObjectURL(blob)
+        $a.setAttr("target", "_blank")
+        $a.setAttr("download", "read.crx-2_#{name}.json")
+        $a.click()
         return
       )
       return
@@ -352,56 +320,56 @@ app.boot "/view/config.html", ["cache", "bbsmenu"], (Cache, BBSMenu) ->
 
   do ->
     #キャッシュ削除ボタン
-    $clear_button = $view.find(".cache_clear")
-    $status = $view.find(".cache_status")
+    $clear_button = $view.C("cache_clear")[0]
+    $status = $$.I("cache_status")
 
     Cache.count().then (count) ->
-      $status.text("#{count}件")
+      $status.textContent = "#{count}件"
       return
 
     $clear_button.on "click", ->
       $clear_button.remove()
-      $status.text("削除中")
+      $status.textContent = "削除中"
 
       Cache.delete()
         .then ->
-          $status.text("削除完了")
+          $status.textContent = "削除完了"
           return
         .catch ->
-          $status.text("削除失敗")
+          $status.textContent = "削除失敗"
           return
       return
     #キャッシュ範囲削除ボタン
-    $clear_range_button = $view.find(".cache_range_clear")
+    $clear_range_button = $view.C("cache_range_clear")[0]
     $clear_range_button.on "click", ->
-      $status.text("範囲指定削除中")
+      $status.textContent = "範囲指定削除中"
 
-      Cache.clearRange(parseInt($view.find(".cache_date_range")[0].value))
+      Cache.clearRange(parseInt($view.C("cache_date_range")[0].value))
         .then ->
-          $status.text("削除完了")
+          $status.textContent = "削除完了"
           return
         .catch ->
-          $status.text("削除失敗")
+          $status.textContent = "削除失敗"
           return
       return
     return
 
   #ブックマークフォルダ変更ボタン
-  $view.find(".bookmark_source_change").on "click", ->
+  $view.C("bookmark_source_change")[0].on "click", ->
     app.message.send("open", url: "bookmark_source_selector")
     return
 
   #ブックマークインポートボタン
-  $view.find(".import_bookmark").on "click", ->
+  $view.C("import_bookmark")[0].on "click", (e) ->
     rcrx_webstore = "hhjpdicibjffnpggdiecaimdgdghainl"
     rcrx_debug = "bhffdiookpgmjkaeiagoecflopbnphhi"
     req = "export_bookmark"
 
-    $button = $(@)
-    $status = $(".import_bookmark_status")
+    $button = e.currentTarget
+    $status = $$.I("import_bookmark_status")
 
-    $button.attr("disabled", true)
-    $status.text("インポート中")
+    $button.disabled = true
+    $status.textContent = "インポート中"
 
     new Promise( (resolve, reject) ->
       parent.chrome.runtime.sendMessage rcrx_webstore, req, (res) ->
@@ -426,96 +394,90 @@ app.boot "/view/config.html", ["cache", "bbsmenu"], (Cache, BBSMenu) ->
       for url, bookmark of res.bookmark_board
         if typeof(url) is typeof(bookmark.title) is "string"
           app.bookmark.add(url, bookmark.title)
-      $status.text("インポート完了")
+      $status.textContent = "インポート完了"
       return
     , ->
-      $status.text("インポートに失敗しました。read.crx v0.73以降がインストールされている事を確認して下さい。")
+      $status.textContent = "インポートに失敗しました。read.crx v0.73以降がインストールされている事を確認して下さい。"
       return
     ).then( ->
-      $button.attr("disabled", false)
+      $button.disabled = false
       return
     )
 
   #「テーマなし」設定
   if app.config.get("theme_id") is "none"
-    $view.find(".theme_none").attr("checked", true)
+    $view.C("theme_none")[0].checked = true
 
   app.message.addListener "config_updated", (message) ->
     if message.key is "theme_id"
-      $view.find(".theme_none").attr("checked", message.val is "none")
+      $view.C("theme_none")[0].checked = (message.val is "none")
     return
 
-  $view.find(".theme_none").on "click", ->
+  $view.C("theme_none")[0].on "click", ->
     app.config.set("theme_id", if @checked then "none" else "default")
     return
 
   #bbsmenu設定
   resetBBSMenu = ->
     app.config.del("bbsmenu").then ->
-      $view.find(".direct.bbsmenu").val(app.config.get("bbsmenu"))
-      $(".bbsmenu_reload").trigger("click")
+      $view.C("direct.bbsmenu")[0].val(app.config.get("bbsmenu"))
+      $$.C("bbsmenu_reload")[0].click()
 
-  if $view.find(".direct.bbsmenu").val() is ""
+  if $view.$(".direct.bbsmenu").value is ""
     resetBBSMenu()
 
-  $view.find(".direct.bbsmenu").on "change", ->
-    if $view.find(".direct.bbsmenu").val() isnt ""
-      $(".bbsmenu_reload").trigger("click")
+  $view.$(".direct.bbsmenu").on "change", ->
+    if $view.$(".direct.bbsmenu").value isnt ""
+      $$.C("bbsmenu_reload")[0].click()
     else
       resetBBSMenu()
     return
 
-  $view.find(".bbsmenu_reset").on "click", ->
+  $view.C("bbsmenu_reset")[0].on "click", ->
     resetBBSMenu()
     return
 
   #設定ファイルインポート
-  $(".config_file_show").on "click", ->
-    $cfg_status.removeClass("done fail select")
-    $(".config_file_hide").click()
+  $$.C("config_file_show")[0].on "click", ->
+    $cfg_status.setClass("")
+    $$.C("config_file_hide")[0].click()
     return
 
   configFile = "";
-  $cfg_status = $view.find(".config_import_status")
-  $(".config_file_hide").change((e) ->
+  $cfg_status = $$.I("config_import_status")
+  $$.C("config_file_hide")[0].on("change", (e) ->
     file = e.target.files
     reader = new FileReader()
     reader.readAsText(file[0])
     reader.onload = ->
       configFile = reader.result
-      $cfg_status
-        .addClass("select")
-        .text("ファイル選択完了")
+      $cfg_status.addClass("select")
+      $cfg_status.textContent = "ファイル選択完了"
       return
     return
   )
 
   #設定インポート
-  $view.find(".config_import_button").on "click", ->
+  $view.C("config_import_button")[0].on "click", ->
     if configFile isnt ""
-      $cfg_status
-        .removeClass("done fail select")
-        .addClass("loading")
-        .text("更新中")
+      $cfg_status.setClass("loading")
+      $cfg_status.textContent = "更新中"
       new Promise( (resolve, reject) ->
         jsonConfig = JSON.parse(configFile)
         keySet(jsonConfig)
         resolve()
       ).then( ->
-        $cfg_status
-          .addClass("done")
-          .text("インポート完了")
+        $cfg_status.addClass("done")
+        $cfg_status.textContent = "インポート完了"
         return
       , ->
-        $cfg_status
-          .addClass("fail")
-          .text("インポート失敗")
+        $cfg_status.addClass("fail")
+        $cfg_status.textContent = "インポート失敗"
         return
       )
     else
-      $cfg_status
-        .addClass("fail")
-        .text("ファイルを選択してください")
+      $cfg_status.addClass("fail")
+      $cfg_status.textContent = "ファイルを選択してください"
     return
 
   #設定を実際にインポートする
@@ -524,136 +486,131 @@ app.boot "/view/config.html", ["cache", "bbsmenu"], (Cache, BBSMenu) ->
       key_before = key
       key = key.slice(7)
       if key isnt "theme_id"
-        $key = $view.find("input[name=\"#{key}\"]")
-        switch $key.attr("type")
-          when "text" then $key.val(value).trigger("input")
-          when "checkbox"then $key.prop("checked", value is "on").trigger("change")
-          when "radio" then $key.val([value]).trigger("change")
-          when "range" then $key.val([value]).trigger("input")
-          when "number" then $key.val([value]).trigger("input")
-          else
-            $keyTextArea = $view.find("textarea[name=\"#{key}\"]")
-            if $keyTextArea[0] then $keyTextArea.val(value).trigger("input")
+        $key = $view.$("input[name=\"#{key}\"]")
+        if $key?
+          switch $key.getAttr("type")
+            when "text", "range", "number"
+              $key.value = value
+              $key.dispatchEvent(new Event("input"))
+            when "checkbox"
+              $key.checked = (value is "on")
+              $key.dispatchEvent(new Event("change"))
+            when "radio"
+              $key.value = value
+              $key.dispatchEvent(new Event("change"))
+            else
+              $keyTextArea = $view.$("textarea[name=\"#{key}\"]")
+              if $keyTextArea?
+                $keyTextArea.value = value
+                $key.dispatchEvent(new Event("input"))
        #config_theme_idは「テーマなし」の場合があるので特例化
        else
          if value is "none"
-           $theme_none = $view.find(".theme_none")
-           if not $theme_none.prop("checked") then $theme_none.trigger("click")
-         else $view.find("input[name=\"theme_id\"]").val([value]).trigger("change")
+           $theme_none = $view.C("theme_none")[0]
+           $theme_none.click() unless $theme_none.checked
+         else
+           $view.$("input[name=\"theme_id\"]").value = value
+           $view.$("input[name=\"theme_id\"]").dispatchEvent(new Event("change"))
     return
 
   #設定エクスポート
-  $view.find(".config_export_button").on "click", ->
+  $view.C("config_export_button")[0].on "click", ->
     content = app.config.getAll()
     content = content.replace(/"config_last_board_sort_config":".*?","/,"\"")
     content = content.replace(/"config_last_version":".*?","/,"\"")
     blob = new Blob([content],{type:"text/plain"})
-    $a = $("<a>")
-    $a.attr({
-      href: window.URL.createObjectURL(blob),
-      target: "_blank",
-      download: "read.crx-2_config.json"
-    })
-    $a[0].click()
+    $a = $__("a")
+    $a.href = window.URL.createObjectURL(blob)
+    $a.setAttr("target", "_blank")
+    $a.setAttr("download", "read.crx-2_config.json")
+    $a.click()
     return
 
   #datファイルインポート
-  $(".dat_file_show").on "click", ->
-    $dat_status.removeClass("done fail select")
-    $(".dat_file_hide").click()
+  $$.C("dat_file_show")[0].on "click", ->
+    $dat_status.setClass("")
+    $$.C("dat_file_hide")[0].click()
     return
 
   datFile = "";
-  $dat_status = $view.find(".dat_import_status")
-  $(".dat_file_hide").change((e) ->
+  $dat_status = $$.I("dat_import_status")
+  $$.C("dat_file_hide")[0].on("change", (e) ->
     file = e.target.files
     reader = new FileReader()
     reader.readAsText(file[0])
     reader.onload = ->
       datFile = reader.result
-      $dat_status
-        .addClass("select")
-        .text("ファイル選択完了")
+      $dat_status.addClass("select")
+      $dat_status.textContent = "ファイル選択完了"
       return
     return
   )
 
   #datインポート
-  $view.find(".dat_import_button").on "click", ->
+  $view.C("dat_import_button")[0].on "click", ->
     if datFile isnt ""
-      $dat_status
-        .removeClass("done fail select")
-        .addClass("loading")
-        .text("更新中")
+      $dat_status.setClass("loading")
+      $dat_status.textContent = "更新中"
       new Promise( (resolve, reject) ->
-        datDom = $view.find("textarea[name=\"image_replace_dat\"]")
-        datDom[0].value = datFile
-        datDom.trigger("input")
+        datDom = $view.$("textarea[name=\"image_replace_dat\"]")
+        datDom.value = datFile
+        datDom.dispatchEvent(new Event("input"))
         resolve()
       ).then( ->
-        $dat_status
-          .addClass("done")
-          .text("インポート完了")
+        $dat_status.addClass("done")
+        $dat_status.textContent = "インポート完了"
         return
       )
     else
-      $dat_status
-        .addClass("fail")
-        .text("ファイルを選択してください")
+      $dat_status.addClass("fail")
+      $dat_status.textContent = "ファイルを選択してください"
     return
 
   #replaceStrTxtファイルインポート
-  $(".replacestr_file_show").on "click", ->
-    $replacestr_status.removeClass("done fail select")
-    $(".replacestr_file_hide").click()
+  $$.C("replacestr_file_show")[0].on "click", ->
+    $replacestr_status.setClass("")
+    $$.C("replacestr_file_hide")[0].click()
     return
 
   replacestrFile = "";
-  $replacestr_status = $view.find(".replacestr_import_status")
-  $(".replacestr_file_hide").change((e) ->
+  $replacestr_status = $$.I("replacestr_import_status")
+  $$.C("replacestr_file_hide")[0].on("change", (e) ->
     file = e.target.files
     reader = new FileReader()
     reader.readAsText(file[0])
     reader.onload = ->
       replacestrFile = reader.result
-      $replacestr_status
-        .addClass("select")
-        .text("ファイル選択完了")
+      $replacestr_status.addClass("select")
+      $replacestr_status.textContent = "ファイル選択完了"
       return
     return
   )
 
   #replaceStrTxtインポート
-  $view.find(".replacestr_import_button").on "click", ->
+  $view.C("replacestr_file_import_button")[0].on "click", ->
     if replacestrFile isnt ""
-      $replacestr_status
-        .removeClass("done fail select")
-        .addClass("loading")
-        .text("更新中")
+      $replacestr_status.setClass("loading")
+      $replacestr_status.textContent = "更新中"
       new Promise( (resolve, reject) ->
-        replacestrDom = $view.find("textarea[name=\"replace_str_txt\"]")
-        replacestrDom[0].value = replacestrFile
-        replacestrDom.trigger("input")
+        replacestrDom = $view.$("textarea[name=\"replace_str_txt\"]")
+        replacestrDom.value = replacestrFile
+        replacestrDom.dispatchEvent(new Event("input"))
         resolve()
       ).then( ->
-        $replacestr_status
-          .addClass("done")
-          .text("インポート完了")
+        $replacestr_status.addClass("done")
+        $replacestr_status.textContent = "インポート完了"
         return
       )
     else
-      $replacestr_status
-        .addClass("fail")
-        .text("ファイルを選択してください")
+      $replacestr_status.addClass("fail")
+      $replacestr_status.textContent = "ファイルを選択してください"
     return
 
-  $replacestr_status = $view.find(".history_from_1151_status")
+  $replacestr_status = $$.I("history_from_1151_status")
   #過去の履歴をインポート
-  $view.find(".history_from_1151").on "click", ->
-    $replacestr_status
-      .removeClass("done fail")
-      .addClass("loading")
-      .text("インポート中")
+  $view.C("history_from_1151")[0].on "click", ->
+    $replacestr_status.setClass("loading")
+    $replacestr_status.textContent = "インポート中"
     hisPro = new Promise( (resolve, reject) ->
       openDatabase("History", "", "History", 0).transaction( (tx) ->
         tx.executeSql("SELECT * FROM History", [], (t, his) ->
@@ -730,13 +687,11 @@ app.boot "/view/config.html", ["cache", "bbsmenu"], (Cache, BBSMenu) ->
       )
     )
     Promise.all([hisPro, whisPro, rsPro]).then( ->
-      $replacestr_status
-        .addClass("done")
-        .text("インポート完了")
+      $replacestr_status.addClass("done")
+      $replacestr_status.textContent = "インポート完了"
     , (e) ->
-      $replacestr_status
-        .addClass("fail")
-        .text("インポート失敗 - #{e}")
+      $replacestr_status.addClass("fail")
+      $replacestr_status.textContent = "インポート失敗 - #{e}"
     )
     return
 

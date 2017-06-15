@@ -286,12 +286,10 @@ namespace UI {
       if (param.locked) {
         $tmptab = this.$element.$(`li[data-tabid=\"${tabId}\"]`);
         $tmptab.addClass("tab_locked");
-        $tmptab.T("img")[0].addClass("hidden");
       } else if (!(param.locked === void 0 || param.locked === null)) {
         $tmptab = this.$element.$(`li[data-tabid=\"${tabId}\"].tab_locked`);
         if ($tmptab !== null) {
           $tmptab.removeClass("tab_locked");
-          $tmptab.T("img")[0].removeClass("hidden");
         }
       }
     }

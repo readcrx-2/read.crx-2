@@ -39,7 +39,7 @@
       cursor: pointer;
       border-radius: 2px;
     }
-    &:hover > img {
+    &:not(.tab_locked):hover > img {
       visibility: visible;
     }
   }

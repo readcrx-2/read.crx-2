@@ -559,14 +559,14 @@ app.boot "/view/thread.html", ->
         $div.textContent = "現在ポップアップしているIP/ID/SLIP/トリップです"
         $div.addClass("popup_disabled")
         $popup.addLast($div)
-      else if threadContent.idIndex[id]
-        for resNum in threadContent.idIndex[id]
+      else if threadContent.idIndex.has(id)
+        for resNum from threadContent.idIndex.get(id)
           $popup.addLast($content.child()[resNum - 1].cloneNode(true))
-      else if threadContent.slipIndex[slip]
-        for resNum in threadContent.slipIndex[slip]
+      else if threadContent.slipIndex.has(slip)
+        for resNum from threadContent.slipIndex.get(slip)
           $popup.addLast($content.child()[resNum - 1].cloneNode(true))
-      else if threadContent.tripIndex[trip]
-        for resNum in threadContent.tripIndex[trip]
+      else if threadContent.tripIndex.has(trip)
+        for resNum from threadContent.tripIndex.get(trip)
           $popup.addLast($content.child()[resNum - 1].cloneNode(true))
       else
         $div = $__("div")
@@ -586,7 +586,7 @@ app.boot "/view/thread.html", ->
 
       frag = $_F()
       res_num = +target.closest("article").C("num")[0].textContent
-      for target_res_num in app.DOMData.get($view, "threadContent").repIndex[res_num]
+      for target_res_num from app.DOMData.get($view, "threadContent").repIndex.get(res_num)
         frag.addLast(tmp[target_res_num - 1].cloneNode(true))
 
       $popup = $__("div")

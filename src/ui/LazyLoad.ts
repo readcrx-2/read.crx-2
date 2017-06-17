@@ -36,7 +36,7 @@ namespace UI {
     constructor (container: HTMLElement) {
       this.container = container;
 
-      this.container.on("scroll", this.onScroll.bind(this));
+      this.container.on("scroll", this.onScroll.bind(this), { passive: true });
       this.container.on("resize", this.onResize.bind(this));
       this.container.on("scrollstart", this.onScrollStart.bind(this));
       this.container.on("scrollfinish", this.onScrollFinish.bind(this));

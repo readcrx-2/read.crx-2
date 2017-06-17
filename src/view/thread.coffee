@@ -908,7 +908,7 @@ app.boot "/view/thread.html", ->
       update_scroll_left()
       update_thread_footer()
       return
-    )
+    , passive: true)
     #次スレ検索
     for dom in $view.$$(".button_tool_search_next_thread, .search_next_thread")
       dom.on "click", ->
@@ -1161,7 +1161,7 @@ app.view_thread._read_state_manager = ($view) ->
     $content.on("scroll", ->
       scroll_flg = true
       return
-    )
+    , passive: true)
     $view.on("request_reload", ->
       scan_and_save()
       return

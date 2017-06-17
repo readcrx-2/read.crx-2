@@ -103,19 +103,21 @@ app.boot "/view/thread.html", ->
       return
     return
 
-  if app.URL.tsld(view_url) in ["2ch.net", "shitaraba.net", "bbspink.com", "2ch.sc", "open2ch.net"]
+  canWriteFlg = do ->
+    tsld = app.URL.tsld(view_url)
+    if tsld in ["2ch.net", "bbspink.com", "2ch.sc", "open2ch.net"]
+      return true
+    # したらばの過去ログ
+    if tsld is "shitaraba.net" and not view_url.includes("/read_archive.cgi/")
+      return true
+    return false
+
+  if canWriteFlg
     $view.C("button_write")[0].on "click", ->
       write()
       return
   else
     $view.C(".button_write")[0].remove()
-
-  # 過去ログであることが自明の場合は書き込みボタンを隠す
-  if (
-    app.URL.tsld(view_url) is "shitaraba.net" and
-    view_url.includes("/read_archive.cgi/")
-  )
-    $view.C("button_write")[0].remove()
 
   # 現状ではしたらばはhttpsに対応していないので切り替えボタンを隠す
   if app.URL.tsld(view_url) is "shitaraba.net"
@@ -277,7 +279,7 @@ app.boot "/view/thread.html", ->
     unless $article.dataset.trip?
       $menu.C("copy_trip")[0].remove()
 
-    unless app.URL.tsld(view_url) in ["2ch.net", "bbspink.com", "shitaraba.net"]
+    unless canWriteFlg
       $menu.C("res_to_this")[0].remove()
       $menu.C("res_to_this2")[0].remove()
 
@@ -486,7 +488,7 @@ app.boot "/view/thread.html", ->
     #read.crxで開ける板だった場合は.open_in_rcrxを付与して再度クリックイベント送出
     if flg
       e.preventDefault()
-      target.classList.add("open_in_rcrx")
+      target.addClass("open_in_rcrx")
       target.dataset.href = target.href
       target.href = "javascript:undefined;"
       if tmp.type is "thread"

@@ -756,8 +756,9 @@ app.boot "/view/thread.html", ->
 
       if selector
         res_num = 1
-        for dom, i in $view.$$("article") when dom is $view.$(selector)
+        for dom, i in $view.T("article") when dom.matches(selector)
           res_num = i + 1
+          break
 
         if typeof res_num is "number"
           threadContent.scrollTo(res_num, true, offset)

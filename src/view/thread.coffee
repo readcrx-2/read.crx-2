@@ -845,7 +845,7 @@ app.boot "/view/thread.html", ->
           read = null
 
           if iframe = parent.$$.$("[data-url=\"#{bookmark.url}\"]")
-            read = iframe.$$(".content > article").length
+            read = iframe.contentWindow?.$$(".content > article").length
 
           unless read
             read = bookmark.read_state?.read or 0

@@ -394,7 +394,7 @@ namespace app {
       }
 
       if (server !== null) {
-        resUrl = mode[1] + "://" + server + ".2ch." + target + "/test/read.cgi/" + mode[4] + "/" + mode[5] + "/";
+        resUrl = `${mode[1]}://${server}.2ch.${target}/test/read.cgi/${mode[4]}/${mode[5]}/`;
       }
       return resUrl;
     }

@@ -265,7 +265,7 @@ class app.view.Index extends app.view.View
     iframe?.contentDocument.C("content")[0].focus()
     return
 
-app.boot "/view/index.html", ->
+app.boot "/view/index.html", ["bbsmenu"], (BBSMenu) ->
   query = app.URL.parseQuery(location.search).get("q")
 
   get_current = new Promise( (resolve, reject) ->
@@ -298,7 +298,12 @@ app.boot "/view/index.html", ->
       if query
         paramResNumFlag = (app.config.get("enable_link_with_res_number") is "on")
         paramResNum = if paramResNumFlag then app.URL.getResNumber(query) else null
-        app.message.send("open", url: query, new_tab: true, param_res_num: paramResNum)
+        # 後ほど実行するためにCallbacksに登録する
+        app.BBSMenu.boardTableCallbacks = new app.Callbacks({persistent: false})
+        app.BBSMenu.boardTableCallbacks.add( ->
+          app.message.send("open", url: query, new_tab: true, param_res_num: paramResNum)
+          return
+        )
 
 app.view_setup_resizer = ->
   MIN_TAB_HEIGHT = 100
@@ -367,6 +372,8 @@ app.view_setup_resizer = ->
 app.main = ->
   urlToIframeInfo = (url) ->
     url = app.URL.fix(url)
+    # 携帯・スマホ用URLの変換
+    url = app.URL.convertUrlFromPhone(url)
     guessResult = app.URL.guessType(url)
     if url is "config"
       src: "/view/config.html"

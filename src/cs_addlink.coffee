@@ -1,6 +1,9 @@
 regs = [
-  ///^https?://(?!find|info|p2)\w+(?:\.2ch\.net|\.2ch\.sc|\.open2ch\.net)/\w+/(?:index\.html)?(?:#\d+)?$///
-  ///^https?://(?!itest)\w+(?:\.2ch\.net|\.2ch\.sc|\.open2ch\.net|\.bbspink\.com)/test/read\.cgi/\w+/\d+///
+  ///^https?://(?!find|info|p2)\w+(?:\.2ch\.net|\.2ch\.sc|\.open2ch\.net|\.bbspink\.com)/(?:subback/)?\w+/?(?:index\.html)?(?:#\d+)?$///
+  ///^https?://\w+(?:\.2ch\.net|\.2ch\.sc|\.open2ch\.net|\.bbspink\.com)/(?:\w+/)?test/read\.cgi/\w+/\d+/?.*///
+  ///^https?://ula\.2ch\.net/2ch/\w+/[\w+\.]+/\d+/.*///
+  ///^https?://c\.2ch\.net/test/-/\w+/i?(?:\?.+)?///
+  ///^https?://c\.2ch\.net/test/-/\w+/\d+/(?:i|g|\d+)?(?:\?.+)?///
   ///^https?://jbbs\.shitaraba\.net/\w+/\d+/(?:index\.html)?(?:#\d+)?$///
   ///^https?://jbbs\.shitaraba\.net/bbs/read(?:_archive)?\.cgi/\w+/\d+/\d+///
   ///^https?://jbbs\.shitaraba\.net/\w+/\d+/storage/\d+\.html///
@@ -10,12 +13,12 @@ regs = [
 
 open_button_id = "36e5cda5"
 close_button_id = "92a5da13"
+url = chrome.extension.getURL("/view/index.html")
+url += "?q=#{encodeURIComponent(location.href)}"
 
 if (regs.some (a) -> a.test(location.href))
   document.body.addEventListener "mousedown", (e) ->
     if e.target.id is open_button_id
-      url = chrome.extension.getURL("/view/index.html")
-      url += "?q=#{encodeURIComponent(location.href)}"
       a = document.createElement("a")
       a.href = url
       event = new MouseEvent("click", {button: e.button ,ctrlKey: e.ctrlKey, shiftKey: e.shiftKey})

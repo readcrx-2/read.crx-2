@@ -14,6 +14,12 @@ class app.BBSMenu
   @_forceReloadFlag: false
 
   ###*
+  @property boardTableCallbacks
+  @type Object|null
+  ###
+  @boardTableCallbacks = null
+
+  ###*
   @method get
   @param {Function} Callback
   @param {Boolean} [ForceReload=false]

@@ -62,8 +62,8 @@ app.boot "/view/sidemenu.html", ["bbsmenu"], (BBSMenu) ->
         when "title"
           $a.textContent = message.entry.title
 
-  checkNetSc = (url) ->
-    res = {net: false, sc: false}
+  checkBbsmenuParam = (url) ->
+    res = {net: false, sc: false, bbspink: false}
     tmp = ///http://kita.jikkyo.org/cbm/cbm.cgi/([\w\d\.]+)(?:/-all|-live2324)?(?:/=[\d\w=!&$()[\]{}]+)?/bbsmenuk?2?.html///.exec(url)
     if tmp
       param = tmp[1].split(".")
@@ -72,6 +72,8 @@ app.boot "/view/sidemenu.html", ["bbsmenu"], (BBSMenu) ->
           res.net = true
         else if mode is "sc"
           res.sc = true
+        else if mode in ["p0", "p1"]
+          res.bbspink = true
     return res
 
   #板覧関連
@@ -80,11 +82,12 @@ app.boot "/view/sidemenu.html", ["bbsmenu"], (BBSMenu) ->
       $view.addClass("loading")
       # 表示用板一覧の取得
       BBSMenu.get (res) ->
-        # 2ch.netと2ch.scの存在確認
-        modeFlag = checkNetSc(res.url)
+        # bbsmenuパラメータの確認
+        modeFlag = checkBbsmenuParam(res.url)
         menuUpdate = (res.url is app.config.get("bbsmenu"))
         boardNet = []
         boardSc = []
+        boardBbspink = []
 
         if menuUpdate
           for dom in $view.$$("h3:not(:first-of-type), ul:not(:first-of-type)")
@@ -110,21 +113,24 @@ app.boot "/view/sidemenu.html", ["bbsmenu"], (BBSMenu) ->
                 boardNet.push(board)
               if modeFlag.sc and /// https?://\w+\.2ch\.sc/\w+/.*? ///.test(board.url)
                 boardSc.push(board)
+              if modeFlag.bbspink and /// https?://\w+\.bbspink\.com/\w+/.*? ///.test(board.url)
+                boardBbspink.push(board)
             frag.addLast($ul)
 
-        # 2ch.netと2ch.scの板・サーバー情報の登録
-        app.URL.pushBoardToServerInfo(boardNet, boardSc)
-        boardNet = []   # メモリ解放用
-        boardSc = []    #     〃
+        # 2ch.netと2ch.sc及びbbspinkの板・サーバー情報の登録
+        app.URL.pushBoardToServerInfo(boardNet, boardSc, boardBbspink)
+        boardNet = []     # メモリ解放用
+        boardSc = []      # 　　〃
+        boardBbspink = [] # 　　〃
 
         if menuUpdate
           document.body.addLast(frag)
           accordion.update()
 
-        # 2ch.netと2ch.scの切替用情報の取得
+        # 2ch.netと2ch.sc及びbbspinkのサーバー情報の取得
         if (
           res.url is app.config.get("bbsmenu") and
-          (!modeFlag.net or !modeFlag.sc)
+          !(modeFlag.net and modeFlag.sc and modeFlag.bbspink)
         )
           loopCount = 0
           intervalID = setInterval( ->
@@ -133,13 +139,12 @@ app.boot "/view/sidemenu.html", ["bbsmenu"], (BBSMenu) ->
             # メニューの更新が終了するまで待機
             unless $view.hasClass("loading")
               clearInterval(intervalID)
-              # 2ch.netと2ch.scの板情報の追加取得
-              if !modeFlag.net and !modeFlag.sc
-                param = "20.sc"
-              else if !modeFlag.net
-                param = "20.99"
-              else
-                param = "sc.99"
+              # bbsmenuパラメータの編集
+              param = ""
+              param += "20." unless modeFlag.net
+              param += "sc." unless modeFlag.sc
+              param += "p0." unless modeFlag.bbspink
+              param += "99"
               otherUrl = "http://kita.jikkyo.org/cbm/cbm.cgi/#{param}/-all/bbsmenu.html"
               BBSMenu.get((res) ->
                 # 表示用一覧取得時のコールバックが実行されるので何もしない
@@ -147,6 +152,9 @@ app.boot "/view/sidemenu.html", ["bbsmenu"], (BBSMenu) ->
               , false, otherUrl)
             return
           , 1000)
+        else if BBSMenu.boardTableCallbacks
+          BBSMenu.boardTableCallbacks.call()
+          BBSMenu.boardTableCallbacks = null
 
         $view.removeClass("loading")
         return

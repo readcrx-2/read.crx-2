@@ -1,3 +1,175 @@
+class SettingIO
+  importFile: ""
+  constructor: ({
+    name: @name
+    importFunc: @importFunc
+    exportFunc: @exportFunc
+  }) ->
+    @$status = $$.I("#{@name}_status")
+    if @importFunc?
+      @$fileSelectButton = $$.C("#{@name}_file_show")[0]
+      @$fileSelectButtonHidden = $$.C("#{@name}_file_hide")[0]
+      @$importButton = $$.C("#{@name}_import_button")[0]
+      @setupFileSelectButton()
+      @setupImportButton()
+    if @exportFunc?
+      @$exportButton = $$.C("#{@name}_export_button")[0]
+      @setupExportButton()
+    return
+  setupFileSelectButton: ->
+    @$fileSelectButton.on("click", =>
+      @$status.setClass("")
+      @$fileSelectButtonHidden.click()
+      return
+    )
+    @$fileSelectButtonHidden.on("change", (e) =>
+      file = e.target.files
+      reader = new FileReader()
+      reader.readAsText(file[0])
+      reader.onload = =>
+        @importFile = reader.result
+        @$status.addClass("select")
+        @$status.textContent = "ファイル選択完了"
+        return
+      return
+    )
+    return
+  setupImportButton: ->
+    @$importButton.on("click", =>
+      if @importFile isnt ""
+        @$status.setClass("loading")
+        @$status.textContent = "更新中"
+        new Promise( (resolve, reject) =>
+          @importFunc(@importFile)
+          resolve()
+          return
+        ).then( =>
+          @$status.addClass("done")
+          @$status.textContent = "インポート完了"
+          return
+        , ->
+          @$status.addClass("fail")
+          @$status.textContent = "インポート失敗"
+          return
+        )
+      else
+        @$status.addClass("fail")
+        @$status.textContent = "ファイルを選択してください"
+      return
+    )
+    return
+  setupExportButton: ->
+    @$exportButton.on("click", =>
+      blob = new Blob([@exportFunc()],{type:"text/plain"})
+      $a = $__("a")
+      $a.href = URL.createObjectURL(blob)
+      $a.setAttr("target", "_blank")
+      $a.setAttr("download", "read.crx-2_#{@name}.json")
+      $a.click()
+      return
+    )
+    return
+
+class HistoryIO extends SettingIO
+  constructor: ({
+    name: @name
+    countFunc: @countFunc
+    importFunc: @importFunc
+    exportFunc: @exportFunc
+    clearFunc: @clearFunc
+    clearRangeFunc: @clearRangeFunc
+  }) ->
+    super(
+      name: @name
+      importFunc: @importFunc
+      exportFunc: @exportFunc
+    )
+    @$clearButton = $$.C("#{@name}_clear")[0]
+    @$clearRangeButton = $$.C("#{@name}_range_clear")[0]
+
+    @showCount()
+    @setupClearButton()
+    @setupClearRangeButton()
+    return
+  showCount: ->
+    @countFunc().then( (count) =>
+      @$status.textContent = "#{count}件"
+      return
+    )
+    return
+  setupClearButton: ->
+    @$clearButton.on("click", =>
+      @$clearButton.addClass("hidden")
+      @$status.textContent = "削除中"
+
+      @clearFunc()
+        .then( =>
+          @$status.textContent = "削除完了"
+          parent.$$.$("iframe[src=\"/view/#{@name}.html\"]")?.contentWindow.C("view")[0].dispatchEvent(new Event("request_reload"))
+        , =>
+          @$status.textContent = "削除失敗"
+        ).then( =>
+          @$clearButton.removeClass("hidden")
+        )
+      return
+    )
+    return
+  setupClearRangeButton: ->
+    @$clearRangeButton.on("click", =>
+      @$clearRangeButton.addClass("hidden")
+      @$status.textContent = "範囲指定削除中"
+
+      @clearRangeFunc(parseInt($$.C("#{@name}_date_range")[0].value))
+        .then( =>
+          @$status.textContent = "範囲指定削除完了"
+          parent.$$.$("iframe[src=\"/view/#{@name}.html\"]")?.contentWindow.C("view")[0].dispatchEvent(new Event("request_reload"))
+        , =>
+          @$status.textContent = "範囲指定削除失敗"
+        ).then( =>
+          @$clearRangeButton.removeClass("hidden")
+        )
+      return
+    )
+    return
+  setupImportButton: ->
+    @$importButton.on("click", =>
+      if @importFile isnt ""
+        @$status.setClass("loading")
+        @$status.textContent = "更新中"
+        @importFunc(JSON.parse(@importFile))
+        .then( =>
+          return @countFunc()
+        ).then( (count) =>
+          @$status.setClass("done")
+          @$status.textContent = "#{count}件 インポート完了"
+          @$clearButton.removeClass("hidden")
+          return
+        , =>
+          @$status.setClass("fail")
+          @$status.textContent = "インポート失敗"
+          return
+        )
+      else
+        @$status.addClass("fail")
+        @$status.textContent = "ファイルを選択してください"
+      return
+    )
+    return
+  setupExportButton: ->
+    @$exportButton.on("click", =>
+      @exportFunc().then( (data) =>
+        exportText = JSON.stringify(data)
+        blob = new Blob([exportText], type: "text/plain")
+        $a = $__("a")
+        $a.href = URL.createObjectURL(blob)
+        $a.setAttr("target", "_blank")
+        $a.setAttr("download", "read.crx-2_#{@name}.json")
+        $a.click()
+      )
+      return
+    )
+    return
+
 app.boot "/view/config.html", ["cache", "bbsmenu"], (Cache, BBSMenu) ->
   $view = document.documentElement
 
@@ -179,143 +351,57 @@ app.boot "/view/config.html", ["cache", "bbsmenu"], (Cache, BBSMenu) ->
     return
 
   #履歴
-  setupHistory = (name, mainClass, cleanFunc, cleanRangeFunc, importFunc, outputFunc) ->
-    $clear_button = $view.C("#{name}_clear")[0]
-    $clear_range_button = $view.C("#{name}_range_clear")[0]
-    $status = $$.I("#{name}_status")
-
-    #履歴件数表示
-    mainClass.count().then (count) ->
-      $status.textContent = "#{count}件"
-      return
-
-    #履歴削除ボタン
-    $clear_button.on "click", ->
-      $clear_button.addClass("hidden")
-      $status.textContent = "削除中"
-
-      cleanFunc()
-        .then ->
-          $status.textContent = "削除完了"
-          parent.$$.$("iframe[src=\"/view/#{name}.html\"]")?.contentWindow.C("view")[0].dispatchEvent(new Event("request_reload"))
-        , ->
-          $status.textContent = "削除失敗"
-        .then ->
-          $clear_button.removeClass("hidden")
-      return
-
-    #履歴範囲削除ボタン
-    $clear_range_button.on "click", ->
-      $clear_range_button.addClass("hidden")
-      $status.textContent = "範囲指定削除中"
-
-      cleanRangeFunc(parseInt($view.C("#{name}_date_range")[0].value))
-        .then ->
-          $status.textContent = "範囲指定削除完了"
-          parent.$$.$("iframe[src=\"/view/#{name}.html\"]")?.contentWindow.C("view")[0].dispatchEvent(new Event("request_reload"))
-        , ->
-          $status.textContent = "範囲指定削除失敗"
-        .then ->
-          $clear_range_button.removeClass("hidden")
-      return
-
-    #履歴ファイルインポート
-    $$.C("#{name}_file_show")[0].on "click", ->
-      $status.setClass("")
-      $$.C("#{name}_file_hide")[0].click()
-      return
-
-    historyFile = "";
-    $$.C("#{name}_file_hide")[0].on("change", (e) ->
-      file = e.target.files
-      reader = new FileReader()
-      reader.readAsText(file[0])
-      reader.onload = ->
-        historyFile = reader.result
-        $status.setClass("select")
-        $status.textContent = "ファイル選択完了"
-        return
-      return
-    )
-
-    #履歴インポート
-    $view.C("#{name}_import")[0].on "click", ->
-      if historyFile isnt ""
-        $status.setClass("loading")
-        $status.textContent = "更新中"
-        importFunc(JSON.parse(historyFile)) #適応処理
-        .then () ->
-          return mainClass.count()
-        .then (count) ->
-          $status.setClass("done")
-          $status.textContent = "#{count}件 インポート完了"
-          $clear_button.removeClass("hidden")
-          return
-        , ->
-          $status.setClass("fail")
-          $status.textContent = "インポート失敗"
-          return
-      else
-        $status.setClass("fail")
-        $status.textContent = "ファイルを選択してください"
-      return
-
-    #履歴エクスポート
-    $view.C("#{name}_export")[0].on "click", ->
-      outputFunc().then( (data) ->
-        outputText = JSON.stringify(data)
-        blob = new Blob([outputText],{type:"text/plain"})
-        $a = $__("a")
-        $a.href = window.URL.createObjectURL(blob)
-        $a.setAttr("target", "_blank")
-        $a.setAttr("download", "read.crx-2_#{name}.json")
-        $a.click()
-        return
+  new HistoryIO(
+    name: "history"
+    countFunc: ->
+      return app.History.count()
+    importFunc: (inputObj) ->
+      return Promise.all(
+        inputObj.history.map( (his) ->
+          return app.History.add(his.url, his.title, his.date)
+        ).concat(inputObj.read_state.map( (rs) ->
+          return app.ReadState.set(rs)
+        ))
       )
-      return
-    return
-
-  setupHistory("history", app.History, ->
-    return Promise.all([app.History.clear(), app.ReadState.clear()])
-  , (day) ->
-    return app.History.clearRange(day)
-  , (inputObj) ->
-    return Promise.all(
-      inputObj.history.map( (his) ->
-        return app.History.add(his.url, his.title, his.date)
-      ).concat(inputObj.read_state.map( (rs) ->
-        return app.ReadState.set(rs)
-      ))
-    )
-  , ->
-    return new Promise( (resolve, reject) ->
-      Promise.all([
-        app.ReadState.getAll(),
-        app.History.getAll()
-      ]).then( ([read_state_res, history_res]) ->
-        resolve({"read_state": read_state_res, "history": history_res})
-        return
+    exportFunc: ->
+      return new Promise( (resolve, reject) ->
+        Promise.all([
+          app.ReadState.getAll(),
+          app.History.getAll()
+        ]).then( ([read_state_res, history_res]) ->
+          resolve({"read_state": read_state_res, "history": history_res})
+          return
+        )
       )
-    )
+    clearFunc: ->
+      return Promise.all([app.History.clear(), app.ReadState.clear()])
+    clearRangeFunc: (day) ->
+      return app.History.clearRange(day)
   )
-  setupHistory("writehistory", app.WriteHistory, ->
-    return app.WriteHistory.clear()
-  , (day) ->
-    return app.WriteHistory.clearRange(day)
-  , (inputObj) ->
-    if inputObj.writehistory
-      return Promise.all(inputObj.writehistory.map( (whis) ->
-        return app.WriteHistory.add(whis.url, whis.res, whis.title, whis.name, whis.mail, whis.input_name, whis.input_mail, whis.message, whis.date)
-      ))
-    else
-      return Promise.resolve()
-  , ->
-    return new Promise( (resolve, reject) ->
-      app.WriteHistory.getAll().then( (data) ->
-        resolve({"writehistory": data})
+
+  new HistoryIO(
+    name: "writehistory"
+    countFunc: ->
+      return app.WriteHistory.count()
+    importFunc: (inputObj) ->
+      if inputObj.writehistory
+        return Promise.all(inputObj.writehistory.map( (whis) ->
+          return app.WriteHistory.add(whis.url, whis.res, whis.title, whis.name, whis.mail, whis.input_name, whis.input_mail, whis.message, whis.date)
+        ))
+      else
+        return Promise.resolve()
+    exportFunc: ->
+      return new Promise( (resolve, reject) ->
+        app.WriteHistory.getAll().then( (data) ->
+          resolve({"writehistory": data})
+          return
+        )
         return
       )
-    )
+    clearFunc: ->
+      return app.WriteHistory.clear()
+    clearRangeFunc: (day) ->
+      return app.WriteHistory.clearRange(day)
   )
 
   do ->
@@ -437,176 +523,68 @@ app.boot "/view/config.html", ["cache", "bbsmenu"], (Cache, BBSMenu) ->
     resetBBSMenu()
     return
 
-  #設定ファイルインポート
-  $$.C("config_file_show")[0].on "click", ->
-    $cfg_status.setClass("")
-    $$.C("config_file_hide")[0].click()
-    return
-
-  configFile = "";
-  $cfg_status = $$.I("config_import_status")
-  $$.C("config_file_hide")[0].on("change", (e) ->
-    file = e.target.files
-    reader = new FileReader()
-    reader.readAsText(file[0])
-    reader.onload = ->
-      configFile = reader.result
-      $cfg_status.addClass("select")
-      $cfg_status.textContent = "ファイル選択完了"
-      return
-    return
-  )
-
-  #設定インポート
-  $view.C("config_import_button")[0].on "click", ->
-    if configFile isnt ""
-      $cfg_status.setClass("loading")
-      $cfg_status.textContent = "更新中"
-      new Promise( (resolve, reject) ->
-        jsonConfig = JSON.parse(configFile)
-        keySet(jsonConfig)
-        resolve()
-      ).then( ->
-        $cfg_status.addClass("done")
-        $cfg_status.textContent = "インポート完了"
-        return
-      , ->
-        $cfg_status.addClass("fail")
-        $cfg_status.textContent = "インポート失敗"
-        return
-      )
-    else
-      $cfg_status.addClass("fail")
-      $cfg_status.textContent = "ファイルを選択してください"
-    return
-
-  #設定を実際にインポートする
-  keySet = (json) ->
-    for key, value of json
-      key_before = key
-      key = key.slice(7)
-      if key isnt "theme_id"
-        $key = $view.$("input[name=\"#{key}\"]")
-        if $key?
-          switch $key.getAttr("type")
-            when "text", "range", "number"
-              $key.value = value
-              $key.dispatchEvent(new Event("input"))
-            when "checkbox"
-              $key.checked = (value is "on")
-              $key.dispatchEvent(new Event("change"))
-            when "radio"
-              $key.value = value
-              $key.dispatchEvent(new Event("change"))
-            else
-              $keyTextArea = $view.$("textarea[name=\"#{key}\"]")
-              if $keyTextArea?
-                $keyTextArea.value = value
+  # 設定をインポート/エクスポート
+  new SettingIO(
+    name: "config"
+    importFunc: (file) ->
+      json = JSON.parse(file)
+      for key, value of json
+        key_before = key
+        key = key.slice(7)
+        if key isnt "theme_id"
+          $key = $view.$("input[name=\"#{key}\"]")
+          if $key?
+            switch $key.getAttr("type")
+              when "text", "range", "number"
+                $key.value = value
                 $key.dispatchEvent(new Event("input"))
-       #config_theme_idは「テーマなし」の場合があるので特例化
-       else
-         if value is "none"
-           $theme_none = $view.C("theme_none")[0]
-           $theme_none.click() unless $theme_none.checked
+              when "checkbox"
+                $key.checked = (value is "on")
+                $key.dispatchEvent(new Event("change"))
+              when "radio"
+                $key.value = value
+                $key.dispatchEvent(new Event("change"))
+              else
+                $keyTextArea = $view.$("textarea[name=\"#{key}\"]")
+                if $keyTextArea?
+                  $keyTextArea.value = value
+                  $key.dispatchEvent(new Event("input"))
+         #config_theme_idは「テーマなし」の場合があるので特例化
          else
-           $view.$("input[name=\"theme_id\"]").value = value
-           $view.$("input[name=\"theme_id\"]").dispatchEvent(new Event("change"))
-    return
-
-  #設定エクスポート
-  $view.C("config_export_button")[0].on "click", ->
-    content = app.config.getAll()
-    content = content.replace(/"config_last_board_sort_config":".*?","/,"\"")
-    content = content.replace(/"config_last_version":".*?","/,"\"")
-    blob = new Blob([content],{type:"text/plain"})
-    $a = $__("a")
-    $a.href = window.URL.createObjectURL(blob)
-    $a.setAttr("target", "_blank")
-    $a.setAttr("download", "read.crx-2_config.json")
-    $a.click()
-    return
-
-  #datファイルインポート
-  $$.C("dat_file_show")[0].on "click", ->
-    $dat_status.setClass("")
-    $$.C("dat_file_hide")[0].click()
-    return
-
-  datFile = "";
-  $dat_status = $$.I("dat_import_status")
-  $$.C("dat_file_hide")[0].on("change", (e) ->
-    file = e.target.files
-    reader = new FileReader()
-    reader.readAsText(file[0])
-    reader.onload = ->
-      datFile = reader.result
-      $dat_status.addClass("select")
-      $dat_status.textContent = "ファイル選択完了"
+           if value is "none"
+             $theme_none = $view.C("theme_none")[0]
+             $theme_none.click() unless $theme_none.checked
+           else
+             $view.$("input[name=\"theme_id\"]").value = value
+             $view.$("input[name=\"theme_id\"]").dispatchEvent(new Event("change"))
       return
-    return
+    exportFunc: ->
+      content = app.config.getAll()
+      content = content.replace(/"config_last_board_sort_config":".*?","/,"\"")
+      content = content.replace(/"config_last_version":".*?","/,"\"")
+      return content
   )
 
-  #datインポート
-  $view.C("dat_import_button")[0].on "click", ->
-    if datFile isnt ""
-      $dat_status.setClass("loading")
-      $dat_status.textContent = "更新中"
-      new Promise( (resolve, reject) ->
-        datDom = $view.$("textarea[name=\"image_replace_dat\"]")
-        datDom.value = datFile
-        datDom.dispatchEvent(new Event("input"))
-        resolve()
-      ).then( ->
-        $dat_status.addClass("done")
-        $dat_status.textContent = "インポート完了"
-        return
-      )
-    else
-      $dat_status.addClass("fail")
-      $dat_status.textContent = "ファイルを選択してください"
-    return
-
-  #replaceStrTxtファイルインポート
-  $$.C("replacestr_file_show")[0].on "click", ->
-    $replacestr_status.setClass("")
-    $$.C("replacestr_file_hide")[0].click()
-    return
-
-  replacestrFile = "";
-  $replacestr_status = $$.I("replacestr_import_status")
-  $$.C("replacestr_file_hide")[0].on("change", (e) ->
-    file = e.target.files
-    reader = new FileReader()
-    reader.readAsText(file[0])
-    reader.onload = ->
-      replacestrFile = reader.result
-      $replacestr_status.addClass("select")
-      $replacestr_status.textContent = "ファイル選択完了"
+  # ImageReplaceDatをインポート
+  new SettingIO(
+    name: "dat"
+    importFunc: (file) ->
+      datDom = $view.$("textarea[name=\"image_replace_dat\"]")
+      datDom.value = file
+      datDom.dispatchEvent(new Event("input"))
       return
-    return
   )
 
-  #replaceStrTxtインポート
-  $view.C("replacestr_file_import_button")[0].on "click", ->
-    if replacestrFile isnt ""
-      $replacestr_status.setClass("loading")
-      $replacestr_status.textContent = "更新中"
-      new Promise( (resolve, reject) ->
-        replacestrDom = $view.$("textarea[name=\"replace_str_txt\"]")
-        replacestrDom.value = replacestrFile
-        replacestrDom.dispatchEvent(new Event("input"))
-        resolve()
-      ).then( ->
-        $replacestr_status.addClass("done")
-        $replacestr_status.textContent = "インポート完了"
-        return
-      )
-    else
-      $replacestr_status.addClass("fail")
-      $replacestr_status.textContent = "ファイルを選択してください"
-    return
+  # ReplaceStrTxtをインポート
+  new SettingIO(
+    name: "replacestr"
+    importFunc: (file) ->
+      replacestrDom = $view.$("textarea[name=\"replace_str_txt\"]")
+      replacestrDom.value = file
+      replacestrDom.dispatchEvent(new Event("input"))
+      return
+  )
 
-  $replacestr_status = $$.I("history_from_1151_status")
   #過去の履歴をインポート
   $view.C("history_from_1151")[0].on "click", ->
     $replacestr_status.setClass("loading")

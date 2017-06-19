@@ -129,43 +129,6 @@ app.boot "/view/bookmark.html", ->
 
   $view.dispatchEvent(new Event("view_loaded"))
 
-  #自動更新
-  do ->
-    $button_pause = $view.C("button_pause")[0]
-
-    auto_load = ->
-      second = parseInt(app.config.get("auto_load_second_bookmark"))
-      if second >= 20000
-        $button_pause.removeClass("hidden")
-        return setInterval( ->
-          $view.dispatchEvent(new CustomEvent("request_reload", detail: true))
-          return
-        , second)
-      else
-        $button_pause.addClass("hidden")
-      return
-
-    auto_load_interval = auto_load()
-
-    app.message.addListener "config_updated", (message) ->
-      if message.key is "auto_load_second_bookmark"
-        clearInterval auto_load_interval
-        auto_load_interval = auto_load()
-      return
-
-    $view.on("togglePause", ->
-      if $button_pause.hasClass("pause")
-        clearInterval auto_load_interval
-      else
-        auto_load_interval = auto_load()
-      return
-    )
-
-    window.on "view_unload", ->
-      clearInterval(auto_load_interval)
-      return
-    return
-
   # 通知
   notify = ->
     notifyStr = ""

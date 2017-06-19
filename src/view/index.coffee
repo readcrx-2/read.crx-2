@@ -93,8 +93,8 @@ class app.view.Index extends app.view.View
 
     if focus
       app.defer ->
-        $iframe.contentDocument.activeElement?.blur()
-        $iframe.contentDocument.getElementsByClassName("content")[0]?.focus()
+        $iframe.contentDocument?.activeElement?.blur()
+        $iframe.contentDocument?.getElementsByClassName("content")[0]?.focus()
         return
     return
 
@@ -861,16 +861,16 @@ app.main = ->
           tab.remove(sourceTabId)
         #タブを全て閉じる
         else if target.hasClass("close_all")
-          for dom in $source.parent().child()
+          for dom in $source.parent().child() by -1
             tabid = dom.dataset.tabid
             tab.remove(tabid) unless tab.isLocked(tabid)
         #他のタブを全て閉じる
-        else if $this.is(".close_all_other")
-          for dom in $source.parent().child() when dom isnt $source
+        else if target.hasClass("close_all_other")
+          for dom in $source.parent().child() by -1 when dom isnt $source
             tabid = dom.dataset.tabid
             tab.remove(tabid) unless tab.isLocked(tabid)
         #右側のタブを全て閉じる
-        else if $this.is(".close_right")
+        else if target.hasClass("close_right")
           while dom = $source.next()
             tabid = dom.dataset.tabid
             tab.remove(tabid) unless tab.isLocked(tabid)

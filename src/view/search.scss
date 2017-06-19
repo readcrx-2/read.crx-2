@@ -18,7 +18,7 @@
 
 .body_empty {
   display: block;
-  &:after {
+  &::after {
     content: "表示可能項目無し";
   }
 }

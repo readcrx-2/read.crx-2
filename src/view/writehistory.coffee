@@ -18,7 +18,7 @@ app.boot "/view/writehistory.html", ->
 
     $view.addClass("loading")
 
-    app.WriteHistory.get(undefined, 500).then (data) ->
+    app.WriteHistory.get(null, 500).then (data) ->
       threadList.empty()
       threadList.addItem(data)
       $view.removeClass("loading")

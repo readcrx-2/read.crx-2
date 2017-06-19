@@ -106,28 +106,30 @@ app.boot "/view/bookmark.html", ->
     fn()
     return
 
-  for a in app.bookmarkEntryList.getAllThreads()
-    do (a) ->
-      boardUrl = app.URL.threadToBoard(a.url)
-      app.BoardTitleSolver.ask(boardUrl).then( (boardName) ->
-        threadList.addItem(
-          title: a.title
-          url: a.url
-          res_count: a.resCount or 0
-          read_state: a.readState or {url: a.url, read: 0, received: 0, last: 0}
-          created_at: /\/(\d+)\/$/.exec(a.url)[1] * 1000
-          expired: a.expired
-          board_url: boardUrl
-          board_title: boardName ? ""
-          is_https: (app.URL.getScheme(a.url) is "https")
-        )
-        return
+  getPromises = app.bookmarkEntryList.getAllThreads().map( (a) ->
+    boardUrl = app.URL.threadToBoard(a.url)
+    return app.BoardTitleSolver.ask(boardUrl).then( (boardName) ->
+      threadList.addItem(
+        title: a.title
+        url: a.url
+        res_count: a.resCount or 0
+        read_state: a.readState or {url: a.url, read: 0, received: 0, last: 0}
+        created_at: /\/(\d+)\/$/.exec(a.url)[1] * 1000
+        expired: a.expired
+        board_url: boardUrl
+        board_title: boardName ? ""
+        is_https: (app.URL.getScheme(a.url) is "https")
       )
+      return
+    )
+  )
 
-  app.message.send("request_update_read_state", {})
-  tableSorter.update()
+  Promise.all(getPromises).then( ->
+    app.message.send("request_update_read_state", {})
+    tableSorter.update()
 
-  $view.dispatchEvent(new Event("view_loaded"))
+    $view.dispatchEvent(new Event("view_loaded"))
+  )
 
   # 通知
   notify = ->

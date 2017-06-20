@@ -35,6 +35,8 @@ class app.view.Index extends app.view.View
     #.tab内の最後のタブが削除された時にフォーカスを移動
     @$element.on "tab_removed", (e) =>
       return unless e.target.hasClass("tab_content")
+      for dom in e.target.parent().$$(":scope > .tab_content") when dom isnt e.target
+        return
       app.defer =>
         for $tab in $$.C("tab") when $tab.C("tab_selected")?
           $tmp = $tab

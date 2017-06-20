@@ -242,7 +242,7 @@ app.boot "/view/thread.html", ->
     if (
       e.type is "click" and
       app.config.get("popup_trigger") is "click" and
-      target.matches(".id.link, .id.freq, .anchor_id, .slip.link, .slip.freq, .trip.link, .trip.freq, .rep.link, .rep.freq")
+      e.target.matches(".id.link, .id.freq, .anchor_id, .slip.link, .slip.freq, .trip.link, .trip.freq, .rep.link, .rep.freq")
     )
       return
 

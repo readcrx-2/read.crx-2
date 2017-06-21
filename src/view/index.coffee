@@ -887,13 +887,13 @@ app.main = ->
   # タブダブルクリックで更新
   for dom in $view.C("tab_tabbar")
     dom.on("dblclick", (e) ->
-      return unless e.target.matches("li")
-      $source = e.target.closest(".tab_tabbar, li")
+      if e.target.matches("li")
+        $source = e.target
+      else if e.target.closest(".tab_tabbar, li")?
+        $source = e.target.closest(".tab_tabbar, li")
+      return unless $source?
 
-      if $source.tagName is "LI"
-        sourceTabId = $source.dataset.tabid
-
-      tab = app.DOMData.get($source.closest(".tab"), "tab")
+      sourceTabId = $source.dataset.tabid
 
       $view.$("iframe[data-tabid=\"#{sourceTabId}\"]").contentWindow.postMessage(
         JSON.stringify(type: "request_reload")

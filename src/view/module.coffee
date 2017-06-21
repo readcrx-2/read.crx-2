@@ -521,12 +521,12 @@ class app.view.TabContentView extends app.view.PaneContentView
           newTab = howToOpen.new_tab or howToOpen.new_window
           background = howToOpen.background
 
-          if not @hasClass("disabled")
-            tmp = if @hasClass("button_back") then "Back" else "Forward"
-            parent.postMessage(
-              JSON.stringify(type: "requestTab#{tmp}", newTab: newTab, background: background),
-              location.origin
-            )
+          return if @hasClass("disabled")
+          tmp = if @hasClass("button_back") then "Back" else "Forward"
+          parent.postMessage(
+            JSON.stringify(type: "requestTab#{tmp}", newTab: newTab, background: background),
+            location.origin
+          )
         return
     return
 

@@ -51,6 +51,7 @@ app.boot "/view/search.html", ["thread_search"], (ThreadSearch) ->
           empty = false
           for dom in $tbody.child() when dom.style.display is "none"
             empty = true
+            break
           if empty
             $tbody.addClass("body_empty")
           else

@@ -157,10 +157,10 @@ class app.Board
             dict[bookmark.url] = true
 
           for thread in thread_list when dict[thread.url]?
-            delete dict[thread.url]
+            dict[thread.url] = false
             app.bookmark.update_expired(thread.url, false)
 
-          for thread_url of dict
+          for thread_url, val of dict when val
             app.bookmark.update_expired(thread_url, true)
         return
       .catch ->

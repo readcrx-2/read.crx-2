@@ -115,14 +115,15 @@ class app.Board
 
               if thread_list
                 @thread = thread_list
+              reject()
         else
           if hasCache and thread_list?
             @message += "キャッシュに残っていたデータを表示します。"
 
           if thread_list?
             @thread = thread_list
-        reject()
-        return {response, thread_list}
+          reject()
+        return Promise.reject({response, thread_list})
       #キャッシュ更新部
       .then ({response, thread_list}) ->
         if response?.status is 200
@@ -162,6 +163,8 @@ class app.Board
           for thread_url of dict
             app.bookmark.update_expired(thread_url, true)
         return
+      .catch ->
+        return
       return
     )
 
@@ -196,6 +199,7 @@ class app.Board
   ###
   @parse: (url, text) ->
     tmp = /^(https?):\/\/((?:\w+\.)?(\w+\.\w+))\/(\w+)\/(\w+)?/.exec(url)
+    scFlg = false
     switch tmp[3]
       when "machi.to"
         bbs_type = "machi"
@@ -206,6 +210,7 @@ class app.Board
         reg = /^(\d+)\.cgi,(.+)\((\d+)\)$/gm
         base_url = "#{tmp[1]}://jbbs.shitaraba.net/bbs/read.cgi/#{tmp[4]}/#{tmp[5]}/"
       else
+        scFlg = (tmp[3] is "2ch.sc")
         bbs_type = "2ch"
         reg = /^(\d+)\.dat<>(.+) \((\d+)\)$/gm
         base_url = "#{tmp[1]}://#{tmp[2]}/test/read.cgi/#{tmp[4]}/"
@@ -221,7 +226,7 @@ class app.Board
         res_count: +reg_res[3]
         created_at: +reg_res[1] * 1000
         ng: app.NG.isNGBoard(title)
-        is_net: !title.startsWith("★")
+        is_net: if scFlg then !title.startsWith("★") else null
       )
 
     if bbs_type is "jbbs"

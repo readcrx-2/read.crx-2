@@ -239,6 +239,36 @@ namespace app {
       });
     }
 
+    const AUDIO_REG = /\.(?:mp3|m4a|wav|oga|spx)(?:[\?#:&].*)?$/;
+    const VIDEO_REG = /\.(?:mp4|m4v|webm|ogv)(?:[\?#:&].*)?$/;
+    const OGG_REG = /\.(?:ogg|ogx)(?:[\?#:&].*)?$/;
+    export function getExtType (filename: string, {
+        audio = true,
+        video = true,
+        oggIsAudio = false,
+        oggIsVideo = true
+      }: {
+        audio?: boolean,
+        video?: boolean,
+        oggIsAudio?: boolean,
+        oggIsVideo?: boolean
+      } = {}
+    ): string|null {
+      if (audio && AUDIO_REG.test(filename)) {
+        return "audio";
+      }
+      if (video && VIDEO_REG.test(filename)) {
+        return "video";
+      }
+      if (video && oggIsVideo && OGG_REG.test(filename)) {
+        return "video";
+      }
+      if (audio && oggIsAudio && OGG_REG.test(filename)) {
+        return "audio";
+      }
+      return null;
+    }
+
     export function convertUrlFromPhone (url: string): string {
       var regs: any[];
       var tmp: string[]|null = [];

@@ -102,6 +102,7 @@ do ->
     .then (new_board_url) ->
       app.message.send("detected_ch_server_move",
         {before: old_board_url, after: new_board_url})
+      return new_board_url
 
   #文字参照をデコード
   span = document.createElement("span")

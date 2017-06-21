@@ -103,19 +103,21 @@ app.boot "/view/thread.html", ->
       return
     return
 
-  if app.URL.tsld(view_url) in ["2ch.net", "shitaraba.net", "bbspink.com", "2ch.sc", "open2ch.net"]
+  canWriteFlg = do ->
+    tsld = app.URL.tsld(view_url)
+    if tsld in ["2ch.net", "bbspink.com", "2ch.sc", "open2ch.net"]
+      return true
+    # したらばの過去ログ
+    if tsld is "shitaraba.net" and not view_url.includes("/read_archive.cgi/")
+      return true
+    return false
+
+  if canWriteFlg
     $view.C("button_write")[0].on "click", ->
       write()
       return
   else
     $view.C(".button_write")[0].remove()
-
-  # 過去ログであることが自明の場合は書き込みボタンを隠す
-  if (
-    app.URL.tsld(view_url) is "shitaraba.net" and
-    view_url.includes("/read_archive.cgi/")
-  )
-    $view.C("button_write")[0].remove()
 
   # 現状ではしたらばはhttpsに対応していないので切り替えボタンを隠す
   if app.URL.tsld(view_url) is "shitaraba.net"
@@ -240,7 +242,7 @@ app.boot "/view/thread.html", ->
     if (
       e.type is "click" and
       app.config.get("popup_trigger") is "click" and
-      target.matches(".id.link, .id.freq, .anchor_id, .slip.link, .slip.freq, .trip.link, .trip.freq, .rep.link, .rep.freq")
+      e.target.matches(".id.link, .id.freq, .anchor_id, .slip.link, .slip.freq, .trip.link, .trip.freq, .rep.link, .rep.freq")
     )
       return
 
@@ -277,7 +279,7 @@ app.boot "/view/thread.html", ->
     unless $article.dataset.trip?
       $menu.C("copy_trip")[0].remove()
 
-    unless app.URL.tsld(view_url) in ["2ch.net", "bbspink.com", "shitaraba.net"]
+    unless canWriteFlg
       $menu.C("res_to_this")[0].remove()
       $menu.C("res_to_this2")[0].remove()
 
@@ -486,7 +488,7 @@ app.boot "/view/thread.html", ->
     #read.crxで開ける板だった場合は.open_in_rcrxを付与して再度クリックイベント送出
     if flg
       e.preventDefault()
-      target.classList.add("open_in_rcrx")
+      target.addClass("open_in_rcrx")
       target.dataset.href = target.href
       target.href = "javascript:undefined;"
       if tmp.type is "thread"
@@ -559,14 +561,14 @@ app.boot "/view/thread.html", ->
         $div.textContent = "現在ポップアップしているIP/ID/SLIP/トリップです"
         $div.addClass("popup_disabled")
         $popup.addLast($div)
-      else if threadContent.idIndex[id]
-        for resNum in threadContent.idIndex[id]
+      else if threadContent.idIndex.has(id)
+        for resNum from threadContent.idIndex.get(id)
           $popup.addLast($content.child()[resNum - 1].cloneNode(true))
-      else if threadContent.slipIndex[slip]
-        for resNum in threadContent.slipIndex[slip]
+      else if threadContent.slipIndex.has(slip)
+        for resNum from threadContent.slipIndex.get(slip)
           $popup.addLast($content.child()[resNum - 1].cloneNode(true))
-      else if threadContent.tripIndex[trip]
-        for resNum in threadContent.tripIndex[trip]
+      else if threadContent.tripIndex.has(trip)
+        for resNum from threadContent.tripIndex.get(trip)
           $popup.addLast($content.child()[resNum - 1].cloneNode(true))
       else
         $div = $__("div")
@@ -586,7 +588,7 @@ app.boot "/view/thread.html", ->
 
       frag = $_F()
       res_num = +target.closest("article").C("num")[0].textContent
-      for target_res_num in app.DOMData.get($view, "threadContent").repIndex[res_num]
+      for target_res_num from app.DOMData.get($view, "threadContent").repIndex.get(res_num)
         frag.addLast(tmp[target_res_num - 1].cloneNode(true))
 
       $popup = $__("div")
@@ -908,7 +910,7 @@ app.boot "/view/thread.html", ->
       update_scroll_left()
       update_thread_footer()
       return
-    )
+    , passive: true)
     #次スレ検索
     for dom in $view.$$(".button_tool_search_next_thread, .search_next_thread")
       dom.on "click", ->
@@ -1161,7 +1163,7 @@ app.view_thread._read_state_manager = ($view) ->
     $content.on("scroll", ->
       scroll_flg = true
       return
-    )
+    , passive: true)
     $view.on("request_reload", ->
       scan_and_save()
       return

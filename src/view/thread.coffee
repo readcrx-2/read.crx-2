@@ -492,7 +492,7 @@ app.boot "/view/thread.html", ->
       target.dataset.href = target.href
       target.href = "javascript:undefined;"
       if tmp.type is "thread"
-        paramResNum = app.URL.getResNumber(target.href)
+        paramResNum = app.URL.getResNumber(target.dataset.href)
         target.dataset.paramResNum = paramResNum if paramResNum
       app.defer ->
         target.dispatchEvent(e)

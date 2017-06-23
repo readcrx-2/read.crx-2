@@ -19,9 +19,8 @@ app.boot "/view/bookmark.html", ->
   new app.view.TabContentView($view)
 
   trUpdatedObserver = new MutationObserver (records) ->
-    for record in records
-      if record.target.matches("tr.updated")
-        record.target.parent().addLast(record.target)
+    for record in records when record.target.matches("tr.updated")
+      record.target.parent().addLast(record.target)
     return
 
   #リロード時処理

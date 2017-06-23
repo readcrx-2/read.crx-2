@@ -673,7 +673,7 @@ class UI.ThreadContent
     do =>
       for [resKey, index] from @repIndex
         res = @container.child()[resKey - 1]
-        return unless res
+        continue unless res
         resCount = index.size
         if elm = res.C("rep")[0]
           newFlg = false

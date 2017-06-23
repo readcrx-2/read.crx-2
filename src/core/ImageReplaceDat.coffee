@@ -55,32 +55,32 @@ class app.ImageReplaceDat
   ###
   @parse: (string) ->
     dat = new Set()
-    if string isnt ""
-      datStrSplit = string.split("\n")
-      for d in datStrSplit
-        continue if d is ""
-        continue if ["//",";", "'"].some((ele) -> d.startsWith(ele))
-        r = d.split("\t")
-        if r[0]?
-          obj =
-            baseUrl: r[0]
-            replaceUrl: if r[1]? then r[1] else ""
-            referrerUrl: if r[2]? then r[2] else ""
-            userAgent: if r[5]? then r[5] else ""
+    return dat if string is ""
+    datStrSplit = string.split("\n")
+    for d in datStrSplit
+      continue if d is ""
+      continue if ["//",";", "'"].some((ele) -> d.startsWith(ele))
+      r = d.split("\t")
+      continue unless r[0]?
+      obj =
+        baseUrl: r[0]
+        replaceUrl: if r[1]? then r[1] else ""
+        referrerUrl: if r[2]? then r[2] else ""
+        userAgent: if r[5]? then r[5] else ""
 
-          if r[3]?
-            obj.param = {}
-            rurl = r[3].split("=")[1]
-            if r[3].includes("$EXTRACT")
-              obj.param =
-                type: "extract"
-                pattern: r[4]
-                referrerUrl: if rurl? then rurl else ""
-            else if r[4].includes("$COOKIE")
-              obj.param =
-                type: "cookie"
-                referrerUrl: if rurl? then rurl else ""
-          dat.add(obj)
+      if r[3]?
+        obj.param = {}
+        rurl = r[3].split("=")[1]
+        if r[3].includes("$EXTRACT")
+          obj.param =
+            type: "extract"
+            pattern: r[4]
+            referrerUrl: if rurl? then rurl else ""
+        else if r[4].includes("$COOKIE")
+          obj.param =
+            type: "cookie"
+            referrerUrl: if rurl? then rurl else ""
+      dat.add(obj)
     return dat
 
   ###*

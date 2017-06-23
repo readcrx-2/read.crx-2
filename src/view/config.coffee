@@ -474,12 +474,10 @@ app.boot "/view/config.html", ["cache", "bbsmenu"], (Cache, BBSMenu) ->
         return
       )
     ).then( (res) ->
-      for url, bookmark of res.bookmark
-        if typeof(url) is typeof(bookmark.title) is "string"
-          app.bookmark.add(url, bookmark.title)
-      for url, bookmark of res.bookmark_board
-        if typeof(url) is typeof(bookmark.title) is "string"
-          app.bookmark.add(url, bookmark.title)
+      for url, bookmark of res.bookmark when typeof(url) is typeof(bookmark.title) is "string"
+        app.bookmark.add(url, bookmark.title)
+      for url, bookmark of res.bookmark_board when typeof(url) is typeof(bookmark.title) is "string"
+        app.bookmark.add(url, bookmark.title)
       $status.textContent = "インポート完了"
       return
     , ->

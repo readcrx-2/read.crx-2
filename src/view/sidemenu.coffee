@@ -65,15 +65,14 @@ app.boot "/view/sidemenu.html", ["bbsmenu"], (BBSMenu) ->
   checkBbsmenuParam = (url) ->
     res = {net: false, sc: false, bbspink: false}
     tmp = ///http://kita.jikkyo.org/cbm/cbm.cgi/([\w\d\.]+)(?:/-all|-live2324)?(?:/=[\d\w=!&$()[\]{}]+)?/bbsmenuk?2?.html///.exec(url)
-    if tmp
-      param = tmp[1].split(".")
-      for mode in param
-        if mode in ["20","2r"]
-          res.net = true
-        else if mode is "sc"
-          res.sc = true
-        else if mode in ["p0", "p1"]
-          res.bbspink = true
+    return res unless tmp
+    param = tmp[1].split(".")
+    for mode in param
+      switch mode
+        when "20", "2r" then res.net = true
+        when "sc" then res.sc = true
+        when "p0", "p1" then res.bbspink = true
+      break if res.net and res.sc and res.bbspink
     return res
 
   #板覧関連

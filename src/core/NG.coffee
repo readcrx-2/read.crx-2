@@ -56,65 +56,66 @@ class app.NG
   ###
   @parse: (string) ->
     ng = new Set()
-    if string isnt ""
-      ngStrSplit = string.split("\n")
-      for ngWord in ngStrSplit
-        ngElement = {}
-        # 関係ないプレフィックスは飛ばす
-        if ngWord.startsWith("Comment:")
-          continue
-        # 指定したレス番号はNG除外する
-        if _ignoreResRegNumber.test(ngWord)
-          m = ngWord.match(_ignoreResRegNumber)
-          ngElement =
-            start: m[1]
-            finish: m[2]
-          ngWord = m[3]
-        # キーワードごとのNG処理
-        if ngWord.startsWith("RegExp:")
+    return ng if string is ""
+    ngStrSplit = string.split("\n")
+    for ngWord in ngStrSplit
+      # 関係ないプレフィックスは飛ばす
+      continue if ngWord.startsWith("Comment:")
+
+      ngElement = {}
+
+      # 指定したレス番号はNG除外する
+      if _ignoreResRegNumber.test(ngWord)
+        m = ngWord.match(_ignoreResRegNumber)
+        ngElement =
+          start: m[1]
+          finish: m[2]
+        ngWord = m[3]
+      # キーワードごとのNG処理
+      switch true
+        when ngWord.startsWith("RegExp:")
           ngElement.type = "regExp"
           ngElement.word = ngWord.substr(7)
-        else if ngWord.startsWith("RegExpTitle:")
+        when ngWord.startsWith("RegExpTitle:")
           ngElement.type = "regExpTitle"
           ngElement.word = ngWord.substr(12)
-        else if ngWord.startsWith("RegExpName:")
+        when ngWord.startsWith("RegExpName:")
           ngElement.type = "regExpName"
           ngElement.word = ngWord.substr(11)
-        else if ngWord.startsWith("RegExpMail:")
+        when ngWord.startsWith("RegExpMail:")
           ngElement.type = "regExpMail"
           ngElement.word = ngWord.substr(11)
-        else if ngWord.startsWith("RegExpID:")
+        when ngWord.startsWith("RegExpID:")
           ngElement.type = "regExpId"
           ngElement.word = ngWord.substr(9)
-        else if ngWord.startsWith("RegExpSlip:")
+        when ngWord.startsWith("RegExpSlip:")
           ngElement.type = "regExpSlip"
           ngElement.word = ngWord.substr(11)
-        else if ngWord.startsWith("RegExpBody:")
+        when ngWord.startsWith("RegExpBody:")
           ngElement.type = "regExpBody"
           ngElement.word = ngWord.substr(11)
-        else if ngWord.startsWith("Title:")
+        when ngWord.startsWith("Title:")
           ngElement.type = "title"
           ngElement.word = app.util.normalize(ngWord.substr(6))
-        else if ngWord.startsWith("Name:")
+        when ngWord.startsWith("Name:")
           ngElement.type = "name"
           ngElement.word = app.util.normalize(ngWord.substr(5))
-        else if ngWord.startsWith("Mail:")
+        when ngWord.startsWith("Mail:")
           ngElement.type = "mail"
           ngElement.word = app.util.normalize(ngWord.substr(5))
-        else if ngWord.startsWith("ID:")
+        when ngWord.startsWith("ID:")
           ngElement.type = "id"
           ngElement.word = ngWord
-        else if ngWord.startsWith("Slip:")
+        when ngWord.startsWith("Slip:")
           ngElement.type = "slip"
           ngElement.word = ngWord.substr(5)
-        else if ngWord.startsWith("Body:")
+        when ngWord.startsWith("Body:")
           ngElement.type = "body"
           ngElement.word = app.util.normalize(ngWord.substr(5))
         else
           ngElement.type = "word"
           ngElement.word = app.util.normalize(ngWord)
-        if ngElement.word isnt ""
-          ng.add(ngElement)
+      ng.add(ngElement) unless ngElement.word is ""
     return ng
 
   ###*

@@ -287,25 +287,24 @@ app.boot "/view/index.html", ["bbsmenu"], (BBSMenu) ->
     .then ([current_tab, windows]) ->
       app_path = chrome.extension.getURL("/view/index.html")
       for win in windows
-        for tab in win.tabs
-          if tab.id isnt current_tab.id and tab.url is app_path
-            chrome.windows.update(win.id, focused: true)
-            chrome.tabs.update(tab.id, highlighted: true)
-            if query
-              chrome.runtime.sendMessage({type: "open", query})
-            chrome.tabs.remove(current_tab.id)
-            return
+        for tab in win.tabs when tab.id isnt current_tab.id and tab.url is app_path
+          chrome.windows.update(win.id, focused: true)
+          chrome.tabs.update(tab.id, highlighted: true)
+          if query
+            chrome.runtime.sendMessage({type: "open", query})
+          chrome.tabs.remove(current_tab.id)
+          return
       history.replaceState(null, null, "/view/index.html")
       app.main()
-      if query
-        paramResNumFlag = (app.config.get("enable_link_with_res_number") is "on")
-        paramResNum = if paramResNumFlag then app.URL.getResNumber(query) else null
-        # 後ほど実行するためにCallbacksに登録する
-        app.BBSMenu.boardTableCallbacks = new app.Callbacks({persistent: false})
-        app.BBSMenu.boardTableCallbacks.add( ->
-          app.message.send("open", url: query, new_tab: true, param_res_num: paramResNum)
-          return
-        )
+      return unless query
+      paramResNumFlag = (app.config.get("enable_link_with_res_number") is "on")
+      paramResNum = if paramResNumFlag then app.URL.getResNumber(query) else null
+      # 後ほど実行するためにCallbacksに登録する
+      app.BBSMenu.boardTableCallbacks = new app.Callbacks({persistent: false})
+      app.BBSMenu.boardTableCallbacks.add( ->
+        app.message.send("open", url: query, new_tab: true, param_res_num: paramResNum)
+        return
+      )
 
 app.view_setup_resizer = ->
   MIN_TAB_HEIGHT = 100
@@ -818,9 +817,8 @@ app.main = ->
         tabURLList = (a.url for a in tab.getAll())
         list = tab.getRecentClosed()
         list.reverse()
-        for tmpTab in list
-          if not (tmpTab.url in tabURLList)
-            return tmpTab.tabId
+        for tmpTab in list when not (tmpTab.url in tabURLList)
+          return tmpTab.tabId
         null
 
       if not getLatestRestorableTabID()

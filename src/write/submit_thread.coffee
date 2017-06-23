@@ -38,10 +38,9 @@ app.boot "/write/submit_thread.html", ->
             # UA変更処理
             ua = app.config.get("useragent").trim()
             if ua.length > 0
-              for i in [0..req.requestHeaders.length-1]
-                if req.requestHeaders[i].name is "User-Agent"
-                  req.requestHeaders[i].value = ua
-                  break
+              for i in [0..req.requestHeaders.length-1] when req.requestHeaders[i].name is "User-Agent"
+                req.requestHeaders[i].value = ua
+                break
 
             return requestHeaders: req.requestHeaders
         return

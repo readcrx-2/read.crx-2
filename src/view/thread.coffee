@@ -117,7 +117,7 @@ app.boot "/view/thread.html", ->
       write()
       return
   else
-    $view.C(".button_write")[0].remove()
+    $view.C("button_write")[0].remove()
 
   # 現状ではしたらばはhttpsに対応していないので切り替えボタンを隠す
   if app.URL.tsld(view_url) is "shitaraba.net"

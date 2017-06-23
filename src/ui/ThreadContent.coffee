@@ -786,7 +786,7 @@ class UI.ThreadContent
       pre = sib
       sib = pre.next()
       if !sib? or sib.tagName is "BR"
-        if sib?.next().hasClass("thumbnail")
+        if sib?.next()?.hasClass("thumbnail")
           continue
         pre.addAfter(thumbnail)
         if not pre.hasClass("thumbnail")
@@ -823,7 +823,7 @@ class UI.ThreadContent
       pre = sib
       sib = pre.next()
       if !sib? or sib.tagName is "BR"
-        if sib?.next().hasClass("expandedURL")
+        if sib?.next()?.hasClass("expandedURL")
           continue
         pre.addAfter(expandedURL)
         if not pre.hasClass("expandedURL")

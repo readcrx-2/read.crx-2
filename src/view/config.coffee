@@ -504,7 +504,7 @@ app.boot "/view/config.html", ["cache", "bbsmenu"], (Cache, BBSMenu) ->
   #bbsmenu設定
   resetBBSMenu = ->
     app.config.del("bbsmenu").then ->
-      $view.C("direct.bbsmenu")[0].val(app.config.get("bbsmenu"))
+      $view.$(".direct.bbsmenu").value = app.config.get("bbsmenu")
       $$.C("bbsmenu_reload")[0].click()
 
   if $view.$(".direct.bbsmenu").value is ""

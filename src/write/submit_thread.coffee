@@ -33,7 +33,14 @@ app.boot "/write/submit_thread.html", ->
             ///^https?://\w+\.(2ch\.net|bbspink\.com|2ch\.sc|open2ch\.net)/test/bbs\.cgi ///.test(req.url) or
             ///^https?://jbbs\.shitaraba\.net/bbs/write\.cgi/ ///.test(req.url)
           )
-            req.requestHeaders.push(name: "Referer", value: arg.url)
+            if (
+              app.URL.tsld(arg.url) is "2ch.sc" and
+              app.URL.getScheme(arg.url) is "https"
+            )
+              refUrl = app.URL.changeScheme(arg.url)
+            else
+              refUrl = arg.url
+            req.requestHeaders.push(name: "Referer", value: refUrl)
 
             # UA変更処理
             ua = app.config.get("useragent").trim()

@@ -159,10 +159,10 @@ class app.NG
     return false
 
   ###*
-  @method isNGThread
+  @method checkNGThread
   @param {Array} res
   ###
-  @isNGThread: (res) ->
+  @checkNGThread: (res) ->
     tmpTxt1 = res.name + " " + res.mail + " " + res.other + " " + res.message
     tmpTxt2 = app.util.normalize(tmpTxt1)
 
@@ -183,5 +183,5 @@ class app.NG
         (n.type is "body" and app.util.normalize(res.message).includes(n.word)) or
         (n.type is "word" and tmpTxt2.includes(n.word))
       )
-        return true
-    return false
+        return n.type
+    return null

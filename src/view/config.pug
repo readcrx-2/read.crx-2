@@ -346,6 +346,26 @@ html.view.view_config(data-app-version=version)
             |NGを連鎖させる
           br
           label
+            input.direct(type="checkbox" name="display_ng")
+            |あぼーん表示する
+          br
+          label
+            input.direct(type="checkbox" name="nothing_id_ng")
+            |IDありスレのIDなしレスをNG
+          br
+          label
+            input.direct(type="checkbox" name="nothing_slip_ng")
+            |SLIPありスレのSLIPなしレスをNG
+          br
+          |ID/SLIPがあるスレの判定方法:
+          label
+            input.direct(type="radio" name="how_to_judgment_id" value="first_res" checked)
+            |1レス目に存在する場合
+          label
+            input.direct(type="radio" name="how_to_judgment_id" value="exists_once")
+            |1つでも存在する場合
+          br
+          label
             input.direct(type="checkbox" name="bookmark_show_dat")
             |ブックマークのdat落ちスレを常に表示する
 

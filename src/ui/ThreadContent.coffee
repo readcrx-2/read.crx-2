@@ -64,6 +64,20 @@ class UI.ThreadContent
     ###
     @_timeoutID = 0
 
+    ###*
+    @property _existIdAtFirstRes
+    @type Boolean
+    @private
+    ###
+    @_existIdAtFirstRes = false
+
+    ###*
+    @property _existSlipAtFirstRes
+    @type Boolean
+    @private
+    ###
+    @_existSlipAtFirstRes = false
+
     try
       @harmfulReg = new RegExp(app.config.get("image_blur_word"))
       @findHarmfulFlag = true
@@ -88,17 +102,17 @@ class UI.ThreadContent
     return
 
   ###*
-  @method checkImageExists
-  @param {Boolean} checkOnly
-  @param {Number} [resNum=1]
+  @method _loadNearlyImages
+  @param {Number}
   @param {Number} [offset=0]
   @return {Boolean} loadFlag
   ###
-  checkImageExists: (checkOnly, resNum = 1, offset = 0) ->
+  _loadNearlyImages: (resNum, offset = 0) ->
     loadFlag = false
     target = @container.children[resNum - 1]
 
-    viewTop = target.offsetTop + offset
+    viewTop = target.offsetTop
+    viewTop += offset if offset < 0
     viewBottom = viewTop + @container.offsetHeight
     if viewBottom > @container.scrollHeight
       viewBottom = @container.scrollHeight
@@ -106,35 +120,46 @@ class UI.ThreadContent
 
     # 遅延ロードの解除
     loadImageByElement = (targetElement) =>
-      qStr = if checkOnly then "img, video" else "img[data-src], video[data-src]"
-      for media in targetElement.$$(qStr)
+      for media in targetElement.$$("img[data-src], video[data-src]")
         loadFlag = true
-        continue if checkOnly or media.dataset.src is null
+        continue if media.dataset.src is null
         if media.hasClass("favicon")
           media.src = media.dataset.src
           media.removeAttr("data-src")
         else
-          media.dispatchEvent(new Event("immediateload"))
+          media.dispatchEvent(new Event("immediateload", {"bubbles": true}))
       return
 
     # 表示範囲内の要素をスキャンする
     # (上方)
     tmpResNum = resNum
     tmpTarget = target
-    while tmpTarget?.offsetTop + tmpTarget?.offsetHeight > viewTop and tmpResNum > 0
-      loadImageByElement(tmpTarget)
+    while (
+      tmpTarget and
+      ((tmpTarget.offsetHeight is 0) or
+       (tmpTarget.offsetTop + tmpTarget.offsetHeight > viewTop))
+    )
+      loadImageByElement(tmpTarget) unless tmpTarget.hasClass("ng")
       tmpResNum--
-      tmpTarget = @container.child()[tmpResNum - 1] if tmpResNum > 0
+      tmpTarget = if tmpResNum > 0 then @container.child()[tmpResNum - 1] else null
     # (下方)
     tmpResNum = resNum + 1
     tmpTarget = @container.child()[resNum]
-    while tmpTarget?.offsetTop < viewBottom and tmpTarget
-      loadImageByElement(tmpTarget)
+    len = @container.child().length
+    while (
+      tmpTarget and
+      ((tmpTarget.offsetHeight is 0) or
+       (tmpTarget.offsetTop < viewBottom and tmpTarget))
+    )
+      loadImageByElement(tmpTarget) unless tmpTarget.hasClass("ng")
       tmpResNum++
-      tmpTarget = @container.child()[tmpResNum - 1]
+      tmpTarget = if tmpResNum <= len then @container.child()[tmpResNum - 1] else null
 
     # 遅延スクロールの設定
-    if loadFlag or @_timeoutID isnt 0
+    if (
+      (loadFlag or @_timeoutID isnt 0) and
+      app.config.get("image_height_fix") is "off"
+    )
       clearTimeout(@_timeoutID) if @_timeoutID isnt 0
       delayScrollTime = parseInt(app.config.get("delay_scroll_time"))
       @_timeoutID = setTimeout( =>
@@ -164,26 +189,32 @@ class UI.ThreadContent
       target = null
 
     # もしターゲットがNGだった場合、その直前/直後の非NGレスをターゲットに変更する
-    if target and target.hasClass("ng")
+    if target and target.offsetHeight is 0
       replaced = target
       while (replaced = replaced.prev())
-        if !replaced.hasClass("ng")
+        if replaced.offsetHeight isnt 0
           target = replaced
           break
         if !replaced?
           replaced = target
           while (replaced = replaced.next())
-            if !replaced.hasClass("ng")
+            if replaced.offsetHeight isnt 0
               target = replaced
               break
 
     if target
-      # 可変サイズの画像が存在している場合は画像を事前にロードする
-      if app.config.get("image_height_fix") is "off" and not rerun
-        loadFlag = @checkImageExists(false, resNum, offset)
+      # 前後に存在する画像を事前にロードする
+      loadFlag = @_loadNearlyImages(resNum, offset) unless rerun
+
+      # offsetが比率の場合はpxを求める
+      if offset > 0 and offset < 1
+        offset = Math.round(target.offsetHeight * offset)
 
       # 遅延スクロールの設定
-      if loadFlag or @_timeoutID isnt 0
+      if (
+        (loadFlag or @_timeoutID isnt 0) and
+        app.config.get("image_height_fix") is "off"
+      )
         @container.scrollTop = target.offsetTop + offset
         return
       return if rerun and @container.scrollTop is target.offsetTop + offset
@@ -245,6 +276,28 @@ class UI.ThreadContent
       read = 1
 
     read
+
+  ###*
+  @method getDisplay
+  @return {Object} 現在表示していると推測されるレスの番号とオフセット
+  ###
+  getDisplay: ->
+    containerTop = @container.scrollTop
+    containerBottom = containerTop + @container.clientHeight
+    resRead = {resNum: 1, offset: 0, bottom: false}
+
+    # 既に画面の一番下までスクロールしている場合
+    # (いつのまにか位置がずれていることがあるので余裕を設ける)
+    if containerBottom >= @container.scrollHeight - 60
+      resRead.bottom = true
+
+    # スクロール位置のレスを抽出
+    for res, key in @container.child() when res.offsetTop + res.offsetHeight >= containerTop
+      resRead.resNum = key + 1
+      resRead.offset = (containerTop - res.offsetTop) / res.offsetHeight
+      break
+
+    return resRead
 
   ###*
   @method getSelected
@@ -415,6 +468,7 @@ class UI.ThreadContent
 
           res.num = resNum
           res.class = []
+          res.attr = []
           scheme = app.URL.getScheme(@url)
 
           res = app.ReplaceStrTxt.do(@url, document.title, res)
@@ -479,6 +533,7 @@ class UI.ThreadContent
 
                 if resNum is 1
                   @oneId = fixedId
+                  @_existIdAtFirstRes = true
 
                 if fixedId is @oneId
                   res.class.push("one")
@@ -501,6 +556,8 @@ class UI.ThreadContent
               tmp = tmp.slice(0, index) + """<span class="slip">SLIP:#{res.slip}</span>""" + tmp.slice(index, tmp.length)
             else
               tmp += """<span class="slip">SLIP:#{res.slip}</span>"""
+            if resNum is 1
+              @_existSlipAtFirstRes = true
 
           articleHtml += """<span class="other">#{tmp}</span>"""
 
@@ -511,8 +568,28 @@ class UI.ThreadContent
 
           # id, slip, tripが取り終わったタイミングでNG判定を行う
           # NG判定されるものは、ReplaceStrTxtで置き換え後のテキストなので注意すること
-          if app.NG.isNGThread(res)
+          if ngType = app.NG.checkNGThread(res)
             res.class.push("ng")
+            res.attr["ng-type"] = ngType
+          else
+            guessType = app.URL.guessType(@url)
+            if guessType.bbsType is "2ch" and resNum <= 1000
+              # idなしをNG
+              if (
+                app.config.get("nothing_id_ng") is "on" and !res.id? and
+                ((app.config.get("how_to_judgment_id") is "first_res" and @_existIdAtFirstRes) or
+                 (app.config.get("how_to_judgment_id") is "exists_once" and @idIndex.size isnt 0))
+              )
+                res.class.push("ng")
+                res.attr["ng-type"] = "IDなし"
+              # slipなしをNG
+              else if (
+                app.config.get("nothing_slip_ng") is "on" and !res.slip? and
+                ((app.config.get("how_to_judgment_id") is "first_res" and @_existSlipAtFirstRes) or
+                 (app.config.get("how_to_judgment_id") is "exists_once" and @slipIndex.size isnt 0))
+              )
+                res.class.push("ng")
+                res.attr["ng-type"] = "SLIPなし"
 
           tmp = (
             res.message
@@ -578,6 +655,9 @@ class UI.ThreadContent
           if color? then articleHtml += " style=\"color:##{color[1]};\""
           articleHtml += ">#{tmp}</div>"
 
+          if app.config.get("display_ng") is "on" and res.class.includes("ng")
+            res.class.push("disp_ng")
+
           tmp = ""
           tmp += " class=\"#{res.class.join(" ")}\""
           if res.id?
@@ -586,6 +666,8 @@ class UI.ThreadContent
             tmp += " data-slip=\"#{res.slip}\""
           if res.trip?
             tmp += " data-trip=\"#{res.trip}\""
+          for key, val of res.attr
+            tmp += " #{key}=\"#{val}\""
 
           articleHtml = """<article#{tmp}>#{articleHtml}</article>"""
           html += articleHtml
@@ -691,7 +773,11 @@ class UI.ThreadContent
         #連鎖NG
         if app.config.get("chain_ng") is "on" and res.hasClass("ng")
           for r from index
+            continue if @container.child()[r - 1].hasClass("ng")
             @container.child()[r - 1].addClass("ng")
+            @container.child()[r - 1].setAttr("ng-type", "chain")
+            if app.config.get("display_ng") is "on"
+              @container.child()[r - 1].addClass("disp_ng")
         #自分に対してのレス
         if res.hasClass("written")
           for r from index

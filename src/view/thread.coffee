@@ -172,10 +172,6 @@ app.boot "/view/thread.html", ->
         on_scroll = true
         return
 
-      # 可変サイズの画像が存在している場合は1ページ目の画像チェックを実行する
-      if app.config.get("image_height_fix") is "off"
-        threadContent.checkImageExists(true)
-
       $last = $content.C("last")[0]
       lastNum = 0
       for dom in $content.$$(":scope > article:last-child")
@@ -187,7 +183,8 @@ app.boot "/view/thread.html", ->
         threadContent.select(jumpResNum, true)
       # 最終既読位置へ
       else if $last?
-        threadContent.scrollTo(+$last.C("num")[0].textContent)
+        offset = $last.attr("last-offset") ? 0
+        threadContent.scrollTo(+$last.C("num")[0].textContent, false, +offset)
 
       #スクロールされなかった場合も余所の処理を走らすためにscrollを発火
       unless on_scroll
@@ -204,14 +201,17 @@ app.boot "/view/thread.html", ->
               threadContent.scrollTo(jumpResNum, true, -60)
               threadContent.select(jumpResNum, true)
             else
+              offset = -100
               for dom in $content.child() when dom.matches(".last.received + article")
                 $tmp = dom
                 break
               # 新着が存在しない場合はスクロールを実行するためにレスを探す
-              $tmp ?= $content.$(":scope > article.last")
+              unless $tmp?
+                $tmp = $content.$(":scope > article.last")
+                offset = $tmp.attr("last-offset") ? -100
               $tmp ?= $content.$(":scope > article.read")
               $tmp ?= $content.$(":scope > article:last-child")
-              threadContent.scrollTo(+$tmp.C("num")[0].textContent, true, -100) if $tmp?
+              threadContent.scrollTo(+$tmp.C("num")[0].textContent, true, +offset) if $tmp?
           when "surely_new"
             for dom, i in $content.child() when dom.matches(".last.received + article")
               res_num = i+1
@@ -492,7 +492,7 @@ app.boot "/view/thread.html", ->
       target.dataset.href = target.href
       target.href = "javascript:undefined;"
       if tmp.type is "thread"
-        paramResNum = app.URL.getResNumber(target.href)
+        paramResNum = app.URL.getResNumber(target.dataset.href)
         target.dataset.paramResNum = paramResNum if paramResNum
       app.defer ->
         target.dispatchEvent(e)
@@ -763,9 +763,11 @@ app.boot "/view/thread.html", ->
         for dom, i in $view.T("article") when dom.matches(selector)
           res_num = i + 1
           break
+        if key is ".jump_last"
+          offset = dom.attr("last-offset") ? offset
 
         if typeof res_num is "number"
-          threadContent.scrollTo(res_num, true, offset)
+          threadContent.scrollTo(res_num, true, +offset)
         else
           app.log("warn", "[view_thread] .jump_panel: ターゲットが存在しません")
       return
@@ -929,9 +931,6 @@ app.boot "/view/thread.html", ->
   $view.on "lazyload-load", (e) ->
     target = e.target.closest(".thumbnail > a > img.image, .thumbnail > video")
     return unless target?
-    # Lazyloadを実行させるためにスクロールを発火
-    if app.config.get("image_height_fix") is "off"
-      $view.C("content")[0].dispatchEvent(new Event("scroll"))
     # マウスオーバーによるズームの設定
     app.view_thread._setupHoverZoom(target)
     return
@@ -1041,7 +1040,9 @@ app.view_thread._read_state_manager = ($view) ->
   view_url = $view.dataset.url
   board_url = app.URL.threadToBoard(view_url)
   readStateAttached = false
-  attachedReadState = {last: 0, read: 0, received: 0}
+  requestReloadFlag = false
+  scanCountByReloaded = 0
+  attachedReadState = {last: 0, read: 0, received: 0, offset: null}
 
   #read_stateの取得
   get_read_state = new Promise( (resolve, reject) ->
@@ -1051,7 +1052,7 @@ app.view_thread._read_state_manager = ($view) ->
       resolve({read_state, read_state_updated})
     else
       app.ReadState.get(view_url).then (_read_state) ->
-        read_state = _read_state or {received: 0, read: 0, last: 0, url: view_url}
+        read_state = _read_state or {received: 0, read: 0, last: 0, url: view_url, offset: null}
         resolve({read_state, read_state_updated})
     return
   )
@@ -1064,6 +1065,7 @@ app.view_thread._read_state_manager = ($view) ->
       if attachedReadState.last > 0
         $content.C("last")[0]?.removeClass("last")
         $content.child()[attachedReadState.last - 1]?.addClass("last")
+        $content.child()[attachedReadState.last - 1]?.attr("last-offset", attachedReadState.offset)
       if attachedReadState.read > 0
         $content.C("read")[0]?.removeClass("read")
         $content.child()[attachedReadState.read - 1]?.addClass("read")
@@ -1071,6 +1073,7 @@ app.view_thread._read_state_manager = ($view) ->
         $content.C("received")[0]?.removeClass("received")
         $content.child()[attachedReadState.received - 1]?.addClass("received")
       readStateAttached = false
+      requestReloadFlag = false
       $view.dispatchEvent(new Event("read_state_attached"))
       return
     # 初回の処理
@@ -1084,9 +1087,11 @@ app.view_thread._read_state_manager = ($view) ->
       contentLength = $content.child().length
       if read_state.last <= contentLength
         $content.child()[read_state.last - 1]?.addClass("last")
+        $content.child()[read_state.last - 1]?.attr("last-offset", read_state.offset)
         attachedReadState.last = -999
       else
         attachedReadState.last = read_state.last
+        attachedReadState.offset = read_state.offset
       if read_state.read <= contentLength
         $content.child()[read_state.read - 1]?.addClass("read")
         attachedReadState.read = -999
@@ -1098,6 +1103,7 @@ app.view_thread._read_state_manager = ($view) ->
       else
         attachedReadState.received = read_state.received
       readStateAttached = true
+      requestReloadFlag = false
 
       $view.dispatchEvent(new Event("read_state_attached"))
     return
@@ -1109,18 +1115,33 @@ app.view_thread._read_state_manager = ($view) ->
       return if received is 0
 
       last = app.DOMData.get($view, "threadContent").getRead()
+      scanCountByReloaded++ if requestReloadFlag
 
       if read_state.received isnt received
         read_state.received = received
         read_state_updated = true
 
-      if read_state.last isnt last
+      lastDisplay = app.DOMData.get($view, "threadContent").getDisplay()
+      if (
+        (!requestReloadFlag or scanCountByReloaded is 1) and
+        (!lastDisplay.bottom or lastDisplay.resNum is last)
+      )
+        if (
+          read_state.last isnt lastDisplay.resNum or
+          read_state.offset isnt lastDisplay.offset
+        )
+          read_state.last = lastDisplay.resNum
+          read_state.offset = lastDisplay.offset
+          read_state_updated = true
+      else if read_state.last isnt last
         read_state.last = last
+        read_state.offset = null
         read_state_updated = true
 
-      if read_state.read < read_state.last
-        read_state.read = read_state.last
+      if read_state.read < last
+        read_state.read = last
         read_state_updated = true
+
       return
 
     #アンロード時は非同期系の処理をzombie.htmlに渡す
@@ -1165,6 +1186,8 @@ app.view_thread._read_state_manager = ($view) ->
       return
     , passive: true)
     $view.on("request_reload", ->
+      requestReloadFlag = true
+      scanCountByReloaded = 0
       scan_and_save()
       return
     )

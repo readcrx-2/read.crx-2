@@ -694,7 +694,7 @@ app.boot "/view/thread.html", ->
       onclick: (info, tab) =>
         target.setAttr("toggle_param_res_num", "on")
         app.defer =>
-          target.dispatchEvent(new Event("mousedown"))
+          target.dispatchEvent(new Event("mousedown", {"bubbles": true}))
         return
     })
     return

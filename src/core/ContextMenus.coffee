@@ -38,15 +38,6 @@ class app.contextMenus
       title: "レス番号を指定してリンクを開く",
       contexts: ["link"],
       enabled: false,
-      targetUrlPatterns: [
-        "*://*.2ch.net/*",
-        "*://*.2ch.sc/*",
-        "*://*.open2ch.net/*",
-        "*://*.bbspink.com/*",
-        "*://jbbs.shitaraba.net/*",
-        "*://jbbs.livedoor.jp/*",
-        "*://*.machi.to/*"
-      ],
       documentUrlPatterns: [viewThread]
     )
     return

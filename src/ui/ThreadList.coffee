@@ -283,6 +283,9 @@ class UI.ThreadList
               else if e.target.hasClass("del_writehistory")
                 app.WriteHistory.remove(threadURL, threadWrittenRes)
                 $tr.remove()
+              else if e.target.hasClass("ignore_res_number")
+                $tr.setAttr("ignore-res-number", "on")
+                $tr.dispatchEvent(new Event("mousedown", {bubbles: true}))
               else if e.target.hasClass("del_read_state")
                 app.ReadState.remove(threadURL)
 

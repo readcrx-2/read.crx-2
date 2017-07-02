@@ -93,7 +93,7 @@ class app.view.View
       if e.which isnt 3
         url = target.dataset.href or target.href
         title = target.dataset.title or target.textContent
-        writtenResNum = target.dataset.writtenResNum
+        writtenResNum = if target.getAttr("ignore-res-number") is "on" then null else target.dataset.writtenResNum
         paramResFlg = (
           (app.config.get("enable_link_with_res_number") is "on" and
            target.getAttr("toggle_param_res_num") isnt "on") or
@@ -102,6 +102,7 @@ class app.view.View
         )
         paramResNum = if paramResFlg then target.dataset.paramResNum else null
         target.removeAttribute("toggle_param_res_num")
+        target.removeAttribute("ignore-res-number")
         howToOpen = app.util.get_how_to_open(e)
         newTab = app.config.get("always_new_tab") is "on"
         newTab or= howToOpen.new_tab or howToOpen.new_window

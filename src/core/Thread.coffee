@@ -200,6 +200,7 @@ class app.Thread
         return Promise.reject({response, thread})
       )
       .then ({response, thread}) =>
+        @message = ""
         resolve()
         return {response, thread}
       , ({response, thread}) =>

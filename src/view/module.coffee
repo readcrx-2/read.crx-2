@@ -96,12 +96,12 @@ class app.view.View
         writtenResNum = if target.getAttr("ignore-res-number") is "on" then null else target.dataset.writtenResNum
         paramResFlg = (
           (app.config.get("enable_link_with_res_number") is "on" and
-           target.getAttr("toggle_param_res_num") isnt "on") or
+           target.getAttr("toggle-param-res-num") isnt "on") or
           (app.config.get("enable_link_with_res_number") is "off" and
-           target.getAttr("toggle_param_res_num") is "on")
+           target.getAttr("toggle-param-res-num") is "on")
         )
         paramResNum = if paramResFlg then target.dataset.paramResNum else null
-        target.removeAttribute("toggle_param_res_num")
+        target.removeAttribute("toggle-param-res-num")
         target.removeAttribute("ignore-res-number")
         howToOpen = app.util.get_how_to_open(e)
         newTab = app.config.get("always_new_tab") is "on"

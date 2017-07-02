@@ -1,50 +1,44 @@
 app.boot "/view/bookmark_source_selector.html", ->
-  new app.view.IframeView(document.documentElement)
+  $view = document.documentElement
 
-  $view = $(document.documentElement)
+  new app.view.IframeView($view)
 
-  $view
-    .on "click", ".node", ->
-      $(@)
+  $view.on("click", (e) ->
+    return unless e.target.hasClass("node")
+    sourceSelector = e.target.closest(".view_bookmark_source_selector")
+    sourceSelector.C("selected")[0]?.removeClass("selected")
+    sourceSelector.C("submit")[0]?.removeAttr("disabled")
+    e.target.addClass("selected")
+    return
+  )
+  $view.C("submit")[0].on("click", (e) ->
+    bookmark_id = (
+      e.target
         .closest(".view_bookmark_source_selector")
-          .find(".selected")
-            .removeClass("selected")
-          .end()
-          .find(".submit")
-            .removeAttr("disabled")
-          .end()
-        .end()
-        .addClass("selected")
-      return
-
-    .find(".submit")
-      .on "click", ->
-        bookmark_id = (
-          $(@)
-            .closest(".view_bookmark_source_selector")
-              .find(".node.selected")
-                .attr("data-bookmark_id")
-        )
-        app.config.set("bookmark_id", bookmark_id)
-        app.bookmarkEntryList.setRootNodeId(bookmark_id)
-        parent.postMessage(JSON.stringify(type: "request_killme"), location.origin)
-        return
+          .$(".node.selected")
+            .dataset.bookmarkId
+    )
+    app.config.set("bookmark_id", bookmark_id)
+    app.bookmarkEntryList.setRootNodeId(bookmark_id)
+    parent.postMessage(JSON.stringify(type: "request_killme"), location.origin)
+    return
+  )
 
   fn = (array_of_tree, ul) ->
     for tree in array_of_tree when tree.children?
-      li = document.createElement("li")
-      span = document.createElement("span")
-      span.className = "node"
+      li = $__("li")
+      span = $__("span")
+      span.addClass("node")
       span.textContent = tree.title
-      span.setAttribute("data-bookmark_id", tree.id)
-      li.appendChild(span)
-      ul.appendChild(li)
+      span.dataset.bookmarkId = tree.id
+      li.addLast(span)
+      ul.addLast(li)
 
-      cul = document.createElement("ul")
-      li.appendChild(cul)
+      cul = $__("ul")
+      li.addLast(cul)
 
       fn(tree.children, cul)
     null
 
   parent.chrome.bookmarks.getTree (array_of_tree) ->
-    fn(array_of_tree[0].children, $view.find(".node_list > ul")[0])
+    fn(array_of_tree[0].children, $view.$(".node_list > ul"))

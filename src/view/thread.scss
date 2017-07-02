@@ -3,12 +3,17 @@
 @include common;
 @include tab-content;
 
-@mixin view_thread_res_info {
-  border-top: 1px solid silver;
-  display: block;
-  margin: 1em 0 0 5px;
-  font-size: 12px;
-  text-align: center;
+@mixin view_thread_res_info($type: normal) {
+  @if $type == normal {
+    border-top: 1px solid silver;
+    display: block;
+    margin: 1em 0 0 5px;
+    font-size: 12px;
+    text-align: center;
+  } @else if $type == ng {
+    border-bottom: 1px solid silver;
+    white-space: pre;
+  }
 }
 
 @keyframes rotateThis {
@@ -22,7 +27,7 @@ header, body {
 
 .content {
   padding-bottom: 50px;
-  &[data-res_search_hit_count="0"]:after {
+  &[data-res-search-hit-count="0"]::after {
     display: block;
     position: absolute;
     width: 100%;
@@ -38,6 +43,31 @@ article {
   &.ng {
     display: none;
 
+    &.disp_ng {
+      display: block;
+      &::after {
+        display: block;
+        margin: 5px 10px;
+        color: gray;
+        content: "あぼーん (" attr(ng-type) ")";
+      }
+      &.last:not(:last-child)::after {
+        @include view_thread_res_info(ng);
+        content: "あぼーん (" attr(ng-type) ")\a\a　[しおり]";
+      }
+      &.received:not(:last-child)::after {
+        @include view_thread_res_info(ng);
+        content: "あぼーん (" attr(ng-type) ")\a\a　[ここから新着]";
+      }
+      &.read:not(:last-child)::after {
+        @include view_thread_res_info(ng);
+        content: "あぼーん (" attr(ng-type) ")\a\a　[ここから未読]";
+      }
+      > .message {
+        display: none;
+      }
+    }
+
     .popup & {
       display: block;
       color: #666;
@@ -47,6 +77,7 @@ article {
 
       &::after {
         display: block;
+        margin: 0px;
         min-width: 10em;
         content: "NG";
         text-align: center;
@@ -69,17 +100,17 @@ article {
   }
 }
 
-.last:not(:last-child):after {
+.last:not(:last-child):not(.disp_ng)::after {
   @include view_thread_res_info;
   content: "しおり";
 }
 
-.received:not(:last-child):after {
+.received:not(:last-child):not(.disp_ng)::after {
   @include view_thread_res_info;
   content: "ここから新着";
 }
 
-.read:not(:last-child):after {
+.read:not(:last-child):not(.disp_ng)::after {
   @include view_thread_res_info;
   content: "ここから未読";
 }
@@ -274,6 +305,9 @@ header {
 
 .searching > :not(.search_hit) {
   display: none;
+  &.disp_ng {
+    display: none;
+  }
 }
 
 .thread_footer {
@@ -472,7 +506,7 @@ header {
   }
 
   .last, .read, .received {
-    &:not(:last-child):after {
+    &:not(:last-child)::after {
       color: $thread-res-info-color;
     }
   }
@@ -484,7 +518,7 @@ header {
     margin-top: 15px;
   }
 
-  .content[data-res_search_hit_count="0"]:after {
+  .content[data-res-search-hit-count="0"]::after {
     color: $no-hit-message-color;
   }
 

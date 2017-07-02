@@ -6,7 +6,7 @@ html.view.view_config(data-app-version=version)
     title 設定
     link(rel="stylesheet" href=`/ui.css?v=${version}`)
     link(rel="stylesheet" href=`config.css?v=${version}`)
-    script(src=`/lib/jshortquery.min.js?v=${version}` defer)
+    script(src=`/lib/shortQuery.min.js?v=${version}` defer)
     script(src=`/ui.js?v=${version}` defer)
     script(src=`/app.js?v=${version}` defer)
     script(src=`module.js?v=${version}` defer)
@@ -151,7 +151,7 @@ html.view.view_config(data-app-version=version)
           button.dat_file_show(type="button") ファイル読み込み(UTF-8)
           input(type="file" class="dat_file_hide hidden" accept=".dat")
           button.dat_import_button(type="button") インポート
-          span.dat_import_status
+          span#dat_status
           br
           label
             input.direct(type="checkbox" name="image_blur")
@@ -324,9 +324,9 @@ html.view.view_config(data-app-version=version)
           |ここに ReplaceStr.txt を記述してください
           br
           button.replacestr_file_show(type="button") ファイル読み込み(UTF-8)
-          input(type="file" class="replacestr_file_hide hidden" accept=".dat")
-          button.dat_import_button(type="button") インポート
-          span.dat_import_status
+          input(type="file" class="replacestr_file_hide hidden" accept=".txt")
+          button.replacestr_import_button(type="button") インポート
+          span#replacestr_file_status
 
       section
         h2
@@ -344,6 +344,26 @@ html.view.view_config(data-app-version=version)
           label
             input.direct(type="checkbox" name="chain_ng")
             |NGを連鎖させる
+          br
+          label
+            input.direct(type="checkbox" name="display_ng")
+            |あぼーん表示する
+          br
+          label
+            input.direct(type="checkbox" name="nothing_id_ng")
+            |IDありスレのIDなしレスをNG
+          br
+          label
+            input.direct(type="checkbox" name="nothing_slip_ng")
+            |SLIPありスレのSLIPなしレスをNG
+          br
+          |ID/SLIPがあるスレの判定方法:
+          label
+            input.direct(type="radio" name="how_to_judgment_id" value="first_res" checked)
+            |1レス目に存在する場合
+          label
+            input.direct(type="radio" name="how_to_judgment_id" value="exists_once")
+            |1つでも存在する場合
           br
           label
             input.direct(type="checkbox" name="bookmark_show_dat")
@@ -373,11 +393,11 @@ html.view.view_config(data-app-version=version)
           .history
             |閲覧履歴:
             button.history_clear(type="button") 削除
-            button.history_export(type="button") エクスポート
+            button.history_export_button(type="button") エクスポート
             button.history_file_show(type="button") ファイル読み込み
             input(type="file" class="history_file_hide hidden" accept=".json")
-            button.history_import(type="button") インポート
-            span.history_status
+            button.history_import_button(type="button") インポート
+            span#history_status
             br
             input(type="number" class="history_date_range" min="1" value="7")
             |日以上の前の履歴を
@@ -388,11 +408,11 @@ html.view.view_config(data-app-version=version)
           .writehistory
             |書込履歴:
             button.writehistory_clear(type="button") 削除
-            button.writehistory_export(type="button") エクスポート
+            button.writehistory_export_button(type="button") エクスポート
             button.writehistory_file_show(type="button") ファイル読み込み
             input(type="file" class="writehistory_file_hide hidden" accept=".json")
-            button.writehistory_import(type="button") インポート
-            span.writehistory_status
+            button.writehistory_import_button(type="button") インポート
+            span#writehistory_status
             br
             input(type="number" class="writehistory_date_range" min="1" value="7")
             |日以上の前の履歴を
@@ -403,7 +423,7 @@ html.view.view_config(data-app-version=version)
             br
           .cache
             |キャッシュ:
-            span.cache_status
+            span#cache_status
             button.cache_clear(type="button") 削除
             br
             input(type="number" class="cache_date_range" min="1" value="7")
@@ -415,7 +435,7 @@ html.view.view_config(data-app-version=version)
             button.config_file_show(type="button") ファイル読み込み
             input(type="file" class="config_file_hide hidden" accept=".json")
             button.config_import_button(type="button") インポート
-            span.config_import_status
+            span#config_status
 
       section
         h2 2ch.netのスレッド読み込み形式
@@ -436,7 +456,7 @@ html.view.view_config(data-app-version=version)
           br
 
           button.bbsmenu_reload(type="button") 板一覧の更新
-          span.bbsmenu_reload_status
+          span#bbsmenu_reload_status
           |更新間隔:
           input.direct(type="number" name="bbsmenu_update_interval" min="1" value="7")
           |日
@@ -471,11 +491,11 @@ html.view.view_config(data-app-version=version)
         h2 過去バージョンからの移行
         div
           button.import_bookmark 初代read.crxからのブックマークのインポート
-          span.import_bookmark_status
+          span#import_bookmark_status
           br
           |履歴/書込履歴/既読情報テーブル:
           button.history_from_1151(type="button") インポート
-          span.history_from_1151_status
+          span#history_from_1151_status
           br
           |(1.15.1以降へ移行時に一度だけ実行してください)
 

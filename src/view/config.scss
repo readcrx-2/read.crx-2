@@ -104,6 +104,9 @@ section button {
   padding: 0;
   > li {
     display: inline-block;
+    &:not(:first-child) {
+      margin-left: 5px;
+    }
   }
 }
 
@@ -129,7 +132,7 @@ section button {
   }
 }
 
-.bbsmenu_reload_status {
+#bbsmenu_reload_status {
   &.done {
     color: $color-success;
   }

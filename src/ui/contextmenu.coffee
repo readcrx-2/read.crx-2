@@ -29,12 +29,13 @@ do ->
 
     $menu.addClass("contextmenu_menu")
     $menu.style.position = "fixed"
+    menuWidth = $menu.offsetWidth
     $menu.style.left = "#{x}px"
     $menu.style.top = "#{y}px"
 
-    if window.innerWidth < $menu.offsetLeft + $menu.offsetWidth
+    if window.innerWidth < $menu.offsetLeft + menuWidth
       $menu.style.left = ""
-      $menu.style.right = "0px"
+      $menu.style.right = "1px"
     if window.innerHeight < $menu.offsetTop + $menu.offsetHeight
-      $menu.style.top = "#{$menu.offsetTop - $menu.offsetHeight}px"
+      $menu.style.top = "#{Math.max($menu.offsetTop - $menu.offsetHeight, 0)}px"
     return

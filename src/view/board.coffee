@@ -7,20 +7,21 @@ app.boot "/view/board.html", ->
   url = app.URL.fix(url)
   opened_at = Date.now()
 
-  $view = $(document.documentElement)
-  $view.attr("data-url", url)
+  $view = document.documentElement
+  $view.setAttr("data-url", url)
 
-  $table = $("<table>")
-  threadList = new UI.ThreadList($table[0], {
+  $table = $__("table")
+  threadList = new UI.ThreadList($table, {
     th: ["bookmark", "title", "res", "unread", "heat", "createdDate"]
-    searchbox: $view.find(".searchbox")[0]
+    searchbox: $view.C("searchbox")[0]
   })
-  $view.data("threadList", threadList)
-  $view.data("selectableItemList", threadList)
-  tableSorter = new UI.TableSorter($table[0])
-  $table.data("tableSorter", tableSorter)
-  $table.find("th.res, th.unread, th.heat").attr("data-table_sort_type", "num")
-  $table.appendTo(".content")
+  app.DOMData.set($view, "threadList", threadList)
+  app.DOMData.set($view, "selectableItemList", threadList)
+  tableSorter = new UI.TableSorter($table)
+  app.DOMData.set($table, "tableSorter", tableSorter)
+  for dom in $table.$$("th.res, th.unread, th.heat")
+    dom.dataset.tableSortType = "num"
+  $$.C("content")[0].addLast($table)
 
   write = (param) ->
     param or= {}
@@ -33,41 +34,42 @@ app.boot "/view/board.html", ->
     )
 
   if app.URL.tsld(url) in ["2ch.net", "shitaraba.net", "bbspink.com", "2ch.sc", "open2ch.net"]
-    $view.find(".button_write").on "click", ->
+    $view.C("button_write")[0].on "click", ->
       write()
       return
   else
-    $view.find(".button_write").remove()
+    $view.C("button_write")[0].remove()
 
   # 現状ではしたらばはhttpsに対応していないので切り替えボタンを隠す
   if app.URL.tsld(url) is "shitaraba.net"
-    $view.find(".button_scheme").remove()
+    $view.C("button_scheme")[0].remove()
 
-  $view
-    .find("table")
-      .each ->
-        tmp = app.config.get("last_board_sort_config")
-        if tmp?
-          tableSorter.updateSnake(JSON.parse(tmp))
-        return
-      .on "table_sort_updated", ({detail}) ->
-        app.config.set("last_board_sort_config", JSON.stringify(detail))
-        return
-      #.sort_item_selectorが非表示の時、各種項目のソート切り替えを
-      #降順ソート→昇順ソート→標準ソートとする
-      .on "click", "th.table_sort_asc", ->
-        return if $view.find(".sort_item_selector").is(":visible")
-        $(@).closest("table").one "table_sort_before_update", (e) ->
-          e.preventDefault()
-          tableSorter.update(
-            sortAttribute: "data-thread_number"
-            sortOrder: "asc"
-            sortType: "num"
-          )
-          return
-        return
+  do ->
+    tmp = app.config.get("last_board_sort_config")
+    if tmp?
+      tableSorter.updateSnake(JSON.parse(tmp))
+    return
+  $table.on "table_sort_updated", ({detail}) ->
+    app.config.set("last_board_sort_config", JSON.stringify(detail))
+    return
+  #.sort_item_selectorが非表示の時、各種項目のソート切り替えを
+  #降順ソート→昇順ソート→標準ソートとする
+  $table.on "click", (e) ->
+    return if e.target.tagName isnt "TH" or e.target.hasClass("table_sort_asc")
+    return if $view.C("sort_item_selector")[0].style.display isnt "none"
+    $table.on("table_sort_before_update", func = (e) ->
+      $table.off("table_sort_before_update", func)
+      e.preventDefault()
+      tableSorter.update(
+        sortAttribute: "data-thread-number"
+        sortOrder: "asc"
+        sortType: "num"
+      )
+      return
+    )
+    return
 
-  new app.view.TabContentView(document.documentElement)
+  new app.view.TabContentView($view)
 
   app.BoardTitleSolver.ask(url).then (title) ->
     if title
@@ -78,120 +80,93 @@ app.boot "/view/board.html", ->
 
   load = (ex) ->
     $view.addClass("loading")
+    app.message.send("request_update_read_state", {board_url: url})
 
-    get_read_state_promise = app.ReadState.getByBoard(url)
+    app.defer( ->
+      get_read_state_promise = app.ReadState.getByBoard(url)
 
-    board_get_promise = new Promise( (resolve, reject) ->
-      app.board.get url, (res) ->
-        $message_bar = $view.find(".message_bar")
-        if res.status is "error"
-          $message_bar.addClass("error").html(res.message)
-        else
-          $message_bar.removeClass("error").empty()
+      board_get_promise = new Promise( (resolve, reject) ->
+        app.board.get url, (res) ->
+          $message_bar = $view.C("message_bar")[0]
+          if res.status is "error"
+            $message_bar.addClass("error")
+            $message_bar.innerHTML = res.message
+          else
+            $message_bar.removeClass("error")
+            $message_bar.removeChildren()
 
-        if res.data?
-          resolve(res.data)
-        else
-          reject()
+          if res.data?
+            resolve(res.data)
+          else
+            reject()
+          return
         return
+      )
+
+      Promise.all([get_read_state_promise, board_get_promise])
+        .then ([array_of_read_state, board]) ->
+          read_state_index = {}
+          for read_state, key in array_of_read_state
+            read_state_index[read_state.url] = key
+
+          threadList.empty()
+          item = []
+          for thread, thread_number in board
+            readState = array_of_read_state[read_state_index[thread.url]]
+            if (bookmark = app.bookmark.get(thread.url))?.read_state?
+              readState = bookmark.read_state
+            item.push(
+              title: thread.title
+              url: thread.url
+              res_count: thread.res_count
+              created_at: thread.created_at
+              read_state: readState
+              thread_number: thread_number
+              ng: thread.ng
+              need_less: thread.need_less
+              is_net: thread.is_net
+            )
+          threadList.addItem(item)
+
+          if ex?
+            writeFlag = app.config.get("no_writehistory") is "off"
+            if ex.kind is "own"
+              if writeFlag
+                app.WriteHistory.add(ex.thread_url, 1, ex.title, ex.name, ex.mail, ex.name, ex.mail, ex.mes, Date.now().valueOf())
+              app.message.send("open", url: ex.thread_url, new_tab: true)
+            else
+              for thread in board
+                if thread.title.includes(ex.title)
+                  if writeFlag
+                    app.WriteHistory.add(thread.url, 1, ex.title, ex.name, ex.mail, ex.name, ex.mail, ex.mes, thread.created_at)
+                  app.message.send("open", url: thread.url, new_tab: true)
+                  break
+
+          tableSorter.update()
+          return
+
+        .catch ->
+          return
+        .then ->
+          $view.removeClass("loading")
+
+          if $table.hasClass("table_search")
+            $view.C("searchbox")[0].dispatchEvent(new Event("input"))
+
+          $view.dispatchEvent(new Event("view_loaded"))
+
+          $button = $view.C("button_reload")[0]
+          $button.addClass("disabled")
+          setTimeout((-> $button.removeClass("disabled")), 1000 * 5)
+          return
       return
     )
-
-    Promise.all([get_read_state_promise, board_get_promise])
-      .then ([array_of_read_state, board]) ->
-        read_state_index = {}
-        for read_state, key in array_of_read_state
-          read_state_index[read_state.url] = key
-
-        threadList.empty()
-        threadList.addItem(
-          for thread, thread_number in board
-            title: thread.title
-            url: thread.url
-            res_count: thread.res_count
-            created_at: thread.created_at
-            read_state: array_of_read_state[read_state_index[thread.url]]
-            thread_number: thread_number
-            ng: thread.ng
-            need_less: thread.need_less
-            is_net: thread.is_net
-        )
-
-        if ex?
-          writeFlag = app.config.get("no_writehistory") is "off"
-          if ex.kind is "own"
-            if writeFlag
-              app.WriteHistory.add(ex.thread_url, 1, ex.title, ex.name, ex.mail, ex.name, ex.mail, ex.mes, Date.now().valueOf())
-            app.message.send("open", url: ex.thread_url, new_tab: true)
-          else
-            for thread in board
-              if thread.title.includes(ex.title)
-                if writeFlag
-                  app.WriteHistory.add(thread.url, 1, ex.title, ex.name, ex.mail, ex.name, ex.mail, ex.mes, thread.created_at)
-                app.message.send("open", url: thread.url, new_tab: true)
-                break
-
-        tableSorter.update()
-        return
-
-      .catch ->
-        return
-      .then ->
-        $view.removeClass("loading")
-
-        if $view.find("table").hasClass("table_search")
-          $view.find(".searchbox")[0].dispatchEvent(new Event("input"))
-
-        $view.trigger("view_loaded")
-
-        $button = $view.find(".button_reload")
-        $button.addClass("disabled")
-        setTimeout((-> $button.removeClass("disabled")), 1000 * 5)
-        app.message.send("request_update_read_state", {board_url: url})
-        return
     return
 
-  $view.on "request_reload", (e, ex) ->
+  $view.on "request_reload", (e) ->
     return if $view.hasClass("loading")
-    return if $view.find(".button_reload").hasClass("disabled")
-    load(ex)
+    return if $view.C("button_reload")[0].hasClass("disabled")
+    load(e.detail)
     return
   load()
-
-  #自動更新
-  do ->
-    $button_pause = $view.find(".button_pause")
-
-    auto_load = ->
-      second = parseInt(app.config.get("auto_load_second_board"))
-      if second >= 20000
-        $button_pause.removeClass("hidden")
-        return setInterval( ->
-          if app.config.get("auto_load_all") is "on" or $(".tab_container", parent.document).find("iframe[data-url=\"#{url}\"]").hasClass("tab_selected")
-            $view.trigger "request_reload"
-          return
-        , second)
-      else
-        $button_pause.addClass("hidden")
-      return
-
-    auto_load_interval = auto_load()
-
-    app.message.addListener "config_updated", (message) ->
-      if message.key is "auto_load_second_board"
-        clearInterval auto_load_interval
-        auto_load_interval = auto_load()
-      return
-
-    $view.on("togglePause", ->
-      if $button_pause.hasClass("pause")
-        clearInterval auto_load_interval
-      else
-        auto_load_interval = auto_load()
-      return
-    )
-
-    window.addEventListener "view_unload", ->
-      clearInterval(auto_load_interval)
-      return
   return

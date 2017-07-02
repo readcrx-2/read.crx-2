@@ -72,7 +72,7 @@ namespace UI {
       $div.addClass("tab_container");
       $ele.addLast($div);
 
-      window.addEventListener("message", (e) => {
+      window.on("message", (e) => {
         var message, tabId: string, history;
 
         if (e.origin !== location.origin || typeof e.data !== "string") {
@@ -143,11 +143,9 @@ namespace UI {
     }
 
     getAll (): any {
-      var li: HTMLLIElement, tmp, res:Object[] = [];
+      var li: HTMLLIElement, res:Object[] = [];
 
-      tmp = Array.from(this.$element.$$("li"));
-
-      for (li of tmp) {
+      for (li of this.$element.$$("li")) {
         res.push({
           tabId: li.dataset.tabid!,
           url: li.dataset.tabsrc!,
@@ -288,12 +286,10 @@ namespace UI {
       if (param.locked) {
         $tmptab = this.$element.$(`li[data-tabid=\"${tabId}\"]`);
         $tmptab.addClass("tab_locked");
-        $tmptab.T("img")[0].addClass("hidden");
       } else if (!(param.locked === void 0 || param.locked === null)) {
         $tmptab = this.$element.$(`li[data-tabid=\"${tabId}\"].tab_locked`);
         if ($tmptab !== null) {
           $tmptab.removeClass("tab_locked");
-          $tmptab.T("img")[0].removeClass("hidden");
         }
       }
     }

@@ -65,7 +65,7 @@ namespace app.HTTP {
         xhr.setRequestHeader(key, val);
       }
 
-      xhr.addEventListener("loadend", () => {
+      xhr.on("loadend", () => {
         var resonseHeaders;
 
         resonseHeaders = Request.parseHTTPHeader(xhr.getAllResponseHeaders());
@@ -73,11 +73,11 @@ namespace app.HTTP {
         callback(new Response(xhr.status, resonseHeaders, xhr.responseText, xhr.responseURL));
       });
 
-      xhr.addEventListener("timeout", () => {
+      xhr.on("timeout", () => {
         callback(new Response(0));
       });
 
-      xhr.addEventListener("abort", () => {
+      xhr.on("abort", () => {
         callback(new Response(0));
       });
 

@@ -1,9 +1,9 @@
 app.boot "/view/inputurl.html", ->
-  new app.view.TabContentView(document.documentElement)
+  $view = document.documentElement
 
-  $view = $(document.documentElement)
+  new app.view.TabContentView($view)
 
-  $view.find("form").on "submit", (e) ->
+  $view.T("form")[0].on "submit", (e) ->
     e.preventDefault()
 
     url = @url.value
@@ -17,8 +17,7 @@ app.boot "/view/inputurl.html", ->
       app.message.send("open", {url, new_tab: true, param_res_num: paramResNum})
       parent.postMessage(JSON.stringify(type: "request_killme"), location.origin)
     else
-      ele = $view
-        .find(".notice")
-          .text("未対応形式のURLです")
-      UI.Animate.fadeIn(ele[0])
+      ele = $view.C("notice")[0]
+      ele.textContent = "未対応形式のURLです"
+      UI.Animate.fadeIn(ele)
     return

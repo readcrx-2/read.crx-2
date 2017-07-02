@@ -8,7 +8,7 @@ namespace UI {
     private interval: number;
 
     constructor (private element: Element, private threshold: number = 100) {
-      this.element.on("wheel", this.onMouseWheel.bind(this));
+      this.element.on("wheel", this.onMouseWheel.bind(this), { passive: true });
       this.interval = setInterval(this.onInterval.bind(this), 500);
     }
 

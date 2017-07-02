@@ -37,6 +37,9 @@ module app.Bookmark {
         param.last = entry.readState.last;
         param.read = entry.readState.read;
         param.received = entry.readState.received;
+        if (entry.readState.offset) {
+          param.offset = entry.readState.offset;
+        }
       }
 
       if (entry.expired === true) {
@@ -83,7 +86,8 @@ module app.Bookmark {
           url: fixedURL,
           received: +arg.get("received"),
           read: +arg.get("read"),
-          last: + arg.get("last")
+          last: +arg.get("last"),
+          offset: arg.get("offset") ? +arg.get("offset") : null
         };
       }
 

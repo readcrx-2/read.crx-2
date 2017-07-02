@@ -17,9 +17,8 @@ class UI.TableSorter
       $th = e.target
       order = if $th.hasClass("table_sort_desc") then "asc" else "desc"
 
-      for tmp in @table.$$(".table_sort_asc, .table_sort_desc")
-        tmp.removeClass("table_sort_asc")
-        tmp.removeClass("table_sort_desc")
+      @table.C("table_sort_asc")[0]?.removeClass("table_sort_asc")
+      @table.C("table_sort_desc")[0]?.removeClass("table_sort_desc")
 
       $th.addClass("table_sort_#{order}")
 
@@ -42,12 +41,11 @@ class UI.TableSorter
       return
 
     if param.sortIndex? and param.sortOrder?
-      for tmp in @table.$$(".table_sort_asc, .table_sort_desc")
-        tmp.removeClass("table_sort_asc")
-        tmp.removeClass("table_sort_desc")
+      @table.C("table_sort_asc")[0]?.removeClass("table_sort_asc")
+      @table.C("table_sort_desc")[0]?.removeClass("table_sort_desc")
       $th = @table.$("th:nth-child(#{param.sortIndex + 1})")
       $th.addClass("table_sort_#{param.sortOrder}")
-      param.sortType ?= $th.getAttr("data-table_sort_type")
+      param.sortType ?= $th.dataset.tableSortType
     else if not param.sortAttribute?
       $th = @table.$(".table_sort_asc, .table_sort_desc")
 
@@ -66,15 +64,14 @@ class UI.TableSorter
           "desc"
 
     if param.sortIndex?
-      param.sortType ?= $th.getAttr("data-table_sort_type") or "str"
+      param.sortType ?= $th.dataset.tableSortType or "str"
       data = {}
       for $td in @table.$$("td:nth-child(#{param.sortIndex + 1})")
         data[$td.textContent] or= []
         data[$td.textContent].push($td.parent())
     else if param.sortAttribute?
-      for tmp in @table.$$(".table_sort_asc, .table_sort_desc")
-        tmp.removeClass("table_sort_asc")
-        tmp.removeClass("table_sort_desc")
+      @table.C("table_sort_asc")[0]?.removeClass("table_sort_asc")
+      @table.C("table_sort_desc")[0]?.removeClass("table_sort_desc")
 
       param.sortType ?= "str"
 

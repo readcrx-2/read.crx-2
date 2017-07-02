@@ -22,22 +22,22 @@
 
 tbody:empty {
   display: block;
-  &:after {
+  &::after {
     content: "ブックマークされているスレッドが有りません";
   }
 }
 
-tr.https td:first-child:before {
+tr.https td:first-child::before {
   content: url(/img/lock_12x12_3a5.webp);
   vertical-align: middle;
 }
 
-tr.expired td:first-child:before {
+tr.expired td:first-child::before {
   content: "[dat落ち] ";
   color: $color-error;
 }
 
-tr.errored:not(.expired) td:first-child:before {
+tr.errored:not(.expired) td:first-child::before {
   content: "[更新失敗] ";
   color: $color-error;
 }

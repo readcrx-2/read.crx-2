@@ -33,15 +33,21 @@ app.boot "/write/write.html", ->
             ///^https?://\w+\.(2ch\.net|bbspink\.com|2ch\.sc|open2ch\.net)/test/bbs\.cgi ///.test(req.url) or
             ///^https?://jbbs\.shitaraba\.net/bbs/write\.cgi/ ///.test(req.url)
           )
-            req.requestHeaders.push(name: "Referer", value: arg.url)
+            if (
+              app.URL.tsld(arg.url) is "2ch.sc" and
+              app.URL.getScheme(arg.url) is "https"
+            )
+              refUrl = app.URL.changeScheme(arg.url)
+            else
+              refUrl = arg.url
+            req.requestHeaders.push(name: "Referer", value: refUrl)
 
             # UA変更処理
             ua = app.config.get("useragent").trim()
             if ua.length > 0
-              for i in [0..req.requestHeaders.length-1]
-                if req.requestHeaders[i].name is "User-Agent"
-                  req.requestHeaders[i].value = ua
-                  break
+              for i in [0..req.requestHeaders.length-1] when req.requestHeaders[i].name is "User-Agent"
+                req.requestHeaders[i].value = ua
+                break
 
             return requestHeaders: req.requestHeaders
         return
@@ -132,7 +138,7 @@ app.boot "/write/write.html", ->
   $notice = $view.C("notice")[0]
   on_error = (message) ->
     for dom from $view.$$("form input, form textarea")
-      dom.disabled = false unless dom.hasClass("mail") and app.config.get("sage_flag") is "on"
+      dom.disabled = (dom.hasClass("mail") and app.config.get("sage_flag") is "on")
 
     if message
       $notice.textContent = "書き込み失敗 - #{message}"
@@ -153,7 +159,7 @@ app.boot "/write/write.html", ->
       clearTimeout(@timer)
       @timer = null
 
-  window.addEventListener "message", (e) ->
+  window.on "message", (e) ->
     message = JSON.parse(e.data)
     if message.type is "ping"
       e.source.postMessage("write_iframe_pong", "*")
@@ -185,7 +191,7 @@ app.boot "/write/write.html", ->
       return
     )
     for dom from $view.$$("input, textarea")
-      dom.disabled = false unless dom.hasClass("mail") and app.config.get("sage_flag") is "on"
+      dom.disabled = (dom.hasClass("mail") and app.config.get("sage_flag") is "on")
     $notice.textContent = ""
     return
 
@@ -201,7 +207,7 @@ app.boot "/write/write.html", ->
     e.preventDefault()
 
     for dom from $view.$$("input, textarea")
-      dom.disabled = true unless dom.hasClass("mail") and app.config.get("sage_flag") is "on"
+      dom.disabled = (dom.hasClass("mail") and app.config.get("sage_flag") is "on")
 
     guess_res = app.URL.guessType(arg.url)
 

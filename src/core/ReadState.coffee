@@ -41,7 +41,8 @@ class app.ReadState
         typeof read_state.url isnt "string" or
         not Number.isFinite(read_state.last) or
         not Number.isFinite(read_state.read) or
-        not Number.isFinite(read_state.received)
+        not Number.isFinite(read_state.received) or
+        not (Number.isFinite(read_state.offset) or read_state.offset is null)
       app.log("error", "app.ReadState.set: 引数が不正です", arguments)
       return Promise.reject()
 

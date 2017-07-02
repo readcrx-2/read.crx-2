@@ -10,6 +10,7 @@ namespace app {
       received: number;
       read: number;
       last: number;
+      offset: number|null;
     }
 
     export interface Entry {
@@ -55,7 +56,8 @@ namespace app {
           readState.url === entry.url &&
           Number.isFinite(readState.received) &&
           Number.isFinite(readState.last) &&
-          Number.isFinite(readState.read)
+          Number.isFinite(readState.read) &&
+          (readState.offset === null || Number.isFinite(readState.offset))
         ) {
           entry.readState = readState;
         }
@@ -87,7 +89,8 @@ namespace app {
           readState.url === entry.url &&
           Number.isFinite(readState.received) &&
           Number.isFinite(readState.last) &&
-          Number.isFinite(readState.read)
+          Number.isFinite(readState.read) &&
+          (readState.offset === null || Number.isFinite(readState.offset))
         ) {
           legacy.read_state = readState;
         }
@@ -329,7 +332,8 @@ namespace app {
               (before.readState && entry.readState) && (
                 before.readState.received !== entry.readState.received ||
                 before.readState.read !== entry.readState.read ||
-                before.readState.last !== entry.readState.last
+                before.readState.last !== entry.readState.last ||
+                before.readState.offset !== entry.readState.offset
               )
             )
           ) {

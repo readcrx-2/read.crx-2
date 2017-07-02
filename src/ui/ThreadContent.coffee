@@ -14,31 +14,31 @@ class UI.ThreadContent
     @property idIndex
     @type Object
     ###
-    @idIndex = {}
+    @idIndex = new Map()
 
     ###*
     @property slipIndex
     @type Object
     ###
-    @slipIndex = {}
+    @slipIndex = new Map()
 
     ###*
     @property tripIndex
     @type Object
     ###
-    @tripIndex = {}
+    @tripIndex = new Map()
 
     ###*
     @property repIndex
     @type Object
     ###
-    @repIndex = {}
+    @repIndex = new Map()
 
     ###*
     @property harmImgIndex
     @type Array
     ###
-    @harmImgIndex = []
+    @harmImgIndex = new Set()
 
     ###*
     @property oneId
@@ -64,6 +64,20 @@ class UI.ThreadContent
     ###
     @_timeoutID = 0
 
+    ###*
+    @property _existIdAtFirstRes
+    @type Boolean
+    @private
+    ###
+    @_existIdAtFirstRes = false
+
+    ###*
+    @property _existSlipAtFirstRes
+    @type Boolean
+    @private
+    ###
+    @_existSlipAtFirstRes = false
+
     try
       @harmfulReg = new RegExp(app.config.get("image_blur_word"))
       @findHarmfulFlag = true
@@ -88,17 +102,17 @@ class UI.ThreadContent
     return
 
   ###*
-  @method checkImageExists
-  @param {Boolean} checkOnly
-  @param {Number} [resNum=1]
+  @method _loadNearlyImages
+  @param {Number}
   @param {Number} [offset=0]
   @return {Boolean} loadFlag
   ###
-  checkImageExists: (checkOnly, resNum = 1, offset = 0) ->
+  _loadNearlyImages: (resNum, offset = 0) ->
     loadFlag = false
     target = @container.children[resNum - 1]
 
-    viewTop = target.offsetTop + offset
+    viewTop = target.offsetTop
+    viewTop += offset if offset < 0
     viewBottom = viewTop + @container.offsetHeight
     if viewBottom > @container.scrollHeight
       viewBottom = @container.scrollHeight
@@ -106,35 +120,46 @@ class UI.ThreadContent
 
     # 遅延ロードの解除
     loadImageByElement = (targetElement) =>
-      qStr = if checkOnly then "img, video" else "img[data-src], video[data-src]"
-      for media in targetElement.$$(qStr)
+      for media in targetElement.$$("img[data-src], video[data-src]")
         loadFlag = true
-        continue if checkOnly or media.getAttr("data-src") is null
+        continue if media.dataset.src is null
         if media.hasClass("favicon")
-          media.src = media.getAttr("data-src")
+          media.src = media.dataset.src
           media.removeAttr("data-src")
         else
-          media.dispatchEvent(new Event("immediateload"))
+          media.dispatchEvent(new Event("immediateload", {"bubbles": true}))
       return
 
     # 表示範囲内の要素をスキャンする
     # (上方)
     tmpResNum = resNum
     tmpTarget = target
-    while tmpTarget?.offsetTop + tmpTarget?.offsetHeight > viewTop and tmpResNum > 0
-      loadImageByElement(tmpTarget)
+    while (
+      tmpTarget and
+      ((tmpTarget.offsetHeight is 0) or
+       (tmpTarget.offsetTop + tmpTarget.offsetHeight > viewTop))
+    )
+      loadImageByElement(tmpTarget) unless tmpTarget.hasClass("ng")
       tmpResNum--
-      tmpTarget = @container.child()[tmpResNum - 1] if tmpResNum > 0
+      tmpTarget = if tmpResNum > 0 then @container.child()[tmpResNum - 1] else null
     # (下方)
     tmpResNum = resNum + 1
     tmpTarget = @container.child()[resNum]
-    while tmpTarget?.offsetTop < viewBottom and tmpTarget
-      loadImageByElement(tmpTarget)
+    len = @container.child().length
+    while (
+      tmpTarget and
+      ((tmpTarget.offsetHeight is 0) or
+       (tmpTarget.offsetTop < viewBottom and tmpTarget))
+    )
+      loadImageByElement(tmpTarget) unless tmpTarget.hasClass("ng")
       tmpResNum++
-      tmpTarget = @container.child()[tmpResNum - 1]
+      tmpTarget = if tmpResNum <= len then @container.child()[tmpResNum - 1] else null
 
     # 遅延スクロールの設定
-    if loadFlag or @_timeoutID isnt 0
+    if (
+      (loadFlag or @_timeoutID isnt 0) and
+      app.config.get("image_height_fix") is "off"
+    )
       clearTimeout(@_timeoutID) if @_timeoutID isnt 0
       delayScrollTime = parseInt(app.config.get("delay_scroll_time"))
       @_timeoutID = setTimeout( =>
@@ -164,26 +189,32 @@ class UI.ThreadContent
       target = null
 
     # もしターゲットがNGだった場合、その直前/直後の非NGレスをターゲットに変更する
-    if target and target.hasClass("ng")
+    if target and target.offsetHeight is 0
       replaced = target
       while (replaced = replaced.prev())
-        if !replaced.hasClass("ng")
+        if replaced.offsetHeight isnt 0
           target = replaced
           break
         if !replaced?
           replaced = target
           while (replaced = replaced.next())
-            if !replaced.hasClass("ng")
+            if replaced.offsetHeight isnt 0
               target = replaced
               break
 
     if target
-      # 可変サイズの画像が存在している場合は画像を事前にロードする
-      if app.config.get("image_height_fix") is "off" and not rerun
-        loadFlag = @checkImageExists(false, resNum, offset)
+      # 前後に存在する画像を事前にロードする
+      loadFlag = @_loadNearlyImages(resNum, offset) unless rerun
+
+      # offsetが比率の場合はpxを求める
+      if offset > 0 and offset < 1
+        offset = Math.round(target.offsetHeight * offset)
 
       # 遅延スクロールの設定
-      if loadFlag or @_timeoutID isnt 0
+      if (
+        (loadFlag or @_timeoutID isnt 0) and
+        app.config.get("image_height_fix") is "off"
+      )
         @container.scrollTop = target.offsetTop + offset
         return
       return if rerun and @container.scrollTop is target.offsetTop + offset
@@ -247,6 +278,28 @@ class UI.ThreadContent
     read
 
   ###*
+  @method getDisplay
+  @return {Object} 現在表示していると推測されるレスの番号とオフセット
+  ###
+  getDisplay: ->
+    containerTop = @container.scrollTop
+    containerBottom = containerTop + @container.clientHeight
+    resRead = {resNum: 1, offset: 0, bottom: false}
+
+    # 既に画面の一番下までスクロールしている場合
+    # (いつのまにか位置がずれていることがあるので余裕を設ける)
+    if containerBottom >= @container.scrollHeight - 60
+      resRead.bottom = true
+
+    # スクロール位置のレスを抽出
+    for res, key in @container.child() when res.offsetTop + res.offsetHeight >= containerTop
+      resRead.resNum = key + 1
+      resRead.offset = (containerTop - res.offsetTop) / res.offsetHeight
+      break
+
+    return resRead
+
+  ###*
   @method getSelected
   @return {Element|null}
   ###
@@ -264,8 +317,7 @@ class UI.ThreadContent
     if typeof target is "number"
       target = @container.$("article:nth-child(#{target}), article:last-child")
 
-    unless target
-      return
+    return unless target
 
     target.addClass("selected")
     if not preventScroll
@@ -416,6 +468,7 @@ class UI.ThreadContent
 
           res.num = resNum
           res.class = []
+          res.attr = []
           scheme = app.URL.getScheme(@url)
 
           res = app.ReplaceStrTxt.do(@url, document.title, res)
@@ -442,16 +495,16 @@ class UI.ThreadContent
               .replace(/<\/b>\(([^<>]+? [^<>]+?)\)<b>$/, ($0, $1) =>
                 res.slip = $1
 
-                @slipIndex[$1] = [] unless @slipIndex[$1]?
-                @slipIndex[$1].push(resNum)
+                @slipIndex.set($1, new Set()) unless @slipIndex.has($1)
+                @slipIndex.get($1).add(resNum)
 
                 return ""
                )
               .replace(/<\/b>(◆[^<>]+?) <b>/, ($0, $1) =>
                 res.trip = $1
 
-                @tripIndex[$1] = [] unless @tripIndex[$1]?
-                @tripIndex[$1].push(resNum)
+                @tripIndex.set($1, new Set()) unless @tripIndex.has($1)
+                @tripIndex.get($1).add(resNum)
 
                 return """<span class="trip">#{$1}</span>"""
               )
@@ -480,6 +533,7 @@ class UI.ThreadContent
 
                 if resNum is 1
                   @oneId = fixedId
+                  @_existIdAtFirstRes = true
 
                 if fixedId is @oneId
                   res.class.push("one")
@@ -487,8 +541,8 @@ class UI.ThreadContent
                 if fixedId.endsWith(".net")
                   res.class.push("net")
 
-                @idIndex[fixedId] = [] unless @idIndex[fixedId]?
-                @idIndex[fixedId].push(resNum)
+                @idIndex.set(fixedId, new Set()) unless @idIndex.has(fixedId)
+                @idIndex.get(fixedId).add(resNum)
 
                 return """<span class="id">#{$1}</span>"""
               )
@@ -502,6 +556,8 @@ class UI.ThreadContent
               tmp = tmp.slice(0, index) + """<span class="slip">SLIP:#{res.slip}</span>""" + tmp.slice(index, tmp.length)
             else
               tmp += """<span class="slip">SLIP:#{res.slip}</span>"""
+            if resNum is 1
+              @_existSlipAtFirstRes = true
 
           articleHtml += """<span class="other">#{tmp}</span>"""
 
@@ -512,8 +568,28 @@ class UI.ThreadContent
 
           # id, slip, tripが取り終わったタイミングでNG判定を行う
           # NG判定されるものは、ReplaceStrTxtで置き換え後のテキストなので注意すること
-          if app.NG.isNGThread(res)
+          if ngType = app.NG.checkNGThread(res)
             res.class.push("ng")
+            res.attr["ng-type"] = ngType
+          else
+            guessType = app.URL.guessType(@url)
+            if guessType.bbsType is "2ch" and resNum <= 1000
+              # idなしをNG
+              if (
+                app.config.get("nothing_id_ng") is "on" and !res.id? and
+                ((app.config.get("how_to_judgment_id") is "first_res" and @_existIdAtFirstRes) or
+                 (app.config.get("how_to_judgment_id") is "exists_once" and @idIndex.size isnt 0))
+              )
+                res.class.push("ng")
+                res.attr["ng-type"] = "IDなし"
+              # slipなしをNG
+              else if (
+                app.config.get("nothing_slip_ng") is "on" and !res.slip? and
+                ((app.config.get("how_to_judgment_id") is "first_res" and @_existSlipAtFirstRes) or
+                 (app.config.get("how_to_judgment_id") is "exists_once" and @slipIndex.size isnt 0))
+              )
+                res.class.push("ng")
+                res.attr["ng-type"] = "SLIPなし"
 
           tmp = (
             res.message
@@ -562,13 +638,13 @@ class UI.ThreadContent
                   for segment in anchor.segments
                     target = segment[0]
                     while target <= segment[1]
-                      @repIndex[target] = [] unless @repIndex[target]?
-                      @repIndex[target].push(resNum) unless resNum in @repIndex[target]
-                      @harmImgIndex.push(target) if isThatHarmImg
+                      @repIndex.set(target, new Set()) unless @repIndex.has(target)
+                      @repIndex.get(target).add(resNum)
+                      @harmImgIndex.add(target) if isThatHarmImg
                       target++
 
                 "<a href=\"javascript:undefined;\" class=\"anchor" +
-                (if disabled then " disabled\" data-disabled_reason=\"#{disabledReason}\"" else "\"") +
+                (if disabled then " disabled\" data-disabled-reason=\"#{disabledReason}\"" else "\"") +
                 ">#{$0}</a>"
               #IDリンク
               .replace /id:(?:[a-hj-z\d_\+\/\.\!]|i(?!d:))+/ig, ($0) ->
@@ -579,6 +655,9 @@ class UI.ThreadContent
           if color? then articleHtml += " style=\"color:##{color[1]};\""
           articleHtml += ">#{tmp}</div>"
 
+          if app.config.get("display_ng") is "on" and res.class.includes("ng")
+            res.class.push("disp_ng")
+
           tmp = ""
           tmp += " class=\"#{res.class.join(" ")}\""
           if res.id?
@@ -587,303 +666,285 @@ class UI.ThreadContent
             tmp += " data-slip=\"#{res.slip}\""
           if res.trip?
             tmp += " data-trip=\"#{res.trip}\""
+          for key, val of res.attr
+            tmp += " #{key}=\"#{val}\""
 
           articleHtml = """<article#{tmp}>#{articleHtml}</article>"""
           html += articleHtml
 
         @container.insertAdjacentHTML("BeforeEnd", html)
 
-        numbersReg = /(?:\(\d+\))?$/
-        #idカウント, .freq/.link更新
-        do =>
-          for id, index of @idIndex
-            idCount = index.length
-            for resNum in index
-              elm = @container.child()[resNum - 1].C("id")[0]
-              elmFirst = elm.firstChild
-              elmFirst.textContent = elmFirst.textContent.replace(numbersReg, "(#{idCount})")
-              if idCount >= 5
-                elm.removeClass("link")
-                elm.addClass("freq")
-              else if idCount >= 2
-                elm.addClass("link")
-          return
-
-        #slipカウント, .freq/.link更新
-        do =>
-          for slip, index of @slipIndex
-            slipCount = index.length
-            for resNum in index
-              elm = @container.child()[resNum - 1].C("slip")[0]
-              elmFirst = elm.firstChild
-              elmFirst.textContent = elmFirst.textContent.replace(numbersReg, "(#{slipCount})")
-              if slipCount >= 5
-                elm.removeClass("link")
-                elm.addClass("freq")
-              else if slipCount >= 2
-                elm.addClass("link")
-          return
-
-        #tripカウント, .freq/.link更新
-        do =>
-          for trip, index of @tripIndex
-            tripCount = index.length
-            for resNum in index
-              elm = @container.child()[resNum - 1].C("trip")[0]
-              elmFirst = elm.firstChild
-              elmFirst.textContent = elmFirst.textContent.replace(numbersReg, "(#{tripCount})")
-              if tripCount >= 5
-                elm.removeClass("link")
-                elm.addClass("freq")
-              else if tripCount >= 2
-                elm.addClass("link")
-          return
-
-        #harmImg更新
-        do =>
-          for res in @harmImgIndex
-            elm = @container.child()[res - 1]
-            continue unless elm
-            elm.addClass("has_blur_word")
-            if elm.hasClass("has_image") and app.config.get("image_blur") is "on"
-              for thumb in elm.$$(".thumbnail:not(.image_blur)")
-                @setImageBlur(thumb, true)
-          return
-
-        #参照関係再構築
-        do =>
-          for resKey, index of @repIndex
-            res = @container.child()[resKey - 1]
-            if res
-              resCount = index.length
-              if elm = res.C("rep")[0]
-                newFlg = false
-              else
-                newFlg = true
-                elm = $__("span")
-              elm.textContent = "返信 (#{resCount})"
-              elm.className = if resCount >= 5 then "rep freq" else "rep link"
-              res.setAttr("data-rescount", [1..resCount].join(" "))
-              if newFlg
-                res.C("other")[0].addLast(
-                  document.createTextNode(" ")
-                )
-                res.C("other")[0].addLast(elm)
-              #連鎖NG
-              if app.config.get("chain_ng") is "on" and res.hasClass("ng")
-                for r in index
-                  @container.child()[r - 1].addClass("ng")
-              #自分に対してのレス
-              if res.hasClass("written")
-                for r in index
-                  @container.child()[r - 1].addClass("to_written")
-          return
+        @updateIds()
 
         #サムネイル追加処理
-        do =>
-          addThumbnail = (sourceA, thumbnailPath, mediaType = "image", res) ->
-            sourceA.addClass("has_thumbnail")
-
-            thumbnail = $__("div")
-            thumbnail.addClass("thumbnail")
-            thumbnail.setAttr("media-type", mediaType)
-
-            if mediaType in ["image", "video"]
-              article = sourceA.closest("article")
-              article.addClass("has_image")
-              # グロ画像に対するぼかし処理
-              if article.hasClass("has_blur_word") and app.config.get("image_blur") is "on"
-                thumbnail.addClass("image_blur")
-                v = app.config.get("image_blur_length")
-                webkitFilter = "blur(#{v}px)"
-              else
-                webkitFilter = "none"
-
-            switch mediaType
-              when "image"
-                thumbnailLink = $__("a")
-                thumbnailLink.href = app.safeHref(sourceA.href)
-                thumbnailLink.target = "_blank"
-
-                thumbnailImg = $__("img")
-                thumbnailImg.addClass("image")
-                thumbnailImg.src = "/img/dummy_1x1.webp"
-                thumbnailImg.style.WebkitFilter = webkitFilter
-                thumbnailImg.style.maxWidth = app.config.get("image_width") + "px"
-                thumbnailImg.style.maxHeight = app.config.get("image_height") + "px"
-                thumbnailImg.dataset.src = thumbnailPath
-                thumbnailImg.dataset.type = res.type
-                if res.extract? then thumbnailImg.dataset.extract = res.extract
-                if res.extractReferrer? then thumbnailImg.dataset.extractReferrer = res.extractReferrer
-                if res.pattern? then thumbnailImg.dataset.pattern = res.pattern
-                if res.cookie? then thumbnailImg.dataset.cookie = res.cookie
-                if res.cookieReferrer? then thumbnailImg.dataset.cookieReferrer = res.cookieReferrer
-                if res.referrer? then thumbnailImg.dataset.referrer = res.referrer
-                if res.userAgent? then thumbnailImg.dataset.userAgent = res.userAgent
-                thumbnailLink.addLast(thumbnailImg)
-
-                thumbnailFavicon = $__("img")
-                thumbnailFavicon.addClass("favicon")
-                thumbnailFavicon.src = "/img/dummy_1x1.webp"
-                thumbnailFavicon.setAttr("data-src", "https://www.google.com/s2/favicons?domain=#{sourceA.hostname}")
-                thumbnailLink.addLast(thumbnailFavicon)
-
-              when "audio", "video"
-                thumbnailLink = $__(mediaType)
-                thumbnailLink.src = ""
-                thumbnailLink.setAttr("data-src", thumbnailPath)
-                thumbnailLink.preload = "metadata"
-                switch mediaType
-                  when "audio"
-                    thumbnailLink.style.width = app.config.get("audio_width") + "px"
-                    thumbnailLink.setAttr("controls", "")
-                  when "video"
-                    thumbnailLink.style.WebkitFilter = webkitFilter
-                    thumbnailLink.style.maxWidth = app.config.get("video_width") + "px"
-                    thumbnailLink.style.maxHeight = app.config.get("video_height") + "px"
-                    if app.config.get("video_controls") is "on"
-                      thumbnailLink.setAttr("controls", "")
-
-            thumbnail.addLast(thumbnailLink)
-
-            # 高さ固定の場合
-            if app.config.get("image_height_fix") is "on"
-              switch mediaType
-                when "image"
-                  h = parseInt(app.config.get("image_height"))
-                when "video"
-                  h = parseInt(app.config.get("video_height"))
-                else
-                  h = 100   # 最低高
-              thumbnail.style.height = h + "px"
-
-            sib = sourceA
-            while true
-              pre = sib
-              sib = pre.nextSibling
-              if !sib? or sib.tagName is "BR"
-                if sib?.nextSibling?.classList?.contains("thumbnail")
-                  continue
-                if not pre.classList?.contains("thumbnail")
-                  sourceA.parent().insertBefore($__("br"), sib)
-                sourceA.parent().insertBefore(thumbnail, sib)
-                break
-            return
-
-          # 展開URL追加処理
-          addExpandedURL = (sourceA, finalUrl) ->
-            sourceA.addClass("has_expandedURL")
-
-            expandedURL = $__("div")
-            expandedURL.addClass("expandedURL")
-            expandedURL.setAttr("short-url", sourceA.href)
-            if app.config.get("expand_short_url") is "popup"
-              expandedURL.addClass("hide_data")
-
-            if finalUrl
-              expandedURLLink = $__("a")
-              expandedURLLink.textContent = finalUrl
-              expandedURLLink.href = app.safeHref(finalUrl)
-              expandedURLLink.target = "_blank"
-              expandedURL.addLast(expandedURLLink)
-            else
-              expandedURL.addClass("expand_error")
-              expandedURLLink = null
-
-            sib = sourceA
-            while true
-              pre = sib
-              sib = pre.nextSibling
-              if !sib? or sib.tagName is "BR"
-                if sib?.nextSibling?.classList?.contains("expandedURL")
-                  continue
-                if not pre.classList?.contains("expandedURL")
-                  sourceA.parent().insertBefore($__("br"), sib)
-                sourceA.parent().insertBefore(expandedURL, sib)
-                break
-
-            return expandedURLLink
-
-          # MediaTypeの取得
-          getMediaType = (href, dftValue) ->
-            mediaType = null
-            # Audioの確認
-            if /\.(?:mp3|m4a|wav|oga|spx)(?:[\?#:&].*)?$/.test(href)
-              mediaType = "audio"
-            if (
-              app.config.get("audio_supported_ogg") is "on" and
-              /\.(?:ogg|ogx)(?:[\?#:&].*)?$/.test(href)
-            )
-              mediaType = "audio"
-            # Videoの確認
-            if /\.(?:mp4|m4v|webm|ogv)(?:[\?#:&].*)?$/.test(href)
-              mediaType = "video"
-            if (
-              app.config.get("video_supported_ogg") is "on" and
-              /\.(?:ogg|ogx)(?:[\?#:&].*)?$/.test(href)
-            )
-              mediaType = "video"
-            # 初期値の設定と有効性のチェック
-            switch mediaType
-              when null
-                mediaType = dftValue
-              when "audio"
-                mediaType = null if app.config.get("audio_supported") is "off"
-              when "video"
-                mediaType = null if app.config.get("video_supported") is "off"
-            return mediaType
-
-          checkUrl = (a) ->
-            return new Promise( (resolve, reject) ->
-              if app.config.get("expand_short_url") isnt "none"
-                if app.URL.SHORT_URL_REG.test(a.href)
-                  # 短縮URLの展開
-                  app.URL.expandShortURL(a.href).then( (finalUrl) ->
-                    newLink = addExpandedURL(a, finalUrl)
-                    if finalUrl
-                      resolve({a, link: newLink.href})
-                    else
-                      resolve({a, link: a.href})
-                    return
-                  )
-                  return
-              resolve({a, link: a.href})
-              return
-            )
-
-          replace = (a) ->
-            return checkUrl(a).then( ({a, link}) ->
+        Promise.all(
+          Array.from(@container.$$(
+            ".message > a:not(.anchor):not(.thumbnail):not(.has_thumbnail):not(.expandedURL):not(.has_expandedURL)"
+          )).map( (a) =>
+            return @checkUrlExpand(a).then( ({a, link}) =>
               {res, err} = app.ImageReplaceDat.do(link)
-              # MediaTypeの設定
               unless err?
                 href = res.text
-                mediaType = getMediaType(href, "image")
               else
                 href = a.href
-                mediaType = getMediaType(href, null)
+              mediaType = app.URL.getExtType(
+                href
+                audio: app.config.get("audio_supported") is "on"
+                video: app.config.get("audio_supported") is "on"
+                oggIsAudio: app.config.get("audio_supported_ogg") is "on"
+                oggIsVideo: app.config.get("video_supported_ogg") is "on"
+              )
+              mediaType ?= "image" unless err?
               # サムネイルの追加
-              addThumbnail(a, href, mediaType, res) if mediaType
+              @addThumbnail(a, href, mediaType, res) if mediaType
               return
             )
-
-          aList = @container.$$(
-            ".message > a:not(.anchor):not(.thumbnail):not(.has_thumbnail):not(.expandedURL):not(.has_expandedURL)"
           )
-          Promise.all(Array.from(aList).map(replace)).catch( ->
-            return
-          ).then( ->
-            resolve()
-            return
-          )
+        ).catch( ->
+          return
+        ).then( ->
+          resolve()
+          return
+        )
         return
       )
       return
     )
 
   ###*
+  @method updateId
+  @param {String} className
+  @param {Map} map
+  @param {String} prefix
+  ###
+  updateId: (className, map, prefix) ->
+    numbersReg = /(?:\(\d+\))?$/
+    for [id, index] from map
+      count = index.size
+      for resNum from index
+        elm = @container.child()[resNum - 1].C(className)[0]
+        elm.textContent = "#{prefix}#{id}(#{count})"
+        if count >= 5
+          elm.removeClass("link")
+          elm.addClass("freq")
+        else if count >= 2
+          elm.addClass("link")
+    return
+
+  ###*
+  @method updateIds
+  ###
+  updateIds: ->
+    #id, slip, trip更新
+    @updateId("id", @idIndex, "")
+    @updateId("slip", @slipIndex, "SLIP:")
+    @updateId("trip", @tripIndex, "")
+
+    #harmImg更新
+    do =>
+      for res from @harmImgIndex
+        elm = @container.child()[res - 1]
+        continue unless elm
+        elm.addClass("has_blur_word")
+        if elm.hasClass("has_image") and app.config.get("image_blur") is "on"
+          for thumb in elm.$$(".thumbnail:not(.image_blur)")
+            @setImageBlur(thumb, true)
+      return
+
+    #参照関係再構築
+    do =>
+      for [resKey, index] from @repIndex
+        res = @container.child()[resKey - 1]
+        continue unless res
+        resCount = index.size
+        if elm = res.C("rep")[0]
+          newFlg = false
+        else
+          newFlg = true
+          elm = $__("span")
+        elm.textContent = "返信 (#{resCount})"
+        elm.className = if resCount >= 5 then "rep freq" else "rep link"
+        res.dataset.rescount = [1..resCount].join(" ")
+        if newFlg
+          res.C("other")[0].addLast(
+            document.createTextNode(" ")
+          )
+          res.C("other")[0].addLast(elm)
+        #連鎖NG
+        if app.config.get("chain_ng") is "on" and res.hasClass("ng")
+          for r from index
+            continue if @container.child()[r - 1].hasClass("ng")
+            @container.child()[r - 1].addClass("ng")
+            @container.child()[r - 1].setAttr("ng-type", "chain")
+            if app.config.get("display_ng") is "on"
+              @container.child()[r - 1].addClass("disp_ng")
+        #自分に対してのレス
+        if res.hasClass("written")
+          for r from index
+            @container.child()[r - 1].addClass("to_written")
+    return
+
+  ###*
+  @method addThumbnail
+  @param {HTMLAElement} sourceA
+  @param {String} thumbnailPath
+  @param {String} [mediaType="image"]
+  @param {Object} res
+  ###
+  addThumbnail: (sourceA, thumbnailPath, mediaType = "image", res) ->
+    sourceA.addClass("has_thumbnail")
+
+    thumbnail = $__("div")
+    thumbnail.addClass("thumbnail")
+    thumbnail.setAttr("media-type", mediaType)
+
+    if mediaType in ["image", "video"]
+      article = sourceA.closest("article")
+      article.addClass("has_image")
+      # グロ画像に対するぼかし処理
+      if article.hasClass("has_blur_word") and app.config.get("image_blur") is "on"
+        thumbnail.addClass("image_blur")
+        v = app.config.get("image_blur_length")
+        webkitFilter = "blur(#{v}px)"
+      else
+        webkitFilter = "none"
+
+    switch mediaType
+      when "image"
+        thumbnailLink = $__("a")
+        thumbnailLink.href = app.safeHref(sourceA.href)
+        thumbnailLink.target = "_blank"
+
+        thumbnailImg = $__("img")
+        thumbnailImg.addClass("image")
+        thumbnailImg.src = "/img/dummy_1x1.webp"
+        thumbnailImg.style.WebkitFilter = webkitFilter
+        thumbnailImg.style.maxWidth = "#{app.config.get("image_width")}px"
+        thumbnailImg.style.maxHeight = "#{app.config.get("image_height")}px"
+        thumbnailImg.dataset.src = thumbnailPath
+        thumbnailImg.dataset.type = res.type
+        if res.extract? then thumbnailImg.dataset.extract = res.extract
+        if res.extractReferrer? then thumbnailImg.dataset.extractReferrer = res.extractReferrer
+        if res.pattern? then thumbnailImg.dataset.pattern = res.pattern
+        if res.cookie? then thumbnailImg.dataset.cookie = res.cookie
+        if res.cookieReferrer? then thumbnailImg.dataset.cookieReferrer = res.cookieReferrer
+        if res.referrer? then thumbnailImg.dataset.referrer = res.referrer
+        if res.userAgent? then thumbnailImg.dataset.userAgent = res.userAgent
+        thumbnailLink.addLast(thumbnailImg)
+
+        thumbnailFavicon = $__("img")
+        thumbnailFavicon.addClass("favicon")
+        thumbnailFavicon.src = "/img/dummy_1x1.webp"
+        thumbnailFavicon.dataset.src = "https://www.google.com/s2/favicons?domain=#{sourceA.hostname}"
+        thumbnailLink.addLast(thumbnailFavicon)
+
+      when "audio", "video"
+        thumbnailLink = $__(mediaType)
+        thumbnailLink.src = ""
+        thumbnailLink.dataset.src = thumbnailPath
+        thumbnailLink.preload = "metadata"
+        switch mediaType
+          when "audio"
+            thumbnailLink.style.width = "#{app.config.get("audio_width")}px"
+            thumbnailLink.setAttr("controls", "")
+          when "video"
+            thumbnailLink.style.WebkitFilter = webkitFilter
+            thumbnailLink.style.maxWidth = "#{app.config.get("video_width")}px"
+            thumbnailLink.style.maxHeight = "#{app.config.get("video_height")}px"
+            if app.config.get("video_controls") is "on"
+              thumbnailLink.setAttr("controls", "")
+
+    thumbnail.addLast(thumbnailLink)
+
+    # 高さ固定の場合
+    if app.config.get("image_height_fix") is "on"
+      switch mediaType
+        when "image"
+          h = parseInt(app.config.get("image_height"))
+        when "video"
+          h = parseInt(app.config.get("video_height"))
+        else
+          h = 100   # 最低高
+      thumbnail.style.height = "#{h}px"
+
+    sib = sourceA
+    while true
+      pre = sib
+      sib = pre.next()
+      if !sib? or sib.tagName is "BR"
+        if sib?.next()?.hasClass("thumbnail")
+          continue
+        pre.addAfter(thumbnail)
+        if not pre.hasClass("thumbnail")
+          pre.addAfter($__("br"))
+        break
+      return
+
+  ###*
+  @method addExpandedURL
+  @param {HTMLAElement} sourceA
+  @param {String} finalUrl
+  ###
+  addExpandedURL: (sourceA, finalUrl) ->
+    sourceA.addClass("has_expandedURL")
+
+    expandedURL = $__("div")
+    expandedURL.addClass("expandedURL")
+    expandedURL.setAttr("short-url", sourceA.href)
+    if app.config.get("expand_short_url") is "popup"
+      expandedURL.addClass("hide_data")
+
+    if finalUrl
+      expandedURLLink = $__("a")
+      expandedURLLink.textContent = finalUrl
+      expandedURLLink.href = app.safeHref(finalUrl)
+      expandedURLLink.target = "_blank"
+      expandedURL.addLast(expandedURLLink)
+    else
+      expandedURL.addClass("expand_error")
+      expandedURLLink = null
+
+    sib = sourceA
+    while true
+      pre = sib
+      sib = pre.next()
+      if !sib? or sib.tagName is "BR"
+        if sib?.next()?.hasClass("expandedURL")
+          continue
+        pre.addAfter(expandedURL)
+        if not pre.hasClass("expandedURL")
+          pre.addAfter($__("br"))
+        break
+     return expandedURLLink
+
+  ###*
+  @method checkUrlExpand
+  @param {HTMLAElement} a
+  ###
+  checkUrlExpand: (a) ->
+    return new Promise( (resolve, reject) =>
+      if (
+        app.config.get("expand_short_url") isnt "none" and
+        app.URL.SHORT_URL_LIST.has(app.URL.getDomain(a.href))
+      )
+        # 短縮URLの展開
+        app.URL.expandShortURL(a.href).then( (finalUrl) =>
+          newLink = @addExpandedURL(a, finalUrl)
+          if finalUrl
+            resolve({a, link: newLink.href})
+          else
+            resolve({a, link: a.href})
+          return
+        )
+        return
+      resolve({a, link: a.href})
+      return
+    )
+
+  ###*
   @method setImageBlur
   @param {Element} thumbnail
-  @parm {Boolean} blurMode
+  @param {Boolean} blurMode
   ###
   setImageBlur: (thumbnail, blurMode) ->
     media = thumbnail.$("a > img.image, video")
@@ -899,7 +960,7 @@ class UI.ThreadContent
   ###*
   @method addClassWithOrg
   @param {Element} $res
-  @parm {String} className
+  @param {String} className
   ###
   addClassWithOrg: ($res, className) ->
     $res.addClass(className)
@@ -910,7 +971,7 @@ class UI.ThreadContent
   ###*
   @method removeClassWithOrg
   @param {Element} $res
-  @parm {String} className
+  @param {String} className
   ###
   removeClassWithOrg: ($res, className) ->
     $res.removeClass("written")

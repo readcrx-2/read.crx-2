@@ -3,7 +3,8 @@
 namespace app {
   "use strict";
 
-  var logLevels = ["log", "debug", "info", "warn", "error"];
+  type logLevel = "log" | "debug" | "info" | "warn" | "error";
+  var logLevels: logLevel[] = ["log", "debug", "info", "warn", "error"];
 
   export function criticalError (message:string):void {
     new Notification(
@@ -18,9 +19,9 @@ namespace app {
     });
   }
 
-  export function log (level:string, ...data:any[]) {
+  export function log (level:logLevel, ...data:any[]) {
     if (logLevels.includes(level)) {
-      console[level](...data);
+      console[<string>level](...data);
     }
     else {
       log("error", "app.log: 引数levelが不正な値です", arguments);
@@ -109,7 +110,7 @@ namespace app {
 
         this._latestCallArg = deepCopy(arg);
 
-        tmpCallbackStore = new Set(this._callbackStore.keys());
+        tmpCallbackStore = new Set(this._callbackStore);
 
         for (callback of tmpCallbackStore) {
           if (this._callbackStore.has(callback)) {
@@ -271,9 +272,13 @@ namespace app {
       ["aa_font", "aa"],
       ["popup_trigger", "click"],
       ["popup_delay_time", "0"],
-      ["ngwords", "RegExpTitle:.+\.2ch\.netの人気スレ\nTitle:【漫画あり】コンビニで浪人を購入する方法\nTitle:★★ ２ちゃんねる\(sc\)のご案内 ★★★\nTitle:浪人はこんなに便利\nTitle:2ちゃんねるの運営を支えるサポーター募集"],
+      ["ngwords", "RegExpTitle:.+\\.2ch\\.netの人気スレ\nTitle:【漫画あり】コンビニで浪人を購入する方法\nTitle:★★ ２ちゃんねる\(sc\)のご案内 ★★★\nTitle:浪人はこんなに便利\nTitle:2ちゃんねるの運営を支えるサポーター募集"],
       ["ngobj", "[{\"type\":\"regExpTitle\",\"word\":\".+\\\\.2ch\\\\.netの人気スレ\"},{\"type\":\"title\",\"word\":\"【漫画あり】こんびにで浪人を購入する方法\"},{\"type\":\"title\",\"word\":\"★★2ちゃんねる\\\\(sc\\\\)のご案内★★★\"},{\"type\":\"title\",\"word\":\"浪人はこんなに便利\"},{\"type\":\"title\",\"word\":\"2ちゃんねるの運営を支えるさぽーたー募集\"}]"],
       ["chain_ng", "off"],
+      ["display_ng", "off"],
+      ["nothing_id_ng", "off"],
+      ["nothing_slip_ng", "off"],
+      ["how_to_judgment_id", "first_res"],
       ["bookmark_show_dat", "on"],
       ["default_name", ""],
       ["default_mail", ""],
@@ -363,8 +368,8 @@ namespace app {
     }
 
     get (key:string):string|null {
-      if (this._cache.has("config_" + key)) {
-        return this._cache.get("config_" + key)!;
+      if (this._cache.has(`config_${key}`)) {
+        return this._cache.get(`config_${key}`)!;
       }
       else if (Config._default.has(key)) {
         return Config._default.get(key)!;
@@ -376,7 +381,7 @@ namespace app {
     getAll ():string {
       var json = {};
       for(var [key, val] of Config._default) {
-        json["config_" + key] = val;
+        json[`config_${key}`] = val;
       }
       for(var [key, val] of this._cache) {
         json[key] = val;
@@ -398,7 +403,7 @@ namespace app {
           return;
         }
 
-        tmp["config_" + key] = val;
+        tmp[`config_${key}`] = val;
 
         chrome.storage.local.set(tmp, () => {
           if (chrome.runtime.lasterror) {
@@ -460,7 +465,7 @@ namespace app {
 
   export var manifest: any;
 
-  if (/^chrome-extension:\/\//.test(location.origin)) {
+  if (location.origin.startsWith("chrome-extension://")) {
     let xhr = new XMLHttpRequest();
     xhr.open("GET", "/manifest.json", false);
     xhr.send();
@@ -566,7 +571,7 @@ namespace app {
     }
 
     if (location.pathname === path) {
-      htmlVersion = document.documentElement.getAttribute("data-app-version")!;
+      htmlVersion = document.documentElement.dataset.appVersion!;
       if (manifest.version !== htmlVersion) {
         location.reload(true);
       }

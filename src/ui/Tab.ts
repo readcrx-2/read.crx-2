@@ -6,11 +6,26 @@ namespace UI {
 
   export class Tab {
     private static idSeed = 0;
+    private static tabA: Tab|null = null;
+    private static tabB: Tab|null = null;
     private recentClosed = [];
     private historyStore = {};
 
     private static genId (): string {
       return "tabId" + ++Tab.idSeed;
+    }
+
+    private static saveTabs (): void {
+      var data: any[] = [], tab: any;
+      for (tab of this.tabA!.getAll().concat(this.tabB!.getAll())) {
+        data.push({
+          url: tab.formatedUrl,
+          title: tab.title,
+          selected: tab.selected,
+          locked: tab.locked
+        });
+      }
+      localStorage.tab_state = JSON.stringify(data);
     }
 
     constructor (private $element: Element) {
@@ -149,6 +164,7 @@ namespace UI {
         res.push({
           tabId: li.dataset.tabid!,
           url: li.dataset.tabsrc!,
+          formatedUrl: this.$element.$(`iframe[data-tabid=${li.dataset.tabid!}]`).dataset.url,
           title: li.title,
           selected: li.hasClass("tab_selected"),
           locked: li.hasClass("tab_locked")
@@ -177,8 +193,8 @@ namespace UI {
 
     add (
       url: string,
-      param: {title?: string; selected?: boolean; locked?: boolean; lazy?: boolean} =
-        {title: undefined, selected: undefined, locked: undefined, lazy: undefined}
+      param: {title?: string; selected?: boolean; locked?: boolean; lazy?: boolean; restore?: boolean} =
+        {title: undefined, selected: undefined, locked: undefined, lazy: undefined, restore: undefined}
     ): string {
       var tabId: string;
 
@@ -186,6 +202,7 @@ namespace UI {
       param.selected = param.selected === undefined ? true : param.selected;
       param.locked = param.locked === undefined ? false : param.locked;
       param.lazy = param.lazy === undefined ? false : param.lazy;
+      param.restore = param.restore === undefined ? false : param.restore;
 
       tabId = Tab.genId();
 
@@ -227,6 +244,7 @@ namespace UI {
         title?: string;
         selected?: boolean;
         locked?: boolean;
+        restore?: boolean;
         _internal?: boolean;
       }
     ): void {
@@ -292,6 +310,10 @@ namespace UI {
           $tmptab.removeClass("tab_locked");
         }
       }
+
+      if (!param.restore) {
+        Tab.saveTabs()
+      }
     }
 
     remove (tabId: string): void {
@@ -330,6 +352,8 @@ namespace UI {
       $tmptabcon = this.$element.$(`iframe[data-tabid=\"${tabId}\"]`);
       $tmptabcon.dispatchEvent(new Event("tab_removed", {"bubbles": true}));
       $tmptabcon.remove();
+
+      Tab.saveTabs()
     }
 
     getRecentClosed (): any {

@@ -558,8 +558,10 @@ app.main = ->
   $$.I("body").addClass(app.config.get("layout"))
   tabA = new UI.Tab($$.I("tab_a"))
   app.DOMData.set($$.I("tab_a"), "tab", tabA)
+  UI.Tab.tabA = tabA
   tabB = new UI.Tab($$.I("tab_b"))
   app.DOMData.set($$.I("tab_b"), "tab", tabB)
+  UI.Tab.tabB = tabB
   for dom in $$(".tab .tab_tabbar")
     new UI.Sortable(dom, exclude: "img")
   adjustWindowSize.add(app.view_setup_resizer)
@@ -623,6 +625,7 @@ app.main = ->
           lazy: not tab.selected
           locked: tab.locked
           new_tab: true
+          restore: true
         })
 
     #もし、タブが一つも復元されなかったらブックマークタブを開く
@@ -634,15 +637,7 @@ app.main = ->
   # コンテキストメニューの作成
   app.contextMenus.createAll()
 
-  #終了時にタブの状態を保存する
   window.on "unload", ->
-    unless localStorage.tab_state?
-      data = for tab in tabA.getAll().concat(tabB.getAll())
-        url: $$.$("iframe[data-tabid=\"#{tab.tabId}\"]").dataset.url
-        title: tab.title
-        selected: tab.selected
-        locked: tab.locked
-      localStorage.tab_state = JSON.stringify(data)
     #コンテキストメニューの削除
     app.contextMenus.removeAll()
     # 終了通知の送信
@@ -687,6 +682,7 @@ app.main = ->
             selected: not (message.background or message.lazy)
             locked: message.locked
             lazy: message.lazy
+            restore: message.restore
           })
         else
           tabId = selectedTab.tabId

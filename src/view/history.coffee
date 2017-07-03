@@ -15,7 +15,6 @@ app.boot "/view/history.html", ->
 
   NUMBER_OF_DATA_IN_ONCE = 500
   loadAddCount = 0
-  contentHeight = 0
   isLoadedEnd = false
 
   load = (add = false) ->
@@ -42,7 +41,6 @@ app.boot "/view/history.html", ->
       threadList.addItem(data)
       $view.removeClass("loading")
       return if add and data.length is 0
-      contentHeight = $content.offsetHeight
       $view.dispatchEvent(new Event("view_loaded"))
       $view.C("button_reload")[0].addClass("disabled")
       setTimeout(->
@@ -57,8 +55,8 @@ app.boot "/view/history.html", ->
 
   isInLoadArea = false
   $content.on("scroll", ->
-    {scrollHeight, scrollTop} = $content
-    scrollPosition = contentHeight + scrollTop
+    {offsetHeight, scrollHeight, scrollTop} = $content
+    scrollPosition = offsetHeight + scrollTop
 
     if scrollHeight - scrollPosition < 100
       return if isInLoadArea

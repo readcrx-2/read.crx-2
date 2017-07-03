@@ -692,7 +692,7 @@ app.boot "/view/thread.html", ->
       title: menuTitle,
       enabled: enableFlg,
       onclick: (info, tab) =>
-        target.setAttr("toggle_param_res_num", "on")
+        target.setAttr("toggle-param-res-num", "on")
         app.defer =>
           target.dispatchEvent(new Event("mousedown", {"bubbles": true}))
         return
@@ -852,7 +852,7 @@ app.boot "/view/thread.html", ->
           read = null
 
           if iframe = parent.$$.$("[data-url=\"#{bookmark.url}\"]")
-            read = iframe.contentWindow?.$$(".content > article").length
+            read = iframe.contentWindow?.$$?(".content > article").length
 
           unless read
             read = bookmark.read_state?.read or 0

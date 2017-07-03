@@ -692,7 +692,7 @@ app.boot "/view/thread.html", ->
       title: menuTitle,
       enabled: enableFlg,
       onclick: (info, tab) =>
-        target.setAttr("toggle_param_res_num", "on")
+        target.setAttr("toggle-param-res-num", "on")
         app.defer =>
           target.dispatchEvent(new Event("mousedown", {"bubbles": true}))
         return

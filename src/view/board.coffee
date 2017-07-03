@@ -55,8 +55,8 @@ app.boot "/view/board.html", ->
   #.sort_item_selectorが非表示の時、各種項目のソート切り替えを
   #降順ソート→昇順ソート→標準ソートとする
   $table.on "click", (e) ->
-    return if e.target.tagName isnt "TH" or e.target.hasClass("table_sort_asc")
-    return if $view.C("sort_item_selector")[0].style.display isnt "none"
+    return unless e.target.tagName is "TH" and e.target.hasClass("table_sort_asc")
+    return unless $view.C("sort_item_selector")[0].offsetWidth is 0
     $table.on("table_sort_before_update", func = (e) ->
       $table.off("table_sort_before_update", func)
       e.preventDefault()

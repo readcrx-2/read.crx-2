@@ -179,6 +179,9 @@ class UI.ThreadList
         tr = $table.$("tr[data-href=\"#{msg.read_state.url}\"]")
         if tr
           res = tr.$(selector.res)
+          if +res.textContent < msg.read_state.received
+            res.textContent = msg.read_state.received
+            tr.addClass("updated")
           unread = tr.$(selector.unread)
           unreadCount = Math.max(+res.textContent - msg.read_state.read, 0)
           unread.textContent = unreadCount or ""

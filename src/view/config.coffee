@@ -542,11 +542,11 @@ app.boot "/view/config.html", ["cache", "bbsmenu"], (Cache, BBSMenu) ->
               when "radio"
                 $key.value = value
                 $key.dispatchEvent(new Event("change"))
-              else
-                $keyTextArea = $view.$("textarea[name=\"#{key}\"]")
-                if $keyTextArea?
-                  $keyTextArea.value = value
-                  $key.dispatchEvent(new Event("input"))
+          else
+            $keyTextArea = $view.$("textarea[name=\"#{key}\"]")
+            if $keyTextArea?
+              $keyTextArea.value = value
+              $keyTextArea.dispatchEvent(new Event("input"))
          #config_theme_idは「テーマなし」の場合があるので特例化
          else
            if value is "none"

@@ -363,7 +363,7 @@ app.boot "/view/thread.html", ->
     else if target.hasClass("res_to_this2")
       write(message: """
       >>#{$res.C("num")[0].textContent}
-      #{$res.C("message")[0].textContent.replace(/^/gm, '>')}\n
+      #{$res.C("message")[0].innerText.replace(/^/gm, '>')}\n
       """)
 
     else if target.hasClass("add_writehistory")

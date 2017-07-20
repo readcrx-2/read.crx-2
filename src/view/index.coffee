@@ -94,10 +94,11 @@ class app.view.Index extends app.view.View
       $iframe.addClass("iframe_focused")
 
     if focus
-      app.defer ->
+      setTimeout( ->
         $iframe.contentDocument?.activeElement?.blur()
         $iframe.contentDocument?.getElementsByClassName("content")[0]?.focus()
         return
+      , 100)
     return
 
   ###*

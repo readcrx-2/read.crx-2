@@ -1062,6 +1062,7 @@ app.view_thread._read_state_manager = ($view) ->
     # 2回目の処理
     # 画像のロードにより位置がずれることがあるので初回処理時の内容を使用する
     if readStateAttached
+      tmpReadState = {read: null, received: null, url: view_url}
       if attachedReadState.last > 0
         $content.C("last")[0]?.removeClass("last")
         $content.child()[attachedReadState.last - 1]?.addClass("last")
@@ -1069,12 +1070,16 @@ app.view_thread._read_state_manager = ($view) ->
       if attachedReadState.read > 0
         $content.C("read")[0]?.removeClass("read")
         $content.child()[attachedReadState.read - 1]?.addClass("read")
+        tmpReadState.read = attachedReadState.read
       if attachedReadState.received > 0
         $content.C("received")[0]?.removeClass("received")
         $content.child()[attachedReadState.received - 1]?.addClass("received")
+        tmpReadState.received = attachedReadState.received
       readStateAttached = false
       requestReloadFlag = false
       $view.dispatchEvent(new Event("read_state_attached"))
+      if tmpReadState.read and tmpReadState.received
+        app.message.send("read_state_updated", {board_url, read_state: tmpReadState})
       return
     # 初回の処理
     get_read_state.then ({read_state, read_state_updated}) ->
@@ -1106,6 +1111,8 @@ app.view_thread._read_state_manager = ($view) ->
       requestReloadFlag = false
 
       $view.dispatchEvent(new Event("read_state_attached"))
+      if attachedReadState.read > 0 and attachedReadState.received > 0
+        app.message.send("read_state_updated", {board_url, read_state})
     return
 
   get_read_state.then ({read_state, read_state_updated}) ->

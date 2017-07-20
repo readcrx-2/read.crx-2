@@ -82,7 +82,7 @@ app.boot "/view/board.html", ->
     $view.addClass("loading")
     app.message.send("request_update_read_state", {board_url: url})
 
-    app.defer( ->
+    setTimeout( ->
       get_read_state_promise = app.ReadState.getByBoard(url)
 
       board_get_promise = new Promise( (resolve, reject) ->
@@ -160,7 +160,7 @@ app.boot "/view/board.html", ->
           setTimeout((-> $button.removeClass("disabled")), 1000 * 5)
           return
       return
-    )
+    , 150)
     return
 
   $view.on "request_reload", (e) ->

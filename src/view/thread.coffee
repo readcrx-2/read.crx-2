@@ -983,7 +983,7 @@ app.view_thread._draw = ($view, force_update, beforeAdd) ->
         app.DOMData.get($view, "lazyload").scan()
 
         if $view.C("content")[0].hasClass("searching")
-          $view.C(".searchbox")[0].dispatchEvent(new Event("input"))
+          $view.C("searchbox")[0].dispatchEvent(new Event("input"))
 
         $view.dispatchEvent(new Event("view_loaded"))
 

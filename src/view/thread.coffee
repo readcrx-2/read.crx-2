@@ -393,19 +393,13 @@ app.boot "/view/thread.html", ->
     target.parent().remove()
     return
 
-  $view.on "mousedown", ".res_menu > li", (e) ->
-    e.preventDefault()
-    return
-
   # アンカーポップアップ
   $view.on("mouseenter", (e) ->
     target = e.target
     return unless target.hasClass("anchor") or target.hasClass("name_anchor")
 
-    if target.hasClass("anchor")
-      anchor = target.innerHTML
-    else
-      anchor = target.innerHTML.trim()
+    anchor = target.innerHTML
+    anchor = anchor.trim() unless target.hasClass("anchor")
 
     popup_helper target, e, =>
       $popup = $__("div")

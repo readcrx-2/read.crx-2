@@ -320,4 +320,9 @@ app.boot "/write/write.html", ->
         return
       return
     return
+
+  window.on("beforeunload", ->
+    chrome.runtime.sendMessage(type: "writesize", x: screenX, y: screenY)
+    return
+  )
   return

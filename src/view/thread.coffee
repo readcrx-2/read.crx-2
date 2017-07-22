@@ -78,10 +78,12 @@ app.boot "/view/thread.html", ->
     param or= {}
     param.url = view_url
     param.title = document.title
+    windowX = app.config.get("write_window_x")
+    windowY = app.config.get("write_window_y")
     open(
       "/write/write.html?#{app.URL.buildQuery(param)}"
       undefined
-      'width=600,height=300'
+      "width=600,height=300,left=#{windowX},top=#{windowY}"
     )
 
   popup_helper = (that, e, fn) ->

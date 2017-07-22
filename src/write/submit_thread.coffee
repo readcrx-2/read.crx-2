@@ -308,4 +308,9 @@ app.boot "/write/submit_thread.html", ->
         return
       return
     return
+
+  window.on("beforeunload", ->
+    chrome.runtime.sendMessage(type: "writesize", x: screenX, y: screenY)
+    return
+  )
   return

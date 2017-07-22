@@ -363,7 +363,7 @@ app.boot "/view/thread.html", ->
     else if target.hasClass("res_to_this2")
       write(message: """
       >>#{$res.C("num")[0].textContent}
-      #{$res.C("message")[0].textContent.replace(/^/gm, '>')}\n
+      #{$res.C("message")[0].innerText.replace(/^/gm, '>')}\n
       """)
 
     else if target.hasClass("add_writehistory")
@@ -393,19 +393,13 @@ app.boot "/view/thread.html", ->
     target.parent().remove()
     return
 
-  $view.on "mousedown", ".res_menu > li", (e) ->
-    e.preventDefault()
-    return
-
   # アンカーポップアップ
   $view.on("mouseenter", (e) ->
     target = e.target
     return unless target.hasClass("anchor") or target.hasClass("name_anchor")
 
-    if target.hasClass("anchor")
-      anchor = target.innerHTML
-    else
-      anchor = target.innerHTML.trim()
+    anchor = target.innerHTML
+    anchor = anchor.trim() unless target.hasClass("anchor")
 
     popup_helper target, e, =>
       $popup = $__("div")
@@ -989,7 +983,7 @@ app.view_thread._draw = ($view, force_update, beforeAdd) ->
         app.DOMData.get($view, "lazyload").scan()
 
         if $view.C("content")[0].hasClass("searching")
-          $view.C(".searchbox")[0].dispatchEvent(new Event("input"))
+          $view.C("searchbox")[0].dispatchEvent(new Event("input"))
 
         $view.dispatchEvent(new Event("view_loaded"))
 

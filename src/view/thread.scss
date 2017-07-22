@@ -461,21 +461,21 @@ header {
     color: $res-name-color;
   }
 
-  .written {
-    .name {
-      color: $res-name-own-color;
-    }
-    .ob {
-      color: $res-name-own-ob-color;
-    }
-  }
-
   .to_written {
     .name {
       color: $res-name-to-own-color;
     }
     .ob {
       color: $res-name-to-own-ob-color;
+    }
+  }
+
+  .written {
+    .name {
+      color: $res-name-own-color;
+    }
+    .ob {
+      color: $res-name-own-ob-color;
     }
   }
 

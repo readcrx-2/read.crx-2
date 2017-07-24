@@ -714,6 +714,12 @@ app.main = ->
         tmp = JSON.stringify(type: "request_reload", force_update: true, kind: request.kind, mes: request.mes, name: request.name, mail: request.mail, title: request.title, thread_url: request.thread_url)
         iframe.contentWindow.postMessage(tmp, location.origin)
 
+  #書き込みウィンドウサイズ保存メッセージの監視
+  chrome.runtime.onMessage.addListener (request) ->
+    if request.type is "writesize"
+      app.config.set("write_window_x", ""+request.x)
+      app.config.set("write_window_y", ""+request.y)
+
   # リクエスト・ヘッダーの監視
   chrome.webRequest.onBeforeSendHeaders.addListener (details) ->
     replaceHeader = (name, value) ->

@@ -236,6 +236,8 @@ namespace app {
     private static _default = new Map<string, string>([
       ["layout", "pane-3"],
       ["theme_id", "default"],
+      ["write_window_x", "0"],
+      ["write_window_y", "0"],
       ["always_new_tab", "on"],
       ["button_change_netsc_newtab", "off"],
       ["button_change_scheme_newtab", "off"],

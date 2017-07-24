@@ -13,13 +13,14 @@ app.boot "/view/history.html", ->
   app.DOMData.set($view, "selectableItemList", threadList)
   $content.addLast($table)
 
+  isOnlyUnique = false
   NUMBER_OF_DATA_IN_ONCE = 500
   loadAddCount = 0
   isLoadedEnd = false
 
-  load = (add = false) ->
+  load = ({ignoreLoading = false, add = false} = {ignoreLoading: false, add: false}) ->
     return if $view.hasClass("loading")
-    return if $view.C("button_reload")[0].hasClass("disabled") and not add
+    return if $view.C("button_reload")[0].hasClass("disabled") and not (ignoreLoading or add)
     return if add and isLoadedEnd
 
     $view.addClass("loading")
@@ -28,12 +29,17 @@ app.boot "/view/history.html", ->
     else
       offset = null
 
-    app.History.get(offset, NUMBER_OF_DATA_IN_ONCE).then (data) ->
+    unless isOnlyUnique
+      promise = app.History.get(offset, NUMBER_OF_DATA_IN_ONCE)
+    else
+      promise = app.History.getUnique(offset, NUMBER_OF_DATA_IN_ONCE)
+    promise.then (data) ->
       if add
         loadAddCount++
       else
         threadList.empty()
         loadAddCount = 1
+        isLoadedEnd = false
 
       if data.length < NUMBER_OF_DATA_IN_ONCE
         isLoadedEnd = true
@@ -61,12 +67,12 @@ app.boot "/view/history.html", ->
     if scrollHeight - scrollPosition < 100
       return if isInLoadArea
       isInLoadArea = true
-      load(true)
+      load(add: true)
     else
       isInLoadArea = false
   , passive: true)
 
-  $view.C("button_history_clear")[0].on "click", ->
+  $view.C("button_history_clear")[0].on("click", ->
     UI.dialog("confirm", {
       message: "履歴を削除しますか？"
       label_ok: "はい"
@@ -76,4 +82,14 @@ app.boot "/view/history.html", ->
         app.History.clear().then(load)
       return
     return
+  )
+
+  onClickUnique = ->
+    isOnlyUnique = !isOnlyUnique
+    $view.C("button_show_unique")[0].toggleClass("hidden")
+    $view.C("button_show_all")[0].toggleClass("hidden")
+    load(ignoreLoading: true)
+    return
+  $view.C("button_show_unique")[0].on("click", onClickUnique)
+  $view.C("button_show_all")[0].on("click", onClickUnique)
   return

@@ -94,10 +94,11 @@ class app.view.Index extends app.view.View
       $iframe.addClass("iframe_focused")
 
     if focus
-      app.defer ->
+      setTimeout( ->
         $iframe.contentDocument?.activeElement?.blur()
         $iframe.contentDocument?.getElementsByClassName("content")[0]?.focus()
         return
+      , 100)
     return
 
   ###*
@@ -712,6 +713,12 @@ app.main = ->
       if iframe
         tmp = JSON.stringify(type: "request_reload", force_update: true, kind: request.kind, mes: request.mes, name: request.name, mail: request.mail, title: request.title, thread_url: request.thread_url)
         iframe.contentWindow.postMessage(tmp, location.origin)
+
+  #書き込みウィンドウサイズ保存メッセージの監視
+  chrome.runtime.onMessage.addListener (request) ->
+    if request.type is "writesize"
+      app.config.set("write_window_x", ""+request.x)
+      app.config.set("write_window_y", ""+request.y)
 
   # リクエスト・ヘッダーの監視
   chrome.webRequest.onBeforeSendHeaders.addListener (details) ->

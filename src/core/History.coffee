@@ -136,6 +136,51 @@ class app.History
     )
 
   ###*
+  @method getUnique
+  @param {Number} offset
+  @param {Number} limit
+  @return {Promise}
+  ###
+  @getUnique: (offset = -1, limit = -1) ->
+    if app.assertArg("History.getUnique", ["number", "number"], [offset, limit])
+      return Promise.reject()
+
+    return @_openDB().then( (db) ->
+      return new Promise( (resolve, reject) ->
+        req = db
+          .transaction("History")
+          .objectStore("History")
+          .index("date")
+          .openCursor(null, "prev")
+        advanced = false
+        histories = []
+        inserted = new Set()
+        req.onsuccess = (e) ->
+          cursor = e.target.result
+          if cursor and (limit is -1 or histories.length < limit)
+            if !advanced
+              advanced = true
+              if offset isnt -1
+                cursor.advance(offset)
+                return
+            value = cursor.value
+            unless inserted.has(value.url)
+              value.is_https = (app.URL.getScheme(value.url) is "https")
+              histories.push(value)
+              inserted.add(value.url)
+            cursor.continue()
+          else
+            resolve(histories)
+          return
+        req.onerror = (e) ->
+          app.log("error", "History.getUnique: トランザクション中断")
+          reject(e)
+          return
+        return
+      )
+    )
+
+  ###*
   @method getAll
   @return {Promise}
   ###

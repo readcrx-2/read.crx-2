@@ -299,7 +299,8 @@ app.boot "/write/submit_thread.html", ->
         """
       return
 
-    $view.on "click", ".ninja_restore", (e) ->
+    $view.on "click", (e) ->
+      return unless e.target.hasClass("ninja_restore")
       e.preventDefault()
       $notice.textContent = "復元中です。"
       app.Ninja.restore "2ch", ->
@@ -307,4 +308,9 @@ app.boot "/write/submit_thread.html", ->
         return
       return
     return
+
+  window.on("beforeunload", ->
+    chrome.runtime.sendMessage(type: "writesize", x: screenX, y: screenY)
+    return
+  )
   return

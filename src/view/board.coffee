@@ -27,10 +27,12 @@ app.boot "/view/board.html", ->
     param or= {}
     param.title = document.title
     param.url = url
+    windowX = app.config.get("write_window_x")
+    windowY = app.config.get("write_window_y")
     open(
       "/write/submit_thread.html?#{app.URL.buildQuery(param)}"
       undefined
-      'width=600,height=400'
+      "width=600,height=300,left=#{windowX},top=#{windowY}"
     )
 
   if app.URL.tsld(url) in ["2ch.net", "shitaraba.net", "bbspink.com", "2ch.sc", "open2ch.net"]

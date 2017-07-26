@@ -193,16 +193,23 @@ namespace UI {
 
     add (
       url: string,
-      param: {title?: string; selected?: boolean; locked?: boolean; lazy?: boolean; restore?: boolean} =
-        {title: undefined, selected: undefined, locked: undefined, lazy: undefined, restore: undefined}
+      {
+        title = null,
+        selected = true,
+        locked = false,
+        lazy = false,
+        restore = false
+      }: Partial<{
+        title: string|null,
+        selected: boolean,
+        locked: boolean,
+        lazy: boolean,
+        restore: boolean
+      }> = {}
     ): string {
       var tabId: string;
 
-      param.title = param.title === undefined ? url : param.title;
-      param.selected = param.selected === undefined ? true : param.selected;
-      param.locked = param.locked === undefined ? false : param.locked;
-      param.lazy = param.lazy === undefined ? false : param.lazy;
-      param.restore = param.restore === undefined ? false : param.restore;
+      title = title === null ? url : title;
 
       tabId = Tab.genId();
 
@@ -213,7 +220,7 @@ namespace UI {
 
       // 既存のタブが一つも無い場合、強制的にselectedオン
       if (!this.$element.$(".tab_tabbar > li")) {
-        param.selected = true;
+        selected = true;
       }
 
       var $li = $__("li");
@@ -227,26 +234,26 @@ namespace UI {
       this.$element.$(".tab_tabbar").addLast($li);
 
       var $iframe = $__("iframe");
-      $iframe.src = param.lazy ? "/view/empty.html" : url;
+      $iframe.src = lazy ? "/view/empty.html" : url;
       $iframe.addClass("tab_content");
       $iframe.dataset.tabid = tabId;
       this.$element.$(".tab_container").addLast($iframe);
 
-      this.update(tabId, {title: param.title, selected: param.selected, locked: param.locked});
+      this.update(tabId, {title, selected, locked});
 
       return tabId;
     }
 
     update (
       tabId: string,
-      param: {
-        url?: string;
-        title?: string;
-        selected?: boolean;
-        locked?: boolean;
-        restore?: boolean;
-        _internal?: boolean;
-      }
+      param: Partial<{
+        url: string,
+        title: string,
+        selected: boolean,
+        locked: boolean,
+        restore: boolean,
+        _internal: boolean
+      }>
     ): void {
       var history, $tmptab, $iframe, tmp;
 

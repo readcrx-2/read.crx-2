@@ -195,7 +195,7 @@ app.boot "/view/thread.html", ->
       #二度目以降のread_state_attached時
       $view.on "read_state_attached", ->
         #通常時と自動更新有効時で、更新後のスクロールの動作を変更する
-        move_mode = if parseInt(app.config.get("auto_load_second")) >= 5000 then app.config.get("auto_load_move") else "new"
+        move_mode = if $view.hasClass("autoload") and not $view.hasClass("autoload_pause") then app.config.get("auto_load_move") else "new"
         switch move_mode
           when "new"
             lastNum = +$content.$(":scope > article:last-child")?.C("num")[0].textContent

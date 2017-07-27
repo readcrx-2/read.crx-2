@@ -942,22 +942,6 @@ class UI.ThreadContent
     )
 
   ###*
-  @method setImageBlur
-  @param {Element} thumbnail
-  @param {Boolean} blurMode
-  ###
-  setImageBlur: (thumbnail, blurMode) ->
-    media = thumbnail.$("a > img.image, video")
-    if blurMode
-      v = app.config.get("image_blur_length")
-      thumbnail.addClass("image_blur")
-      media.style.WebkitFilter = "blur(#{v}px)"
-    else
-      thumbnail.removeClass("image_blur")
-      media.style.WebkitFilter = "none"
-    return
-
-  ###*
   @method addClassWithOrg
   @param {Element} $res
   @param {String} className
@@ -965,7 +949,7 @@ class UI.ThreadContent
   addClassWithOrg: ($res, className) ->
     $res.addClass(className)
     resnum = parseInt($res.C("num")[0].textContent)
-    @container.child()[resnum-1].addClass("written")
+    @container.child()[resnum-1].addClass(className)
     return
 
   ###*
@@ -974,9 +958,9 @@ class UI.ThreadContent
   @param {String} className
   ###
   removeClassWithOrg: ($res, className) ->
-    $res.removeClass("written")
+    $res.removeClass(className)
     resnum = parseInt($res.C("num")[0].textContent)
-    @container.child()[resnum-1].removeClass("written")
+    @container.child()[resnum-1].removeClass(className)
     return
 
   ###*

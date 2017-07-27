@@ -965,7 +965,7 @@ class UI.ThreadContent
   addClassWithOrg: ($res, className) ->
     $res.addClass(className)
     resnum = parseInt($res.C("num")[0].textContent)
-    @container.child()[resnum-1].addClass("written")
+    @container.child()[resnum-1].addClass(className)
     return
 
   ###*
@@ -974,9 +974,9 @@ class UI.ThreadContent
   @param {String} className
   ###
   removeClassWithOrg: ($res, className) ->
-    $res.removeClass("written")
+    $res.removeClass(className)
     resnum = parseInt($res.C("num")[0].textContent)
-    @container.child()[resnum-1].removeClass("written")
+    @container.child()[resnum-1].removeClass(className)
     return
 
   ###*

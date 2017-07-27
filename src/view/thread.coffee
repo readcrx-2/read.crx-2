@@ -49,12 +49,6 @@ app.boot "/view/thread.html", ->
     return
   view_url = app.URL.fix(view_url)
 
-  jumpResNum = -1
-  iframe = parent.$$.$("iframe[data-url=\"#{view_url}\"]")
-  if iframe
-    jumpResNum = +iframe.dataset.writtenResNum
-    jumpResNum = +iframe.dataset.paramResNum if jumpResNum < 1
-
   $view = document.documentElement
   $view.dataset.url = view_url
 
@@ -124,14 +118,10 @@ app.boot "/view/thread.html", ->
     $view.C("button_scheme")[0].remove()
 
   #リロード処理
-  $view.on "request_reload", (e) ->
-    ex = e.detail
+  $view.on "request_reload", ({detail: ex}) ->
     #先にread_state更新処理を走らせるために、処理を飛ばす
     app.defer ->
-      if ex?.written_res_num?
-        jumpResNum = +ex.written_res_num
-      if ex?.param_res_num? and jumpResNum < 1
-        jumpResNum = +ex.param_res_num
+      jumpResNum = +(ex.written_res_num ? ex.param_res_num ? -1)
       if (
         (
           $view.hasClass("loading") or
@@ -141,10 +131,9 @@ app.boot "/view/thread.html", ->
       )
         threadContent.scrollTo(jumpResNum, true, -60)
         threadContent.select(jumpResNum, true)
-        jumpResNum = -1
         return
 
-      app.view_thread._draw($view, ex?.force_update, (thread) ->
+      app.view_thread._draw($view, { force_update: ex.force_update, jumpResNum }, (thread) ->
         return unless ex?.mes? and app.config.get("no_writehistory") is "off"
         postMes = ex.mes.replace(/\s/g, "")
         for t, i in thread.res by -1 when postMes is app.util.decode_char_reference(app.util.stripTags(t.message)).replace(/\s/g, "")
@@ -153,7 +142,6 @@ app.boot "/view/thread.html", ->
           mail = app.util.decode_char_reference(t.mail)
           app.WriteHistory.add(view_url, i+1, document.title, name, mail, ex.name, ex.mail, ex.mes, date.valueOf()) if date?
           break
-        jumpResNum = -1
         return
       )
     return
@@ -170,6 +158,11 @@ app.boot "/view/thread.html", ->
         $content.off("scroll", f)
         on_scroll = true
         return
+
+      iframe = parent.$$.$("iframe[data-url=\"#{view_url}\"]")
+      if iframe
+        jumpResNum = +iframe.dataset.writtenResNum
+        jumpResNum = +iframe.dataset.paramResNum if jumpResNum < 1
 
       $last = $content.C("last")[0]
       lastNum = 0
@@ -190,7 +183,8 @@ app.boot "/view/thread.html", ->
         $content.dispatchEvent(new Event("scroll"))
 
       #二度目以降のread_state_attached時
-      $view.on "read_state_attached", ->
+      $view.on "read_state_attached", ({detail}) ->
+        {jumpResNum} = detail
         move_mode = "new"
         #通常時と自動更新有効時で、更新後のスクロールの動作を変更する
         move_mode = app.config.get("auto_load_move") if $view.hasClass("autoload") and not $view.hasClass("autoload_pause")
@@ -224,11 +218,9 @@ app.boot "/view/thread.html", ->
             threadContent.scrollTo(res_num, true) if typeof res_num is "number"
 
     app.view_thread._draw($view).catch ->
-      jumpResNum = -1
       return
     .then ->
       app.History.add(view_url, document.title, opened_at) unless app.config.get("no_history") is "on"
-      jumpResNum = -1
       return
 
   #レスメニュー表示(ヘッダー上)
@@ -898,7 +890,7 @@ app.boot "/view/thread.html", ->
 
 readStateAttached = false
 
-app.view_thread._draw = ($view, force_update, beforeAdd) ->
+app.view_thread._draw = ($view, {force_update = false, jumpResNum = -1} = {}, beforeAdd) ->
   $view.addClass("loading")
   $view.style.cursor = "wait"
   $reload_button = $view.C("button_reload")[0]
@@ -925,7 +917,7 @@ app.view_thread._draw = ($view, force_update, beforeAdd) ->
         if $view.C("content")[0].hasClass("searching")
           $view.C("searchbox")[0].dispatchEvent(new Event("input"))
 
-        $view.dispatchEvent(new Event("view_loaded"))
+        $view.dispatchEvent(new CustomEvent("view_loaded", detail: {jumpResNum}))
 
         resolve(thread)
         return
@@ -992,7 +984,8 @@ app.view_thread._read_state_manager = ($view) ->
   )
 
   #スレの描画時に、read_state関連のクラスを付与する
-  $view.on "view_loaded", ->
+  $view.on "view_loaded", ({detail}) ->
+    {jumpResNum} = detail
     # 2回目の処理
     # 画像のロードにより位置がずれることがあるので初回処理時の内容を使用する
     if readStateAttached
@@ -1011,7 +1004,7 @@ app.view_thread._read_state_manager = ($view) ->
         tmpReadState.received = attachedReadState.received
       readStateAttached = false
       requestReloadFlag = false
-      $view.dispatchEvent(new Event("read_state_attached"))
+      $view.dispatchEvent(new CustomEvent("read_state_attached", detail: {jumpResNum}))
       if tmpReadState.read and tmpReadState.received
         app.message.send("read_state_updated", {board_url, read_state: tmpReadState})
       return

@@ -18,7 +18,7 @@ app.boot "/view/history.html", ->
   loadAddCount = 0
   isLoadedEnd = false
 
-  load = ({ignoreLoading = false, add = false} = {ignoreLoading: false, add: false}) ->
+  load = ({ignoreLoading = false, add = false} = {}) ->
     return if $view.hasClass("loading")
     return if $view.C("button_reload")[0].hasClass("disabled") and not (ignoreLoading or add)
     return if add and isLoadedEnd

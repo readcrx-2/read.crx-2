@@ -60,6 +60,7 @@ app.boot "/view/thread.html", ->
 
   $content = $view.C("content")[0]
   threadContent = new UI.ThreadContent(view_url, $content)
+  mediaContainer = new UI.MediaContainer($view)
   app.DOMData.set($view, "threadContent", threadContent)
   app.DOMData.set($view, "selectableItemList", threadContent)
   app.DOMData.set($view, "lazyload", new UI.LazyLoad($content))
@@ -97,9 +98,6 @@ app.boot "/view/thread.html", ->
     for dom in $popup.$$("img[data-src], video[data-src]")
       app.DOMData.get($view, "lazyload").immediateLoad(dom)
     app.defer ->
-      # マウスオーバーによるズームの設定
-      for dom in $popup.$$("img.image, video")
-        app.view_thread._setupHoverZoom(dom)
       # popupの表示
       popupView.show($popup, e.clientX, e.clientY, that)
       return
@@ -380,13 +378,11 @@ app.boot "/view/thread.html", ->
 
     # 画像をぼかす
     else if target.hasClass("set_image_blur")
-      for thumb in $res.$$(".thumbnail[media-type='image'], .thumbnail[media-type='video']")
-        threadContent.setImageBlur(thumb, true)
+      mediaContainer.setImageBlur($res, true)
 
     # 画像のぼかしを解除する
     else if target.hasClass("reset_image_blur")
-      for thumb in $res.$$(".thumbnail[media-type='image'], .thumbnail[media-type='video']")
-        threadContent.setImageBlur(thumb, false)
+      mediaContainer.setImageBlur($res, false)
 
     target.parent().remove()
     return
@@ -596,53 +592,6 @@ app.boot "/view/thread.html", ->
     return
   , true)
 
-  #何もないところをダブルクリックすると更新する
-  $view.on "dblclick", ({target}) ->
-    return if app.config.get("dblclick_reload") is "off"
-    return unless target.hasClass("message")
-    return if target.tagName is "A" or target.hasClass("thumbnail")
-    $view.dispatchEvent(new Event("request_reload"))
-    return
-
-  # VIDEOの再生/一時停止
-  $view.on "click", ({target}) ->
-    return unless target.matches(".thumbnail > video")
-    target.preload = "auto" if target.preload is "metadata"
-    if target.paused
-      target.play()
-    else
-      target.pause()
-    return
-
-  # VIDEO再生中はマウスポインタを消す
-  $view.on("mouseenter", ({target}) ->
-    return unless target.matches(".thumbnail > video")
-    target.on("play", (evt) ->
-      app.view_thread._controlVideoCursor(target, evt.type)
-      return
-    )
-    target.on("timeupdate", (evt) ->
-      app.view_thread._controlVideoCursor(target, evt.type)
-      return
-    )
-    target.on("pause", (evt) ->
-      app.view_thread._controlVideoCursor(target, evt.type)
-      return
-    )
-    target.on("ended", (evt) ->
-      app.view_thread._controlVideoCursor(target, evt.type)
-      return
-    )
-    return
-  , true)
-
-  # マウスポインタのリセット
-  $view.on "mousemove", (e) ->
-    target = e.target
-    return unless target.matches(".thumbnail > video")
-    app.view_thread._controlVideoCursor(target, e.type)
-    return
-
   # 展開済みURLのポップアップ
   $view.on("mouseenter", (e) ->
     target = e.target
@@ -719,6 +668,14 @@ app.boot "/view/thread.html", ->
         app.NG.add(@src)
         return
     })
+    return
+
+  #何もないところをダブルクリックすると更新する
+  $view.on "dblclick", ({target}) ->
+    return if app.config.get("dblclick_reload") is "off"
+    return unless target.hasClass("message")
+    return if target.tagName is "A" or target.hasClass("thumbnail")
+    $view.dispatchEvent(new Event("request_reload"))
     return
 
   #クイックジャンプパネル
@@ -918,22 +875,6 @@ app.boot "/view/thread.html", ->
         next_unread.show()
       return
 
-    return
-
-  # サムネイルロード時の追加処理
-  $view.on "lazyload-load", ({target}) ->
-    target = target.closest(".thumbnail > a > img.image, .thumbnail > video")
-    return unless target?
-    # マウスオーバーによるズームの設定
-    app.view_thread._setupHoverZoom(target)
-    return
-
-  # 逆スクロール時の処理
-  $view.on "lazyload-load-reverse", ({target}) ->
-    target = target.closest(".thumbnail > a > img.image, .thumbnail > video")
-    return unless target?
-    # マウスオーバーによるズームの設定
-    app.view_thread._setupHoverZoom(target)
     return
 
   #パンくずリスト表示
@@ -1204,44 +1145,3 @@ app.view_thread._read_state_manager = ($view) ->
       return if $view.hasClass("loading")
       scan_and_save()
       return
-
-# マウスオーバーによるズームの設定
-app.view_thread._setupHoverZoom = ($media) ->
-  zoomFlg = false
-  if app.config.get("hover_zoom_image") is "on" and $media.tagName is "IMG"
-    zoomRatio = app.config.get("zoom_ratio_image") + "%"
-    zoomFlg = true
-  else if app.config.get("hover_zoom_video") is "on" and $media.tagName is "VIDEO"
-    zoomRatio = app.config.get("zoom_ratio_video") + "%"
-    zoomFlg = true
-  if zoomFlg
-    $media.on("mouseenter", ->
-      $media.closest(".thumbnail").addClass("zoom")
-      $media.style.zoom = zoomRatio
-      return
-    )
-    $media.on("mouseleave", ->
-      $media.closest(".thumbnail").removeClass("zoom")
-      $media.style.zoom = "normal"
-      return
-    )
-  return
-
-# VIDEO再生中のマウスポインタ制御
-app.view_thread._videoPlayTime = 0
-app.view_thread._controlVideoCursor = (v, act) ->
-  switch act
-    when "play"
-      app.view_thread._videoPlayTime = Date.now()
-    when "timeupdate"
-      return if v.style.cursor is "none"
-      if Date.now() - app.view_thread._videoPlayTime > 2000
-        v.style.cursor = "none"
-    when "pause", "ended"
-      v.style.cursor = "auto"
-      app.view_thread._videoPlayTime = 0
-    when "mousemove"
-      return if app.view_thread._videoPlayTime is 0
-      v.style.cursor = "auto"
-      app.view_thread._videoPlayTime = Date.now()
-  return

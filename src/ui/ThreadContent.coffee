@@ -942,22 +942,6 @@ class UI.ThreadContent
     )
 
   ###*
-  @method setImageBlur
-  @param {Element} thumbnail
-  @param {Boolean} blurMode
-  ###
-  setImageBlur: (thumbnail, blurMode) ->
-    media = thumbnail.$("a > img.image, video")
-    if blurMode
-      v = app.config.get("image_blur_length")
-      thumbnail.addClass("image_blur")
-      media.style.WebkitFilter = "blur(#{v}px)"
-    else
-      thumbnail.removeClass("image_blur")
-      media.style.WebkitFilter = "none"
-    return
-
-  ###*
   @method addClassWithOrg
   @param {Element} $res
   @param {String} className

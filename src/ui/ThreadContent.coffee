@@ -309,9 +309,11 @@ class UI.ThreadContent
   ###*
   @method select
   @param {Element | Number} target
-  @param {bool} [preventScroll = false]
+  @param {Boolean} [preventScroll = false]
+  @param {Boolean} [animate = false]
+  @param {Number} [offset = 0]
   ###
-  select: (target, preventScroll = false) ->
+  select: (target, preventScroll = false, animate = false, offset = 0) ->
     @container.$("article.selected")?.removeClass("selected")
 
     if typeof target is "number"
@@ -321,7 +323,7 @@ class UI.ThreadContent
 
     target.addClass("selected")
     if not preventScroll
-      @scrollTo(+target.$(".num").textContent)
+      @scrollTo(+target.$(".num").textContent, animate, offset)
     return
 
   ###*

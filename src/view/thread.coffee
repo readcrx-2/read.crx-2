@@ -190,7 +190,7 @@ app.boot "/view/thread.html", ->
               # 新着が存在しない場合はスクロールを実行するためにレスを探す
               unless $tmp?
                 $tmp = $content.$(":scope > article.last")
-                offset = $tmp.attr("last-offset") ? -100
+                offset = $tmp?.attr("last-offset") ? -100
               $tmp ?= $content.$(":scope > article.read")
               $tmp ?= $content.$(":scope > article:last-child")
               threadContent.scrollTo(+$tmp.C("num")[0].textContent, true, +offset) if $tmp?

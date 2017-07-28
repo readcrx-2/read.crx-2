@@ -172,7 +172,7 @@ app.boot "/view/thread.html", ->
       unless on_scroll
         $content.dispatchEvent(new Event("scroll"))
 
-      #二度目以降のread_state_attached時
+      #二度目以降のread_state_attached時(再読み込みなど)
       $view.on "read_state_attached", ({ detail: {jumpResNum} = {} }) ->
         move_mode = "new"
         #通常時と自動更新有効時で、更新後のスクロールの動作を変更する
@@ -882,15 +882,13 @@ app.boot "/view/thread.html", ->
 
   return
 
-readStateAttached = false
-
 app.view_thread._draw = ($view, {force_update = false, jumpResNum = -1} = {}, beforeAdd) ->
   $view.addClass("loading")
   $view.style.cursor = "wait"
   $reload_button = $view.C("button_reload")[0]
   $reload_button.addClass("disabled")
 
-  fn = (thread, error) ->
+  fn = (thread, error, maybeTemp) ->
     return new Promise( (resolve, reject) ->
       if error
         $view.C("message_bar")[0].addClass("error")
@@ -911,7 +909,7 @@ app.view_thread._draw = ($view, {force_update = false, jumpResNum = -1} = {}, be
         if $view.C("content")[0].hasClass("searching")
           $view.C("searchbox")[0].dispatchEvent(new Event("input"))
 
-        $view.dispatchEvent(new CustomEvent("view_loaded", detail: {jumpResNum}))
+        $view.dispatchEvent(new CustomEvent("view_loaded", detail: {jumpResNum, maybeTemp}))
 
         resolve(thread)
         return
@@ -920,12 +918,11 @@ app.view_thread._draw = ($view, {force_update = false, jumpResNum = -1} = {}, be
     )
 
   return new Promise( (resolve, reject) ->
-    readStateAttached = false
     thread = new app.Thread($view.dataset.url)
     threadSetPromise = null
     threadGetPromise = app.util.promiseWithState(thread.get(force_update, ->
       unless threadGetPromise.isResolved()
-        threadSetPromise = app.util.promiseWithState(fn(thread, false))
+        threadSetPromise = app.util.promiseWithState(fn(thread, false, true))
       return
     ))
     threadGetPromise.promise
@@ -938,7 +935,7 @@ app.view_thread._draw = ($view, {force_update = false, jumpResNum = -1} = {}, be
         ).then( ->
           threadGetPromiseState = threadGetPromise.isResolved()
           beforeAdd?(thread) if threadGetPromiseState
-          threadSetPromise = app.util.promiseWithState(fn(thread, not threadGetPromiseState))
+          threadSetPromise = app.util.promiseWithState(fn(thread, not threadGetPromiseState, false))
           threadSetPromise.promise.catch( ->
             return
           ).then( ->
@@ -977,61 +974,61 @@ app.view_thread._read_state_manager = ($view) ->
   )
 
   #スレの描画時に、read_state関連のクラスを付与する
-  $view.on "view_loaded", ({ detail: {jumpResNum} }) ->
+  $view.on "view_loaded", ({ detail: {maybeTemp, jumpResNum} }) ->
+    # 1回目の処理
+    if maybeTemp
+      get_read_state.then( ({read_state, read_state_updated}) ->
+        $content.C("last")[0]?.removeClass("last")
+        $content.C("read")[0]?.removeClass("read")
+        $content.C("received")[0]?.removeClass("received")
+
+        # キャッシュの内容が古い場合にread_stateの内容の方が大きくなることがあるので
+        # その場合は次回の処理に委ねる
+        contentLength = $content.child().length
+        if read_state.last <= contentLength
+          $content.child()[read_state.last - 1]?.addClass("last")
+          $content.child()[read_state.last - 1]?.attr("last-offset", read_state.offset)
+          attachedReadState.last = -999
+        else
+          attachedReadState.last = read_state.last
+          attachedReadState.offset = read_state.offset
+        if read_state.read <= contentLength
+          $content.child()[read_state.read - 1]?.addClass("read")
+          attachedReadState.read = -999
+        else
+          attachedReadState.read = read_state.read
+        if read_state.received <= contentLength
+          $content.child()[read_state.received - 1]?.addClass("received")
+          attachedReadState.received = -999
+        else
+          attachedReadState.received = read_state.received
+        requestReloadFlag = false
+
+        $view.dispatchEvent(new Event("read_state_attached"))
+        if attachedReadState.read > 0 and attachedReadState.received > 0
+          app.message.send("read_state_updated", {board_url, read_state})
+        return
+      )
+      return
     # 2回目の処理
     # 画像のロードにより位置がずれることがあるので初回処理時の内容を使用する
-    if readStateAttached
-      tmpReadState = {read: null, received: null, url: view_url}
-      if attachedReadState.last > 0
-        $content.C("last")[0]?.removeClass("last")
-        $content.child()[attachedReadState.last - 1]?.addClass("last")
-        $content.child()[attachedReadState.last - 1]?.attr("last-offset", attachedReadState.offset)
-      if attachedReadState.read > 0
-        $content.C("read")[0]?.removeClass("read")
-        $content.child()[attachedReadState.read - 1]?.addClass("read")
-        tmpReadState.read = attachedReadState.read
-      if attachedReadState.received > 0
-        $content.C("received")[0]?.removeClass("received")
-        $content.child()[attachedReadState.received - 1]?.addClass("received")
-        tmpReadState.received = attachedReadState.received
-      readStateAttached = false
-      requestReloadFlag = false
-      $view.dispatchEvent(new CustomEvent("read_state_attached", detail: {jumpResNum}))
-      if tmpReadState.read and tmpReadState.received
-        app.message.send("read_state_updated", {board_url, read_state: tmpReadState})
-      return
-    # 初回の処理
-    get_read_state.then ({read_state, read_state_updated}) ->
+    tmpReadState = {read: null, received: null, url: view_url}
+    if attachedReadState.last > 0
       $content.C("last")[0]?.removeClass("last")
+      $content.child()[attachedReadState.last - 1]?.addClass("last")
+      $content.child()[attachedReadState.last - 1]?.attr("last-offset", attachedReadState.offset)
+    if attachedReadState.read > 0
       $content.C("read")[0]?.removeClass("read")
+      $content.child()[attachedReadState.read - 1]?.addClass("read")
+      tmpReadState.read = attachedReadState.read
+    if attachedReadState.received > 0
       $content.C("received")[0]?.removeClass("received")
-
-      # キャッシュの内容が古い場合にread_stateの内容の方が大きくなることがあるので
-      # その場合は次回の処理に委ねる
-      contentLength = $content.child().length
-      if read_state.last <= contentLength
-        $content.child()[read_state.last - 1]?.addClass("last")
-        $content.child()[read_state.last - 1]?.attr("last-offset", read_state.offset)
-        attachedReadState.last = -999
-      else
-        attachedReadState.last = read_state.last
-        attachedReadState.offset = read_state.offset
-      if read_state.read <= contentLength
-        $content.child()[read_state.read - 1]?.addClass("read")
-        attachedReadState.read = -999
-      else
-        attachedReadState.read = read_state.read
-      if read_state.received <= contentLength
-        $content.child()[read_state.received - 1]?.addClass("received")
-        attachedReadState.received = -999
-      else
-        attachedReadState.received = read_state.received
-      readStateAttached = true
-      requestReloadFlag = false
-
-      $view.dispatchEvent(new CustomEvent("read_state_attached", detail: {jumpResNum}))
-      if attachedReadState.read > 0 and attachedReadState.received > 0
-        app.message.send("read_state_updated", {board_url, read_state})
+      $content.child()[attachedReadState.received - 1]?.addClass("received")
+      tmpReadState.received = attachedReadState.received
+    requestReloadFlag = false
+    $view.dispatchEvent(new CustomEvent("read_state_attached", detail: {jumpResNum}))
+    if tmpReadState.read and tmpReadState.received
+      app.message.send("read_state_updated", {board_url, read_state: tmpReadState})
     return
 
   get_read_state.then ({read_state, read_state_updated}) ->

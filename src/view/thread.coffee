@@ -156,17 +156,14 @@ app.boot "/view/thread.html", ->
         return
 
       $last = $content.C("last")[0]
-      lastNum = 0
-      for dom in $content.$$(":scope > article:last-child")
-        lastNum = +dom.C("num")[0].textContent
-        break
+      lastNum = $content.$(":scope > article:last-child").C("num")[0].textContent
       # 指定レス番号へ
       if 0 < jumpResNum <= lastNum
         threadContent.select(jumpResNum, false, true, -60)
       # 最終既読位置へ
       else if $last?
         offset = $last.attr("last-offset") ? 0
-        threadContent.scrollTo(+$last.C("num")[0].textContent, false, +offset)
+        threadContent.scrollTo($last, false, +offset)
 
       #スクロールされなかった場合も余所の処理を走らすためにscrollを発火
       unless on_scroll
@@ -193,17 +190,15 @@ app.boot "/view/thread.html", ->
                 offset = $tmp?.attr("last-offset") ? -100
               $tmp ?= $content.$(":scope > article.read")
               $tmp ?= $content.$(":scope > article:last-child")
-              threadContent.scrollTo(+$tmp.C("num")[0].textContent, true, +offset) if $tmp?
+              threadContent.scrollTo($tmp, true, +offset) if $tmp?
           when "surely_new"
-            for dom, i in $content.child() when dom.matches(".last.received + article")
-              res_num = i+1
+            for dom in $content.child() when dom.matches(".last.received + article")
+              $res = dom
               break
-            threadContent.scrollTo(res_num, true) if typeof res_num is "number"
+            threadContent.scrollTo($res, true) if $res?
           when "newest"
-            for dom, i in $content.child() when dom.matches("article:last-child")
-              res_num = i+1
-              break
-            threadContent.scrollTo(res_num, true) if typeof res_num is "number"
+            $res = $content.$(":scope > article:last-child")
+            threadContent.scrollTo($res, true) if $res?
 
     jumpResNum = -1
     iframe = parent.$$.$("iframe[data-url=\"#{view_url}\"]")
@@ -337,7 +332,7 @@ app.boot "/view/thread.html", ->
       app.NG.add("Slip:" + $res.dataset.slip)
 
     else if target.hasClass("jump_to_this")
-      threadContent.scrollTo(+$res.C("num")[0].textContent, true)
+      threadContent.scrollTo($res, true)
 
     else if target.hasClass("res_to_this")
       write(message: ">>#{$res.C("num")[0].textContent}\n")
@@ -695,15 +690,12 @@ app.boot "/view/thread.html", ->
           break
 
       if selector
-        res_num = 1
-        for dom, i in $view.T("article") when dom.matches(selector)
-          res_num = i + 1
-          break
-        if key is ".jump_last"
-          offset = dom.attr("last-offset") ? offset
+        $res = $view.$(selector)
 
-        if typeof res_num is "number"
-          threadContent.scrollTo(res_num, true, +offset)
+        if $res?
+          if key is ".jump_last"
+            offset = $res.attr("last-offset") ? offset
+          threadContent.scrollTo($res, true, +offset)
         else
           app.log("warn", "[view_thread] .jump_panel: ターゲットが存在しません")
       return

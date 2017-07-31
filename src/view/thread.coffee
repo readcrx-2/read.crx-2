@@ -564,7 +564,7 @@ app.boot "/view/thread.html", ->
 
       frag = $_F()
       res_num = +target.closest("article").C("num")[0].textContent
-      for target_res_num from app.DOMData.get($view, "threadContent").repIndex.get(res_num)
+      for target_res_num from threadContent.repIndex.get(res_num)
         frag.addLast(tmp[target_res_num - 1].cloneNode(true))
 
       $popup = $__("div")
@@ -948,6 +948,7 @@ app.view_thread._draw = ($view, {force_update = false, jumpResNum = -1} = {}, be
   )
 
 app.view_thread._read_state_manager = ($view) ->
+  threadContent = app.DOMData.get($view, "threadContent")
   $content = $view.C("content")[0]
   view_url = $view.dataset.url
   board_url = app.URL.threadToBoard(view_url)
@@ -1032,14 +1033,15 @@ app.view_thread._read_state_manager = ($view) ->
       #onbeforeunload内で呼び出された時に、この値が0になる場合が有る
       return if received is 0
 
-      last = app.DOMData.get($view, "threadContent").getRead()
+      last = threadContent.getRead()
+
       scanCountByReloaded++ if requestReloadFlag
 
       if read_state.received isnt received
         read_state.received = received
         read_state_updated = true
 
-      lastDisplay = app.DOMData.get($view, "threadContent").getDisplay()
+      lastDisplay = threadContent.getDisplay()
       if (
         (!requestReloadFlag or scanCountByReloaded is 1) and
         (!lastDisplay.bottom or lastDisplay.resNum is last)

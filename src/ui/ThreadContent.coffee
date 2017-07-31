@@ -103,7 +103,7 @@ class UI.ThreadContent
 
   ###*
   @method _loadNearlyImages
-  @param {Number}
+  @param {Number} resNum
   @param {Number} [offset=0]
   @return {Boolean} loadFlag
   ###
@@ -171,18 +171,22 @@ class UI.ThreadContent
 
   ###*
   @method scrollTo
-  @param {Number} resNum
+  @param {Element | Number} target
   @param {Boolean} [animate=false]
   @param {Number} [offset=0]
   @param {Boolean} [rerun=false]
   ###
-  scrollTo: (resNum, animate = false, offset = 0, rerun = false) ->
+  scrollTo: (target, animate = false, offset = 0, rerun = false) ->
+    if typeof target is "number"
+      resNum = target
+    else
+      resNum = +target.C("num")[0].textContent
     @_lastScrollInfo.resNum = resNum
     @_lastScrollInfo.animate = animate
     @_lastScrollInfo.offset = offset
     loadFlag = false
 
-    target = @container.child()[resNum - 1]
+    target = @container.children[resNum - 1]
 
     # 検索中で、ターゲットが非ヒット項目で非表示の場合、スクロールを中断
     if target and @container.hasClass("searching") and not target.hasClass("search_hit")
@@ -309,9 +313,11 @@ class UI.ThreadContent
   ###*
   @method select
   @param {Element | Number} target
-  @param {bool} [preventScroll = false]
+  @param {Boolean} [preventScroll = false]
+  @param {Boolean} [animate = false]
+  @param {Number} [offset = 0]
   ###
-  select: (target, preventScroll = false) ->
+  select: (target, preventScroll = false, animate = false, offset = 0) ->
     @container.$("article.selected")?.removeClass("selected")
 
     if typeof target is "number"
@@ -321,7 +327,7 @@ class UI.ThreadContent
 
     target.addClass("selected")
     if not preventScroll
-      @scrollTo(+target.$(".num").textContent)
+      @scrollTo(target, animate, offset)
     return
 
   ###*

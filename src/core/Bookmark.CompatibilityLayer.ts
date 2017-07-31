@@ -155,9 +155,8 @@ namespace app.Bookmark {
           this.cbel.update(entry, undefined, (res) => {
             res ? resolve() : reject();
           });
-        }
-        else {
-          reject();
+        } else {
+          resolve();
         }
       });
     }

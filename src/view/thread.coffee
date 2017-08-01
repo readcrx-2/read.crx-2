@@ -759,13 +759,21 @@ app.boot "/view/thread.html", ->
 
   #フッター表示処理
   do ->
-    scroll_left = 0
-    update_scroll_left = ->
-      scroll_left = $content.scrollHeight - ($content.offsetHeight + $content.scrollTop)
+    couldBeShown = false
+    observer = new IntersectionObserver( (changes) ->
+      for change in changes
+        couldBeShown = (change.intersectionRatio is 1)
+      updateThreadFooter()
+    , root: $content, threshold: [0.95, 1.0])
+
+    setObserve = ->
+      observer.disconnect()
+      ele = $content.lastElementChild
+      observer.observe(ele) if ele?
       return
 
     #未読ブックマーク数表示
-    next_unread =
+    $nextUnread =
       _elm: $view.C("next_unread")[0]
       show: ->
         next = null
@@ -807,7 +815,7 @@ app.boot "/view/thread.html", ->
         @_elm.addClass("hidden")
         return
 
-    search_next_thread =
+    $searchNextThread =
       _elm: $view.C("search_next_thread")[0]
       show: ->
         if $content.child().length >= 1000 or $view.C("message_bar")[0].hasClass("error")
@@ -819,40 +827,36 @@ app.boot "/view/thread.html", ->
         @_elm.addClass("hidden")
         return
 
-    update_thread_footer = ->
-      if scroll_left <= 1
-        next_unread.show()
-        search_next_thread.show()
+    updateThreadFooter = ->
+      if couldBeShown
+        $nextUnread.show()
+        $searchNextThread.show()
       else
-        next_unread.hide()
-        search_next_thread.hide()
+        $nextUnread.hide()
+        $searchNextThread.hide()
       return
 
     $view.on("tab_selected", ->
-      update_thread_footer()
+      updateThreadFooter()
       return
     )
     $view.on("view_loaded", ->
-      update_thread_footer()
+      setObserve()
+      updateThreadFooter()
       return
     )
-    $view.C("content")[0].on("scroll", ->
-      update_scroll_left()
-      update_thread_footer()
+    app.message.addListener("bookmark_updated", (message) ->
+      if couldBeShown
+        $nextUnread.show()
       return
-    , passive: true)
+    )
+
     #次スレ検索
     for dom in $view.$$(".button_tool_search_next_thread, .search_next_thread")
       dom.on "click", ->
         searchNextThread.show()
         searchNextThread.search(view_url, document.title)
         return
-
-    app.message.addListener "bookmark_updated", (message) ->
-      if scroll_left is 0
-        next_unread.show()
-      return
-
     return
 
   #パンくずリスト表示

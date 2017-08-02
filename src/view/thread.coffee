@@ -169,7 +169,7 @@ app.boot "/view/thread.html", ->
       unless on_scroll
         $content.dispatchEvent(new Event("scroll"))
 
-      #二度目以降のread_state_attached時(再読み込みなど)
+      #二度目以降のread_state_attached時
       $view.on "read_state_attached", ({ detail: {jumpResNum} = {} }) ->
         move_mode = "new"
         #通常時と自動更新有効時で、更新後のスクロールの動作を変更する
@@ -564,7 +564,7 @@ app.boot "/view/thread.html", ->
 
       frag = $_F()
       res_num = +target.closest("article").C("num")[0].textContent
-      for target_res_num from app.DOMData.get($view, "threadContent").repIndex.get(res_num)
+      for target_res_num from threadContent.repIndex.get(res_num)
         frag.addLast(tmp[target_res_num - 1].cloneNode(true))
 
       $popup = $__("div")
@@ -759,13 +759,21 @@ app.boot "/view/thread.html", ->
 
   #フッター表示処理
   do ->
-    scroll_left = 0
-    update_scroll_left = ->
-      scroll_left = $content.scrollHeight - ($content.offsetHeight + $content.scrollTop)
+    couldBeShown = false
+    observer = new IntersectionObserver( (changes) ->
+      for change in changes
+        couldBeShown = (change.intersectionRatio is 1)
+      updateThreadFooter()
+    , root: $content, threshold: [0.95, 1.0])
+
+    setObserve = ->
+      observer.disconnect()
+      ele = $content.lastElementChild
+      observer.observe(ele) if ele?
       return
 
     #未読ブックマーク数表示
-    next_unread =
+    $nextUnread =
       _elm: $view.C("next_unread")[0]
       show: ->
         next = null
@@ -807,7 +815,7 @@ app.boot "/view/thread.html", ->
         @_elm.addClass("hidden")
         return
 
-    search_next_thread =
+    $searchNextThread =
       _elm: $view.C("search_next_thread")[0]
       show: ->
         if $content.child().length >= 1000 or $view.C("message_bar")[0].hasClass("error")
@@ -819,40 +827,36 @@ app.boot "/view/thread.html", ->
         @_elm.addClass("hidden")
         return
 
-    update_thread_footer = ->
-      if scroll_left <= 1
-        next_unread.show()
-        search_next_thread.show()
+    updateThreadFooter = ->
+      if couldBeShown
+        $nextUnread.show()
+        $searchNextThread.show()
       else
-        next_unread.hide()
-        search_next_thread.hide()
+        $nextUnread.hide()
+        $searchNextThread.hide()
       return
 
     $view.on("tab_selected", ->
-      update_thread_footer()
+      updateThreadFooter()
       return
     )
     $view.on("view_loaded", ->
-      update_thread_footer()
+      setObserve()
+      updateThreadFooter()
       return
     )
-    $view.C("content")[0].on("scroll", ->
-      update_scroll_left()
-      update_thread_footer()
+    app.message.addListener("bookmark_updated", (message) ->
+      if couldBeShown
+        $nextUnread.show()
       return
-    , passive: true)
+    )
+
     #次スレ検索
     for dom in $view.$$(".button_tool_search_next_thread, .search_next_thread")
       dom.on "click", ->
         searchNextThread.show()
         searchNextThread.search(view_url, document.title)
         return
-
-    app.message.addListener "bookmark_updated", (message) ->
-      if scroll_left is 0
-        next_unread.show()
-      return
-
     return
 
   #パンくずリスト表示
@@ -879,8 +883,9 @@ app.view_thread._draw = ($view, {force_update = false, jumpResNum = -1} = {}, be
   $view.style.cursor = "wait"
   $reload_button = $view.C("button_reload")[0]
   $reload_button.addClass("disabled")
+  loadCount = 0
 
-  fn = (thread, error, maybeTemp) ->
+  fn = (thread, error) ->
     return new Promise( (resolve, reject) ->
       if error
         $view.C("message_bar")[0].addClass("error")
@@ -896,12 +901,13 @@ app.view_thread._draw = ($view, {force_update = false, jumpResNum = -1} = {}, be
       document.title = thread.title
 
       app.DOMData.get($view, "threadContent").addItem(thread.res.slice($view.C("content")[0].child().length)).then( ->
+        loadCount++
         app.DOMData.get($view, "lazyload").scan()
 
         if $view.C("content")[0].hasClass("searching")
           $view.C("searchbox")[0].dispatchEvent(new Event("input"))
 
-        $view.dispatchEvent(new CustomEvent("view_loaded", detail: {jumpResNum, maybeTemp}))
+        $view.dispatchEvent(new CustomEvent("view_loaded", detail: {jumpResNum, loadCount}))
 
         resolve(thread)
         return
@@ -914,7 +920,7 @@ app.view_thread._draw = ($view, {force_update = false, jumpResNum = -1} = {}, be
     threadSetPromise = null
     threadGetPromise = app.util.promiseWithState(thread.get(force_update, ->
       unless threadGetPromise.isResolved()
-        threadSetPromise = app.util.promiseWithState(fn(thread, false, true))
+        threadSetPromise = app.util.promiseWithState(fn(thread, false))
       return
     ))
     threadGetPromise.promise
@@ -927,7 +933,7 @@ app.view_thread._draw = ($view, {force_update = false, jumpResNum = -1} = {}, be
         ).then( ->
           threadGetPromiseState = threadGetPromise.isResolved()
           beforeAdd?(thread) if threadGetPromiseState
-          threadSetPromise = app.util.promiseWithState(fn(thread, not threadGetPromiseState, false))
+          threadSetPromise = app.util.promiseWithState(fn(thread, not threadGetPromiseState))
           threadSetPromise.promise.catch( ->
             return
           ).then( ->
@@ -945,6 +951,7 @@ app.view_thread._draw = ($view, {force_update = false, jumpResNum = -1} = {}, be
   )
 
 app.view_thread._read_state_manager = ($view) ->
+  threadContent = app.DOMData.get($view, "threadContent")
   $content = $view.C("content")[0]
   view_url = $view.dataset.url
   board_url = app.URL.threadToBoard(view_url)
@@ -966,9 +973,9 @@ app.view_thread._read_state_manager = ($view) ->
   )
 
   #スレの描画時に、read_state関連のクラスを付与する
-  $view.on "view_loaded", ({ detail: {maybeTemp, jumpResNum} }) ->
-    # 1回目の処理
-    if maybeTemp
+  $view.on "view_loaded", ({ detail: {jumpResNum, loadCount} }) ->
+    if loadCount isnt 2
+      # 初回の処理
       get_read_state.then( ({read_state, read_state_updated}) ->
         $content.C("last")[0]?.removeClass("last")
         $content.C("read")[0]?.removeClass("read")
@@ -996,7 +1003,7 @@ app.view_thread._read_state_manager = ($view) ->
           attachedReadState.received = read_state.received
         requestReloadFlag = false
 
-        $view.dispatchEvent(new Event("read_state_attached"))
+        $view.dispatchEvent(new CustomEvent("read_state_attached", detail: {jumpResNum}))
         if attachedReadState.read > 0 and attachedReadState.received > 0
           app.message.send("read_state_updated", {board_url, read_state})
         return
@@ -1029,14 +1036,15 @@ app.view_thread._read_state_manager = ($view) ->
       #onbeforeunload内で呼び出された時に、この値が0になる場合が有る
       return if received is 0
 
-      last = app.DOMData.get($view, "threadContent").getRead()
+      last = threadContent.getRead()
+
       scanCountByReloaded++ if requestReloadFlag
 
       if read_state.received isnt received
         read_state.received = received
         read_state_updated = true
 
-      lastDisplay = app.DOMData.get($view, "threadContent").getDisplay()
+      lastDisplay = threadContent.getDisplay()
       if (
         (!requestReloadFlag or scanCountByReloaded is 1) and
         (!lastDisplay.bottom or lastDisplay.resNum is last)

@@ -269,17 +269,14 @@ class UI.ThreadContent
   @return {Number} 現在読んでいると推測されるレスの番号
   ###
   getRead: ->
-    containerBottom = @container.scrollTop + @container.clientHeight
-    read = @container.child().length
-    for res, key in @container.child() when res.offsetTop > containerBottom
-      read = key - 1
-      break
+    {top, left, height} = @container.getBoundingClientRect()
+    res = document.elementFromPoint(left, top + height - 1)
 
-    # >>1の底辺が表示領域外にはみ出していた場合対策
-    if read is 0
-      read = 1
-
-    read
+    if res?.tagName is "ARTICLE"
+      return parseInt(res.C("num")[0].textContent)
+    else if res? and res is @container
+      return @container.child().length
+    return 1
 
   ###*
   @method getDisplay
@@ -296,11 +293,12 @@ class UI.ThreadContent
       resRead.bottom = true
 
     # スクロール位置のレスを抽出
-    for res, key in @container.child() when res.offsetTop + res.offsetHeight >= containerTop
-      resRead.resNum = key + 1
-      resRead.offset = (containerTop - res.offsetTop) / res.offsetHeight
-      break
-
+    {top, left} = @container.getBoundingClientRect()
+    res = document.elementFromPoint(left, top)
+    {top: resTop, height: resHeight} = res.getBoundingClientRect()
+    if res?.tagName is "ARTICLE"
+      resRead.resNum = parseInt(res.C("num")[0].textContent)
+      resRead.offset = (top - resTop) / resHeight
     return resRead
 
   ###*
@@ -343,16 +341,13 @@ class UI.ThreadContent
   ###
   selectNext: (repeat = 1) ->
     current = @getSelected()
+    containerHeight = @container.offsetHeight
 
-    # 現在選択されているレスが表示範囲外だった場合、それを無視する
-    if (
-      current and
-      (
-        current.offsetTop + current.offsetHeight < @container.scrollTop or
-        @container.scrollTop + @container.offsetHeight < current.offsetTop
-      )
-    )
-      current = null
+    if current
+      {top, bottom} = current.getBoundingClientRect()
+      # 現在選択されているレスが表示範囲外だった場合、それを無視する
+      if top >= containerHeight or bottom <= 0
+        current = null
 
     unless current
       @select(@container.child()[@getRead() - 1], true)
@@ -362,13 +357,8 @@ class UI.ThreadContent
       for [0...repeat]
         prevTarget = target
 
-        if (
-          (
-            target.offsetTop + target.offsetHeight <=
-            @container.scrollTop + @container.offsetHeight
-          ) and
-          target.next()
-        )
+        {bottom: targetBottom} = target.getBoundingClientRect()
+        if targetBottom <= containerHeight and target.next()
           target = target.next()
 
           while target and target.offsetHeight is 0
@@ -378,21 +368,18 @@ class UI.ThreadContent
           target = prevTarget
           break
 
-        if (
-          @container.scrollTop + @container.offsetHeight <
-          target.offsetTop + target.offsetHeight
-        )
-          if target.offsetHeight >= @container.offsetHeight
-            @container.scrollTop += @container.offsetHeight * 0.5
+        {bottom: targetBottom, height: targetHeight} = target.getBoundingClientRect()
+        if containerHeight < targetBottom
+          if targetHeight >= containerHeight
+            @container.scrollTop += containerHeight * 0.5
           else
-            @container.scrollTop = (
-              target.offsetTop -
-              @container.offsetHeight +
-              target.offsetHeight +
+            @container.scrollTop += (
+              targetBottom -
+              containerHeight +
               10
             )
         else if not target.next()
-          @container.scrollTop += @container.offsetHeight * 0.5
+          @container.scrollTop += containerHeight * 0.5
           if target is prevTarget
             break
 
@@ -406,16 +393,13 @@ class UI.ThreadContent
   ###
   selectPrev: (repeat = 1) ->
     current = @getSelected()
+    containerHeight = @container.offsetHeight
 
-    # 現在選択されているレスが表示範囲外だった場合、それを無視する
-    if (
-      current and
-      (
-        current.offsetTop + current.offsetHeight < @container.scrollTop or
-        @container.scrollTop + @container.offsetHeight < current.offsetTop
-      )
-    )
-      current = null
+    if current
+      {top, bottom} = current.getBoundingClientRect()
+      # 現在選択されているレスが表示範囲外だった場合、それを無視する
+      if top >= containerHeight or bottom <= 0
+        current = null
 
     unless current
       @select(@container.child()[@getRead() - 1], true)
@@ -425,10 +409,8 @@ class UI.ThreadContent
       for [0...repeat]
         prevTarget = target
 
-        if (
-          @container.scrollTop <= target.offsetTop and
-          target.prev()
-        )
+        {top: targetTop, height: targetHeight} = target.getBoundingClientRect()
+        if 0 <= targetTop and target.prev()
           target = target.prev()
 
           while target and target.offsetHeight is 0
@@ -438,13 +420,14 @@ class UI.ThreadContent
           target = prevTarget
           break
 
-        if @container.scrollTop > target.offsetTop
-          if target.offsetHeight >= @container.offsetHeight
-            @container.scrollTop -= @container.offsetHeight * 0.5
+        {top: targetTop, height: targetHeight} = target.getBoundingClientRect()
+        if targetTop < 0
+          if targetHeight >= containerHeight
+            @container.scrollTop -= containerHeight * 0.5
           else
             @container.scrollTop = target.offsetTop - 10
-        else if not target.previousElementSibling
-          @container.scrollTop -= @container.offsetHeight * 0.5
+        else if not target.prev()
+          @container.scrollTop -= containerHeight * 0.5
           if target is prevTarget
             break
 

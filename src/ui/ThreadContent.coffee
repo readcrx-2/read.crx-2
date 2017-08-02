@@ -270,13 +270,22 @@ class UI.ThreadContent
   ###
   getRead: ->
     {top, left, height} = @container.getBoundingClientRect()
-    res = document.elementFromPoint(left, top + height - 1)
+    y = top + height - 1
+    res = document.elementFromPoint(left, y)
 
-    if res?.tagName is "ARTICLE"
-      return parseInt(res.C("num")[0].textContent)
-    else if res? and res is @container
-      return @container.child().length
-    return 1
+    while true
+      if res?
+        if res.tagName isnt "ARTICLE" and res.closest("article")?
+          res = res.closest("article")
+        if res.tagName is "ARTICLE"
+          return parseInt(res.C("num")[0].textContent)
+        else if res is @container
+          return @container.child().length
+      else
+        return 1
+      y -= res.getBoundingClientRect().height
+      res = document.elementFromPoint(left, y)
+    return
 
   ###*
   @method getDisplay
@@ -295,8 +304,12 @@ class UI.ThreadContent
     # スクロール位置のレスを抽出
     {top, left} = @container.getBoundingClientRect()
     res = document.elementFromPoint(left, top)
-    {top: resTop, height: resHeight} = res.getBoundingClientRect()
-    if res?.tagName is "ARTICLE"
+    if res?
+      if res.tagName isnt "ARTICLE" and res.closest("article")?
+        res = res.closest("article")
+      else
+        return resRead
+      {top: resTop, height: resHeight} = res.getBoundingClientRect()
       resRead.resNum = parseInt(res.C("num")[0].textContent)
       resRead.offset = (top - resTop) / resHeight
     return resRead

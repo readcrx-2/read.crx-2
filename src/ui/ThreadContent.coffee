@@ -307,11 +307,10 @@ class UI.ThreadContent
     if res?
       if res.tagName isnt "ARTICLE" and res.closest("article")?
         res = res.closest("article")
-      else
-        return resRead
-      {top: resTop, height: resHeight} = res.getBoundingClientRect()
-      resRead.resNum = parseInt(res.C("num")[0].textContent)
-      resRead.offset = (top - resTop) / resHeight
+      if res.tagName is "ARTICLE"
+        {top: resTop, height: resHeight} = res.getBoundingClientRect()
+        resRead.resNum = parseInt(res.C("num")[0].textContent)
+        resRead.offset = (top - resTop) / resHeight
     return resRead
 
   ###*

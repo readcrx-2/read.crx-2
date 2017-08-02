@@ -663,6 +663,7 @@ class app.view.TabContentView extends app.view.PaneContentView
     auto_load = =>
       second = parseInt(app.config.get("auto_load_second#{cfgName}"))
       if second >= minSeconds
+        @$element.addClass("autoload")
         $button.removeClass("hidden")
         if @$element.hasClass("view_bookmark")
           return setInterval( =>
@@ -680,6 +681,7 @@ class app.view.TabContentView extends app.view.PaneContentView
             return
           , second)
       else
+        @$element.removeClass("autoload")
         $button.addClass("hidden")
       return
 
@@ -693,6 +695,7 @@ class app.view.TabContentView extends app.view.PaneContentView
     )
 
     $button.on("click", ->
+      @$element.togggleClass("autoload_pause")
       $button.toggleClass("pause")
       if $button.hasClass("pause")
         clearInterval(auto_load_interval)

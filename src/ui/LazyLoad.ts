@@ -5,22 +5,13 @@
 namespace UI {
   "use strict";
 
-  interface MediaPosition {
-    top: number;
-    offsetHeight: number;
-  }
   type HTMLMediaElement = HTMLImageElement | HTMLAudioElement | HTMLVideoElement;
 
   export class LazyLoad {
-    static UPDATE_INTERVAL = 200;
-
     container: HTMLElement;
-    private scroll = false;
+    private observer: IntersectionObserver;
     private medias: HTMLMediaElement[] = [];
-    private mediaPlaceTable = new Map<HTMLMediaElement, MediaPosition>();
-    private updateInterval: number|null = null;
     private pause: boolean = false;
-    private lastScrollTop: number = -1;
     private noNeedAttrs: string[] = [
       "data-src",
       "data-type",
@@ -36,8 +27,7 @@ namespace UI {
     constructor (container: HTMLElement) {
       this.container = container;
 
-      this.container.on("scroll", this.onScroll.bind(this), { passive: true });
-      this.container.on("resize", this.onResize.bind(this));
+      this.observer = new IntersectionObserver(this.onChange.bind(this), {root: this.container, rootMargin: "10px"})
       this.container.on("scrollstart", this.onScrollStart.bind(this));
       this.container.on("scrollfinish", this.onScrollFinish.bind(this));
       this.container.on("searchstart", this.onSearchStart.bind(this));
@@ -46,18 +36,15 @@ namespace UI {
       this.scan();
     }
 
-    private onScroll (): void {
-      this.scroll = true;
-    }
+    private onChange(changes): void {
+      var change;
 
-    private onResize (): void {
-      this.mediaPlaceTable.clear();
-    }
+      if (this.pause) return;
 
-    public immediateLoad (media: HTMLMediaElement): void {
-      if (media.tagName === "IMG" || media.tagName === "VIDEO") {
-        if (media.dataset.src === undefined) return;
-        this.load(media);
+      for (change of changes) {
+        if (change.isIntersecting) {
+          this.load(change.target);
+        }
       }
     }
 
@@ -77,7 +64,6 @@ namespace UI {
 
     // 検索による表示位置の変更に対応するため、テーブルをクリアしてから再開する
     private onSearchFinish(): void {
-      this.mediaPlaceTable.clear();
       this.pause = false;
     }
 
@@ -85,7 +71,14 @@ namespace UI {
       this.immediateLoad(e.target);
     }
 
-    private load ($media: HTMLMediaElement, reverse: boolean = false): void {
+    public immediateLoad (media: HTMLMediaElement): void {
+      if (media.tagName === "IMG" || media.tagName === "VIDEO") {
+        if (media.dataset.src === undefined) return;
+        this.load(media);
+      }
+    }
+
+    private load ($media: HTMLMediaElement): void {
       var $newImg: HTMLImageElement, attr: Attr, attrs: Attr[];
       var imgFlg: boolean = ($media.tagName === "IMG");
       var faviconFlg: boolean = $media.hasClass("favicon");
@@ -110,11 +103,6 @@ namespace UI {
         $media.parent().replaceChild(this, $media);
 
         if (e.type === "load") {
-          if (reverse === false) {
-            this.dispatchEvent(new Event("lazyload-load", {"bubbles": true}));
-          } else {
-            this.dispatchEvent(new Event("lazyload-load-reverse", {"bubbles": true}));
-          }
           UI.Animate.fadeIn(this);
         }
       };
@@ -127,13 +115,6 @@ namespace UI {
         }
         $media.off("loadedmetadata", loadmetadata);
         $media.off("error", loadmetadata);
-        if (e.type !== "error") {
-          if (reverse === false) {
-            this.dispatchEvent(new Event("lazyload-load", {"bubbles": true}));
-          } else {
-            this.dispatchEvent(new Event("lazyload-load-reverse", {"bubbles": true}));
-          }
-        }
       };
       $media.on("loadedmetadata", loadmetadata);
       $media.on("error", loadmetadata);
@@ -168,58 +149,15 @@ namespace UI {
         $media.src = $media.dataset.src!;
       }
       $media.removeAttr("data-src");
-    }
-
-    private watch (): void {
-      if (this.updateInterval === null) {
-        this.updateInterval = setInterval(() => {
-          if (this.scroll) {
-            this.update();
-            this.scroll = false;
-          }
-        }, LazyLoad.UPDATE_INTERVAL);
-      }
-    }
-
-    private unwatch (): void {
-      if (this.updateInterval !== null) {
-        clearInterval(this.updateInterval);
-        this.updateInterval = null;
-      }
+      this.observer.unobserve($media);
     }
 
     scan (): void {
+      var media;
       this.medias = <HTMLMediaElement[]>Array.from(this.container.$$("img[data-src], audio[data-src], video[data-src]"));
-      if (this.medias.length > 0) {
-        this.update();
-        this.watch();
+      for (media of this.medias) {
+        this.observer.observe(media);
       }
-      else {
-        this.unwatch();
-      }
-    }
-
-    private getMediaPosition (media: HTMLMediaElement): MediaPosition {
-      var current: HTMLElement;
-      var pos: MediaPosition = {top: 0, offsetHeight: 0};
-
-      // 高さが固定の場合のみテーブルの値を使用する
-      if (
-        app.config.get("image_height_fix") === "on" &&
-        this.mediaPlaceTable.has(media)
-      ) {
-        pos = this.mediaPlaceTable.get(media)!;
-      } else {
-        pos.top = 0;
-        current = media;
-        while (current !== null && current !== this.container) {
-          pos.top += current.offsetTop;
-          current = <HTMLElement>current.offsetParent;
-        }
-        pos.offsetHeight = media.offsetHeight;
-        this.mediaPlaceTable.set(media, pos);
-      }
-      return pos;
     }
 
     private getWithReferrer (link: string, referrer: string, userAgent: string, cookie: string = ""): string {
@@ -269,69 +207,6 @@ namespace UI {
           }
         });
       });
-    }
-
-    update (): void {
-      var scrollTop: number, clientHeight: number, reverseMode: boolean = false;
-      var pos: MediaPosition;
-
-      scrollTop = this.container.scrollTop;
-      clientHeight = this.container.clientHeight;
-      if (this.pause === true) return;
-      if (
-        scrollTop < this.lastScrollTop &&
-        scrollTop > this.lastScrollTop - clientHeight
-      ) {
-        reverseMode = true;
-      }
-      this.lastScrollTop = scrollTop;
-
-      this.medias = this.medias.filter( (media: HTMLMediaElement) => {
-
-        // 逆スクロール時の範囲チェック(lazyload-load-reverseを優先させるため先に実行)
-        if (reverseMode === true) {
-          var bottom: number, targetHeight: number;
-
-          targetHeight = 0;
-          switch (media.tagName) {
-            case "IMG":
-              targetHeight = parseInt(app.config.get("image_height")!);
-              break;
-            case "VIDEO":
-              targetHeight = parseInt(app.config.get("video_height")!);
-              break;
-          }
-
-          pos = this.getMediaPosition(media);
-          if (pos.top === 0) return true;
-          bottom = pos.top + targetHeight;
-
-          if (
-            bottom > this.container.scrollTop &&
-            bottom < this.container.scrollTop + this.container.clientHeight
-          ) {
-            this.load(media, true);
-            return false;
-          }
-        }
-
-        if (media.offsetWidth !== 0) {  //imgが非表示の時はロードしない
-          pos = this.getMediaPosition(media);
-
-          if (
-            !(pos.top + pos.offsetHeight < scrollTop ||
-            scrollTop + clientHeight < pos.top)
-          ) {
-            this.load(media);
-            return false;
-          }
-        }
-        return true;
-      });
-
-      if (this.medias.length === 0) {
-        this.unwatch();
-      }
     }
   }
 }

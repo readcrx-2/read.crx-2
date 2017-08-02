@@ -103,7 +103,7 @@ class UI.ThreadContent
 
   ###*
   @method _loadNearlyImages
-  @param {Number}
+  @param {Number} resNum
   @param {Number} [offset=0]
   @return {Boolean} loadFlag
   ###
@@ -171,18 +171,22 @@ class UI.ThreadContent
 
   ###*
   @method scrollTo
-  @param {Number} resNum
+  @param {Element | Number} target
   @param {Boolean} [animate=false]
   @param {Number} [offset=0]
   @param {Boolean} [rerun=false]
   ###
-  scrollTo: (resNum, animate = false, offset = 0, rerun = false) ->
+  scrollTo: (target, animate = false, offset = 0, rerun = false) ->
+    if typeof target is "number"
+      resNum = target
+    else
+      resNum = +target.C("num")[0].textContent
     @_lastScrollInfo.resNum = resNum
     @_lastScrollInfo.animate = animate
     @_lastScrollInfo.offset = offset
     loadFlag = false
 
-    target = @container.child()[resNum - 1]
+    target = @container.children[resNum - 1]
 
     # 検索中で、ターゲットが非ヒット項目で非表示の場合、スクロールを中断
     if target and @container.hasClass("searching") and not target.hasClass("search_hit")
@@ -265,17 +269,14 @@ class UI.ThreadContent
   @return {Number} 現在読んでいると推測されるレスの番号
   ###
   getRead: ->
-    containerBottom = @container.scrollTop + @container.clientHeight
-    read = @container.child().length
-    for res, key in @container.child() when res.offsetTop > containerBottom
-      read = key - 1
-      break
+    {top, left, height} = @container.getBoundingClientRect()
+    res = document.elementFromPoint(left, top + height - 1)
 
-    # >>1の底辺が表示領域外にはみ出していた場合対策
-    if read is 0
-      read = 1
-
-    read
+    if res?.tagName is "ARTICLE"
+      return parseInt(res.C("num")[0].textContent)
+    else if res? and res is @container
+      return @container.child().length
+    return 1
 
   ###*
   @method getDisplay
@@ -292,11 +293,12 @@ class UI.ThreadContent
       resRead.bottom = true
 
     # スクロール位置のレスを抽出
-    for res, key in @container.child() when res.offsetTop + res.offsetHeight >= containerTop
-      resRead.resNum = key + 1
-      resRead.offset = (containerTop - res.offsetTop) / res.offsetHeight
-      break
-
+    {top, left} = @container.getBoundingClientRect()
+    res = document.elementFromPoint(left, top)
+    {top: resTop, height: resHeight} = res.getBoundingClientRect()
+    if res?.tagName is "ARTICLE"
+      resRead.resNum = parseInt(res.C("num")[0].textContent)
+      resRead.offset = (top - resTop) / resHeight
     return resRead
 
   ###*
@@ -309,9 +311,11 @@ class UI.ThreadContent
   ###*
   @method select
   @param {Element | Number} target
-  @param {bool} [preventScroll = false]
+  @param {Boolean} [preventScroll = false]
+  @param {Boolean} [animate = false]
+  @param {Number} [offset = 0]
   ###
-  select: (target, preventScroll = false) ->
+  select: (target, preventScroll = false, animate = false, offset = 0) ->
     @container.$("article.selected")?.removeClass("selected")
 
     if typeof target is "number"
@@ -321,7 +325,7 @@ class UI.ThreadContent
 
     target.addClass("selected")
     if not preventScroll
-      @scrollTo(+target.$(".num").textContent)
+      @scrollTo(target, animate, offset)
     return
 
   ###*
@@ -337,16 +341,13 @@ class UI.ThreadContent
   ###
   selectNext: (repeat = 1) ->
     current = @getSelected()
+    containerHeight = @container.offsetHeight
 
-    # 現在選択されているレスが表示範囲外だった場合、それを無視する
-    if (
-      current and
-      (
-        current.offsetTop + current.offsetHeight < @container.scrollTop or
-        @container.scrollTop + @container.offsetHeight < current.offsetTop
-      )
-    )
-      current = null
+    if current
+      {top, bottom} = current.getBoundingClientRect()
+      # 現在選択されているレスが表示範囲外だった場合、それを無視する
+      if top >= containerHeight or bottom <= 0
+        current = null
 
     unless current
       @select(@container.child()[@getRead() - 1], true)
@@ -356,13 +357,8 @@ class UI.ThreadContent
       for [0...repeat]
         prevTarget = target
 
-        if (
-          (
-            target.offsetTop + target.offsetHeight <=
-            @container.scrollTop + @container.offsetHeight
-          ) and
-          target.next()
-        )
+        {bottom: targetBottom} = target.getBoundingClientRect()
+        if targetBottom <= containerHeight and target.next()
           target = target.next()
 
           while target and target.offsetHeight is 0
@@ -372,21 +368,18 @@ class UI.ThreadContent
           target = prevTarget
           break
 
-        if (
-          @container.scrollTop + @container.offsetHeight <
-          target.offsetTop + target.offsetHeight
-        )
-          if target.offsetHeight >= @container.offsetHeight
-            @container.scrollTop += @container.offsetHeight * 0.5
+        {bottom: targetBottom, height: targetHeight} = target.getBoundingClientRect()
+        if containerHeight < targetBottom
+          if targetHeight >= containerHeight
+            @container.scrollTop += containerHeight * 0.5
           else
-            @container.scrollTop = (
-              target.offsetTop -
-              @container.offsetHeight +
-              target.offsetHeight +
+            @container.scrollTop += (
+              targetBottom -
+              containerHeight +
               10
             )
         else if not target.next()
-          @container.scrollTop += @container.offsetHeight * 0.5
+          @container.scrollTop += containerHeight * 0.5
           if target is prevTarget
             break
 
@@ -400,16 +393,13 @@ class UI.ThreadContent
   ###
   selectPrev: (repeat = 1) ->
     current = @getSelected()
+    containerHeight = @container.offsetHeight
 
-    # 現在選択されているレスが表示範囲外だった場合、それを無視する
-    if (
-      current and
-      (
-        current.offsetTop + current.offsetHeight < @container.scrollTop or
-        @container.scrollTop + @container.offsetHeight < current.offsetTop
-      )
-    )
-      current = null
+    if current
+      {top, bottom} = current.getBoundingClientRect()
+      # 現在選択されているレスが表示範囲外だった場合、それを無視する
+      if top >= containerHeight or bottom <= 0
+        current = null
 
     unless current
       @select(@container.child()[@getRead() - 1], true)
@@ -419,10 +409,8 @@ class UI.ThreadContent
       for [0...repeat]
         prevTarget = target
 
-        if (
-          @container.scrollTop <= target.offsetTop and
-          target.prev()
-        )
+        {top: targetTop, height: targetHeight} = target.getBoundingClientRect()
+        if 0 <= targetTop and target.prev()
           target = target.prev()
 
           while target and target.offsetHeight is 0
@@ -432,13 +420,14 @@ class UI.ThreadContent
           target = prevTarget
           break
 
-        if @container.scrollTop > target.offsetTop
-          if target.offsetHeight >= @container.offsetHeight
-            @container.scrollTop -= @container.offsetHeight * 0.5
+        {top: targetTop, height: targetHeight} = target.getBoundingClientRect()
+        if targetTop < 0
+          if targetHeight >= containerHeight
+            @container.scrollTop -= containerHeight * 0.5
           else
             @container.scrollTop = target.offsetTop - 10
-        else if not target.previousElementSibling
-          @container.scrollTop -= @container.offsetHeight * 0.5
+        else if not target.prev()
+          @container.scrollTop -= containerHeight * 0.5
           if target is prevTarget
             break
 
@@ -942,22 +931,6 @@ class UI.ThreadContent
     )
 
   ###*
-  @method setImageBlur
-  @param {Element} thumbnail
-  @param {Boolean} blurMode
-  ###
-  setImageBlur: (thumbnail, blurMode) ->
-    media = thumbnail.$("a > img.image, video")
-    if blurMode
-      v = app.config.get("image_blur_length")
-      thumbnail.addClass("image_blur")
-      media.style.WebkitFilter = "blur(#{v}px)"
-    else
-      thumbnail.removeClass("image_blur")
-      media.style.WebkitFilter = "none"
-    return
-
-  ###*
   @method addClassWithOrg
   @param {Element} $res
   @param {String} className
@@ -965,7 +938,7 @@ class UI.ThreadContent
   addClassWithOrg: ($res, className) ->
     $res.addClass(className)
     resnum = parseInt($res.C("num")[0].textContent)
-    @container.child()[resnum-1].addClass("written")
+    @container.child()[resnum-1].addClass(className)
     return
 
   ###*
@@ -974,9 +947,9 @@ class UI.ThreadContent
   @param {String} className
   ###
   removeClassWithOrg: ($res, className) ->
-    $res.removeClass("written")
+    $res.removeClass(className)
     resnum = parseInt($res.C("num")[0].textContent)
-    @container.child()[resnum-1].removeClass("written")
+    @container.child()[resnum-1].removeClass(className)
     return
 
   ###*

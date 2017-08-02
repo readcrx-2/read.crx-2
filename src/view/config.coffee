@@ -440,9 +440,22 @@ app.boot "/view/config.html", ["cache", "bbsmenu"], (Cache, BBSMenu) ->
       return
     return
 
-  #ブックマークフォルダ変更ボタン
-  $view.C("bookmark_source_change")[0].on "click", ->
-    app.message.send("open", url: "bookmark_source_selector")
+  do ->
+    #ブックマークフォルダ変更ボタン
+    $view.C("bookmark_source_change")[0].on "click", ->
+      app.message.send("open", url: "bookmark_source_selector")
+      return
+
+    #ブックマークフォルダ表示
+    do updateName = ->
+      chrome.bookmarks.get(app.config.get("bookmark_id"), (res) ->
+        $$.I("bookmark_source_name").textContent = res[0].title
+        return
+      )
+    app.message.addListener("config_updated", (message) ->
+      updateName() if message.key is "bookmark_id"
+      return
+    )
     return
 
   #ブックマークインポートボタン

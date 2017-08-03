@@ -34,12 +34,12 @@ tr.https td:first-child::before {
 
 tr.expired td:first-child::before {
   content: "[dat落ち] ";
-  color: $color-error;
+  color: var(--color-error);
 }
 
 tr.errored:not(.expired) td:first-child::before {
   content: "[更新失敗] ";
-  color: $color-error;
+  color: var(--color-error);
 }
 
 td {
@@ -69,19 +69,19 @@ td {
   height: initial;
   background: transparent;
   > .pending {
-    color: $color-pending;
+    color: var(--color-pending);
     &::before {
       content: "待機中: ";
     }
   }
   > .success {
-    color: $color-success;
+    color: var(--color-success);
     &::before {
       content: "更新成功: ";
     }
   }
   > .error {
-    color: $color-error;
+    color: var(--color-error);
     &::before {
       content: "更新失敗: ";
     }

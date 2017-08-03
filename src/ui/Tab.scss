@@ -86,13 +86,13 @@
   position: absolute;
   width: 100%;
   height: 100%;
-  z-index: $z-index-tab-content;
+  z-index: var(--z-index-tab-content);
   visibility: hidden;
   border-top-right-radius: 2px;
   border-bottom-left-radius: 2px;
   border-bottom-right-radius: 2px;
   &.tab_selected {
-    z-index: $z-index-selected-tab-content;
+    z-index: var(--z-index-selected-tab-content);
     visibility: visible;
   }
 }

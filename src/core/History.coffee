@@ -9,17 +9,16 @@ class app.History
       req.onerror = (e) ->
         reject(e)
         return
-      req.onupgradeneeded = (e) ->
-        db = e.target.result
+      req.onupgradeneeded = ({ target: {result: db, transaction: tx} }) ->
         objStore = db.createObjectStore("History", keyPath: "id", autoIncrement: true)
         objStore.createIndex("url", "url", unique: false)
         objStore.createIndex("title", "title", unique: false)
         objStore.createIndex("date", "date", unique: false)
-        e.target.transaction.oncomplete = ->
+        tx.oncomplete = ->
           resolve(db)
         return
-      req.onsuccess = (e) ->
-        resolve(e.target.result)
+      req.onsuccess = ({ target: {result: db} }) ->
+        resolve(db)
         return
       return
     )
@@ -41,7 +40,7 @@ class app.History
           .transaction("History", "readwrite")
           .objectStore("History")
           .put(url: url, title: title, date: date)
-        req.onsuccess = (e) ->
+        req.onsuccess = ->
           resolve()
           return
         req.onerror = (e) ->
@@ -72,18 +71,17 @@ class app.History
           .objectStore("History")
           .index("url")
           .openCursor(IDBKeyRange.only(url))
-        req.onsuccess = (e) ->
-          cursor = e.target.result
-          if cursor
-            if date?
-              ddate = cursor.value.date
-              if date < ddate < date+60000
-                cursor.delete()
-            else
-              cursor.delete()
-            cursor.continue()
-          else
+        req.onsuccess = ({ target: {result: cursor} }) ->
+          unless cursor
             resolve()
+            return
+          if date?
+            ddate = cursor.value.date
+            if date < ddate < date + 60*1000
+              cursor.delete()
+          else
+            cursor.delete()
+          cursor.continue()
           return
         req.onerror = (e) ->
           app.log("error", "History.remove: トランザクション中断")
@@ -112,15 +110,14 @@ class app.History
           .openCursor(null, "prev")
         advanced = false
         histories = []
-        req.onsuccess = (e) ->
-          cursor = e.target.result
+        req.onsuccess = ({ target: {result: cursor} }) ->
           if cursor and (limit is -1 or histories.length < limit)
             if !advanced
               advanced = true
               if offset isnt -1
                 cursor.advance(offset)
                 return
-            value = cursor.value
+            {value} = cursor
             value.is_https = (app.URL.getScheme(value.url) is "https")
             histories.push(value)
             cursor.continue()
@@ -155,15 +152,14 @@ class app.History
         advanced = false
         histories = []
         inserted = new Set()
-        req.onsuccess = (e) ->
-          cursor = e.target.result
+        req.onsuccess = ({ target: {result: cursor} }) ->
           if cursor and (limit is -1 or histories.length < limit)
             if !advanced
               advanced = true
               if offset isnt -1
                 cursor.advance(offset)
                 return
-            value = cursor.value
+            {value} = cursor
             unless inserted.has(value.url)
               value.is_https = (app.URL.getScheme(value.url) is "https")
               histories.push(value)
@@ -191,8 +187,8 @@ class app.History
           .transaction("History")
           .objectStore("History")
           .getAll()
-        req.onsuccess = (e) ->
-          resolve(e.target.result)
+        req.onsuccess = ({ target: {result} }) ->
+          resolve(result)
           return
         req.onerror = (e) ->
           app.log("error", "History.getAll: トランザクション中断")
@@ -213,8 +209,8 @@ class app.History
           .transaction("History")
           .objectStore("History")
           .count()
-        req.onsuccess = (e) ->
-          resolve(e.target.result)
+        req.onsuccess = ({ target: {result} }) ->
+          resolve(result)
           return
         req.onerror = (e) ->
           app.log("error", "History.count: トランザクション中断")
@@ -240,8 +236,7 @@ class app.History
           .objectStore("History")
           .openCursor()
         advanced = false
-        req.onsuccess = (e) ->
-          cursor = e.target.result
+        req.onsuccess = ({ target: {result: cursor} }) ->
           if cursor
             if !advanced
               advanced = true
@@ -272,14 +267,13 @@ class app.History
 
     return @_openDB().then( (db) ->
       return new Promise( (resolve, reject) ->
-        dayUnix = Date.now()-86400000*day
+        dayUnix = Date.now() - day*24*60*60*1000
         req = db
           .transaction("History", "readwrite")
           .objectStore("History")
           .index("date")
           .openCursor(IDBKeyRange.upperBound(dayUnix, true))
-        req.onsuccess = (e) ->
-          cursor = e.target.result
+        req.onsuccess = ({ target: {result: cursor} }) ->
           if cursor
             cursor.delete()
             cursor.continue()

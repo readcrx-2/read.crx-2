@@ -3,7 +3,6 @@
 @class BoardTitleSolver
 @static
 @require app.BBSMenu
-@require jQuery
 ###
 class app.BoardTitleSolver
   ###*
@@ -21,17 +20,20 @@ class app.BoardTitleSolver
     return new Promise( (resolve, reject) =>
       if @_bbsmenu?
         resolve(@_bbsmenu)
-      else
-        app.BBSMenu.get (result) =>
-          if result.data?
-            @_bbsmenu = {}
-            for category in result.data
-              for board in category.board
-                @_bbsmenu[board.url] = board.title
-            resolve(@_bbsmenu)
-          else
-            reject()
+        return
+
+      app.BBSMenu.get( ({data}) =>
+        unless data?
+          reject()
           return
+
+        @_bbsmenu = {}
+        for {board} in data
+          for {url, title} in board
+            @_bbsmenu[url] = title
+        resolve(@_bbsmenu)
+        return
+      )
       return
     )
 
@@ -83,16 +85,17 @@ class app.BoardTitleSolver
   ###
   @searchFromSettingTXT: (url) ->
     return new Promise( (resolve, reject) ->
-      request = new app.HTTP.Request("GET", url + "SETTING.TXT", {
+      request = new app.HTTP.Request("GET", "#{url}SETTING.TXT",
         mimeType: "text/plain; charset=Shift_JIS"
         timeout: 1000 * 10
-      })
-      request.send (response) ->
+      )
+      request.send( (response) ->
         if response.status is 200
           resolve(response.body)
         else
           reject(response.body)
         return
+      )
       return
     ).then( (text) ->
       return new Promise( (resolve, reject) ->
@@ -121,19 +124,20 @@ class app.BoardTitleSolver
   @searchFromJbbsAPI: (url) ->
     tmp = url.split("/")
     scheme = app.URL.getScheme(url)
-    ajax_path = "#{scheme}://jbbs.shitaraba.net/bbs/api/setting.cgi/#{tmp[3]}/#{tmp[4]}/"
+    ajaxPath = "#{scheme}://jbbs.shitaraba.net/bbs/api/setting.cgi/#{tmp[3]}/#{tmp[4]}/"
 
     return new Promise( (resolve, reject) ->
-      request = new app.HTTP.Request("GET", ajax_path, {
+      request = new app.HTTP.Request("GET", ajaxPath,
         mimeType: "text/plain; charset=EUC-JP"
         timeout: 1000 * 10
-      })
-      request.send (response) ->
+      )
+      request.send( (response) ->
         if response.status is 200
           resolve(response.body)
-        else
-          reject(response.body)
+          return
+        reject(response.body)
         return
+      )
       return
     ).then( (text) ->
       return new Promise( (resolve, reject) ->
@@ -158,26 +162,25 @@ class app.BoardTitleSolver
 
     #bbsmenu内を検索
     return @searchFromBBSMenu(url)
-      #ブックマーク内を検索
       .catch( =>
+        #ブックマーク内を検索
         return @searchFromBookmark(url)
-      )
-      #SETTING.TXTからの取得を試みる
-      .catch( =>
+      ).catch( =>
+        #SETTING.TXTからの取得を試みる
         if app.URL.guessType(url).bbsType is "2ch"
           return @searchFromSettingTXT(url)
         else
           return Promise.reject()
-      )
-      #したらばのAPIから取得を試みる
-      .catch( =>
+      ).catch( =>
+        #したらばのAPIから取得を試みる
         if app.URL.guessType(url).bbsType is"jbbs"
           return @searchFromJbbsAPI(url)
         else
           return Promise.reject()
       )
 
-app.module "board_title_solver", [], (callback) ->
+app.module("board_title_solver", [], (callback) ->
   app.BoardTitleSolver.getBBSMenu()
   callback(app.BoardTitleSolver)
   return
+)

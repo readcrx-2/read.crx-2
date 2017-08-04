@@ -23,17 +23,12 @@ app.module "thread_search", [], (callback) ->
       )
 
     read: ->
-      return new Promise( (resolve, reject) =>
-        request = new app.HTTP.Request("GET", "http://dig.2ch.net/?keywords=#{encodeURIComponent(@query)}&maxResult=500&json=1", {
-          cache: false
-        })
-        request.send (response) ->
-          if response.status is 200
-            resolve(response.body)
-          else
-            reject(response.body)
-          return
-        return
+      request = new app.HTTP.Request("GET", "http://dig.2ch.net/?keywords=#{encodeURIComponent(@query)}&maxResult=500&json=1", {
+        cache: false
+      })
+      return request.send().then( ({status, body}) ->
+        return body if status is 200
+        return Promise.reject(body)
       ).then( (responseText) ->
         return new Promise( (resolve, reject) ->
           try

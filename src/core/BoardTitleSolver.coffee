@@ -84,36 +84,23 @@ class app.BoardTitleSolver
   @return {Promise}
   ###
   @searchFromSettingTXT: (url) ->
-    return new Promise( (resolve, reject) ->
-      request = new app.HTTP.Request("GET", "#{url}SETTING.TXT",
-        mimeType: "text/plain; charset=Shift_JIS"
-        timeout: 1000 * 10
-      )
-      request.send( (response) ->
-        if response.status is 200
-          resolve(response.body)
-        else
-          reject(response.body)
-        return
-      )
-      return
+    request = new app.HTTP.Request("GET", "#{url}SETTING.TXT",
+      mimeType: "text/plain; charset=Shift_JIS"
+      timeout: 1000 * 10
+    )
+    return request.send().then( ({status, body}) ->
+      return body if status is 200
+      return Promise.reject()
     ).then( (text) ->
-      return new Promise( (resolve, reject) ->
-        if res = /^BBS_TITLE=(.+)$/m.exec(text)
-          title = res[1].replace("＠2ch掲示板", "")
-          tsld = app.URL.tsld(url)
-          if tsld is "2ch.sc"
-            title += "_sc"
-          else if tsld is "open2ch.net"
-            title += "_op"
-          resolve(title)
-        else
-          reject()
-        return
-      )
-    , ->
-      Promise.reject()
-      return
+      if res = /^BBS_TITLE=(.+)$/m.exec(text)
+        title = res[1].replace("＠2ch掲示板", "")
+        tsld = app.URL.tsld(url)
+        if tsld is "2ch.sc"
+          title += "_sc"
+        else if tsld is "open2ch.net"
+          title += "_op"
+        resolve(title)
+      return Promise.reject()
     )
 
   ###*
@@ -126,30 +113,17 @@ class app.BoardTitleSolver
     scheme = app.URL.getScheme(url)
     ajaxPath = "#{scheme}://jbbs.shitaraba.net/bbs/api/setting.cgi/#{tmp[3]}/#{tmp[4]}/"
 
-    return new Promise( (resolve, reject) ->
-      request = new app.HTTP.Request("GET", ajaxPath,
-        mimeType: "text/plain; charset=EUC-JP"
-        timeout: 1000 * 10
-      )
-      request.send( (response) ->
-        if response.status is 200
-          resolve(response.body)
-          return
-        reject(response.body)
-        return
-      )
-      return
+    request = new app.HTTP.Request("GET", ajaxPath,
+      mimeType: "text/plain; charset=EUC-JP"
+      timeout: 1000 * 10
+    )
+    return request.send().then( ({status, body}) ->
+      return body if status is 200
+      return Promise.reject()
     ).then( (text) ->
-      return new Promise( (resolve, reject) ->
-        if res = /^BBS_TITLE=(.+)$/m.exec(text)
-          resolve(res[1])
-        else
-          reject()
-        return
-      )
-    , ->
-      Promise.reject()
-      return
+      if res = /^BBS_TITLE=(.+)$/m.exec(text)
+        return res[1]
+      return Promise.reject()
     )
 
   ###*

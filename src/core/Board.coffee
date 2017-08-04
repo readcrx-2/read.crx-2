@@ -48,28 +48,17 @@ class app.Board
         )
       ).catch( =>
         #通信
-        return new Promise( (resolve, reject) ->
-          request = new app.HTTP.Request("GET", xhrPath,
-            mimeType: "text/plain; charset=#{xhrCharset}"
-          )
-          if hasCache
-            if cache.last_modified?
-              request.headers["If-Modified-Since"] =
-                new Date(cache.last_modified).toUTCString()
-            if cache.etag?
-              request.headers["If-None-Match"] = cache.etag
-
-          request.send( (response) ->
-            if response.status is 200
-              resolve(response)
-            else if hasCache and response.status is 304
-              resolve(response)
-            else
-              reject(response)
-            return
-          )
-          return
+        request = new app.HTTP.Request("GET", xhrPath,
+          mimeType: "text/plain; charset=#{xhrCharset}"
         )
+        if hasCache
+          if cache.last_modified?
+            request.headers["If-Modified-Since"] =
+              new Date(cache.last_modified).toUTCString()
+          if cache.etag?
+            request.headers["If-None-Match"] = cache.etag
+
+        return request.send()
       ).then(fn = (response) =>
         #パース
         return new Promise( (resolve, reject) =>

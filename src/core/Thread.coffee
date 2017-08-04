@@ -65,43 +65,39 @@ class app.Thread
         )
       #通信
       .catch =>
-        return new Promise( (resolve, reject) =>
-          if @tsld in ["shitaraba.net", "machi.to"]
-            if hasCache
-              deltaFlg = true
-              xhrPath += (+cache.res_length + 1) + "-"
-          # 2ch.netは差分を-nで取得
-          else if (app.config.get("format_2chnet") isnt "dat" and @tsld is "2ch.net") or @tsld is "bbspink.com"
-            if hasCache
-              deltaFlg = true
-              readcgiVer = cache.readcgi_ver
-              if readcgiVer >= 6
-                xhrPath += (+cache.res_length + 1) + "-n"
-              else
-                xhrPath += (+cache.res_length) + "-n"
-
-          request = new app.HTTP.Request("GET", xhrPath, {
-            mimeType: "text/plain; charset=#{xhrCharset}"
-          })
-
+        if @tsld in ["shitaraba.net", "machi.to"]
           if hasCache
-            if cache.last_modified?
-              request.headers["If-Modified-Since"] =
-                new Date(cache.last_modified).toUTCString()
-            if cache.etag?
-              request.headers["If-None-Match"] = cache.etag
-
-          request.send (response) ->
-            if response.status is 200
-              resolve(response)
-            else if response.status is 500 and readcgiVer >= 6
-              resolve(response)
-            else if hasCache and response.status is 304
-              resolve(response)
+            deltaFlg = true
+            xhrPath += (+cache.res_length + 1) + "-"
+        # 2ch.netは差分を-nで取得
+        else if (app.config.get("format_2chnet") isnt "dat" and @tsld is "2ch.net") or @tsld is "bbspink.com"
+          if hasCache
+            deltaFlg = true
+            readcgiVer = cache.readcgi_ver
+            if readcgiVer >= 6
+              xhrPath += (+cache.res_length + 1) + "-n"
             else
-              reject(response)
-            return
-          return
+              xhrPath += (+cache.res_length) + "-n"
+
+        request = new app.HTTP.Request("GET", xhrPath, {
+          mimeType: "text/plain; charset=#{xhrCharset}"
+        })
+
+        if hasCache
+          if cache.last_modified?
+            request.headers["If-Modified-Since"] =
+              new Date(cache.last_modified).toUTCString()
+          if cache.etag?
+            request.headers["If-None-Match"] = cache.etag
+
+        return request.send().then( (response) ->
+          if response.status is 200
+            return response
+          else if response.status is 500 and readcgiVer >= 6
+            return response
+          else if hasCache and response.status is 304
+            return response
+          return Promise.reject(response)
         )
       #パース
       .then( (response) =>

@@ -168,43 +168,35 @@ namespace UI {
     }
 
     private getWithCookie (link: string, cookieLink: string, referrer: string, userAgent: string): Promise<string> {
-      return new Promise( (resolve, reject) => {
-        var req = new app.HTTP.Request("GET", cookieLink)
-        //TODO: use chrome.webRequest
-        //if(referrer !== ""){ req.headers["Referer"] = referrer); }
-        //if(userAgent !== ""){ req.headers["User-Agent"] = userAgent; }
-        req.send( (res) => {
-          if (res.status === 200) {
-            var cookie = res.headers["Set-Cookie"];
-            resolve(this.getWithReferrer(link, "", userAgent, cookie));
-          } else {
-            reject();
-          }
-        });
+      var req = new app.HTTP.Request("GET", cookieLink)
+      //TODO: use chrome.webRequest
+      //if(referrer !== ""){ req.headers["Referer"] = referrer); }
+      //if(userAgent !== ""){ req.headers["User-Agent"] = userAgent; }
+      return req.send().then( (res) => {
+        if (res.status === 200) {
+          var cookie = res.headers["Set-Cookie"];
+          return Promise.resolve(this.getWithReferrer(link, "", userAgent, cookie));
+        }
+        return Promise.reject(null);
       });
     }
 
     private getWithExtract (link: string, extractLink: string, pattern: string, referrer: string, userAgent: string): Promise<string> {
-      return new Promise( (resolve, reject) => {
-        var req = new app.HTTP.Request("GET", extractLink)
-        //TODO: use chrome.webRequest
-        //if(referrer !== ""){ req.headers["Referer"] = referrer); }
-        //if(userAgent !== ""){ req.headers["User-Agent"] = userAgent; }
-        req.send( (res) => {
-          if (res.status === 200) {
-            var m = res.body.match(new RegExp(pattern));
-            if (m !== null) {
-              var replaced = link.replace(/\$EXTRACT(\d+)?/g, (str, n) => {
-                return (n === null) ? m[1] : m[n];
-              });
-              resolve(replaced);
-            } else {
-              reject();
-            }
-          } else {
-            reject();
+      var req = new app.HTTP.Request("GET", extractLink)
+      //TODO: use chrome.webRequest
+      //if(referrer !== ""){ req.headers["Referer"] = referrer); }
+      //if(userAgent !== ""){ req.headers["User-Agent"] = userAgent; }
+      return req.send().then( (res) => {
+        if (res.status === 200) {
+          var m = res.body.match(new RegExp(pattern));
+          if (m !== null) {
+            var replaced = link.replace(/\$EXTRACT(\d+)?/g, (str, n) => {
+              return (n === null) ? m![1] : m![n];
+            });
+            return Promise.resolve(replaced);
           }
-        });
+        }
+        return Promise.reject(null);
       });
     }
   }

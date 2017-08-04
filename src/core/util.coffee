@@ -56,18 +56,13 @@ do ->
     )
     #htmlが渡されなかった場合は通信する
     .catch ->
-      return new Promise( (resolve, reject) ->
-        request = new app.HTTP.Request("GET", old_board_url, {
-          mimeType: "text/html; charset=Shift_JIS"
-          cache: false
-        })
-        request.send (response) ->
-          if response.status is 200
-            resolve(response.body)
-          else
-            reject()
-          return
-        return
+      request = new app.HTTP.Request("GET", old_board_url, {
+        mimeType: "text/html; charset=Shift_JIS"
+        cache: false
+      })
+      return request.send().then( ({status, body}) ->
+        return body if status is 200
+        return Promise.reject()
       )
     #htmlから移転を判定
     .then (html) ->

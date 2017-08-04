@@ -26,8 +26,7 @@ class app.BBSMenu
   ###
   @get: (callback, forceReload = false, otherUrl = null) ->
     BBSMenu._callbacks.add(callback)
-    unless BBSMenu._updating
-      BBSMenu._update(forceReload, otherUrl)
+    BBSMenu._update(forceReload, otherUrl) unless BBSMenu._updating
     return
 
   ###*
@@ -36,38 +35,37 @@ class app.BBSMenu
   @return {Array}
   ###
   @parse: (html) ->
-    reg_category = ///<b>(.+?)</b>(?:.*[\r\n]+<a\s.*?>.+?</a>)+///gi
-    reg_board = ///<a\shref=(https?://(?!info\.2ch\.net/|headline\.bbspink\.com)
+    regCategory = ///<b>(.+?)</b>(?:.*[\r\n]+<a\s.*?>.+?</a>)+///gi
+    regBoard = ///<a\shref=(https?://(?!info\.2ch\.net/|headline\.bbspink\.com)
       \w+\.(?:2ch\.net|machi\.to|open2ch\.net|2ch\.sc|bbspink\.com)/\w+/)(?:\s.*?)?>(.+?)</a>///gi
-
     menu = []
 
-    while reg_category_res = reg_category.exec(html)
+    while regCategoryRes = regCategory.exec(html)
       category =
-        title: reg_category_res[1]
+        title: regCategoryRes[1]
         board: []
 
-      while reg_board_res = reg_board.exec(reg_category_res[0])
-        category.board.push
-          url: reg_board_res[1]
-          title: reg_board_res[2]
+      while regBoardRes = regBoard.exec(regCategoryRes[0])
+        category.board.push(
+          url: regBoardRes[1]
+          title: regBoardRes[2]
+        )
 
       if category.board.length > 0
         menu.push(category)
-
-    menu
+    return menu
 
   @_callbacks: new app.Callbacks({persistent: true})
   @_updating: false
-  @_update: (force_reload, otherUrl) ->
+  @_update: (forceReload, otherUrl) ->
     BBSMenu._updating = true
-    if force_reload and !@_forceReloadFlag
+    if forceReload and !@_forceReloadFlag
       @_forceReloadFlag = true
 
     if otherUrl
       url = otherUrl
       if @_forceReloadFlag
-        force_reload = true
+        forceReload = true
         @_forceReloadFlag = false
     else
       url = app.config.get("bbsmenu")
@@ -75,18 +73,17 @@ class app.BBSMenu
     cache = new app.Cache(url)
     cache.get()
       .then( ->
-        if force_reload
+        if forceReload
           return Promise.reject()
-        else if Date.now() - cache.last_updated < 1000 * 86400 * +app.config.get("bbsmenu_update_interval")
+        else if Date.now() - cache.last_updated < +app.config.get("bbsmenu_update_interval")*24*60*60*1000
           return Promise.resolve()
         return Promise.reject()
-      )
-      #通信
-      .catch( ->
+      ).catch( ->
+        #通信
         return new Promise( (resolve, reject) ->
-          request = new app.HTTP.Request("GET", url, {
+          request = new app.HTTP.Request("GET", url,
             mimeType: "text/plain; charset=Shift_JIS"
-          })
+          )
 
           if cache.last_modified?
             request.headers["If-Modified-Since"] = new Date(cache.last_modified).toUTCString()
@@ -94,7 +91,7 @@ class app.BBSMenu
           if cache.etag?
             request.headers["If-None-Match"] = cache.etag
 
-          request.send (response) ->
+          request.send( (response) ->
             if response.status is 200
               resolve(response)
             else if cache.data? and response.status is 304
@@ -102,11 +99,11 @@ class app.BBSMenu
             else
               reject(response)
             return
+          )
           return
         )
-      )
-      #パース
-      .then((fn = (response) ->
+      ).then(fn = (response) ->
+        #パース
         return new Promise( (resolve, reject) ->
           if response?.status is 200
             menu = BBSMenu.parse(response.body)
@@ -122,42 +119,43 @@ class app.BBSMenu
             reject({response})
           return
         )
-      ), fn)
-      #コールバック
-      .then ({response, menu}) ->
-        BBSMenu._callbacks.call(status: "success", data: menu, url: url)
+      , fn).then( ({response, menu}) ->
+        #コールバック
+        BBSMenu._callbacks.call({status: "success", data: menu, url})
         return {response, menu}
       , ({response, menu}) ->
         message = "板一覧の取得に失敗しました。"
         if menu?
           message += "キャッシュに残っていたデータを表示します。"
-          BBSMenu._callbacks.call({status: "error", data: menu, url: url, message})
+          BBSMenu._callbacks.call({status: "error", data: menu, url, message})
         else
-          BBSMenu._callbacks.call({status: "error", url: url, message})
+          BBSMenu._callbacks.call({status: "error", url, message})
         return {response, menu}
-      .then (arg) ->
+      ).then( (arg) ->
         BBSMenu._updating = false
         BBSMenu._callbacks.destroy()
         return arg
-      #キャッシュ更新
-      .then ({response, menu}) ->
+      ).then( ({response, menu}) ->
+        #キャッシュ更新
         if response?.status is 200
           cache.data = response.body
           cache.last_updated = Date.now()
 
-          last_modified = new Date(
+          lastModified = new Date(
             response.headers["Last-Modified"] or "dummy"
           ).getTime()
 
-          if Number.isFinite(last_modified)
-            cache.last_modified = last_modified
+          if Number.isFinite(lastModified)
+            cache.last_modified = lastModified
           cache.put()
         else if cache.data? and response?.status is 304
           cache.last_updated = Date.now()
           cache.put()
         return
+      )
     return
 
-app.module "bbsmenu", [], (callback) ->
+app.module("bbsmenu", [], (callback) ->
   callback(app.BBSMenu)
   return
+)

@@ -5,7 +5,6 @@ do ->
       "History"
       "WriteHistory"
       "Thread"
-      "board"
       "bookmark"
       "bookmarkEntryList"
       "config"

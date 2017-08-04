@@ -3,7 +3,6 @@
 @class Board
 @constructor
 @param {String} url
-@requires jQuery
 @requires app.Cache
 @requires app.NG
 ###
@@ -28,18 +27,17 @@ class app.Board
   ###
   get: ->
     return new Promise( (resolve, reject) =>
-      tmp = Board._get_xhr_info(@url)
+      tmp = Board._getXhrInfo(@url)
       unless tmp
         reject()
         return
-      xhr_path = tmp.path
-      xhr_charset = tmp.charset
+      {path: xhrPath, charset: xhrCharset} = tmp
 
       hasCache = false
 
       #キャッシュ取得
-      cache = new app.Cache(xhr_path)
-      cache.get().then ->
+      cache = new app.Cache(xhrPath)
+      cache.get().then( ->
         return new Promise( (resolve, reject) ->
           hasCache = true
           if Date.now() - cache.last_updated < 1000 * 3
@@ -48,12 +46,12 @@ class app.Board
             reject()
           return
         )
-      #通信
-      .catch =>
+      ).catch( =>
+        #通信
         return new Promise( (resolve, reject) ->
-          request = new app.HTTP.Request("GET", xhr_path, {
-            mimeType: "text/plain; charset=#{xhr_charset}"
-          })
+          request = new app.HTTP.Request("GET", xhrPath,
+            mimeType: "text/plain; charset=#{xhrCharset}"
+          )
           if hasCache
             if cache.last_modified?
               request.headers["If-Modified-Since"] =
@@ -61,125 +59,148 @@ class app.Board
             if cache.etag?
               request.headers["If-None-Match"] = cache.etag
 
-          request.send (response) ->
+          request.send( (response) ->
             if response.status is 200
               resolve(response)
             else if hasCache and response.status is 304
               resolve(response)
             else
               reject(response)
+            return
+          )
           return
         )
-      #パース
-      .then( (response) =>
+      ).then(fn = (response) =>
+        #パース
         return new Promise( (resolve, reject) =>
           if response?.status is 200
-            thread_list = Board.parse(@url, response.body)
+            threadList = Board.parse(@url, response.body)
           else if hasCache
-            thread_list = Board.parse(@url, cache.data)
+            threadList = Board.parse(@url, cache.data)
 
-          if thread_list?
+          if threadList?
             if response?.status is 200 or response?.status is 304 or (not response? and hasCache)
-              resolve({response, thread_list})
+              resolve({response, threadList})
             else
-              reject({response, thread_list})
+              reject({response, threadList})
           else
             reject({response})
           return
         )
-      )
-      #コールバック
-      .then ({response, thread_list}) =>
-        @thread = thread_list
+      , fn).then( ({response, threadList}) =>
+        #コールバック
+        @thread = threadList
         resolve()
-        return {response, thread_list}
-      , ({response, thread_list}) =>
+        return {response, threadList}
+      , ({response, threadList}) =>
         @message = "板の読み込みに失敗しました。"
 
         #2chでrejectされている場合は移転を疑う
         if app.URL.tsld(@url) is "2ch.net" and response?
           app.util.ch_server_move_detect(@url)
             #移転検出時
-            .then (new_board_url) =>
+            .then( (newBoardUrl) =>
               @message += """
               サーバーが移転している可能性が有ります
-              (<a href="#{app.escapeHtml(app.safeHref(new_board_url))}"
-              class="open_in_rcrx">#{app.escapeHtml(new_board_url)}
+              (<a href="#{app.escapeHtml(app.safeHref(newBoardUrl))}"
+              class="open_in_rcrx">#{app.escapeHtml(newBoardUrl)}
               </a>)
               """
-            .catch ->
+            ).catch( ->
               return
-            .then =>
-              if hasCache and thread_list?
+            ).then( =>
+              if hasCache and threadList?
                 @message += "キャッシュに残っていたデータを表示します。"
 
-              if thread_list
-                @thread = thread_list
+              if threadList
+                @thread = threadList
               reject()
+            )
         else
-          if hasCache and thread_list?
+          if hasCache and threadList?
             @message += "キャッシュに残っていたデータを表示します。"
 
           if thread_list?
-            @thread = thread_list
+            @thread = threadList
           reject()
-        return Promise.reject({response, thread_list})
-      #キャッシュ更新部
-      .then ({response, thread_list}) ->
+        return Promise.reject({response, threadList})
+      ).then( ({response, threadList}) ->
+        #キャッシュ更新部
         if response?.status is 200
           cache.data = response.body
           cache.last_updated = Date.now()
 
-          last_modified = new Date(
+          lastModified = new Date(
             response.headers["Last-Modified"] or "dummy"
           ).getTime()
 
-          if Number.isFinite(last_modified)
-            cache.last_modified = last_modified
+          if Number.isFinite(lastModified)
+            cache.last_modified = lastModified
 
           if etag = response.headers["ETag"]
             cache.etag = etag
 
           cache.put()
 
-          for thread in thread_list
-            app.bookmark.update_res_count(thread.url, thread.res_count)
+          for thread in threadList
+            app.bookmark.update_res_count(thread.url, thread.resCount)
 
         else if hasCache and response?.status is 304
           cache.last_updated = Date.now()
           cache.put()
-        return {response, thread_list}
-      #dat落ちスキャン
-      .then ({response, thread_list}) =>
-        if thread_list
-          dict = {}
-          for bookmark in app.bookmark.get_by_board(@url) when bookmark.type is "thread"
-            dict[bookmark.url] = true
+        return {response, threadList}
+      ).then( ({response, threadList}) =>
+        #dat落ちスキャン
+        return unless threadList
+        dict = {}
+        for bookmark in app.bookmark.get_by_board(@url) when bookmark.type is "thread"
+          dict[bookmark.url] = true
 
-          for thread in thread_list when dict[thread.url]?
-            dict[thread.url] = false
-            app.bookmark.update_expired(thread.url, false)
+        for thread in threadList when dict[thread.url]?
+          dict[thread.url] = false
+          app.bookmark.update_expired(thread.url, false)
 
-          for thread_url, val of dict when val
-            app.bookmark.update_expired(thread_url, true)
+        for threadUrl, val of dict when val
+          app.bookmark.update_expired(threadUrl, true)
         return
-      .catch ->
+      ).catch( ->
         return
-      return
+      )
     )
 
   ###*
-  @method _get_xhr_info
+  @method get
+  @static
+  @param {String} url
+  @return {Promise}
+  ###
+  @get: (url) ->
+    return new Promise( (resolve, reject) ->
+      board = new app.Board(url)
+      board.get().then( ->
+        resolve(status: "success", data: board.thread)
+        return
+      , ->
+        resolve(
+          status: "error"
+          message: board.message ? null
+          data: board.thread ? null
+        )
+        return
+      )
+    )
+
+  ###*
+  @method _getXhrInfo
   @private
   @static
-  @param {String} board_url
-  @return {Object | null} xhr_info
+  @param {String} boardUrl
+  @return {Object | null} xhrInfo
   ###
-  @_get_xhr_info: (board_url) ->
-    tmp = ///^(https?)://((?:\w+\.)?(\w+\.\w+))/(\w+)/(?:(\d+)/)?$///.exec(board_url)
-    unless tmp
-      return null
-    switch tmp[3]
+  @_getXhrInfo: (boardUrl) ->
+    tmp = ///^(https?)://((?:\w+\.)?(\w+\.\w+))/(\w+)/(?:(\d+)/)?$///.exec(boardUrl)
+    return null unless tmp
+    return switch tmp[3]
       when "machi.to"
         path: "#{tmp[1]}://#{tmp[2]}/bbs/offlaw.cgi/#{tmp[4]}/"
         charset: "Shift_JIS"
@@ -202,61 +223,64 @@ class app.Board
     scFlg = false
     switch tmp[3]
       when "machi.to"
-        bbs_type = "machi"
+        bbsType = "machi"
         reg = /^\d+<>(\d+)<>(.+)\((\d+)\)$/gm
-        base_url = "#{tmp[1]}://#{tmp[2]}/bbs/read.cgi/#{tmp[4]}/"
+        baseUrl = "#{tmp[1]}://#{tmp[2]}/bbs/read.cgi/#{tmp[4]}/"
       when "shitaraba.net"
-        bbs_type = "jbbs"
+        bbsType = "jbbs"
         reg = /^(\d+)\.cgi,(.+)\((\d+)\)$/gm
-        base_url = "#{tmp[1]}://jbbs.shitaraba.net/bbs/read.cgi/#{tmp[4]}/#{tmp[5]}/"
+        baseUrl = "#{tmp[1]}://jbbs.shitaraba.net/bbs/read.cgi/#{tmp[4]}/#{tmp[5]}/"
       else
         scFlg = (tmp[3] is "2ch.sc")
-        bbs_type = "2ch"
+        bbsType = "2ch"
         reg = /^(\d+)\.dat<>(.+) \((\d+)\)$/gm
-        base_url = "#{tmp[1]}://#{tmp[2]}/test/read.cgi/#{tmp[4]}/"
+        baseUrl = "#{tmp[1]}://#{tmp[2]}/test/read.cgi/#{tmp[4]}/"
 
     board = []
-    while (reg_res = reg.exec(text))
-      title = app.util.decode_char_reference(reg_res[2])
+    while (regRes = reg.exec(text))
+      title = app.util.decode_char_reference(regRes[2])
       title = app.util.removeNeedlessFromTitle(title)
 
       board.push(
-        url: base_url + reg_res[1] + "/"
+        url: baseUrl + regRes[1] + "/"
         title: title
-        res_count: +reg_res[3]
-        created_at: +reg_res[1] * 1000
+        resCount: +regRes[3]
+        createdAt: +regRes[1] * 1000
         ng: app.NG.isNGBoard(title)
-        is_net: if scFlg then !title.startsWith("★") else null
+        isNet: if scFlg then !title.startsWith("★") else null
       )
 
-    if bbs_type is "jbbs"
+    if bbsType is "jbbs"
       board.splice(-1, 1)
 
-    if board.length > 0 then board else null
+    if board.length > 0
+      return board
+    return null
 
   ###*
-  @method get_cached_res_count
+  @method getCachedResCount
   @static
-  @param {String} thread_url
+  @param {String} threadUrl
   @return {Promise}
   ###
-  @get_cached_res_count: (thread_url) ->
+  @getCachedResCount: (threadUrl) ->
     return new Promise( (resolve, reject) ->
-      board_url = app.URL.threadToBoard(thread_url)
-      xhr_path = Board._get_xhr_info(board_url)?.path
+      boardUrl = app.URL.threadToBoard(threadUrl)
+      xhrPath = Board._getXhrInfo(threadUrl)?.path
 
-      unless xhr_path?
+      unless xhrPath?
         reject()
         return
 
-      cache = new app.Cache(xhr_path)
+      cache = new app.Cache(xhrPath)
       cache.get()
         .then( ->
-          last_modified = cache.last_modified
-          for thread in Board.parse(board_url, cache.data) when thread.url is thread_url
-            resolve
-              res_count: thread.res_count
-              modified: last_modified
+          lastModified = cache.last_modified
+          for thread in Board.parse(boardUrl, cache.data) when thread.url is threadUrl
+            resolve(
+              resCount: thread.resCount
+              modified: lastModified
+            )
             return
           reject()
           return
@@ -266,35 +290,7 @@ class app.Board
         )
     )
 
-app.module "board", [], (callback) ->
+app.module("board", [], (callback) ->
   callback(app.Board)
   return
-
-app.board =
-  get: (url, callback) ->
-    board = new app.Board(url)
-    board.get()
-      .then( ->
-        callback(status: "success", data: board.thread)
-        return
-      , ->
-        tmp = {status: "error"}
-        if board.message?
-          tmp.message = board.message
-        if board.thread?
-          tmp.data = board.thread
-        callback(tmp)
-        return
-      )
-    return
-
-  get_cached_res_count: (thread_url, callback) ->
-    app.Board.get_cached_res_count(thread_url)
-      .then( (res) ->
-        callback(res)
-        return
-      , ->
-        callback(null)
-        return
-      )
-    return
+)

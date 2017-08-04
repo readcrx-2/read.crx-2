@@ -1,4 +1,4 @@
-app.boot "/view/bookmark.html", ->
+app.boot "/view/bookmark.html", ["board"], (Board) ->
   $view = document.documentElement
 
   $table = $__("table")
@@ -92,7 +92,7 @@ app.boot "/view/bookmark.html", ->
         continue if loadingServer.has(server)
         loadingServer.add(server)
         board_list.delete(board)
-        app.board.get(board, fn.bind(prev: board))
+        Board.get(board).then(fn.bind(prev: board))
         fn()
         break
 

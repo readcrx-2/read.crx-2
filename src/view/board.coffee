@@ -1,4 +1,4 @@
-app.boot "/view/board.html", ->
+app.boot "/view/board.html", ["board"], (Board) ->
   try
     url = app.URL.parseQuery(location.search).get("q")
   catch
@@ -87,22 +87,18 @@ app.boot "/view/board.html", ->
     setTimeout( ->
       get_read_state_promise = app.ReadState.getByBoard(url)
 
-      board_get_promise = new Promise( (resolve, reject) ->
-        app.board.get url, (res) ->
-          $message_bar = $view.C("message_bar")[0]
-          if res.status is "error"
-            $message_bar.addClass("error")
-            $message_bar.innerHTML = res.message
-          else
-            $message_bar.removeClass("error")
-            $message_bar.removeChildren()
+      board_get_promise = Board.get(url).then( ({status, message, data}) ->
+        $messageBar = $view.C("message_bar")[0]
+        if status is "error"
+          $messageBar.addClass("error")
+          $messageBar.innerHTML = message
+        else
+          $messageBar.removeClass("error")
+          $messageBar.removeChildren()
 
-          if res.data?
-            resolve(res.data)
-          else
-            reject()
-          return
-        return
+        if data?
+          return data
+        return Promise.reject()
       )
 
       Promise.all([get_read_state_promise, board_get_promise])
@@ -120,13 +116,12 @@ app.boot "/view/board.html", ->
             item.push(
               title: thread.title
               url: thread.url
-              res_count: thread.res_count
-              created_at: thread.created_at
+              res_count: thread.resCount
+              created_at: thread.createdAt
               read_state: readState
               thread_number: thread_number
               ng: thread.ng
-              need_less: thread.need_less
-              is_net: thread.is_net
+              is_net: thread.isNet
             )
           threadList.addItem(item)
 

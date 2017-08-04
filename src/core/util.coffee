@@ -146,29 +146,24 @@ do ->
       return def
 
   app.util.search_next_thread = (thread_url, thread_title) ->
-    return new Promise( (resolve, reject) ->
-      thread_url = app.URL.fix(thread_url)
-      board_url = app.URL.threadToBoard(thread_url)
-      thread_title = app.util.normalize(thread_title)
+    thread_url = app.URL.fix(thread_url)
+    board_url = app.URL.threadToBoard(thread_url)
+    thread_title = app.util.normalize(thread_title)
 
-      app.board.get board_url, (res) ->
-        if res.data?
-          tmp = res.data
-          tmp = tmp.filter (thread) ->
-            thread.url isnt thread_url and thread.res_count < 1001
-          tmp = tmp.map (thread) ->
-            {
-              score: app.Util.levenshteinDistance(thread_title, app.util.normalize(thread.title), false)
-              title: thread.title
-              url: thread.url
-            }
-          tmp.sort (a, b) ->
-            a.score - b.score
-          resolve(tmp[0...5])
-        else
-          reject()
-        return
-      return
+    return app.Board.get(board_url).then( ({ data }) ->
+      return Promise.reject() unless data?
+      tmp = data
+      tmp = tmp.filter (thread) ->
+        thread.url isnt thread_url and thread.resCount < 1001
+      tmp = tmp.map (thread) ->
+        {
+          score: app.Util.levenshteinDistance(thread_title, app.util.normalize(thread.title), false)
+          title: thread.title
+          url: thread.url
+        }
+      tmp.sort (a, b) ->
+        a.score - b.score
+      return tmp[0...5]
     )
 
   wideSlimReg = ///[

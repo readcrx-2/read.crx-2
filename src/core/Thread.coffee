@@ -16,7 +16,7 @@ class app.Thread
   get: (forceUpdate, progress) ->
     getCachedInfo = new Promise( (resolve, reject) =>
       if @tsld in ["shitaraba.net", "machi.to"]
-        app.Board.get_cached_res_count(@url).then( (res) ->
+        app.Board.getCachedResCount(@url).then( (res) ->
           resolve(res)
           return
         , ->
@@ -174,7 +174,7 @@ class app.Thread
         return new Promise( (resolve, reject) ->
           getCachedInfo
             .then( (cachedInfo) ->
-              while thread.res.length < cachedInfo.res_count
+              while thread.res.length < cachedInfo.resCount
                 thread.res.push
                   name: "あぼーん"
                   mail: "あぼーん"

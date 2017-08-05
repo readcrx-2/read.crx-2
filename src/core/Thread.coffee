@@ -14,10 +14,15 @@ class app.Thread
     return
 
   get: (forceUpdate, progress) ->
-    getCachedInfo = do =>
+    getCachedInfo = (do =>
       if @tsld in ["shitaraba.net", "machi.to"]
         return app.Board.getCachedResCount(@url)
       return Promise.reject()
+    ).then( (info) ->
+      return { status: "success" , cachedInfo}
+    , ->
+      return { status: "none" }
+    )
 
     return new Promise( (resolve, reject) =>
       xhrInfo = Thread._getXhrInfo(@url)
@@ -153,16 +158,15 @@ class app.Thread
         )
       ).then( ({response, thread}) ->
         #したらば/まちBBS最新レス削除対策
-        return getCachedInfo.then( (cachedInfo) ->
-          while thread.res.length < cachedInfo.resCount
-            thread.res.push(
-              name: "あぼーん"
-              mail: "あぼーん"
-              message: "あぼーん"
-              other: "あぼーん"
-            )
-          return {response, thread}
-        , ->
+        return getCachedInfo.then( ({status, cachedInfo}) ->
+          if status is "sucess"
+            while thread.res.length < cachedInfo.resCount
+              thread.res.push(
+                name: "あぼーん"
+                mail: "あぼーん"
+                message: "あぼーん"
+                other: "あぼーん"
+              )
           return {response, thread}
         )
       ).then( ({response, thread}) =>

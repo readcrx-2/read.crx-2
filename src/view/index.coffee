@@ -639,8 +639,6 @@ app.main = ->
   app.contextMenus.createAll()
 
   window.on "unload", ->
-    # 一応終了時にもタブの状態を保存する
-    UI.Tab.saveTabs()
     #コンテキストメニューの削除
     app.contextMenus.removeAll()
     # 終了通知の送信

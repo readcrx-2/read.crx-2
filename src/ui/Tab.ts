@@ -239,7 +239,7 @@ namespace UI {
       $iframe.dataset.tabid = tabId;
       this.$element.$(".tab_container").addLast($iframe);
 
-      this.update(tabId, {title, selected, locked});
+      this.update(tabId, {title, selected, locked, restore});
 
       return tabId;
     }

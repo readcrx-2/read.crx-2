@@ -1,20 +1,28 @@
-$z-index-tab-content: 0;
-$z-index-selected-tab-content: 1;
-$z-index-tabbed-view-nav-bar: 2;
-$z-index-popup: 3;
-$z-index-tabbed-view-overlay: 4;
-$z-index-contextmenu: 5;
-$z-index-dialog: 6;
-$z-index-modal: 7;
-$z-index-modalhelp: 8;
-$z-index-notification: 9;
-$z-index-thumnail-zoom: 20;
+$z-indexes:(
+  "tab-content",
+  "selected-tab-content",
+  "tabbed-view-nav-bar",
+  "popup",
+  "tabbed-view-overlay",
+  "contextmenu",
+  "dialog",
+  "modal",
+  "modalhelp",
+  "notification"
+);
 
-$color-pending: #7F7F7F;
-$color-loading: #AC7239;
-$color-success: #339933;
-$color-error: #BF3F3F;
-$color-https: #109020;
+:root {
+  @each $name in $z-indexes {
+    --z-index-#{$name}: index($z-indexes, $name);
+  }
+  --z-index-thumnail-zoom: 20;
+
+  --color-pending: #7F7F7F;
+  --color-loading: #AC7239;
+  --color-success: #339933;
+  --color-error: #BF3F3F;
+  --color-https: #109020;
+}
 
 @mixin common {
   header, body {
@@ -144,7 +152,7 @@ $color-https: #109020;
   .nav_bar {
     height: 27px;
     border-bottom: 2px solid hsla(0, 0%, 0%, 0.2);
-    z-index: $z-index-tabbed-view-nav-bar;
+    z-index: var(--z-index-tabbed-view-nav-bar);
     position: relative;
     > label, > .button {
       float: left;
@@ -282,7 +290,7 @@ $color-https: #109020;
     outline: none;
   }
   .loading_overlay {
-    z-index: $z-index-tabbed-view-overlay;
+    z-index: var(--z-index-tabbed-view-overlay);
     position: absolute;
     left: 0;
     top: 0;

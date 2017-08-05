@@ -437,6 +437,8 @@ app.boot "/view/thread.html", ->
     #.open_in_rcrxが付与されている場合、処理は他モジュールに任せる
     return if target.hasClass("open_in_rcrx")
 
+    tmp = app.URL.guessType(target_url)
+
     #read.crxで開けるURLかどうかを判定
     flg = do ->
       #スレのURLはほぼ確実に判定できるので、そのままok
@@ -450,8 +452,6 @@ app.boot "/view/thread.html", ->
         #ブックマークされている場合も板として判定
         return true if app.bookmark.get(app.URL.fix(target_url))
       return false
-
-    tmp = app.URL.guessType(target_url)
 
     #read.crxで開ける板だった場合は.open_in_rcrxを付与して再度クリックイベント送出
     if flg

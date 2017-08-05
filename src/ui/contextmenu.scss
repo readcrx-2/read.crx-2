@@ -6,7 +6,7 @@
   padding: 0;
   list-style-type: none;
   font-size: 14px;
-  z-index: $z-index-contextmenu;
+  z-index: var(--z-index-contextmenu);
   -webkit-user-select: none;
   > li {
     cursor: pointer;

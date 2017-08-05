@@ -694,8 +694,8 @@ class app.view.TabContentView extends app.view.PaneContentView
       return
     )
 
-    $button.on("click", ->
-      @$element.togggleClass("autoload_pause")
+    $button.on("click", =>
+      @$element.toggleClass("autoload_pause")
       $button.toggleClass("pause")
       if $button.hasClass("pause")
         clearInterval(auto_load_interval)

@@ -112,7 +112,7 @@ iframe {
 
 #modal {
   > iframe {
-    z-index: $z-index-modal;
+    z-index: var(--z-index-modal);
     position: fixed;
     left: 0;
     top: 0;
@@ -126,7 +126,7 @@ iframe {
   left: 50px;
   top: 10px;
   right: 50px;
-  z-index: $z-index-notification;
+  z-index: var(--z-index-notification);
   > div {
     @include drop-shadow;
     background-image: linear-gradient(transparent, rgba(black, 0.25));
@@ -162,7 +162,7 @@ iframe {
 }
 
 .keyboard_help {
-  z-index: $z-index-modalhelp;
+  z-index: var(--z-index-modalhelp);
   background: hsla(0, 0%, 0%, 0.9);
   color: hsl(0, 0%, 80%);
   position: fixed;

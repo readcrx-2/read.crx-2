@@ -15,7 +15,7 @@ namespace UI {
       return "tabId" + ++Tab.idSeed;
     }
 
-    private static saveTabs (): void {
+    public static saveTabs (): void {
       var data: any[] = [], tab: any;
       for (tab of this.tabA!.getAll().concat(this.tabB!.getAll())) {
         data.push({

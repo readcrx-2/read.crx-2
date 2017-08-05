@@ -209,7 +209,7 @@ header {
     background-color: #666666;
   }
   &.zoom {
-     z-index: $z-index-thumnail-zoom;
+     z-index: var(--z-index-thumnail-zoom);
   }
 }
 
@@ -244,7 +244,7 @@ header {
 
 .popup {
   position: fixed;
-  z-index: $z-index-popup;
+  z-index: var(--z-index-popup);
   overflow: auto;
   box-shadow: 0 3px 10px rgba(black, 0.75);
   border: 3px solid #666;

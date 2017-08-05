@@ -62,7 +62,6 @@ namespace UI {
       this.pause = true;
     }
 
-    // 検索による表示位置の変更に対応するため、テーブルをクリアしてから再開する
     private onSearchFinish(): void {
       this.pause = false;
     }

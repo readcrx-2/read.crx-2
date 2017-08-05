@@ -13,7 +13,7 @@ app.boot "/view/history.html", ->
   app.DOMData.set($view, "selectableItemList", threadList)
   $content.addLast($table)
 
-  isOnlyUnique = false
+  isOnlyUnique = true
   NUMBER_OF_DATA_IN_ONCE = 500
   loadAddCount = 0
   isLoadedEnd = false
@@ -29,10 +29,10 @@ app.boot "/view/history.html", ->
     else
       offset = null
 
-    unless isOnlyUnique
-      promise = app.History.get(offset, NUMBER_OF_DATA_IN_ONCE)
-    else
+    if isOnlyUnique
       promise = app.History.getUnique(offset, NUMBER_OF_DATA_IN_ONCE)
+    else
+      promise = app.History.get(offset, NUMBER_OF_DATA_IN_ONCE)
     promise.then (data) ->
       if add
         loadAddCount++

@@ -9,18 +9,17 @@ class app.WriteHistory
       req.onerror = (e) ->
         reject(e)
         return
-      req.onupgradeneeded = (e) ->
-        db = e.target.result
+      req.onupgradeneeded = ({ target: {result: db, transaction: tx} }) ->
         objStore = db.createObjectStore("WriteHistory", keyPath: "id", autoIncrement: true)
         objStore.createIndex("url", "url", unique: false)
         objStore.createIndex("res", "res", unique: false)
         objStore.createIndex("title", "title", unique: false)
         objStore.createIndex("date", "date", unique: false)
-        e.target.transaction.oncomplete = ->
+        tx.oncomplete = ->
           resolve(db)
         return
-      req.onsuccess = (e) ->
-        resolve(e.target.result)
+      req.onsuccess = ({ target: {result: db} }) ->
+        resolve(db)
         return
       return
     )
@@ -56,7 +55,7 @@ class app.WriteHistory
             message
             date
           })
-        req.onsuccess = (e) ->
+        req.onsuccess = ->
           resolve()
           return
         req.onerror = (e) ->
@@ -84,8 +83,7 @@ class app.WriteHistory
           .objectStore("WriteHistory")
           .index("url")
           .openCursor(IDBKeyRange.only(url))
-        req.onsuccess = (e) ->
-          cursor = e.target.result
+        req.onsuccess = ({ target: {result: cursor} }) ->
           if cursor
             if cursor.value.res is res
               cursor.delete()
@@ -120,8 +118,7 @@ class app.WriteHistory
           .openCursor(null, "prev")
         advanced = false
         histories = []
-        req.onsuccess = (e) ->
-          cursor = e.target.result
+        req.onsuccess = ({ target: {result: cursor} }) ->
           if cursor and (limit is -1 or histories.length < limit)
             if !advanced
               advanced = true
@@ -159,8 +156,8 @@ class app.WriteHistory
           .objectStore("WriteHistory")
           .index("url")
           .getAll(IDBKeyRange.only(url))
-        req.onsuccess = (e) ->
-          resolve(e.target.result)
+        req.onsuccess = ({ target: {result} }) ->
+          resolve(result)
           return
         req.onerror = (e) ->
           app.log("error", "WriteHistory.remove: トランザクション中断")
@@ -181,8 +178,8 @@ class app.WriteHistory
           .transaction("WriteHistory")
           .objectStore("WriteHistory")
           .getAll()
-        req.onsuccess = (e) ->
-          resolve(e.target.result)
+        req.onsuccess = ({ target: {result} }) ->
+          resolve(result)
           return
         req.onerror = (e) ->
           app.log("error", "WriteHistory.getAll: トランザクション中断")
@@ -203,8 +200,8 @@ class app.WriteHistory
           .transaction("WriteHistory")
           .objectStore("WriteHistory")
           .count()
-        req.onsuccess = (e) ->
-          resolve(e.target.result)
+        req.onsuccess = ({ target: {result} }) ->
+          resolve(result)
           return
         req.onerror = (e) ->
           app.log("error", "WriteHistory.count: トランザクション中断")
@@ -230,8 +227,7 @@ class app.WriteHistory
           .objectStore("WriteHistory")
           .openCursor()
         advanced = false
-        req.onsuccess = (e) ->
-          cursor = e.target.result
+        req.onsuccess = ({ target: {result: cursor} }) ->
           if cursor
             if !advanced
               advanced = true
@@ -262,14 +258,13 @@ class app.WriteHistory
 
     return @_openDB().then( (db) ->
       return new Promise( (resolve, reject) ->
-        dayUnix = Date.now()-86400000*day
+        dayUnix = Date.now() - day*24*60*60*1000
         req = db
           .transaction("WriteHistory", "readwrite")
           .objectStore("WriteHistory")
           .index("date")
           .openCursor(IDBKeyRange.upperBound(dayUnix, true))
-        req.onsuccess = (e) ->
-          cursor = e.target.result
+        req.onsuccess = ({ target: {result: cursor} }) ->
           if cursor
             cursor.delete()
             cursor.continue()

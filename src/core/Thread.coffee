@@ -189,7 +189,7 @@ class app.Thread
 
         #2chでrejectされてる場合は移転を疑う
         if @tsld is "2ch.net" and response
-          app.util.ch_server_move_detect(app.URL.threadToBoard(@url))
+          app.util.chServerMoveDetect(app.URL.threadToBoard(@url))
             .then( (newBoardURL) =>
               #移転検出時
               tmp = ///^https?://(\w+)\.2ch\.net/ ///.exec(newBoardURL)[1]
@@ -399,7 +399,7 @@ class app.Thread
       regRes = reg.exec(line)
 
       if title
-        thread.title = app.util.decode_char_reference(title[1])
+        thread.title = app.util.decodeCharReference(title[1])
         thread.title = app.util.removeNeedlessFromTitle(thread.title)
         gotTitle = true
       else if regRes
@@ -432,7 +432,7 @@ class app.Thread
       sp = line.split("<>")
       if sp.length >= 4
         if key is 0
-          thread.title = app.util.decode_char_reference(sp[4])
+          thread.title = app.util.decodeCharReference(sp[4])
 
         thread.res.push(
           name: sp[0]
@@ -480,7 +480,7 @@ class app.Thread
           )
 
         if resCount is 1
-          thread.title = app.util.decode_char_reference(sp[5])
+          thread.title = app.util.decodeCharReference(sp[5])
 
         thread.res.push(
           name: sp[1]
@@ -528,7 +528,7 @@ class app.Thread
           )
 
         if resCount is 1
-          thread.title = app.util.decode_char_reference(sp[5])
+          thread.title = app.util.decodeCharReference(sp[5])
 
         thread.res.push(
           name: sp[1]
@@ -574,7 +574,7 @@ class app.Thread
       regRes = reg.exec(line)
 
       if title
-        thread.title = app.util.decode_char_reference(title[1])
+        thread.title = app.util.decodeCharReference(title[1])
       else if regRes
         thread.res.push(
           name: regRes[2]
@@ -616,7 +616,7 @@ class app.Thread
       regRes = reg.exec(line)
 
       if title
-        thread.title = app.util.decode_char_reference(title[1])
+        thread.title = app.util.decodeCharReference(title[1])
         thread.title = app.util.removeNeedlessFromTitle(thread.title)
       else if regRes
         while ++resCount < +regRes[1]

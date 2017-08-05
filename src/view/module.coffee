@@ -102,7 +102,7 @@ class app.view.View
         paramResNum = if paramResFlg then target.dataset.paramResNum else null
         target.removeAttribute("toggle-param-res-num")
         target.removeAttribute("ignore-res-number")
-        howToOpen = app.util.get_how_to_open(e)
+        howToOpen = app.util.getHowToOpen(e)
         newTab = app.config.get("always_new_tab") is "on"
         newTab or= howToOpen.new_tab or howToOpen.new_window
         background = howToOpen.background
@@ -519,7 +519,7 @@ class app.view.TabContentView extends app.view.PaneContentView
     for dom in @$element.$$(".button_back, .button_forward")
       dom.on "mousedown", (e) ->
         if e.which isnt 3
-          howToOpen = app.util.get_how_to_open(e)
+          howToOpen = app.util.getHowToOpen(e)
           newTab = howToOpen.new_tab or howToOpen.new_window
           background = howToOpen.background
 

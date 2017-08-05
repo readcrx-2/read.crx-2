@@ -8,7 +8,7 @@ class ThreadSearch
       return {
         url
         created_at: new Date(key * 1000)
-        title: app.util.decode_char_reference(subject)
+        title: app.util.decodeCharReference(subject)
         res_count: +resno
         board_url: "#{scheme}://#{server}/#{ita}/"
         board_title: boardName

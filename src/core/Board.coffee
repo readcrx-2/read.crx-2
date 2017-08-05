@@ -86,7 +86,7 @@ class app.Board
 
         #2chでrejectされている場合は移転を疑う
         if app.URL.tsld(@url) is "2ch.net" and response?
-          app.util.ch_server_move_detect(@url)
+          app.util.chServerMoveDetect(@url)
             #移転検出時
             .then( (newBoardUrl) =>
               @message += """
@@ -227,7 +227,7 @@ class app.Board
 
     board = []
     while (regRes = reg.exec(text))
-      title = app.util.decode_char_reference(regRes[2])
+      title = app.util.decodeCharReference(regRes[2])
       title = app.util.removeNeedlessFromTitle(title)
 
       board.push(

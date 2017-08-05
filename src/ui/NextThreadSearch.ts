@@ -31,7 +31,7 @@ namespace UI {
       this.$element.C("current")[0].textContent = title;
       this.$element.C("status")[0].textContent = "検索中";
 
-      app.util.search_next_thread(url, title)
+      app.util.searchNextThread(url, title)
         .then( (res) => {
           for(var thread of res) {
             var $li = $__("li")

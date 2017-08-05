@@ -198,28 +198,26 @@ namespace app {
             return Promise.resolve({data: cache.data, url: null});
           })
           .catch( () => {
-            return new Promise( (resolve, reject) => {
-              var req = new app.HTTP.Request("HEAD", shortUrl);
-              req.timeout = parseInt(app.config.get("expand_short_url_timeout")!);
+            var req = new app.HTTP.Request("HEAD", shortUrl);
+            req.timeout = parseInt(app.config.get("expand_short_url_timeout")!);
 
-              return req.send().then( ({status, responseURL: resUrl}) => {
-                if (status >= 400) {
-                  return {data: null, url: null};
-                }
-                // 無限ループの防止
-                if (resUrl === shortUrl) {
-                  return {data: null, url: null};
-                }
-                // 取得したURLが短縮URLだった場合は再帰呼出しする
-                if (SHORT_URL_LIST.has(getDomain(resUrl))) {
-                  expandShortURL(resUrl).then( (resUrl) => {
-                    return {data: null, url: resUrl};
-                  });
-                // 短縮URL以外なら終了
-                } else {
+            return req.send().then( ({status, responseURL: resUrl}) => {
+              if (status >= 400) {
+                return {data: null, url: null};
+              }
+              // 無限ループの防止
+              if (resUrl === shortUrl) {
+                return {data: null, url: null};
+              }
+              // 取得したURLが短縮URLだった場合は再帰呼出しする
+              if (SHORT_URL_LIST.has(getDomain(resUrl))) {
+                return expandShortURL(resUrl).then( (resUrl) => {
                   return {data: null, url: resUrl};
-                }
-              });
+                });
+              // 短縮URL以外なら終了
+              } else {
+                return {data: null, url: resUrl};
+              }
             });
           })
           .then( (res) => {

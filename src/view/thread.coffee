@@ -132,10 +132,10 @@ app.boot "/view/thread.html", ->
       app.view_thread._draw($view, { force_update: ex.force_update, jumpResNum }).then( (thread) ->
         return unless ex?.mes? and app.config.get("no_writehistory") is "off"
         postMes = ex.mes.replace(/\s/g, "")
-        for t, i in thread.res by -1 when postMes is app.util.decode_char_reference(app.util.stripTags(t.message)).replace(/\s/g, "")
+        for t, i in thread.res by -1 when postMes is app.util.decodeCharReference(app.util.stripTags(t.message)).replace(/\s/g, "")
           date = threadContent.stringToDate(t.other)
-          name = app.util.decode_char_reference(t.name)
-          mail = app.util.decode_char_reference(t.mail)
+          name = app.util.decodeCharReference(t.name)
+          mail = app.util.decodeCharReference(t.mail)
           app.WriteHistory.add(view_url, i+1, document.title, name, mail, ex.name, ex.mail, ex.mes, date.valueOf()) if date?
           threadContent.addClassWithOrg($content.child()[i], "written")
           break

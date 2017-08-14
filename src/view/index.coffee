@@ -632,7 +632,6 @@ app.main = ->
     #もし、タブが一つも復元されなかったらブックマークタブを開く
     unless is_restored
       app.message.send("open", url: "bookmark")
-    delete localStorage.tab_state
     return
 
   # コンテキストメニューの作成

@@ -6,7 +6,7 @@ window.UI ?= {}
 @constructor
 @param {String} URL
 @param {Element} container
-@requires jQuery
+@requires MediaContainer
 ###
 class UI.ThreadContent
   constructor: (@url, @container) ->
@@ -748,8 +748,7 @@ class UI.ThreadContent
         continue unless elm
         elm.addClass("has_blur_word")
         if elm.hasClass("has_image") and app.config.get("image_blur") is "on"
-          for thumb in elm.$$(".thumbnail:not(.image_blur)")
-            @setImageBlur(thumb, true)
+          UI.MediaContainer.setImageBlur(elm, true)
       return
 
     #参照関係再構築

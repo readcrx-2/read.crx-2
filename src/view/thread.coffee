@@ -760,13 +760,12 @@ app.boot "/view/thread.html", ->
 
   #フッター表示処理
   do ->
-    couldBeShown = false
+    canBeShown = false
     observer = new IntersectionObserver( (changes) ->
       for change in changes
-        couldBeShown = (change.intersectionRatio is 1)
+        canBeShown = (change.boundingClientRect.top < change.rootBounds.height)
       updateThreadFooter()
-    , root: $content, threshold: [0.95, 1.0])
-
+    , root: $content, threshold: [0, 0.05, 0.5, 0.95, 1.0])
     setObserve = ->
       observer.disconnect()
       ele = $content.lastElementChild
@@ -829,7 +828,7 @@ app.boot "/view/thread.html", ->
         return
 
     updateThreadFooter = ->
-      if couldBeShown
+      if canBeShown
         $nextUnread.show()
         $searchNextThread.show()
       else
@@ -847,7 +846,7 @@ app.boot "/view/thread.html", ->
       return
     )
     app.message.addListener("bookmark_updated", (message) ->
-      if couldBeShown
+      if canBeShown
         $nextUnread.show()
       return
     )

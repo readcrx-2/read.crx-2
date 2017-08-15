@@ -969,7 +969,7 @@ app.view_thread._read_state_manager = ($view) ->
 
   #スレの描画時に、read_state関連のクラスを付与する
   $view.on "view_loaded", ({ detail: {jumpResNum, loadCount} }) ->
-    if loadCount isnt 2
+    if loadCount is 1
       # 初回の処理
       get_read_state.then( ({read_state, read_state_updated}) ->
         $content.C("last")[0]?.removeClass("last")

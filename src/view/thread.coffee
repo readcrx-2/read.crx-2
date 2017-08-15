@@ -242,7 +242,7 @@ app.boot "/view/thread.html", ->
 
     $toggleAaMode = $menu.C("toggle_aa_mode")[0]
     if $article.parent().hasClass("config_use_aa_font")
-      $toggleAaMode = if $article.hasClass("aa") then "AA表示モードを解除" else "AA表示モードに変更"
+      $toggleAaMode.textContent = if $article.hasClass("aa") then "AA表示モードを解除" else "AA表示モードに変更"
     else
       $toggleAaMode.remove()
 

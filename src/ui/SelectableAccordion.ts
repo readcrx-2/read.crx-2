@@ -24,8 +24,8 @@ namespace UI {
       });
     }
 
-    getSelected (): HTMLElement {
-      return <HTMLElement>this.$element.$("h3.selected, a.selected") || null;
+    getSelected (): HTMLElement|null {
+      return (<HTMLElement>this.$element.$("h3.selected, a.selected")) || null;
     }
 
     select (target: HTMLElement): void {
@@ -48,7 +48,7 @@ namespace UI {
     }
 
     clearSelect (): void {
-      var selected: HTMLElement;
+      var selected: HTMLElement|null;
 
       selected = this.getSelected();
 
@@ -58,7 +58,7 @@ namespace UI {
     }
 
     selectNext (repeat: number = 1): void {
-      var current: HTMLElement,
+      var current: HTMLElement|null,
         prevCurrent: HTMLElement,
         currentH3: HTMLElement,
         nextH3: HTMLElement,
@@ -110,7 +110,7 @@ namespace UI {
     }
 
     selectPrev (repeat: number = 1): void {
-      var current: HTMLElement,
+      var current: HTMLElement|null,
         prevCurrent: HTMLElement,
         currentH3: HTMLElement,
         prevH3: HTMLElement,

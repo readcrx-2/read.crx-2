@@ -31,25 +31,23 @@ namespace UI {
       this.$element.C("current")[0].textContent = title;
       this.$element.C("status")[0].textContent = "検索中";
 
-      app.util.searchNextThread(url, title)
-        .then( (res) => {
-          for(var thread of res) {
-            var $li = $__("li")
-            $li.addClass("open_in_rcrx")
-            $li.textContent = thread.title
-            $li.dataset.href = thread.url
-            $ol.addLast($li)
+      app.util.searchNextThread(url, title).then( (res) => {
+        for(var thread of res) {
+          var $li = $__("li")
+          $li.addClass("open_in_rcrx")
+          $li.textContent = thread.title
+          $li.dataset.href = thread.url
+          $ol.addLast($li)
 
-            if (app.bookmark.get(thread.url)) {
-              $li.addClass("bookmarked");
-            }
+          if (app.bookmark.get(thread.url)) {
+            $li.addClass("bookmarked");
           }
+        }
 
-          this.$element.C("status")[0].textContent = "";
-        })
-        .catch( () => {
-          this.$element.C("status")[0].textContent = "次スレ検索に失敗しました";
-        });
+        this.$element.C("status")[0].textContent = "";
+      }).catch( () => {
+        this.$element.C("status")[0].textContent = "次スレ検索に失敗しました";
+      });
     }
   }
 }

@@ -11,7 +11,7 @@ namespace UI {
         start: {x: number|null; y: number|null} = {x: null, y: null},
         target: HTMLElement|null = null,
         overlay: HTMLDivElement,
-        onHoge: Function;
+        onDrop: Function;
 
       this.container = container;
 
@@ -24,15 +24,15 @@ namespace UI {
         e.preventDefault();
       });
 
-      overlay.on("mousemove", (e) => {
+      overlay.on("mousemove", ({pageX, pageY}) => {
         var targetCenter: {x: number; y: number},
           tmp: HTMLElement,
           cacheX: number,
           cacheY: number;
 
         if (!sorting) {
-          start.x = e.pageX;
-          start.y = e.pageY;
+          start.x = pageX;
+          start.y = pageY;
           sorting = true;
         }
 
@@ -79,12 +79,12 @@ namespace UI {
             tmp = <HTMLElement>tmp.nextElementSibling;
           }
 
-          target.style.left = (e.pageX - start.x!) + "px";
-          target.style.top = (e.pageY - start.y!) + "px";
+          target.style.left = (pageX - start.x!) + "px";
+          target.style.top = (pageY - start.y!) + "px";
         }
       });
 
-      onHoge = function (this:HTMLElement) {
+      onDrop = function (this:HTMLElement) {
         // removeするとmouseoutも発火するので二重に呼ばれる
         sorting = false;
 
@@ -97,8 +97,8 @@ namespace UI {
         }
       };
 
-      overlay.on("mouseup", <any>onHoge);
-      overlay.on("mouseout", <any>onHoge);
+      overlay.on("mouseup", onDrop);
+      overlay.on("mouseout", onDrop);
 
       var clicks = 1;
       var timer: number|null = null;

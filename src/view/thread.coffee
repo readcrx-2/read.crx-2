@@ -282,7 +282,7 @@ app.boot "/view/thread.html", ->
 
     app.defer ->
       $menu.removeClass("hidden")
-      UI.contextmenu($menu, e.clientX, e.clientY)
+      UI.ContextMenu($menu, e.clientX, e.clientY)
       return
     return
 

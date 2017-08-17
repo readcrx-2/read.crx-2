@@ -293,7 +293,7 @@ class UI.ThreadList
               @remove()
               return
             )
-            UI.contextmenu($menu, e.clientX, e.clientY)
+            UI.ContextMenu($menu, e.clientX, e.clientY)
             return
           )
           return

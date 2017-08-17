@@ -880,7 +880,7 @@ app.main = ->
         return
       app.defer ->
         document.body.addLast($menu)
-        UI.contextmenu($menu, e.clientX, e.clientY)
+        UI.ContextMenu($menu, e.clientX, e.clientY)
         return
       return
 

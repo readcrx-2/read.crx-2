@@ -216,13 +216,13 @@ class UI.ThreadList
       $searchbox.on("input", ->
         return if _isComposing
         if @value isnt ""
-          UI.table_search($table, "search", {
+          UI.TableSearch($table, "search", {
             query: @value, target_col: title_index})
           hitCount = $table.dataset.tableSearchHitCount
           for dom in @parent().child() when dom.hasClass("hit_count")
             dom.textContent = hitCount + "hit"
         else
-          UI.table_search($table, "clear")
+          UI.TableSearch($table, "clear")
           for dom in @parent().child() when dom.hasClass("hit_count")
             dom.textContent = ""
         return

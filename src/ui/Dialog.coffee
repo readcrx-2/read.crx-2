@@ -13,7 +13,7 @@ do ->
       <div class="dialog_spacer"></div>
     """
 
-  UI.dialog = (method, prop) ->
+  UI.Dialog = (method, prop) ->
     return new Promise( (resolve, reject) ->
       #prop.message, prop.label_ok, prop.label_no
       if method is "confirm"

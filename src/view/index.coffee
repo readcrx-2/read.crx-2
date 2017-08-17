@@ -632,15 +632,12 @@ app.main = ->
     #もし、タブが一つも復元されなかったらブックマークタブを開く
     unless is_restored
       app.message.send("open", url: "bookmark")
-    delete localStorage.tab_state
     return
 
   # コンテキストメニューの作成
   app.contextMenus.createAll()
 
   window.on "unload", ->
-    # 一応終了時にもタブの状態を保存する
-    UI.Tab.saveTabs()
     #コンテキストメニューの削除
     app.contextMenus.removeAll()
     # 終了通知の送信

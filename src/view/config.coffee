@@ -99,35 +99,51 @@ class HistoryIO extends SettingIO
     return
   setupClearButton: ->
     @$clearButton.on("click", =>
-      @$clearButton.addClass("hidden")
-      @$status.textContent = "削除中"
+      UI.dialog("confirm",
+        message: "本当に削除しますか？"
+        label_ok: "はい"
+        label_no: "いいえ"
+      ).then( (result) =>
+        return unless result
+        @$clearButton.addClass("hidden")
+        @$status.textContent = "削除中"
 
-      @clearFunc()
-        .then( =>
-          @$status.textContent = "削除完了"
-          parent.$$.$("iframe[src=\"/view/#{@name}.html\"]")?.contentWindow.C("view")[0].dispatchEvent(new Event("request_reload"))
-        , =>
-          @$status.textContent = "削除失敗"
-        ).then( =>
-          @$clearButton.removeClass("hidden")
-        )
+        @clearFunc()
+          .then( =>
+            @$status.textContent = "削除完了"
+            parent.$$.$("iframe[src=\"/view/#{@name}.html\"]")?.contentWindow.C("view")[0].dispatchEvent(new Event("request_reload"))
+          , =>
+            @$status.textContent = "削除失敗"
+          ).then( =>
+            @$clearButton.removeClass("hidden")
+          )
+        return
+      )
       return
     )
     return
   setupClearRangeButton: ->
     @$clearRangeButton.on("click", =>
-      @$clearRangeButton.addClass("hidden")
-      @$status.textContent = "範囲指定削除中"
+      UI.dialog("confirm",
+        message: "本当に削除しますか？"
+        label_ok: "はい"
+        label_no: "いいえ"
+      ).then( (result) =>
+        return unless result
+        @$clearRangeButton.addClass("hidden")
+        @$status.textContent = "範囲指定削除中"
 
-      @clearRangeFunc(parseInt($$.C("#{@name}_date_range")[0].value))
-        .then( =>
-          @$status.textContent = "範囲指定削除完了"
-          parent.$$.$("iframe[src=\"/view/#{@name}.html\"]")?.contentWindow.C("view")[0].dispatchEvent(new Event("request_reload"))
-        , =>
-          @$status.textContent = "範囲指定削除失敗"
-        ).then( =>
-          @$clearRangeButton.removeClass("hidden")
-        )
+        @clearRangeFunc(parseInt($$.C("#{@name}_date_range")[0].value))
+          .then( =>
+            @$status.textContent = "範囲指定削除完了"
+            parent.$$.$("iframe[src=\"/view/#{@name}.html\"]")?.contentWindow.C("view")[0].dispatchEvent(new Event("request_reload"))
+          , =>
+            @$status.textContent = "範囲指定削除失敗"
+          ).then( =>
+            @$clearRangeButton.removeClass("hidden")
+          )
+        return
+      )
       return
     )
     return

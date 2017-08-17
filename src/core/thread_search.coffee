@@ -24,7 +24,7 @@ app.module "thread_search", [], (callback) ->
 
     read: ->
       return new Promise( (resolve, reject) =>
-        request = new app.HTTP.Request("GET", "http://dig.2ch.net/?keywords=#{encodeURI(@query)}&maxResult=500&json=1", {
+        request = new app.HTTP.Request("GET", "http://dig.2ch.net/?keywords=#{encodeURIComponent(@query)}&maxResult=500&json=1", {
           cache: false
         })
         request.send (response) ->

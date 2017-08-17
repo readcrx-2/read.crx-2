@@ -7,11 +7,11 @@ class ThreadSearch
     return app.BoardTitleSolver.ask("#{scheme}://#{server}/#{ita}/").then( (boardName) ->
       return {
         url
-        created_at: new Date(key * 1000)
+        createdAt: new Date(key * 1000)
         title: app.util.decodeCharReference(subject)
-        res_count: +resno
-        board_url: "#{scheme}://#{server}/#{ita}/"
-        board_title: boardName
+        resCount: +resno
+        boardUrl: "#{scheme}://#{server}/#{ita}/"
+        boardTitle: boardName
       }
     )
 

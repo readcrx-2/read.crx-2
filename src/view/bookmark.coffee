@@ -111,13 +111,13 @@ app.boot "/view/bookmark.html", ["board"], (Board) ->
       threadList.addItem(
         title: a.title
         url: a.url
-        res_count: a.resCount or 0
-        read_state: a.readState or {url: a.url, read: 0, received: 0, last: 0}
-        created_at: /\/(\d+)\/$/.exec(a.url)[1] * 1000
+        resCount: a.resCount or 0
+        readState: a.readState or {url: a.url, read: 0, received: 0, last: 0}
+        createdAt: /\/(\d+)\/$/.exec(a.url)[1] * 1000
         expired: a.expired
-        board_url: boardUrl
-        board_title: boardName ? ""
-        is_https: (app.URL.getScheme(a.url) is "https")
+        boardUrl: boardUrl
+        boardTitle: boardName ? ""
+        isHttps: (app.URL.getScheme(a.url) is "https")
       )
       return
     , fn)

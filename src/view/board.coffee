@@ -116,12 +116,12 @@ app.boot "/view/board.html", ["board"], (Board) ->
             item.push(
               title: thread.title
               url: thread.url
-              res_count: thread.resCount
-              created_at: thread.createdAt
-              read_state: readState
-              thread_number: thread_number
+              resCount: thread.resCount
+              createdAt: thread.createdAt
+              readState: readState
+              threadNumber: thread_number
               ng: thread.ng
-              is_net: thread.isNet
+              isNet: thread.isNet
             )
           threadList.addItem(item)
 

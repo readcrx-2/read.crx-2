@@ -6,7 +6,7 @@ window.UI ?= {}
 @constructor
 @param {String} URL
 @param {Element} container
-@requires jQuery
+@requires MediaContainer
 ###
 class UI.ThreadContent
   constructor: (@url, @container) ->
@@ -527,8 +527,8 @@ class UI.ThreadContent
               #タグ除去
               .replace(/<(?!(?:a class="beid".*?|\/a)>).*?(?:>|$)/g, "")
               #.id
-              .replace(/(?:^| |\d)(ID:(?!\?\?\?)[^ <>"']+|発信元:\d+.\d+.\d+.\d+)/, ($0, $1) =>
-                fixedId = $1.replace(/\u25cf$/, "") #末尾●除去
+              .replace(/(?:^| |(\d))(ID:(?!\?\?\?)[^ <>"']+|発信元:\d+.\d+.\d+.\d+)/, ($0, $1, $2) =>
+                fixedId = $2.replace(/\u25cf$/, "") #末尾●除去
 
                 res.id = fixedId
 
@@ -545,7 +545,7 @@ class UI.ThreadContent
                 @idIndex.set(fixedId, new Set()) unless @idIndex.has(fixedId)
                 @idIndex.get(fixedId).add(resNum)
 
-                return """<span class="id">#{$1}</span>"""
+                return """#{$1 ? ""}<span class="id">#{$2}</span>"""
               )
               #.beid
               .replace /(?:^| )(BE:(\d+)\-[A-Z\d]+\(\d+\))/,
@@ -748,8 +748,7 @@ class UI.ThreadContent
         continue unless elm
         elm.addClass("has_blur_word")
         if elm.hasClass("has_image") and app.config.get("image_blur") is "on"
-          for thumb in elm.$$(".thumbnail:not(.image_blur)")
-            @setImageBlur(thumb, true)
+          UI.MediaContainer.setImageBlur(elm, true)
       return
 
     #参照関係再構築

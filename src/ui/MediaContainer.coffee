@@ -1,3 +1,5 @@
+window.UI ?= {}
+
 ###*
 @namespace UI
 @class MediaContainer

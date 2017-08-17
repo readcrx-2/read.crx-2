@@ -46,8 +46,8 @@ class app.Thread
         return new Promise( (resolve, reject) =>
           hasCache = true
           if forceUpdate or Date.now() - cache.last_updated > 1000 * 3
-            #通信が生じる場合のみ、notifyでキャッシュを送出する
-            app.defer =>
+            #通信が生じる場合のみ、progressでキャッシュを送出する
+            setTimeout =>
               if cache.parsed?
                 tmp = cache.parsed
               else
@@ -57,6 +57,7 @@ class app.Thread
               @title = tmp.title
               progress()
               return
+            , 100
             reject()
           else
             resolve()

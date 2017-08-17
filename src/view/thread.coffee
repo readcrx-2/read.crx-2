@@ -129,7 +129,7 @@ app.boot "/view/thread.html", ->
         threadContent.select(jumpResNum, false, true, -60) if jumpResNum > 0
         return
 
-      app.view_thread._draw($view, { force_update: ex.force_update, jumpResNum }, (thread) ->
+      app.view_thread._draw($view, { force_update: ex.force_update, jumpResNum }).then( (thread) ->
         return unless ex?.mes? and app.config.get("no_writehistory") is "off"
         postMes = ex.mes.replace(/\s/g, "")
         for t, i in thread.res by -1 when postMes is app.util.decode_char_reference(app.util.stripTags(t.message)).replace(/\s/g, "")
@@ -137,6 +137,7 @@ app.boot "/view/thread.html", ->
           name = app.util.decode_char_reference(t.name)
           mail = app.util.decode_char_reference(t.mail)
           app.WriteHistory.add(view_url, i+1, document.title, name, mail, ex.name, ex.mail, ex.mes, date.valueOf()) if date?
+          threadContent.addClassWithOrg($content.child()[i], "written")
           break
         return
       )
@@ -242,7 +243,7 @@ app.boot "/view/thread.html", ->
 
     $toggleAaMode = $menu.C("toggle_aa_mode")[0]
     if $article.parent().hasClass("config_use_aa_font")
-      $toggleAaMode = if $article.hasClass("aa") then "AA表示モードを解除" else "AA表示モードに変更"
+      $toggleAaMode.textContent = if $article.hasClass("aa") then "AA表示モードを解除" else "AA表示モードに変更"
     else
       $toggleAaMode.remove()
 
@@ -759,13 +760,12 @@ app.boot "/view/thread.html", ->
 
   #フッター表示処理
   do ->
-    couldBeShown = false
+    canBeShown = false
     observer = new IntersectionObserver( (changes) ->
       for change in changes
-        couldBeShown = (change.intersectionRatio is 1)
+        canBeShown = (change.boundingClientRect.top < change.rootBounds.height)
       updateThreadFooter()
-    , root: $content, threshold: [0.95, 1.0])
-
+    , root: $content, threshold: [0, 0.05, 0.5, 0.95, 1.0])
     setObserve = ->
       observer.disconnect()
       ele = $content.lastElementChild
@@ -828,7 +828,7 @@ app.boot "/view/thread.html", ->
         return
 
     updateThreadFooter = ->
-      if couldBeShown
+      if canBeShown
         $nextUnread.show()
         $searchNextThread.show()
       else
@@ -846,7 +846,7 @@ app.boot "/view/thread.html", ->
       return
     )
     app.message.addListener("bookmark_updated", (message) ->
-      if couldBeShown
+      if canBeShown
         $nextUnread.show()
       return
     )
@@ -878,7 +878,7 @@ app.boot "/view/thread.html", ->
 
   return
 
-app.view_thread._draw = ($view, {force_update = false, jumpResNum = -1} = {}, beforeAdd) ->
+app.view_thread._draw = ($view, {force_update = false, jumpResNum = -1} = {}) ->
   $view.addClass("loading")
   $view.style.cursor = "wait"
   $reload_button = $view.C("button_reload")[0]
@@ -917,36 +917,31 @@ app.view_thread._draw = ($view, {force_update = false, jumpResNum = -1} = {}, be
 
   return new Promise( (resolve, reject) ->
     thread = new app.Thread($view.dataset.url)
-    threadSetPromise = null
+    threadSetFromCacheBeforeHTTPPromise = Promise.resolve()
     threadGetPromise = app.util.promiseWithState(thread.get(force_update, ->
+      # 通信する前にキャッシュを取得して一旦表示する
       unless threadGetPromise.isResolved()
-        threadSetPromise = app.util.promiseWithState(fn(thread, false))
+        threadSetFromCacheBeforeHTTPPromise = fn(thread, false)
       return
     ))
-    threadGetPromise.promise
-      .catch ->
+    threadGetPromise.promise.catch( -> return).then( ->
+      return threadSetFromCacheBeforeHTTPPromise
+    ).catch( -> return).then( ->
+      return fn(thread, not threadGetPromise.isResolved())
+    ).then( ->
+      return true
+    , ->
+      return false
+    ).then( (successedSet) ->
+      $view.removeClass("loading")
+      $view.style.cursor = "auto"
+      setTimeout( ->
+        $reload_button.removeClass("disabled")
         return
-      .then ->
-        threadSetPromise = app.util.promiseWithState(Promise.resolve()) unless threadSetPromise
-        threadSetPromise.promise.catch(->
-          return
-        ).then( ->
-          threadGetPromiseState = threadGetPromise.isResolved()
-          beforeAdd?(thread) if threadGetPromiseState
-          threadSetPromise = app.util.promiseWithState(fn(thread, not threadGetPromiseState))
-          threadSetPromise.promise.catch( ->
-            return
-          ).then( ->
-            $view.removeClass("loading")
-            $view.style.cursor = "auto"
-            setTimeout((-> $reload_button.removeClass("disabled")), 1000 * 5)
-            if threadSetPromise.isResolved() then resolve() else reject()
-            return
-          )
-          return
-        )
-        return
+      , 1000 * 5)
+      if successedSet then resolve(thread) else reject()
       return
+    )
     return
   )
 
@@ -974,7 +969,7 @@ app.view_thread._read_state_manager = ($view) ->
 
   #スレの描画時に、read_state関連のクラスを付与する
   $view.on "view_loaded", ({ detail: {jumpResNum, loadCount} }) ->
-    if loadCount isnt 2
+    if loadCount is 1
       # 初回の処理
       get_read_state.then( ({read_state, read_state_updated}) ->
         $content.C("last")[0]?.removeClass("last")

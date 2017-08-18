@@ -32,6 +32,7 @@ pugCompiler = require "pug"
 args =
   outputPath: "./debug"
   manifestPath: "./src/manifest.json"
+  cssPath: "./src/**/*.scss"
   appTsPath: "./src/app.ts"
   backgroundCoffeePath: "./src/background.coffee"
   csaddlinkCoffeePath: "./src/cs_addlink.coffee"
@@ -73,7 +74,6 @@ args =
   logo128BinPath: "./debug/img/read.crx_128x128.png"
   loadingSrcPath: "./src/image/svg/loading.svg"
   loadingBinPath: "./debug/img/loading.webp"
-  jQueryPath: ["./node_modules/jquery/dist/jquery.slim.min.js", "./node_modules/ShortQuery.js/bin/shortQuery.chrome.min.js"]
   shortQueryPath: "./node_modules/ShortQuery.js/bin/shortQuery.chrome.min.js"
   coffeeOptions:
     coffee: coffeeCompiler
@@ -81,7 +81,11 @@ args =
   tsOptions:
     typescript: tsCompiler
     target: "es2015"
-    lib: ["dom", "es2015", "es2016"]
+    lib: [
+      "dom"
+      "es2015"
+      "es2016"
+    ]
     skipLibCheck: true
     noUnusedLocals: true
     alwaysStrict: true
@@ -181,19 +185,18 @@ gulp.task "watch", ["default"], ->
   gulp.watch(args.writePath.cs.coffee, ["cs_write.js"])
   gulp.watch([args.writePath.write.ts, args.writePath.write.coffee], ["write.js"])
   gulp.watch([args.writePath.submit_thread.ts, args.writePath.submit_thread.coffee], ["submit_thread.js"])
-  gulp.watch("./src/**/*.scss", ["css"])
+  gulp.watch(args.cssPath, ["css"])
   gulp.watch(args.viewHtmlPath, ["viewhtml"])
   gulp.watch(args.zombieHtmlPath, ["zombie.html"])
   gulp.watch(args.writeHtmlPath, ["writehtml"])
   gulp.watch(args.webpSrcPath, ["img"])
   gulp.watch(args.manifestPath, ["manifest"])
-  gulp.watch(args.jQueryPath, ["jQuery"])
   gulp.watch(args.shortQueryPath, ["shortQuery"])
   return
 
 gulp.task "clean", ->
   return Promise.all([
-    fs.remove("./debug"),
+    fs.remove("./debug")
     fs.remove("./read.crx_2.zip")
   ])
 
@@ -375,10 +378,12 @@ gulp.task "webp&png", ->
 
         promise = fs.readFile(src).then( (data) ->
           buf = new Buffer(data)
+          # 塗りつぶし
           if m[4]?
             str = buf.toString("utf8").replace(/#333/g, "##{m[4]}")
             buf = Buffer.from(str, "utf8")
           sh = sharp(buf)
+          # 回転
           if m[5]?
             degrees = parseInt(m[5])
             degrees = 270 if degrees is -90

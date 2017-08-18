@@ -10,7 +10,7 @@ app.module "thread_search", [], (callback) ->
           resolve(
             url: x.url
             created_at: new Date x.key * 1000
-            title: x.subject
+            title: app.util.decode_char_reference(x.subject)
             res_count: +x.resno
             board_url: "#{scheme}://#{x.server}/#{x.ita}/"
             board_title: boardName

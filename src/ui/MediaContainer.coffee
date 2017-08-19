@@ -96,9 +96,10 @@ class UI.MediaContainer
   @method _setImageBlurOne
   @param {Element} thumbnail
   @param {Boolean} blurMode
+  @static
   @private
   ###
-  _setImageBlurOne: (thumbnail, blurMode) ->
+  @_setImageBlurOne: (thumbnail, blurMode) ->
     media = thumbnail.$("a > img.image, video")
     if blurMode
       v = app.config.get("image_blur_length")
@@ -113,10 +114,11 @@ class UI.MediaContainer
   @method setImageBlur
   @param {Element} res
   @param {Boolean} blurMode
+  @static
   ###
-  setImageBlur: (res, blurMode) ->
+  @setImageBlur: (res, blurMode) ->
     for thumb in res.$$(".thumbnail[media-type='image'], .thumbnail[media-type='video']")
-      @_setImageBlurOne(thumb, blurMode)
+      MediaContainer._setImageBlurOne(thumb, blurMode)
     return
 
   ###*

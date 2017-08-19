@@ -360,11 +360,11 @@ app.boot "/view/thread.html", ->
 
     # 画像をぼかす
     else if target.hasClass("set_image_blur")
-      mediaContainer.setImageBlur($res, true)
+      UI.MediaContainer.setImageBlur($res, true)
 
     # 画像のぼかしを解除する
     else if target.hasClass("reset_image_blur")
-      mediaContainer.setImageBlur($res, false)
+      UI.MediaContainer.setImageBlur($res, false)
 
     target.parent().remove()
     return

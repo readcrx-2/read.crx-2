@@ -107,7 +107,7 @@ app.boot "/view/bookmark.html", ->
 
   getPromises = app.bookmarkEntryList.getAllThreads().map( (a) ->
     boardUrl = app.URL.threadToBoard(a.url)
-    return app.BoardTitleSolver.ask(boardUrl).then( (boardName) ->
+    return app.BoardTitleSolver.ask(boardUrl).then(fn = (boardName) ->
       threadList.addItem(
         title: a.title
         url: a.url
@@ -120,7 +120,7 @@ app.boot "/view/bookmark.html", ->
         is_https: (app.URL.getScheme(a.url) is "https")
       )
       return
-    )
+    , fn)
   )
 
   Promise.all(getPromises).then( ->

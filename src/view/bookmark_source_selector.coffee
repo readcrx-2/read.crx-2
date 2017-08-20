@@ -1,44 +1,47 @@
-app.boot "/view/bookmark_source_selector.html", ->
+app.boot("/view/bookmark_source_selector.html", ->
   $view = document.documentElement
 
   new app.view.IframeView($view)
 
-  $view.on("click", (e) ->
-    return unless e.target.hasClass("node")
-    sourceSelector = e.target.closest(".view_bookmark_source_selector")
+  $view.on("click", ({target}) ->
+    return unless target.hasClass("node")
+    sourceSelector = target.closest(".view_bookmark_source_selector")
     sourceSelector.C("selected")[0]?.removeClass("selected")
-    sourceSelector.C("submit")[0]?.removeAttr("disabled")
-    e.target.addClass("selected")
+    sourceSelector.C("submit")[0]?.disabled = false
+    target.addClass("selected")
     return
   )
-  $view.C("submit")[0].on("click", (e) ->
-    bookmark_id = (
-      e.target
+  $view.C("submit")[0].on("click", ({target}) ->
+    {bookmarkId} = (
+      target
         .closest(".view_bookmark_source_selector")
           .$(".node.selected")
-            .dataset.bookmarkId
+            .dataset
     )
-    app.config.set("bookmark_id", bookmark_id)
-    app.bookmarkEntryList.setRootNodeId(bookmark_id)
+    app.config.set("bookmark_id", bookmarkId)
+    app.bookmarkEntryList.setRootNodeId(bookmarkId)
     parent.postMessage(JSON.stringify(type: "request_killme"), location.origin)
     return
   )
 
-  fn = (array_of_tree, ul) ->
-    for tree in array_of_tree when tree.children?
+  fn = (arrayOfTree, ul) ->
+    for {title, id, children} in arrayOfTree when children?
       li = $__("li")
       span = $__("span")
       span.addClass("node")
-      span.textContent = tree.title
-      span.dataset.bookmarkId = tree.id
+      span.textContent = title
+      span.dataset.bookmarkId = id
       li.addLast(span)
       ul.addLast(li)
 
       cul = $__("ul")
       li.addLast(cul)
 
-      fn(tree.children, cul)
-    null
+      fn(children, cul)
+    return
 
-  parent.chrome.bookmarks.getTree (array_of_tree) ->
-    fn(array_of_tree[0].children, $view.$(".node_list > ul"))
+  parent.chrome.bookmarks.getTree( (arrayOfTree) ->
+    fn(arrayOfTree[0].children, $view.$(".node_list > ul"))
+  )
+  return
+)

@@ -182,7 +182,7 @@ class HistoryIO extends SettingIO
     )
     return
 
-app.boot "/view/config.html", ["cache", "bbsmenu"], (Cache, BBSMenu) ->
+app.boot("/view/config.html", ["cache", "bbsmenu"], (Cache, BBSMenu) ->
   $view = document.documentElement
 
   new app.view.IframeView($view)
@@ -197,77 +197,87 @@ app.boot "/view/config.html", ["cache", "bbsmenu"], (Cache, BBSMenu) ->
     return
 
   #閉じるボタン
-  $view.C("button_close")[0].on "click", ->
+  $view.C("button_close")[0].on("click", ->
     if frameElement
       tmp = type: "request_killme"
       parent.postMessage(JSON.stringify(tmp), location.origin)
     whenClose()
     return
+  )
 
-  window.on "unload", ->
+  window.on("unload", ->
     whenClose()
     return
+  )
 
   #掲示板を開いたときに閉じる
   for dom in $view.C("open_in_rcrx")
-    dom.on "click", ->
+    dom.on("click", ->
       $view.C("button_close")[0].click()
       return
+    )
 
   #汎用設定項目
   for dom in $view.$$("input.direct[type=\"text\"], textarea.direct")
     dom.value = app.config.get(dom.name) or ""
-    dom.on "input", ->
+    dom.on("input", ->
       app.config.set(@name, @value)
       return
+    )
 
   for dom in $view.$$("input.direct[type=\"number\"]")
     dom.value = app.config.get(dom.name) or "0"
-    dom.on "input", ->
+    dom.on("input", ->
       app.config.set(@name, if Number.isInteger(+@value) then @value else "0")
       return
+    )
 
   for dom in $view.$$("input.direct[type=\"checkbox\"]")
     dom.checked = app.config.get(dom.name) is "on"
-    dom.on "change", ->
+    dom.on("change", ->
       app.config.set(@name, if @checked then "on" else "off")
       return
+    )
 
   for dom in $view.$$("input.direct[type=\"radio\"]")
     if dom.value is app.config.get(dom.name)
       dom.checked = true
-    dom.on "change", ->
+    dom.on("change", ->
       val = $view.$("""input[name="#{@name}"]:checked""").value
       app.config.set(@name, val)
       return
+    )
 
   for dom in $view.$$("input.direct[type=\"range\"]")
     dom.value = app.config.get(dom.name) or "0"
     $view.C("#{dom.name}_text")[0].textContent = dom.value
-    dom.on "input", ->
+    dom.on("input", ->
       $view.C("#{@name}_text")[0].textContent = @value
       app.config.set(@name, @value)
       return
+    )
 
   #バージョン情報表示
   $view.C("version_text")[0].textContent = "#{app.manifest.name} v#{app.manifest.version} + #{navigator.userAgent}"
 
-  $view.C("version_copy")[0].on "click", ->
+  $view.C("version_copy")[0].on("click", ->
     app.clipboardWrite($$.C("version_text")[0].textContent)
     return
+  )
 
-  $view.C("keyboard_help")[0].on "click", (e) ->
+  $view.C("keyboard_help")[0].on("click", (e) ->
     e.preventDefault()
 
     app.message.send("showKeyboardHelp", null, parent)
     return
+  )
 
   #忍法帖関連機能
   do ->
     $ninjaInfo = $view.C("ninja_info")[0]
 
     updateNinjaInfo = ->
-      app.Ninja.getCookie (cookies) ->
+      app.Ninja.getCookie( (cookies) ->
         $ninjaInfo.removeChildren()
 
         backup = app.Ninja.getBackup()
@@ -303,41 +313,45 @@ app.boot "/view/config.html", ["cache", "bbsmenu"], (Cache, BBSMenu) ->
 
           $ninjaInfo.addLast($div)
         return
+      )
       return
 
     updateNinjaInfo()
 
     # 「Cookieを削除」ボタン
-    $ninjaInfo.on "click", (e) ->
-      return unless e.target.matches(".ninja_item_cookie_found > button")
-      siteId = e.target.closest(".ninja_item").dataset.siteid
+    $ninjaInfo.on("click", ({target}) ->
+      return unless target.matches(".ninja_item_cookie_found > button")
+      siteId = target.closest(".ninja_item").dataset.siteid
       app.Ninja.deleteCookie(siteId, updateNinjaInfo)
       return
+    )
 
     # 「バックアップから復元」ボタン
-    $ninjaInfo.on "click", (e) ->
-      return unless e.target.matches(".ninja_item_cookie_notfound > button")
-      siteId = e.target.closest(".ninja_item").dataset.siteid
+    $ninjaInfo.on("click", ({target}) ->
+      return unless target.matches(".ninja_item_cookie_notfound > button")
+      siteId = target.closest(".ninja_item").dataset.siteid
       app.Ninja.restore(siteId, updateNinjaInfo)
       return
+    )
 
     # 「バックアップを削除」ボタン
-    $ninjaInfo.on "click", (e) ->
-      return unless e.target.matches(".ninja_item_backup_available > button")
-      siteId = e.target.closest(".ninja_item").dataset.siteid
-      UI.Dialog("confirm", {
+    $ninjaInfo.on("click", ({target}) ->
+      return unless target.matches(".ninja_item_backup_available > button")
+      siteId = target.closest(".ninja_item").dataset.siteid
+      UI.Dialog("confirm",
         message: "本当に削除しますか？"
-      }).then (result) ->
-        if result
-          app.Ninja.deleteBackup(siteId)
-          updateNinjaInfo()
+      ).then( (result) ->
+        return unless result
+        app.Ninja.deleteBackup(siteId)
+        updateNinjaInfo()
         return
+      )
       return
+    )
     return
 
   #板覧更新ボタン
-  $view.C("bbsmenu_reload")[0].on "click", (e) ->
-    $button = e.currentTarget
+  $view.C("bbsmenu_reload")[0].on("click", ({currentTarget: $button}) ->
     $status = $$.I("bbsmenu_reload_status")
 
     $button.disabled = true
@@ -345,7 +359,7 @@ app.boot "/view/config.html", ["cache", "bbsmenu"], (Cache, BBSMenu) ->
     $status.textContent = "更新中"
 
     BBSMenu.get( (res) ->
-      $button.removeAttr("disabled")
+      $button.disabled = false
       if res.status is "success"
         $status.setClass("done")
         $status.textContent = "更新完了"
@@ -359,6 +373,7 @@ app.boot "/view/config.html", ["cache", "bbsmenu"], (Cache, BBSMenu) ->
       return
     , true)
     return
+  )
 
   #履歴
   new HistoryIO(
@@ -416,50 +431,54 @@ app.boot "/view/config.html", ["cache", "bbsmenu"], (Cache, BBSMenu) ->
 
   do ->
     #キャッシュ削除ボタン
-    $clear_button = $view.C("cache_clear")[0]
+    $clearButton = $view.C("cache_clear")[0]
     $status = $$.I("cache_status")
 
-    Cache.count().then (count) ->
+    Cache.count().then( (count) ->
       $status.textContent = "#{count}件"
       return
+    )
 
-    $clear_button.on "click", ->
-      $clear_button.remove()
+    $clearButton.on("click", ->
+      $clearButton.remove()
       $status.textContent = "削除中"
 
-      Cache.delete()
-        .then ->
-          $status.textContent = "削除完了"
-          return
-        .catch ->
-          $status.textContent = "削除失敗"
-          return
+      Cache.delete().then( ->
+        $status.textContent = "削除完了"
+        return
+      , ->
+        $status.textContent = "削除失敗"
+        return
+      )
       return
+    )
     #キャッシュ範囲削除ボタン
-    $clear_range_button = $view.C("cache_range_clear")[0]
-    $clear_range_button.on "click", ->
+    $clearRangeButton = $view.C("cache_range_clear")[0]
+    $clearRangeButton.on("click", ->
       $status.textContent = "範囲指定削除中"
 
-      Cache.clearRange(parseInt($view.C("cache_date_range")[0].value))
-        .then ->
-          $status.textContent = "削除完了"
-          return
-        .catch ->
-          $status.textContent = "削除失敗"
-          return
+      Cache.clearRange(parseInt($view.C("cache_date_range")[0].value)).then( ->
+        $status.textContent = "削除完了"
+        return
+      , ->
+        $status.textContent = "削除失敗"
+        return
+      )
       return
+    )
     return
 
   do ->
     #ブックマークフォルダ変更ボタン
-    $view.C("bookmark_source_change")[0].on "click", ->
+    $view.C("bookmark_source_change")[0].on("click", ->
       app.message.send("open", url: "bookmark_source_selector")
       return
+    )
 
     #ブックマークフォルダ表示
     do updateName = ->
-      chrome.bookmarks.get(app.config.get("bookmark_id"), (res) ->
-        $$.I("bookmark_source_name").textContent = res[0].title
+      chrome.bookmarks.get(app.config.get("bookmark_id"), ([folder]) ->
+        $$.I("bookmark_source_name").textContent = folder.title
         return
       )
     app.message.addListener("config_updated", (message) ->
@@ -469,31 +488,34 @@ app.boot "/view/config.html", ["cache", "bbsmenu"], (Cache, BBSMenu) ->
     return
 
   #ブックマークインポートボタン
-  $view.C("import_bookmark")[0].on "click", (e) ->
+  $view.C("import_bookmark")[0].on("click", ({currentTarget: $button}) ->
     rcrx_webstore = "hhjpdicibjffnpggdiecaimdgdghainl"
     rcrx_debug = "bhffdiookpgmjkaeiagoecflopbnphhi"
     req = "export_bookmark"
 
-    $button = e.currentTarget
     $status = $$.I("import_bookmark_status")
 
     $button.disabled = true
     $status.textContent = "インポート中"
 
     new Promise( (resolve, reject) ->
-      parent.chrome.runtime.sendMessage rcrx_webstore, req, (res) ->
+      parent.chrome.runtime.sendMessage(rcrx_webstore, req, (res) ->
         if res
           resolve(res)
         else
           reject()
+        return
+      )
       return
     ).catch( ->
       return new Promise( (resolve, reject) ->
-        parent.chrome.runtime.sendMessage rcrx_debug, req, (res) ->
+        parent.chrome.runtime.sendMessage(rcrx_debug, req, (res) ->
           if res
             resolve(res)
           else
             reject()
+          return
+        )
         return
       )
     ).then( (res) ->
@@ -510,39 +532,46 @@ app.boot "/view/config.html", ["cache", "bbsmenu"], (Cache, BBSMenu) ->
       $button.disabled = false
       return
     )
+    return
+  )
 
   #「テーマなし」設定
   if app.config.get("theme_id") is "none"
     $view.C("theme_none")[0].checked = true
 
-  app.message.addListener "config_updated", (message) ->
+  app.message.addListener("config_updated", (message) ->
     if message.key is "theme_id"
       $view.C("theme_none")[0].checked = (message.val is "none")
     return
+  )
 
-  $view.C("theme_none")[0].on "click", ->
+  $view.C("theme_none")[0].on("click", ->
     app.config.set("theme_id", if @checked then "none" else "default")
     return
+  )
 
   #bbsmenu設定
   resetBBSMenu = ->
-    app.config.del("bbsmenu").then ->
+    app.config.del("bbsmenu").then( ->
       $view.$(".direct.bbsmenu").value = app.config.get("bbsmenu")
       $$.C("bbsmenu_reload")[0].click()
+    )
 
   if $view.$(".direct.bbsmenu").value is ""
     resetBBSMenu()
 
-  $view.$(".direct.bbsmenu").on "change", ->
+  $view.$(".direct.bbsmenu").on("change", ->
     if $view.$(".direct.bbsmenu").value isnt ""
       $$.C("bbsmenu_reload")[0].click()
     else
       resetBBSMenu()
     return
+  )
 
-  $view.C("bbsmenu_reset")[0].on "click", ->
+  $view.C("bbsmenu_reset")[0].on("click", ->
     resetBBSMenu()
     return
+  )
 
   # 設定をインポート/エクスポート
   new SettingIO(
@@ -550,7 +579,6 @@ app.boot "/view/config.html", ["cache", "bbsmenu"], (Cache, BBSMenu) ->
     importFunc: (file) ->
       json = JSON.parse(file)
       for key, value of json
-        key_before = key
         key = key.slice(7)
         if key isnt "theme_id"
           $key = $view.$("input[name=\"#{key}\"]")
@@ -581,8 +609,8 @@ app.boot "/view/config.html", ["cache", "bbsmenu"], (Cache, BBSMenu) ->
       return
     exportFunc: ->
       content = app.config.getAll()
-      content = content.replace(/"config_last_board_sort_config":".*?","/,"\"")
-      content = content.replace(/"config_last_version":".*?","/,"\"")
+        .replace(/"config_last_board_sort_config":".*?","/,"\"")
+        .replace(/"config_last_version":".*?","/,"\"")
       return content
   )
 
@@ -607,15 +635,16 @@ app.boot "/view/config.html", ["cache", "bbsmenu"], (Cache, BBSMenu) ->
   )
 
   #過去の履歴をインポート
+  $replacestrStatus = $$.I("history_from_1151_status")
   $view.C("history_from_1151")[0].on "click", ->
-    $replacestr_status.setClass("loading")
-    $replacestr_status.textContent = "インポート中"
+    $replacestrStatus.setClass("loading")
+    $replacestrStatus.textContent = "インポート中"
     hisPro = new Promise( (resolve, reject) ->
       openDatabase("History", "", "History", 0).transaction( (tx) ->
         tx.executeSql("SELECT * FROM History", [], (t, his) ->
           h = Array.from(his.rows)
-          h.map( (a) ->
-            return app.History.add(a.url, a.title, a.date)
+          h.map( ({url, title, date}) ->
+            return app.History.add(url, title, date)
           )
           Promise.all(h).then( ->
             t.executeSql("drop table History", [])
@@ -639,8 +668,8 @@ app.boot "/view/config.html", ["cache", "bbsmenu"], (Cache, BBSMenu) ->
       openDatabase("WriteHistory", "", "WriteHistory", 0).transaction( (tx) ->
         tx.executeSql("SELECT * FROM WriteHistory", [], (t, whis) ->
           w = Array.from(whis.rows)
-          w.map( (a) ->
-            return app.WriteHistory.add(a.url, a.res, a.title, a.name, a.mail, a.input_name, a.mail, a.message, a.date)
+          w.map( ({url, res, title, name, mail, input_name, message, date}) ->
+            return app.WriteHistory.add(url, res, title, name, mail, input_name, mail, message, date)
           )
           Promise.all(w).then( ->
             t.executeSql("drop table WriteHistory", [])
@@ -686,12 +715,13 @@ app.boot "/view/config.html", ["cache", "bbsmenu"], (Cache, BBSMenu) ->
       )
     )
     Promise.all([hisPro, whisPro, rsPro]).then( ->
-      $replacestr_status.addClass("done")
-      $replacestr_status.textContent = "インポート完了"
+      $replacestrStatus.addClass("done")
+      $replacestrStatus.textContent = "インポート完了"
     , (e) ->
-      $replacestr_status.addClass("fail")
-      $replacestr_status.textContent = "インポート失敗 - #{e}"
+      $replacestrStatus.addClass("fail")
+      $replacestrStatus.textContent = "インポート失敗 - #{e}"
     )
     return
 
   return
+)

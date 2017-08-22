@@ -63,10 +63,11 @@ class app.view.View
     @_changeTheme(app.config.get("theme_id"))
 
     # テーマ更新反映
-    app.message.addListener "config_updated", (message) =>
-      if message.key is "theme_id"
-        @_changeTheme(message.val)
+    app.message.addListener("config_updated", ({key, val}) =>
+      if key is "theme_id"
+        @_changeTheme(val)
       return
+    )
     return
 
   ###*
@@ -102,12 +103,18 @@ class app.view.View
         paramResNum = if paramResFlg then target.dataset.paramResNum else null
         target.removeAttribute("toggle-param-res-num")
         target.removeAttribute("ignore-res-number")
-        howToOpen = app.util.getHowToOpen(e)
+        {new_tab: openNewTab, new_window: openNewWindow, background} = app.util.getHowToOpen(e)
         newTab = app.config.get("always_new_tab") is "on"
-        newTab or= howToOpen.new_tab or howToOpen.new_window
-        background = howToOpen.background
+        newTab or= openNewTab or openNewWindow
 
-        app.message.send("open", {url, new_tab: newTab, background, title, written_res_num: writtenResNum, param_res_num: paramResNum})
+        app.message.send("open", {
+          url
+          new_tab: newTab
+          background
+          title
+          written_res_num: writtenResNum
+          param_res_num: paramResNum
+        })
       return
     )
     @$element.on("click", (e) ->
@@ -137,19 +144,18 @@ class app.view.IframeView extends app.view.View
   ###
   close: ->
     parent.postMessage(
-      JSON.stringify(type: "request_killme"),
+      JSON.stringify({type: "request_killme"})
       location.origin
     )
     return
 
-  _write: (param) ->
+  _write: (param = {}) ->
     if @$element.hasClass("view_thread")
       htmlname = "write"
       height = "300"
     else if @$element.hasClass("view_board")
       htmlname = "submit_thread"
       height = "400"
-    param or= {}
     param.title = document.title
     param.url = @$element.dataset.url
     windowX = app.config.get("write_window_x")
@@ -233,15 +239,17 @@ class app.view.IframeView extends app.view.View
   _setupCommandBox: ->
     $input = $__("input")
     $input.addClass("command")
-    $input.on "keydown", (e) =>
-      # Enter
-      if e.which is 13
-        @execCommand(e.target.value.replace(/[\s]/g, ""))
-        @_closeCommandBox()
-      # Esc
-      else if e.which is 27
-        @_closeCommandBox()
+    $input.on("keydown", ({which, target}) =>
+      switch which
+        # Enter
+        when 13
+          @execCommand(target.value.replace(/[\s]/g, ""))
+          @_closeCommandBox()
+        # Esc
+        when 27
+          @_closeCommandBox()
       return
+    )
     $input.addClass("hidden")
     @$element.addLast($input)
     return
@@ -271,33 +279,34 @@ class app.view.IframeView extends app.view.View
   @private
   ###
   _setupKeyboard: ->
-    @$element.on "keydown", (e) =>
+    @$element.on("keydown", (e) =>
+      {target, which, shiftKey, ctrlKey, metaKey} = e
       # F5 or Ctrl+r or ⌘+r
-      if e.which is 116 or (e.ctrlKey and e.which is 82) or (e.metaKey and e.which is 82)
+      if which is 116 or (ctrlKey and which is 82) or (metaKey and which is 82)
         e.preventDefault()
         command = "r"
-      else if e.ctrlKey or e.metaKey
+      else if ctrlKey or metaKey
         return
 
       # Windows版ChromeでのBackSpace誤爆対策
-      if e.which is 8 and not (e.target.tagName in ["INPUT", "TEXTAREA"])
+      if which is 8 and not (target.tagName in ["INPUT", "TEXTAREA"])
         e.preventDefault()
 
       # Esc (空白の入力欄に入力された場合)
       else if (
-        e.which is 27 and
-        e.target.tagName in ["INPUT", "TEXTAREA"] and
-        e.target.value is "" and
-        not e.target.hasClass("command")
+        which is 27 and
+        target.tagName in ["INPUT", "TEXTAREA"] and
+        target.value is "" and
+        not target.hasClass("command")
       )
         @$element.C("content")[0].focus()
 
       # 入力欄内では発動しない系
-      else if not (e.target.tagName in ["INPUT", "TEXTAREA"])
-        switch (e.which)
+      else if not (target.tagName in ["INPUT", "TEXTAREA"])
+        switch which
           # Enter
           when 13
-            if e.shiftKey
+            if shiftKey
               command = "shift+enter"
             else
               command = "enter"
@@ -306,37 +315,37 @@ class app.view.IframeView extends app.view.View
             command = "clearSelect"
           # h
           when 72
-            if e.shiftKey
+            if shiftKey
               command = "focusLeftFrame"
             else
               command = "left"
           # l
           when 76
-            if e.shiftKey
+            if shiftKey
               command = "focusRightFrame"
             else
               command = "right"
           # k
           when 75
-            if e.shiftKey
+            if shiftKey
               command = "focusUpFrame"
             else
               command = "up"
           # j
           when 74
-            if e.shiftKey
+            if shiftKey
               command = "focusDownFrame"
             else
               command = "down"
           # r
           when 82
             # Shift+r
-            if e.shiftKey
+            if shiftKey
               command = "r"
           # w
           when 87
             # Shift+w
-            if e.shiftKey
+            if shiftKey
               command = "q"
           # :
           when 186
@@ -345,7 +354,7 @@ class app.view.IframeView extends app.view.View
           # /
           when 191
             # ?
-            if e.shiftKey
+            if shiftKey
               command = "help"
             # /
             else
@@ -353,16 +362,17 @@ class app.view.IframeView extends app.view.View
               @$element.$(".searchbox, form.search > input[type=\"search\"]").focus()
           else
             # 数値
-            if 48 <= e.which <= 57
-              @_numericInput += e.which - 48
+            if 48 <= which <= 57
+              @_numericInput += which - 48
 
       if command?
         @execCommand(command, Math.max(1, +@_numericInput))
 
       # 0-9かShift以外が押された場合は数値入力を終了
-      unless 48 <= e.which <= 57 or e.which is 16
+      unless 48 <= which <= 57 or which is 16
         @_numericInput = ""
       return
+    )
     return
 
 ###*
@@ -385,49 +395,53 @@ class app.view.PaneContentView extends app.view.IframeView
   @private
   ###
   _setupEventConverter: ->
-    window.on "message", (e) =>
-      if e.origin is location.origin and typeof e.data is "string"
-        message = JSON.parse(e.data)
+    window.on("message", ({origin, data}) =>
+      return unless origin is location.origin and typeof data is "string"
+      message = JSON.parse(data)
 
-        # request_reload(postMessage) -> request_reload(event) 翻訳処理
-        if message.type is "request_reload"
-          @$element.dispatchEvent(new CustomEvent(
-            "request_reload"
-            detail:
-              force_update: message.force_update is true
-              kind: message.kind ? null
-              mes: message.mes ? null
-              name: message.name ? null
-              mail: message.mail ? null
-              title: message.title ? null
-              thread_url: message.thread_url ? null
-              written_res_num: message.written_res_num ? null
-              param_res_num: message.param_res_num ? null
-          ))
+      # request_reload(postMessage) -> request_reload(event) 翻訳処理
+      if message.type is "request_reload"
+        @$element.dispatchEvent(new CustomEvent(
+          "request_reload"
+          detail:
+            force_update: message.force_update is true
+            kind: message.kind ? null
+            mes: message.mes ? null
+            name: message.name ? null
+            mail: message.mail ? null
+            title: message.title ? null
+            thread_url: message.thread_url ? null
+            written_res_num: message.written_res_num ? null
+            param_res_num: message.param_res_num ? null
+        ))
 
-        # tab_selected(postMessage) -> tab_selected(event) 翻訳処理
-        else if message.type is "tab_selected"
-          @$element.dispatchEvent(new Event("tab_selected", bubbles: true))
+      # tab_selected(postMessage) -> tab_selected(event) 翻訳処理
+      else if message.type is "tab_selected"
+        @$element.dispatchEvent(new Event("tab_selected", bubbles: true))
       return
+    )
 
     # request_focus送出処理
-    @$element.on "mousedown", (e) ->
+    @$element.on("mousedown", ({target}) ->
       message =
         type: "request_focus"
         focus: true
 
-      if e.target.tagName in ["INPUT", "TEXTAREA"]
+      if target.tagName in ["INPUT", "TEXTAREA"]
         message.focus = false
 
       parent.postMessage(JSON.stringify(message), location.origin)
       return
+    )
+
     # view_loaded翻訳処理
-    @$element.on "view_loaded", ->
+    @$element.on("view_loaded", ->
       parent.postMessage(
-        JSON.stringify(type: "view_loaded"),
+        JSON.stringify({type: "view_loaded"}),
         location.origin
       )
       return
+    )
     return
 
 ###*
@@ -458,10 +472,10 @@ class app.view.TabContentView extends app.view.PaneContentView
   _setupTitleReporter: ->
     sendTitleUpdated = =>
       parent.postMessage(
-        JSON.stringify(
+        JSON.stringify({
           type: "title_updated"
           title: @$element.T("title")[0].textContent
-        ),
+        }),
         location.origin
       )
       return
@@ -481,10 +495,11 @@ class app.view.TabContentView extends app.view.PaneContentView
   ###
   _setupReloadButton: ->
     # View内リロードボタン
-    @$element.C("button_reload")[0]?.on "click", (e) =>
-      if not e.currentTarget.hasClass("disabled")
+    @$element.C("button_reload")[0]?.on("click", ({currentTarget}) =>
+      if not currentTarget.hasClass("disabled")
         @$element.dispatchEvent(new Event("request_reload"))
       return
+    )
     return
 
   ###*
@@ -494,42 +509,43 @@ class app.view.TabContentView extends app.view.PaneContentView
   _setupNavButton: ->
     # 戻る/進むボタン管理
     parent.postMessage(
-      JSON.stringify(type: "requestTabHistory"),
+      JSON.stringify({type: "requestTabHistory"}),
       location.origin
     )
 
-    window.on "message", (e) =>
-      if e.origin is location.origin and typeof e.data is "string"
-        message = JSON.parse(e.data)
-        if message.type is "responseTabHistory"
-          if message.history.current > 0
-            @$element.C("button_back")[0].removeClass("disabled")
+    window.on("message", ({origin, data}) =>
+      return unless origin is location.origin and typeof data is "string"
+      {type, history: {current, stack} = {}} = JSON.parse(data)
+      return unless type is "responseTabHistory"
+      if current > 0
+        @$element.C("button_back")[0].removeClass("disabled")
 
-          if message.history.current < message.history.stack.length - 1
-            @$element.C("button_forward")[0].removeClass("disabled")
+      if current < stack.length - 1
+        @$element.C("button_forward")[0].removeClass("disabled")
 
-          if (
-            message.history.stack.length is 1 and
-            app.config.get("always_new_tab") is "on"
-          )
-            @$element.C("button_back")[0].remove()
-            @$element.C("button_forward")[0].remove()
+      if (
+        stack.length is 1 and
+        app.config.get("always_new_tab") is "on"
+      )
+        @$element.C("button_back")[0].remove()
+        @$element.C("button_forward")[0].remove()
       return
+    )
 
     for dom in @$element.$$(".button_back, .button_forward")
-      dom.on "mousedown", (e) ->
+      dom.on("mousedown", (e) ->
         if e.which isnt 3
-          howToOpen = app.util.getHowToOpen(e)
-          newTab = howToOpen.new_tab or howToOpen.new_window
-          background = howToOpen.background
+          {new_tab: newTab, new_window: newWindow, background} = app.util.getHowToOpen(e)
+          newTab or= newWindow
 
           return if @hasClass("disabled")
           tmp = if @hasClass("button_back") then "Back" else "Forward"
           parent.postMessage(
-            JSON.stringify(type: "requestTab#{tmp}", newTab: newTab, background: background),
+            JSON.stringify({type: "requestTab#{tmp}", newTab, background}),
             location.origin
           )
         return
+      )
     return
 
   ###*
@@ -539,39 +555,41 @@ class app.view.TabContentView extends app.view.PaneContentView
   _setupBookmarkButton: ->
     $button = @$element.C("button_bookmark")[0]
 
-    if $button
-      url = @$element.dataset.url
+    return unless $button
+    {url} = @$element.dataset
 
-      if ///^https?://\w///.test(url)
-        if app.bookmark.get(url)
-          $button.addClass("bookmarked")
-        else
-          $button.removeClass("bookmarked")
-
-        app.message.addListener "bookmark_updated", (message) ->
-          if message.bookmark.url is url
-            if message.type is "added"
-              $button.addClass("bookmarked")
-            else if message.type is "removed"
-              $button.removeClass("bookmarked")
-          return
-
-        $button.on "click", =>
-          if app.bookmark.get(url)
-            app.bookmark.remove(url)
-          else
-            title = document.title or url
-
-            if @$element.hasClass("view_thread")
-              resCount = @$element.C("content")[0].child().length
-
-            if resCount? and resCount > 0
-              app.bookmark.add(url, title, resCount)
-            else
-              app.bookmark.add(url, title)
-          return
+    if ///^https?://\w///.test(url)
+      if app.bookmark.get(url)
+        $button.addClass("bookmarked")
       else
-        $button.remove()
+        $button.removeClass("bookmarked")
+
+      app.message.addListener("bookmark_updated", ({type, bookmark}) ->
+        if bookmark.url is url
+          if type is "added"
+            $button.addClass("bookmarked")
+          else if type is "removed"
+            $button.removeClass("bookmarked")
+        return
+      )
+
+      $button.on("click", =>
+        if app.bookmark.get(url)
+          app.bookmark.remove(url)
+        else
+          title = document.title or url
+
+          if @$element.hasClass("view_thread")
+            resCount = @$element.C("content")[0].child().length
+
+          if resCount? and resCount > 0
+            app.bookmark.add(url, title, resCount)
+          else
+            app.bookmark.add(url, title)
+        return
+      )
+    else
+      $button.remove()
     return
 
   ###*
@@ -582,29 +600,31 @@ class app.view.TabContentView extends app.view.PaneContentView
     $table = @$element.C("table_sort")[0]
     $selector = @$element.C("sort_item_selector")[0]
 
-    $table?.on "table_sort_updated", ({detail}) ->
+    $table?.on("table_sort_updated", ({detail}) ->
       for dom in $selector.T("option")
         dom.setAttr("selected", false)
         if String(detail.sort_attribute or detail.sort_index) is dom.textContent
           dom.setAttr("selected", true)
       return
+    )
 
-    $selector?.on "change", ->
+    $selector?.on("change", ->
       selected = @child()[@selectedIndex]
       config = {}
 
-      config.sort_order = selected.dataset.sortOrder or "desc"
+      config.sortOrder = selected.dataset.sortOrder or "desc"
 
       if /^\d+$/.test(@value)
-        config.sort_index = +@value
+        config.sortIndex = +@value
       else
-        config.sort_attribute = @value
+        config.sortAttribute = @value
 
       if (tmp = selected.dataset.sortType)?
-        config.sort_type = tmp
+        config.sortType = tmp
 
-      app.DOMData.get($table, "tableSorter").updateSnake(config)
+      app.DOMData.get($table, "tableSorter").update(config)
       return
+    )
     return
 
   ###*
@@ -614,23 +634,24 @@ class app.view.TabContentView extends app.view.PaneContentView
   _setupSchemeButton: ->
     $button = @$element.C("button_scheme")[0]
 
-    if $button
-      url = @$element.dataset.url
+    return unless $button
+    {url} = @$element.dataset
 
-      if ///^https?://\w///.test(url)
-        if app.URL.getScheme(url) is "https"
-          $button.addClass("https")
-        else
-          $button.removeClass("https")
-
-        $button.on "click", =>
-          app.message.send "open", {
-            url: app.URL.changeScheme(url),
-            new_tab: app.config.get("button_change_scheme_newtab") is "on"
-          }
-          return
+    if ///^https?://\w///.test(url)
+      if app.URL.getScheme(url) is "https"
+        $button.addClass("https")
       else
-        $button.remove()
+        $button.removeClass("https")
+
+      $button.on("click", ->
+        app.message.send("open",
+          url: app.URL.changeScheme(url),
+          new_tab: app.config.get("button_change_scheme_newtab") is "on"
+        )
+        return
+      )
+    else
+      $button.remove()
     return
 
   ###*
@@ -659,7 +680,7 @@ class app.view.TabContentView extends app.view.PaneContentView
         cfgName = "_bookmark"
         minSeconds = 20000
 
-    auto_load = =>
+    autoLoad = =>
       second = parseInt(app.config.get("auto_load_second#{cfgName}"))
       if second >= minSeconds
         @$element.addClass("autoload")
@@ -671,7 +692,7 @@ class app.view.TabContentView extends app.view.PaneContentView
           , second)
         else
           return setInterval( =>
-            url = @$element.dataset.url
+            {url} = @$element.dataset
             if (
               app.config.get("auto_load_all") is "on" or
               parent.$$.$(".tab_container > iframe[data-url=\"#{url}\"]").hasClass("tab_selected")
@@ -684,12 +705,12 @@ class app.view.TabContentView extends app.view.PaneContentView
         $button.addClass("hidden")
       return
 
-    auto_load_interval = auto_load()
+    autoLoadInterval = autoLoad()
 
-    app.message.addListener("config_updated", (message) ->
-      if message.key is "auto_load_second#{cfgName}"
-        clearInterval(auto_load_interval)
-        auto_load_interval = auto_load()
+    app.message.addListener("config_updated", ({key}) ->
+      if key is "auto_load_second#{cfgName}"
+        clearInterval(autoLoadInterval)
+        autoLoadInterval = autoLoad()
       return
     )
 
@@ -697,14 +718,14 @@ class app.view.TabContentView extends app.view.PaneContentView
       @$element.toggleClass("autoload_pause")
       $button.toggleClass("pause")
       if $button.hasClass("pause")
-        clearInterval(auto_load_interval)
+        clearInterval(autoLoadInterval)
       else
-        auto_load_interval = auto_load()
+        autoLoadInterval = autoLoad()
       return
     )
 
     window.on("view_unload", ->
-      clearInterval(auto_load_interval)
+      clearInterval(autoLoadInterval)
       return
     )
     return
@@ -715,114 +736,125 @@ class app.view.TabContentView extends app.view.PaneContentView
   ###
   _setupToolMenu: ->
     #メニューの表示/非表示制御
-    @$element.C("button_tool")[0]?.on "click", (e) =>
+    @$element.C("button_tool")[0]?.on("click", (e) =>
       $ul = e.currentTarget.T("ul")[0]
       $ul.toggleClass("hidden")
-      if $ul.hasClass("hidden")
-        app.defer =>
-          @$element.on "click", func = (e) =>
-            @$element.off("click", func)
-            if not e.target.hasClass("button_tool")
-              @$element.$(".button_tool > ul").addClass("hidden")
-            return
-          @$element.on "contextmenu", func = (e) =>
-            @$element.off("contextmenu", func)
-            if not e.target.hasClass("button_tool")
-              @$element.$(".button_tool > ul").addClass("hidden")
-            return
+      return unless $ul.hasClass("hidden")
+      app.defer( =>
+        @$element.on("click", func = (e) =>
+          @$element.off("click", func)
+          if not e.target.hasClass("button_tool")
+            @$element.$(".button_tool > ul").addClass("hidden")
+          return
+        )
+        @$element.on("contextmenu", func = (e) =>
+          @$element.off("contextmenu", func)
+          if not e.target.hasClass("button_tool")
+            @$element.$(".button_tool > ul").addClass("hidden")
+          return
+        )
+        return
+      )
       return
+    )
 
-    window.on "blur", =>
+    window.on("blur", =>
       @$element.$(".button_tool > ul")?.addClass("hidden")
       return
+    )
 
     # Chromeで直接開く
     do =>
-      url = @$element.dataset.url
+      {url} = @$element.dataset
 
       if url is "bookmark"
         url = "chrome://bookmarks/##{app.config.get("bookmark_id")}"
-      else if /^search:/.test(url)
+      else if url?.startsWith("search:")
         return
       else
         url = app.safeHref(url)
 
-      @$element.$(".button_link > a")?.on "click", (e) ->
+      @$element.$(".button_link > a")?.on("click", (e) ->
         e.preventDefault()
 
-        parent.chrome.tabs.create url: url
+        parent.chrome.tabs.create(url: url)
         return
+      )
       return
 
     # dat落ちを表示/非表示
-    @$element.C("button_toggle_dat")[0]?.on "click", =>
+    @$element.C("button_toggle_dat")[0]?.on("click", =>
       for dom in @$element.C("expired")
         dom.toggleClass("hidden")
       return
+    )
 
     # 未読スレッドを全て開く
-    @$element.C("button_open_updated")[0]?.on "click", =>
+    @$element.C("button_open_updated")[0]?.on("click", =>
       for dom in @$element.C("updated")
-        url = dom.dataset.href
-        title = dom.dataset.title
+        {href: url, title} = dom.dataset
         lazy = app.config.get("open_all_unread_lazy") is "on"
 
         app.message.send("open", {url, title, new_tab: true, lazy})
       return
+    )
 
     # タイトルをコピー
-    @$element.C("button_copy_title")[0]?.on "click", =>
+    @$element.C("button_copy_title")[0]?.on("click", =>
       app.clipboardWrite(document.title)
       return
+    )
 
     # URLをコピー
-    @$element.C("button_copy_url")[0]?.on "click", =>
+    @$element.C("button_copy_url")[0]?.on("click", =>
       app.clipboardWrite(@$element.dataset.url)
       return
+    )
 
     # タイトルとURLをコピー
-    @$element.C("button_copy_title_and_url")[0]?.on "click", =>
+    @$element.C("button_copy_title_and_url")[0]?.on("click", =>
       app.clipboardWrite(document.title + " " + @$element.dataset.url)
       return
+    )
 
     # 2ch.net/2ch.scに切り替え
     reg = /https?:\/\/\w+\.2ch\.(net|sc)\/\w+\/(.*?)/
     url = @$element.dataset.url
     mode = reg.exec(url)
     if mode
-      @$element.C("button_change_netsc")[0]?.on "click", =>
+      @$element.C("button_change_netsc")[0]?.on("click", =>
         newUrl = app.URL.exchangeNetSc(url)
         if newUrl
-          app.message.send "open", {
+          app.message.send("open",
             url: newUrl,
             new_tab: app.config.get("button_change_netsc_newtab") is "on"
-          }
+          )
         else
-          app.URL.convertNetSc(url)
-            .then( (res) ->
-              app.message.send "open", {
-                url: res,
-                new_tab: app.config.get("button_change_netsc_newtab") is "on"
-              }
-              return
+          app.URL.convertNetSc(url).then( (res) ->
+            app.message.send("open",
+              url: res,
+              new_tab: app.config.get("button_change_netsc_newtab") is "on"
             )
-            .catch( ->
-              msg = """
-              スレッドのURLが古いか新しいため、板一覧に2ch.netと2ch.scのペアが存在しません。
-              板一覧が更新されるのを待つか、板一覧を更新してみてください。
-              """
-              new app.Notification("現在この機能は使用できません", msg, "", "invalid")
-              return
-            )
+            return
+          ).catch( ->
+            msg = """
+            スレッドのURLが古いか新しいため、板一覧に2ch.netと2ch.scのペアが存在しません。
+            板一覧が更新されるのを待つか、板一覧を更新してみてください。
+            """
+            new app.Notification("現在この機能は使用できません", msg, "", "invalid")
+            return
+          )
         return
+      )
     else
       @$element.C("button_change_netsc")[0]?.remove()
 
     #2ch.scでscの投稿だけ表示(スレ&レス)
     if app.URL.tsld(url) is "2ch.sc"
-      @$element.C("button_only_sc")[0]?.on "click", =>
+      @$element.C("button_only_sc")[0]?.on("click", =>
         for dom in @$element.C("net")
           dom.toggleClass("hidden")
         return
+      )
     else
       @$element.C("button_only_sc")[0]?.remove()

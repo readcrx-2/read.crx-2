@@ -47,9 +47,9 @@ app.boot("/view/search.html", ["thread_search"], (ThreadSearch) ->
       if $tbody.child().length is 0
         $tbody.addClass("body_empty")
       else
-        empty = false
-        for dom in $tbody.child() when dom.style.display is "none"
-          empty = true
+        empty = true
+        for dom in $tbody.child() when dom.offsetHeight isnt 0
+          empty = false
           break
         if empty
           $tbody.addClass("body_empty")

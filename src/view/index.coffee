@@ -340,7 +340,7 @@ app.view_setup_resizer = ->
 
   tmp = app.config.get("tab_a_#{val}")
   if tmp
-    tab_a.style[val] = Math.max(Math.min(tmp, max), min) + "px"
+    $tab_a.style[val] = Math.max(Math.min(tmp, max), min) + "px"
 
   $$.I("tab_resizer").on("mousedown", (e) ->
     e.preventDefault()
@@ -358,13 +358,13 @@ app.view_setup_resizer = ->
       cursor: #{if val_axis is "X" then "col-resize" else "row-resize"}
       """
     $div.on("mousemove", (e) =>
-      tab_a.style[val] =
+      $tab_a.style[val] =
         Math.max(Math.min(e["page#{val_axis}"] - offset, max), min) + "px"
       return
     )
     $div.on("mouseup", ->
       @remove()
-      app.config.set("tab_a_#{val}", parseInt(tab_a.style[val], 10))
+      app.config.set("tab_a_#{val}", parseInt($tab_a.style[val], 10))
       return
     )
     document.body.addLast($div)

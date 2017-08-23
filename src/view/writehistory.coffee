@@ -69,8 +69,6 @@ app.boot "/view/writehistory.html", ->
   $view.C("button_history_clear")[0].on "click", ->
     UI.Dialog("confirm", {
       message: "履歴を削除しますか？"
-      label_ok: "はい"
-      label_no: "いいえ"
     }).then (res) ->
       if res
         app.WriteHistory.clear().then(load)

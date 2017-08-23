@@ -101,8 +101,6 @@ class HistoryIO extends SettingIO
     @$clearButton.on("click", =>
       UI.Dialog("confirm",
         message: "本当に削除しますか？"
-        label_ok: "はい"
-        label_no: "いいえ"
       ).then( (result) =>
         return unless result
         @$clearButton.addClass("hidden")
@@ -126,8 +124,6 @@ class HistoryIO extends SettingIO
     @$clearRangeButton.on("click", =>
       UI.Dialog("confirm",
         message: "本当に削除しますか？"
-        label_ok: "はい"
-        label_no: "いいえ"
       ).then( (result) =>
         return unless result
         @$clearRangeButton.addClass("hidden")
@@ -331,8 +327,6 @@ app.boot "/view/config.html", ["cache", "bbsmenu"], (Cache, BBSMenu) ->
       siteId = e.target.closest(".ninja_item").dataset.siteid
       UI.Dialog("confirm", {
         message: "本当に削除しますか？"
-        label_ok: "はい"
-        label_no: "いいえ"
       }).then (result) ->
         if result
           app.Ninja.deleteBackup(siteId)

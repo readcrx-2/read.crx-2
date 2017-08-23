@@ -1,14 +1,14 @@
-app.boot "/view/writehistory.html", ->
+app.boot("/view/writehistory.html", ->
   $view = document.documentElement
   $content = $$.C("content")[0]
 
   new app.view.TabContentView($view)
 
   $table = $__("table")
-  threadList = new UI.ThreadList($table, {
+  threadList = new UI.ThreadList($table,
     th: ["title", "writtenRes", "name", "mail", "message", "writtenDate"]
     searchbox: $view.C("searchbox")[0]
-  })
+  )
   app.DOMData.set($view, "threadList", threadList)
   app.DOMData.set($view, "selectableItemList", threadList)
   $content.addLast($table)
@@ -28,7 +28,7 @@ app.boot "/view/writehistory.html", ->
     else
       offset = null
 
-    app.WriteHistory.get(offset, NUMBER_OF_DATA_IN_ONCE).then (data) ->
+    app.WriteHistory.get(offset, NUMBER_OF_DATA_IN_ONCE).then( (data) ->
       if add
         loadAddCount++
       else
@@ -48,6 +48,7 @@ app.boot "/view/writehistory.html", ->
         return
       , 5000)
       return
+    )
     return
 
   $view.on("request_reload", load)
@@ -64,14 +65,17 @@ app.boot "/view/writehistory.html", ->
       load(add: true)
     else
       isInLoadArea = false
+    return
   , passive: true)
 
-  $view.C("button_history_clear")[0].on "click", ->
-    UI.Dialog("confirm", {
+  $view.C("button_history_clear")[0].on("click", ->
+    UI.Dialog("confirm",
       message: "履歴を削除しますか？"
-    }).then (res) ->
-      if res
-        app.WriteHistory.clear().then(load)
+    ).then( (res) ->
+      app.WriteHistory.clear().then(load) if res
       return
+    )
     return
+  )
   return
+)

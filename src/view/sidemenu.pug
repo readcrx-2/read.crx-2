@@ -1,25 +1,24 @@
-doctype
-html.view.view_sidemenu(data-app-version=version)
-  head
-    meta(charset="utf-8")
-    meta(name="referrer" content="no-referrer")
-    title sidemenu
-    link(rel="stylesheet" href=`/ui.css?v=${version}`)
-    link(rel="stylesheet" href=`sidemenu.css?v=${version}`)
-    script(src=`/lib/shortQuery.min.js?v=${version}` defer)
-    script(src=`/ui.js?v=${version}` defer)
-    script(src=`/app.js?v=${version}` defer)
-    script(src=`module.js?v=${version}` defer)
-    script(src=`sidemenu.js?v=${version}` defer)
-  body.content(tabindex="0")
-    form.search
-      input(type="search" name="q" placeholder="スレッド検索")
-      input(type="submit" value="")
-    h3 read.crx
-    ul
-      li: a.open_in_rcrx(data-href="bookmark" title="ブックマーク") ブックマーク
-      li: a.open_in_rcrx(data-href="history" title="閲覧履歴") 閲覧履歴
-      li: a.open_in_rcrx(data-href="writehistory" title="書込履歴") 書込履歴
-      li: a.open_in_rcrx(data-href="inputurl" title="URL指定で開く") URL指定で開く
-      li: a.open_in_rcrx(data-href="config" title="設定") 設定
-    .loading_message Loading
+extends ../_base.pug
+
+block vars
+  - var name = "sidemenu";
+  - var title = "sidemenu";
+  - var html = {};
+  - var htmlClasses = ["view", "view_sidemenu"];
+  - var body = {class: "content", tabindex: "0"};
+  - var needUI = true;
+  - var needModule = true;
+  - var needCss = true;
+
+block body
+  form.search
+    input(type="search" name="q" placeholder="スレッド検索")
+    input(type="submit" value="")
+  h3 read.crx
+  ul
+    li: a.open_in_rcrx(data-href="bookmark" title="ブックマーク") ブックマーク
+    li: a.open_in_rcrx(data-href="history" title="閲覧履歴") 閲覧履歴
+    li: a.open_in_rcrx(data-href="writehistory" title="書込履歴") 書込履歴
+    li: a.open_in_rcrx(data-href="inputurl" title="URL指定で開く") URL指定で開く
+    li: a.open_in_rcrx(data-href="config" title="設定") 設定
+  .loading_message Loading

@@ -1,30 +1,32 @@
-doctype
-html(data-app-version=version)
-  head
-    meta(charset="utf-8")
-    meta(name="referrer" content="no-referrer")
-    title
-    link(rel="stylesheet" href=`/write/write.css?v=${version}`)
-    script(src=`/lib/shortQuery.min.js?v=${version}` defer)
-    script(src=`/app.js?v=${version}` defer)
-    script(src=`/write/write.js?v=${version}` defer)
-  body.view_write
-    form
-      header
-        h1
-        button.preview_button(tabindex="1") AA表示確認
-      #main
-        input(type="submit" value="書き込む" tabindex="5")
-        label
-          |名前:
-          input.name(size="19" tabindex="2" list="names")
-        label
-          |E-mail:
-          input.mail(size="19" tabindex="3" list="mails")
-        label
-          input.sage(type="checkbox")
-          |sage
-      textarea.message(wrap="off" tabindex="4" autofocus required)
-      .notice
-    .iframe_container.hidden
-      .hide_iframe
+extends ../_base.pug
+
+block vars
+  - var name = "write";
+  - var title = "";
+  - var html = {};
+  - var htmlClasses = [""];
+  - var body = {class: "view_write"};
+  - var needUI = false;
+  - var needModule = false;
+  - var needCss = true;
+
+block body
+  form
+    header
+      h1
+      button.preview_button(tabindex="1") AA表示確認
+    #main
+      input(type="submit" value="書き込む" tabindex="5")
+      label
+        |名前:
+        input.name(size="19" tabindex="2" list="names")
+      label
+        |E-mail:
+        input.mail(size="19" tabindex="3" list="mails")
+      label
+        input.sage(type="checkbox")
+        |sage
+    textarea.message(wrap="off" tabindex="4" autofocus required)
+    .notice
+  .iframe_container.hidden
+    .hide_iframe

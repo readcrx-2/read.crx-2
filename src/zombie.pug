@@ -1,11 +1,14 @@
-doctype
-html(data-app-version=version)
-  head
-    meta(charset="utf-8")
-    meta(name="referrer" content="no-referrer")
-    title read.crx 2
-    script(src=`/lib/shortQuery.min.js?v=${version}` defer)
-    script(src=`/app.js?v=${version}` defer)
-    script(src=`/zombie.js?v=${version}` defer)
-  body
-    |read.crx 2 を終了しています
+extends _base.pug
+
+block vars
+  - var name = "zombie";
+  - var title = "read.crx 2";
+  - var html = {};
+  - var htmlClasses = [""];
+  - var body = {};
+  - var needUI = false;
+  - var needModule = false;
+  - var needCss = false;
+
+block body
+  |read.crx 2 を終了しています

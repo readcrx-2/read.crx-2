@@ -973,10 +973,10 @@ app.viewThread._draw = ($view, {forceUpdate = false, jumpResNum = -1} = {}) ->
     ).then( (successedSet) ->
       $view.removeClass("loading")
       $view.style.cursor = "auto"
-      setTimeout( ->
+      app.defer5( ->
         $reloadButton.removeClass("disabled")
         return
-      , 1000 * 5)
+      )
       if successedSet then resolve(thread) else reject()
       return
     )

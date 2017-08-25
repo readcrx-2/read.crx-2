@@ -50,7 +50,11 @@ namespace app {
   }
 
   export function defer (fn:Function):void {
-    requestIdleCallback(fn);
+    setTimeout(fn, 100);
+  }
+
+  export function defer5 (fn:Function):void {
+    setTimeout(fn, 1000 * 5);
   }
 
   export function assertArg (name:string, rule:string[], arg:any[]):boolean {

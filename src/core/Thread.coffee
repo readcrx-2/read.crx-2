@@ -45,14 +45,14 @@ class app.Thread
           hasCache = true
           if forceUpdate or Date.now() - cache.last_updated > 1000 * 3
             #通信が生じる場合のみ、progressでキャッシュを送出する
-            setTimeout( =>
+            app.defer( =>
               tmp = cache.parsed ? Thread.parse(@url, cache.data)
               return unless tmp?
               @res = tmp.res
               @title = tmp.title
               progress()
               return
-            , 100)
+            )
             reject()
           else
             resolve()

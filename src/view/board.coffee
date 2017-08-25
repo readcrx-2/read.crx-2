@@ -153,10 +153,10 @@ app.boot("/view/board.html", ["board"], (Board) ->
 
       $button = $view.C("button_reload")[0]
       $button.addClass("disabled")
-      setTimeout( ->
+      app.defer5( ->
         $button.removeClass("disabled")
         return
-      , 1000 * 5)
+      )
       return
     )
     return

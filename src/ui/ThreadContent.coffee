@@ -267,8 +267,8 @@ class UI.ThreadContent
   @return {Number} 現在読んでいると推測されるレスの番号
   ###
   getRead: ->
-    {top, left, height} = @container.getBoundingClientRect()
-    y = top + height - 1
+    {left, bottom} = @container.getBoundingClientRect()
+    y = bottom - 1
     res = document.elementFromPoint(left, y)
 
     while true

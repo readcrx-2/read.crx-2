@@ -65,10 +65,10 @@ app.boot("/view/search.html", ["thread_search"], (ThreadSearch) ->
       return
     ).then( ->
       $view.C("more")[0].addClass("hidden")
-      setTimeout( ->
+      app.defer5( ->
         $buttonReload.removeClass("disabled")
         return
-      , 5000)
+      )
       return
     )
     return

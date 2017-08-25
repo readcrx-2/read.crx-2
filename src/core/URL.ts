@@ -78,6 +78,13 @@ namespace app {
       return urlstr.slice(0, urlstr.indexOf("://"));
     }
 
+    export function setScheme (urlstr: string, protocol: string): string {
+      var split;
+
+      split = urlstr.indexOf("://");
+      return protocol + "://" + urlstr.slice(split+3);
+    }
+
     export function changeScheme (urlstr: string): string {
       var split, protocol;
 

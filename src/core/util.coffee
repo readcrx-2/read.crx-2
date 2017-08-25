@@ -49,6 +49,8 @@ do ->
   #検出出来なかった場合はrejectする
   #htmlを渡す事で通信をスキップする事が出来る
   app.util.chServerMoveDetect = (oldBoardUrl, html) ->
+    if app.URL.getScheme(oldBoardUrl) is "https"
+      oldBoardUrl = app.URL.changeScheme(oldBoardUrl)
     return new Promise( (resolve, reject) ->
       if typeof html is "string"
         resolve(html)
@@ -67,25 +69,32 @@ do ->
       #htmlから移転を判定
       res = ///location\.href="(https?://\w+\.2ch\.net/\w*/)"///.exec(html)
 
-      if res and res[1] isnt oldBoardUrl
-        return res[1]
+      if res
+        newBoardUrl = app.URL.setScheme(res[1], "http")
+        if newBoardUrl isnt oldBoardUrl
+          return newBoardUrl
       return Promise.reject()
     ).catch( ->
       #bbsmenuから検索
       return new Promise( (resolve, reject) ->
         app.BBSMenu.get( ({data}) ->
-          if data?
-            match = oldBoardUrl.match(boardUrlReg)
-            reject() unless match.length > 0
-            for category in data
-              for board in category.board
-                m = board.url.match(boardUrlReg)
-                if m? and match[1] is m[1] and match[0] isnt m[0]
-                  resolve(m[0])
-                  break
+          unless data?
             reject()
-          else
+            return
+          match = oldBoardUrl.match(boardUrlReg)
+          unless match.length > 0
             reject()
+            return
+          for category in data
+            for board in category.board
+              m = board.url.match(boardUrlReg)
+              if m?
+                oldUrl = app.URL.setScheme(match[0], "http")
+                newUrl = app.URL.setScheme(m[0], "http")
+                if match[1] is m[1] and oldUrl isnt newUrl
+                  resolve(oldUrl)
+                  return
+          reject()
           return
         )
         return

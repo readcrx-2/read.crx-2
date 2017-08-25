@@ -1,70 +1,74 @@
 do ->
-  return if /windows/i.test(navigator.userAgent)
-  if "textar_font" of localStorage
-    document.on("DOMContentLoaded", ->
-      style = $__("style")
-      style.textContent = """
-        @font-face {
-          font-family: "Textar";
-          src: url(#{localStorage.textar_font});
-        }
-      """
-      document.head.addLast(style)
-      return
-    )
+  return if navigator.platform.includes("Win")
+  font = localStorage.getItem("textar_font")
+  return unless font?
+  document.on("DOMContentLoaded", ->
+    style = $__("style")
+    style.textContent = """
+      @font-face {
+        font-family: "Textar";
+        src: url(#{font});
+      }
+    """
+    document.head.addLast(style)
+    return
+  )
   return
 
-app.boot "/write/submit_thread.html", ->
+app.boot("/write/submit_thread.html", ->
   param = app.URL.parseQuery(location.search)
-  arg = {}
-  arg.url = app.URL.fix(param.get("url"))
-  arg.title = param.get("title") ? param.get("url")
-  arg.name = param.get("name") ? app.config.get("default_name")
-  arg.mail = param.get("mail") ? app.config.get("default_mail")
-  arg.message = param.get("message") ? ""
+  arg =
+    url: app.URL.fix(param.get("url"))
+    title: param.get("title") ? param.get("url")
+    name: param.get("name") ? app.config.get("default_name")
+    mail: param.get("mail") ? app.config.get("default_mail")
+    message: param.get("message") ? ""
 
-  chrome.tabs.getCurrent (tab) ->
-    chrome.webRequest.onBeforeSendHeaders.addListener(
-      (req) ->
-        origin = chrome.extension.getURL("")[...-1]
-        is_same_origin = req.requestHeaders.some((header) -> header.name is "Origin" and (header.value is origin or header.value is "null"))
-        if req.method is "POST" and is_same_origin
-          if (
-            ///^https?://\w+\.(2ch\.net|bbspink\.com|2ch\.sc|open2ch\.net)/test/bbs\.cgi ///.test(req.url) or
-            ///^https?://jbbs\.shitaraba\.net/bbs/write\.cgi/ ///.test(req.url)
-          )
-            if (
-              app.URL.tsld(arg.url) is "2ch.sc" and
-              app.URL.getScheme(arg.url) is "https"
-            )
-              refUrl = app.URL.changeScheme(arg.url)
-            else
-              refUrl = arg.url
-            req.requestHeaders.push(name: "Referer", value: refUrl)
+  chrome.tabs.getCurrent( ({id}) ->
+    chrome.webRequest.onBeforeSendHeaders.addListener( ({method, url, requestHeaders}) ->
+      origin = chrome.extension.getURL("")[...-1]
+      isSameOrigin = requestHeaders.some( ({name, value}) ->
+        return name is "Origin" and (value is origin or value is "null")
+      )
+      if (
+        method is "POST" and isSameOrigin and
+        (
+          ///^https?://\w+\.(2ch\.net|bbspink\.com|2ch\.sc|open2ch\.net)/test/bbs\.cgi ///.test(url) or
+          ///^https?://jbbs\.shitaraba\.net/bbs/write\.cgi/ ///.test(url)
+        )
+      )
+        if (
+          app.URL.tsld(arg.url) is "2ch.sc" and
+          app.URL.getScheme(arg.url) is "https"
+        )
+          refUrl = app.URL.changeScheme(arg.url)
+        else
+          refUrl = arg.url
+        requestHeaders.push(name: "Referer", value: refUrl)
 
-            # UA変更処理
-            ua = app.config.get("useragent").trim()
-            if ua.length > 0
-              for i in [0..req.requestHeaders.length-1] when req.requestHeaders[i].name is "User-Agent"
-                req.requestHeaders[i].value = ua
-                break
+        # UA変更処理
+        ua = app.config.get("useragent").trim()
+        if ua.length > 0
+          for header, i in requestHeaders when header.name is "User-Agent"
+            requestHeaders[i].value = ua
+            break
 
-            return requestHeaders: req.requestHeaders
-        return
-      {
-        tabId: tab.id
-        types: ["sub_frame"]
-        urls: [
-          "*://*.2ch.net/test/bbs.cgi*"
-          "*://*.bbspink.com/test/bbs.cgi*"
-          "*://*.2ch.sc/test/bbs.cgi*"
-          "*://*.open2ch.net/test/bbs.cgi*"
-          "*://jbbs.shitaraba.net/bbs/write.cgi/*"
-        ]
-      }
-      ["requestHeaders", "blocking"]
-    )
+        return {requestHeaders}
+      return
+    {
+      tabId: id
+      types: ["sub_frame"]
+      urls: [
+        "*://*.2ch.net/test/bbs.cgi*"
+        "*://*.bbspink.com/test/bbs.cgi*"
+        "*://*.2ch.sc/test/bbs.cgi*"
+        "*://*.open2ch.net/test/bbs.cgi*"
+        "*://jbbs.shitaraba.net/bbs/write.cgi/*"
+      ]
+    }
+    ["requestHeaders", "blocking"])
     return
+  )
 
   $view = $$.C("view_write")[0]
 
@@ -85,6 +89,7 @@ app.boot "/write/submit_thread.html", ->
     $button.textContent = "戻る"
     $button.on("click", ->
       @parentElement.remove()
+      return
     )
     $div.addLast($button)
     document.body.addLast($div)
@@ -114,7 +119,7 @@ app.boot "/write/submit_thread.html", ->
   )
 
   $notice = $view.C("notice")[0]
-  on_error = (message) ->
+  onError = (message) ->
     for dom from $view.$$("form input, form textarea")
       dom.disabled = false unless dom.hasClass("mail") and app.config.get("sage_flag") is "on"
 
@@ -125,52 +130,60 @@ app.boot "/write/submit_thread.html", ->
       UI.Animate.fadeIn($view.C("iframe_container")[0])
     return
 
-  write_timer =
+  writeTimer =
     wake: ->
-      if @timer? then @kill()
-      @timer = setTimeout ->
-        on_error("一定時間経過しても応答が無いため、処理を中断しました")
-      , 1000 * 30
+      @kill() if @timer?
+      @timer = setTimeout( ->
+        onError("一定時間経過しても応答が無いため、処理を中断しました")
+        return
+      , 1000 * 30)
+      return
     kill: ->
       clearTimeout(@timer)
       @timer = null
+      return
 
-  window.on "message", (e) ->
-    message = JSON.parse(e.data)
-    if message.type is "ping"
-      e.source.postMessage("write_iframe_pong:thread", "*")
-      write_timer.wake()
-    else if message.type is "success"
-      $notice.textContent = "書き込み成功"
-      setTimeout ->
-        mes = $view.C("message")[0].value
-        name = $view.C("name")[0].value
-        mail = $view.C("mail")[0].value
-        title = $view.C("title")[0].value
-        if app.URL.tsld(arg.url) in ["2ch.net", "2ch.sc", "bbspink.com", "open2ch.net"]
-          keys = message.key.match(/.*\/test\/read\.cgi\/(\w+?)\/(\d+)\/l\d+/)
-          if !keys?
-            $notice.textContent = "書き込み失敗 - 不明な転送場所"
-          else
-            server = arg.url.match(/^(https?:\/\/\w+\.(?:2ch\.net|2ch\.sc|bbspink\.com|open2ch\.net)).*/)[1]
-            url = "#{server}/test/read.cgi/#{keys[1]}/#{keys[2]}"
-            chrome.runtime.sendMessage(type: "written", kind: "own", url: arg.url, thread_url: url, mes: mes, name: name, mail: mail, title: title)
-        else if app.URL.tsld(arg.url) is "shitaraba.net"
-          chrome.runtime.sendMessage(type: "written", kind: "board", url: arg.url, mes: mes, name: name, mail: mail, title: title)
-        chrome.tabs.getCurrent (tab) ->
-          chrome.tabs.remove(tab.id)
-      , 2000
-      write_timer.kill()
-    else if message.type is "confirm"
-      UI.Animate.fadeIn($view.C("iframe_container")[0])
-      write_timer.kill()
-    else if message.type is "error"
-      on_error(message.message)
-      write_timer.kill()
+  window.on("message", ({data, source}) ->
+    {type, key, message} = JSON.parse(data)
+    switch type
+      when "ping"
+        source.postMessage("write_iframe_pong:thread", "*")
+        writeTimer.wake()
+      when "success"
+        $notice.textContent = "書き込み成功"
+        setTimeout( ->
+          mes = $view.C("message")[0].value
+          name = $view.C("name")[0].value
+          mail = $view.C("mail")[0].value
+          title = $view.C("title")[0].value
+          if app.URL.tsld(arg.url) in ["2ch.net", "2ch.sc", "bbspink.com", "open2ch.net"]
+            keys = key.match(/.*\/test\/read\.cgi\/(\w+?)\/(\d+)\/l\d+/)
+            unless keys?
+              $notice.textContent = "書き込み失敗 - 不明な転送場所"
+            else
+              server = arg.url.match(/^(https?:\/\/\w+\.(?:2ch\.net|2ch\.sc|bbspink\.com|open2ch\.net)).*/)[1]
+              url = "#{server}/test/read.cgi/#{keys[1]}/#{keys[2]}"
+              chrome.runtime.sendMessage({type: "written", kind: "own", url: arg.url, thread_url: url, mes, name, mail, title})
+          else if app.URL.tsld(arg.url) is "shitaraba.net"
+            chrome.runtime.sendMessage({type: "written", kind: "board", url: arg.url, mes, name, mail, title})
+          chrome.tabs.getCurrent( ({id}) ->
+            chrome.tabs.remove(id)
+            return
+          )
+          return
+        , 2000)
+        writeTimer.kill()
+      when "confirm"
+        UI.Animate.fadeIn($view.C("iframe_container")[0])
+        writeTimer.kill()
+      when "error"
+        onError(message)
+        writeTimer.kill()
     return
+  )
 
-  $view.C("hide_iframe")[0].on "click", ->
-    write_timer.kill()
+  $view.C("hide_iframe")[0].on("click", ->
+    writeTimer.kill()
     $iframeContainer = $view.C("iframe_container")[0]
     UI.Animate.fadeOut($iframeContainer).on("finish", ->
       $iframeContainer.T("iframe")[0].remove()
@@ -180,6 +193,7 @@ app.boot "/write/submit_thread.html", ->
       dom.disabled = false unless dom.hasClass("mail") and app.config.get("sage_flag") is "on"
     $notice.textContent = ""
     return
+  )
 
   document.title = arg.title + "板"
   $h1 = $view.T("h1")[0]
@@ -195,14 +209,14 @@ app.boot "/write/submit_thread.html", ->
     for dom from $view.$$("input, textarea")
       dom.disabled = true unless dom.hasClass("mail") and app.config.get("sage_flag") is "on"
 
-    guess_res = app.URL.guessType(arg.url)
+    {bbsType} = app.URL.guessType(arg.url)
     scheme = app.URL.getScheme(arg.url)
 
-    iframe_arg =
-      rcrx_name: $view.C("name")[0].value
-      rcrx_mail: if $view.C("sage")[0].checked then "sage" else $view.C("mail")[0].value
-      rcrx_title: $view.C("title")[0].value
-      rcrx_message: $view.C("message")[0].value
+    iframeArg =
+      rcrxName: $view.C("name")[0].value
+      rcrxMail: if $view.C("sage")[0].checked then "sage" else $view.C("mail")[0].value
+      rcrxTitle: $view.C("title")[0].value
+      rcrxMessage: $view.C("message")[0].value
 
     $iframe = $__("iframe")
     $iframe.src = "/view/empty.html"
@@ -210,39 +224,39 @@ app.boot "/write/submit_thread.html", ->
       $iframe.off("load", fn)
 
       #2ch
-      if guess_res.bbsType is "2ch"
+      if bbsType is "2ch"
         #open2ch
         if app.URL.tsld(arg.url) is "open2ch.net"
           tmp = arg.url.split("/")
-          form_data =
+          formData =
             action: "#{scheme}://#{tmp[2]}/test/bbs.cgi"
             charset: "UTF-8"
             input:
               submit: "新規スレッド作成"
               bbs: tmp[3]
-              subject: iframe_arg.rcrx_title
-              FROM: iframe_arg.rcrx_name
-              mail: iframe_arg.rcrx_mail
+              subject: iframeArg.rcrxTitle
+              FROM: iframeArg.rcrxName
+              mail: iframeArg.rcrxMail
             textarea:
-              MESSAGE: iframe_arg.rcrx_message
+              MESSAGE: iframeArg.rcrxMessage
         else
           tmp = arg.url.split("/")
-          form_data =
+          formData =
             action: "#{scheme}://#{tmp[2]}/test/bbs.cgi"
             charset: "Shift_JIS"
             input:
               submit: "新規スレッド作成"
               time: Math.floor(Date.now() / 1000) - 60
               bbs: tmp[3]
-              subject: iframe_arg.rcrx_title
-              FROM: iframe_arg.rcrx_name
-              mail: iframe_arg.rcrx_mail
+              subject: iframeArg.rcrxTitle
+              FROM: iframeArg.rcrxName
+              mail: iframeArg.rcrxMail
             textarea:
-              MESSAGE: iframe_arg.rcrx_message
+              MESSAGE: iframeArg.rcrxMessage
       #したらば
-      else if guess_res.bbsType is "jbbs"
+      else if bbsType is "jbbs"
         tmp = arg.url.split("/")
-        form_data =
+        formData =
           action: "#{scheme}://jbbs.shitaraba.net/bbs/write.cgi/#{tmp[3]}/#{tmp[4]}/new/"
           charset: "EUC-JP"
           input:
@@ -250,22 +264,22 @@ app.boot "/write/submit_thread.html", ->
             TIME: Math.floor(Date.now() / 1000) - 60
             DIR: tmp[3]
             BBS: tmp[4]
-            SUBJECT: iframe_arg.rcrx_title
-            NAME: iframe_arg.rcrx_name
-            MAIL: iframe_arg.rcrx_mail
+            SUBJECT: iframeArg.rcrxTitle
+            NAME: iframeArg.rcrxName
+            MAIL: iframeArg.rcrxMail
           textarea:
-            MESSAGE: iframe_arg.rcrx_message
+            MESSAGE: iframeArg.rcrxMessage
       #フォーム生成
       form = @contentDocument.createElement("form")
-      form.setAttribute("accept-charset", form_data.charset)
-      form.action = form_data.action
+      form.setAttribute("accept-charset", formData.charset)
+      form.action = formData.action
       form.method = "POST"
-      for key, val of form_data.input
+      for key, val of formData.input
         input = @contentDocument.createElement("input")
         input.name = key
         input.setAttribute("value", val)
         form.appendChild(input)
-      for key, val of form_data.textarea
+      for key, val of formData.textarea
         textarea = @contentDocument.createElement("textarea")
         textarea.name = key
         textarea.textContent = val
@@ -276,7 +290,7 @@ app.boot "/write/submit_thread.html", ->
     )
     $$.C("iframe_container")[0].addLast($iframe)
 
-    write_timer.wake()
+    writeTimer.wake()
 
     $notice.textContent = "書き込み中"
     return
@@ -286,11 +300,11 @@ app.boot "/write/submit_thread.html", ->
   do ->
     return if app.URL.tsld(arg.url) isnt "2ch.net"
 
-    app.Ninja.getCookie (cookies) ->
+    app.Ninja.getCookie( (cookies) ->
       backup = app.Ninja.getBackup()
 
-      availableCookie = cookies.some((info) -> info.site.siteId is "2ch")
-      availableBackup = backup.some((info) -> info.site.siteId is "2ch")
+      availableCookie = cookies.some(({site}) -> site.siteId is "2ch")
+      availableBackup = backup.some(({site}) -> site.siteId is "2ch")
 
       if (not availableCookie) and availableBackup
         $notice.innerHTML = """
@@ -298,15 +312,18 @@ app.boot "/write/submit_thread.html", ->
           <button class="ninja_restore">バックアップから復元</button>
         """
       return
+    )
 
-    $view.on "click", (e) ->
+    $view.on("click", (e) ->
       return unless e.target.hasClass("ninja_restore")
       e.preventDefault()
       $notice.textContent = "復元中です。"
-      app.Ninja.restore "2ch", ->
+      app.Ninja.restore("2ch", ->
         $notice.textContent = "忍法帳クッキーの復元が完了しました。"
         return
+      )
       return
+    )
     return
 
   window.on("beforeunload", ->
@@ -314,3 +331,4 @@ app.boot "/write/submit_thread.html", ->
     return
   )
   return
+)

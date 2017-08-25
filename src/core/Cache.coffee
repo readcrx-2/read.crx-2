@@ -3,7 +3,6 @@
 @class Cache
 @constructor
 @param {String} key
-@requires jQuery
 ###
 class app.Cache
   constructor: (@key) ->

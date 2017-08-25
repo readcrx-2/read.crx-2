@@ -33,7 +33,6 @@ app.view ?= {}
 @class View
 @constructor
 @param {Element} element
-@requires jQuery
 ###
 class app.view.View
   constructor: (@$element) ->

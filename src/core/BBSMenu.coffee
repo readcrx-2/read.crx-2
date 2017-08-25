@@ -3,7 +3,6 @@
 @class BBSMenu
 @static
 @requires app.Cache
-@requires jQuery
 ###
 class app.BBSMenu
   ###*

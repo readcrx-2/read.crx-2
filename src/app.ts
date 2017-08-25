@@ -551,12 +551,6 @@ namespace app {
         fire_definition(module_id, dependencies, definition);
       }
     };
-
-    if (window["jQuery"]) {
-      app.module("jquery", [], (callback) => {
-        callback(window["jQuery"]);
-      });
-    }
   }
 
   export function boot (path:string, requirements, fn):void {

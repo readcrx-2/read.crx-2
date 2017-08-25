@@ -28,6 +28,10 @@ app.boot("/view/search.html", ["thread_search"], (ThreadSearch) ->
   )
   app.DOMData.set($view, "threadList", threadList)
   app.DOMData.set($view, "selectableItemList", threadList)
+  tableSorter = new UI.TableSorter($table)
+  app.DOMData.set($table, "tableSorter", tableSorter)
+  for dom in $table.$$("th.res, th.heat")
+    dom.dataset.tableSortType = "num"
   $$.C("content")[0].addFirst($table)
 
   threadSearch = new ThreadSearch(query)

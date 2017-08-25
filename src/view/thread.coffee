@@ -145,29 +145,36 @@ app.boot("/view/thread.html", ->
     openedAt = Date.now()
 
     app.viewThread._readStateManager($view)
-    $view.on("read_state_attached", ({ detail: {jumpResNum} = {} }) ->
+    $view.on("read_state_attached", ({ detail: {jumpResNum, requestReloadFlag, loadCount} = {} }) ->
       onScroll = false
       $content.on("scroll", ->
         onScroll = true
         return
       , once: true)
 
-      $last = $content.C("last")[0]
-      lastNum = $content.$(":scope > article:last-child").C("num")[0].textContent
-      # 指定レス番号へ
-      if 0 < jumpResNum <= lastNum
-        threadContent.select(jumpResNum, false, true, -60)
-      # 最終既読位置へ
-      else if $last?
-        offset = $last.attr("last-offset") ? 0
-        threadContent.scrollTo($last, false, +offset)
+      do defaultScroll = ->
+        $last = $content.C("last")[0]
+        lastNum = $content.$(":scope > article:last-child").C("num")[0].textContent
+        # 指定レス番号へ
+        if 0 < jumpResNum <= lastNum
+          threadContent.select(jumpResNum, false, true, -60)
+        # 最終既読位置へ
+        else if $last?
+          offset = $last.attr("last-offset") ? 0
+          threadContent.scrollTo($last, false, +offset)
+        return
 
       #スクロールされなかった場合も余所の処理を走らすためにscrollを発火
       unless onScroll
         $content.dispatchEvent(new Event("scroll"))
 
       #二度目以降のread_state_attached時
-      $view.on("read_state_attached", ({ detail: {jumpResNum} = {} }) ->
+      $view.on("read_state_attached", ({ detail: {jumpResNum, requestReloadFlag, loadCount} = {} }) ->
+        # リロード時の一回目の処理
+        if requestReloadFlag and loadCount is 1
+          defaultScroll()
+          return
+
         moveMode = "new"
         #通常時と自動更新有効時で、更新後のスクロールの動作を変更する
         moveMode = app.config.get("auto_load_move") if $view.hasClass("autoload") and not $view.hasClass("autoload_pause")
@@ -1025,9 +1032,8 @@ app.viewThread._readStateManager = ($view) ->
           attachedReadState.received = -999
         else
           attachedReadState.received = readState.received
-        requestReloadFlag = false
 
-        $view.dispatchEvent(new CustomEvent("read_state_attached", detail: {jumpResNum}))
+        $view.dispatchEvent(new CustomEvent("read_state_attached", detail: {jumpResNum, requestReloadFlag, loadCount}))
         if attachedReadState.read > 0 and attachedReadState.received > 0
           app.message.send("read_state_updated", {board_url: boardUrl, read_state: readState})
         return
@@ -1048,10 +1054,10 @@ app.viewThread._readStateManager = ($view) ->
       $content.C("received")[0]?.removeClass("received")
       $content.child()[attachedReadState.received - 1]?.addClass("received")
       tmpReadState.received = attachedReadState.received
-    requestReloadFlag = false
-    $view.dispatchEvent(new CustomEvent("read_state_attached", detail: {jumpResNum}))
+    $view.dispatchEvent(new CustomEvent("read_state_attached", detail: {jumpResNum, requestReloadFlag, loadCount}))
     if tmpReadState.read and tmpReadState.received
       app.message.send("read_state_updated", {board_url: boardUrl, read_state: tmpReadState})
+    requestReloadFlag = false
     return
   )
 

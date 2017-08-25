@@ -84,6 +84,20 @@ class UI.ThreadContent
     ###
     @_hiddenSelectors = null
 
+    ###*
+    @property _isScrolling
+    @type Boolean
+    @private
+    ###
+    @_isScrolling = false
+
+    ###*
+    @property _scrollRequestID
+    @type Number
+    @private
+    ###
+    @_scrollRequestID = 0
+
     try
       @harmfulReg = new RegExp(app.config.get("image_blur_word"))
       @findHarmfulFlag = true
@@ -96,6 +110,14 @@ class UI.ThreadContent
         background_color: "red"
       )
       @findHarmfulFlag = false
+
+    @container.on "scrollstart", =>
+      @_isScrolling = true
+      return
+
+    @container.on "scrollfinish", =>
+      @_isScrolling = false
+      return
 
     return
 
@@ -248,6 +270,7 @@ class UI.ThreadContent
 
       # スクロールの実行
       if animate
+        cancelAnimationFrame(@_scrollRequestID) if @_isScrolling
         do =>
           @container.dispatchEvent(new Event("scrollstart"))
 
@@ -255,7 +278,7 @@ class UI.ThreadContent
           change = (to - @container.scrollTop)/15
           min = Math.min(to-change, to+change)
           max = Math.max(to-change, to+change)
-          requestAnimationFrame(_scrollInterval = =>
+          @_scrollRequestID = requestAnimationFrame(_scrollInterval = =>
             before = @container.scrollTop
             # 画像のロードによる座標変更時の補正
             if to isnt target.offsetTop + offset
@@ -280,7 +303,7 @@ class UI.ThreadContent
             if @container.scrollTop is before
               @container.dispatchEvent(new Event("scrollfinish"))
               return
-            requestAnimationFrame(_scrollInterval)
+            @_scrollRequestID = requestAnimationFrame(_scrollInterval)
             return
           )
       else

@@ -14,8 +14,8 @@ namespace app {
       }
     )
 
-    parent.chrome.tabs.getCurrent( (tab): void => {
-      parent.chrome.tabs.remove(tab.id);
+    parent.chrome.tabs.getCurrent( ({id}): void => {
+      parent.chrome.tabs.remove(id);
     });
   }
 
@@ -335,7 +335,6 @@ namespace app {
         if (this._cache !== null) {
           for (key in res) {
             val = res[key];
-
             if (
               key.startsWith("config_") &&
               (typeof val === "string" || typeof val ==="number")
@@ -348,19 +347,19 @@ namespace app {
       });
 
       this._onChanged = (change, area) => {
-        var key:string, info;
+        var key:string;
 
         if (area === "local") {
           for (key in change) {
+            var {newValue} = change[key];
             if (!key.startsWith("config_")) continue;
 
-            info = change[key];
-            if (typeof info.newValue === "string") {
-              this._cache.set(key, info.newValue);
+            if (typeof newValue === "string") {
+              this._cache.set(key, newValue);
 
               app.message.send("config_updated", {
                 key: key.slice(7),
-                val: info.newValue
+                val: newValue
               });
             }
             else {
@@ -491,64 +490,64 @@ namespace app {
 
   export var module;
   {
-    let pending_modules = new Set<any>();
-    let ready_modules = new Map<string, any>();
-    let fire_definition, add_ready_module;
+    let pendingModules = new Set<any>();
+    let readyModules = new Map<string, any>();
+    let fireDefinition, addReadyModule;
 
-    fire_definition = (module_id, dependencies, definition) => {
-      var dep_modules:any[] = [], dep_module_id, callback;
+    fireDefinition = (moduleId, dependencies, definition) => {
+      var depModules:any[] = [], depModuleId, callback;
 
-      for (dep_module_id of dependencies) {
-        dep_modules.push(ready_modules.get(dep_module_id).module);
+      for (depModuleId of dependencies) {
+        depModules.push(readyModules.get(depModuleId).module);
       }
 
-      if (module_id !== null) {
-        callback = add_ready_module.bind({
-          module_id,
+      if (moduleId !== null) {
+        callback = addReadyModule.bind({
+          moduleId,
           dependencies
         });
         defer( () => {
-          definition(...dep_modules.concat(callback));
+          definition(...depModules.concat(callback));
         });
       }
       else {
         defer( () => {
-          definition(...dep_modules);
+          definition(...depModules);
         });
       }
     };
 
-    add_ready_module = function (this:{module_id: string, dependencies: string[]}, module) {
-      ready_modules.set(this.module_id,{
+    addReadyModule = function (this:{moduleId: string, dependencies: string[]}, module) {
+      readyModules.set(this.moduleId,{
         dependencies: this.dependencies,
         module: module
       });
 
       // このモジュールが初期化された事で依存関係が満たされたモジュールを初期化
-      for (var val of pending_modules.values()) {
-        if (val.dependencies.includes(this.module_id)) {
-          if (!val.dependencies.some((a) => { return !ready_modules.get(a); } )) {
-            fire_definition(val.module_id, val.dependencies, val.definition);
-            pending_modules.delete(module);
+      for (var val of pendingModules.values()) {
+        if (val.dependencies.includes(this.moduleId)) {
+          if (!val.dependencies.some((a) => { return !readyModules.get(a); } )) {
+            fireDefinition(val.moduleId, val.dependencies, val.definition);
+            pendingModules.delete(module);
           }
         }
       }
     };
 
-    app.module = function (module_id, dependencies, definition) {
+    app.module = function (moduleId, dependencies, definition) {
       if (!dependencies) dependencies = [];
 
       // 依存関係が満たされていないモジュールは、しまっておく
-      if (dependencies.some((a) => { return !ready_modules.get(a); } )) {
-        pending_modules.add({
-          module_id,
+      if (dependencies.some((a) => { return !readyModules.get(a); } )) {
+        pendingModules.add({
+          moduleId,
           dependencies,
           definition
         });
       }
       // 依存関係が満たされている場合、即座にモジュール初期化を開始する
       else {
-        fire_definition(module_id, dependencies, definition);
+        fireDefinition(moduleId, dependencies, definition);
       }
     };
   }

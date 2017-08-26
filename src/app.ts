@@ -137,51 +137,13 @@ namespace app {
 
   export class Message {
     private _listenerStore:{[index:string]:Callbacks;} = {};
+    private _bc:any;
 
     constructor () {
-      window.addEventListener("message", (e:MessageEvent) => {
-        if (e.origin !== location.origin) return;
-
-        var data, iframes, iframe:HTMLIFrameElement;
-
-        if (typeof e.data === "string") {
-          try {
-            data = JSON.parse(e.data);
-          }
-          catch (e) {
-          }
-        }
-        else {
-          data = e.data;
-        }
-
-        if (typeof data !== "object" || data.type !== "app.message") {
-          return;
-        }
-
-        if (data.propagation !== false) {
-          iframes = Array.from(document.getElementsByTagName("iframe"));
-
-          // parentから伝わってきた場合はiframeにも伝える
-          if (e.source === parent) {
-            for (iframe of iframes) {
-              iframe.contentWindow.postMessage(e.data, location.origin);
-            }
-          }
-          // iframeから伝わってきた場合は、parentと他のiframeにも伝える
-          else {
-            if (parent !== window) {
-              parent.postMessage(e.data, location.origin);
-            }
-
-            for (iframe of iframes) {
-              if (iframe.contentWindow === e.source) continue;
-              iframe.contentWindow.postMessage(e.data, location.origin);
-            }
-          }
-        }
-
-        this._fire(data.message_type, data.message);
+      this._bc = new BroadcastChannel("readcrx");
+      this._bc.on("message", ({data}) => {
+        var {type, message} = JSON.parse(data);
+        this._fire(type, message);
       });
     }
 
@@ -195,40 +157,20 @@ namespace app {
       });
     }
 
-    send (type:string, message:any, targetWindow?:Window):void {
-      var data: Object, iframes, iframe:HTMLIFrameElement;
-
-      data = {
-        type: "app.message",
-        message_type: type,
-        message: message,
-        propagation: !targetWindow
-      };
-
-      if (targetWindow) {
-        targetWindow.postMessage(data, location.origin);
-      }
-      else {
-        if (parent !== window) {
-          parent.postMessage(data, location.origin);
-        }
-
-        iframes = Array.from(document.getElementsByTagName("iframe"));
-        for (iframe of iframes) {
-          iframe.contentWindow.postMessage(data, location.origin);
-        }
-        this._fire(type, message);
-      }
+    send (type:string, message:any = {}):void {
+      this._fire(type, message);
+      this._bc.postMessage(JSON.stringify({type, message}));
+      return
     }
 
-    addListener (type:string, listener:Function) {
+    on (type:string, listener:Function) {
       if (!this._listenerStore[type]) {
         this._listenerStore[type] = new app.Callbacks({persistent: true});
       }
       this._listenerStore[type].add(listener);
     }
 
-    removeListener (type:string, listener:Function) {
+    off (type:string, listener:Function) {
       if (this._listenerStore[type]) {
         this._listenerStore[type].remove(listener);
       }

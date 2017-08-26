@@ -62,7 +62,7 @@ class app.view.View
     @_changeTheme(app.config.get("theme_id"))
 
     # テーマ更新反映
-    app.message.addListener("config_updated", ({key, val}) =>
+    app.message.on("config_updated", ({key, val}) =>
       if key is "theme_id"
         @_changeTheme(val)
       return
@@ -207,7 +207,7 @@ class app.view.IframeView extends app.view.View
       when "clearSelect"
         app.DOMData.get(@$element, "selectableItemList")?.clearSelect()
       when "focusUpFrame", "focusDownFrame", "focusLeftFrame", "focusRightFrame"
-        app.message.send("requestFocusMove", {command, repeatCount}, parent)
+        app.message.send("requestFocusMove", {command, repeatCount})
       when "r"
         @$element.dispatchEvent(new Event("request_reload"))
       when "q"
@@ -229,7 +229,7 @@ class app.view.IframeView extends app.view.View
           new MouseEvent("mouseup", shiftKey: true, bubbles: true)
         )
       when "help"
-        app.message.send("showKeyboardHelp", null, parent)
+        app.message.send("showKeyboardHelp")
     return
 
   ###*
@@ -563,7 +563,7 @@ class app.view.TabContentView extends app.view.PaneContentView
       else
         $button.removeClass("bookmarked")
 
-      app.message.addListener("bookmark_updated", ({type, bookmark}) ->
+      app.message.on("bookmark_updated", ({type, bookmark}) ->
         if bookmark.url is url
           if type is "added"
             $button.addClass("bookmarked")
@@ -706,7 +706,7 @@ class app.view.TabContentView extends app.view.PaneContentView
 
     autoLoadInterval = autoLoad()
 
-    app.message.addListener("config_updated", ({key}) ->
+    app.message.on("config_updated", ({key}) ->
       if key is "auto_load_second#{cfgName}"
         clearInterval(autoLoadInterval)
         autoLoadInterval = autoLoad()

@@ -95,7 +95,7 @@ class UI.ThreadList
       column[key] = i
 
     #ブックマーク更新時処理
-    app.message.addListener("bookmark_updated", ({type, bookmark}) =>
+    app.message.on("bookmark_updated", ({type, bookmark}) =>
       return if bookmark.type isnt "thread"
 
       if type is "expired"
@@ -173,7 +173,7 @@ class UI.ThreadList
 
     #未読数更新
     if @_flg.unread
-      app.message.addListener("read_state_updated", ({read_state}) ->
+      app.message.on("read_state_updated", ({read_state}) ->
         tr = $table.$("tr[data-href=\"#{read_state.url}\"]")
         if tr
           res = tr.$(selector.res)
@@ -190,7 +190,7 @@ class UI.ThreadList
         return
       )
 
-      app.message.addListener("read_state_removed", ({url}) ->
+      app.message.on("read_state_removed", ({url}) ->
         tr = $table.$("tr[data-href=\"#{url}\"]")
         if tr
           tr.$(selector.unread).textContent = ""

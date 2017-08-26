@@ -268,7 +268,7 @@ app.boot("/view/config.html", ["cache", "bbsmenu"], (Cache, BBSMenu) ->
   $view.C("keyboard_help")[0].on("click", (e) ->
     e.preventDefault()
 
-    app.message.send("showKeyboardHelp", null, parent)
+    app.message.send("showKeyboardHelp")
     return
   )
 
@@ -481,7 +481,7 @@ app.boot("/view/config.html", ["cache", "bbsmenu"], (Cache, BBSMenu) ->
         $$.I("bookmark_source_name").textContent = folder.title
         return
       )
-    app.message.addListener("config_updated", (message) ->
+    app.message.on("config_updated", (message) ->
       updateName() if message.key is "bookmark_id"
       return
     )
@@ -539,7 +539,7 @@ app.boot("/view/config.html", ["cache", "bbsmenu"], (Cache, BBSMenu) ->
   if app.config.get("theme_id") is "none"
     $view.C("theme_none")[0].checked = true
 
-  app.message.addListener("config_updated", (message) ->
+  app.message.on("config_updated", (message) ->
     if message.key is "theme_id"
       $view.C("theme_none")[0].checked = (message.val is "none")
     return

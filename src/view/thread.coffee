@@ -881,7 +881,7 @@ app.boot("/view/thread.html", ->
       updateThreadFooter()
       return
     )
-    app.message.addListener("bookmark_updated", (message) ->
+    app.message.on("bookmark_updated", (message) ->
       if canBeShown
         $nextUnread.show()
       return
@@ -1141,7 +1141,7 @@ app.viewThread._readStateManager = ($view) ->
         readStateUpdated = false
       return
 
-    app.message.addListener("request_update_read_state", ({board_url} = {}) ->
+    app.message.on("request_update_read_state", ({board_url} = {}) ->
       if not board_url? or board_url is boardUrl
         scanAndSave()
       return

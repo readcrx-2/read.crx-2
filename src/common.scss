@@ -281,7 +281,7 @@ $z-indexes:(
         width: 40px;
         padding: 0 3px 0 3px;
         text-align: right;
-        -webkit-user-select: none;
+        user-select: none;
       }
     }
     > .button {
@@ -311,7 +311,7 @@ $z-indexes:(
         margin: 0;
         padding: 0;
         border: 1px solid;
-        -webkit-user-select: none;
+        user-select: none;
         font-size: 14px;
         > li {
           padding: 5px;
@@ -385,7 +385,7 @@ $z-indexes:(
     background-color: rgba(#555555, 0.75);
     font-size: 13px;
     color: #eeeeee;
-    -webkit-user-select: none;
+    user-select: none;
   }
   .loading_overlay {
     display: none;
@@ -453,7 +453,7 @@ $z-indexes:(
     table-layout: fixed;
     font-size: 13px;
     border-collapse: collapse;
-    -webkit-user-select: none;
+    user-select: none;
   }
   tr {
     border-bottom: 1px solid;
@@ -510,7 +510,7 @@ $z-indexes:(
 
   .table_sort {
     th {
-      -webkit-user-select: none;
+      user-select: none;
       cursor: pointer;
     }
   }

@@ -267,15 +267,21 @@ class UI.ThreadContent
   @return {Number} 現在読んでいると推測されるレスの番号
   ###
   getRead: ->
-    {left, bottom} = @container.getBoundingClientRect()
+    {left, height, bottom} = @container.getBoundingClientRect()
     y = bottom - 1
     res = document.elementFromPoint(left, y)
 
     while true
       if res?
         if res.closest("article")?
-          res = res.closest("article")
-          return parseInt(res.C("num")[0].textContent)
+          resNum = parseInt(res.closest("article").C("num")[0].textContent)
+          # 最後のレスがすべて表示されているとき
+          if (
+            (resNum is @container.child().length) and
+            (y+1 < height)
+          )
+            return resNum
+          return Math.max(resNum-1, 1)
         else if res is @container
           return @container.child().length
       else

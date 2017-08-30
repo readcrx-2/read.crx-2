@@ -75,6 +75,7 @@ class app.view.View
   ###
   _insertUserCSS: ->
     style = $__("style")
+    style.id = "user_css"
     style.textContent = app.config.get("user_css")
     document.head.addLast(style)
     return

@@ -1,6 +1,6 @@
 window.UI ?= {}
 do ->
-  UI.table_search = ($table, method, prop) ->
+  UI.TableSearch = ($table, method, prop) ->
     $table.addClass("hidden")
     $table.removeAttr("data-table-search-hit-count")
     for dom in $table.C("table_search_hit") by -1
@@ -12,15 +12,15 @@ do ->
     if method is "search"
       prop.query = app.util.normalize(prop.query)
       $table.addClass("table_search")
-      hit_count = 0
+      hitCount = 0
       for $tr in $table.T("tbody")[0].child()
         $td = $tr.child()[prop.target_col-1]
         if !$tr.hasClass("hidden") and app.util.normalize($td.textContent).includes(prop.query)
           $tr.addClass("table_search_hit")
-          hit_count++
+          hitCount++
         else
           $tr.addClass("table_search_not_hit")
-      $table.dataset.tableSearchHitCount = hit_count
+      $table.dataset.tableSearchHitCount = hitCount
     else if method is "clear"
       $table.removeClass("table_search")
 

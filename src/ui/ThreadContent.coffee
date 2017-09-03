@@ -51,11 +51,10 @@ class UI.ThreadContent
     @type Object
     @private
     ###
-    @_lastScrollInfo = {
-      "resNum": 0,
-      "animate": false,
-      "offset": 0
-    }
+    @_lastScrollInfo =
+      resNum: 0
+      animate: false
+      offset: 0
 
     ###*
     @property _timeoutID
@@ -82,13 +81,13 @@ class UI.ThreadContent
       @harmfulReg = new RegExp(app.config.get("image_blur_word"))
       @findHarmfulFlag = true
     catch e
-      app.message.send "notify", {
+      app.message.send("notify",
         html: """
           画像ぼかしの正規表現を読み込むのに失敗しました
           画像ぼかし機能は無効化されます
         """
         background_color: "red"
-      }
+      )
       @findHarmfulFlag = false
 
     return
@@ -111,49 +110,44 @@ class UI.ThreadContent
     loadFlag = false
     target = @container.children[resNum - 1]
 
+    {offsetHeight: containerHeight, scrollHeight: containerScroll} = @container
     viewTop = target.offsetTop
     viewTop += offset if offset < 0
-    viewBottom = viewTop + @container.offsetHeight
-    if viewBottom > @container.scrollHeight
-      viewBottom = @container.scrollHeight
-      viewTop = viewBottom - @container.offsetHeight
+    viewBottom = viewTop + containerHeight
+    if viewBottom > containerScroll
+      viewBottom = containerScroll
+      viewTop = viewBottom - containerHeight
 
     # 遅延ロードの解除
     loadImageByElement = (targetElement) =>
       for media in targetElement.$$("img[data-src], video[data-src]")
         loadFlag = true
-        continue if media.dataset.src is null
-        if media.hasClass("favicon")
-          media.src = media.dataset.src
-          media.removeAttr("data-src")
-        else
-          media.dispatchEvent(new Event("immediateload", {"bubbles": true}))
+        media.dispatchEvent(new Event("immediateload", {"bubbles": true}))
       return
 
     # 表示範囲内の要素をスキャンする
     # (上方)
-    tmpResNum = resNum
     tmpTarget = target
     while (
       tmpTarget and
-      ((tmpTarget.offsetHeight is 0) or
-       (tmpTarget.offsetTop + tmpTarget.offsetHeight > viewTop))
+      (
+        (isHidden = tmpTarget.offsetHeight is 0) or
+        tmpTarget.offsetTop + tmpTarget.offsetHeight > viewTop
+      )
     )
-      loadImageByElement(tmpTarget) unless tmpTarget.hasClass("ng")
-      tmpResNum--
-      tmpTarget = if tmpResNum > 0 then @container.child()[tmpResNum - 1] else null
+      loadImageByElement(tmpTarget) unless isHidden
+      tmpTarget = tmpTarget.prev()
     # (下方)
-    tmpResNum = resNum + 1
-    tmpTarget = @container.child()[resNum]
-    len = @container.child().length
+    tmpTarget = target.next()
     while (
       tmpTarget and
-      ((tmpTarget.offsetHeight is 0) or
-       (tmpTarget.offsetTop < viewBottom and tmpTarget))
+      (
+        (isHidden = tmpTarget.offsetHeight is 0) or
+        tmpTarget.offsetTop < viewBottom
+      )
     )
-      loadImageByElement(tmpTarget) unless tmpTarget.hasClass("ng")
-      tmpResNum++
-      tmpTarget = if tmpResNum <= len then @container.child()[tmpResNum - 1] else null
+      loadImageByElement(tmpTarget) unless isHidden
+      tmpTarget = tmpTarget.next()
 
     # 遅延スクロールの設定
     if (
@@ -189,7 +183,11 @@ class UI.ThreadContent
     target = @container.children[resNum - 1]
 
     # 検索中で、ターゲットが非ヒット項目で非表示の場合、スクロールを中断
-    if target and @container.hasClass("searching") and not target.hasClass("search_hit")
+    if (
+      target and
+      @container.hasClass("searching") and
+      not target.hasClass("search_hit")
+    )
       target = null
 
     # もしターゲットがNGだった場合、その直前/直後の非NGレスをターゲットに変更する
@@ -211,7 +209,7 @@ class UI.ThreadContent
       loadFlag = @_loadNearlyImages(resNum, offset) unless rerun
 
       # offsetが比率の場合はpxを求める
-      if offset > 0 and offset < 1
+      if 0 < offset < 1
         offset = Math.round(target.offsetHeight * offset)
 
       # 遅延スクロールの設定
@@ -269,16 +267,21 @@ class UI.ThreadContent
   @return {Number} 現在読んでいると推測されるレスの番号
   ###
   getRead: ->
-    {top, left, height} = @container.getBoundingClientRect()
-    y = top + height - 1
+    {left, height, bottom} = @container.getBoundingClientRect()
+    y = bottom - 1
     res = document.elementFromPoint(left, y)
 
     while true
       if res?
-        if res.tagName isnt "ARTICLE" and res.closest("article")?
-          res = res.closest("article")
-        if res.tagName is "ARTICLE"
-          return parseInt(res.C("num")[0].textContent)
+        if res.closest("article")?
+          resNum = parseInt(res.closest("article").C("num")[0].textContent)
+          # 最後のレスがすべて表示されているとき
+          if (
+            (resNum is @container.child().length) and
+            (y+1 < height)
+          )
+            return resNum
+          return Math.max(resNum-1, 1)
         else if res is @container
           return @container.child().length
       else
@@ -304,13 +307,11 @@ class UI.ThreadContent
     # スクロール位置のレスを抽出
     {top, left} = @container.getBoundingClientRect()
     res = document.elementFromPoint(left, top)
-    if res?
-      if res.tagName isnt "ARTICLE" and res.closest("article")?
-        res = res.closest("article")
-      if res.tagName is "ARTICLE"
-        {top: resTop, height: resHeight} = res.getBoundingClientRect()
-        resRead.resNum = parseInt(res.C("num")[0].textContent)
-        resRead.offset = (top - resTop) / resHeight
+    if res?.closest("article")?
+      res = res.closest("article")
+      {top: resTop, height: resHeight} = res.getBoundingClientRect()
+      resRead.resNum = parseInt(res.C("num")[0].textContent)
+      resRead.offset = (top - resTop) / resHeight
     return resRead
 
   ###*
@@ -318,7 +319,7 @@ class UI.ThreadContent
   @return {Element|null}
   ###
   getSelected: ->
-    @container.$("article.selected")
+    return @container.$("article.selected")
 
   ###*
   @method select
@@ -607,19 +608,19 @@ class UI.ThreadContent
               .replace(/(h)?(ttps?:\/\/(?!img\.2ch\.net\/(?:ico|emoji|premium)\/[\w\-_]+\.gif)(?:[a-hj-zA-HJ-Z\d_\-.!~*'();\/?:@=+$,%#]|\&(?!gt;)|[iI](?![dD]:)+)+)/g,
                 '<a href="h$2" target="_blank">$1$2</a>')
               #Beアイコン埋め込み表示
-              .replace ///^(?:\s*sssp|https?)://(img\.2ch\.net/(?:ico|premium)/[\w\-_]+\.gif)\s*<br>///, ($0, $1) =>
+              .replace(///^(?:\s*sssp|https?)://(img\.2ch\.net/(?:ico|premium)/[\w\-_]+\.gif)\s*<br>///, ($0, $1) =>
                 if app.URL.tsld(@url) in ["2ch.net", "bbspink.com", "2ch.sc"]
-                  """<img class="beicon" src="/img/dummy_1x1.webp" data-src="#{scheme}://#{$1}"><br>"""
-                else
-                  $0
+                  return """<img class="beicon" src="/img/dummy_1x1.webp" data-src="#{scheme}://#{$1}"><br>"""
+                return $0
+              )
               #エモーティコン埋め込み表示
-              .replace ///(?:\s*sssp|https?)://(img\.2ch\.net/emoji/[\w\-_]+\.gif)\s*///g, ($0, $1) =>
+              .replace(///(?:\s*sssp|https?)://(img\.2ch\.net/emoji/[\w\-_]+\.gif)\s*///g, ($0, $1) =>
                 if app.URL.tsld(@url) in ["2ch.net", "bbspink.com", "2ch.sc"]
-                  """<img class="beicon emoticon" src="/img/dummy_1x1.webp" data-src="#{scheme}://#{$1}">"""
-                else
-                  $0
+                  return """<img class="beicon emoticon" src="/img/dummy_1x1.webp" data-src="#{scheme}://#{$1}">"""
+                return $0
+              )
               #アンカーリンク
-              .replace app.util.Anchor.reg.ANCHOR, ($0) =>
+              .replace(app.util.Anchor.reg.ANCHOR, ($0) =>
                 anchor = app.util.Anchor.parseAnchor($0)
 
                 if anchor.targetCount >= 25
@@ -644,12 +645,12 @@ class UI.ThreadContent
                       @harmImgIndex.add(target) if isThatHarmImg
                       target++
 
-                "<a href=\"javascript:undefined;\" class=\"anchor" +
+                return "<a href=\"javascript:undefined;\" class=\"anchor" +
                 (if disabled then " disabled\" data-disabled-reason=\"#{disabledReason}\"" else "\"") +
                 ">#{$0}</a>"
+              )
               #IDリンク
-              .replace /id:(?:[a-hj-z\d_\+\/\.\!]|i(?!d:))+/ig, ($0) ->
-                "<a href=\"javascript:undefined;\" class=\"anchor_id\">#{$0}</a>"
+              .replace(/id:(?:[a-hj-z\d_\+\/\.\!]|i(?!d:))+/ig, "<a href=\"javascript:undefined;\" class=\"anchor_id\">$0</a>")
           )
 
           articleHtml += "<div class=\"message\""
@@ -661,12 +662,9 @@ class UI.ThreadContent
 
           tmp = ""
           tmp += " class=\"#{res.class.join(" ")}\""
-          if res.id?
-            tmp += " data-id=\"#{res.id}\""
-          if res.slip?
-            tmp += " data-slip=\"#{res.slip}\""
-          if res.trip?
-            tmp += " data-trip=\"#{res.trip}\""
+          tmp += " data-id=\"#{res.id}\"" if res.id?
+          tmp += " data-slip=\"#{res.slip}\"" if res.slip?
+          tmp += " data-trip=\"#{res.trip}\"" if res.trip?
           for key, val of res.attr
             tmp += " #{key}=\"#{val}\""
 
@@ -701,9 +699,7 @@ class UI.ThreadContent
               return
             )
           )
-        ).catch( ->
-          return
-        ).then( ->
+        ).catch( -> return).then( ->
           resolve()
           return
         )

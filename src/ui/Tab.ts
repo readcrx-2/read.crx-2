@@ -16,13 +16,13 @@ namespace UI {
     }
 
     public static saveTabs (): void {
-      var data: any[] = [], tab: any;
-      for (tab of this.tabA!.getAll().concat(this.tabB!.getAll())) {
+      var data: any[] = [];
+      for (var {formatedUrl, title, selected, locked} of this.tabA!.getAll().concat(this.tabB!.getAll())) {
         data.push({
-          url: tab.formatedUrl,
-          title: tab.title,
-          selected: tab.selected,
-          locked: tab.locked
+          url: formatedUrl,
+          title,
+          selected,
+          locked
         });
       }
       localStorage.tab_state = JSON.stringify(data);
@@ -55,28 +55,23 @@ namespace UI {
           }
         }
       });
-      $ul.on("mousedown", function (e) {
+      $ul.on("mousedown", (e) => {
         if ((<HTMLElement>e.target).tagName === "IMG") {
           e.preventDefault();
           return;
         }
         var target = (<HTMLElement>(<HTMLElement>e.target).closest("li"))
-        if (target === null) {
-          return;
-        }
-        if (e.which === 3) {
-          return;
-        }
+        if (target === null) return;
+        if (e.which === 3) return;
 
         if (e.which === 2 && !target.hasClass("tab_locked")) {
           tab.remove(target.dataset.tabid!);
         }
         else {
           tab.update(target.dataset.tabid!, {selected: true});
-         }
+        }
       });
-      $ul.on("click", function (e) {
-        var target = <HTMLElement>e.target;
+      $ul.on("click", ({target}) => {
         if (target.tagName === "IMG") {
           tab.remove(<string>target.parent().dataset.tabid);
         }
@@ -87,14 +82,14 @@ namespace UI {
       $div.addClass("tab_container");
       $ele.addLast($div);
 
-      window.on("message", (e) => {
+      window.on("message", ({origin, data, source}) => {
         var message, tabId: string, history;
 
-        if (e.origin !== location.origin || typeof e.data !== "string") {
+        if (origin !== location.origin || typeof data !== "string") {
           return
         }
 
-        message = JSON.parse(e.data);
+        message = JSON.parse(data);
 
         if (![
             "requestTabHistory",
@@ -104,55 +99,57 @@ namespace UI {
           return;
         }
 
-        if (!(<HTMLElement>this.$element).contains(<HTMLElement>e.source.frameElement)) {
+        if (!(<HTMLElement>this.$element).contains(<HTMLElement>source.frameElement)) {
           return;
         }
 
-        tabId = (<HTMLElement>e.source.frameElement).dataset.tabid!;
+        tabId = (<HTMLElement>source.frameElement).dataset.tabid!;
         history = this.historyStore[tabId];
 
-        if (message.type === "requestTabHistory") {
-          message = JSON.stringify({
-            type: "responseTabHistory",
-            history: history
-          });
-          e.source.postMessage(message, e.origin);
-        }
-        else if (message.type === "requestTabBack") {
-          if (history.current > 0) {
-            if (message.newTab) {
-              this.add(history.stack[history.current-1].url, {
-                title: history.stack[history.current-1].title,
-                selected: !message.background,
-                lazy: message.background
-              })
-            } else {
-              history.current--;
-              this.update(tabId, {
-                title: history.stack[history.current].title,
-                url: history.stack[history.current].url,
-                _internal: true
-              })
+        switch (message.type) {
+          case "requestTabHistory":
+            message = JSON.stringify({
+              type: "responseTabHistory",
+              history
+            });
+            source.postMessage(message, origin);
+            break;
+          case "requestTabBack":
+            if (history.current > 0) {
+              if (message.newTab) {
+                this.add(history.stack[history.current-1].url, {
+                  title: history.stack[history.current-1].title,
+                  selected: !message.background,
+                  lazy: message.background
+                })
+              } else {
+                history.current--;
+                this.update(tabId, {
+                  title: history.stack[history.current].title,
+                  url: history.stack[history.current].url,
+                  _internal: true
+                })
+              }
             }
-          }
-        }
-        else if (message.type === "requestTabForward") {
-          if (history.current < history.stack.length - 1) {
-            if (message.newTab) {
-              this.add(history.stack[history.current+1].url, {
-                title: history.stack[history.current+1].title,
-                selected: !message.background,
-                lazy: message.background
-              })
-            } else {
-              history.current++;
-              this.update(tabId, {
-                title: history.stack[history.current].title,
-                url: history.stack[history.current].url,
-                _internal: true
-              })
+            break;
+          case "requestTabForward":
+            if (history.current < history.stack.length - 1) {
+              if (message.newTab) {
+                this.add(history.stack[history.current+1].url, {
+                  title: history.stack[history.current+1].title,
+                  selected: !message.background,
+                  lazy: message.background
+                })
+              } else {
+                history.current++;
+                this.update(tabId, {
+                  title: history.stack[history.current].title,
+                  url: history.stack[history.current].url,
+                  _internal: true
+                })
+              }
             }
-          }
+            break;
         }
       });
     }
@@ -295,7 +292,7 @@ namespace UI {
 
         // 遅延ロード指定のタブをロードする
         // 連続でlazy指定のタブがaddされた時のために非同期処理
-        app.defer(() => {
+        app.defer( () => {
           var selectedTab, iframe: HTMLIFrameElement;
 
           if (selectedTab = this.getSelected()) {
@@ -381,8 +378,8 @@ namespace UI {
     }
 
     isLocked (tabId: string): boolean {
-      var tab = this.$element.$$(`li[data-tabid=\"${tabId}\"]`)
-      return tab.length > 0 && tab[0].hasClass("tab_locked");
+      var tab = this.$element.$(`li[data-tabid=\"${tabId}\"]`);
+      return (tab !== null && tab.hasClass("tab_locked"));
     }
   }
 }

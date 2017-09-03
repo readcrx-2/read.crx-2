@@ -17,7 +17,7 @@ namespace UI {
 
       openAccordions = this.$element.C("accordion_open");
       for (var i = openAccordions.length - 1; i >= 0; i--) {
-        openAccordions[i].removeClass(".accordion_open");
+        openAccordions[i].removeClass("accordion_open");
       }
 
       this.$element.on("click", (e) => {

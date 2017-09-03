@@ -1,23 +1,21 @@
-doctype
-html.view.view_inputurl(data-app-version=version)
-  head
-    mo
-    meta(charset="utf-8")
-    meta(name="referrer" content="no-referrer")
-    title URLを指定して開く
-    link(rel="stylesheet" href=`/ui.css?v=${version}`)
-    link(rel="stylesheet" href=`inputurl.css?v=${version}`)
-    script(src=`/lib/shortQuery.min.js?v=${version}` defer)
-    script(src=`/ui.js?v=${version}` defer)
-    script(src=`/app.js?v=${version}` defer)
-    script(src=`module.js?v=${version}` defer)
-    script(src=`inputurl.js?v=${version}` defer)
-  body
-    nav.nav_bar
-      .button.button_back.disabled(title="戻る")
-      .button.button_forward.disabled(title="進む")
-    .container
-      form
-        input(name="url" placeholder="ここにURLを入力して下さい" autofocus)
-        input(type="submit" value="開く")
-      .notice.hidden
+extends ../_base.pug
+
+block vars
+  - var name = "inputurl";
+  - var title = "URLを指定して開く";
+  - var html = {};
+  - var htmlClasses = ["view", "view_inputurl"];
+  - var body = {};
+  - var needUI = true;
+  - var needModule = true;
+  - var needCss = true;
+
+block body
+  nav.nav_bar
+    .button.button_back.disabled(title="戻る")
+    .button.button_forward.disabled(title="進む")
+  .container
+    form
+      input(name="url" placeholder="ここにURLを入力して下さい" autofocus)
+      input(type="submit" value="開く")
+    .notice.hidden

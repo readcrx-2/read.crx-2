@@ -1,8 +1,9 @@
 do ->
-  return if /windows/i.test(navigator.userAgent)
+  return if navigator.platform.includes("Win")
   new Promise( (resolve, reject) ->
-    if "textar_font" of localStorage
-      resolve()
+    font = localStorage.getItem("textar_font")
+    if font?
+      resolve(font)
     else
       reject()
     return
@@ -17,43 +18,44 @@ do ->
           s = ""
           for a in buffer
             s += String.fromCharCode(a)
-          localStorage.textar_font = "data:application/x-font-woff;base64," + btoa(s)
-          resolve()
+          font = "data:application/x-font-woff;base64,#{btoa(s)}"
+          localStorage.setItem("textar_font", font)
+          resolve(font)
         return
       xhr.send()
       return
     )
-  ).then( ->
+  ).then( (font) ->
     document.on("DOMContentLoaded", ->
       style = $__("style")
       style.textContent = """
         @font-face {
           font-family: "Textar";
-          src: url(#{localStorage.textar_font});
+          src: url(#{font});
         }
       """
-      document.head.appendChild(style)
+      document.head.addLast(style)
       return
     )
     return
   )
   return
 
-app.view_thread = {}
+app.viewThread = {}
 
-app.boot "/view/thread.html", ->
+app.boot("/view/thread.html", ->
   try
-    view_url = app.URL.parseQuery(location.search).get("q")
+    viewUrl = app.URL.parseQuery(location.search).get("q")
   catch
     alert("不正な引数です")
     return
-  view_url = app.URL.fix(view_url)
+  viewUrl = app.URL.fix(viewUrl)
 
   $view = document.documentElement
-  $view.dataset.url = view_url
+  $view.dataset.url = viewUrl
 
   $content = $view.C("content")[0]
-  threadContent = new UI.ThreadContent(view_url, $content)
+  threadContent = new UI.ThreadContent(viewUrl, $content)
   mediaContainer = new UI.MediaContainer($view)
   app.DOMData.set($view, "threadContent", threadContent)
   app.DOMData.set($view, "selectableItemList", threadContent)
@@ -69,9 +71,8 @@ app.boot "/view/thread.html", ->
   if app.config.get("aa_font") is "aa"
     $content.addClass("config_use_aa_font")
 
-  write = (param) ->
-    param or= {}
-    param.url = view_url
+  write = (param = {}) ->
+    param.url = viewUrl
     param.title = document.title
     windowX = app.config.get("write_window_x")
     windowY = app.config.get("write_window_y")
@@ -80,8 +81,9 @@ app.boot "/view/thread.html", ->
       undefined
       "width=600,height=300,left=#{windowX},top=#{windowY}"
     )
+    return
 
-  popup_helper = (that, e, fn) ->
+  popupHelper = (that, e, fn) ->
     $popup = fn()
     return if $popup.child().length is 0
     for dom in $popup.T("article")
@@ -91,36 +93,38 @@ app.boot "/view/thread.html", ->
     #ポップアップ内のサムネイルの遅延ロードを解除
     for dom in $popup.$$("img[data-src], video[data-src]")
       app.DOMData.get($view, "lazyload").immediateLoad(dom)
-    app.defer ->
+    app.defer( ->
       # popupの表示
       popupView.show($popup, e.clientX, e.clientY, that)
       return
+    )
     return
 
   canWriteFlg = do ->
-    tsld = app.URL.tsld(view_url)
+    tsld = app.URL.tsld(viewUrl)
     if tsld in ["2ch.net", "bbspink.com", "2ch.sc", "open2ch.net"]
       return true
     # したらばの過去ログ
-    if tsld is "shitaraba.net" and not view_url.includes("/read_archive.cgi/")
+    if tsld is "shitaraba.net" and not viewUrl.includes("/read_archive.cgi/")
       return true
     return false
 
   if canWriteFlg
-    $view.C("button_write")[0].on "click", ->
+    $view.C("button_write")[0].on("click", ->
       write()
       return
+    )
   else
     $view.C("button_write")[0].remove()
 
   # 現状ではしたらばはhttpsに対応していないので切り替えボタンを隠す
-  if app.URL.tsld(view_url) is "shitaraba.net"
+  if app.URL.tsld(viewUrl) is "shitaraba.net"
     $view.C("button_scheme")[0].remove()
 
   #リロード処理
-  $view.on "request_reload", ({ detail: ex = {} }) ->
+  $view.on("request_reload", ({ detail: ex = {} }) ->
     #先にread_state更新処理を走らせるために、処理を飛ばす
-    app.defer ->
+    app.defer( ->
       jumpResNum = +(ex.written_res_num ? ex.param_res_num ? -1)
       if (
         $view.hasClass("loading") or
@@ -129,32 +133,35 @@ app.boot "/view/thread.html", ->
         threadContent.select(jumpResNum, false, true, -60) if jumpResNum > 0
         return
 
-      app.view_thread._draw($view, { force_update: ex.force_update, jumpResNum }).then( (thread) ->
+      app.viewThread._draw($view, { forceUpdate: ex.force_update, jumpResNum }).then( (thread) ->
         return unless ex?.mes? and app.config.get("no_writehistory") is "off"
         postMes = ex.mes.replace(/\s/g, "")
-        for t, i in thread.res by -1 when postMes is app.util.decode_char_reference(app.util.stripTags(t.message)).replace(/\s/g, "")
+        for t, i in thread.res by -1 when postMes is app.util.decodeCharReference(app.util.stripTags(t.message)).replace(/\s/g, "")
           date = threadContent.stringToDate(t.other)
-          name = app.util.decode_char_reference(t.name)
-          mail = app.util.decode_char_reference(t.mail)
-          app.WriteHistory.add(view_url, i+1, document.title, name, mail, ex.name, ex.mail, ex.mes, date.valueOf()) if date?
+          name = app.util.decodeCharReference(t.name)
+          mail = app.util.decodeCharReference(t.mail)
+          app.WriteHistory.add(viewUrl, i+1, document.title, name, mail, ex.name, ex.mail, ex.mes, date.valueOf()) if date?
           threadContent.addClassWithOrg($content.child()[i], "written")
           break
         return
       )
+    )
     return
+  )
 
   #初回ロード処理
   do ->
-    opened_at = Date.now()
+    openedAt = Date.now()
 
-    app.view_thread._read_state_manager($view)
-    $view.on "read_state_attached", func = ({ detail: {jumpResNum} = {} }) ->
+    app.viewThread._readStateManager($view)
+    $view.on("read_state_attached", func = ({ detail: {jumpResNum} = {} }) ->
       $view.off("read_state_attached", func)
-      on_scroll = false
-      $content.on "scroll", f = ->
+      onScroll = false
+      $content.on("scroll", f = ->
         $content.off("scroll", f)
-        on_scroll = true
+        onScroll = true
         return
+      )
 
       $last = $content.C("last")[0]
       lastNum = $content.$(":scope > article:last-child").C("num")[0].textContent
@@ -167,15 +174,15 @@ app.boot "/view/thread.html", ->
         threadContent.scrollTo($last, false, +offset)
 
       #スクロールされなかった場合も余所の処理を走らすためにscrollを発火
-      unless on_scroll
+      unless onScroll
         $content.dispatchEvent(new Event("scroll"))
 
       #二度目以降のread_state_attached時
-      $view.on "read_state_attached", ({ detail: {jumpResNum} = {} }) ->
-        move_mode = "new"
+      $view.on("read_state_attached", ({ detail: {jumpResNum} = {} }) ->
+        moveMode = "new"
         #通常時と自動更新有効時で、更新後のスクロールの動作を変更する
-        move_mode = app.config.get("auto_load_move") if $view.hasClass("autoload") and not $view.hasClass("autoload_pause")
-        switch move_mode
+        moveMode = app.config.get("auto_load_move") if $view.hasClass("autoload") and not $view.hasClass("autoload_pause")
+        switch moveMode
           when "new"
             lastNum = +$content.$(":scope > article:last-child")?.C("num")[0].textContent
             if 0 < jumpResNum <= lastNum
@@ -200,18 +207,22 @@ app.boot "/view/thread.html", ->
           when "newest"
             $res = $content.$(":scope > article:last-child")
             threadContent.scrollTo($res, true) if $res?
+        return
+      )
+      return
+    )
 
     jumpResNum = -1
-    iframe = parent.$$.$("iframe[data-url=\"#{view_url}\"]")
+    iframe = parent.$$.$("iframe[data-url=\"#{viewUrl}\"]")
     if iframe
       jumpResNum = +iframe.dataset.writtenResNum
       jumpResNum = +iframe.dataset.paramResNum if jumpResNum < 1
 
-    app.view_thread._draw($view, {jumpResNum}).catch ->
+    app.viewThread._draw($view, {jumpResNum}).catch( -> return).then( ->
+      app.History.add(viewUrl, document.title, openedAt) unless app.config.get("no_history") is "on"
       return
-    .then ->
-      app.History.add(view_url, document.title, opened_at) unless app.config.get("no_history") is "on"
-      return
+    )
+    return
 
   #レスメニュー表示(ヘッダー上)
   onHeaderMenu = (e) ->
@@ -235,11 +246,12 @@ app.boot "/view/thread.html", ->
     $menu.addClass("hidden")
     $article.addLast($menu)
 
-    app.defer ->
+    app.defer( ->
       if getSelection().toString().length is 0
         $menu.C("copy_selection")[0].remove()
         $menu.C("search_selection")[0].remove()
       return
+    )
 
     $toggleAaMode = $menu.C("toggle_aa_mode")[0]
     if $article.parent().hasClass("config_use_aa_font")
@@ -280,37 +292,37 @@ app.boot "/view/thread.html", ->
       else
         $menu.C("reset_image_blur")[0].remove()
 
-    app.defer ->
+    app.defer( ->
       $menu.removeClass("hidden")
-      UI.contextmenu($menu, e.clientX, e.clientY)
+      UI.ContextMenu($menu, e.clientX, e.clientY)
       return
+    )
     return
 
   $view.on("click", onHeaderMenu)
   $view.on("contextmenu", onHeaderMenu)
 
   #レスメニュー表示(内容上)
-  $view.on "contextmenu", ({target}) ->
+  $view.on("contextmenu", ({target}) ->
     return unless target.matches("article > .message")
     # 選択範囲をNG登録
     app.contextMenus.update("add_selection_to_ngwords", {
       onclick: (info, tab) ->
         selectedText = getSelection().toString()
-        if selectedText.length > 0
-          app.NG.add(selectedText)
+        app.NG.add(selectedText) if selectedText.length > 0
         return
     })
     return
+  )
 
   #レスメニュー項目クリック
-  $view.on "click", ({target}) ->
+  $view.on("click", ({target}) ->
     return unless target.matches(".res_menu > li")
     $res = target.closest("article")
 
     if target.hasClass("copy_selection")
       selectedText = getSelection().toString()
-      if selectedText.length > 0
-        document.execCommand("copy")
+      document.execCommand("copy") if selectedText.length > 0
 
     else if target.hasClass("search_selection")
       selectedText = getSelection().toString()
@@ -356,7 +368,7 @@ app.boot "/view/thread.html", ->
       $res.toggleClass("aa")
 
     else if target.hasClass("res_permalink")
-      open(app.safeHref(view_url + $res.C("num")[0].textContent))
+      open(app.safeHref(viewUrl + $res.C("num")[0].textContent))
 
     # 画像をぼかす
     else if target.hasClass("set_image_blur")
@@ -368,16 +380,17 @@ app.boot "/view/thread.html", ->
 
     target.parent().remove()
     return
+  )
 
   # アンカーポップアップ
   $view.on("mouseenter", (e) ->
-    target = e.target
+    {target} = e
     return unless target.hasClass("anchor") or target.hasClass("name_anchor")
 
     anchor = target.innerHTML
     anchor = anchor.trim() unless target.hasClass("anchor")
 
-    popup_helper target, e, =>
+    popupHelper(target, e, =>
       $popup = $__("div")
 
       if target.hasClass("disabled")
@@ -408,50 +421,52 @@ app.boot "/view/thread.html", ->
         $popup.addLast($div)
 
       return $popup
+    )
     return
   , true)
 
   #アンカーリンク
-  $view.on "click", (e) ->
-    target = e.target
+  $view.on("click", (e) ->
+    {target} = e
     return unless target.hasClass("anchor")
     e.preventDefault()
     return if target.hasClass("disabled")
 
     tmp = app.util.Anchor.parseAnchor(target.innerHTML)
-    target_res_num = tmp.segments[0]?[0]
-    if target_res_num?
-      threadContent.scrollTo(target_res_num, true)
+    targetResNum = tmp.segments[0]?[0]
+    if targetResNum?
+      threadContent.scrollTo(targetResNum, true)
     return
+  )
 
   #通常リンク
   onLink = (e) ->
-    target = e.target
+    {target} = e
     return unless target.matches(".message a:not(.anchor)")
-    target_url = target.href
+    targetUrl = target.href
 
     #http、httpsスキーム以外ならクリックを無効化する
-    if not /// ^https?:// ///.test(target_url)
+    if not /// ^https?:// ///.test(targetUrl)
       e.preventDefault()
       return
 
     #.open_in_rcrxが付与されている場合、処理は他モジュールに任せる
     return if target.hasClass("open_in_rcrx")
 
-    tmp = app.URL.guessType(target_url)
+    {type: srcType, bbsType} = app.URL.guessType(targetUrl)
 
     #read.crxで開けるURLかどうかを判定
     flg = do ->
       #スレのURLはほぼ確実に判定できるので、そのままok
-      return true if tmp.type is "thread"
+      return true if srcType is "thread"
       #2chタイプ以外の板urlもほぼ確実に判定できる
-      return true if tmp.type is "board" and tmp.bbsType isnt "2ch"
+      return true if srcType is "board" and bbsType isnt "2ch"
       #2chタイプの板は誤爆率が高いので、もう少し細かく判定する
-      if tmp.type is "board" and tmp.bbsType is "2ch"
+      if srcType is "board" and bbsType is "2ch"
         #2ch自体の場合の判断はguess_typeを信じて板判定
-        return true if app.URL.tsld(target_url) is "2ch.net"
+        return true if app.URL.tsld(targetUrl) is "2ch.net"
         #ブックマークされている場合も板として判定
-        return true if app.bookmark.get(app.URL.fix(target_url))
+        return true if app.bookmark.get(app.URL.fix(targetUrl))
       return false
 
     #read.crxで開ける板だった場合は.open_in_rcrxを付与して再度クリックイベント送出
@@ -460,52 +475,56 @@ app.boot "/view/thread.html", ->
       target.addClass("open_in_rcrx")
       target.dataset.href = target.href
       target.href = "javascript:undefined;"
-      if tmp.type is "thread"
+      if srcType is "thread"
         paramResNum = app.URL.getResNumber(target.dataset.href)
         target.dataset.paramResNum = paramResNum if paramResNum
-      app.defer ->
+      app.defer( ->
         target.dispatchEvent(e)
+        return
+      )
     return
 
-  $view.on "click", onLink
-  $view.on "mousedown", onLink
+  $view.on("click", onLink)
+  $view.on("mousedown", onLink)
 
   #リンク先情報ポップアップ
   $view.on("mouseenter", (e) ->
-    target = e.target
+    {target} = e
     return unless target.matches(".message a:not(.anchor)")
     # 携帯・スマホ用URLをPC用URLに変換
     url = app.URL.convertUrlFromPhone(target.href)
-    tmp = app.URL.guessType(url)
-    switch tmp.type
+    {type} = app.URL.guessType(url)
+    switch type
       when "board"
-        board_url = app.URL.fix(url)
+        boardUrl = app.URL.fix(url)
         after = ""
       when "thread"
-        board_url = app.URL.threadToBoard(url)
+        boardUrl = app.URL.threadToBoard(url)
         after = "のスレ"
       else
         return
 
-    app.BoardTitleSolver.ask(board_url).then (title) =>
-      popup_helper target, e, =>
+    app.BoardTitleSolver.ask(boardUrl).then( (title) =>
+      popupHelper(target, e, =>
         $div = $__("div")
         $div.addClass("popup_linkinfo")
         $div2 = $__("div")
         $div2.textContent = title + after
         $div.addLast($div2)
         return $div
+      )
       return
+    )
     return
   , true)
 
   #IDポップアップ
   $view.on(app.config.get("popup_trigger"), (e) ->
-    target = e.target
+    {target} = e
     return unless target.matches(".id.link, .id.freq, .anchor_id, .slip.link, .slip.freq, .trip.link, .trip.freq")
     e.preventDefault()
 
-    popup_helper target, e, =>
+    popupHelper(target, e, =>
       id = ""
       slip = ""
       trip = ""
@@ -553,14 +572,15 @@ app.boot "/view/thread.html", ->
         $div.addClass("popup_disabled")
         $popup.addLast($div)
       return $popup
+    )
     return
   , true)
 
   #リプライポップアップ
   $view.on(app.config.get("popup_trigger"), (e) ->
-    target = e.target
+    {target} = e
     return unless target.hasClass("rep")
-    popup_helper target, e, =>
+    popupHelper(target, e, =>
       tmp = $content.child()
 
       frag = $_F()
@@ -571,40 +591,44 @@ app.boot "/view/thread.html", ->
       $popup = $__("div")
       $popup.addLast(frag)
       return $popup
+    )
     return
   , true)
 
   # 展開済みURLのポップアップ
   $view.on("mouseenter", (e) ->
-    target = e.target
+    {target} = e
     return unless target.hasClass("has_expandedURL")
     return if app.config.get("expand_short_url") isnt "popup"
-    popup_helper target, e, =>
+    popupHelper(target, e, =>
       targetUrl = target.href
 
       frag = $_F()
       sib = target
       while true
-        sib = sib.nextSibling
-        if sib?.hasClass("expandedURL") and
-           sib?.getAttr("short-url") is targetUrl
+        sib = sib.next()
+        if(
+          sib?.hasClass("expandedURL") and
+          sib?.getAttr("short-url") is targetUrl
+        )
           frag.addLast(sib.cloneNode(true))
           break
 
-      frag.querySelector(".expandedURL").removeClass("hide_data")
+      frag.$(".expandedURL").removeClass("hide_data")
       $popup = $__("div")
       $popup.addLast(frag)
       return $popup
+    )
     return
   , true)
 
   # リンクのコンテキストメニュー
-  $view.on "contextmenu", ({target}) ->
+  $view.on("contextmenu", ({target}) ->
     return unless target.matches(".message > a")
     # リンクアドレスをNG登録
     enableFlg = !(target.hasClass("anchor") or target.hasClass("anchor_id"))
     app.contextMenus.update("add_link_to_ngwords", {
-      enabled: enableFlg,
+      enabled: enableFlg
       onclick: (info, tab) =>
         app.NG.add(target.href)
         return
@@ -616,18 +640,21 @@ app.boot "/view/thread.html", ->
       menuTitle = "レス番号を指定してリンクを開く"
     enableFlg = (target.hasClass("open_in_rcrx") and target.dataset.paramResNum isnt undefined)
     app.contextMenus.update("open_link_with_res_number", {
-      title: menuTitle,
-      enabled: enableFlg,
+      title: menuTitle
+      enabled: enableFlg
       onclick: (info, tab) =>
         target.setAttr("toggle-param-res-num", "on")
-        app.defer =>
+        app.defer( =>
           target.dispatchEvent(new Event("mousedown", {"bubbles": true}))
+          return
+        )
         return
     })
     return
+  )
 
   # 画像のコンテキストメニュー
-  $view.on "contextmenu", ({target}) ->
+  $view.on("contextmenu", ({target}) ->
     return unless target.matches("img, video, audio")
     switch target.tagName
       when "IMG"
@@ -651,77 +678,82 @@ app.boot "/view/thread.html", ->
         return
     })
     return
+  )
 
   #何もないところをダブルクリックすると更新する
-  $view.on "dblclick", ({target}) ->
+  $view.on("dblclick", ({target}) ->
     return if app.config.get("dblclick_reload") is "off"
     return unless target.hasClass("message")
     return if target.tagName is "A" or target.hasClass("thumbnail")
     $view.dispatchEvent(new Event("request_reload"))
     return
+  )
 
   #クイックジャンプパネル
   do ->
-    jump_hoge =
+    jumpArticleSelector =
       ".jump_one": "article:nth-child(1)"
       ".jump_newest": "article:last-child"
       ".jump_not_read": "article.read + article"
       ".jump_new": "article.received + article"
       ".jump_last": "article.last"
 
-    $jump_panel = $view.C("jump_panel")[0]
+    $jumpPanel = $view.C("jump_panel")[0]
 
-    $view.on "read_state_attached", ->
+    $view.on("read_state_attached", ->
       already = {}
-      for panel_item_selector, target_res_selector of jump_hoge
-        res = $view.$(target_res_selector)
-        res_num = +res.C("num")[0].textContent if res
-        if res and not already[res_num]
-          $jump_panel.$(panel_item_selector).style.display = "block"
-          already[res_num] = true
+      for panelItemSelector, targetResSelector of jumpArticleSelector
+        res = $view.$(targetResSelector)
+        resNum = +res.C("num")[0].textContent if res
+        if res and not already[resNum]
+          $jumpPanel.$(panelItemSelector).style.display = "block"
+          already[resNum] = true
         else
-          $jump_panel.$(panel_item_selector).style.display = "none"
+          $jumpPanel.$(panelItemSelector).style.display = "none"
       return
+    )
 
-    $jump_panel.on "click", ({target}) ->
-      for key, val of jump_hoge
-        if target.matches(key)
-          selector = val
-          offset = if key in [".jump_not_read", ".jump_new"] then -100 else 0
-          break
+    $jumpPanel.on("click", ({target}) ->
+      for key, val of jumpArticleSelector when target.matches(key)
+        selector = val
+        offset = if key in [".jump_not_read", ".jump_new"] then -100 else 0
+        break
 
-      if selector
-        $res = $view.$(selector)
+      return unless selector
+      $res = $view.$(selector)
 
-        if $res?
-          if key is ".jump_last"
-            offset = $res.attr("last-offset") ? offset
-          threadContent.scrollTo($res, true, +offset)
-        else
-          app.log("warn", "[view_thread] .jump_panel: ターゲットが存在しません")
+      if $res?
+        if key is ".jump_last"
+          offset = $res.attr("last-offset") ? offset
+        threadContent.scrollTo($res, true, +offset)
+      else
+        app.log("warn", "[view_thread] .jump_panel: ターゲットが存在しません")
       return
+    )
     return
 
   #検索ボックス
   do ->
-    search_stored_scrollTop = null
+    searchStoredScrollTop = null
     _isComposing = false
     $searchbox = $view.C("searchbox")[0]
-    $searchbox.on "compositionstart", ->
+    $searchbox.on("compositionstart", ->
       _isComposing = true
       return
-    $searchbox.on "compositionend", (e) ->
+    )
+    $searchbox.on("compositionend", ({currentTarget}) ->
       _isComposing = false
-      e.currentTarget.dispatchEvent(new Event("input"))
+      currentTarget.dispatchEvent(new Event("input"))
       return
-    $searchbox.on "input", ->
+    )
+    $searchbox.on("input", ->
       return if _isComposing
       $content.dispatchEvent(new Event("searchstart"))
       if @value isnt ""
-        if typeof search_stored_scrollTop isnt "number"
-          search_stored_scrollTop = $content.scrollTop
+        if typeof searchStoredScrollTop isnt "number"
+          searchStoredScrollTop = $content.scrollTop
 
-        hit_count = 0
+        hitCount = 0
         query = app.util.normalize(@value)
 
         scrollTop = $content.scrollTop
@@ -730,11 +762,11 @@ app.boot "/view/thread.html", ->
         for dom in $content.child()
           if app.util.normalize(dom.textContent).includes(query)
             dom.addClass("search_hit")
-            hit_count++
+            hitCount++
           else
             dom.removeClass("search_hit")
-        $content.dataset.resSearchHitCount = hit_count
-        $view.C("hit_count")[0].textContent = "#{hit_count}hit"
+        $content.dataset.resSearchHitCount = hitCount
+        $view.C("hit_count")[0].textContent = "#{hitCount}hit"
 
         if scrollTop is $content.scrollTop
           $content.dispatchEvent(new Event("scroll"))
@@ -744,26 +776,28 @@ app.boot "/view/thread.html", ->
         $view.C("search_hit")[0].removeClass("search_hit")
         $view.C("hit_count")[0].textContent = ""
 
-        if typeof search_stored_scrollTop is "number"
-          $content.scrollTop = search_stored_scrollTop
-          search_stored_scrollTop = null
+        if typeof searchStoredScrollTop is "number"
+          $content.scrollTop = searchStoredScrollTop
+          searchStoredScrollTop = null
 
       $content.dispatchEvent(new Event("searchfinish"))
       return
+    )
 
-    $searchbox.on "keyup", ({which}) ->
+    $searchbox.on("keyup", ({which}) ->
       if which is 27 #Esc
         if @value isnt ""
           @value = ""
           @dispatchEvent(new Event("input"))
       return
+    )
 
   #フッター表示処理
   do ->
     canBeShown = false
     observer = new IntersectionObserver( (changes) ->
-      for change in changes
-        canBeShown = (change.boundingClientRect.top < change.rootBounds.height)
+      for {boundingClientRect, rootBounds} in changes
+        canBeShown = (boundingClientRect.top < rootBounds.height)
       updateThreadFooter()
     , root: $content, threshold: [0, 0.05, 0.5, 0.95, 1.0])
     setObserve = ->
@@ -778,10 +812,12 @@ app.boot "/view/thread.html", ->
       show: ->
         next = null
 
-        bookmarks = app.bookmark.get_all().filter((bookmark) -> bookmark.type is "thread" and bookmark.url isnt view_url)
+        bookmarks = app.bookmark.get_all().filter( (bookmark) ->
+          return (bookmark.type is "thread") and (bookmark.url isnt viewUrl)
+        )
 
         #閲覧中のスレッドに新着が有った場合は優先して扱う
-        if bookmark = app.bookmark.get(view_url)
+        if bookmark = app.bookmark.get(viewUrl)
           bookmarks.unshift(bookmark)
 
         for bookmark in bookmarks when bookmark.res_count?
@@ -798,7 +834,7 @@ app.boot "/view/thread.html", ->
             break
 
         if next
-          if next.url is view_url
+          if next.url is viewUrl
             text = "新着レスがあります"
           else
             text = "未読ブックマーク: #{next.title}"
@@ -853,36 +889,38 @@ app.boot "/view/thread.html", ->
 
     #次スレ検索
     for dom in $view.$$(".button_tool_search_next_thread, .search_next_thread")
-      dom.on "click", ->
+      dom.on("click", ->
         searchNextThread.show()
-        searchNextThread.search(view_url, document.title)
+        searchNextThread.search(viewUrl, document.title)
         return
+      )
     return
 
   #パンくずリスト表示
   do ->
-    board_url = app.URL.threadToBoard(view_url)
-    app.BoardTitleSolver.ask(board_url).catch ->
-      return
-    .then (title) ->
+    boardUrl = app.URL.threadToBoard(viewUrl)
+    app.BoardTitleSolver.ask(boardUrl).catch( -> return).then( (title) ->
       $a = $view.$(".breadcrumb > li > a")
-      $a.href = board_url
+      $a.href = boardUrl
       $a.textContent = if title? then "#{title.replace(/板$/, "")}板" else "板"
       $a.addClass("hidden")
       # Windows版Chromeで描画が崩れる現象を防ぐため、わざとリフローさせる。
-      app.defer ->
+      app.defer( ->
         $view.$(".breadcrumb > li > a").style.display = "inline-block"
         return
+      )
       return
+    )
     return
 
   return
+)
 
-app.view_thread._draw = ($view, {force_update = false, jumpResNum = -1} = {}) ->
+app.viewThread._draw = ($view, {forceUpdate = false, jumpResNum = -1} = {}) ->
   $view.addClass("loading")
   $view.style.cursor = "wait"
-  $reload_button = $view.C("button_reload")[0]
-  $reload_button.addClass("disabled")
+  $reloadButton = $view.C("button_reload")[0]
+  $reloadButton.addClass("disabled")
   loadCount = 0
 
   fn = (thread, error) ->
@@ -918,7 +956,7 @@ app.view_thread._draw = ($view, {force_update = false, jumpResNum = -1} = {}) ->
   return new Promise( (resolve, reject) ->
     thread = new app.Thread($view.dataset.url)
     threadSetFromCacheBeforeHTTPPromise = Promise.resolve()
-    threadGetPromise = app.util.promiseWithState(thread.get(force_update, ->
+    threadGetPromise = app.util.promiseWithState(thread.get(forceUpdate, ->
       # 通信する前にキャッシュを取得して一旦表示する
       unless threadGetPromise.isResolved()
         threadSetFromCacheBeforeHTTPPromise = fn(thread, false)
@@ -935,78 +973,80 @@ app.view_thread._draw = ($view, {force_update = false, jumpResNum = -1} = {}) ->
     ).then( (successedSet) ->
       $view.removeClass("loading")
       $view.style.cursor = "auto"
-      setTimeout( ->
-        $reload_button.removeClass("disabled")
+      app.defer5( ->
+        $reloadButton.removeClass("disabled")
         return
-      , 1000 * 5)
+      )
       if successedSet then resolve(thread) else reject()
       return
     )
     return
   )
 
-app.view_thread._read_state_manager = ($view) ->
+app.viewThread._readStateManager = ($view) ->
   threadContent = app.DOMData.get($view, "threadContent")
   $content = $view.C("content")[0]
-  view_url = $view.dataset.url
-  board_url = app.URL.threadToBoard(view_url)
+  viewUrl = $view.dataset.url
+  boardUrl = app.URL.threadToBoard(viewUrl)
   requestReloadFlag = false
   scanCountByReloaded = 0
   attachedReadState = {last: 0, read: 0, received: 0, offset: null}
 
   #read_stateの取得
-  get_read_state = new Promise( (resolve, reject) ->
-    read_state_updated = false
-    if (bookmark = app.bookmark.get(view_url))?.read_state?
-      read_state = bookmark.read_state
-      resolve({read_state, read_state_updated})
+  getReadState = new Promise( (resolve, reject) ->
+    readStateUpdated = false
+    if (bookmark = app.bookmark.get(viewUrl))?.read_state?
+      readState = bookmark.read_state
+      resolve({readState, readStateUpdated})
     else
-      app.ReadState.get(view_url).then (_read_state) ->
-        read_state = _read_state or {received: 0, read: 0, last: 0, url: view_url, offset: null}
-        resolve({read_state, read_state_updated})
+      app.ReadState.get(viewUrl).then( (_readState) ->
+        readState = _readState or {received: 0, read: 0, last: 0, url: viewUrl, offset: null}
+        resolve({readState, readStateUpdated})
+        return
+      )
     return
   )
 
   #スレの描画時に、read_state関連のクラスを付与する
-  $view.on "view_loaded", ({ detail: {jumpResNum, loadCount} }) ->
+  $view.on("view_loaded", ({ detail: {jumpResNum, loadCount} }) ->
     if loadCount is 1
       # 初回の処理
-      get_read_state.then( ({read_state, read_state_updated}) ->
+      getReadState.then( ({readState, readStateUpdated}) ->
         $content.C("last")[0]?.removeClass("last")
         $content.C("read")[0]?.removeClass("read")
         $content.C("received")[0]?.removeClass("received")
 
-        # キャッシュの内容が古い場合にread_stateの内容の方が大きくなることがあるので
+        # キャッシュの内容が古い場合にreadStateの内容の方が大きくなることがあるので
         # その場合は次回の処理に委ねる
         contentLength = $content.child().length
-        if read_state.last <= contentLength
-          $content.child()[read_state.last - 1]?.addClass("last")
-          $content.child()[read_state.last - 1]?.attr("last-offset", read_state.offset)
+        if readState.last <= contentLength
+          $content.child()[readState.last - 1]?.addClass("last")
+          $content.child()[readState.last - 1]?.attr("last-offset", readState.offset)
           attachedReadState.last = -999
         else
-          attachedReadState.last = read_state.last
-          attachedReadState.offset = read_state.offset
-        if read_state.read <= contentLength
-          $content.child()[read_state.read - 1]?.addClass("read")
+          attachedReadState.last = readState.last
+          attachedReadState.offset = readState.offset
+        if readState.read <= contentLength
+          $content.child()[readState.read - 1]?.addClass("read")
           attachedReadState.read = -999
         else
-          attachedReadState.read = read_state.read
-        if read_state.received <= contentLength
-          $content.child()[read_state.received - 1]?.addClass("received")
+          attachedReadState.read = readState.read
+        if readState.received <= contentLength
+          $content.child()[readState.received - 1]?.addClass("received")
           attachedReadState.received = -999
         else
-          attachedReadState.received = read_state.received
+          attachedReadState.received = readState.received
         requestReloadFlag = false
 
         $view.dispatchEvent(new CustomEvent("read_state_attached", detail: {jumpResNum}))
         if attachedReadState.read > 0 and attachedReadState.received > 0
-          app.message.send("read_state_updated", {board_url, read_state})
+          app.message.send("read_state_updated", {board_url: boardUrl, read_state: readState})
         return
       )
       return
     # 2回目の処理
     # 画像のロードにより位置がずれることがあるので初回処理時の内容を使用する
-    tmpReadState = {read: null, received: null, url: view_url}
+    tmpReadState = {read: null, received: null, url: viewUrl}
     if attachedReadState.last > 0
       $content.C("last")[0]?.removeClass("last")
       $content.child()[attachedReadState.last - 1]?.addClass("last")
@@ -1022,10 +1062,11 @@ app.view_thread._read_state_manager = ($view) ->
     requestReloadFlag = false
     $view.dispatchEvent(new CustomEvent("read_state_attached", detail: {jumpResNum}))
     if tmpReadState.read and tmpReadState.received
-      app.message.send("read_state_updated", {board_url, read_state: tmpReadState})
+      app.message.send("read_state_updated", {board_url: boardUrl, read_state: tmpReadState})
     return
+  )
 
-  get_read_state.then ({read_state, read_state_updated}) ->
+  getReadState.then( ({readState, readStateUpdated}) ->
     scan = ->
       received = $content.child().length
       #onbeforeunload内で呼び出された時に、この値が0になる場合が有る
@@ -1035,9 +1076,9 @@ app.view_thread._read_state_manager = ($view) ->
 
       scanCountByReloaded++ if requestReloadFlag
 
-      if read_state.received isnt received
-        read_state.received = received
-        read_state_updated = true
+      if readState.received isnt received
+        readState.received = received
+        readStateUpdated = true
 
       lastDisplay = threadContent.getDisplay()
       if (
@@ -1045,80 +1086,87 @@ app.view_thread._read_state_manager = ($view) ->
         (!lastDisplay.bottom or lastDisplay.resNum is last)
       )
         if (
-          read_state.last isnt lastDisplay.resNum or
-          read_state.offset isnt lastDisplay.offset
+          readState.last isnt lastDisplay.resNum or
+          readState.offset isnt lastDisplay.offset
         )
-          read_state.last = lastDisplay.resNum
-          read_state.offset = lastDisplay.offset
-          read_state_updated = true
-      else if read_state.last isnt last
-        read_state.last = last
-        read_state.offset = null
-        read_state_updated = true
+          readState.last = lastDisplay.resNum
+          readState.offset = lastDisplay.offset
+          readStateUpdated = true
+      else if readState.last isnt last
+        readState.last = last
+        readState.offset = null
+        readStateUpdated = true
 
-      if read_state.read < last
-        read_state.read = last
-        read_state_updated = true
+      if readState.read < last
+        readState.read = last
+        readStateUpdated = true
 
       return
 
     #アンロード時は非同期系の処理をzombie.htmlに渡す
     #そのためにlocalStorageに更新するread_stateの情報を渡す
     doneBeforezombie = false
-    on_beforezombie = ->
+    onBeforezombie = ->
       return if doneBeforezombie
       doneBeforezombie = true
       scan()
-      if read_state_updated
+      if readStateUpdated
         if localStorage.zombie_read_state?
           data = JSON.parse(localStorage["zombie_read_state"])
         else
           data = []
-        data.push(read_state)
+        data.push(readState)
         localStorage["zombie_read_state"] = JSON.stringify(data)
       return
 
-    parent.window.on("beforezombie", on_beforezombie)
-    window.on("beforeunload", on_beforezombie)
+    parent.window.on("beforezombie", onBeforezombie)
+    window.on("beforeunload", onBeforezombie)
 
     #スクロールされたら定期的にスキャンを実行する
-    scroll_flg = false
-    scroll_watcher = setInterval ->
-      if scroll_flg
-        scroll_flg = false
+    scrollFlg = false
+    scrollWatcher = setInterval( ->
+      if scrollFlg
+        scrollFlg = false
         scan()
-        if read_state_updated
-          app.message.send("read_state_updated", {board_url, read_state})
-    , 250
+        if readStateUpdated
+          app.message.send("read_state_updated", {board_url: boardUrl, read_state: readState})
+      return
+    , 250)
 
-    scan_and_save = ->
+    scanAndSave = ->
       scan()
-      if read_state_updated
-        app.ReadState.set(read_state)
-        app.bookmark.update_read_state(read_state)
-        read_state_updated = false
-
-    app.message.addListener "request_update_read_state", (message) ->
-      if not message.board_url? or message.board_url is board_url
-        scan_and_save()
+      if readStateUpdated
+        app.ReadState.set(readState)
+        app.bookmark.update_read_state(readState)
+        readStateUpdated = false
       return
 
+    app.message.addListener("request_update_read_state", ({board_url} = {}) ->
+      if not board_url? or board_url is boardUrl
+        scanAndSave()
+      return
+    )
+
     $content.on("scroll", ->
-      scroll_flg = true
+      scrollFlg = true
       return
     , passive: true)
     $view.on("request_reload", ->
       requestReloadFlag = true
       scanCountByReloaded = 0
-      scan_and_save()
+      scanAndSave()
       return
     )
 
-    window.on "view_unload", ->
-      clearInterval(scroll_watcher)
-      parent.window.off("beforezombie", on_beforezombie)
-      window.off("beforeunload", on_beforezombie)
+    window.on("view_unload", ->
+      clearInterval(scrollWatcher)
+      parent.window.off("beforezombie", onBeforezombie)
+      window.off("beforeunload", onBeforezombie)
       #ロード中に閉じられた場合、スキャンは行わない
       return if $view.hasClass("loading")
-      scan_and_save()
+      scanAndSave()
       return
+    )
+    return
+  )
+  return

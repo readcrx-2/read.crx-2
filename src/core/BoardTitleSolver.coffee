@@ -3,7 +3,6 @@
 @class BoardTitleSolver
 @static
 @require app.BBSMenu
-@require jQuery
 ###
 class app.BoardTitleSolver
   ###*
@@ -21,17 +20,20 @@ class app.BoardTitleSolver
     return new Promise( (resolve, reject) =>
       if @_bbsmenu?
         resolve(@_bbsmenu)
-      else
-        app.BBSMenu.get (result) =>
-          if result.data?
-            @_bbsmenu = {}
-            for category in result.data
-              for board in category.board
-                @_bbsmenu[board.url] = board.title
-            resolve(@_bbsmenu)
-          else
-            reject()
+        return
+
+      app.BBSMenu.get( ({data}) =>
+        unless data?
+          reject()
           return
+
+        @_bbsmenu = {}
+        for {board} in data
+          for {url, title} in board
+            @_bbsmenu[url] = title
+        resolve(@_bbsmenu)
+        return
+      )
       return
     )
 
@@ -82,35 +84,23 @@ class app.BoardTitleSolver
   @return {Promise}
   ###
   @searchFromSettingTXT: (url) ->
-    return new Promise( (resolve, reject) ->
-      request = new app.HTTP.Request("GET", url + "SETTING.TXT", {
-        mimeType: "text/plain; charset=Shift_JIS"
-        timeout: 1000 * 10
-      })
-      request.send (response) ->
-        if response.status is 200
-          resolve(response.body)
-        else
-          reject(response.body)
-        return
-      return
+    request = new app.HTTP.Request("GET", "#{url}SETTING.TXT",
+      mimeType: "text/plain; charset=Shift_JIS"
+      timeout: 1000 * 10
+    )
+    return request.send().then( ({status, body}) ->
+      return body if status is 200
+      return Promise.reject()
     ).then( (text) ->
-      return new Promise( (resolve, reject) ->
-        if res = /^BBS_TITLE=(.+)$/m.exec(text)
-          title = res[1].replace("＠2ch掲示板", "")
-          tsld = app.URL.tsld(url)
-          if tsld is "2ch.sc"
-            title += "_sc"
-          else if tsld is "open2ch.net"
-            title += "_op"
-          resolve(title)
-        else
-          reject()
-        return
-      )
-    , ->
-      Promise.reject()
-      return
+      if res = /^BBS_TITLE=(.+)$/m.exec(text)
+        title = res[1].replace("＠2ch掲示板", "")
+        tsld = app.URL.tsld(url)
+        if tsld is "2ch.sc"
+          title += "_sc"
+        else if tsld is "open2ch.net"
+          title += "_op"
+        resolve(title)
+      return Promise.reject()
     )
 
   ###*
@@ -121,31 +111,19 @@ class app.BoardTitleSolver
   @searchFromJbbsAPI: (url) ->
     tmp = url.split("/")
     scheme = app.URL.getScheme(url)
-    ajax_path = "#{scheme}://jbbs.shitaraba.net/bbs/api/setting.cgi/#{tmp[3]}/#{tmp[4]}/"
+    ajaxPath = "#{scheme}://jbbs.shitaraba.net/bbs/api/setting.cgi/#{tmp[3]}/#{tmp[4]}/"
 
-    return new Promise( (resolve, reject) ->
-      request = new app.HTTP.Request("GET", ajax_path, {
-        mimeType: "text/plain; charset=EUC-JP"
-        timeout: 1000 * 10
-      })
-      request.send (response) ->
-        if response.status is 200
-          resolve(response.body)
-        else
-          reject(response.body)
-        return
-      return
+    request = new app.HTTP.Request("GET", ajaxPath,
+      mimeType: "text/plain; charset=EUC-JP"
+      timeout: 1000 * 10
+    )
+    return request.send().then( ({status, body}) ->
+      return body if status is 200
+      return Promise.reject()
     ).then( (text) ->
-      return new Promise( (resolve, reject) ->
-        if res = /^BBS_TITLE=(.+)$/m.exec(text)
-          resolve(res[1])
-        else
-          reject()
-        return
-      )
-    , ->
-      Promise.reject()
-      return
+      if res = /^BBS_TITLE=(.+)$/m.exec(text)
+        return res[1]
+      return Promise.reject()
     )
 
   ###*
@@ -158,26 +136,25 @@ class app.BoardTitleSolver
 
     #bbsmenu内を検索
     return @searchFromBBSMenu(url)
-      #ブックマーク内を検索
       .catch( =>
+        #ブックマーク内を検索
         return @searchFromBookmark(url)
-      )
-      #SETTING.TXTからの取得を試みる
-      .catch( =>
+      ).catch( =>
+        #SETTING.TXTからの取得を試みる
         if app.URL.guessType(url).bbsType is "2ch"
           return @searchFromSettingTXT(url)
         else
           return Promise.reject()
-      )
-      #したらばのAPIから取得を試みる
-      .catch( =>
+      ).catch( =>
+        #したらばのAPIから取得を試みる
         if app.URL.guessType(url).bbsType is"jbbs"
           return @searchFromJbbsAPI(url)
         else
           return Promise.reject()
       )
 
-app.module "board_title_solver", [], (callback) ->
+app.module("board_title_solver", [], (callback) ->
   app.BoardTitleSolver.getBBSMenu()
   callback(app.BoardTitleSolver)
   return
+)

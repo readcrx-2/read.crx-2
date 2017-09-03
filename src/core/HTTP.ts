@@ -29,61 +29,64 @@ namespace app.HTTP {
       this.preventCache = params.preventCache || false;
     }
 
-    send (callback:Function):void {
+    send ():Promise<Response> {
       var res, xhr:XMLHttpRequest, url:string, key:string,
-        val:string;
+        val:string, date:number;
 
       url = this.url;
 
       if (this.preventCache) {
+        date = Date.now();
         if (res = /\?(.*)$/.exec(url)) {
           if (res[1].length > 0) {
-            url += `&_=${Date.now()}`;
+            url += `&_=${date}`;
           }
           else {
-            url += `_=${Date.now()}`;
+            url += `_=${date}`;
           }
         }
         else {
-          url += `?=${Date.now()}`;
+          url += `?=${date}`;
         }
       }
 
-      xhr = new XMLHttpRequest();
+      return new Promise( (resolve, reject) => {
+        xhr = new XMLHttpRequest();
 
-      xhr.open(this.method, url);
+        xhr.open(this.method, url);
 
-      if (this.mimeType !== null) {
-        xhr.overrideMimeType(this.mimeType);
-      }
+        if (this.mimeType !== null) {
+          xhr.overrideMimeType(this.mimeType);
+        }
 
-      xhr.timeout = this.timeout;
+        xhr.timeout = this.timeout;
 
-      for (key in this.headers) {
-        val = this.headers[key];
+        for (key in this.headers) {
+          val = this.headers[key];
+          xhr.setRequestHeader(key, val);
+        }
 
-        xhr.setRequestHeader(key, val);
-      }
+        xhr.on("loadend", () => {
+          var resonseHeaders;
 
-      xhr.on("loadend", () => {
-        var resonseHeaders;
+          resonseHeaders = Request.parseHTTPHeader(xhr.getAllResponseHeaders());
 
-        resonseHeaders = Request.parseHTTPHeader(xhr.getAllResponseHeaders());
+          resolve(new Response(xhr.status, resonseHeaders, xhr.responseText, xhr.responseURL));
+        });
 
-        callback(new Response(xhr.status, resonseHeaders, xhr.responseText, xhr.responseURL));
+        xhr.on("timeout", () => {
+          reject();
+        });
+
+        xhr.on("abort", () => {
+          reject();
+        });
+
+        xhr.send();
+
+        this.xhr = xhr;
+        return
       });
-
-      xhr.on("timeout", () => {
-        callback(new Response(0));
-      });
-
-      xhr.on("abort", () => {
-        callback(new Response(0));
-      });
-
-      xhr.send();
-
-      this.xhr = xhr;
     }
 
     abort ():void {
@@ -115,8 +118,8 @@ namespace app.HTTP {
     constructor (
       public status:number,
       public headers:{[index:string]:string;} = {},
-      public body:string|null = null,
-      public responseURL: string|null = null
+      public body:string,
+      public responseURL: string
     ) {
     }
   }

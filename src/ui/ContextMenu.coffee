@@ -24,7 +24,7 @@ do ->
     return
   )
 
-  UI.contextmenu = ($menu, x, y) ->
+  UI.ContextMenu = ($menu, x, y) ->
     cleanup()
 
     $menu.addClass("contextmenu_menu")

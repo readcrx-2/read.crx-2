@@ -11,21 +11,22 @@ regs = [
   ///^https?://\w+\.machi\.to/bbs/read\.cgi/\w+/\d+///
 ]
 
-open_button_id = "36e5cda5"
-close_button_id = "92a5da13"
+openButtonId = "36e5cda5"
+closeButtonId = "92a5da13"
 url = chrome.extension.getURL("/view/index.html")
 url += "?q=#{encodeURIComponent(location.href)}"
 
-if (regs.some (a) -> a.test(location.href))
-  document.body.addEventListener "mousedown", (e) ->
-    if e.target.id is open_button_id
+if regs.some((a) -> a.test(location.href))
+  document.body.addEventListener("mousedown", ({target, button, ctrlKey, shiftKey}) ->
+    if target.id is openButtonId
       a = document.createElement("a")
       a.href = url
-      event = new MouseEvent("click", {button: e.button ,ctrlKey: e.ctrlKey, shiftKey: e.shiftKey})
+      event = new MouseEvent("click", {button, ctrlKey, shiftKey})
       a.dispatchEvent(event)
-    else if e.target.id is close_button_id
-      @removeChild(e.target.parentElement)
+    else if target.id is closeButtonId
+      @removeChild(target.parentElement)
     return
+  )
 
   container = document.createElement("div")
   style =
@@ -44,19 +45,19 @@ if (regs.some (a) -> a.test(location.href))
   for key, val of style
     container.style[key] = val
 
-  open_button = document.createElement("span")
-  open_button.id = open_button_id
-  open_button.textContent = "read.crx 2 で開く"
-  open_button.style["cursor"] = "pointer"
-  open_button.style["text-decoration"] = "underline"
-  container.appendChild(open_button)
+  openButton = document.createElement("span")
+  openButton.id = openButtonId
+  openButton.textContent = "read.crx 2 で開く"
+  openButton.style["cursor"] = "pointer"
+  openButton.style["text-decoration"] = "underline"
+  container.appendChild(openButton)
 
-  close_button = document.createElement("span")
-  close_button.id = close_button_id
-  close_button.textContent = " x"
-  close_button.style["cursor"] = "pointer"
-  close_button.style["display"] = "inline-block"
-  close_button.style["margin-left"] = "5px"
-  container.appendChild(close_button)
+  closeButton = document.createElement("span")
+  closeButton.id = closeButtonId
+  closeButton.textContent = " x"
+  closeButton.style["cursor"] = "pointer"
+  closeButton.style["display"] = "inline-block"
+  closeButton.style["margin-left"] = "5px"
+  container.appendChild(closeButton)
 
   document.body.appendChild(container)

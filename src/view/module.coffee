@@ -215,17 +215,17 @@ class app.view.IframeView extends app.view.View
       when "openCommandBox"
         @_openCommandBox()
       when "enter"
-        @$element.C("selected")[0].dispatchEvent(
+        @$element.C("selected")[0]?.dispatchEvent(
           new Event("mousedown", bubbles: true)
         )
-        @$element.C("selected")[0].dispatchEvent(
+        @$element.C("selected")[0]?.dispatchEvent(
           new Event("mouseup", bubbles: true)
         )
       when "shift+enter"
-        @$element.C("selected")[0].dispatchEvent(
+        @$element.C("selected")[0]?.dispatchEvent(
           new MouseEvent("mousedown", shiftKey: true, bubbles: true)
         )
-        @$element.C("selected")[0].dispatchEvent(
+        @$element.C("selected")[0]?.dispatchEvent(
           new MouseEvent("mouseup", shiftKey: true, bubbles: true)
         )
       when "help"

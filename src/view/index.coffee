@@ -967,8 +967,8 @@ app.main = ->
     dom.on("dblclick", ({target}) ->
       if target.matches("li")
         $source = target
-      else if target.closest(".tab_tabbar, li")?
-        $source = target.closest(".tab_tabbar, li")
+      else if target.closest(".tab_tabbar > li")?
+        $source = target.closest(".tab_tabbar > li")
       return unless $source?
 
       sourceTabId = $source.dataset.tabid

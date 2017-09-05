@@ -275,7 +275,8 @@ class UI.ThreadContent
           @container.dispatchEvent(new Event("scrollstart"))
 
           to = target.offsetTop + offset
-          change = (to - @container.scrollTop)/15
+          movingHeight = to - @container.scrollTop
+          change = Math.max(Math.round(movingHeight / 15), 1)
           min = Math.min(to-change, to+change)
           max = Math.max(to-change, to+change)
           @_scrollRequestID = requestAnimationFrame(_scrollInterval = =>
@@ -283,6 +284,9 @@ class UI.ThreadContent
             # 画像のロードによる座標変更時の補正
             if to isnt target.offsetTop + offset
               to = target.offsetTop + offset
+              if to - @container.scrollTop > movingHeight
+                movingHeight = to - @container.scrollTop
+                change = Math.max(Math.round(movingHeight / 15), 1)
               min = Math.min(to-change, to+change)
               max = Math.max(to-change, to+change)
             # 例外発生時の停止処理

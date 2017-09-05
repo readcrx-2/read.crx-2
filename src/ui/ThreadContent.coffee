@@ -9,6 +9,8 @@ window.UI ?= {}
 @requires MediaContainer
 ###
 class UI.ThreadContent
+  _OVER1000_DATA = "Over 1000"
+
   constructor: (@url, @container) ->
     ###*
     @property idIndex
@@ -97,6 +99,13 @@ class UI.ThreadContent
     @private
     ###
     @_scrollRequestID = 0
+
+    ###*
+    @property _over1000Res
+    @type Boolean
+    @private
+    ###
+    @_over1000Res = false
 
     try
       @harmfulReg = new RegExp(app.config.get("image_blur_word"))
@@ -513,6 +522,7 @@ class UI.ThreadContent
         return
 
       resNum = @container.child().length
+      {bbsType} = app.URL.guessType(@url)
 
       app.WriteHistory.getByUrl(@url).then( (writtenRes) =>
         html = ""
@@ -617,6 +627,13 @@ class UI.ThreadContent
 
           articleHtml += "</header>"
 
+          # スレッド終端の自動追加メッセージの確認
+          if (
+            bbsType is "2ch" and
+            tmp.startsWith(_OVER1000_DATA)
+          )
+            @_over1000Res = true
+
           #文字色
           color = res.message.match(/<font color="(.*?)">/i)
 
@@ -626,8 +643,7 @@ class UI.ThreadContent
             res.class.push("ng")
             res.attr["ng-type"] = ngType
           else
-            guessType = app.URL.guessType(@url)
-            if guessType.bbsType is "2ch" and resNum <= 1000
+            if bbsType is "2ch" and !@_over1000Res
               # idなしをNG
               if (
                 app.config.isOn("nothing_id_ng") and !res.id? and

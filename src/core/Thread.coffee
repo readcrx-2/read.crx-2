@@ -289,7 +289,7 @@ class app.Thread
         #ブックマーク更新部
         app.bookmark.update_res_count(@url, thread.res.length) if thread?
         return {response, thread}
-      ).then( ({response: {status}, thread}) =>
+      ).then( ({response: {status} = {}}) =>
         #dat落ち検出
         if status is 203
           app.bookmark.update_expired(@url, true)

@@ -209,7 +209,6 @@ class app.Board
   ###
   @parse: (url, text) ->
     tmp = /^(https?):\/\/((?:\w+\.)?(\w+\.\w+))\/(\w+)(?:\/(\w+)|\/?)/.exec(url)
-    console.log url, tmp
     scFlg = false
     switch tmp[3]
       when "machi.to"

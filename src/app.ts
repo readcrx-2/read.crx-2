@@ -371,7 +371,7 @@ namespace app {
           return;
         }
 
-        chrome.storage.local.remove("config_" + key, () => {
+        chrome.storage.local.remove(`config_${key}`, () => {
           if (chrome.runtime.lasterror) {
             reject(chrome.runtime.lasterror.message);
           } else {

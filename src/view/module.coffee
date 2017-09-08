@@ -90,31 +90,30 @@ class app.view.View
       target = e.target.closest(".open_in_rcrx")
       return unless target?
       e.preventDefault()
-      if e.which isnt 3
-        url = target.dataset.href or target.href
-        title = target.dataset.title or target.textContent
-        writtenResNum = if target.getAttr("ignore-res-number") is "on" then null else target.dataset.writtenResNum
-        paramResFlg = (
-          (app.config.get("enable_link_with_res_number") is "on" and
-           target.getAttr("toggle-param-res-num") isnt "on") or
-          (app.config.get("enable_link_with_res_number") is "off" and
-           target.getAttr("toggle-param-res-num") is "on")
-        )
-        paramResNum = if paramResFlg then target.dataset.paramResNum else null
-        target.removeAttribute("toggle-param-res-num")
-        target.removeAttribute("ignore-res-number")
-        {new_tab: openNewTab, new_window: openNewWindow, background} = app.util.getHowToOpen(e)
-        newTab = app.config.get("always_new_tab") is "on"
-        newTab or= openNewTab or openNewWindow
+      return if e.which is 3
+      url = target.dataset.href or target.href
+      title = target.dataset.title or target.textContent
+      writtenResNum = if target.getAttr("ignore-res-number") is "on" then null else target.dataset.writtenResNum
+      paramResFlg = (
+        (app.config.get("enable_link_with_res_number") is "on" and
+         target.getAttr("toggle-param-res-num") isnt "on") or
+        (app.config.get("enable_link_with_res_number") is "off" and
+         target.getAttr("toggle-param-res-num") is "on")
+      )
+      paramResNum = if paramResFlg then target.dataset.paramResNum else null
+      target.removeAttribute("toggle-param-res-num")
+      target.removeAttribute("ignore-res-number")
+      {newTab, newWindow, background} = app.util.getHowToOpen(e)
+      newTab or= app.config.get("always_new_tab") is "on" or newWindow
 
-        app.message.send("open", {
-          url
-          new_tab: newTab
-          background
-          title
-          written_res_num: writtenResNum
-          param_res_num: paramResNum
-        })
+      app.message.send("open", {
+        url
+        new_tab: newTab
+        background
+        title
+        written_res_num: writtenResNum
+        param_res_num: paramResNum
+      })
       return
     )
     @$element.on("click", (e) ->
@@ -535,7 +534,7 @@ class app.view.TabContentView extends app.view.PaneContentView
     for dom in @$element.$$(".button_back, .button_forward")
       dom.on("mousedown", (e) ->
         if e.which isnt 3
-          {new_tab: newTab, new_window: newWindow, background} = app.util.getHowToOpen(e)
+          {newTab, newWindow, background} = app.util.getHowToOpen(e)
           newTab or= newWindow
 
           return if @hasClass("disabled")

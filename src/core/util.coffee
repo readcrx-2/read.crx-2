@@ -126,26 +126,23 @@ do ->
   #マウスクリックのイベントオブジェクトから、リンク先をどう開くべきかの情報を導く
   openMap = new Map([
     #which(number), shift(bool), ctrl(bool)の文字列
-    ["1falsefalse", { new_tab: false, new_window: false, background: false }]
-    ["1truefalse",  { new_tab: false, new_window: true,  background: false }]
-    ["1falsetrue",  { new_tab: true,  new_window: false, background: true  }]
-    ["1truetrue",   { new_tab: true,  new_window: false, background: false }]
-    ["2falsefalse", { new_tab: true,  new_window: false, background: true  }]
-    ["2truefalse",  { new_tab: true,  new_window: false, background: false }]
-    ["2falsetrue",  { new_tab: true,  new_window: false, background: true  }]
-    ["2truetrue",   { new_tab: true,  new_window: false, background: false }]
+    ["1falsefalse", { newTab: false, newWindow: false, background: false }]
+    ["1truefalse",  { newTab: false, newWindow: true,  background: false }]
+    ["1falsetrue",  { newTab: true,  newWindow: false, background: true  }]
+    ["1truetrue",   { newTab: true,  newWindow: false, background: false }]
+    ["2falsefalse", { newTab: true,  newWindow: false, background: true  }]
+    ["2truefalse",  { newTab: true,  newWindow: false, background: false }]
+    ["2falsetrue",  { newTab: true,  newWindow: false, background: true  }]
+    ["2truetrue",   { newTab: true,  newWindow: false, background: false }]
   ])
   app.util.getHowToOpen = ({type, which, shiftKey, ctrlKey, metaKey}) ->
     ctrlKey or= metaKey
-    def = {new_tab: false, new_window: false, background: false}
+    def = {newTab: false, newWindow: false, background: false}
     if type is "mousedown"
       key = "" + which + shiftKey + ctrlKey
       if openMap.has(key)
         return openMap.get(key)
-      else
-        return def
-    else
-      return def
+    return def
 
   app.util.searchNextThread = (threadUrl, threadTitle) ->
     threadUrl = app.URL.fix(threadUrl)

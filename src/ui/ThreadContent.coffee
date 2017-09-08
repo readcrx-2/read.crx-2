@@ -57,6 +57,8 @@ class UI.ThreadContent
       resNum: 0
       animate: false
       offset: 0
+      animateTo: 0
+      animateChange: 0
 
     ###*
     @property _timeoutID
@@ -268,26 +270,30 @@ class UI.ThreadContent
       if 0 < offset < 1
         offset = Math.round(target.offsetHeight * offset)
 
-      # 遅延スクロールの設定
-      if (
-        (loadFlag or @_timeoutID isnt 0) and
-        not app.config.isOn("image_height_fix")
-      )
-        @container.scrollTop = target.offsetTop + offset
-        return
+      # 遅延スクロール時の実行必要性確認
       return if rerun and @container.scrollTop is target.offsetTop + offset
 
       # スクロールの実行
       if animate
-        cancelAnimationFrame(@_scrollRequestID) if @_isScrolling
+        rerunAndCancel = false
+        if @_isScrolling
+          cancelAnimationFrame(@_scrollRequestID)
+          rerunAndCancel = true if rerun
         do =>
           @container.dispatchEvent(new Event("scrollstart"))
 
           to = target.offsetTop + offset
           movingHeight = to - @container.scrollTop
-          change = Math.max(Math.round(movingHeight / 15), 1)
+          if rerunAndCancel and to is @_lastScrollInfo.animateTo
+            change = @_lastScrollInfo.animateChange
+          else
+            change = Math.max(Math.round(movingHeight / 15), 1)
           min = Math.min(to-change, to+change)
           max = Math.max(to-change, to+change)
+          unless rerun
+            @_lastScrollInfo.animateTo = to
+            @_lastScrollInfo.animateChange = change
+
           @_scrollRequestID = requestAnimationFrame(_scrollInterval = =>
             before = @container.scrollTop
             # 画像のロードによる座標変更時の補正
@@ -298,6 +304,9 @@ class UI.ThreadContent
                 change = Math.max(Math.round(movingHeight / 15), 1)
               min = Math.min(to-change, to+change)
               max = Math.max(to-change, to+change)
+              unless rerun
+                @_lastScrollInfo.animateTo = to
+                @_lastScrollInfo.animateChange = change
             # 例外発生時の停止処理
             if (
               (change > 0 and @container.scrollTop > max) or

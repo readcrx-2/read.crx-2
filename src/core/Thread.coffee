@@ -287,12 +287,12 @@ class app.Thread
         return {response, thread}
       ).then( ({response, thread}) =>
         #ブックマーク更新部
-        app.bookmark.update_res_count(@url, thread.res.length) if thread?
+        app.bookmark.updateResCount(@url, thread.res.length) if thread?
         return {response, thread}
       ).then( ({response: {status} = {}}) =>
         #dat落ち検出
         if status is 203
-          app.bookmark.update_expired(@url, true)
+          app.bookmark.updateExpired(@url, true)
         return
       )
       return

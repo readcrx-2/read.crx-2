@@ -67,7 +67,7 @@ app.boot("/view/bookmark.html", ["board"], (Board) ->
         count[status]++
         if status is "error"
           for board in boardThreadTable.get(@prev)
-            app.message.send("bookmark_updated", {type: "errored", bookmark: {type: "thread", url: board}, entry: {type: "thread"}})
+            app.message.send("bookmark_updated", {type: "errored", bookmark: {type: "thread", url: board}})
 
       if count.all is count.success + count.error
         #更新完了

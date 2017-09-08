@@ -812,7 +812,7 @@ app.boot("/view/thread.html", ->
       show: ->
         next = null
 
-        bookmarks = app.bookmark.get_all().filter( (bookmark) ->
+        bookmarks = app.bookmark.getAll().filter( (bookmark) ->
           return (bookmark.type is "thread") and (bookmark.url isnt viewUrl)
         )
 
@@ -820,16 +820,16 @@ app.boot("/view/thread.html", ->
         if bookmark = app.bookmark.get(viewUrl)
           bookmarks.unshift(bookmark)
 
-        for bookmark in bookmarks when bookmark.res_count?
+        for bookmark in bookmarks when bookmark.resCount?
           read = null
 
           if iframe = parent.$$.$("[data-url=\"#{bookmark.url}\"]")
             read = iframe.contentWindow?.$$?(".content > article").length
 
           unless read
-            read = bookmark.read_state?.read or 0
+            read = bookmark.readState?.read or 0
 
-          if bookmark.res_count > read
+          if bookmark.resCount > read
             next = bookmark
             break
 
@@ -839,7 +839,7 @@ app.boot("/view/thread.html", ->
           else
             text = "未読ブックマーク: #{next.title}"
           if next.res_count?
-            text += " (未読#{next.res_count - (next.read_state?.read or 0)}件)"
+            text += " (未読#{next.resCount - (next.readState?.read or 0)}件)"
           @_elm.href = app.safeHref(next.url)
           @_elm.textContent = text
           @_elm.dataset.title = next.title
@@ -881,7 +881,7 @@ app.boot("/view/thread.html", ->
       updateThreadFooter()
       return
     )
-    app.message.on("bookmark_updated", (message) ->
+    app.message.on("bookmark_updated", ->
       if canBeShown
         $nextUnread.show()
       return
@@ -995,8 +995,8 @@ app.viewThread._readStateManager = ($view) ->
   #read_stateの取得
   getReadState = new Promise( (resolve, reject) ->
     readStateUpdated = false
-    if (bookmark = app.bookmark.get(viewUrl))?.read_state?
-      readState = bookmark.read_state
+    if (bookmark = app.bookmark.get(viewUrl))?.readState?
+      {readState} = bookmark
       resolve({readState, readStateUpdated})
     else
       app.ReadState.get(viewUrl).then( (_readState) ->
@@ -1137,7 +1137,7 @@ app.viewThread._readStateManager = ($view) ->
       scan()
       if readStateUpdated
         app.ReadState.set(readState)
-        app.bookmark.update_read_state(readState)
+        app.bookmark.updateReadState(readState)
         readStateUpdated = false
       return
 

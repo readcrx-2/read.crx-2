@@ -51,19 +51,19 @@ app.boot("/view/sidemenu.html", ["bbsmenu"], (BBSMenu) ->
     )
 
     #ブックマーク更新時処理
-    app.message.on("bookmark_updated", ({entry, type}) ->
-      return if entry.type isnt "board"
+    app.message.on("bookmark_updated", ({type, bookmark}) ->
+      return if bookmark.type isnt "board"
 
-      $a = $view.$("li.bookmark > a[href=\"#{entry.url}\"]")
+      $a = $view.$("li.bookmark > a[href=\"#{bookmark.url}\"]")
 
       switch type
         when "added"
           unless $a?
-            $view.$("ul:first-of-type").addLast(entryToLi(entry))
+            $view.$("ul:first-of-type").addLast(entryToLi(bookmark))
         when "removed"
           $a.parent().remove()
         when "title"
-          $a.textContent = entry.title
+          $a.textContent = bookmark.title
       return
     )
 

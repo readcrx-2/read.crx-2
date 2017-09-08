@@ -6,9 +6,9 @@ app.boot("/zombie.html", ->
       new app.Bookmark.ChromeBookmarkEntryList(app.config.get("bookmark_id"))
     )
 
-    app.bookmark.promise_first_scan.then( ->
+    app.bookmark.promiseFirstScan.then( ->
       rsarray = (app.ReadState.set(rs).catch(->return) for rs in arrayOfReadState)
-      bkarray = (app.bookmark.update_read_state(rs).catch(->return) for rs in arrayOfReadState)
+      bkarray = (app.bookmark.updateReadState(rs).catch(->return) for rs in arrayOfReadState)
       return Promise.all(rsarray.concat(bkarray))
     ).then( ->
       close()

@@ -120,8 +120,8 @@ app.boot("/view/board.html", ["board"], (Board) ->
       item = []
       for thread, threadNumber in board
         readState = readStateArray[readStateIndex[thread.url]]
-        if (bookmark = app.bookmark.get(thread.url))?.read_state?
-          readState = bookmark.read_state
+        if (bookmark = app.bookmark.get(thread.url))?.readState?
+          {readState} = bookmark
         thread.readState = readState
         thread.threadNumber = threadNumber
         item.push(thread)

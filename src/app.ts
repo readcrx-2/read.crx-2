@@ -336,6 +336,10 @@ namespace app {
       return JSON.stringify(json);
     }
 
+    isOn (key:string):boolean {
+      return this.get(key) === "on";
+    }
+
     set (key:string, val:string) {
       return new Promise( (resolve, reject) => {
         var tmp = {};

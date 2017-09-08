@@ -134,7 +134,7 @@ app.boot("/view/thread.html", ->
         return
 
       app.viewThread._draw($view, { forceUpdate: ex.force_update, jumpResNum }).then( (thread) ->
-        return unless ex?.mes? and app.config.get("no_writehistory") is "off"
+        return unless ex?.mes? and not app.config.isOn("no_writehistory")
         postMes = ex.mes.replace(/\s/g, "")
         for t, i in thread.res by -1 when postMes is app.util.decodeCharReference(app.util.stripTags(t.message)).replace(/\s/g, "")
           date = threadContent.stringToDate(t.other)
@@ -219,7 +219,7 @@ app.boot("/view/thread.html", ->
       jumpResNum = +iframe.dataset.paramResNum if jumpResNum < 1
 
     app.viewThread._draw($view, {jumpResNum}).catch( -> return).then( ->
-      app.History.add(viewUrl, document.title, openedAt) unless app.config.get("no_history") is "on"
+      app.History.add(viewUrl, document.title, openedAt) unless app.config.isOn("no_history")
       return
     )
     return
@@ -634,7 +634,7 @@ app.boot("/view/thread.html", ->
         return
     })
     # レス番号を指定してリンクを開く
-    if app.config.get("enable_link_with_res_number") is "on"
+    if app.config.isOn("enable_link_with_res_number")
       menuTitle = "レス番号を無視してリンクを開く"
     else
       menuTitle = "レス番号を指定してリンクを開く"
@@ -682,7 +682,7 @@ app.boot("/view/thread.html", ->
 
   #何もないところをダブルクリックすると更新する
   $view.on("dblclick", ({target}) ->
-    return if app.config.get("dblclick_reload") is "off"
+    return unless app.config.isOn("dblclick_reload")
     return unless target.hasClass("message")
     return if target.tagName is "A" or target.hasClass("thumbnail")
     $view.dispatchEvent(new Event("request_reload"))

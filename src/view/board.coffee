@@ -80,7 +80,7 @@ app.boot("/view/board.html", ["board"], (Board) ->
 
   app.BoardTitleSolver.ask(url).then( (title) ->
     document.title = title if title
-    if app.config.get("no_history") is "off"
+    unless app.config.isOn("no_history")
       app.History.add(url, title or url, openedAt)
     return
   )
@@ -129,7 +129,7 @@ app.boot("/view/board.html", ["board"], (Board) ->
 
       # スレ建て後の処理
       if ex?
-        writeFlag = app.config.get("no_writehistory") is "off"
+        writeFlag = (not app.config.isOn("no_writehistory"))
         if ex.kind is "own"
           if writeFlag
             app.WriteHistory.add(ex.thread_url, 1, ex.title, ex.name, ex.mail, ex.name, ex.mail, ex.mes, Date.now().valueOf())

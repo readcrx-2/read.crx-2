@@ -12,7 +12,7 @@ app.boot("/view/inputurl.html", ->
       url = "http://" + url
     {type: guessType} = app.URL.guessType(url)
     if guessType is "thread" or guessType is "board"
-      paramResNumFlag = (app.config.get("enable_link_with_res_number") is "on")
+      paramResNumFlag = app.config.isOn("enable_link_with_res_number")
       paramResNum = if paramResNumFlag then app.URL.getResNumber(url) else null
       app.message.send("open", {
         url

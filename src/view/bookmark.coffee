@@ -79,7 +79,7 @@ app.boot("/view/bookmark.html", ["board"], (Board) ->
             tr.parent().addLast(tr)
           trUpdatedObserver.disconnect()
           $view.removeClass("loading")
-          if app.config.get("auto_bookmark_notify") is "on" and auto
+          if app.config.isOn("auto_bookmark_notify") and auto
             notify()
           $view.C("searchbox")[0].disabled = false
           setTimeout(->

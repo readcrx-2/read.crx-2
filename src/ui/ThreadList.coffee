@@ -103,10 +103,10 @@ class UI.ThreadList
         if $tr?
           if bookmark.expired
             $tr.addClass("expired")
-            if app.config.get("bookmark_show_dat") is "off"
-              $tr.addClass("hidden")
-            else
+            if app.config.isOn("bookmark_show_dat")
               $tr.removeClass("hidden")
+            else
+              $tr.addClass("hidden")
           else
             $tr.removeClass("expired")
 
@@ -363,7 +363,7 @@ class UI.ThreadList
       trClassName += " ng_thread" if item.ng
       trClassName += " net" if item.isNet
       trClassName += " https" if item.isHttps
-      if item.expired and app.config.get("bookmark_show_dat") is "off"
+      if item.expired and not app.config.isOn("bookmark_show_dat")
         trClassName += " hidden"
 
       tmpHeadHTML = " data-href=\"#{app.escapeHtml(item.url)}\""

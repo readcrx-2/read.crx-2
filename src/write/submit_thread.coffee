@@ -102,7 +102,7 @@ app.boot("/write/submit_thread.html", ->
   $sage = $view.C("sage")[0]
   $mail = $view.C("mail")[0]
 
-  if app.config.get("sage_flag") is "on"
+  if app.config.isOn("sage_flag")
     $sage.checked = true
     $mail.disabled = true
   $view.C("sage")[0].on("change", ->
@@ -118,7 +118,7 @@ app.boot("/write/submit_thread.html", ->
   $notice = $view.C("notice")[0]
   onError = (message) ->
     for dom from $view.$$("form input, form textarea")
-      dom.disabled = false unless dom.hasClass("mail") and app.config.get("sage_flag") is "on"
+      dom.disabled = false unless dom.hasClass("mail") and app.config.isOn("sage_flag")
 
     if message
       $notice.textContent = "書き込み失敗 - #{message}"
@@ -187,7 +187,7 @@ app.boot("/write/submit_thread.html", ->
       return
     )
     for dom from $view.$$("input, textarea")
-      dom.disabled = false unless dom.hasClass("mail") and app.config.get("sage_flag") is "on"
+      dom.disabled = false unless dom.hasClass("mail") and app.config.isOn("sage_flag")
     $notice.textContent = ""
     return
   )
@@ -204,7 +204,7 @@ app.boot("/write/submit_thread.html", ->
     e.preventDefault()
 
     for dom from $view.$$("input, textarea")
-      dom.disabled = true unless dom.hasClass("mail") and app.config.get("sage_flag") is "on"
+      dom.disabled = true unless dom.hasClass("mail") and app.config.isOn("sage_flag")
 
     {bbsType} = app.URL.guessType(arg.url)
     scheme = app.URL.getScheme(arg.url)

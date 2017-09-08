@@ -2,17 +2,8 @@ do ->
   return if navigator.platform.includes("Win")
   font = localStorage.getItem("textar_font")
   return unless font?
-  document.on("DOMContentLoaded", ->
-    style = $__("style")
-    style.textContent = """
-      @font-face {
-        font-family: "Textar";
-        src: url(#{font});
-      }
-    """
-    document.head.addLast(style)
-    return
-  )
+  fontface = new FontFace("Textar", "url(#{font})")
+  document.fonts.add(fontface)
   return
 
 app.boot("/write/submit_thread.html", ->

@@ -26,17 +26,8 @@ do ->
       return
     )
   ).then( (font) ->
-    document.on("DOMContentLoaded", ->
-      style = $__("style")
-      style.textContent = """
-        @font-face {
-          font-family: "Textar";
-          src: url(#{font});
-        }
-      """
-      document.head.addLast(style)
-      return
-    )
+    fontface = new FontFace("Textar", "url(#{font})")
+    document.fonts.add(fontface)
     return
   )
   return

@@ -1,14 +1,14 @@
-app.boot "/view/history.html", ->
+app.boot("/view/history.html", ->
   $view = document.documentElement
   $content = $$.C("content")[0]
 
   new app.view.TabContentView($view)
 
   $table = $__("table")
-  threadList = new UI.ThreadList($table, {
+  threadList = new UI.ThreadList($table,
     th: ["title", "viewedDate"]
     searchbox: $view.C("searchbox")[0]
-  })
+  )
   app.DOMData.set($view, "threadList", threadList)
   app.DOMData.set($view, "selectableItemList", threadList)
   $content.addLast($table)
@@ -33,7 +33,7 @@ app.boot "/view/history.html", ->
       promise = app.History.getUnique(offset, NUMBER_OF_DATA_IN_ONCE)
     else
       promise = app.History.get(offset, NUMBER_OF_DATA_IN_ONCE)
-    promise.then (data) ->
+    promise.then( (data) ->
       if add
         loadAddCount++
       else
@@ -49,11 +49,12 @@ app.boot "/view/history.html", ->
       return if add and data.length is 0
       $view.dispatchEvent(new Event("view_loaded"))
       $view.C("button_reload")[0].addClass("disabled")
-      setTimeout(->
+      app.defer5(->
         $view.C("button_reload")[0].removeClass("disabled")
         return
-      , 5000)
+      )
       return
+    )
     return
 
   $view.on("request_reload", load)
@@ -73,14 +74,12 @@ app.boot "/view/history.html", ->
   , passive: true)
 
   $view.C("button_history_clear")[0].on("click", ->
-    UI.dialog("confirm", {
+    UI.Dialog("confirm",
       message: "履歴を削除しますか？"
-      label_ok: "はい"
-      label_no: "いいえ"
-    }).then (res) ->
-      if res
-        app.History.clear().then(load)
+    ).then( (res) ->
+      app.History.clear().then(load) if res
       return
+    )
     return
   )
 
@@ -93,3 +92,4 @@ app.boot "/view/history.html", ->
   $view.C("button_show_unique")[0].on("click", onClickUnique)
   $view.C("button_show_all")[0].on("click", onClickUnique)
   return
+)

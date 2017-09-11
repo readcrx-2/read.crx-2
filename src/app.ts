@@ -14,8 +14,8 @@ namespace app {
       }
     )
 
-    parent.chrome.tabs.getCurrent( (tab): void => {
-      parent.chrome.tabs.remove(tab.id);
+    parent.chrome.tabs.getCurrent( ({id}): void => {
+      parent.chrome.tabs.remove(id);
     });
   }
 
@@ -50,7 +50,11 @@ namespace app {
   }
 
   export function defer (fn:Function):void {
-    requestIdleCallback(fn);
+    setTimeout(fn, 100);
+  }
+
+  export function defer5 (fn:Function):void {
+    setTimeout(fn, 1000 * 5);
   }
 
   export function assertArg (name:string, rule:string[], arg:any[]):boolean {
@@ -133,51 +137,13 @@ namespace app {
 
   export class Message {
     private _listenerStore:{[index:string]:Callbacks;} = {};
+    private _bc:any;
 
     constructor () {
-      window.addEventListener("message", (e:MessageEvent) => {
-        if (e.origin !== location.origin) return;
-
-        var data, iframes, iframe:HTMLIFrameElement;
-
-        if (typeof e.data === "string") {
-          try {
-            data = JSON.parse(e.data);
-          }
-          catch (e) {
-          }
-        }
-        else {
-          data = e.data;
-        }
-
-        if (typeof data !== "object" || data.type !== "app.message") {
-          return;
-        }
-
-        if (data.propagation !== false) {
-          iframes = Array.from(document.getElementsByTagName("iframe"));
-
-          // parentから伝わってきた場合はiframeにも伝える
-          if (e.source === parent) {
-            for (iframe of iframes) {
-              iframe.contentWindow.postMessage(e.data, location.origin);
-            }
-          }
-          // iframeから伝わってきた場合は、parentと他のiframeにも伝える
-          else {
-            if (parent !== window) {
-              parent.postMessage(e.data, location.origin);
-            }
-
-            for (iframe of iframes) {
-              if (iframe.contentWindow === e.source) continue;
-              iframe.contentWindow.postMessage(e.data, location.origin);
-            }
-          }
-        }
-
-        this._fire(data.message_type, data.message);
+      this._bc = new BroadcastChannel("readcrx");
+      this._bc.on("message", ({data}) => {
+        var {type, message} = JSON.parse(data);
+        this._fire(type, message);
       });
     }
 
@@ -191,40 +157,20 @@ namespace app {
       });
     }
 
-    send (type:string, message:any, targetWindow?:Window):void {
-      var data: Object, iframes, iframe:HTMLIFrameElement;
-
-      data = {
-        type: "app.message",
-        message_type: type,
-        message: message,
-        propagation: !targetWindow
-      };
-
-      if (targetWindow) {
-        targetWindow.postMessage(data, location.origin);
-      }
-      else {
-        if (parent !== window) {
-          parent.postMessage(data, location.origin);
-        }
-
-        iframes = Array.from(document.getElementsByTagName("iframe"));
-        for (iframe of iframes) {
-          iframe.contentWindow.postMessage(data, location.origin);
-        }
-        this._fire(type, message);
-      }
+    send (type:string, message:any = {}):void {
+      this._fire(type, message);
+      this._bc.postMessage(JSON.stringify({type, message}));
+      return
     }
 
-    addListener (type:string, listener:Function) {
+    on (type:string, listener:Function) {
       if (!this._listenerStore[type]) {
         this._listenerStore[type] = new app.Callbacks({persistent: true});
       }
       this._listenerStore[type].add(listener);
     }
 
-    removeListener (type:string, listener:Function) {
+    off (type:string, listener:Function) {
       if (this._listenerStore[type]) {
         this._listenerStore[type].remove(listener);
       }
@@ -331,7 +277,6 @@ namespace app {
         if (this._cache !== null) {
           for (key in res) {
             val = res[key];
-
             if (
               key.startsWith("config_") &&
               (typeof val === "string" || typeof val ==="number")
@@ -344,19 +289,19 @@ namespace app {
       });
 
       this._onChanged = (change, area) => {
-        var key:string, info;
+        var key:string;
 
         if (area === "local") {
           for (key in change) {
+            var {newValue} = change[key];
             if (!key.startsWith("config_")) continue;
 
-            info = change[key];
-            if (typeof info.newValue === "string") {
-              this._cache.set(key, info.newValue);
+            if (typeof newValue === "string") {
+              this._cache.set(key, newValue);
 
               app.message.send("config_updated", {
                 key: key.slice(7),
-                val: info.newValue
+                val: newValue
               });
             }
             else {
@@ -487,72 +432,66 @@ namespace app {
 
   export var module;
   {
-    let pending_modules = new Set<any>();
-    let ready_modules = new Map<string, any>();
-    let fire_definition, add_ready_module;
+    let pendingModules = new Set<any>();
+    let readyModules = new Map<string, any>();
+    let fireDefinition, addReadyModule;
 
-    fire_definition = (module_id, dependencies, definition) => {
-      var dep_modules:any[] = [], dep_module_id, callback;
+    fireDefinition = (moduleId, dependencies, definition) => {
+      var depModules:any[] = [], depModuleId, callback;
 
-      for (dep_module_id of dependencies) {
-        dep_modules.push(ready_modules.get(dep_module_id).module);
+      for (depModuleId of dependencies) {
+        depModules.push(readyModules.get(depModuleId).module);
       }
 
-      if (module_id !== null) {
-        callback = add_ready_module.bind({
-          module_id,
+      if (moduleId !== null) {
+        callback = addReadyModule.bind({
+          moduleId,
           dependencies
         });
         defer( () => {
-          definition(...dep_modules.concat(callback));
+          definition(...depModules.concat(callback));
         });
       }
       else {
         defer( () => {
-          definition(...dep_modules);
+          definition(...depModules);
         });
       }
     };
 
-    add_ready_module = function (this:{module_id: string, dependencies: string[]}, module) {
-      ready_modules.set(this.module_id,{
+    addReadyModule = function (this:{moduleId: string, dependencies: string[]}, module) {
+      readyModules.set(this.moduleId,{
         dependencies: this.dependencies,
         module: module
       });
 
       // このモジュールが初期化された事で依存関係が満たされたモジュールを初期化
-      for (var val of pending_modules.values()) {
-        if (val.dependencies.includes(this.module_id)) {
-          if (!val.dependencies.some((a) => { return !ready_modules.get(a); } )) {
-            fire_definition(val.module_id, val.dependencies, val.definition);
-            pending_modules.delete(module);
+      for (var val of pendingModules.values()) {
+        if (val.dependencies.includes(this.moduleId)) {
+          if (!val.dependencies.some((a) => { return !readyModules.get(a); } )) {
+            fireDefinition(val.moduleId, val.dependencies, val.definition);
+            pendingModules.delete(module);
           }
         }
       }
     };
 
-    app.module = function (module_id, dependencies, definition) {
+    app.module = function (moduleId, dependencies, definition) {
       if (!dependencies) dependencies = [];
 
       // 依存関係が満たされていないモジュールは、しまっておく
-      if (dependencies.some((a) => { return !ready_modules.get(a); } )) {
-        pending_modules.add({
-          module_id,
+      if (dependencies.some((a) => { return !readyModules.get(a); } )) {
+        pendingModules.add({
+          moduleId,
           dependencies,
           definition
         });
       }
       // 依存関係が満たされている場合、即座にモジュール初期化を開始する
       else {
-        fire_definition(module_id, dependencies, definition);
+        fireDefinition(moduleId, dependencies, definition);
       }
     };
-
-    if (window["jQuery"]) {
-      app.module("jquery", [], (callback) => {
-        callback(window["jQuery"]);
-      });
-    }
   }
 
   export function boot (path:string, requirements, fn):void {

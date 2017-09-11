@@ -104,14 +104,15 @@ class UI.PopupView
     # 表示位置の決定
     setDispPosition = (popupNode) =>
       margin = 20
+      {offsetHeight: bodyHeight, offsetWidth: bodyWidth} = document.body
       viewTop = @defaultParent.$(".nav_bar").offsetHeight
-      bodyHeight = document.body.offsetHeight
       viewHeight = bodyHeight - viewTop
+      maxWidth = bodyWidth - margin * 2
 
       # カーソルの上下左右のスペースを測定
       space =
         left: @mouseX
-        right: document.body.offsetWidth - @mouseX
+        right: bodyWidth - @mouseX
         top: @mouseY
         bottom: bodyHeight - @mouseY
 
@@ -120,28 +121,28 @@ class UI.PopupView
         # 例え右より左が広くても、右に十分なスペースが有れば右に配置
         if space.right > 350
           popupNode.style.left = "#{space.left + margin}px"
-          popupNode.style.maxWidth = "#{document.body.offsetWidth - space.left - margin * 2}px"
+          popupNode.style.maxWidth = "#{maxWidth - space.left}px"
         else
           popupNode.style.right = "#{space.right + margin}px"
-          popupNode.style.maxWidth = "#{document.body.offsetWidth - space.right - margin * 2}px"
+          popupNode.style.maxWidth = "#{maxWidth - space.right}px"
         cursorTop = Math.max(space.top, viewTop + margin * 2)
         outerHeight = @_getOuterHeight(popupNode, true)
         if viewHeight > outerHeight + margin
-          cssTop = Math.min(cursorTop, document.body.offsetHeight - outerHeight) - margin
+          cssTop = Math.min(cursorTop, bodyHeight - outerHeight) - margin
         else
           cssTop = viewTop + margin
         popupNode.style.top = "#{cssTop}px"
-        popupNode.style.maxHeight = "#{document.body.offsetHeight - cssTop - margin}px"
+        popupNode.style.maxHeight = "#{bodyHeight - cssTop - margin}px"
       else
         popupNode.style.left = "#{margin}px"
-        popupNode.style.maxWidth = "#{document.body.offsetWidth - margin * 2}px"
+        popupNode.style.maxWidth = "#{maxWidth}px"
         # 例え上より下が広くても、上に十分なスペースが有れば上に配置
         if space.top > Math.min(350, space.bottom)
           cssBottom = Math.max(space.bottom, margin)
           popupNode.style.bottom = "#{cssBottom}px"
           popupNode.style.maxHeight = "#{viewHeight - cssBottom - margin}px"
         else
-          cssTop = document.body.offsetHeight - space.bottom + margin
+          cssTop = bodyHeight - space.bottom + margin
           popupNode.style.top = "#{cssTop}px"
           popupNode.style.maxHeight = "#{viewHeight - cssTop - margin}px"
       return
@@ -182,9 +183,10 @@ class UI.PopupView
       # popupの表示
       @_popupArea.addLast(@popup)
       # ノードのアクティブ化
-      app.defer =>
+      app.defer( =>
         @_activateNode()
         return
+      )
 
     # 遅延表示の場合
     else
@@ -210,24 +212,23 @@ class UI.PopupView
   @param {Boolean} forceRemove
   ###
   _remove: (forceRemove) ->
-    while @_popupStack.length > 0
-      popupInfo = @_popupStack[@_popupStack.length - 1]
+    for {popup, source} in @_popupStack by -1
       # 末端の非アクティブ・ノードを選択
       break if (
         !forceRemove and
         (
-          popupInfo.source.hasClass("active") or
-          popupInfo.popup.hasClass("active")
+          source.hasClass("active") or
+          popup.hasClass("active")
         )
       )
       # 該当ノードの除去
-      popupInfo.source.off("mouseenter", @_onMouseEnter)
-      popupInfo.source.off("mouseleave", @_onMouseLeave)
-      popupInfo.popup.off("mouseenter", @_onMouseEnter)
-      popupInfo.popup.off("mouseleave", @_onMouseLeave)
-      popupInfo.source.removeClass("popup_source")
-      popupInfo.source.removeAttr("stack-index")
-      @_popupArea.removeChild(popupInfo.popup)
+      source.off("mouseenter", @_onMouseEnter)
+      source.off("mouseleave", @_onMouseLeave)
+      popup.off("mouseenter", @_onMouseEnter)
+      popup.off("mouseleave", @_onMouseLeave)
+      source.removeClass("popup_source")
+      source.removeAttr("stack-index")
+      popup.remove()
       @_popupStack.pop()
 
     # マウス座標の監視終了
@@ -251,8 +252,7 @@ class UI.PopupView
   @method _onMouseEnter
   @param {Object} Event
   ###
-  _onMouseEnter: (e) =>
-    target = e.currentTarget
+  _onMouseEnter: ({currentTarget: target}) =>
     target.addClass("active")
     # ペア・ノードの非アクティブ化
     stackIndex = target.getAttr("stack-index")
@@ -271,8 +271,7 @@ class UI.PopupView
   @method _onMouseLeave
   @param {Object} Event
   ###
-  _onMouseLeave: (e) =>
-    target = e.currentTarget
+  _onMouseLeave: ({ currentTarget: target }) =>
     target.removeClass("active")
     @_delayRemove(false)
     return
@@ -281,9 +280,9 @@ class UI.PopupView
   @method _onMouseMove
   @param {Object} Event
   ###
-  _onMouseMove: (e) =>
-    @_currentX = e.clientX
-    @_currentY = e.clientY
+  _onMouseMove: ({clientX, clientY}) =>
+    @_currentX = clientX
+    @_currentY = clientY
     return
 
   ###*
@@ -316,7 +315,7 @@ class UI.PopupView
     elm.style.zIndex = "-1"
     @_popupArea.addLast(elm)
     outerHeight = elm.offsetHeight
-    @_popupArea.removeChild(elm)
+    elm.remove()
     elm.style.zIndex = "3"    # ソースでは"3"だが、getComputedStyleでは"0"になるため
     # 表示済みのノードが存在すればCSSの値を取得する
     if @_popupStyle is null and @_popupStack.length > 0

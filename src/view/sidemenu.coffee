@@ -1,4 +1,4 @@
-app.boot "/view/sidemenu.html", ["bbsmenu"], (BBSMenu) ->
+app.boot("/view/sidemenu.html", ["bbsmenu"], (BBSMenu) ->
   $view = document.documentElement
 
   new app.view.PaneContentView($view)
@@ -7,7 +7,7 @@ app.boot "/view/sidemenu.html", ["bbsmenu"], (BBSMenu) ->
   app.DOMData.set($view, "accordion", accordion)
   app.DOMData.set($view, "selectableItemList", accordion)
 
-  board_to_li = (board) ->
+  boardToLi = (board) ->
     $li = $__("li")
     $a = $__("a")
     $a.setClass("open_in_rcrx")
@@ -16,51 +16,56 @@ app.boot "/view/sidemenu.html", ["bbsmenu"], (BBSMenu) ->
     $a.href = app.safeHref(board.url)
     $a.addClass("https") if app.URL.getScheme(board.url) is "https"
     $li.addLast($a)
-    $li
+    return $li
 
-  entry_to_li = (entry) ->
-    $li = board_to_li(entry)
+  entryToLi = (entry) ->
+    $li = boardToLi(entry)
     $li.addClass("bookmark")
-    $li
+    return $li
 
   #スレタイ検索ボックス
-  $view.C("search")[0].on "keydown", (e) ->
-    if e.which is 27 #Esc
+  $view.C("search")[0].on("keydown", ({which}) ->
+    if which is 27 #Esc
       @q.value = ""
     return
-  $view.C("search")[0].on "submit", (e) ->
+  )
+  $view.C("search")[0].on("submit", (e) ->
     e.preventDefault()
     app.message.send("open", {url: "search:#{@q.value}", new_tab: true})
     @q.value = ""
     return
+  )
 
   #ブックマーク関連
   do ->
     #初回ブックマーク表示構築
-    app.bookmarkEntryList.ready.add ->
+    app.bookmarkEntryList.ready.add( ->
       frag = $_F()
 
       for entry in app.bookmarkEntryList.getAllBoards()
-        frag.addLast(entry_to_li(entry))
+        frag.addLast(entryToLi(entry))
 
       $view.$("ul:first-of-type").addLast(frag)
       accordion.update()
       return
+    )
 
     #ブックマーク更新時処理
-    app.message.addListener "bookmark_updated", (message) ->
-      return if message.entry.type isnt "board"
+    app.message.on("bookmark_updated", ({entry, type}) ->
+      return if entry.type isnt "board"
 
-      $a = $view.$("li.bookmark > a[href=\"#{message.entry.url}\"]")
+      $a = $view.$("li.bookmark > a[href=\"#{entry.url}\"]")
 
-      switch message.type
+      switch type
         when "added"
           unless $a?
-            $view.$("ul:first-of-type").addLast(entry_to_li(message.entry))
+            $view.$("ul:first-of-type").addLast(entryToLi(entry))
         when "removed"
           $a.parent().remove()
         when "title"
-          $a.textContent = message.entry.title
+          $a.textContent = entry.title
+      return
+    )
 
   checkBbsmenuParam = (url) ->
     res = {net: false, sc: false, bbspink: false}
@@ -80,10 +85,10 @@ app.boot "/view/sidemenu.html", ["bbsmenu"], (BBSMenu) ->
     load = ->
       $view.addClass("loading")
       # 表示用板一覧の取得
-      BBSMenu.get (res) ->
+      BBSMenu.get( ({url, message, data}) ->
         # bbsmenuパラメータの確認
-        modeFlag = checkBbsmenuParam(res.url)
-        menuUpdate = (res.url is app.config.get("bbsmenu"))
+        modeFlag = checkBbsmenuParam(url)
+        menuUpdate = (url is app.config.get("bbsmenu"))
         boardNet = []
         boardSc = []
         boardBbspink = []
@@ -92,22 +97,22 @@ app.boot "/view/sidemenu.html", ["bbsmenu"], (BBSMenu) ->
           for dom in $view.$$("h3:not(:first-of-type), ul:not(:first-of-type)")
             dom.remove()
 
-        if res.message?
-          app.message.send("notify", {
-            message: res.message
+        if message?
+          app.message.send("notify",
+            message: message
             background_color: "red"
-          })
+          )
 
-        if res.data?
+        if data?
           frag = $_F()
-          for category in res.data
+          for category in data
             $h3 = $__("h3")
             $h3.textContent = category.title
             frag.addLast($h3)
 
             $ul = $__("ul")
             for board in category.board
-              $ul.addLast(board_to_li(board))
+              $ul.addLast(boardToLi(board))
               if modeFlag.net and /// https?://\w+\.2ch\.net/\w+/.*? ///.test(board.url)
                 boardNet.push(board)
               if modeFlag.sc and /// https?://\w+\.2ch\.sc/\w+/.*? ///.test(board.url)
@@ -128,7 +133,7 @@ app.boot "/view/sidemenu.html", ["bbsmenu"], (BBSMenu) ->
 
         # 2ch.netと2ch.sc及びbbspinkのサーバー情報の取得
         if (
-          res.url is app.config.get("bbsmenu") and
+          url is app.config.get("bbsmenu") and
           !(modeFlag.net and modeFlag.sc and modeFlag.bbspink)
         )
           loopCount = 0
@@ -136,19 +141,19 @@ app.boot "/view/sidemenu.html", ["bbsmenu"], (BBSMenu) ->
             # 一旦待機させるため1回目をスキップ
             return if loopCount++ is 1
             # メニューの更新が終了するまで待機
-            unless $view.hasClass("loading")
-              clearInterval(intervalID)
-              # bbsmenuパラメータの編集
-              param = ""
-              param += "20." unless modeFlag.net
-              param += "sc." unless modeFlag.sc
-              param += "p0." unless modeFlag.bbspink
-              param += "99"
-              otherUrl = "http://kita.jikkyo.org/cbm/cbm.cgi/#{param}/-all/bbsmenu.html"
-              BBSMenu.get((res) ->
-                # 表示用一覧取得時のコールバックが実行されるので何もしない
-                return
-              , false, otherUrl)
+            return if $view.hasClass("loading")
+            clearInterval(intervalID)
+            # bbsmenuパラメータの編集
+            param = ""
+            param += "20." unless modeFlag.net
+            param += "sc." unless modeFlag.sc
+            param += "p0." unless modeFlag.bbspink
+            param += "99"
+            otherUrl = "http://kita.jikkyo.org/cbm/cbm.cgi/#{param}/-all/bbsmenu.html"
+            BBSMenu.get( ->
+              # 表示用一覧取得時のコールバックが実行されるので何もしない
+              return
+            , false, otherUrl)
             return
           , 1000)
         else if BBSMenu.boardTableCallbacks
@@ -157,12 +162,15 @@ app.boot "/view/sidemenu.html", ["bbsmenu"], (BBSMenu) ->
 
         $view.removeClass("loading")
         return
+      )
       return
 
-    $view.on "request_reload", ->
+    $view.on("request_reload", ->
       load()
       return
+    )
 
     load()
     return
   return
+)

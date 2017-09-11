@@ -14,101 +14,87 @@ class app.Thread
     return
 
   get: (forceUpdate, progress) ->
-    getCachedInfo = new Promise( (resolve, reject) =>
+    getCachedInfo = (do =>
       if @tsld in ["shitaraba.net", "machi.to"]
-        app.Board.get_cached_res_count(@url).then( (res) ->
-          resolve(res)
-          return
-        , ->
-          reject()
-          return
-        )
-        return
-      else
-        reject()
-      return
+        return app.Board.getCachedResCount(@url)
+      return Promise.reject()
+    ).then( (info) ->
+      return { status: "success" , cachedInfo}
+    , ->
+      return { status: "none" }
     )
 
     return new Promise( (resolve, reject) =>
       xhrInfo = Thread._getXhrInfo(@url)
       unless xhrInfo then return reject()
-      xhrPath = xhrInfo.path
-      xhrCharset = xhrInfo.charset
+      {path: xhrPath, charset: xhrCharset} = xhrInfo
 
       cache = new app.Cache(xhrPath)
       hasCache = false
       deltaFlg = false
       readcgiVer = 5
       noChangeFlg = false
+      isHtml = (
+        (app.config.get("format_2chnet") isnt "dat" and @tsld is "2ch.net") or
+        @tsld is "bbspink.com"
+      )
 
       #キャッシュ取得
-      cache.get().then =>
+      cache.get().then( =>
         return new Promise( (resolve, reject) =>
           hasCache = true
           if forceUpdate or Date.now() - cache.last_updated > 1000 * 3
             #通信が生じる場合のみ、progressでキャッシュを送出する
-            setTimeout =>
-              if cache.parsed?
-                tmp = cache.parsed
-              else
-                tmp = Thread.parse(@url, cache.data)
+            app.defer( =>
+              tmp = cache.parsed ? Thread.parse(@url, cache.data)
               return unless tmp?
               @res = tmp.res
               @title = tmp.title
               progress()
               return
-            , 100
+            )
             reject()
           else
             resolve()
           return
         )
-      #通信
-      .catch =>
-        return new Promise( (resolve, reject) =>
-          if @tsld in ["shitaraba.net", "machi.to"]
-            if hasCache
-              deltaFlg = true
-              xhrPath += (+cache.res_length + 1) + "-"
-          # 2ch.netは差分を-nで取得
-          else if (app.config.get("format_2chnet") isnt "dat" and @tsld is "2ch.net") or @tsld is "bbspink.com"
-            if hasCache
-              deltaFlg = true
-              readcgiVer = cache.readcgi_ver
-              if readcgiVer >= 6
-                xhrPath += (+cache.res_length + 1) + "-n"
-              else
-                xhrPath += (+cache.res_length) + "-n"
-
-          request = new app.HTTP.Request("GET", xhrPath, {
-            mimeType: "text/plain; charset=#{xhrCharset}"
-          })
-
+      ).catch( =>
+        #通信
+        if @tsld in ["shitaraba.net", "machi.to"]
           if hasCache
-            if cache.last_modified?
-              request.headers["If-Modified-Since"] =
-                new Date(cache.last_modified).toUTCString()
-            if cache.etag?
-              request.headers["If-None-Match"] = cache.etag
-
-          request.send (response) ->
-            if response.status is 200
-              resolve(response)
-            else if response.status is 500 and readcgiVer >= 6
-              resolve(response)
-            else if hasCache and response.status is 304
-              resolve(response)
+            deltaFlg = true
+            xhrPath += (+cache.res_length + 1) + "-"
+        # 2ch.netは差分を-nで取得
+        else if isHtml
+          if hasCache
+            deltaFlg = true
+            readcgiVer = cache.readcgi_ver
+            if readcgiVer >= 6
+              xhrPath += (+cache.res_length + 1) + "-n"
             else
-              reject(response)
-            return
-          return
+              xhrPath += (+cache.res_length) + "-n"
+
+        request = new app.HTTP.Request("GET", xhrPath,
+          mimeType: "text/plain; charset=#{xhrCharset}"
         )
-      #パース
-      .then( (response) =>
+
+        if hasCache
+          if cache.last_modified?
+            request.headers["If-Modified-Since"] =
+              new Date(cache.last_modified).toUTCString()
+          if cache.etag?
+            request.headers["If-None-Match"] = cache.etag
+
+        return request.send()
+      ).then( (response) =>
+        #パース
         return new Promise( (resolve, reject) =>
           guessRes = app.URL.guessType(@url)
 
-          if response?.status is 200 or (readcgiVer >= 6 and response?.status is 500)
+          if (
+            response?.status is 200 or
+            (readcgiVer >= 6 and response?.status is 500)
+          )
             if deltaFlg
               # 2ch.netなら-nを使って前回取得したレスの後のレスからのものを取得する
               if @tsld in ["2ch.net", "bbspink.com"]
@@ -142,7 +128,7 @@ class app.Thread
             else
               thread = Thread.parse(@url, response.body)
           else if hasCache
-            if (app.config.get("format_2chnet") isnt "dat" and @tsld is "2ch.net") or @tsld is "bbspink.com"
+            if isHtml
               thread = cache.parsed
             else
               thread = Thread.parse(@url, cache.data)
@@ -150,13 +136,15 @@ class app.Thread
           #パース成功
           if thread
             #通信成功
-            if response?.status is 200 or
-                #通信成功（更新なし）
-                response?.status is 304 or
-                #通信成功（2ch read.cgi ver6,7の差分更新なし）
-                (readcgiVer >= 6 and response?.status is 500) or
-                #キャッシュが期限内だった場合
-                (not response and hasCache)
+            if (
+              response?.status is 200 or
+              #通信成功（更新なし）
+              response?.status is 304 or
+              #通信成功（2ch read.cgi ver6,7の差分更新なし）
+              (readcgiVer >= 6 and response?.status is 500) or
+              #キャッシュが期限内だった場合
+              (not response and hasCache)
+            )
               resolve({response, thread})
             #2ch系BBSのdat落ち
             else if guessRes.bbsType is "2ch" and response?.status is 203
@@ -168,39 +156,31 @@ class app.Thread
             reject({response})
           return
         )
-      )
-      #したらば/まちBBS最新レス削除対策
-      .then ({response, thread}) ->
-        return new Promise( (resolve, reject) ->
-          getCachedInfo
-            .then( (cachedInfo) ->
-              while thread.res.length < cachedInfo.res_count
-                thread.res.push
-                  name: "あぼーん"
-                  mail: "あぼーん"
-                  message: "あぼーん"
-                  other: "あぼーん"
-              resolve({response, thread})
-              return
-            , ->
-              resolve({response, thread})
-              return
-            )
-          return
+      ).then( ({response, thread}) ->
+        #したらば/まちBBS最新レス削除対策
+        return getCachedInfo.then( ({status, cachedInfo}) ->
+          if status is "sucess"
+            while thread.res.length < cachedInfo.resCount
+              thread.res.push(
+                name: "あぼーん"
+                mail: "あぼーん"
+                message: "あぼーん"
+                other: "あぼーん"
+              )
+          return {response, thread}
         )
-      #コールバック
-      .then(({response, thread}) =>
+      ).then( ({response, thread}) =>
+        #コールバック
         if thread
           @title = thread.title
           @res = thread.res
-        return Promise.resolve({response, thread})
+        return {response, thread}
       , ({response, thread}) =>
         if thread
           @title = thread.title
           @res = thread.res
         return Promise.reject({response, thread})
-      )
-      .then ({response, thread}) =>
+      ).then( ({response, thread}) =>
         @message = ""
         resolve()
         return {response, thread}
@@ -209,9 +189,9 @@ class app.Thread
 
         #2chでrejectされてる場合は移転を疑う
         if @tsld is "2ch.net" and response
-          app.util.ch_server_move_detect(app.URL.threadToBoard(@url))
-            #移転検出時
-            .then (newBoardURL) =>
+          app.util.chServerMoveDetect(app.URL.threadToBoard(@url))
+            .then( (newBoardURL) =>
+              #移転検出時
               tmp = ///^https?://(\w+)\.2ch\.net/ ///.exec(newBoardURL)[1]
               newURL = @url.replace(
                 ///^(https?://)\w+(\.2ch\.net/test/read\.cgi/\w+/\d+/)$///,
@@ -225,18 +205,19 @@ class app.Thread
                 class="open_in_rcrx">#{app.escapeHtml(newURL)}</a>)
               """
               return
-            #移転検出出来なかった場合
-            .catch =>
+            ).catch( =>
+              #移転検出出来なかった場合
               if response?.status is 203
                 @message += "dat落ちしたスレッドです。"
               else
                 @message += "スレッドの読み込みに失敗しました。"
               return
-            .then =>
+            ).then( =>
               if hasCache and !thread
                 @message += "キャッシュに残っていたデータを表示します。"
               reject()
               return
+            )
         else if @tsld is "shitaraba.net" and @url.includes("/read.cgi/")
           newURL = @url.replace("/read.cgi/", "/read_archive.cgi/")
           @message += """
@@ -255,20 +236,21 @@ class app.Thread
 
           reject()
         return {response, thread}
-      #キャッシュ更新部
-      .then ({response, thread}) =>
+      ).then( ({response, thread}) =>
+        #キャッシュ更新部
         #通信に成功した場合
-        if (response?.status is 200 and thread) or (readcgiVer >= 6 and response?.status is 500)
+        if (
+          (response?.status is 200 and thread) or
+          (readcgiVer >= 6 and response?.status is 500)
+        )
           cache.last_updated = Date.now()
 
-          html2ch = false
-          if (app.config.get("format_2chnet") isnt "dat" and @tsld is "2ch.net") or @tsld is "bbspink.com"
+          if isHtml
             readcgiPlace = response.body.indexOf("<div class=\"footer push\">read.cgi ver ")
             if readcgiPlace isnt -1
               readcgiVer = parseInt(response.body.substr(readcgiPlace+38, 2))
             else
               readcgiVer = 5
-            html2ch = true
 
           if deltaFlg
             if @tsld in ["2ch.net", "bbspink.com"] and noChangeFlg is false
@@ -278,7 +260,7 @@ class app.Thread
               cache.data += response.body
             cache.res_length = thread.res.length
           else
-            if html2ch
+            if isHtml
               cache.parsed = thread
               cache.readcgi_ver = readcgiVer
             else
@@ -303,17 +285,16 @@ class app.Thread
           cache.last_updated = Date.now()
           cache.put()
         return {response, thread}
-      #ブックマーク更新部
-      .then ({response, thread}) =>
-        if thread?
-          app.bookmark.update_res_count(@url, thread.res.length)
+      ).then( ({response, thread}) =>
+        #ブックマーク更新部
+        app.bookmark.update_res_count(@url, thread.res.length) if thread?
         return {response, thread}
-      #dat落ち検出
-      .then ({response, thread}) =>
-        if response?.status is 203
+      ).then( ({response: {status}, thread}) =>
+        #dat落ち検出
+        if status is 203
           app.bookmark.update_expired(@url, true)
         return
-
+      )
       return
     )
 
@@ -327,7 +308,7 @@ class app.Thread
     tmp = ///^(https?)://((?:\w+\.)?(\w+\.\w+))/(?:test|bbs)/read(?:_archive)?\.cgi/
       (\w+)/(\d+)/(?:(\d+)/)?$///.exec(url)
     unless tmp then return null
-    switch tmp[3]
+    return switch tmp[3]
       when "machi.to"
         path: "#{tmp[1]}://#{tmp[2]}/bbs/offlaw.cgi/#{tmp[4]}/#{tmp[5]}/",
         charset: "Shift_JIS"
@@ -362,7 +343,7 @@ class app.Thread
   @return {null|Object}
   ###
   @parse: (url, text, resLength) ->
-    switch app.URL.tsld(url)
+    return switch app.URL.tsld(url)
       when ""
         null
       when "machi.to"
@@ -408,7 +389,7 @@ class app.Thread
     else
       reg = /^(?:<\/?div.*?(?:<br><br>)?)?<dt>\d+.*：(?:<a href="mailto:([^<>]*)">|<font [^>]*>)?<b>(.*)<\/b>.*：(.*)<dd> ?(.*)<br><br>$/
       separator = "\n"
-    titleReg = /<h1 [^<>]*>(.*)\n?<\/h1>/;
+    titleReg = /<h1 [^<>]*>(.*)\n?<\/h1>/
     numberOfBroken = 0
     thread = res: []
     gotTitle = false
@@ -418,20 +399,20 @@ class app.Thread
       regRes = reg.exec(line)
 
       if title
-        thread.title = app.util.decode_char_reference(title[1])
+        thread.title = app.util.decodeCharReference(title[1])
         thread.title = app.util.removeNeedlessFromTitle(thread.title)
         gotTitle = true
       else if regRes
-        thread.res.push
+        thread.res.push(
           name: regRes[2]
           mail: regRes[1] or ""
           message: regRes[4]
           other: regRes[3]
+        )
 
     if thread.res.length > 0 and thread.res.length > numberOfBroken
-      thread
-    else
-      null
+      return thread
+    return null
 
   ###*
   @method _parseCh
@@ -451,26 +432,27 @@ class app.Thread
       sp = line.split("<>")
       if sp.length >= 4
         if key is 0
-          thread.title = app.util.decode_char_reference(sp[4])
+          thread.title = app.util.decodeCharReference(sp[4])
 
-        thread.res.push
+        thread.res.push(
           name: sp[0]
           mail: sp[1]
           message: sp[3]
           other: sp[2]
+        )
       else
         continue if line is ""
         numberOfBroken++
-        thread.res.push
+        thread.res.push(
           name: "</b>データ破損<b>"
           mail: ""
           message: "データが破損しています"
           other: ""
+        )
 
     if thread.res.length > 0 and thread.res.length > numberOfBroken
-      thread
-    else
-      null
+      return thread
+    return null
 
   ###*
   @method _parseMachi
@@ -490,33 +472,35 @@ class app.Thread
       sp = line.split("<>")
       if sp.length >= 5
         while ++resCount isnt +sp[0]
-          thread.res.push
+          thread.res.push(
             name: "あぼーん"
             mail: "あぼーん"
             message: "あぼーん"
             other: "あぼーん"
+          )
 
         if resCount is 1
-          thread.title = app.util.decode_char_reference(sp[5])
+          thread.title = app.util.decodeCharReference(sp[5])
 
-        thread.res.push
+        thread.res.push(
           name: sp[1]
           mail: sp[2]
           message: sp[4]
           other: sp[3]
+        )
       else
         continue if line is ""
         numberOfBroken++
-        thread.res.push
+        thread.res.push(
           name: "</b>データ破損<b>"
           mail: ""
           message: "データが破損しています"
           other: ""
+        )
 
     if thread.res.length > 0 and thread.res.length > numberOfBroken
-      thread
-    else
-      null
+      return thread
+    return null
 
   ###*
   @method _parseJbbs
@@ -536,34 +520,36 @@ class app.Thread
       sp = line.split("<>")
       if sp.length >= 6
         while ++resCount isnt +sp[0]
-          thread.res.push
+          thread.res.push(
             name: "あぼーん"
             mail: "あぼーん"
             message: "あぼーん"
             other: "あぼーん"
+          )
 
         if resCount is 1
-          thread.title = app.util.decode_char_reference(sp[5])
+          thread.title = app.util.decodeCharReference(sp[5])
 
-        thread.res.push
+        thread.res.push(
           name: sp[1]
           mail: sp[2]
           message: sp[4]
           other: sp[3] + if sp[6] then " ID:#{sp[6]}" else ""
+        )
 
       else
         continue if line is ""
         numberOfBroken++
-        thread.res.push
+        thread.res.push(
           name: "</b>データ破損<b>"
           mail: ""
           message: "データが破損しています"
           other: ""
+        )
 
     if thread.res.length > 0 and thread.res.length > numberOfBroken
-      thread
-    else
-      null
+      return thread
+    return null
 
   ###*
   @method _parseJbbsArchive
@@ -588,18 +574,18 @@ class app.Thread
       regRes = reg.exec(line)
 
       if title
-        thread.title = app.util.decode_char_reference(title[1])
+        thread.title = app.util.decodeCharReference(title[1])
       else if regRes
-        thread.res.push
+        thread.res.push(
           name: regRes[2]
           mail: regRes[1] or ""
           message: regRes[4]
           other: regRes[3]
+        )
 
     if thread.res.length > 0 and thread.res.length > numberOfBroken
-      thread
-    else
-      null
+      return thread
+    return null
 
   ###*
   @method _parsePink
@@ -630,22 +616,23 @@ class app.Thread
       regRes = reg.exec(line)
 
       if title
-        thread.title = app.util.decode_char_reference(title[1])
+        thread.title = app.util.decodeCharReference(title[1])
         thread.title = app.util.removeNeedlessFromTitle(thread.title)
       else if regRes
         while ++resCount < +regRes[1]
-          thread.res.push
+          thread.res.push(
             name: "あぼーん"
             mail: "あぼーん"
             message: "あぼーん"
             other: "あぼーん"
-        thread.res.push
+          )
+        thread.res.push(
           name: regRes[3]
           mail: regRes[2] or ""
           message: regRes[5]
           other: regRes[4]
+        )
 
     if thread.res.length > 0 and thread.res.length > numberOfBroken
-      thread
-    else
-      null
+      return thread
+    return null

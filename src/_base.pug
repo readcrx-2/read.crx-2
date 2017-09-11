@@ -1,0 +1,23 @@
+doctype
+block vars
+html(class=htmlClasses data-app-version=version)&attributes(html)
+  head
+    meta(charset="utf-8")
+    meta(name="referrer" content="no-referrer")
+    title= title
+    if needUI
+      link(rel="stylesheet" href=`/ui.css?v=${version}`)
+    if needCss
+      link(rel="stylesheet" href=`${name}.css?v=${version}`)
+    script(src=`/lib/shortQuery.min.js?v=${version}` defer)
+    script(src=`/app.js?v=${version}` defer)
+    if name === "index"
+      script(src=`/app_core.js?v=${version}` defer)
+    if needUI
+      script(src=`/ui.js?v=${version}` defer)
+    if needModule
+      script(src=`module.js?v=${version}` defer)
+    script(src=`${name}.js?v=${version}` defer)
+  body&attributes(body)
+    block body
+  block temp

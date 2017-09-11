@@ -3,7 +3,6 @@
 @class Cache
 @constructor
 @param {String} key
-@requires jQuery
 ###
 class app.Cache
   constructor: (@key) ->
@@ -56,26 +55,25 @@ class app.Cache
     @readcgi_ver = null
 
   ###*
-  @property _db_open
+  @property _dbOpen
   @type Promise
   @static
   @private
   ###
-  @_db_open: new Promise( (resolve, reject) ->
+  @_dbOpen: new Promise( (resolve, reject) ->
       req = indexedDB.open("Cache", 1)
       req.onerror = (e) ->
         reject(e)
         return
-      req.onupgradeneeded = (e) ->
-        db = e.target.result
+      req.onupgradeneeded = ({ target: {result: db, transaction: tx} }) ->
         objStore = db.createObjectStore("Cache", keyPath: "url")
         objStore.createIndex("last_updated", "last_updated", unique: false)
         objStore.createIndex("last_modified", "last_modified", unique: false)
-        e.target.transaction.oncomplete = ->
+        tx.oncomplete = ->
           resolve(db)
         return
-      req.onsuccess = (e) ->
-        resolve(e.target.result)
+      req.onsuccess = ({ target: {result: db} }) ->
+        resolve(db)
         return
       return
     )
@@ -86,14 +84,14 @@ class app.Cache
   @return {Promise}
   ###
   @count: ->
-    return @_db_open.then( (db) ->
+    return @_dbOpen.then( (db) ->
       return new Promise( (resolve, reject) ->
         req = db
           .transaction("Cache")
           .objectStore("Cache")
           .count()
-        req.onsuccess = (e) ->
-          resolve(e.target.result)
+        req.onsuccess = ({ target: {result} }) ->
+          resolve(result)
           return
         req.onerror = (e) ->
           app.log("error", "Cache.count: トランザクション中断")
@@ -109,13 +107,13 @@ class app.Cache
   @return {Promise}
   ###
   @delete: ->
-    return @_db_open.then( (db) =>
+    return @_dbOpen.then( (db) =>
       return new Promise( (resolve, reject) =>
         req = db
           .transaction("Cache", "readwrite")
           .objectStore("Cache")
           .clear()
-        req.onsuccess = (e) ->
+        req.onsuccess = ->
           resolve()
           return
         req.onerror = (e) ->
@@ -133,16 +131,16 @@ class app.Cache
   @return {Promise}
   ###
   @clearRange: (day) ->
-    return @_db_open.then( (db) ->
+    return @_dbOpen.then( (db) ->
       return new Promise( (resolve, reject) ->
-        dayUnix = Date.now()-86400000*day
+        dayUnix = Date.now() - day*24*60*60*1000
         req = db
           .transaction("Cache", "readwrite")
           .objectStore("Cache")
           .index("last_updated")
           .openCursor(IDBKeyRange.upperBound(dayUnix, true))
-        req.onsuccess = (e) ->
-          resolve(e.target.result)
+        req.onsuccess = ({ target: {result} }) ->
+          resolve(result)
           return
         req.onerror = (e) ->
           app.log("error", "Cache.clearRange: トランザクション中断")
@@ -157,21 +155,20 @@ class app.Cache
   @return {Promise}
   ###
   get: ->
-    Cache._db_open.then( (db) =>
+    Cache._dbOpen.then( (db) =>
       new Promise( (resolve, reject) =>
         req = db
           .transaction("Cache")
           .objectStore("Cache")
           .get(@key)
-        req.onsuccess = (e) =>
-          res = e.target.result
-          if res?
-            data = app.deepCopy(e.target.result)
-            for key, val of data
-              @[key] = val ? null
-            resolve()
-          else
+        req.onsuccess = ({ target: {result} }) =>
+          unless result?
             reject()
+            return
+          data = app.deepCopy(result)
+          for key, val of data
+            @[key] = val ? null
+          resolve()
           return
         req.onerror = (e) ->
           app.log("error", "Cache::get: トランザクション中断")
@@ -197,7 +194,7 @@ class app.Cache
       app.log("error", "Cache::put: データが不正です", @)
       return Promise.reject()
 
-    return Cache._db_open.then( (db) =>
+    return Cache._dbOpen.then( (db) =>
       return new Promise( (resolve, reject) =>
         req = db
           .transaction("Cache", "readwrite")
@@ -213,7 +210,7 @@ class app.Cache
             dat_size: @dat_size or null
             readcgi_ver: @readcgi_ver or null
           )
-        req.onsuccess = (e) ->
+        req.onsuccess = ->
           resolve()
           return
         req.onerror = (e) ->
@@ -229,13 +226,13 @@ class app.Cache
   @return {Promise}
   ###
   delete: ->
-    return Cache._db_open.then( (db) =>
+    return Cache._dbOpen.then( (db) =>
       return new Promise( (resolve, reject) =>
         req = db
           .transaction("Cache", "readwrite")
           .objectStore("Cache")
           .delete(url)
-        req.onsuccess = (e) ->
+        req.onsuccess = ->
           resolve()
           return
         req.onerror = (e) ->
@@ -246,6 +243,7 @@ class app.Cache
       )
     )
 
-app.module "cache", [], (callback) ->
+app.module("cache", [], (callback) ->
   callback(app.Cache)
   return
+)

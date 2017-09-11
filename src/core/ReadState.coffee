@@ -9,60 +9,59 @@ class app.ReadState
       app.criticalError("既読情報管理システムの起動に失敗しました")
       reject(e)
       return
-    req.onupgradeneeded = (e) ->
-      db = e.target.result
+    req.onupgradeneeded = ({ target: {result: db, transaction: tx} }) ->
       objStore = db.createObjectStore("ReadState", keyPath: "url")
       objStore.createIndex("board_url", "board_url", unique: false)
-      e.target.transaction.oncomplete = ->
+      tx.oncomplete = ->
         resolve(db)
       return
-    req.onsuccess = (e) ->
-      resolve(e.target.result)
+    req.onsuccess = ({ target: {result: db} }) ->
+      resolve(db)
       return
     return
   )
 
-  @_url_filter = (original_url) ->
-    original_url = app.URL.fix(original_url)
-    scheme = app.URL.getScheme(original_url)
+  @_urlFilter = (originalUrl) ->
+    originalUrl = app.URL.fix(originalUrl)
+    scheme = app.URL.getScheme(originalUrl)
 
     return {
-      original: original_url
-      replaced: original_url
+      original: originalUrl
+      replaced: originalUrl
         .replace(/// ^https?://\w+\.2ch\.net/ ///, "#{scheme}://*.2ch.net/")
-      original_origin: original_url
+      originalOrigin: originalUrl
         .replace(/// ^(https?://\w+\.2ch\.net)/.* ///, "$1")
-      replaced_origin: "#{scheme}://*.2ch.net"
+      replacedOrigin: "#{scheme}://*.2ch.net"
     }
 
-  @set: (read_state) ->
-    if not read_state? or
-        typeof read_state isnt "object" or
-        typeof read_state.url isnt "string" or
-        not Number.isFinite(read_state.last) or
-        not Number.isFinite(read_state.read) or
-        not Number.isFinite(read_state.received) or
-        not (Number.isFinite(read_state.offset) or read_state.offset is null)
+  @set: (readState) ->
+    if not readState? or
+        typeof readState isnt "object" or
+        typeof readState.url isnt "string" or
+        not Number.isFinite(readState.last) or
+        not Number.isFinite(readState.read) or
+        not Number.isFinite(readState.received) or
+        not (Number.isFinite(readState.offset) or readState.offset is null)
       app.log("error", "app.ReadState.set: 引数が不正です", arguments)
       return Promise.reject()
 
-    read_state = app.deepCopy(read_state)
+    readState = app.deepCopy(readState)
 
-    url = @_url_filter(read_state.url)
-    read_state.url = url.replaced
-    board_url = app.URL.threadToBoard(url.original)
-    read_state.board_url = @_url_filter(board_url).replaced
+    url = @_urlFilter(readState.url)
+    readState.url = url.replaced
+    boardUrl = app.URL.threadToBoard(url.original)
+    readState.board_url = @_urlFilter(boardUrl).replaced
 
     return @_openDB.then( (db) =>
       return new Promise( (resolve, reject) =>
         req = db
           .transaction("ReadState", "readwrite")
           .objectStore("ReadState")
-          .put(read_state)
-        req.onsuccess = (e) ->
-          delete read_state.board_url
-          read_state.url = read_state.url.replace(url.replaced, url.original)
-          app.message.send("read_state_updated", {board_url, read_state})
+          .put(readState)
+        req.onsuccess = ->
+          delete readState.board_url
+          readState.url = readState.url.replace(url.replaced, url.original)
+          app.message.send("read_state_updated", {board_url: boardUrl, read_state: readState})
           resolve()
           return
         req.onerror = (e) ->
@@ -77,7 +76,7 @@ class app.ReadState
     if app.assertArg("app.read_state.get", ["string"], arguments)
       return Promise.reject()
 
-    url = @_url_filter(url)
+    url = @_urlFilter(url)
 
     return @_openDB.then( (db) =>
       new Promise( (resolve, reject) =>
@@ -85,8 +84,8 @@ class app.ReadState
           .transaction("ReadState")
           .objectStore("ReadState")
           .get(url.replaced)
-        req.onsuccess = (e) ->
-          data = app.deepCopy(e.target.result)
+        req.onsuccess = ({ target: {result} }) ->
+          data = app.deepCopy(result)
           if data?
             data.url = url.original
           resolve(data)
@@ -106,8 +105,8 @@ class app.ReadState
           .transaction("ReadState")
           .objectStore("ReadState")
           .getAll()
-        req.onsuccess = (e) ->
-          resolve(e.target.result)
+        req.onsuccess = ({ target: {result} }) ->
+          resolve(result)
           return
         req.onerror = (e) ->
           app.log("error", "app.ReadState.getAll: トランザクション中断")
@@ -121,7 +120,7 @@ class app.ReadState
     if app.assertArg("app.ReadState.getByBoard", ["string"], arguments)
       return Promise.reject()
 
-    url = @_url_filter(url)
+    url = @_urlFilter(url)
 
     return @_openDB.then( (db) ->
       return new Promise( (resolve, reject) ->
@@ -130,10 +129,9 @@ class app.ReadState
           .objectStore("ReadState")
           .index("board_url")
           .getAll(IDBKeyRange.only(url.replaced))
-        req.onsuccess = (e) ->
-          data = e.target.result
+        req.onsuccess = ({ target: {result: data} }) ->
           for key, val of data
-            data[key].url = val.url.replace(url.replaced_origin, url.original_origin)
+            data[key].url = val.url.replace(url.replacedOrigin, url.originalOrigin)
           resolve(data)
           return
         req.onerror = (e) ->
@@ -148,7 +146,7 @@ class app.ReadState
     if app.assertArg("app.ReadState.remove", ["string"], arguments)
       return Promise.reject()
 
-    url = @_url_filter(url)
+    url = @_urlFilter(url)
 
     return @_openDB.then( (db) ->
       return new Promise( (resolve, reject) ->
@@ -156,7 +154,7 @@ class app.ReadState
           .transaction("ReadState", "readwrite")
           .objectStore("ReadState")
           .delete(url.replaced)
-        req.onsuccess = (e) ->
+        req.onsuccess = ->
           app.message.send("read_state_removed", url: url.original)
           resolve()
           return
@@ -175,7 +173,7 @@ class app.ReadState
           .transaction("ReadState", "readwrite")
           .objectStore("ReadState")
           .clear()
-        req.onsuccess = (e) ->
+        req.onsuccess = ->
           resolve()
           return
         req.onerror = (e) ->

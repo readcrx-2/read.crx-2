@@ -1,4 +1,4 @@
-app.boot "/zombie.html", ->
+app.boot("/zombie.html", ->
   save = ->
     arrayOfReadState = JSON.parse(localStorage.zombie_read_state)
 
@@ -26,3 +26,4 @@ app.boot "/zombie.html", ->
   else
     close()
   return
+)

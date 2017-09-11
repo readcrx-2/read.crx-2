@@ -5,6 +5,7 @@
 namespace app {
   export namespace URL {
     export const CH_BOARD_REG = /^(https?:\/\/[\w\.]+\/(?:\w+\/)?test\/(?:read\.cgi|-)\/\w+\/\d+).*$/;
+    export const CH_BOARD_REG2 = /^(https?:\/\/[\w\.]+\/\w+)\/?(?!test)$/;
     export const CH_BOARD_ULA_REG = /^(https?):\/\/ula\.2ch\.net\/2ch\/(\w+)\/([\w\.]+)\/(\d+).*$/;
     export const MACHI_BOARD_REG = /^(https?:\/\/\w+\.machi\.to\/bbs\/read\.cgi\/\w+\/\d+).*$/;
     export const SHITARABA_BOARD_REG = /^(https?):\/\/jbbs\.(?:livedoor\.jp|shitaraba\.net)\/(bbs\/read(?:_archive)?\.cgi\/\w+\/\d+\/\d+).*$/;
@@ -16,6 +17,7 @@ namespace app {
         url
           // スレ系 誤爆する事は考えられないので、パラメータ部分をバッサリ切ってしまう
           .replace(CH_BOARD_REG, "$1/")
+          .replace(CH_BOARD_REG2, "$1/")
           .replace(CH_BOARD_ULA_REG, "$1://$3/test/read.cgi/$2/$4/")
           .replace(MACHI_BOARD_REG, "$1/")
           .replace(SHITARABA_BOARD_REG, "$1://jbbs.shitaraba.net/$2/")
@@ -74,6 +76,13 @@ namespace app {
 
     export function getScheme (urlstr: string): string {
       return urlstr.slice(0, urlstr.indexOf("://"));
+    }
+
+    export function setScheme (urlstr: string, protocol: string): string {
+      var split;
+
+      split = urlstr.indexOf("://");
+      return protocol + "://" + urlstr.slice(split+3);
     }
 
     export function changeScheme (urlstr: string): string {
@@ -198,30 +207,26 @@ namespace app {
             return Promise.resolve({data: cache.data, url: null});
           })
           .catch( () => {
-            return new Promise( (resolve, reject) => {
-              var resUrl: string;
-              var req = new app.HTTP.Request("HEAD", shortUrl);
-              req.timeout = parseInt(app.config.get("expand_short_url_timeout")!);
+            var req = new app.HTTP.Request("HEAD", shortUrl);
+            req.timeout = parseInt(app.config.get("expand_short_url_timeout")!);
 
-              req.send( (res) => {
-                if (res.status === 0 || res.status >= 400) {
-                  return resolve({data: null, url: null});
-                }
-                resUrl = res.responseURL;
-                // 無限ループの防止
-                if (resUrl === shortUrl) {
-                  return resolve({data: null, url: null});
-                }
-                // 取得したURLが短縮URLだった場合は再帰呼出しする
-                if (SHORT_URL_LIST.has(getDomain(resUrl))) {
-                  expandShortURL(resUrl).then( (resUrl) => {
-                    return resolve({data: null, url: resUrl});
-                  });
-                // 短縮URL以外なら終了
-                } else {
-                  return resolve({data: null, url: resUrl});
-                }
-              });
+            return req.send().then( ({status, responseURL: resUrl}) => {
+              if (status >= 400) {
+                return {data: null, url: null};
+              }
+              // 無限ループの防止
+              if (resUrl === shortUrl) {
+                return {data: null, url: null};
+              }
+              // 取得したURLが短縮URLだった場合は再帰呼出しする
+              if (SHORT_URL_LIST.has(getDomain(resUrl))) {
+                return expandShortURL(resUrl).then( (resUrl) => {
+                  return {data: null, url: resUrl};
+                });
+              // 短縮URL以外なら終了
+              } else {
+                return {data: null, url: resUrl};
+              }
             });
           })
           .then( (res) => {
@@ -429,36 +434,31 @@ namespace app {
       return resUrl;
     }
 
-    export function convertNetSc (url: string): any {
-      return new Promise( (resolve, reject) => {
-        var resUrl: string;
-        var scheme: string;
-        var tmpUrl: string;
-        var tmp: string[]|null;
+    export function convertNetSc (url: string): Promise<string> {
+      var scheme: string;
+      var tmpUrl: string;
+      var tmp: string[]|null;
 
-        tmp = /(https?):\/\/(\w+)\.2ch\.net\/test\/read\.cgi\/(\w+\/\d+\/)/.exec(url);
-        if (tmp === null) {
-          return reject();
+      tmp = /(https?):\/\/(\w+)\.2ch\.net\/test\/read\.cgi\/(\w+\/\d+\/)/.exec(url);
+      if (tmp === null) {
+        return Promise.reject(null);
+      }
+      tmpUrl = `http://${tmp[2]}.2ch.sc/test/read.cgi/${tmp[3]}`;
+      scheme = tmp[1];
+
+      var req = new app.HTTP.Request("HEAD", tmpUrl);
+      return req.send().then( ({status, responseURL: resUrl}) => {
+        if (status >= 400) {
+          return Promise.reject(null);
         }
-        tmpUrl = `http://${tmp[2]}.2ch.sc/test/read.cgi/${tmp[3]}`;
-        scheme = tmp[1];
-
-        var req = new app.HTTP.Request("HEAD", tmpUrl);
-
-        req.send( (res) => {
-          if (res.status === 0 || res.status >= 400) {
-            return reject();
+        tmp = /https?:\/\/(\w+)\.2ch\.sc\/test\/read\.cgi\/(\w+)\/(\d+)\//.exec(resUrl);
+        if (tmp !== null) {
+          if (serverSc.has(tmp[2]) === false) {
+            serverSc.set(tmp[2], tmp[1]);
           }
-          resUrl = res.responseURL;
-          tmp = /https?:\/\/(\w+)\.2ch\.sc\/test\/read\.cgi\/(\w+)\/(\d+)\//.exec(resUrl);
-          if (tmp !== null) {
-            if (serverSc.has(tmp[2]) === false) {
-              serverSc.set(tmp[2], tmp[1]);
-            }
-            resUrl = `${scheme}://${tmp[1]}.2ch.sc/test/read.cgi/${tmp[2]}/${tmp[3]}/`;
-          }
-          return resolve(resUrl);
-        });
+          resUrl = `${scheme}://${tmp[1]}.2ch.sc/test/read.cgi/${tmp[2]}/${tmp[3]}/`;
+        }
+        return Promise.resolve(resUrl);
       });
     }
   }

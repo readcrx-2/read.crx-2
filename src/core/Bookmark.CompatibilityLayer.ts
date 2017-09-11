@@ -66,7 +66,7 @@ namespace app.Bookmark {
       });
 
       // 鯖移転検出時処理
-      app.message.addListener("detected_ch_server_move", (message) => {
+      app.message.on("detected_ch_server_move", (message) => {
         this.cbel.serverMove(message.before, message.after);
       });
     }

@@ -17,8 +17,9 @@ class app.util.Anchor
       segments: []
 
     str = str.replace(Anchor.reg._FW_DASH, "-")
-    str = str.replace Anchor.reg._FW_NUMBER, ($0) ->
-      String.fromCharCode($0.charCodeAt(0) - 65248)
+    str = str.replace(Anchor.reg._FW_NUMBER, ($0) ->
+      return String.fromCharCode($0.charCodeAt(0) - 65248)
+    )
 
     if not /^(?:&gt;|＞){0,2}([\d]+(?:-\d+)?(?:\s*,\s*\d+(?:-\d+)?)*)$/.test(str)
       return data
@@ -39,7 +40,7 @@ class app.util.Anchor
 
       data.targetCount += segrangeEnd - segrangeStart + 1
       data.segments.push([segrangeStart, segrangeEnd])
-    data
+    return data
 
 do ->
   boardUrlReg = /^https?:\/\/\w+\.2ch\.net\/(\w+)\/$/
@@ -47,79 +48,80 @@ do ->
   #移転を検出した場合は移転先のURLをresolveに載せる
   #検出出来なかった場合はrejectする
   #htmlを渡す事で通信をスキップする事が出来る
-  app.util.ch_server_move_detect = (old_board_url, html) ->
+  app.util.chServerMoveDetect = (oldBoardUrl, html) ->
+    if app.URL.getScheme(oldBoardUrl) is "https"
+      oldBoardUrl = app.URL.changeScheme(oldBoardUrl)
     return new Promise( (resolve, reject) ->
       if typeof html is "string"
         resolve(html)
-      else
-        reject()
-    )
-    #htmlが渡されなかった場合は通信する
-    .catch ->
-      return new Promise( (resolve, reject) ->
-        request = new app.HTTP.Request("GET", old_board_url, {
-          mimeType: "text/html; charset=Shift_JIS"
-          cache: false
-        })
-        request.send (response) ->
-          if response.status is 200
-            resolve(response.body)
-          else
-            reject()
-          return
-        return
+      reject()
+    ).catch(->
+      #htmlが渡されなかった場合は通信する
+      request = new app.HTTP.Request("GET", oldBoardUrl,
+        mimeType: "text/html; charset=Shift_JIS"
+        cache: false
       )
-    #htmlから移転を判定
-    .then (html) ->
-      return new Promise( (resolve, reject) ->
-        res = ///location\.href="(https?://\w+\.2ch\.net/\w*/)"///.exec(html)
+      return request.send().then( ({status, body}) ->
+        return body if status is 200
+        return Promise.reject()
+      )
+    ).then( (html) ->
+      #htmlから移転を判定
+      res = ///location\.href="(https?://\w+\.2ch\.net/\w*/)"///.exec(html)
 
-        if res and res[1] isnt old_board_url
-          resolve(res[1])
-        else
-          reject()
-      )
-    #bbsmenuから検索
-    .catch ->
+      if res
+        newBoardUrl = app.URL.setScheme(res[1], "http")
+        if newBoardUrl isnt oldBoardUrl
+          return newBoardUrl
+      return Promise.reject()
+    ).catch( ->
+      #bbsmenuから検索
       return new Promise( (resolve, reject) ->
-        app.BBSMenu.get (result) ->
-          if result.data?
-            match = old_board_url.match(boardUrlReg)
-            reject() unless match.length > 0
-            for category in result.data
-              for board in category.board
-                m = board.url.match(boardUrlReg)
-                if m? and match[1] is m[1] and match[0] isnt m[0]
-                  resolve(m[0])
-                  break
+        app.BBSMenu.get( ({data}) ->
+          unless data?
             reject()
-          else
+            return
+          match = oldBoardUrl.match(boardUrlReg)
+          unless match.length > 0
             reject()
+            return
+          for category in data
+            for board in category.board
+              m = board.url.match(boardUrlReg)
+              if m?
+                oldUrl = app.URL.setScheme(match[0], "http")
+                newUrl = app.URL.setScheme(m[0], "http")
+                if match[1] is m[1] and oldUrl isnt newUrl
+                  resolve(oldUrl)
+                  return
+          reject()
           return
+        )
         return
       )
-    #移転を検出した場合は移転検出メッセージを送出
-    .then (new_board_url) ->
+    ).then( (newBoardUrl) ->
+      #移転を検出した場合は移転検出メッセージを送出
       app.message.send("detected_ch_server_move",
-        {before: old_board_url, after: new_board_url})
-      return new_board_url
+        {before: oldBoardUrl, after: newBoardUrl})
+      return newBoardUrl
+    )
 
   #文字参照をデコード
   span = document.createElement("span")
-  app.util.decode_char_reference = (str) ->
-    str.replace /\&(?:#(\d+)|#x([\dA-Fa-f]+)|([\da-zA-Z]+));/g, ($0, $1, $2, $3) ->
+  app.util.decodeCharReference = (str) ->
+    return str.replace(/\&(?:#(\d+)|#x([\dA-Fa-f]+)|([\da-zA-Z]+));/g, ($0, $1, $2, $3) ->
       #数値文字参照 - 10進数
       if $1?
-        String.fromCodePoint($1)
+        return String.fromCodePoint($1)
       #数値文字参照 - 16進数
-      else if $2?
-        String.fromCodePoint(parseInt($2, 16))
+      if $2?
+        return String.fromCodePoint(parseInt($2, 16))
       #文字実体参照
-      else if $3?
+      if $3?
         span.innerHTML = $0
-        span.textContent
-      else
-        $0
+        return span.textContent
+      return $0
+    )
 
   #マウスクリックのイベントオブジェクトから、リンク先をどう開くべきかの情報を導く
   openMap = new Map([
@@ -133,7 +135,7 @@ do ->
     ["2falsetrue",  { new_tab: true,  new_window: false, background: true  }]
     ["2truetrue",   { new_tab: true,  new_window: false, background: false }]
   ])
-  app.util.get_how_to_open = ({type, which, shiftKey, ctrlKey, metaKey}) ->
+  app.util.getHowToOpen = ({type, which, shiftKey, ctrlKey, metaKey}) ->
     ctrlKey or= metaKey
     def = {new_tab: false, new_window: false, background: false}
     if type is "mousedown"
@@ -145,30 +147,25 @@ do ->
     else
       return def
 
-  app.util.search_next_thread = (thread_url, thread_title) ->
-    return new Promise( (resolve, reject) ->
-      thread_url = app.URL.fix(thread_url)
-      board_url = app.URL.threadToBoard(thread_url)
-      thread_title = app.util.normalize(thread_title)
+  app.util.searchNextThread = (threadUrl, threadTitle) ->
+    threadUrl = app.URL.fix(threadUrl)
+    boardUrl = app.URL.threadToBoard(threadUrl)
+    threadTitle = app.util.normalize(threadTitle)
 
-      app.board.get board_url, (res) ->
-        if res.data?
-          tmp = res.data
-          tmp = tmp.filter (thread) ->
-            thread.url isnt thread_url and thread.res_count < 1001
-          tmp = tmp.map (thread) ->
-            {
-              score: app.Util.levenshteinDistance(thread_title, app.util.normalize(thread.title), false)
-              title: thread.title
-              url: thread.url
-            }
-          tmp.sort (a, b) ->
-            a.score - b.score
-          resolve(tmp[0...5])
-        else
-          reject()
-        return
-      return
+    return app.Board.get(boardUrl).then( ({ data }) ->
+      return Promise.reject() unless data?
+      data = data.filter( (thread) ->
+        return (thread.url isnt threadUrl and thread.resCount < 1001)
+      ).map( (thread) ->
+        return {
+          score: app.Util.levenshteinDistance(threadTitle, app.util.normalize(thread.title), false)
+          title: thread.title
+          url: thread.url
+        }
+      ).sort( (a, b) ->
+        return a.score - b.score
+      )
+      return data[0...5]
     )
 
   wideSlimReg = ///[
@@ -245,7 +242,7 @@ do ->
   spaceReg = /[\u0020\u3000]/g
   #検索用に全角/半角や大文字/小文字を揃える
   app.util.normalize = (str) ->
-    str
+    return str
       #全角英数を半角英数に変換
       .replace(
         wideSlimReg

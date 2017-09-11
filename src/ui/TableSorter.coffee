@@ -11,19 +11,19 @@ class UI.TableSorter
 
   constructor: (@table) ->
     @table.addClass("table_sort")
-    @table.on "click", (e) =>
-      return if e.target.tagName isnt "TH"
+    @table.on("click", ({target}) =>
+      return if target.tagName isnt "TH"
 
-      $th = e.target
-      order = if $th.hasClass("table_sort_desc") then "asc" else "desc"
+      order = if target.hasClass("table_sort_desc") then "asc" else "desc"
 
       @table.C("table_sort_asc")[0]?.removeClass("table_sort_asc")
       @table.C("table_sort_desc")[0]?.removeClass("table_sort_desc")
 
-      $th.addClass("table_sort_#{order}")
+      target.addClass("table_sort_#{order}")
 
       @update()
       return
+    )
     return
 
   ###*
@@ -34,60 +34,54 @@ class UI.TableSorter
     @param {String} [param.sortOrder]
     @param {String} [param.sortType]
   ###
-  update: (param = {}) ->
+  update: ({sortIndex, sortAttribute, sortOrder, sortType} = {}) ->
     event = new Event("table_sort_before_update")
     @table.dispatchEvent(event)
-    if event.defaultPrevented
-      return
+    return if event.defaultPrevented
 
-    if param.sortIndex? and param.sortOrder?
+    if sortIndex? and sortOrder?
       @table.C("table_sort_asc")[0]?.removeClass("table_sort_asc")
       @table.C("table_sort_desc")[0]?.removeClass("table_sort_desc")
-      $th = @table.$("th:nth-child(#{param.sortIndex + 1})")
-      $th.addClass("table_sort_#{param.sortOrder}")
-      param.sortType ?= $th.dataset.tableSortType
-    else if not param.sortAttribute?
+      $th = @table.$("th:nth-child(#{sortIndex + 1})")
+      $th.addClass("table_sort_#{sortOrder}")
+      sortType ?= $th.dataset.tableSortType
+    else if not sortAttribute?
       $th = @table.$(".table_sort_asc, .table_sort_desc")
 
-      unless $th
-        return
+      return unless $th
 
-      param.sortIndex = 0
+      sortIndex = 0
       tmp = $th
       while tmp = tmp.prev()
-        param.sortIndex++
+        sortIndex++
 
-      param.sortOrder =
-        if $th.hasClass("table_sort_asc")
-          "asc"
-        else
-          "desc"
+      sortOrder = if $th.hasClass("table_sort_asc") then "asc" else "desc"
 
-    if param.sortIndex?
-      param.sortType ?= $th.dataset.tableSortType or "str"
+    if sortIndex?
+      sortType ?= $th.dataset.tableSortType or "str"
       data = {}
-      for $td in @table.$$("td:nth-child(#{param.sortIndex + 1})")
+      for $td in @table.$$("td:nth-child(#{sortIndex + 1})")
         data[$td.textContent] or= []
         data[$td.textContent].push($td.parent())
-    else if param.sortAttribute?
+    else if sortAttribute?
       @table.C("table_sort_asc")[0]?.removeClass("table_sort_asc")
       @table.C("table_sort_desc")[0]?.removeClass("table_sort_desc")
 
-      param.sortType ?= "str"
+      sortType ?= "str"
 
       data = {}
       for $tr in @table.$("tbody").T("tr")
-        value = $tr.getAttr(param.sortAttribute)
+        value = $tr.getAttr(sortAttribute)
         data[value] ?= []
         data[value].push($tr)
 
     dataKeys = Object.keys(data)
-    if param.sortType is "num"
+    if sortType is "num"
       dataKeys.sort((a, b) -> a - b)
     else
       dataKeys.sort()
 
-    if param.sortOrder is "desc"
+    if sortOrder is "desc"
       dataKeys.reverse()
 
     $tbody = @table.$("tbody")
@@ -96,15 +90,14 @@ class UI.TableSorter
       for $tr in data[key]
         $tbody.addLast($tr)
 
-    exparam = {
-      sort_order: param.sortOrder
-      sort_type: param.sortType
-    }
+    exparam =
+      sort_order: sortOrder
+      sort_type: sortType
 
-    if param.sortIndex?
-      exparam.sort_index = param.sortIndex
+    if sortIndex?
+      exparam.sort_index = sortIndex
     else
-      exparam.sort_attribute = param.sortAttribute
+      exparam.sort_attribute = sortAttribute
 
     @table.dispatchEvent(new CustomEvent("table_sort_updated", { detail: exparam }))
     return
@@ -117,11 +110,11 @@ class UI.TableSorter
     @param {String} [param.sort_order]
     @param {String} [param.sort_type]
   ###
-  updateSnake: (param = {}) ->
+  updateSnake: ({sort_index = null, sort_attribute = null, sort_order = null, sort_type = null}) ->
     @update(
-      sortIndex: param.sort_index ? null
-      sortAttribute: param.sort_attribute ? null
-      sortOrder: param.sort_order ? null
-      sortType: param.sort_type ? null
+      sortIndex: sort_index
+      sortAttribute: sort_attribute
+      sortOrder: sort_order
+      sortType: sort_type
     )
     return

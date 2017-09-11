@@ -32,9 +32,12 @@ class app.util.Anchor
       continue if +segment[1] < 1
 
       if segment[2]
-        continue if +segment[2] < +segment[1]
-        segrangeStart = +segment[1]
-        segrangeEnd = +segment[2]
+        if +segment[1] <= +segment[2]
+          segrangeStart = +segment[1]
+          segrangeEnd = +segment[2]
+        else
+          segrangeStart = +segment[2]
+          segrangeEnd = +segment[1]
       else
         segrangeStart = segrangeEnd = +segment[1]
 

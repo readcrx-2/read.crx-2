@@ -259,16 +259,14 @@ class app.view.Index extends app.view.View
   ###
   showKeyboardHelp: ->
     $help = @$element.C("keyboard_help")[0]
-    $help.on("click", func = =>
-      $help.off("click", func)
+    $help.on("click", =>
       @hideKeyboardHelp()
       return
-    )
-    $help.on("keydown", func = =>
-      $help.off("keydown", func)
+    , once: true)
+    $help.on("keydown", =>
       @hideKeyboardHelp()
       return
-    )
+    , once: true)
     UI.Animate.fadeIn($help).on("finish", ->
       $help.focus()
     )

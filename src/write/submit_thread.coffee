@@ -208,9 +208,7 @@ app.boot("/write/submit_thread.html", ->
 
     $iframe = $__("iframe")
     $iframe.src = "/view/empty.html"
-    $iframe.on("load", fn = ->
-      $iframe.off("load", fn)
-
+    $iframe.on("load", ->
       #2ch
       if bbsType is "2ch"
         #open2ch
@@ -275,7 +273,7 @@ app.boot("/write/submit_thread.html", ->
       @contentDocument.body.appendChild(form)
       Object.getPrototypeOf(form).submit.call(form)
       return
-    )
+    , once: true)
     $$.C("iframe_container")[0].addLast($iframe)
 
     writeTimer.wake()

@@ -62,8 +62,7 @@ app.boot("/view/board.html", ["board"], (Board) ->
     $table.on("click", ({target}) ->
       return unless target.tagName is "TH" and target.hasClass("table_sort_asc")
       return unless $view.C("sort_item_selector")[0].offsetWidth is 0
-      $table.on("table_sort_before_update", func = (e) ->
-        $table.off("table_sort_before_update", func)
+      $table.on("table_sort_before_update", (e) ->
         e.preventDefault()
         tableSorter.update(
           sortAttribute: "data-thread-number"
@@ -71,7 +70,7 @@ app.boot("/view/board.html", ["board"], (Board) ->
           sortType: "num"
         )
         return
-      )
+      , once: true)
       return
     )
     return

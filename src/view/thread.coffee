@@ -145,14 +145,12 @@ app.boot("/view/thread.html", ->
     openedAt = Date.now()
 
     app.viewThread._readStateManager($view)
-    $view.on("read_state_attached", func = ({ detail: {jumpResNum} = {} }) ->
-      $view.off("read_state_attached", func)
+    $view.on("read_state_attached", ({ detail: {jumpResNum} = {} }) ->
       onScroll = false
-      $content.on("scroll", f = ->
-        $content.off("scroll", f)
+      $content.on("scroll", ->
         onScroll = true
         return
-      )
+      , once: true)
 
       $last = $content.C("last")[0]
       lastNum = $content.$(":scope > article:last-child").C("num")[0].textContent
@@ -201,7 +199,7 @@ app.boot("/view/thread.html", ->
         return
       )
       return
-    )
+    , once: true)
 
     jumpResNum = -1
     iframe = parent.$$.$("iframe[data-url=\"#{viewUrl}\"]")

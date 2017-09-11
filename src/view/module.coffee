@@ -732,23 +732,21 @@ class app.view.TabContentView extends app.view.PaneContentView
   ###
   _setupToolMenu: ->
     #メニューの表示/非表示制御
-    @$element.C("button_tool")[0]?.on("click", (e) =>
-      $ul = e.currentTarget.T("ul")[0]
+    @$element.C("button_tool")[0]?.on("click", ({currentTarget}) =>
+      $ul = currentTarget.T("ul")[0]
       $ul.toggleClass("hidden")
       return unless $ul.hasClass("hidden")
       app.defer( =>
-        @$element.on("click", func = (e) =>
-          @$element.off("click", func)
-          if not e.target.hasClass("button_tool")
+        @$element.on("click", ({target}) =>
+          if not target.hasClass("button_tool")
             @$element.$(".button_tool > ul").addClass("hidden")
           return
-        )
-        @$element.on("contextmenu", func = (e) =>
-          @$element.off("contextmenu", func)
-          if not e.target.hasClass("button_tool")
+        , once: true)
+        @$element.on("contextmenu", ({target}) =>
+          if not target.hasClass("button_tool")
             @$element.$(".button_tool > ul").addClass("hidden")
           return
-        )
+        , once: true)
         return
       )
       return

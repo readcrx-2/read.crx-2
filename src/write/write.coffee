@@ -225,9 +225,7 @@ app.boot("/write/write.html", ->
 
     $iframe = $__("iframe")
     $iframe.src = "/view/empty.html"
-    $iframe.on("load", fn = ->
-      $iframe.off("load", fn)
-
+    $iframe.on("load", ->
       scheme = app.URL.getScheme(arg.url)
       #2ch
       if bbsType is "2ch"
@@ -292,7 +290,7 @@ app.boot("/write/write.html", ->
       @contentDocument.body.appendChild(form)
       Object.getPrototypeOf(form).submit.call(form)
       return
-    )
+    , once: true)
     $$.C("iframe_container")[0].addLast($iframe)
 
     writeTimer.wake()

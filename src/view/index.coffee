@@ -61,7 +61,7 @@ class app.view.Index extends app.view.View
       return
     )
 
-    app.message.addListener("requestFocusMove", ({command, repeatCount}) =>
+    app.message.on("requestFocusMove", ({command, repeatCount}) =>
       switch command
         when "focusUpFrame"
           @focusUp()
@@ -85,7 +85,7 @@ class app.view.Index extends app.view.View
       return
     )
 
-    app.message.addListener("showKeyboardHelp", =>
+    app.message.on("showKeyboardHelp", =>
       @showKeyboardHelp()
       return
     )
@@ -474,7 +474,7 @@ app.main = ->
 
   app.Ninja.enableAutoBackup()
 
-  app.message.addListener("notify", ({message: text, html, background_color = "#777"}) ->
+  app.message.on("notify", ({message: text, html, background_color = "#777"}) ->
     $div = $__("div")
     $div.style["background-color"] = background_color
     $div2 = $__("div")
@@ -605,7 +605,7 @@ app.main = ->
     return
   )
 
-  app.message.addListener("config_updated", ({key, val}) ->
+  app.message.on("config_updated", ({key, val}) ->
     return unless key is "layout"
     $body = $$.I("body")
     $body.removeClass("pane-3")
@@ -681,7 +681,7 @@ app.main = ->
   )
 
   #openメッセージ受信部
-  app.message.addListener("open", ({
+  app.message.on("open", ({
     url
     title
     background
@@ -967,8 +967,8 @@ app.main = ->
     dom.on("dblclick", ({target}) ->
       if target.matches("li")
         $source = target
-      else if target.closest(".tab_tabbar, li")?
-        $source = target.closest(".tab_tabbar, li")
+      else if target.closest(".tab_tabbar > li")?
+        $source = target.closest(".tab_tabbar > li")
       return unless $source?
 
       sourceTabId = $source.dataset.tabid

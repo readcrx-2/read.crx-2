@@ -5,6 +5,7 @@
 namespace app {
   export namespace URL {
     export const CH_BOARD_REG = /^(https?:\/\/[\w\.]+\/(?:\w+\/)?test\/(?:read\.cgi|-)\/\w+\/\d+).*$/;
+    export const CH_BOARD_REG2 = /^(https?:\/\/[\w\.]+\/\w+)\/?(?!test)$/;
     export const CH_BOARD_ULA_REG = /^(https?):\/\/ula\.2ch\.net\/2ch\/(\w+)\/([\w\.]+)\/(\d+).*$/;
     export const MACHI_BOARD_REG = /^(https?:\/\/\w+\.machi\.to\/bbs\/read\.cgi\/\w+\/\d+).*$/;
     export const SHITARABA_BOARD_REG = /^(https?):\/\/jbbs\.(?:livedoor\.jp|shitaraba\.net)\/(bbs\/read(?:_archive)?\.cgi\/\w+\/\d+\/\d+).*$/;
@@ -16,6 +17,7 @@ namespace app {
         url
           // スレ系 誤爆する事は考えられないので、パラメータ部分をバッサリ切ってしまう
           .replace(CH_BOARD_REG, "$1/")
+          .replace(CH_BOARD_REG2, "$1/")
           .replace(CH_BOARD_ULA_REG, "$1://$3/test/read.cgi/$2/$4/")
           .replace(MACHI_BOARD_REG, "$1/")
           .replace(SHITARABA_BOARD_REG, "$1://jbbs.shitaraba.net/$2/")
@@ -74,6 +76,13 @@ namespace app {
 
     export function getScheme (urlstr: string): string {
       return urlstr.slice(0, urlstr.indexOf("://"));
+    }
+
+    export function setScheme (urlstr: string, protocol: string): string {
+      var split;
+
+      split = urlstr.indexOf("://");
+      return protocol + "://" + urlstr.slice(split+3);
     }
 
     export function changeScheme (urlstr: string): string {

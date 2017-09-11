@@ -132,7 +132,7 @@ app.boot("/view/bookmark.html", ["board"], (Board) ->
   )
 
   Promise.all(getPromises).then( ->
-    app.message.send("request_update_read_state", {})
+    app.message.send("request_update_read_state")
     tableSorter.update()
 
     $view.dispatchEvent(new Event("view_loaded"))

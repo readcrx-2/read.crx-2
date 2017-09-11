@@ -277,7 +277,7 @@ header {
   padding: 0;
   border: 1px solid;
   border-radius: $radius;
-  -webkit-user-select: none;
+  user-select: none;
   list-style-type: none;
   font-size: 14px;
   opacity: 0.25;

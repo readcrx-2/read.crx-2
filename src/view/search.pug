@@ -22,6 +22,12 @@ block body
     .button.button_tool(title="メニュー")
       ul.hidden
         li.button_link: a(target="_blank") Chromeで直接開く
+    select.sort_item_selector
+      option(label="ブックマーク") 0
+      option(label="タイトル") 1
+      option(label="レス数") 2
+      option(label="勢い") 3
+      option(label="作成日時") 4
   .content(tabindex="0")
     .more
 

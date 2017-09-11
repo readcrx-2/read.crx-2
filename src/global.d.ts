@@ -4,7 +4,7 @@ interface Window {
   chrome: any;
 }
 
-declare var requestIdleCallback: any;
+declare var BroadcastChannel: any;
 declare var chrome: any;
 
 declare namespace UI {

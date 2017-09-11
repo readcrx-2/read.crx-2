@@ -57,7 +57,7 @@ class UI.TableSorter
 
       sortOrder = if $th.hasClass("table_sort_asc") then "asc" else "desc"
 
-    if sortIndex
+    if sortIndex?
       sortType ?= $th.dataset.tableSortType or "str"
       data = {}
       for $td in @table.$$("td:nth-child(#{sortIndex + 1})")

@@ -51,7 +51,7 @@ app.boot("/view/sidemenu.html", ["bbsmenu"], (BBSMenu) ->
     )
 
     #ブックマーク更新時処理
-    app.message.addListener("bookmark_updated", ({entry, type}) ->
+    app.message.on("bookmark_updated", ({entry, type}) ->
       return if entry.type isnt "board"
 
       $a = $view.$("li.bookmark > a[href=\"#{entry.url}\"]")

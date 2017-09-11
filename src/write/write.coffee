@@ -37,11 +37,8 @@ app.boot("/write/write.html", ->
           ///^https?://jbbs\.shitaraba\.net/bbs/write\.cgi/ ///.test(url)
         )
       )
-        if (
-          app.URL.tsld(arg.url) is "2ch.sc" and
-          app.URL.getScheme(arg.url) is "https"
-        )
-          refUrl = app.URL.changeScheme(arg.url)
+        if app.URL.tsld(arg.url) is "2ch.sc"
+          refUrl = app.URL.setScheme(arg.url, "http")
         else
           refUrl = arg.url
         requestHeaders.push(name: "Referer", value: refUrl)

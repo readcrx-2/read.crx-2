@@ -77,6 +77,13 @@ class UI.ThreadContent
     ###
     @_existSlipAtFirstRes = false
 
+    ###*
+    @property _hiddenSelectors
+    @type
+    @private
+    ###
+    @_hiddenSelectors = null
+
     try
       @harmfulReg = new RegExp(app.config.get("image_blur_word"))
       @findHarmfulFlag = true
@@ -99,6 +106,24 @@ class UI.ThreadContent
   _reScrollTo: ->
     @scrollTo(@_lastScrollInfo.resNum, @_lastScrollInfo.animate, @_lastScrollInfo.offset, true)
     return
+
+  ###*
+  @method _isHidden
+  @private
+  ###
+  _isHidden: (ele) ->
+    unless @_hiddenSelectors?
+      @_hiddenSelectors = []
+      css = $$.I("user_css").sheet.cssRules
+      for {selectorText, style, type} in css when type is 1
+        if style.display is "none"
+          @_hiddenSelectors.push(selectorText)
+    return (
+      (ele.hasClass("ng") and app.config.get("display_ng") is "off") or
+      @_hiddenSelectors.some( (selector) ->
+        return ele.matches(selector)
+      )
+    )
 
   ###*
   @method _loadNearlyImages
@@ -131,7 +156,7 @@ class UI.ThreadContent
     while (
       tmpTarget and
       (
-        (isHidden = tmpTarget.offsetHeight is 0) or
+        (isHidden = @_isHidden(tmpTarget)) or
         tmpTarget.offsetTop + tmpTarget.offsetHeight > viewTop
       )
     )
@@ -142,7 +167,7 @@ class UI.ThreadContent
     while (
       tmpTarget and
       (
-        (isHidden = tmpTarget.offsetHeight is 0) or
+        (isHidden = @_isHidden(tmpTarget)) or
         tmpTarget.offsetTop < viewBottom
       )
     )
@@ -191,16 +216,16 @@ class UI.ThreadContent
       target = null
 
     # もしターゲットがNGだった場合、その直前/直後の非NGレスをターゲットに変更する
-    if target and target.offsetHeight is 0
+    if target and @_isHidden(target)
       replaced = target
       while (replaced = replaced.prev())
-        if replaced.offsetHeight isnt 0
+        unless @_isHidden(replaced)
           target = replaced
           break
         if !replaced?
           replaced = target
           while (replaced = replaced.next())
-            if replaced.offsetHeight isnt 0
+            unless @_isHidden(replaced)
               target = replaced
               break
 
@@ -374,7 +399,7 @@ class UI.ThreadContent
         if targetBottom <= containerHeight and target.next()
           target = target.next()
 
-          while target and target.offsetHeight is 0
+          while target and @_isHidden(target)
             target = target.next()
 
         if not target
@@ -426,7 +451,7 @@ class UI.ThreadContent
         if 0 <= targetTop and target.prev()
           target = target.prev()
 
-          while target and target.offsetHeight is 0
+          while target and @_isHidden(target)
             target = target.prev()
 
         if not target

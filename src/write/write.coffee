@@ -2,17 +2,8 @@ do ->
   return if navigator.platform.includes("Win")
   font = localStorage.getItem("textar_font")
   return unless font?
-  document.on("DOMContentLoaded", ->
-    style = $__("style")
-    style.textContent = """
-      @font-face {
-        font-family: "Textar";
-        src: url(#{font});
-      }
-    """
-    document.head.addLast(style)
-    return
-  )
+  fontface = new FontFace("Textar", "url(#{font})")
+  document.fonts.add(fontface)
   return
 
 app.boot("/write/write.html", ->
@@ -102,7 +93,7 @@ app.boot("/write/write.html", ->
   $sage = $view.C("sage")[0]
   $mail = $view.C("mail")[0]
 
-  if app.config.get("sage_flag") is "on"
+  if app.config.isOn("sage_flag")
     $sage.checked = true
     $mail.disabled = true
   $view.C("sage")[0].on("change", ->
@@ -145,7 +136,7 @@ app.boot("/write/write.html", ->
   $notice = $view.C("notice")[0]
   onError = (message) ->
     for dom from $view.$$("form input, form textarea")
-      dom.disabled = false unless dom.hasClass("mail") and app.config.get("sage_flag") is "on"
+      dom.disabled = false unless dom.hasClass("mail") and app.config.isOn("sage_flag")
 
     if message
       $notice.textContent = "書き込み失敗 - #{message}"
@@ -206,7 +197,7 @@ app.boot("/write/write.html", ->
       return
     )
     for dom from $view.$$("input, textarea")
-      dom.disabled = false unless dom.hasClass("mail") and app.config.get("sage_flag") is "on"
+      dom.disabled = false unless dom.hasClass("mail") and app.config.isOn("sage_flag")
     $notice.textContent = ""
     return
   )
@@ -223,7 +214,7 @@ app.boot("/write/write.html", ->
     e.preventDefault()
 
     for dom from $view.$$("input, textarea")
-      dom.disabled = true unless dom.hasClass("mail") and app.config.get("sage_flag") is "on"
+      dom.disabled = true unless dom.hasClass("mail") and app.config.isOn("sage_flag")
 
     {bbsType} = app.URL.guessType(arg.url)
 
@@ -234,9 +225,7 @@ app.boot("/write/write.html", ->
 
     $iframe = $__("iframe")
     $iframe.src = "/view/empty.html"
-    $iframe.on("load", fn = ->
-      $iframe.off("load", fn)
-
+    $iframe.on("load", ->
       scheme = app.URL.getScheme(arg.url)
       #2ch
       if bbsType is "2ch"
@@ -301,7 +290,7 @@ app.boot("/write/write.html", ->
       @contentDocument.body.appendChild(form)
       Object.getPrototypeOf(form).submit.call(form)
       return
-    )
+    , once: true)
     $$.C("iframe_container")[0].addLast($iframe)
 
     writeTimer.wake()

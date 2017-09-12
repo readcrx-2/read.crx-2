@@ -62,8 +62,7 @@ app.boot("/view/board.html", ["board"], (Board) ->
     $table.on("click", ({target}) ->
       return unless target.tagName is "TH" and target.hasClass("table_sort_asc")
       return unless $view.C("sort_item_selector")[0].offsetWidth is 0
-      $table.on("table_sort_before_update", func = (e) ->
-        $table.off("table_sort_before_update", func)
+      $table.on("table_sort_before_update", (e) ->
         e.preventDefault()
         tableSorter.update(
           sortAttribute: "data-thread-number"
@@ -71,7 +70,7 @@ app.boot("/view/board.html", ["board"], (Board) ->
           sortType: "num"
         )
         return
-      )
+      , once: true)
       return
     )
     return
@@ -80,7 +79,7 @@ app.boot("/view/board.html", ["board"], (Board) ->
 
   app.BoardTitleSolver.ask(url).then( (title) ->
     document.title = title if title
-    if app.config.get("no_history") is "off"
+    unless app.config.isOn("no_history")
       app.History.add(url, title or url, openedAt)
     return
   )
@@ -120,8 +119,8 @@ app.boot("/view/board.html", ["board"], (Board) ->
       item = []
       for thread, threadNumber in board
         readState = readStateArray[readStateIndex[thread.url]]
-        if (bookmark = app.bookmark.get(thread.url))?.read_state?
-          readState = bookmark.read_state
+        if (bookmark = app.bookmark.get(thread.url))?.readState?
+          {readState} = bookmark
         thread.readState = readState
         thread.threadNumber = threadNumber
         item.push(thread)
@@ -129,7 +128,7 @@ app.boot("/view/board.html", ["board"], (Board) ->
 
       # スレ建て後の処理
       if ex?
-        writeFlag = app.config.get("no_writehistory") is "off"
+        writeFlag = (not app.config.isOn("no_writehistory"))
         if ex.kind is "own"
           if writeFlag
             app.WriteHistory.add(ex.thread_url, 1, ex.title, ex.name, ex.mail, ex.name, ex.mail, ex.mes, Date.now().valueOf())

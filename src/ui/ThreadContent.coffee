@@ -119,7 +119,7 @@ class UI.ThreadContent
         if style.display is "none"
           @_hiddenSelectors.push(selectorText)
     return (
-      (ele.hasClass("ng") and app.config.get("display_ng") is "off") or
+      (ele.hasClass("ng") and not app.config.isOn("display_ng")) or
       @_hiddenSelectors.some( (selector) ->
         return ele.matches(selector)
       )
@@ -177,7 +177,7 @@ class UI.ThreadContent
     # 遅延スクロールの設定
     if (
       (loadFlag or @_timeoutID isnt 0) and
-      app.config.get("image_height_fix") is "off"
+      not app.config.isOn("image_height_fix")
     )
       clearTimeout(@_timeoutID) if @_timeoutID isnt 0
       delayScrollTime = parseInt(app.config.get("delay_scroll_time"))
@@ -240,7 +240,7 @@ class UI.ThreadContent
       # 遅延スクロールの設定
       if (
         (loadFlag or @_timeoutID isnt 0) and
-        app.config.get("image_height_fix") is "off"
+        not app.config.isOn("image_height_fix")
       )
         @container.scrollTop = target.offsetTop + offset
         return
@@ -603,7 +603,7 @@ class UI.ThreadContent
             if guessType.bbsType is "2ch" and resNum <= 1000
               # idなしをNG
               if (
-                app.config.get("nothing_id_ng") is "on" and !res.id? and
+                app.config.isOn("nothing_id_ng") and !res.id? and
                 ((app.config.get("how_to_judgment_id") is "first_res" and @_existIdAtFirstRes) or
                  (app.config.get("how_to_judgment_id") is "exists_once" and @idIndex.size isnt 0))
               )
@@ -611,7 +611,7 @@ class UI.ThreadContent
                 res.attr["ng-type"] = "IDなし"
               # slipなしをNG
               else if (
-                app.config.get("nothing_slip_ng") is "on" and !res.slip? and
+                app.config.isOn("nothing_slip_ng") and !res.slip? and
                 ((app.config.get("how_to_judgment_id") is "first_res" and @_existSlipAtFirstRes) or
                  (app.config.get("how_to_judgment_id") is "exists_once" and @slipIndex.size isnt 0))
               )
@@ -682,7 +682,7 @@ class UI.ThreadContent
           if color? then articleHtml += " style=\"color:##{color[1]};\""
           articleHtml += ">#{tmp}</div>"
 
-          if app.config.get("display_ng") is "on" and res.class.includes("ng")
+          if app.config.isOn("display_ng") and res.class.includes("ng")
             res.class.push("disp_ng")
 
           tmp = ""
@@ -713,10 +713,10 @@ class UI.ThreadContent
                 href = a.href
               mediaType = app.URL.getExtType(
                 href
-                audio: app.config.get("audio_supported") is "on"
-                video: app.config.get("audio_supported") is "on"
-                oggIsAudio: app.config.get("audio_supported_ogg") is "on"
-                oggIsVideo: app.config.get("video_supported_ogg") is "on"
+                audio: app.config.isOn("audio_supported")
+                video: app.config.isOn("audio_supported")
+                oggIsAudio: app.config.isOn("audio_supported_ogg")
+                oggIsVideo: app.config.isOn("video_supported_ogg")
               )
               mediaType ?= "image" unless err?
               # サムネイルの追加
@@ -768,7 +768,7 @@ class UI.ThreadContent
         elm = @container.child()[res - 1]
         continue unless elm
         elm.addClass("has_blur_word")
-        if elm.hasClass("has_image") and app.config.get("image_blur") is "on"
+        if elm.hasClass("has_image") and app.config.isOn("image_blur")
           UI.MediaContainer.setImageBlur(elm, true)
       return
 
@@ -792,12 +792,12 @@ class UI.ThreadContent
           )
           res.C("other")[0].addLast(elm)
         #連鎖NG
-        if app.config.get("chain_ng") is "on" and res.hasClass("ng")
+        if app.config.isOn("chain_ng") and res.hasClass("ng")
           for r from index
             continue if @container.child()[r - 1].hasClass("ng")
             @container.child()[r - 1].addClass("ng")
             @container.child()[r - 1].setAttr("ng-type", "chain")
-            if app.config.get("display_ng") is "on"
+            if app.config.isOn("display_ng")
               @container.child()[r - 1].addClass("disp_ng")
         #自分に対してのレス
         if res.hasClass("written")
@@ -823,7 +823,7 @@ class UI.ThreadContent
       article = sourceA.closest("article")
       article.addClass("has_image")
       # グロ画像に対するぼかし処理
-      if article.hasClass("has_blur_word") and app.config.get("image_blur") is "on"
+      if article.hasClass("has_blur_word") and app.config.isOn("image_blur")
         thumbnail.addClass("image_blur")
         v = app.config.get("image_blur_length")
         webkitFilter = "blur(#{v}px)"
@@ -872,13 +872,13 @@ class UI.ThreadContent
             thumbnailLink.style.WebkitFilter = webkitFilter
             thumbnailLink.style.maxWidth = "#{app.config.get("video_width")}px"
             thumbnailLink.style.maxHeight = "#{app.config.get("video_height")}px"
-            if app.config.get("video_controls") is "on"
+            if app.config.isOn("video_controls")
               thumbnailLink.setAttr("controls", "")
 
     thumbnail.addLast(thumbnailLink)
 
     # 高さ固定の場合
-    if app.config.get("image_height_fix") is "on"
+    if app.config.isOn("image_height_fix")
       switch mediaType
         when "image"
           h = parseInt(app.config.get("image_height"))

@@ -12,104 +12,60 @@ namespace app.Bookmark {
 
   export class CompatibilityLayer {
     private cbel: ChromeBookmarkEntryList;
-    promise_first_scan;
+    promiseFirstScan;
 
     constructor (cbel: ChromeBookmarkEntryList) {
       this.cbel = cbel;
-      this.promise_first_scan = new Promise( (resolve, reject) => {
+      this.promiseFirstScan = new Promise( (resolve, reject) => {
         this.cbel.ready.add(() => {
           resolve();
 
-          this.cbel.onChanged.add((e) => {
-            var legacyEntry: LegacyEntry = app.Bookmark.currentToLegacy(e.entry);
-
-            switch (e.type) {
-              case "ADD":
-                app.message.send(
-                  "bookmark_updated",
-                  {type: "added", bookmark: legacyEntry, entry: e.entry}
-                );
-                break;
-              case "TITLE":
-                app.message.send(
-                  "bookmark_updated",
-                  {type: "title", bookmark: legacyEntry, entry: e.entry}
-                );
-                break;
-              case "RES_COUNT":
-                app.message.send(
-                  "bookmark_updated",
-                  {type: "res_count", bookmark: legacyEntry, entry: e.entry}
-                );
-                break;
-              case "READ_STATE":
-                app.message.send("read_state_updated", {
-                  "board_url": app.URL.threadToBoard(e.entry.url),
-                  "read_state": e.entry.readState
-                });
-                break;
-              case "EXPIRED":
-                app.message.send(
-                  "bookmark_updated",
-                  {type: "expired", bookmark: legacyEntry, entry: e.entry}
-                );
-                break;
-              case "REMOVE":
-                app.message.send(
-                  "bookmark_updated",
-                  {type: "removed", bookmark: legacyEntry, entry: e.entry}
-                );
-                break;
+          this.cbel.onChanged.add(({type: typeName, entry: bookmark}) => {
+            var type = "";
+            switch (typeName) {
+              case "ADD": type = "added"; break;
+              case "TITLE": type = "title"; break;
+              case "RES_COUNT": type = "res_count"; break;
+              case "EXPIRED": type = "expired"; break;
+              case "REMOVE": type = "removed"; break;
+            }
+            if (type !== "") {
+              app.message.send("bookmark_updated", {type, bookmark});
+              return
+            }
+            if (typeName === "READ_STATE") {
+              app.message.send("read_state_updated", {
+                "board_url": app.URL.threadToBoard(bookmark.url),
+                "read_state": bookmark.readState
+              });
             }
           });
         });
       });
 
       // 鯖移転検出時処理
-      app.message.on("detected_ch_server_move", (message) => {
-        this.cbel.serverMove(message.before, message.after);
+      app.message.on("detected_ch_server_move", ({before, after}) => {
+        this.cbel.serverMove(before, after);
       });
     }
 
-    url_to_bookmark (url:string):LegacyEntry {
-      return app.Bookmark.currentToLegacy(
-        app.Bookmark.ChromeBookmarkEntryList.URLToEntry(url)!
-      );
-    }
-
-    bookmark_to_url (entry:LegacyEntry):string {
-      return app.Bookmark.ChromeBookmarkEntryList.entryToURL(
-        app.Bookmark.legacyToCurrent(entry)
-      );
-    }
-
-    get (url:string):app.Bookmark.LegacyEntry|null {
+    get (url:string):Entry|null {
       var entry = this.cbel.get(url);
 
       if (entry) {
-        return app.Bookmark.currentToLegacy(entry);
+        return entry;
       }
       else {
         return null;
       }
     }
 
-    get_by_board (boardURL:string):LegacyEntry[] {
-      return (
-        this.cbel.getThreadsByBoardURL(boardURL)
-          .map( (entry:Entry):LegacyEntry => {
-            return app.Bookmark.currentToLegacy(entry);
-          })
-      );
+    getByBoard (boardURL:string):Entry[] {
+      return this.cbel.getThreadsByBoardURL(boardURL);
     }
 
-    get_all ():LegacyEntry[] {
-      return (
-        this.cbel.getAll()
-          .map( (entry:Entry):LegacyEntry => {
-            return app.Bookmark.currentToLegacy(entry);
-          })
-      );
+    getAll ():Entry[] {
+      return this.cbel.getAll();
     }
 
     add (url:string, title:string, resCount?:number) {
@@ -145,7 +101,7 @@ namespace app.Bookmark {
       });
     }
 
-    update_read_state (readState) {
+    updateReadState (readState) {
       // TODO
       return new Promise( (resolve, reject) => {
         var entry = this.cbel.get(readState.url);
@@ -161,7 +117,7 @@ namespace app.Bookmark {
       });
     }
 
-    update_res_count (url:string, resCount:number) {
+    updateResCount (url:string, resCount:number) {
       return new Promise( (resolve, reject) => {
         var entry = this.cbel.get(url);
 
@@ -174,7 +130,7 @@ namespace app.Bookmark {
       });
     }
 
-    update_expired (url:string, expired:boolean) {
+    updateExpired (url:string, expired:boolean) {
       return new Promise( (resolve, reject) => {
         var entry = this.cbel.get(url);
 

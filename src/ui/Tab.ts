@@ -36,7 +36,7 @@ namespace UI {
       var $ul = $__("ul");
       $ul.addClass("tab_tabbar");
       $ul.on("notchedmousewheel", (e) => {
-        if (app.config.get("mousewheel_change_tab") === "on") {
+        if (app.config.isOn("mousewheel_change_tab")) {
           var tmp: string, next: HTMLElement;
 
           e.preventDefault();

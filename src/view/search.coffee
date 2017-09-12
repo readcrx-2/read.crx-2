@@ -16,7 +16,7 @@ app.boot("/view/search.html", ["thread_search"], (ThreadSearch) ->
   new app.view.TabContentView($view)
 
   document.title = "検索:#{query}"
-  if app.config.get("no_history") is "off"
+  unless app.config.isOn("no_history")
     app.History.add($view.dataset.url, document.title, openedAt)
 
   $view.$(".button_link > a").href = "http://dig.2ch.net/search?maxResult=500&keywords=#{encodeURIComponent(query)}"

@@ -90,31 +90,30 @@ class app.view.View
       target = e.target.closest(".open_in_rcrx")
       return unless target?
       e.preventDefault()
-      if e.which isnt 3
-        url = target.dataset.href or target.href
-        title = target.dataset.title or target.textContent
-        writtenResNum = if target.getAttr("ignore-res-number") is "on" then null else target.dataset.writtenResNum
-        paramResFlg = (
-          (app.config.get("enable_link_with_res_number") is "on" and
-           target.getAttr("toggle-param-res-num") isnt "on") or
-          (app.config.get("enable_link_with_res_number") is "off" and
-           target.getAttr("toggle-param-res-num") is "on")
-        )
-        paramResNum = if paramResFlg then target.dataset.paramResNum else null
-        target.removeAttribute("toggle-param-res-num")
-        target.removeAttribute("ignore-res-number")
-        {new_tab: openNewTab, new_window: openNewWindow, background} = app.util.getHowToOpen(e)
-        newTab = app.config.get("always_new_tab") is "on"
-        newTab or= openNewTab or openNewWindow
+      return if e.which is 3
+      url = target.dataset.href or target.href
+      title = target.dataset.title or target.textContent
+      writtenResNum = if target.getAttr("ignore-res-number") is "on" then null else target.dataset.writtenResNum
+      paramResFlg = (
+        (app.config.isOn("enable_link_with_res_number") and
+         target.getAttr("toggle-param-res-num") isnt "on") or
+        (not app.config.isOn("enable_link_with_res_number") and
+         target.getAttr("toggle-param-res-num") is "on")
+      )
+      paramResNum = if paramResFlg then target.dataset.paramResNum else null
+      target.removeAttribute("toggle-param-res-num")
+      target.removeAttribute("ignore-res-number")
+      {newTab, newWindow, background} = app.util.getHowToOpen(e)
+      newTab or= app.config.isOn("always_new_tab") or newWindow
 
-        app.message.send("open", {
-          url
-          new_tab: newTab
-          background
-          title
-          written_res_num: writtenResNum
-          param_res_num: paramResNum
-        })
+      app.message.send("open", {
+        url
+        new_tab: newTab
+        background
+        title
+        written_res_num: writtenResNum
+        param_res_num: paramResNum
+      })
       return
     )
     @$element.on("click", (e) ->
@@ -523,10 +522,7 @@ class app.view.TabContentView extends app.view.PaneContentView
       if current < stack.length - 1
         @$element.C("button_forward")[0].removeClass("disabled")
 
-      if (
-        stack.length is 1 and
-        app.config.get("always_new_tab") is "on"
-      )
+      if stack.length is 1 and app.config.isOn("always_new_tab")
         @$element.C("button_back")[0].remove()
         @$element.C("button_forward")[0].remove()
       return
@@ -535,7 +531,7 @@ class app.view.TabContentView extends app.view.PaneContentView
     for dom in @$element.$$(".button_back, .button_forward")
       dom.on("mousedown", (e) ->
         if e.which isnt 3
-          {new_tab: newTab, new_window: newWindow, background} = app.util.getHowToOpen(e)
+          {newTab, newWindow, background} = app.util.getHowToOpen(e)
           newTab or= newWindow
 
           return if @hasClass("disabled")
@@ -646,7 +642,7 @@ class app.view.TabContentView extends app.view.PaneContentView
       $button.on("click", ->
         app.message.send("open",
           url: app.URL.changeScheme(url),
-          new_tab: app.config.get("button_change_scheme_newtab") is "on"
+          new_tab: app.config.isOn("button_change_scheme_newtab")
         )
         return
       )
@@ -694,7 +690,7 @@ class app.view.TabContentView extends app.view.PaneContentView
           return setInterval( =>
             {url} = @$element.dataset
             if (
-              app.config.get("auto_load_all") is "on" or
+              app.config.isOn("auto_load_all") or
               parent.$$.$(".tab_container > iframe[data-url=\"#{url}\"]").hasClass("tab_selected")
             )
               @$element.dispatchEvent(new Event("request_reload"))
@@ -736,23 +732,21 @@ class app.view.TabContentView extends app.view.PaneContentView
   ###
   _setupToolMenu: ->
     #メニューの表示/非表示制御
-    @$element.C("button_tool")[0]?.on("click", (e) =>
-      $ul = e.currentTarget.T("ul")[0]
+    @$element.C("button_tool")[0]?.on("click", ({currentTarget}) =>
+      $ul = currentTarget.T("ul")[0]
       $ul.toggleClass("hidden")
       return unless $ul.hasClass("hidden")
       app.defer( =>
-        @$element.on("click", func = (e) =>
-          @$element.off("click", func)
-          if not e.target.hasClass("button_tool")
+        @$element.on("click", ({target}) =>
+          if not target.hasClass("button_tool")
             @$element.$(".button_tool > ul").addClass("hidden")
           return
-        )
-        @$element.on("contextmenu", func = (e) =>
-          @$element.off("contextmenu", func)
-          if not e.target.hasClass("button_tool")
+        , once: true)
+        @$element.on("contextmenu", ({target}) =>
+          if not target.hasClass("button_tool")
             @$element.$(".button_tool > ul").addClass("hidden")
           return
-        )
+        , once: true)
         return
       )
       return
@@ -793,7 +787,7 @@ class app.view.TabContentView extends app.view.PaneContentView
     @$element.C("button_open_updated")[0]?.on("click", =>
       for dom in @$element.C("updated")
         {href: url, title} = dom.dataset
-        lazy = app.config.get("open_all_unread_lazy") is "on"
+        lazy = app.config.isOn("open_all_unread_lazy")
 
         app.message.send("open", {url, title, new_tab: true, lazy})
       return
@@ -827,13 +821,13 @@ class app.view.TabContentView extends app.view.PaneContentView
         if newUrl
           app.message.send("open",
             url: newUrl,
-            new_tab: app.config.get("button_change_netsc_newtab") is "on"
+            new_tab: app.config.isOn("button_change_netsc_newtab")
           )
         else
           app.URL.convertNetSc(url).then( (res) ->
             app.message.send("open",
               url: res,
-              new_tab: app.config.get("button_change_netsc_newtab") is "on"
+              new_tab: app.config.isOn("button_change_netsc_newtab")
             )
             return
           ).catch( ->

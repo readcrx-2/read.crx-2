@@ -88,7 +88,7 @@ app.boot("/view/board.html", ["board"], (Board) ->
     $view.addClass("loading")
     app.message.send("request_update_read_state", {board_url: url})
 
-    getReadStatePromise = ->
+    getReadStatePromise = do ->
       return new Promise( (resolve, reject) ->
         # request_update_read_stateを待つ
         setTimeout(resolve, 150)

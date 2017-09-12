@@ -598,9 +598,9 @@ class app.view.TabContentView extends app.view.PaneContentView
 
     $table?.on("table_sort_updated", ({detail}) ->
       for dom in $selector.T("option")
-        dom.setAttr("selected", false)
+        dom.selected = false
         if String(detail.sort_attribute or detail.sort_index) is dom.textContent
-          dom.setAttr("selected", true)
+          dom.selected = true
       return
     )
 

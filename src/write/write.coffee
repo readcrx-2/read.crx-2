@@ -178,7 +178,7 @@ app.boot("/write/write.html", ->
             return
           )
           return
-        , 2000)
+        , 3000)
         writeTimer.kill()
       when "confirm"
         UI.Animate.fadeIn($view.C("iframe_container")[0])

@@ -9,6 +9,8 @@ window.UI ?= {}
 @requires MediaContainer
 ###
 class UI.ThreadContent
+  _OVER1000_DATA = "Over 1000"
+
   constructor: (@url, @container) ->
     ###*
     @property idIndex
@@ -55,6 +57,8 @@ class UI.ThreadContent
       resNum: 0
       animate: false
       offset: 0
+      animateTo: 0
+      animateChange: 0
 
     ###*
     @property _timeoutID
@@ -84,6 +88,27 @@ class UI.ThreadContent
     ###
     @_hiddenSelectors = null
 
+    ###*
+    @property _isScrolling
+    @type Boolean
+    @private
+    ###
+    @_isScrolling = false
+
+    ###*
+    @property _scrollRequestID
+    @type Number
+    @private
+    ###
+    @_scrollRequestID = 0
+
+    ###*
+    @property _over1000Res
+    @type Boolean
+    @private
+    ###
+    @_over1000Res = false
+
     try
       @harmfulReg = new RegExp(app.config.get("image_blur_word"))
       @findHarmfulFlag = true
@@ -96,6 +121,14 @@ class UI.ThreadContent
         background_color: "red"
       )
       @findHarmfulFlag = false
+
+    @container.on "scrollstart", =>
+      @_isScrolling = true
+      return
+
+    @container.on "scrollfinish", =>
+      @_isScrolling = false
+      return
 
     return
 
@@ -237,31 +270,43 @@ class UI.ThreadContent
       if 0 < offset < 1
         offset = Math.round(target.offsetHeight * offset)
 
-      # 遅延スクロールの設定
-      if (
-        (loadFlag or @_timeoutID isnt 0) and
-        not app.config.isOn("image_height_fix")
-      )
-        @container.scrollTop = target.offsetTop + offset
-        return
+      # 遅延スクロール時の実行必要性確認
       return if rerun and @container.scrollTop is target.offsetTop + offset
 
       # スクロールの実行
       if animate
+        rerunAndCancel = false
+        if @_isScrolling
+          cancelAnimationFrame(@_scrollRequestID)
+          rerunAndCancel = true if rerun
         do =>
           @container.dispatchEvent(new Event("scrollstart"))
 
           to = target.offsetTop + offset
-          change = (to - @container.scrollTop)/15
+          movingHeight = to - @container.scrollTop
+          if rerunAndCancel and to is @_lastScrollInfo.animateTo
+            change = @_lastScrollInfo.animateChange
+          else
+            change = Math.max(Math.round(movingHeight / 15), 1)
           min = Math.min(to-change, to+change)
           max = Math.max(to-change, to+change)
-          requestAnimationFrame(_scrollInterval = =>
+          unless rerun
+            @_lastScrollInfo.animateTo = to
+            @_lastScrollInfo.animateChange = change
+
+          @_scrollRequestID = requestAnimationFrame(_scrollInterval = =>
             before = @container.scrollTop
             # 画像のロードによる座標変更時の補正
             if to isnt target.offsetTop + offset
               to = target.offsetTop + offset
+              if to - @container.scrollTop > movingHeight
+                movingHeight = to - @container.scrollTop
+                change = Math.max(Math.round(movingHeight / 15), 1)
               min = Math.min(to-change, to+change)
               max = Math.max(to-change, to+change)
+              unless rerun
+                @_lastScrollInfo.animateTo = to
+                @_lastScrollInfo.animateChange = change
             # 例外発生時の停止処理
             if (
               (change > 0 and @container.scrollTop > max) or
@@ -280,7 +325,7 @@ class UI.ThreadContent
             if @container.scrollTop is before
               @container.dispatchEvent(new Event("scrollfinish"))
               return
-            requestAnimationFrame(_scrollInterval)
+            @_scrollRequestID = requestAnimationFrame(_scrollInterval)
             return
           )
       else
@@ -486,6 +531,7 @@ class UI.ThreadContent
         return
 
       resNum = @container.child().length
+      {bbsType} = app.URL.guessType(@url)
 
       app.WriteHistory.getByUrl(@url).then( (writtenRes) =>
         html = ""
@@ -590,6 +636,13 @@ class UI.ThreadContent
 
           articleHtml += "</header>"
 
+          # スレッド終端の自動追加メッセージの確認
+          if (
+            bbsType is "2ch" and
+            tmp.startsWith(_OVER1000_DATA)
+          )
+            @_over1000Res = true
+
           #文字色
           color = res.message.match(/<font color="(.*?)">/i)
 
@@ -599,8 +652,7 @@ class UI.ThreadContent
             res.class.push("ng")
             res.attr["ng-type"] = ngType
           else
-            guessType = app.URL.guessType(@url)
-            if guessType.bbsType is "2ch" and resNum <= 1000
+            if bbsType is "2ch" and !@_over1000Res
               # idなしをNG
               if (
                 app.config.isOn("nothing_id_ng") and !res.id? and

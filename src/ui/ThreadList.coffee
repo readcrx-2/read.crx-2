@@ -179,7 +179,6 @@ class UI.ThreadList
           res = tr.$(selector.res)
           if +res.textContent < read_state.received
             res.textContent = read_state.received
-            tr.addClass("updated")
           unread = tr.$(selector.unread)
           unreadCount = Math.max(+res.textContent - read_state.read, 0)
           unread.textContent = unreadCount or ""

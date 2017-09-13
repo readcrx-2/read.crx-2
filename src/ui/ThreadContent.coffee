@@ -675,7 +675,7 @@ class UI.ThreadContent
                 ">#{$0}</a>"
               )
               #IDリンク
-              .replace(/id:(?:[a-hj-z\d_\+\/\.\!]|i(?!d:))+/ig, "<a href=\"javascript:undefined;\" class=\"anchor_id\">$0</a>")
+              .replace(/id:(?:[a-hj-z\d_\+\/\.\!]|i(?!d:))+/ig, "<a href=\"javascript:undefined;\" class=\"anchor_id\">$&</a>")
           )
 
           articleHtml += "<div class=\"message\""

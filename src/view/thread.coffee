@@ -480,7 +480,7 @@ app.boot("/view/thread.html", ->
   $view.on("mouseenter", (e) ->
     {target} = e
     return unless target.matches(".message a:not(.anchor)")
-    url = target.href
+    url = app.URL.convertUrlFromPhone(target.href)
     {type} = app.URL.guessType(url)
     switch type
       when "board"

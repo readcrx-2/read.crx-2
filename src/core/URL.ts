@@ -273,5 +273,223 @@ namespace app {
       }
       return null;
     }
+
+    export function convertUrlFromPhone (url: string): string {
+      var regs: any[];
+      var tmp: string[]|null = [];
+      var mode: string;
+      var scheme: string = "";
+      var server: string|null = null;
+      var board: string|null = null;
+      var thread: string|null = null;
+      var resUrl: string = url;
+
+      function checkReg (value: any, index: number, array: any[]): boolean {
+        return (tmp = value.exec(url));
+      }
+
+      mode = tsld(url);
+      switch (mode) {
+        case "2ch.net":
+          regs = [
+            /(https?):\/\/itest\.2ch\.net\/(?:\w+\/)?test\/read\.cgi\/(\w+)\/(\d+)\//,
+            /(https?):\/\/itest\.2ch\.net\/(?:subback\/)?(\w+)(?:\/)?/,
+            /(https?):\/\/c\.2ch\.net\/test\/-\/(\w+)\/(\d+)\//,
+            /(https?):\/\/c\.2ch\.net\/test\/-\/(\w+)\//
+          ]
+          if (regs.some(checkReg)) {
+            scheme = tmp[1];
+            board = tmp[2];
+            thread = tmp[3] ? tmp[3] : null;
+            if (board !== null) {
+              if (serverNet.has(board) === true) {
+                server = serverNet.get(board)!;
+              // 携帯用bbspinkの可能性をチェック
+              } else if (serverPink.has(board) === true) {
+                server = serverPink.get(board)!;
+                mode = "bbspink.com";
+              }
+            }
+          }
+          break;
+
+        case "2ch.sc":
+          regs = [
+            /(https?):\/\/sp\.2ch\.sc\/(?:\w+\/)?test\/read\.cgi\/(\w+)\/(\d+)\//,
+            /(https?):\/\/sp\.2ch\.sc\/(?:subback\/)?(\w+)\//
+          ]
+          if (regs.some(checkReg)) {
+            scheme = tmp[1];
+            board = tmp[2];
+            thread = tmp[3] ? tmp[3] : null;
+            if (board !== null && serverSc.has(board) === true) {
+              server = serverSc.get(board)!;
+            }
+          }
+          break;
+
+        case "bbspink.com":
+          regs = [
+            /(https?):\/\/itest\.bbspink\.com\/(?:\w+\/)?test\/read\.cgi\/(\w+)\/(\d+)\//,
+            /(https?):\/\/itest\.bbspink\.com\/(?:subback\/)?(\w+)(?:\/)?/
+          ]
+          if (regs.some(checkReg)) {
+            scheme = tmp[1];
+            board = tmp[2];
+            thread = tmp[3] ? tmp[3] : null;
+            if (board !== null && serverPink.has(board) === true) {
+              server = serverPink.get(board)!;
+            }
+          }
+          break;
+      }
+
+      if (server !== null) {
+        if (thread !== null) {
+          resUrl = `${scheme}://${server}.${mode}/test/read.cgi/${board}/${thread}/`;
+        } else {
+          resUrl = `${scheme}://${server}.${mode}/${board}/`;
+        }
+      }
+
+      return resUrl;
+    }
+
+    var serverNet = new Map<string, string>();
+    var serverSc = new Map<string, string>();
+    var serverPink = new Map<string, string>();
+
+    function bbsmenuParam (url: string) {
+      var res = {net: false, sc: false, bbspink: false};
+      var tmp = /http:\/\/kita\.jikkyo\.org\/cbm\/cbm\.cgi\/([\w\d\.]+)(?:\/-all|-live2324)?(?:\/=[\d\w=!&$()[\]{}]+)?\/bbsmenuk?2?\.html/.exec(url);
+      if (tmp) {
+        var param = tmp[1].split(".");
+        for (var mode of param) {
+          switch (mode) {
+            case "20":
+            case "2r":
+              res.net = true; break;
+            case "sc":
+              res.sc = true; break;
+            case "p0":
+            case "p1":
+              res.bbspink = true; break;
+          }
+          if (res.net && res.sc && res.bbspink) {
+            break;
+          }
+        }
+      } else if (url.endsWith("menu.2ch.net/bbsmenu.html")) {
+        res.net = true;
+      }
+      return res;
+    }
+
+    function applyServerInfo (res: {net: boolean, sc: boolean, bbspink: boolean}, menu: any[]) {
+      var boardNet = new Map<string, string>(),
+        boardSc = new Map<string, string>(),
+        boardPink = new Map<string, string>(),
+        tmp: string[]|null;
+
+      for (let category of menu) {
+        for (let board of category.board) {
+          if (res.net && (tmp = /https?:\/\/(\w+)\.2ch\.net\/(\w+)\/.*?/.exec(board.url)) !== null) {
+            boardNet.set(tmp[2], tmp[1]);
+          }else if (res.sc && (tmp = /https?:\/\/(\w+)\.2ch\.sc\/(\w+)\/.*?/.exec(board.url)) !== null) {
+            boardSc.set(tmp[2], tmp[1]);
+          }else if (res.bbspink && (tmp = /https?:\/\/(\w+)\.bbspink\.com\/(\w+)\/.*?/.exec(board.url)) !== null) {
+            boardPink.set(tmp[2], tmp[1]);
+          }
+        }
+      }
+
+      if (boardNet.size > 0) serverNet = boardNet;
+      if (boardSc.size > 0) serverSc = boardSc;
+      if (boardPink.size > 0) serverPink = boardPink;
+    }
+
+    export function pushServerInfo (url: string, menu: any[][]): void {
+      var res = bbsmenuParam(url);
+
+      applyServerInfo(res, menu);
+
+      if (res.net && res.sc && res.bbspink) {
+        return;
+      }
+
+      var param = "";
+      if (!res.net) param += "20.";
+      if (!res.sc) param += "sc.";
+      if (!res.bbspink) param += "p0.";
+      param += "99";
+      var url = `http://kita.jikkyo.org/cbm/cbm.cgi/${param}/-all/bbsmenu.html`;
+      app.BBSMenu.fetch(url, false).then( ({menu}) => {
+        var res = bbsmenuParam(url);
+        applyServerInfo(res, menu);
+      });
+    }
+
+    function exchangeNetSc (url: string): string|null {
+      var mode: string[]|null;
+      var server: string|null = null;
+      var target: string|null = null;
+      var resUrl: string|null = null;
+
+      mode = /(https?):\/\/(\w+)\.2ch\.(net|sc)\/test\/read\.cgi\/(\w+)\/(\d+)\//.exec(url);
+      if (mode === null) {
+        return null;
+      }
+
+      if (mode[3] === "net") {
+        if (serverSc.has(mode[4]) === true) {
+          server = serverSc.get(mode[4])!;
+          target = "sc";
+        }
+      } else {
+        if (serverNet.has(mode[4]) === true) {
+          server = serverNet.get(mode[4])!;
+          target = "net";
+        }
+      }
+
+      if (server !== null) {
+        resUrl = `${mode[1]}://${server}.2ch.${target}/test/read.cgi/${mode[4]}/${mode[5]}/`;
+      }
+      return resUrl;
+    }
+
+    export function convertNetSc (url: string): Promise<string> {
+      var newUrl = exchangeNetSc(url);
+
+      if (newUrl) {
+        return Promise.resolve(newUrl);
+      } else {
+        var scheme: string;
+        var tmpUrl: string;
+        var tmp: string[]|null;
+
+        tmp = /(https?):\/\/(\w+)\.2ch\.net\/test\/read\.cgi\/(\w+\/\d+\/)/.exec(url);
+        if (tmp === null) {
+          return Promise.reject(null);
+        }
+        tmpUrl = `http://${tmp[2]}.2ch.sc/test/read.cgi/${tmp[3]}`;
+        scheme = tmp[1];
+
+        var req = new app.HTTP.Request("HEAD", tmpUrl);
+        return req.send().then( ({status, responseURL: resUrl}) => {
+          if (status >= 400) {
+            return Promise.reject(null);
+          }
+          tmp = /https?:\/\/(\w+)\.2ch\.sc\/test\/read\.cgi\/(\w+)\/(\d+)\//.exec(resUrl);
+          if (tmp !== null) {
+            if (serverSc.has(tmp[2]) === false) {
+              serverSc.set(tmp[2], tmp[1]);
+            }
+            resUrl = `${scheme}://${tmp[1]}.2ch.sc/test/read.cgi/${tmp[2]}/${tmp[3]}/`;
+          }
+          return Promise.resolve(resUrl);
+        });
+      }
+    }
   }
 }

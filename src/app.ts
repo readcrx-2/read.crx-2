@@ -234,6 +234,7 @@ namespace app {
       ["no_writehistory", "off"],
       ["user_css", ""],
       ["bbsmenu", "http://kita.jikkyo.org/cbm/cbm.cgi/20.p0.m0.jb.vs.op.sc.nb.bb/-all/bbsmenu.html"],
+      ["bbsmenu_update_interval", "7"],
       ["useragent", ""],
       ["format_2chnet", "html"],
       ["sage_flag", "on"],

@@ -392,6 +392,7 @@ app.view_setup_resizer = ->
 app.main = ->
   urlToIframeInfo = (url) ->
     url = app.URL.fix(url)
+    url = app.URL.convertUrlFromPhone(url)
     guessResult = app.URL.guessType(url)
     switch url
       when "config"

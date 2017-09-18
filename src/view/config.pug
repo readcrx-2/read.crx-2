@@ -460,6 +460,9 @@ block body
 
         button.bbsmenu_reload(type="button") 板一覧の更新
         span#bbsmenu_reload_status
+        |更新間隔:
+        input.direct(type="number" name="bbsmenu_update_interval" min="1" value="7")
+        |日
 
     section
       h2 上級者向け機能

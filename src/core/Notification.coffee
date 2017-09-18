@@ -1,6 +1,6 @@
-class Notification
+class app.Notification
   constructor: (@title, @message, @url, @tag) ->
-    @notify = new Notification(
+    @notify = new window.Notification(
       @title,
       {
         tag: @tag

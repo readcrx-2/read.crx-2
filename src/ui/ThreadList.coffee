@@ -125,19 +125,19 @@ class UI.ThreadList
       if @_flg.bookmarkAddRm
         if type is "added"
           boardUrl = app.URL.threadToBoard(bookmark.url)
-          app.BoardTitleSolver.ask(boardUrl).then( (boardName) =>
-            @addItem(
+          app.BoardTitleSolver.ask(boardUrl).then(fn = (boardTitle = "") =>
+            @addItem({
               title: bookmark.title
               url: bookmark.url
               resCount: bookmark.resCount or 0
               readState: bookmark.readState or null
               createdAt: /\/(\d+)\/$/.exec(bookmark.url)[1] * 1000
-              boardUrl: boardUrl
-              boardTitle: boardName
+              boardUrl
+              boardTitle
               isHttps: (app.URL.getScheme(bookmark.url) is "https")
-            )
+            })
             return
-          )
+          , fn)
         else if type is "removed"
           $table.$("tr[data-href=\"#{bookmark.url}\"]").remove()
 

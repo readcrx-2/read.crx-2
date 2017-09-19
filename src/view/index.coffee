@@ -392,7 +392,6 @@ app.view_setup_resizer = ->
 app.main = ->
   urlToIframeInfo = (url) ->
     url = app.URL.fix(url)
-    # 携帯・スマホ用URLの変換
     url = app.URL.convertUrlFromPhone(url)
     guessResult = app.URL.guessType(url)
     switch url

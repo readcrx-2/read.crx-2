@@ -487,7 +487,6 @@ app.boot("/view/thread.html", ->
   $view.on("mouseenter", (e) ->
     {target} = e
     return unless target.matches(".message a:not(.anchor)")
-    # 携帯・スマホ用URLをPC用URLに変換
     url = app.URL.convertUrlFromPhone(target.href)
     {type} = app.URL.guessType(url)
     switch type

@@ -817,28 +817,20 @@ class app.view.TabContentView extends app.view.PaneContentView
     mode = reg.exec(url)
     if mode
       @$element.C("button_change_netsc")[0]?.on("click", =>
-        newUrl = app.URL.exchangeNetSc(url)
-        if newUrl
+        app.URL.convertNetSc(url).then( (res) ->
           app.message.send("open",
-            url: newUrl,
+            url: res,
             new_tab: app.config.isOn("button_change_netsc_newtab")
           )
-        else
-          app.URL.convertNetSc(url).then( (res) ->
-            app.message.send("open",
-              url: res,
-              new_tab: app.config.isOn("button_change_netsc_newtab")
-            )
-            return
-          ).catch( ->
-            msg = """
-            スレッドのURLが古いか新しいため、板一覧に2ch.netと2ch.scのペアが存在しません。
-            板一覧が更新されるのを待つか、板一覧を更新してみてください。
-            """
-            new app.Notification("現在この機能は使用できません", msg, "", "invalid")
-            return
-          )
-        return
+          return
+        ).catch( ->
+          msg = """
+          スレッドのURLが古いか新しいため、板一覧に2ch.netと2ch.scのペアが存在しません。
+          板一覧が更新されるのを待つか、板一覧を更新してみてください。
+          """
+          new app.Notification("現在この機能は使用できません", msg, "", "invalid")
+          return
+        )
       )
     else
       @$element.C("button_change_netsc")[0]?.remove()

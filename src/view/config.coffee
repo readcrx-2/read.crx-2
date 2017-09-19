@@ -365,8 +365,6 @@ app.boot("/view/config.html", ["cache", "bbsmenu"], (Cache, BBSMenu) ->
         $status.textContent = "更新完了"
 
         # sidemenuの表示時に設定されたコールバックが実行されるので、特別なことはしない
-
-        #TODO [board_title_solver]も更新するよう変更
       else
         $status.setClass("fail")
         $status.textContent = "更新失敗"

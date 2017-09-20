@@ -26,17 +26,8 @@ do ->
       return
     )
   ).then( (font) ->
-    document.on("DOMContentLoaded", ->
-      style = $__("style")
-      style.textContent = """
-        @font-face {
-          font-family: "Textar";
-          src: url(#{font});
-        }
-      """
-      document.head.addLast(style)
-      return
-    )
+    fontface = new FontFace("Textar", "url(#{font})")
+    document.fonts.add(fontface)
     return
   )
   return
@@ -134,7 +125,7 @@ app.boot("/view/thread.html", ->
         return
 
       app.viewThread._draw($view, { forceUpdate: ex.force_update, jumpResNum }).then( (thread) ->
-        return unless ex?.mes? and app.config.get("no_writehistory") is "off"
+        return unless ex?.mes? and not app.config.isOn("no_writehistory")
         postMes = ex.mes.replace(/\s/g, "")
         for t, i in thread.res by -1 when postMes is app.util.decodeCharReference(app.util.stripTags(t.message)).replace(/\s/g, "")
           date = threadContent.stringToDate(t.other)
@@ -154,31 +145,36 @@ app.boot("/view/thread.html", ->
     openedAt = Date.now()
 
     app.viewThread._readStateManager($view)
-    $view.on("read_state_attached", func = ({ detail: {jumpResNum} = {} }) ->
-      $view.off("read_state_attached", func)
+    $view.on("read_state_attached", ({ detail: {jumpResNum, requestReloadFlag, loadCount} = {} }) ->
       onScroll = false
-      $content.on("scroll", f = ->
-        $content.off("scroll", f)
+      $content.on("scroll", ->
         onScroll = true
         return
-      )
+      , once: true)
 
-      $last = $content.C("last")[0]
-      lastNum = $content.$(":scope > article:last-child").C("num")[0].textContent
-      # 指定レス番号へ
-      if 0 < jumpResNum <= lastNum
-        threadContent.select(jumpResNum, false, true, -60)
-      # 最終既読位置へ
-      else if $last?
-        offset = $last.attr("last-offset") ? 0
-        threadContent.scrollTo($last, false, +offset)
+      do defaultScroll = ->
+        $last = $content.C("last")[0]
+        lastNum = $content.$(":scope > article:last-child").C("num")[0].textContent
+        # 指定レス番号へ
+        if 0 < jumpResNum <= lastNum
+          threadContent.select(jumpResNum, false, true, -60)
+        # 最終既読位置へ
+        else if $last?
+          offset = $last.attr("last-offset") ? 0
+          threadContent.scrollTo($last, false, +offset)
+        return
 
       #スクロールされなかった場合も余所の処理を走らすためにscrollを発火
       unless onScroll
         $content.dispatchEvent(new Event("scroll"))
 
       #二度目以降のread_state_attached時
-      $view.on("read_state_attached", ({ detail: {jumpResNum} = {} }) ->
+      $view.on("read_state_attached", ({ detail: {jumpResNum, requestReloadFlag, loadCount} = {} }) ->
+        # リロード時の一回目の処理
+        if requestReloadFlag and loadCount is 1
+          defaultScroll()
+          return
+
         moveMode = "new"
         #通常時と自動更新有効時で、更新後のスクロールの動作を変更する
         moveMode = app.config.get("auto_load_move") if $view.hasClass("autoload") and not $view.hasClass("autoload_pause")
@@ -210,7 +206,7 @@ app.boot("/view/thread.html", ->
         return
       )
       return
-    )
+    , once: true)
 
     jumpResNum = -1
     iframe = parent.$$.$("iframe[data-url=\"#{viewUrl}\"]")
@@ -219,7 +215,7 @@ app.boot("/view/thread.html", ->
       jumpResNum = +iframe.dataset.paramResNum if jumpResNum < 1
 
     app.viewThread._draw($view, {jumpResNum}).catch( -> return).then( ->
-      app.History.add(viewUrl, document.title, openedAt) unless app.config.get("no_history") is "on"
+      app.History.add(viewUrl, document.title, openedAt) unless app.config.isOn("no_history")
       return
     )
     return
@@ -491,7 +487,6 @@ app.boot("/view/thread.html", ->
   $view.on("mouseenter", (e) ->
     {target} = e
     return unless target.matches(".message a:not(.anchor)")
-    # 携帯・スマホ用URLをPC用URLに変換
     url = app.URL.convertUrlFromPhone(target.href)
     {type} = app.URL.guessType(url)
     switch type
@@ -634,7 +629,7 @@ app.boot("/view/thread.html", ->
         return
     })
     # レス番号を指定してリンクを開く
-    if app.config.get("enable_link_with_res_number") is "on"
+    if app.config.isOn("enable_link_with_res_number")
       menuTitle = "レス番号を無視してリンクを開く"
     else
       menuTitle = "レス番号を指定してリンクを開く"
@@ -682,7 +677,7 @@ app.boot("/view/thread.html", ->
 
   #何もないところをダブルクリックすると更新する
   $view.on("dblclick", ({target}) ->
-    return if app.config.get("dblclick_reload") is "off"
+    return unless app.config.isOn("dblclick_reload")
     return unless target.hasClass("message")
     return if target.tagName is "A" or target.hasClass("thumbnail")
     $view.dispatchEvent(new Event("request_reload"))
@@ -812,7 +807,7 @@ app.boot("/view/thread.html", ->
       show: ->
         next = null
 
-        bookmarks = app.bookmark.get_all().filter( (bookmark) ->
+        bookmarks = app.bookmark.getAll().filter( (bookmark) ->
           return (bookmark.type is "thread") and (bookmark.url isnt viewUrl)
         )
 
@@ -820,16 +815,16 @@ app.boot("/view/thread.html", ->
         if bookmark = app.bookmark.get(viewUrl)
           bookmarks.unshift(bookmark)
 
-        for bookmark in bookmarks when bookmark.res_count?
+        for bookmark in bookmarks when bookmark.resCount?
           read = null
 
           if iframe = parent.$$.$("[data-url=\"#{bookmark.url}\"]")
             read = iframe.contentWindow?.$$?(".content > article").length
 
           unless read
-            read = bookmark.read_state?.read or 0
+            read = bookmark.readState?.read or 0
 
-          if bookmark.res_count > read
+          if bookmark.resCount > read
             next = bookmark
             break
 
@@ -839,7 +834,7 @@ app.boot("/view/thread.html", ->
           else
             text = "未読ブックマーク: #{next.title}"
           if next.res_count?
-            text += " (未読#{next.res_count - (next.read_state?.read or 0)}件)"
+            text += " (未読#{next.resCount - (next.readState?.read or 0)}件)"
           @_elm.href = app.safeHref(next.url)
           @_elm.textContent = text
           @_elm.dataset.title = next.title
@@ -881,7 +876,7 @@ app.boot("/view/thread.html", ->
       updateThreadFooter()
       return
     )
-    app.message.on("bookmark_updated", (message) ->
+    app.message.on("bookmark_updated", ->
       if canBeShown
         $nextUnread.show()
       return
@@ -995,8 +990,8 @@ app.viewThread._readStateManager = ($view) ->
   #read_stateの取得
   getReadState = new Promise( (resolve, reject) ->
     readStateUpdated = false
-    if (bookmark = app.bookmark.get(viewUrl))?.read_state?
-      readState = bookmark.read_state
+    if (bookmark = app.bookmark.get(viewUrl))?.readState?
+      {readState} = bookmark
       resolve({readState, readStateUpdated})
     else
       app.ReadState.get(viewUrl).then( (_readState) ->
@@ -1036,9 +1031,8 @@ app.viewThread._readStateManager = ($view) ->
           attachedReadState.received = -999
         else
           attachedReadState.received = readState.received
-        requestReloadFlag = false
 
-        $view.dispatchEvent(new CustomEvent("read_state_attached", detail: {jumpResNum}))
+        $view.dispatchEvent(new CustomEvent("read_state_attached", detail: {jumpResNum, requestReloadFlag, loadCount}))
         if attachedReadState.read > 0 and attachedReadState.received > 0
           app.message.send("read_state_updated", {board_url: boardUrl, read_state: readState})
         return
@@ -1059,10 +1053,10 @@ app.viewThread._readStateManager = ($view) ->
       $content.C("received")[0]?.removeClass("received")
       $content.child()[attachedReadState.received - 1]?.addClass("received")
       tmpReadState.received = attachedReadState.received
-    requestReloadFlag = false
-    $view.dispatchEvent(new CustomEvent("read_state_attached", detail: {jumpResNum}))
+    $view.dispatchEvent(new CustomEvent("read_state_attached", detail: {jumpResNum, requestReloadFlag, loadCount}))
     if tmpReadState.read and tmpReadState.received
       app.message.send("read_state_updated", {board_url: boardUrl, read_state: tmpReadState})
+    requestReloadFlag = false
     return
   )
 
@@ -1137,7 +1131,7 @@ app.viewThread._readStateManager = ($view) ->
       scan()
       if readStateUpdated
         app.ReadState.set(readState)
-        app.bookmark.update_read_state(readState)
+        app.bookmark.updateReadState(readState)
         readStateUpdated = false
       return
 

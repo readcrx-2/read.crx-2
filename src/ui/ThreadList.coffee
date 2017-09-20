@@ -103,10 +103,10 @@ class UI.ThreadList
         if $tr?
           if bookmark.expired
             $tr.addClass("expired")
-            if app.config.get("bookmark_show_dat") is "off"
-              $tr.addClass("hidden")
-            else
+            if app.config.isOn("bookmark_show_dat")
               $tr.removeClass("hidden")
+            else
+              $tr.addClass("hidden")
           else
             $tr.removeClass("expired")
 
@@ -125,19 +125,19 @@ class UI.ThreadList
       if @_flg.bookmarkAddRm
         if type is "added"
           boardUrl = app.URL.threadToBoard(bookmark.url)
-          app.BoardTitleSolver.ask(boardUrl).then( (boardName) =>
-            @addItem(
+          app.BoardTitleSolver.ask(boardUrl).then(fn = (boardTitle = "") =>
+            @addItem({
               title: bookmark.title
               url: bookmark.url
-              resCount: bookmark.res_count or 0
-              readState: bookmark.read_state or null
+              resCount: bookmark.resCount or 0
+              readState: bookmark.readState or null
               createdAt: /\/(\d+)\/$/.exec(bookmark.url)[1] * 1000
-              boardUrl: boardUrl
-              boardTitle: boardName
+              boardUrl
+              boardTitle
               isHttps: (app.URL.getScheme(bookmark.url) is "https")
-            )
+            })
             return
-          )
+          , fn)
         else if type is "removed"
           $table.$("tr[data-href=\"#{bookmark.url}\"]").remove()
 
@@ -146,12 +146,12 @@ class UI.ThreadList
         if tr
           td = tr.$(selector.res)
           oldResCount = +td.textContent
-          td.textContent = bookmark.res_count
+          td.textContent = bookmark.resCount
           td.dataset.beforeres = oldResCount
           if @_flg.unread
             td = tr.$(selector.unread)
             oldUnread = +td.textContent
-            unread = oldUnread + (bookmark.res_count - oldResCount)
+            unread = oldUnread + (bookmark.resCount - oldResCount)
             td.textContent = unread or ""
             if unread > 0
               tr.addClass("updated")
@@ -162,7 +162,7 @@ class UI.ThreadList
             td.textContent = ThreadList._calcHeat(
               Date.now()
               /\/(\d+)\/$/.exec(bookmark.url)[1] * 1000
-              bookmark.res_count
+              bookmark.resCount
             )
 
       if @_flg.title and type is "title"
@@ -179,7 +179,6 @@ class UI.ThreadList
           res = tr.$(selector.res)
           if +res.textContent < read_state.received
             res.textContent = read_state.received
-            tr.addClass("updated")
           unread = tr.$(selector.unread)
           unreadCount = Math.max(+res.textContent - read_state.read, 0)
           unread.textContent = unreadCount or ""
@@ -363,7 +362,7 @@ class UI.ThreadList
       trClassName += " ng_thread" if item.ng
       trClassName += " net" if item.isNet
       trClassName += " https" if item.isHttps
-      if item.expired and app.config.get("bookmark_show_dat") is "off"
+      if item.expired and not app.config.isOn("bookmark_show_dat")
         trClassName += " hidden"
 
       tmpHeadHTML = " data-href=\"#{app.escapeHtml(item.url)}\""

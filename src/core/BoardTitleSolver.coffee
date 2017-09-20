@@ -99,7 +99,7 @@ class app.BoardTitleSolver
           title += "_sc"
         else if tsld is "open2ch.net"
           title += "_op"
-        resolve(title)
+        return title
       return Promise.reject()
     )
 

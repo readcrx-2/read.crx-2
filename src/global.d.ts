@@ -12,4 +12,5 @@ declare namespace UI {
 }
 declare namespace app {
   var Cache: any;
+  var BBSMenu: any;
 }

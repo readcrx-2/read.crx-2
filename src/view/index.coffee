@@ -259,16 +259,14 @@ class app.view.Index extends app.view.View
   ###
   showKeyboardHelp: ->
     $help = @$element.C("keyboard_help")[0]
-    $help.on("click", func = =>
-      $help.off("click", func)
+    $help.on("click", =>
       @hideKeyboardHelp()
       return
-    )
-    $help.on("keydown", func = =>
-      $help.off("keydown", func)
+    , once: true)
+    $help.on("keydown", =>
       @hideKeyboardHelp()
       return
-    )
+    , once: true)
     UI.Animate.fadeIn($help).on("finish", ->
       $help.focus()
     )
@@ -314,7 +312,7 @@ app.boot("/view/index.html", ["bbsmenu"], (BBSMenu) ->
     history.replaceState(null, null, "/view/index.html")
     app.main()
     return unless query
-    paramResNumFlag = (app.config.get("enable_link_with_res_number") is "on")
+    paramResNumFlag = app.config.isOn("enable_link_with_res_number")
     paramResNum = if paramResNumFlag then app.URL.getResNumber(query) else null
     # 後ほど実行するためにCallbacksに登録する
     app.BBSMenu.boardTableCallbacks = new app.Callbacks({persistent: false})
@@ -394,7 +392,6 @@ app.view_setup_resizer = ->
 app.main = ->
   urlToIframeInfo = (url) ->
     url = app.URL.fix(url)
-    # 携帯・スマホ用URLの変換
     url = app.URL.convertUrlFromPhone(url)
     guessResult = app.URL.guessType(url)
     switch url
@@ -750,7 +747,7 @@ app.main = ->
   #openリクエストの監視
   chrome.runtime.onMessage.addListener( ({type, query}) ->
     return unless type is "open"
-    paramResNumFlag = (app.config.get("enable_link_with_res_number") is "on")
+    paramResNumFlag = app.config.isOn("enable_link_with_res_number")
     paramResNum = if paramResNumFlag then app.URL.getResNumber(query) else null
     app.message.send("open", url: query, new_tab: true, param_res_num: paramResNum)
     return

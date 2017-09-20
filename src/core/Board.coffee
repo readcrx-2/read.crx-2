@@ -62,6 +62,14 @@ class app.Board
       ).then(fn = (response) =>
         #パース
         return new Promise( (resolve, reject) =>
+          # 2chで自動移動しているときはサーバー移転
+          if (
+            app.URL.tsld(@url) is "2ch.net" and
+            @url.split("/")[2] isnt response.responseURL.split("/")[2]
+          )
+            newBoardUrl = response.responseURL.slice(0, -"subject.txt".length)
+            reject({response, newBoardUrl})
+
           if response?.status is 200
             threadList = Board.parse(@url, response.body)
           else if hasCache
@@ -81,11 +89,19 @@ class app.Board
         @thread = threadList
         resolve()
         return {response, threadList}
-      , ({response, threadList}) =>
+      , ({response, threadList, newBoardUrl}) =>
         @message = "板の読み込みに失敗しました。"
 
+        if newBoardUrl?
+          @message += """
+            サーバーが移転しています
+            (<a href="#{app.escapeHtml(app.safeHref(newBoardUrl))}"
+            class="open_in_rcrx">#{app.escapeHtml(newBoardUrl)}
+            </a>)
+            """
+          reject()
         #2chでrejectされている場合は移転を疑う
-        if app.URL.tsld(@url) is "2ch.net" and response?
+        else if app.URL.tsld(@url) is "2ch.net" and response?
           app.util.chServerMoveDetect(@url)
             #移転検出時
             .then( (newBoardUrl) =>
@@ -95,9 +111,7 @@ class app.Board
               class="open_in_rcrx">#{app.escapeHtml(newBoardUrl)}
               </a>)
               """
-            ).catch( ->
-              return
-            ).then( =>
+            ).catch( -> return).then( =>
               if hasCache and threadList?
                 @message += "キャッシュに残っていたデータを表示します。"
 
@@ -132,7 +146,7 @@ class app.Board
           cache.put()
 
           for thread in threadList
-            app.bookmark.update_res_count(thread.url, thread.resCount)
+            app.bookmark.updateResCount(thread.url, thread.resCount)
 
         else if hasCache and response?.status is 304
           cache.last_updated = Date.now()
@@ -142,15 +156,15 @@ class app.Board
         #dat落ちスキャン
         return unless threadList
         dict = {}
-        for bookmark in app.bookmark.get_by_board(@url) when bookmark.type is "thread"
+        for bookmark in app.bookmark.getByBoard(@url) when bookmark.type is "thread"
           dict[bookmark.url] = true
 
         for thread in threadList when dict[thread.url]?
           dict[thread.url] = false
-          app.bookmark.update_expired(thread.url, false)
+          app.bookmark.updateExpired(thread.url, false)
 
         for threadUrl, val of dict when val
-          app.bookmark.update_expired(threadUrl, true)
+          app.bookmark.updateExpired(threadUrl, true)
         return
       ).catch( ->
         return
@@ -209,7 +223,6 @@ class app.Board
   ###
   @parse: (url, text) ->
     tmp = /^(https?):\/\/((?:\w+\.)?(\w+\.\w+))\/(\w+)(?:\/(\w+)|\/?)/.exec(url)
-    console.log url, tmp
     scFlg = false
     switch tmp[3]
       when "machi.to"

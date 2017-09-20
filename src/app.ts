@@ -336,6 +336,10 @@ namespace app {
       return JSON.stringify(json);
     }
 
+    isOn (key:string):boolean {
+      return this.get(key) === "on";
+    }
+
     set (key:string, val:string) {
       return new Promise( (resolve, reject) => {
         var tmp = {};
@@ -371,7 +375,7 @@ namespace app {
           return;
         }
 
-        chrome.storage.local.remove("config_" + key, () => {
+        chrome.storage.local.remove(`config_${key}`, () => {
           if (chrome.runtime.lasterror) {
             reject(chrome.runtime.lasterror.message);
           } else {

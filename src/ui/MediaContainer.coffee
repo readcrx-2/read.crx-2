@@ -24,8 +24,8 @@ class UI.MediaContainer
   @method setHoverEvents
   ###
   setHoverEvents: ->
-    isImageOn = app.config.get("hover_zoom_image") is "on"
-    isVideoOn = app.config.get("hover_zoom_video") is "on"
+    isImageOn = app.config.isOn("hover_zoom_image")
+    isVideoOn = app.config.isOn("hover_zoom_video")
     imageRatio = app.config.get("zoom_ratio_image") + "%"
     videoRatio = app.config.get("zoom_ratio_video") + "%"
 

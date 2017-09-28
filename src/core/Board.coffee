@@ -123,7 +123,7 @@ class app.Board
           if hasCache and threadList?
             @message += "キャッシュに残っていたデータを表示します。"
 
-          if thread_list?
+          if threadList?
             @thread = threadList
           reject()
         return Promise.reject({response, threadList})

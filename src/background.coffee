@@ -31,18 +31,18 @@ searchRcrx = ->
 # アイコンクリック時の動作
 chrome.browserAction.onClicked.addListener( ->
   # 現在のタブが自分自身なら何もしない
-  isCurrentTab().catch( ->
-    return searchRcrx()
-  ).then( ({windowId, id}) ->
-    # 実行中のread.crxが存在すればそれを開く
-    chrome.windows.update(windowId, {focused: true})
-    chrome.tabs.update(id, {highlighted: true})
-    return
-  , ->
-    # 存在しなければタブを作成する
-    chrome.tabs.create(url: "/view/index.html")
-    return
-  )
+  try
+    {windowId, id} = await isCurrentTab()
+  catch
+    try
+      {windowId, id} = await searchRcrx()
+    catch
+      # 存在しなければタブを作成する
+      chrome.tabs.create(url: "/view/index.html")
+      return
+  # 実行中のread.crxが存在すればそれを開く
+  chrome.windows.update(windowId, {focused: true})
+  chrome.tabs.update(id, {highlighted: true})
   return
 )
 
@@ -51,11 +51,11 @@ chrome.runtime.onMessage.addListener( ({type}) ->
   return unless type is "exit_rcrx"
   # zombie.htmlが動いているかもしれないので10秒待機
   setTimeout( ->
-    searchRcrx().catch( ->
+    try
+      await searchRcrx()
+    catch
       # 実行していなければメモリ解放のためにリロード
       chrome.runtime.reload()
-      return
-    )
     return
   , 1000 * 10)
   return
@@ -100,15 +100,14 @@ chrome.contextMenus.onClicked.addListener( ({menuItemId, linkUrl: url}, tab) ->
   unless supportedURL.some((a) -> a.test(url))
     new Notification("未対応のURLです")
     return
-  searchRcrx().then( ({windowId, id}) ->
+  try
+    {windowId, id} = await searchRcrx()
     # 実行中のread.crxが存在すればそれを開く
     chrome.windows.update(windowId, {focused: true})
     chrome.tabs.update(id, {highlighted: true})
     chrome.runtime.sendMessage(type: "open", query: url)
-    return
-  , ->
+  catch
     # 存在しなければタブを作成する
     chrome.tabs.create(url: "/view/index.html?q=#{url}")
-  )
   return
 )

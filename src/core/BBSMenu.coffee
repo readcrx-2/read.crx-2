@@ -110,23 +110,18 @@ class app.BBSMenu
   @_updating: false
   @_update: (forceReload) ->
     BBSMenu._updating = true
-    BBSMenu.fetch(app.config.get("bbsmenu"), forceReload).then( ({response, menu}) ->
-      #コールバック
+    try
+      {menu} = await BBSMenu.fetch(app.config.get("bbsmenu"), forceReload)
       BBSMenu._callbacks.call({status: "success", data: menu})
-      return {response, menu}
-    , ({response, menu}) ->
+    catch {menu}
       message = "板一覧の取得に失敗しました。"
       if menu?
         message += "キャッシュに残っていたデータを表示します。"
         BBSMenu._callbacks.call({status: "error", data: menu, message})
       else
         BBSMenu._callbacks.call({status: "error", message})
-      return {response, menu}
-    ).then( (arg) ->
-      BBSMenu._updating = false
-      BBSMenu._callbacks.destroy()
-      return arg
-    )
+    BBSMenu._updating = false
+    BBSMenu._callbacks.destroy()
     return
 
 app.module("bbsmenu", [], (callback) ->

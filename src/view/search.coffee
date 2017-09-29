@@ -42,7 +42,8 @@ app.boot("/view/search.html", ["thread_search"], (ThreadSearch) ->
     $view.addClass("loading")
     $buttonReload.addClass("disabled")
     $view.C("more")[0].textContent = "検索中"
-    threadSearch.read().then( (result) ->
+    try
+      result = await threadSearch.read()
       $messageBar.removeClass("error")
       $messageBar.removeChildren()
 
@@ -61,18 +62,14 @@ app.boot("/view/search.html", ["thread_search"], (ThreadSearch) ->
           $tbody.removeClass("body_empty")
 
       $view.removeClass("loading")
-      return
-    , ({message}) ->
+    catch {message}
       $messageBar.addClass("error")
       $messageBar.textContent = message
       $view.removeClass("loading")
-      return
-    ).then( ->
-      $view.C("more")[0].addClass("hidden")
-      app.defer5( ->
-        $buttonReload.removeClass("disabled")
-        return
-      )
+
+    $view.C("more")[0].addClass("hidden")
+    app.defer5( ->
+      $buttonReload.removeClass("disabled")
       return
     )
     return

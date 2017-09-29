@@ -299,27 +299,26 @@ app.boot("/view/index.html", ["bbsmenu"], (BBSMenu) ->
     return
   )
 
-  Promise.all([getCurrent, getAll]).then( ([currentTab, windows]) ->
-    appPath = chrome.extension.getURL("/view/index.html")
-    for win in windows
-      for tab in win.tabs when tab.id isnt currentTab.id and tab.url is appPath
-        chrome.windows.update(win.id, focused: true)
-        chrome.tabs.update(tab.id, highlighted: true)
-        if query
-          chrome.runtime.sendMessage({type: "open", query})
-        chrome.tabs.remove(currentTab.id)
-        return
-    history.replaceState(null, null, "/view/index.html")
-    app.main()
-    return unless query
-    paramResNumFlag = app.config.isOn("enable_link_with_res_number")
-    paramResNum = if paramResNumFlag then app.URL.getResNumber(query) else null
-    # 後ほど実行するためにCallbacksに登録する
-    app.BBSMenu.boardTableCallbacks = new app.Callbacks({persistent: false})
-    app.BBSMenu.boardTableCallbacks.add( ->
-      app.message.send("open", url: query, new_tab: true, param_res_num: paramResNum)
+  [currentTab, windows] = await Promise.all([getCurrent, getAll])
+  appPath = chrome.extension.getURL("/view/index.html")
+  for win in windows
+    for tab in win.tabs when tab.id isnt currentTab.id and tab.url is appPath
+      chrome.windows.update(win.id, focused: true)
+      chrome.tabs.update(tab.id, highlighted: true)
+      if query
+        chrome.runtime.sendMessage({type: "open", query})
+      chrome.tabs.remove(currentTab.id)
       return
-    )
+  history.replaceState(null, null, "/view/index.html")
+  app.main()
+  return unless query
+  paramResNumFlag = app.config.isOn("enable_link_with_res_number")
+  paramResNum = if paramResNumFlag then app.URL.getResNumber(query) else null
+  # 後ほど実行するためにCallbacksに登録する
+  app.BBSMenu.boardTableCallbacks = new app.Callbacks({persistent: false})
+  app.BBSMenu.boardTableCallbacks.add( ->
+    app.message.send("open", url: query, new_tab: true, param_res_num: paramResNum)
+    return
   )
   return
 )

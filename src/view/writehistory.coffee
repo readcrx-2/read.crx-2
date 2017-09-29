@@ -28,25 +28,23 @@ app.boot("/view/writehistory.html", ->
     else
       offset = undefined
 
-    app.WriteHistory.get(offset, NUMBER_OF_DATA_IN_ONCE).then( (data) ->
-      if add
-        loadAddCount++
-      else
-        threadList.empty()
-        loadAddCount = 1
+    data = await app.WriteHistory.get(offset, NUMBER_OF_DATA_IN_ONCE)
+    if add
+      loadAddCount++
+    else
+      threadList.empty()
+      loadAddCount = 1
 
-      if data.length < NUMBER_OF_DATA_IN_ONCE
-        isLoadedEnd = true
+    if data.length < NUMBER_OF_DATA_IN_ONCE
+      isLoadedEnd = true
 
-      threadList.addItem(data)
-      $view.removeClass("loading")
-      return if add and data.length is 0
-      $view.dispatchEvent(new Event("view_loaded"))
-      $view.C("button_reload")[0].addClass("disabled")
-      app.defer5(->
-        $view.C("button_reload")[0].removeClass("disabled")
-        return
-      )
+    threadList.addItem(data)
+    $view.removeClass("loading")
+    return if add and data.length is 0
+    $view.dispatchEvent(new Event("view_loaded"))
+    $view.C("button_reload")[0].addClass("disabled")
+    app.defer5(->
+      $view.C("button_reload")[0].removeClass("disabled")
       return
     )
     return
@@ -69,12 +67,10 @@ app.boot("/view/writehistory.html", ->
   , passive: true)
 
   $view.C("button_history_clear")[0].on("click", ->
-    UI.Dialog("confirm",
+    res = await UI.Dialog("confirm",
       message: "履歴を削除しますか？"
-    ).then( (res) ->
-      app.WriteHistory.clear().then(load) if res
-      return
     )
+    app.WriteHistory.clear().then(load) if res
     return
   )
   return

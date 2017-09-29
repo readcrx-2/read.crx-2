@@ -72,18 +72,22 @@ class SettingIO
 
 class HistoryIO extends SettingIO
   constructor: ({
-    name: @name
+    name
     countFunc: @countFunc
-    importFunc: @importFunc
-    exportFunc: @exportFunc
+    importFunc
+    exportFunc
     clearFunc: @clearFunc
     clearRangeFunc: @clearRangeFunc
   }) ->
-    super(
-      name: @name
-      importFunc: @importFunc
-      exportFunc: @exportFunc
-    )
+    super({
+      name
+      importFunc
+      exportFunc
+    })
+    @name = name
+    @importFunc = importFunc
+    @exportFunc = exportFunc
+
     @$clearButton = $$.C("#{@name}_clear")[0]
     @$clearRangeButton = $$.C("#{@name}_range_clear")[0]
 
@@ -92,54 +96,46 @@ class HistoryIO extends SettingIO
     @setupClearRangeButton()
     return
   showCount: ->
-    @countFunc().then( (count) =>
-      @$status.textContent = "#{count}件"
-      return
-    )
+    count = await @countFunc()
+    @$status.textContent = "#{count}件"
     return
   setupClearButton: ->
     @$clearButton.on("click", =>
-      UI.Dialog("confirm",
+      result = await UI.Dialog("confirm",
         message: "本当に削除しますか？"
-      ).then( (result) =>
-        return unless result
-        @$clearButton.addClass("hidden")
-        @$status.textContent = "削除中"
-
-        @clearFunc()
-          .then( =>
-            @$status.textContent = "削除完了"
-            parent.$$.$("iframe[src=\"/view/#{@name}.html\"]")?.contentWindow.C("view")[0].dispatchEvent(new Event("request_reload"))
-          , =>
-            @$status.textContent = "削除失敗"
-          ).then( =>
-            @$clearButton.removeClass("hidden")
-          )
-        return
       )
+      return unless result
+      @$clearButton.addClass("hidden")
+      @$status.textContent = "削除中"
+
+      try
+        await @clearFunc()
+        @$status.textContent = "削除完了"
+        parent.$$.$("iframe[src=\"/view/#{@name}.html\"]")?.contentWindow.C("view")[0].dispatchEvent(new Event("request_reload"))
+      catch
+        @$status.textContent = "削除失敗"
+
+      @$clearButton.removeClass("hidden")
       return
     )
     return
   setupClearRangeButton: ->
     @$clearRangeButton.on("click", =>
-      UI.Dialog("confirm",
+      result = await UI.Dialog("confirm",
         message: "本当に削除しますか？"
-      ).then( (result) =>
-        return unless result
-        @$clearRangeButton.addClass("hidden")
-        @$status.textContent = "範囲指定削除中"
-
-        @clearRangeFunc(parseInt($$.C("#{@name}_date_range")[0].value))
-          .then( =>
-            @$status.textContent = "範囲指定削除完了"
-            parent.$$.$("iframe[src=\"/view/#{@name}.html\"]")?.contentWindow.C("view")[0].dispatchEvent(new Event("request_reload"))
-          , =>
-            @$status.textContent = "範囲指定削除失敗"
-          ).then( =>
-            @$clearRangeButton.removeClass("hidden")
-          )
-        return
       )
+      return unless result
+      @$clearRangeButton.addClass("hidden")
+      @$status.textContent = "範囲指定削除中"
+
+      try
+        await @clearRangeFunc(parseInt($$.C("#{@name}_date_range")[0].value))
+        @$status.textContent = "範囲指定削除完了"
+        parent.$$.$("iframe[src=\"/view/#{@name}.html\"]")?.contentWindow.C("view")[0].dispatchEvent(new Event("request_reload"))
+      catch
+        @$status.textContent = "範囲指定削除失敗"
+
+      @$clearRangeButton.removeClass("hidden")
       return
     )
     return
@@ -148,19 +144,15 @@ class HistoryIO extends SettingIO
       if @importFile isnt ""
         @$status.setClass("loading")
         @$status.textContent = "更新中"
-        @importFunc(JSON.parse(@importFile))
-        .then( =>
-          return @countFunc()
-        ).then( (count) =>
+        await @importFunc(JSON.parse(@importFile))
+        try
+          count = await @countFunc()
           @$status.setClass("done")
           @$status.textContent = "#{count}件 インポート完了"
           @$clearButton.removeClass("hidden")
-          return
-        , =>
+        catch
           @$status.setClass("fail")
           @$status.textContent = "インポート失敗"
-          return
-        )
       else
         @$status.addClass("fail")
         @$status.textContent = "ファイルを選択してください"
@@ -169,15 +161,14 @@ class HistoryIO extends SettingIO
     return
   setupExportButton: ->
     @$exportButton.on("click", =>
-      @exportFunc().then( (data) =>
-        exportText = JSON.stringify(data)
-        blob = new Blob([exportText], type: "text/plain")
-        $a = $__("a")
-        $a.href = URL.createObjectURL(blob)
-        $a.setAttr("target", "_blank")
-        $a.setAttr("download", "read.crx-2_#{@name}.json")
-        $a.click()
-      )
+      data = await @exportFunc()
+      exportText = JSON.stringify(data)
+      blob = new Blob([exportText], type: "text/plain")
+      $a = $__("a")
+      $a.href = URL.createObjectURL(blob)
+      $a.setAttr("target", "_blank")
+      $a.setAttr("download", "read.crx-2_#{@name}.json")
+      $a.click()
       return
     )
     return
@@ -387,14 +378,11 @@ app.boot("/view/config.html", ["cache", "bbsmenu"], (Cache, BBSMenu) ->
         ))
       )
     exportFunc: ->
-      return new Promise( (resolve, reject) ->
-        Promise.all([
-          app.ReadState.getAll(),
-          app.History.getAll()
-        ]).then( ([read_state_res, history_res]) ->
-          resolve({"read_state": read_state_res, "history": history_res})
-          return
-        )
+      return Promise.all([
+        app.ReadState.getAll(),
+        app.History.getAll()
+      ]).then( ([read_state_res, history_res]) ->
+        return {"read_state": read_state_res, "history": history_res}
       )
     clearFunc: ->
       return Promise.all([app.History.clear(), app.ReadState.clear()])
@@ -414,12 +402,8 @@ app.boot("/view/config.html", ["cache", "bbsmenu"], (Cache, BBSMenu) ->
       else
         return Promise.resolve()
     exportFunc: ->
-      return new Promise( (resolve, reject) ->
-        app.WriteHistory.getAll().then( (data) ->
-          resolve({"writehistory": data})
-          return
-        )
-        return
+      return app.WriteHistory.getAll().then( (data) ->
+        return {"writehistory": data}
       )
     clearFunc: ->
       return app.WriteHistory.clear()
@@ -432,22 +416,20 @@ app.boot("/view/config.html", ["cache", "bbsmenu"], (Cache, BBSMenu) ->
     $clearButton = $view.C("cache_clear")[0]
     $status = $$.I("cache_status")
 
-    Cache.count().then( (count) ->
+    do ->
+      count = await Cache.count()
       $status.textContent = "#{count}件"
       return
-    )
 
     $clearButton.on("click", ->
       $clearButton.remove()
       $status.textContent = "削除中"
 
-      Cache.delete().then( ->
+      try
+        await Cache.delete()
         $status.textContent = "削除完了"
-        return
-      , ->
+      catch
         $status.textContent = "削除失敗"
-        return
-      )
       return
     )
     #キャッシュ範囲削除ボタン
@@ -455,13 +437,11 @@ app.boot("/view/config.html", ["cache", "bbsmenu"], (Cache, BBSMenu) ->
     $clearRangeButton.on("click", ->
       $status.textContent = "範囲指定削除中"
 
-      Cache.clearRange(parseInt($view.C("cache_date_range")[0].value)).then( ->
+      try
+        await Cache.clearRange(parseInt($view.C("cache_date_range")[0].value))
         $status.textContent = "削除完了"
-        return
-      , ->
+      catch
         $status.textContent = "削除失敗"
-        return
-      )
       return
     )
     return
@@ -550,10 +530,10 @@ app.boot("/view/config.html", ["cache", "bbsmenu"], (Cache, BBSMenu) ->
 
   #bbsmenu設定
   resetBBSMenu = ->
-    app.config.del("bbsmenu").then( ->
-      $view.$(".direct.bbsmenu").value = app.config.get("bbsmenu")
-      $$.C("bbsmenu_reload")[0].click()
-    )
+    await app.config.del("bbsmenu")
+    $view.$(".direct.bbsmenu").value = app.config.get("bbsmenu")
+    $$.C("bbsmenu_reload")[0].click()
+    return
 
   if $view.$(".direct.bbsmenu").value is ""
     resetBBSMenu()
@@ -634,7 +614,7 @@ app.boot("/view/config.html", ["cache", "bbsmenu"], (Cache, BBSMenu) ->
 
   #過去の履歴をインポート
   $replacestrStatus = $$.I("history_from_1151_status")
-  $view.C("history_from_1151")[0].on "click", ->
+  $view.C("history_from_1151")[0].on( "click", ->
     $replacestrStatus.setClass("loading")
     $replacestrStatus.textContent = "インポート中"
     hisPro = new Promise( (resolve, reject) ->
@@ -644,14 +624,12 @@ app.boot("/view/config.html", ["cache", "bbsmenu"], (Cache, BBSMenu) ->
           h.map( ({url, title, date}) ->
             return app.History.add(url, title, date)
           )
-          Promise.all(h).then( ->
+          try
+            await Promise.all(h)
             t.executeSql("drop table History", [])
             resolve()
-            return
-          , (e) ->
+          catch e
             reject(e)
-            return
-          )
           return
         , (e) ->
           if e.code?
@@ -669,14 +647,12 @@ app.boot("/view/config.html", ["cache", "bbsmenu"], (Cache, BBSMenu) ->
           w.map( ({url, res, title, name, mail, input_name, message, date}) ->
             return app.WriteHistory.add(url, res, title, name, mail, input_name, mail, message, date)
           )
-          Promise.all(w).then( ->
+          try
+            await Promise.all(w)
             t.executeSql("drop table WriteHistory", [])
             resolve()
-            return
-          , (e) ->
+          catch e
             reject(e)
-            return
-          )
           return
         , (e) ->
           if e.code?
@@ -694,14 +670,12 @@ app.boot("/view/config.html", ["cache", "bbsmenu"], (Cache, BBSMenu) ->
           r.map( (a) ->
             return app.ReadState.set(a)
           )
-          Promise.all(r).then( ->
+          try
+            await Promise.all(r)
             t.executeSql("drop table ReadState", [])
             resolve()
-            return
-          , (e) ->
+          catch e
             reject(e)
-            return
-          )
           return
         , (e) ->
           if e.code?
@@ -712,14 +686,14 @@ app.boot("/view/config.html", ["cache", "bbsmenu"], (Cache, BBSMenu) ->
         )
       )
     )
-    Promise.all([hisPro, whisPro, rsPro]).then( ->
+    try
+      await Promise.all([hisPro, whisPro, rsPro])
       $replacestrStatus.addClass("done")
       $replacestrStatus.textContent = "インポート完了"
-    , (e) ->
+    catch e
       $replacestrStatus.addClass("fail")
       $replacestrStatus.textContent = "インポート失敗 - #{e}"
-    )
     return
-
+  )
   return
 )

@@ -115,28 +115,31 @@ app.boot("/view/bookmark.html", ["board"], (Board) ->
     expired
   }) ->
     boardUrl = app.URL.threadToBoard(url)
-    return app.BoardTitleSolver.ask(boardUrl).then(fn = (boardTitle = "") ->
-      threadList.addItem({
-        title
-        url
-        resCount
-        readState
-        createdAt: /\/(\d+)\/$/.exec(url)[1] * 1000
-        expired
-        boardUrl
-        boardTitle
-        isHttps: (app.URL.getScheme(url) is "https")
-      })
-      return
-    , fn)
+    try
+      boardTitle = await app.BoardTitleSolver.ask(boardUrl)
+    catch
+      boardTitle = ""
+    threadList.addItem({
+      title
+      url
+      resCount
+      readState
+      createdAt: /\/(\d+)\/$/.exec(url)[1] * 1000
+      expired
+      boardUrl
+      boardTitle
+      isHttps: (app.URL.getScheme(url) is "https")
+    })
+    return
   )
 
-  Promise.all(getPromises).then( ->
+  do ->
+    await Promise.all(getPromises)
     app.message.send("request_update_read_state")
     tableSorter.update()
 
     $view.dispatchEvent(new Event("view_loaded"))
-  )
+    return
 
   titleIndex = tableHeaders.indexOf("title")
   resIndex = tableHeaders.indexOf("res")

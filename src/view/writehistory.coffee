@@ -26,7 +26,7 @@ app.boot("/view/writehistory.html", ->
     if add
       offset = loadAddCount*NUMBER_OF_DATA_IN_ONCE
     else
-      offset = null
+      offset = undefined
 
     app.WriteHistory.get(offset, NUMBER_OF_DATA_IN_ONCE).then( (data) ->
       if add

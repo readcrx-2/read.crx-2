@@ -466,7 +466,9 @@ app.main = ->
     return
   )
 
-  document.title = app.manifest.name
+  do ->
+    document.title = (await app.manifest).name
+    return
 
   app.Ninja.enableAutoBackup()
 
@@ -497,27 +499,29 @@ app.main = ->
   #前回起動時のバージョンと違うバージョンだった場合、アップデート通知を送出
   do ->
     lastVersion = app.config.get("last_version")
+    {name, version} = await app.manifest
     if lastVersion?
-      if app.manifest.version isnt lastVersion
+      if version isnt lastVersion
         app.message.send("notify",
           html: """
-            #{app.manifest.name} が #{lastVersion} から
-            #{app.manifest.version} にアップデートされました。
-             <a href="https://readcrx-2.github.io/read.crx-2/changelog.html#v#{app.manifest.version}" target="_blank">更新履歴</a>
+            #{name} が #{lastVersion} から
+            #{version} にアップデートされました。
+             <a href="https://readcrx-2.github.io/read.crx-2/changelog.html#v#{version}" target="_blank">更新履歴</a>
           """
           background_color: "green"
         )
       else
         return
-    app.config.set("last_version", app.manifest.version)
+    app.config.set("last_version", version)
     return
 
   #更新通知
-  chrome.runtime.onUpdateAvailable.addListener( ({version}) ->
-    return if version is app.manifest.version
+  chrome.runtime.onUpdateAvailable.addListener( ({newVer}) ->
+    {name, version} = await app.manifest
+    return if newVer is version
     app.message.send("notify",
       html: """
-        #{app.manifest.name} の #{version} が利用可能です
+        #{name} の #{newVer} が利用可能です
       """
       background_color: "green"
     )

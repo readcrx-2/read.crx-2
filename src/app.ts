@@ -414,14 +414,15 @@ namespace app {
     return /^https?:\/\//.test(url) ? url : "/view/empty.html";
   }
 
-  export var manifest: any;
-
-  if (location.origin.startsWith("chrome-extension://")) {
-    let xhr = new XMLHttpRequest();
-    xhr.open("GET", "/manifest.json", false);
-    xhr.send();
-    manifest = JSON.parse(xhr.responseText);
-  }
+  export var manifest = (async () => {
+    if (location.origin.startsWith("chrome-extension://")) {
+      try {
+        let response = await fetch("/manifest.json");
+        return await response.json();
+      } catch (e) {}
+    }
+    throw new Error("manifest.jsonの取得に失敗しました");
+  })();
 
   export function clipboardWrite (str:string):void {
     var textarea:HTMLTextAreaElement;
@@ -498,7 +499,7 @@ namespace app {
     };
   }
 
-  export function boot (path:string, requirements, fn):void {
+  export async function boot (path:string, requirements, fn):Promise<undefined> {
     var htmlVersion:string;
 
     if (!fn) {
@@ -517,11 +518,11 @@ namespace app {
 
     if (location.pathname === path) {
       htmlVersion = document.documentElement.dataset.appVersion!;
-      if (manifest.version !== htmlVersion) {
+      if ((await manifest).version !== htmlVersion) {
         location.reload(true);
       }
       else {
-        document.addEventListener("DOMContentLoaded", () => {
+        let onload = () => {
           app.config.ready(() => {
             if (requirements) {
               app.module(null, requirements, fn);
@@ -530,7 +531,13 @@ namespace app {
               fn();
             }
           });
-        });
+        };
+        // async関数のためDOMContentLoadedに間に合わないことがある
+        if (document.readyState === "loading") {
+          document.addEventListener("DOMContentLoaded", onload);
+        } else {
+          onload();
+        }
       }
     }
   }

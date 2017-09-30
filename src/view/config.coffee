@@ -249,7 +249,10 @@ app.boot("/view/config.html", ["cache", "bbsmenu"], (Cache, BBSMenu) ->
     )
 
   #バージョン情報表示
-  $view.C("version_text")[0].textContent = "#{app.manifest.name} v#{app.manifest.version} + #{navigator.userAgent}"
+  do ->
+    {name, version} = await app.manifest
+    $view.C("version_text")[0].textContent = "#{name} v#{version} + #{navigator.userAgent}"
+    return
 
   $view.C("version_copy")[0].on("click", ->
     app.clipboardWrite($$.C("version_text")[0].textContent)

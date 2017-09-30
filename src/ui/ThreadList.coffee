@@ -114,6 +114,10 @@ class UI.ThreadList
         $tr = $table.$("tr[data-href=\"#{bookmark.url}\"]")
         $tr?.addClass("errored")
 
+      if type is "updated"
+        $tr = $table.$("tr[data-href=\"#{bookmark.url}\"]")
+        $tr?.removeClass("errored")
+
       if @_flg.bookmark
         if type is "added"
           $tr = $table.$("tr[data-href=\"#{bookmark.url}\"]")

@@ -724,19 +724,14 @@ app.boot("/view/thread.html", ->
   #検索ボックス
   do ->
     searchStoredScrollTop = null
-    _isComposing = false
     $searchbox = $view.C("searchbox")[0]
-    $searchbox.on("compositionstart", ->
-      _isComposing = true
+
+    $searchbox.on("compositionend", ->
+      @dispatchEvent(new Event("input"))
       return
     )
-    $searchbox.on("compositionend", ({currentTarget}) ->
-      _isComposing = false
-      currentTarget.dispatchEvent(new Event("input"))
-      return
-    )
-    $searchbox.on("input", ->
-      return if _isComposing
+    $searchbox.on("input", ({isComposing}) ->
+      return if isComposing
       $content.dispatchEvent(new Event("searchstart"))
       if @value isnt ""
         if typeof searchStoredScrollTop isnt "number"
@@ -780,6 +775,7 @@ app.boot("/view/thread.html", ->
           @dispatchEvent(new Event("input"))
       return
     )
+    return
 
   #フッター表示処理
   do ->

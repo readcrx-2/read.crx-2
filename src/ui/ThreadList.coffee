@@ -207,18 +207,12 @@ class UI.ThreadList
       titleIndex = column.title
       $searchbox = option.searchbox
 
-      _isComposing = false
-      $searchbox.on("compositionstart", ->
-        _isComposing = true
-        return
-      )
       $searchbox.on("compositionend", ->
-        _isComposing = false
         @dispatchEvent(new Event("input"))
         return
       )
-      $searchbox.on("input", ->
-        return if _isComposing
+      $searchbox.on("input", ({isComposing}) ->
+        return if isComposing
         if @value isnt ""
           UI.TableSearch($table, "search",
             query: @value, target_col: titleIndex)

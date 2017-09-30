@@ -827,7 +827,7 @@ app.boot("/view/thread.html", ->
             text = "新着レスがあります"
           else
             text = "未読ブックマーク: #{next.title}"
-          if next.res_count?
+          if next.resCount?
             text += " (未読#{next.resCount - (next.readState?.read or 0)}件)"
           @_elm.href = app.safeHref(next.url)
           @_elm.textContent = text

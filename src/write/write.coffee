@@ -106,7 +106,8 @@ app.boot("/write/write.html", ->
     return
   )
 
-  app.WriteHistory.getByUrl(arg.url).then( (data) ->
+  do ->
+    data = await app.WriteHistory.getByUrl(arg.url)
     names = []
     mails = []
     for {input_name, input_mail} in data
@@ -131,7 +132,6 @@ app.boot("/write/write.html", ->
     $$.I("main").addLast($names)
     $$.I("main").addLast($mails)
     return
-  )
 
   $notice = $view.C("notice")[0]
   onError = (message) ->

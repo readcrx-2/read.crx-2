@@ -12,7 +12,7 @@ sort = require "gulp-sort"
 concat = require "gulp-concat"
 rename = require "gulp-rename"
 
-coffee = require "gulp-coffee"
+coffee = require "gulp-coffeescript"
 ts = require "gulp-typescript"
 sass = require "gulp-sass"
 pug = require "gulp-pug"
@@ -23,7 +23,7 @@ execSync = require("child_process").exec
 
 manifest = require "./src/manifest.json"
 
-coffeeCompiler = require "coffee-script"
+coffeeCompiler = require "coffeescript"
 tsCompiler = require "typescript"
 sassCompiler = require "node-sass"
 pugCompiler = require "pug"

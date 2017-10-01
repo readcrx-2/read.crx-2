@@ -1,14 +1,11 @@
 do ->
   return if navigator.platform.includes("Win")
-  new Promise( (resolve, reject) ->
+  try
     font = localStorage.getItem("textar_font")
-    if font?
-      resolve(font)
-    else
-      reject()
-    return
-  ).catch( ->
-    return new Promise( (resolve, reject) ->
+    unless font?
+      throw new Error("localstorageからのフォントの取得に失敗しました")
+  catch
+    font = await new Promise( (resolve, reject) ->
       xhr = new XMLHttpRequest()
       xhr.open("GET", "https://readcrx-2.github.io/read.crx-2/textar-min.woff")
       xhr.responseType = "arraybuffer"
@@ -25,11 +22,8 @@ do ->
       xhr.send()
       return
     )
-  ).then( (font) ->
-    fontface = new FontFace("Textar", "url(#{font})")
-    document.fonts.add(fontface)
-    return
-  )
+  fontface = new FontFace("Textar", "url(#{font})")
+  document.fonts.add(fontface)
   return
 
 app.viewThread = {}
@@ -730,19 +724,14 @@ app.boot("/view/thread.html", ->
   #検索ボックス
   do ->
     searchStoredScrollTop = null
-    _isComposing = false
     $searchbox = $view.C("searchbox")[0]
-    $searchbox.on("compositionstart", ->
-      _isComposing = true
+
+    $searchbox.on("compositionend", ->
+      @dispatchEvent(new Event("input"))
       return
     )
-    $searchbox.on("compositionend", ({currentTarget}) ->
-      _isComposing = false
-      currentTarget.dispatchEvent(new Event("input"))
-      return
-    )
-    $searchbox.on("input", ->
-      return if _isComposing
+    $searchbox.on("input", ({isComposing}) ->
+      return if isComposing
       $content.dispatchEvent(new Event("searchstart"))
       if @value isnt ""
         if typeof searchStoredScrollTop isnt "number"
@@ -786,6 +775,7 @@ app.boot("/view/thread.html", ->
           @dispatchEvent(new Event("input"))
       return
     )
+    return
 
   #フッター表示処理
   do ->
@@ -833,7 +823,7 @@ app.boot("/view/thread.html", ->
             text = "新着レスがあります"
           else
             text = "未読ブックマーク: #{next.title}"
-          if next.res_count?
+          if next.resCount?
             text += " (未読#{next.resCount - (next.readState?.read or 0)}件)"
           @_elm.href = app.safeHref(next.url)
           @_elm.textContent = text
@@ -919,64 +909,54 @@ app.viewThread._draw = ($view, {forceUpdate = false, jumpResNum = -1} = {}) ->
   loadCount = 0
 
   fn = (thread, error) ->
-    return new Promise( (resolve, reject) ->
-      if error
-        $view.C("message_bar")[0].addClass("error")
-        $view.C("message_bar")[0].innerHTML = thread.message
-      else
-        $view.C("message_bar")[0].removeClass("error")
-        $view.C("message_bar")[0].removeChildren()
+    if error
+      $view.C("message_bar")[0].addClass("error")
+      $view.C("message_bar")[0].innerHTML = thread.message
+    else
+      $view.C("message_bar")[0].removeClass("error")
+      $view.C("message_bar")[0].removeChildren()
 
-      unless thread.res?
-        reject()
-        return
+    unless thread.res?
+      throw new Error("スレの取得に失敗しました")
 
-      document.title = thread.title
+    document.title = thread.title
 
-      app.DOMData.get($view, "threadContent").addItem(thread.res.slice($view.C("content")[0].child().length)).then( ->
-        loadCount++
-        app.DOMData.get($view, "lazyload").scan()
+    await app.DOMData.get($view, "threadContent").addItem(thread.res.slice($view.C("content")[0].child().length))
+    loadCount++
+    app.DOMData.get($view, "lazyload").scan()
 
-        if $view.C("content")[0].hasClass("searching")
-          $view.C("searchbox")[0].dispatchEvent(new Event("input"))
+    if $view.C("content")[0].hasClass("searching")
+      $view.C("searchbox")[0].dispatchEvent(new Event("input"))
 
-        $view.dispatchEvent(new CustomEvent("view_loaded", detail: {jumpResNum, loadCount}))
+    $view.dispatchEvent(new CustomEvent("view_loaded", detail: {jumpResNum, loadCount}))
+    return thread
 
-        resolve(thread)
-        return
-      )
-      return
-    )
-
-  return new Promise( (resolve, reject) ->
-    thread = new app.Thread($view.dataset.url)
-    threadSetFromCacheBeforeHTTPPromise = Promise.resolve()
-    threadGetPromise = app.util.promiseWithState(thread.get(forceUpdate, ->
-      # 通信する前にキャッシュを取得して一旦表示する
-      unless threadGetPromise.isResolved()
-        threadSetFromCacheBeforeHTTPPromise = fn(thread, false)
-      return
-    ))
-    threadGetPromise.promise.catch( -> return).then( ->
-      return threadSetFromCacheBeforeHTTPPromise
-    ).catch( -> return).then( ->
-      return fn(thread, not threadGetPromise.isResolved())
-    ).then( ->
-      return true
-    , ->
-      return false
-    ).then( (successedSet) ->
-      $view.removeClass("loading")
-      $view.style.cursor = "auto"
-      app.defer5( ->
-        $reloadButton.removeClass("disabled")
-        return
-      )
-      if successedSet then resolve(thread) else reject()
-      return
-    )
+  thread = new app.Thread($view.dataset.url)
+  threadSetFromCacheBeforeHTTPPromise = Promise.resolve()
+  threadGetPromise = app.util.promiseWithState(thread.get(forceUpdate, ->
+    # 通信する前にキャッシュを取得して一旦表示する
+    unless threadGetPromise.isResolved()
+      threadSetFromCacheBeforeHTTPPromise = fn(thread, false)
+    return
+  ))
+  try
+    await threadGetPromise.promise
+  try
+    await threadSetFromCacheBeforeHTTPPromise
+  try
+    await fn(thread, not threadGetPromise.isResolved())
+    ok = true
+  catch
+    ok = false
+  $view.removeClass("loading")
+  $view.style.cursor = "auto"
+  app.defer5( ->
+    $reloadButton.removeClass("disabled")
     return
   )
+  unless ok
+    throw new Error("スレの表示に失敗しました")
+  return thread
 
 app.viewThread._readStateManager = ($view) ->
   threadContent = app.DOMData.get($view, "threadContent")
@@ -988,19 +968,14 @@ app.viewThread._readStateManager = ($view) ->
   attachedReadState = {last: 0, read: 0, received: 0, offset: null}
 
   #read_stateの取得
-  getReadState = new Promise( (resolve, reject) ->
+  getReadState = do ->
     readStateUpdated = false
     if (bookmark = app.bookmark.get(viewUrl))?.readState?
       {readState} = bookmark
-      resolve({readState, readStateUpdated})
-    else
-      app.ReadState.get(viewUrl).then( (_readState) ->
-        readState = _readState or {received: 0, read: 0, last: 0, url: viewUrl, offset: null}
-        resolve({readState, readStateUpdated})
-        return
-      )
-    return
-  )
+      return {readState, readStateUpdated}
+    _readState = await app.ReadState.get(viewUrl)
+    readState = _readState or {received: 0, read: 0, last: 0, url: viewUrl, offset: null}
+    return {readState, readStateUpdated}
 
   #スレの描画時に、read_state関連のクラスを付与する
   $view.on("view_loaded", ({ detail: {jumpResNum, loadCount} }) ->
@@ -1060,107 +1035,105 @@ app.viewThread._readStateManager = ($view) ->
     return
   )
 
-  getReadState.then( ({readState, readStateUpdated}) ->
-    scan = ->
-      received = $content.child().length
-      #onbeforeunload内で呼び出された時に、この値が0になる場合が有る
-      return if received is 0
+  {readState, readStateUpdated} = await getReadState
+  scan = ->
+    received = $content.child().length
+    #onbeforeunload内で呼び出された時に、この値が0になる場合が有る
+    return if received is 0
 
-      last = threadContent.getRead()
+    last = threadContent.getRead()
 
-      scanCountByReloaded++ if requestReloadFlag
+    scanCountByReloaded++ if requestReloadFlag
 
-      if readState.received isnt received
-        readState.received = received
-        readStateUpdated = true
+    if readState.received isnt received
+      readState.received = received
+      readStateUpdated = true
 
-      lastDisplay = threadContent.getDisplay()
+    lastDisplay = threadContent.getDisplay()
+    if (
+      (!requestReloadFlag or scanCountByReloaded is 1) and
+      (!lastDisplay.bottom or lastDisplay.resNum is last)
+    )
       if (
-        (!requestReloadFlag or scanCountByReloaded is 1) and
-        (!lastDisplay.bottom or lastDisplay.resNum is last)
+        readState.last isnt lastDisplay.resNum or
+        readState.offset isnt lastDisplay.offset
       )
-        if (
-          readState.last isnt lastDisplay.resNum or
-          readState.offset isnt lastDisplay.offset
-        )
-          readState.last = lastDisplay.resNum
-          readState.offset = lastDisplay.offset
-          readStateUpdated = true
-      else if readState.last isnt last
-        readState.last = last
-        readState.offset = null
+        readState.last = lastDisplay.resNum
+        readState.offset = lastDisplay.offset
         readStateUpdated = true
+    else if readState.last isnt last
+      readState.last = last
+      readState.offset = null
+      readStateUpdated = true
 
-      if readState.read < last
-        readState.read = last
-        readStateUpdated = true
+    if readState.read < last
+      readState.read = last
+      readStateUpdated = true
 
-      return
+    return
 
-    #アンロード時は非同期系の処理をzombie.htmlに渡す
-    #そのためにlocalStorageに更新するread_stateの情報を渡す
-    doneBeforezombie = false
-    onBeforezombie = ->
-      return if doneBeforezombie
-      doneBeforezombie = true
+  #アンロード時は非同期系の処理をzombie.htmlに渡す
+  #そのためにlocalStorageに更新するread_stateの情報を渡す
+  doneBeforezombie = false
+  onBeforezombie = ->
+    return if doneBeforezombie
+    doneBeforezombie = true
+    scan()
+    if readStateUpdated
+      if localStorage.zombie_read_state?
+        data = JSON.parse(localStorage["zombie_read_state"])
+      else
+        data = []
+      data.push(readState)
+      localStorage["zombie_read_state"] = JSON.stringify(data)
+    return
+
+  parent.window.on("beforezombie", onBeforezombie)
+  window.on("beforeunload", onBeforezombie)
+
+  #スクロールされたら定期的にスキャンを実行する
+  scrollFlg = false
+  scrollWatcher = setInterval( ->
+    if scrollFlg
+      scrollFlg = false
       scan()
       if readStateUpdated
-        if localStorage.zombie_read_state?
-          data = JSON.parse(localStorage["zombie_read_state"])
-        else
-          data = []
-        data.push(readState)
-        localStorage["zombie_read_state"] = JSON.stringify(data)
-      return
+        app.message.send("read_state_updated", {board_url: boardUrl, read_state: readState})
+    return
+  , 250)
 
-    parent.window.on("beforezombie", onBeforezombie)
-    window.on("beforeunload", onBeforezombie)
+  scanAndSave = ->
+    scan()
+    if readStateUpdated
+      app.ReadState.set(readState)
+      app.bookmark.updateReadState(readState)
+      readStateUpdated = false
+    return
 
-    #スクロールされたら定期的にスキャンを実行する
-    scrollFlg = false
-    scrollWatcher = setInterval( ->
-      if scrollFlg
-        scrollFlg = false
-        scan()
-        if readStateUpdated
-          app.message.send("read_state_updated", {board_url: boardUrl, read_state: readState})
-      return
-    , 250)
-
-    scanAndSave = ->
-      scan()
-      if readStateUpdated
-        app.ReadState.set(readState)
-        app.bookmark.updateReadState(readState)
-        readStateUpdated = false
-      return
-
-    app.message.on("request_update_read_state", ({board_url} = {}) ->
-      if not board_url? or board_url is boardUrl
-        scanAndSave()
-      return
-    )
-
-    $content.on("scroll", ->
-      scrollFlg = true
-      return
-    , passive: true)
-    $view.on("request_reload", ->
-      requestReloadFlag = true
-      scanCountByReloaded = 0
+  app.message.on("request_update_read_state", ({board_url} = {}) ->
+    if not board_url? or board_url is boardUrl
       scanAndSave()
-      return
-    )
+    return
+  )
 
-    window.on("view_unload", ->
-      clearInterval(scrollWatcher)
-      parent.window.off("beforezombie", onBeforezombie)
-      window.off("beforeunload", onBeforezombie)
-      #ロード中に閉じられた場合、スキャンは行わない
-      return if $view.hasClass("loading")
-      scanAndSave()
-      return
-    )
+  $content.on("scroll", ->
+    scrollFlg = true
+    return
+  , passive: true)
+  $view.on("request_reload", ->
+    requestReloadFlag = true
+    scanCountByReloaded = 0
+    scanAndSave()
+    return
+  )
+
+  window.on("view_unload", ->
+    clearInterval(scrollWatcher)
+    parent.window.off("beforezombie", onBeforezombie)
+    window.off("beforeunload", onBeforezombie)
+    #ロード中に閉じられた場合、スキャンは行わない
+    return if $view.hasClass("loading")
+    scanAndSave()
     return
   )
   return

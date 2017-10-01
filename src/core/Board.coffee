@@ -37,16 +37,12 @@ class app.Board
 
       #キャッシュ取得
       cache = new app.Cache(xhrPath)
-      cache.get().then( ->
-        return new Promise( (resolve, reject) ->
-          hasCache = true
-          if Date.now() - cache.last_updated < 1000 * 3
-            resolve()
-          else
-            reject()
-          return
-        )
-      ).catch( =>
+      try
+        await cache.get()
+        hasCache = true
+        unless Date.now() - cache.last_updated < 1000 * 3
+          throw new Error("キャッシュの期限が切れているため通信します")
+      catch
         #通信
         request = new app.HTTP.Request("GET", xhrPath,
           mimeType: "text/plain; charset=#{xhrCharset}"
@@ -58,76 +54,32 @@ class app.Board
           if cache.etag?
             request.headers["If-None-Match"] = cache.etag
 
-        return request.send()
-      ).then(fn = (response) =>
-        #パース
-        return new Promise( (resolve, reject) =>
-          # 2chで自動移動しているときはサーバー移転
-          if (
-            app.URL.tsld(@url) is "2ch.net" and
-            @url.split("/")[2] isnt response.responseURL.split("/")[2]
-          )
-            newBoardUrl = response.responseURL.slice(0, -"subject.txt".length)
-            reject({response, newBoardUrl})
+        response = await request.send()
 
-          if response?.status is 200
-            threadList = Board.parse(@url, response.body)
-          else if hasCache
-            threadList = Board.parse(@url, cache.data)
-
-          if threadList?
-            if response?.status is 200 or response?.status is 304 or (not response? and hasCache)
-              resolve({response, threadList})
-            else
-              reject({response, threadList})
-          else
-            reject({response})
-          return
+      #パース
+      try
+        # 2chで自動移動しているときはサーバー移転
+        if (
+          app.URL.tsld(@url) is "2ch.net" and
+          @url.split("/")[2] isnt response.responseURL.split("/")[2]
         )
-      , fn).then( ({response, threadList}) =>
+          newBoardUrl = response.responseURL.slice(0, -"subject.txt".length)
+          throw {response, newBoardUrl}
+
+        if response?.status is 200
+          threadList = Board.parse(@url, response.body)
+        else if hasCache
+          threadList = Board.parse(@url, cache.data)
+
+        unless threadList?
+          throw {response}
+        unless response?.status is 200 or response?.status is 304 or (not response? and hasCache)
+          throw {response, threadList}
+
         #コールバック
         @thread = threadList
         resolve()
-        return {response, threadList}
-      , ({response, threadList, newBoardUrl}) =>
-        @message = "板の読み込みに失敗しました。"
 
-        if newBoardUrl?
-          @message += """
-            サーバーが移転しています
-            (<a href="#{app.escapeHtml(app.safeHref(newBoardUrl))}"
-            class="open_in_rcrx">#{app.escapeHtml(newBoardUrl)}
-            </a>)
-            """
-          reject()
-        #2chでrejectされている場合は移転を疑う
-        else if app.URL.tsld(@url) is "2ch.net" and response?
-          app.util.chServerMoveDetect(@url)
-            #移転検出時
-            .then( (newBoardUrl) =>
-              @message += """
-              サーバーが移転している可能性が有ります
-              (<a href="#{app.escapeHtml(app.safeHref(newBoardUrl))}"
-              class="open_in_rcrx">#{app.escapeHtml(newBoardUrl)}
-              </a>)
-              """
-            ).catch( -> return).then( =>
-              if hasCache and threadList?
-                @message += "キャッシュに残っていたデータを表示します。"
-
-              if threadList
-                @thread = threadList
-              reject()
-            )
-        else
-          if hasCache and threadList?
-            @message += "キャッシュに残っていたデータを表示します。"
-
-          if thread_list?
-            @thread = threadList
-          reject()
-        return Promise.reject({response, threadList})
-      ).then( ({response, threadList}) ->
         #キャッシュ更新部
         if response?.status is 200
           cache.data = response.body
@@ -151,24 +103,55 @@ class app.Board
         else if hasCache and response?.status is 304
           cache.last_updated = Date.now()
           cache.put()
-        return {response, threadList}
-      ).then( ({response, threadList}) =>
-        #dat落ちスキャン
-        return unless threadList
-        dict = {}
-        for bookmark in app.bookmark.getByBoard(@url) when bookmark.type is "thread"
-          dict[bookmark.url] = true
 
-        for thread in threadList when dict[thread.url]?
-          dict[thread.url] = false
-          app.bookmark.updateExpired(thread.url, false)
+      catch {response, threadList, newBoardUrl}
+        #コールバック
+        @message = "板の読み込みに失敗しました。"
 
-        for threadUrl, val of dict when val
-          app.bookmark.updateExpired(threadUrl, true)
-        return
-      ).catch( ->
-        return
-      )
+        if newBoardUrl?
+          @message += """
+            サーバーが移転しています
+            (<a href="#{app.escapeHtml(app.safeHref(newBoardUrl))}"
+            class="open_in_rcrx">#{app.escapeHtml(newBoardUrl)}
+            </a>)
+            """
+        #2chでrejectされている場合は移転を疑う
+        else if app.URL.tsld(@url) is "2ch.net" and response?
+          try
+            newBoardUrl = await app.util.chServerMoveDetect(@url)
+            #移転検出時
+            @message += """
+            サーバーが移転している可能性が有ります
+            (<a href="#{app.escapeHtml(app.safeHref(newBoardUrl))}"
+            class="open_in_rcrx">#{app.escapeHtml(newBoardUrl)}
+            </a>)
+            """
+          if hasCache and threadList?
+            @message += "キャッシュに残っていたデータを表示します。"
+
+          if threadList
+            @thread = threadList
+        else
+          if hasCache and threadList?
+            @message += "キャッシュに残っていたデータを表示します。"
+
+          if threadList?
+            @thread = threadList
+        reject()
+
+      #dat落ちスキャン
+      return unless threadList
+      dict = {}
+      for bookmark in app.bookmark.getByBoard(@url) when bookmark.type is "thread"
+        dict[bookmark.url] = true
+
+      for thread in threadList when dict[thread.url]?
+        dict[thread.url] = false
+        app.bookmark.updateExpired(thread.url, false)
+
+      for threadUrl, val of dict when val
+        app.bookmark.updateExpired(threadUrl, true)
+      return
     )
 
   ###*
@@ -178,20 +161,16 @@ class app.Board
   @return {Promise}
   ###
   @get: (url) ->
-    return new Promise( (resolve, reject) ->
-      board = new app.Board(url)
-      board.get().then( ->
-        resolve(status: "success", data: board.thread)
-        return
-      , ->
-        resolve(
-          status: "error"
-          message: board.message ? null
-          data: board.thread ? null
-        )
-        return
-      )
-    )
+    board = new app.Board(url)
+    try
+      await board.get()
+      return {status: "success", data: board.thread}
+    catch
+      return {
+        status: "error"
+        message: board.message ? null
+        data: board.thread ? null
+      }
 
   ###*
   @method _getXhrInfo
@@ -267,31 +246,23 @@ class app.Board
   @return {Promise}
   ###
   @getCachedResCount: (threadUrl) ->
-    return new Promise( (resolve, reject) ->
-      boardUrl = app.URL.threadToBoard(threadUrl)
-      xhrPath = Board._getXhrInfo(threadUrl)?.path
+    boardUrl = app.URL.threadToBoard(threadUrl)
+    xhrPath = Board._getXhrInfo(boardUrl)?.path
 
-      unless xhrPath?
-        reject()
-        return
+    unless xhrPath?
+      throw new Error("その板の取得方法の情報が存在しません")
 
-      cache = new app.Cache(xhrPath)
-      cache.get()
-        .then( ->
-          lastModified = cache.last_modified
-          for thread in Board.parse(boardUrl, cache.data) when thread.url is threadUrl
-            resolve(
-              resCount: thread.resCount
-              modified: lastModified
-            )
-            return
-          reject()
-          return
-        , ->
-          reject()
-          return
-        )
-    )
+    cache = new app.Cache(xhrPath)
+    try
+      await cache.get()
+      lastModified = cache.last_modified
+      for thread in Board.parse(boardUrl, cache.data) when thread.url is threadUrl
+        return {
+          resCount: thread.resCount
+          modified: lastModified
+        }
+    throw new Error("板のスレ一覧にそのスレが存在しません")
+    return
 
 app.module("board", [], (callback) ->
   callback(app.Board)

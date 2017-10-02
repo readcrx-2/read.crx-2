@@ -114,6 +114,10 @@ class UI.ThreadList
         $tr = $table.$("tr[data-href=\"#{bookmark.url}\"]")
         $tr?.addClass("errored")
 
+      if type is "updated"
+        $tr = $table.$("tr[data-href=\"#{bookmark.url}\"]")
+        $tr?.removeClass("errored")
+
       if @_flg.bookmark
         if type is "added"
           $tr = $table.$("tr[data-href=\"#{bookmark.url}\"]")
@@ -125,19 +129,20 @@ class UI.ThreadList
       if @_flg.bookmarkAddRm
         if type is "added"
           boardUrl = app.URL.threadToBoard(bookmark.url)
-          app.BoardTitleSolver.ask(boardUrl).then(fn = (boardTitle = "") =>
-            @addItem({
-              title: bookmark.title
-              url: bookmark.url
-              resCount: bookmark.resCount or 0
-              readState: bookmark.readState or null
-              createdAt: /\/(\d+)\/$/.exec(bookmark.url)[1] * 1000
-              boardUrl
-              boardTitle
-              isHttps: (app.URL.getScheme(bookmark.url) is "https")
-            })
-            return
-          , fn)
+          try
+            boardTitle = await app.BoardTitleSolver.ask(boardUrl)
+          catch
+            boardTitle = ""
+          @addItem({
+            title: bookmark.title
+            url: bookmark.url
+            resCount: bookmark.resCount or 0
+            readState: bookmark.readState or null
+            createdAt: /\/(\d+)\/$/.exec(bookmark.url)[1] * 1000
+            boardUrl
+            boardTitle
+            isHttps: (app.URL.getScheme(bookmark.url) is "https")
+          })
         else if type is "removed"
           $table.$("tr[data-href=\"#{bookmark.url}\"]").remove()
 
@@ -202,18 +207,12 @@ class UI.ThreadList
       titleIndex = column.title
       $searchbox = option.searchbox
 
-      _isComposing = false
-      $searchbox.on("compositionstart", ->
-        _isComposing = true
-        return
-      )
       $searchbox.on("compositionend", ->
-        _isComposing = false
         @dispatchEvent(new Event("input"))
         return
       )
-      $searchbox.on("input", ->
-        return if _isComposing
+      $searchbox.on("input", ({isComposing}) ->
+        return if isComposing
         if @value isnt ""
           UI.TableSearch($table, "search",
             query: @value, target_col: titleIndex)

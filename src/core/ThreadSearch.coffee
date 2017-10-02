@@ -4,34 +4,30 @@ class ThreadSearch
 
   _parse = ({url, key, subject, resno, server, ita}) ->
     scheme = app.URL.getScheme(url)
-    return app.BoardTitleSolver.ask("#{scheme}://#{server}/#{ita}/").then( (boardName) ->
-      return {
-        url
-        createdAt: new Date(key * 1000)
-        title: app.util.decodeCharReference(subject)
-        resCount: +resno
-        boardUrl: "#{scheme}://#{server}/#{ita}/"
-        boardTitle: boardName
-      }
-    )
+    try
+      boardTitle = await app.BoardTitleSolver.ask("#{scheme}://#{server}/#{ita}/")
+    catch
+      boardTitle = ""
+    return {
+      url
+      createdAt: new Date(key * 1000)
+      title: app.util.decodeCharReference(subject)
+      resCount: +resno
+      boardUrl: "#{scheme}://#{server}/#{ita}/"
+      boardTitle
+    }
 
   read: ->
-    request = new app.HTTP.Request("GET", "http://dig.2ch.net/?keywords=#{encodeURIComponent(@query)}&maxResult=500&json=1",
+    {status, body} = await new app.HTTP.Request("GET", "http://dig.5ch.net/?keywords=#{encodeURIComponent(@query)}&maxResult=500&json=1",
       cache: false
-    )
-    return request.send().then( ({status, body}) ->
-      return body if status is 200
-      return Promise.reject(body)
-    ).then( (responseText) ->
-      try
-        result = JSON.parse(responseText)
-      catch
-        return Promise.reject(message: "通信エラー（JSONパースエラー）")
-      {result: res} = result
-      return Promise.all(res.map(_parse))
-    , ->
-      return Promise.reject(message: "通信エラー")
-    )
+    ).send()
+    unless status is 200
+      throw new Error("検索の通信に失敗しました")
+    try
+      {result} = JSON.parse(body)
+    catch
+      throw new Error("検索のJSONのパースに失敗しました")
+    return Promise.all(result.map(_parse))
 
 app.module("thread_search", [], (callback) ->
   callback(ThreadSearch)

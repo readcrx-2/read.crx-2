@@ -36,7 +36,7 @@ app.boot("/view/board.html", ["board"], (Board) ->
     return
 
   $writeButton = $view.C("button_write")[0]
-  if app.URL.tsld(url) in ["2ch.net", "shitaraba.net", "bbspink.com", "2ch.sc", "open2ch.net"]
+  if app.URL.tsld(url) in ["5ch.net", "shitaraba.net", "bbspink.com", "2ch.sc", "open2ch.net"]
     $writeButton.on("click", ->
       write()
       return
@@ -77,12 +77,12 @@ app.boot("/view/board.html", ["board"], (Board) ->
 
   new app.view.TabContentView($view)
 
-  app.BoardTitleSolver.ask(url).then( (title) ->
+  do ->
+    title = await app.BoardTitleSolver.ask(url)
     document.title = title if title
     unless app.config.isOn("no_history")
       app.History.add(url, title or url, openedAt)
     return
-  )
 
   load = (ex) ->
     $view.addClass("loading")
@@ -96,7 +96,8 @@ app.boot("/view/board.html", ["board"], (Board) ->
       ).then( ->
         return app.ReadState.getByBoard(url)
       )
-    getBoardPromise = Board.get(url).then( ({status, message, data}) ->
+    getBoardPromise = do ->
+      {status, message, data} = await Board.get(url)
       $messageBar = $view.C("message_bar")[0]
       if status is "error"
         $messageBar.addClass("error")
@@ -104,13 +105,13 @@ app.boot("/view/board.html", ["board"], (Board) ->
       else
         $messageBar.removeClass("error")
         $messageBar.removeChildren()
-
       if data?
         return data
-      return Promise.reject()
-    )
+      throw new Error("板の取得に失敗しました")
+      return
 
-    Promise.all([getReadStatePromise, getBoardPromise]).then( ([readStateArray, board]) ->
+    try
+      [readStateArray, board] = await Promise.all([getReadStatePromise, getBoardPromise])
       readStateIndex = {}
       for readState, key in readStateArray
         readStateIndex[readState.url] = key
@@ -141,21 +142,18 @@ app.boot("/view/board.html", ["board"], (Board) ->
             break
 
       tableSorter.update()
-      return
-    ).catch( -> return).then( ->
-      $view.removeClass("loading")
 
-      if $table.hasClass("table_search")
-        $view.C("searchbox")[0].dispatchEvent(new Event("input"))
+    $view.removeClass("loading")
 
-      $view.dispatchEvent(new Event("view_loaded"))
+    if $table.hasClass("table_search")
+      $view.C("searchbox")[0].dispatchEvent(new Event("input"))
 
-      $button = $view.C("button_reload")[0]
-      $button.addClass("disabled")
-      app.defer5( ->
-        $button.removeClass("disabled")
-        return
-      )
+    $view.dispatchEvent(new Event("view_loaded"))
+
+    $button = $view.C("button_reload")[0]
+    $button.addClass("disabled")
+    app.defer5( ->
+      $button.removeClass("disabled")
       return
     )
     return

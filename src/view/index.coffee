@@ -299,27 +299,26 @@ app.boot("/view/index.html", ["bbsmenu"], (BBSMenu) ->
     return
   )
 
-  Promise.all([getCurrent, getAll]).then( ([currentTab, windows]) ->
-    appPath = chrome.extension.getURL("/view/index.html")
-    for win in windows
-      for tab in win.tabs when tab.id isnt currentTab.id and tab.url is appPath
-        chrome.windows.update(win.id, focused: true)
-        chrome.tabs.update(tab.id, highlighted: true)
-        if query
-          chrome.runtime.sendMessage({type: "open", query})
-        chrome.tabs.remove(currentTab.id)
-        return
-    history.replaceState(null, null, "/view/index.html")
-    app.main()
-    return unless query
-    paramResNumFlag = app.config.isOn("enable_link_with_res_number")
-    paramResNum = if paramResNumFlag then app.URL.getResNumber(query) else null
-    # 後ほど実行するためにCallbacksに登録する
-    app.BBSMenu.boardTableCallbacks = new app.Callbacks({persistent: false})
-    app.BBSMenu.boardTableCallbacks.add( ->
-      app.message.send("open", url: query, new_tab: true, param_res_num: paramResNum)
+  [currentTab, windows] = await Promise.all([getCurrent, getAll])
+  appPath = chrome.extension.getURL("/view/index.html")
+  for win in windows
+    for tab in win.tabs when tab.id isnt currentTab.id and tab.url is appPath
+      chrome.windows.update(win.id, focused: true)
+      chrome.tabs.update(tab.id, highlighted: true)
+      if query
+        chrome.runtime.sendMessage({type: "open", query})
+      chrome.tabs.remove(currentTab.id)
       return
-    )
+  history.replaceState(null, null, "/view/index.html")
+  app.main()
+  return unless query
+  paramResNumFlag = app.config.isOn("enable_link_with_res_number")
+  paramResNum = if paramResNumFlag then app.URL.getResNumber(query) else null
+  # 後ほど実行するためにCallbacksに登録する
+  app.BBSMenu.boardTableCallbacks = new app.Callbacks({persistent: false})
+  app.BBSMenu.boardTableCallbacks.add( ->
+    app.message.send("open", url: query, new_tab: true, param_res_num: paramResNum)
+    return
   )
   return
 )
@@ -467,7 +466,9 @@ app.main = ->
     return
   )
 
-  document.title = app.manifest.name
+  do ->
+    document.title = (await app.manifest).name
+    return
 
   app.Ninja.enableAutoBackup()
 
@@ -498,27 +499,29 @@ app.main = ->
   #前回起動時のバージョンと違うバージョンだった場合、アップデート通知を送出
   do ->
     lastVersion = app.config.get("last_version")
+    {name, version} = await app.manifest
     if lastVersion?
-      if app.manifest.version isnt lastVersion
+      if version isnt lastVersion
         app.message.send("notify",
           html: """
-            #{app.manifest.name} が #{lastVersion} から
-            #{app.manifest.version} にアップデートされました。
-             <a href="https://readcrx-2.github.io/read.crx-2/changelog.html#v#{app.manifest.version}" target="_blank">更新履歴</a>
+            #{name} が #{lastVersion} から
+            #{version} にアップデートされました。
+             <a href="https://readcrx-2.github.io/read.crx-2/changelog.html#v#{version}" target="_blank">更新履歴</a>
           """
           background_color: "green"
         )
       else
         return
-    app.config.set("last_version", app.manifest.version)
+    app.config.set("last_version", version)
     return
 
   #更新通知
-  chrome.runtime.onUpdateAvailable.addListener( ({version}) ->
-    return if version is app.manifest.version
+  chrome.runtime.onUpdateAvailable.addListener( ({newVer}) ->
+    {name, version} = await app.manifest
+    return if newVer is version
     app.message.send("notify",
       html: """
-        #{app.manifest.name} の #{version} が利用可能です
+        #{name} の #{newVer} が利用可能です
       """
       background_color: "green"
     )

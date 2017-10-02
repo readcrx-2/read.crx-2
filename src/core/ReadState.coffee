@@ -28,10 +28,13 @@ class app.ReadState
     return {
       original: originalUrl
       replaced: originalUrl
+        .replace(/// ^https?://\w+\.5ch\.net/ ///, "#{scheme}://*.5ch.net/")
         .replace(/// ^https?://\w+\.2ch\.net/ ///, "#{scheme}://*.2ch.net/")
       originalOrigin: originalUrl
+        .replace(/// ^(https?://\w+\.5ch\.net)/.* ///, "$1")
         .replace(/// ^(https?://\w+\.2ch\.net)/.* ///, "$1")
-      replacedOrigin: "#{scheme}://*.2ch.net"
+      replacedOrigin: originalUrl
+        .replace(/// ^(https?)://\w+\.([25])ch\.net/.* ///, "$1://*.$2ch.net")
     }
 
   @set: (readState) ->

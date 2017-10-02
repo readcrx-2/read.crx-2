@@ -69,26 +69,25 @@ namespace app.Bookmark {
     }
 
     add (url:string, title:string, resCount?:number) {
-      return new Promise( (resolve, reject) => {
+      return new Promise( async (resolve, reject) => {
         var entry = app.Bookmark.ChromeBookmarkEntryList.URLToEntry(url)!;
 
         entry.title = title;
 
-        app.ReadState.get(entry.url).then( (readState:ReadState) => {
-          if (readState) {
-            entry.readState = readState;
-          }
+        var readState = await app.ReadState.get(entry.url)
+        if (readState) {
+          entry.readState = readState;
+        }
 
-          if (typeof resCount === "number") {
-            entry.resCount = resCount;
-          }
-          else if (entry.readState) {
-            entry.resCount = entry.readState.received;
-          }
+        if (typeof resCount === "number") {
+          entry.resCount = resCount;
+        }
+        else if (entry.readState) {
+          entry.resCount = entry.readState.received;
+        }
 
-          this.cbel.add(entry, undefined, (res) => {
-            res ? resolve() : reject();
-          });
+        this.cbel.add(entry, undefined, (res) => {
+          res ? resolve() : reject();
         });
       });
     }

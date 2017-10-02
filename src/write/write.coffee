@@ -24,7 +24,7 @@ app.boot("/write/write.html", ->
       if (
         method is "POST" and isSameOrigin and
         (
-          ///^https?://\w+\.(2ch\.net|bbspink\.com|2ch\.sc|open2ch\.net)/test/bbs\.cgi ///.test(url) or
+          ///^https?://\w+\.(5ch\.net|bbspink\.com|2ch\.sc|open2ch\.net)/test/bbs\.cgi ///.test(url) or
           ///^https?://jbbs\.shitaraba\.net/bbs/write\.cgi/ ///.test(url)
         )
       )
@@ -47,7 +47,7 @@ app.boot("/write/write.html", ->
       tabId: id
       types: ["sub_frame"]
       urls: [
-        "*://*.2ch.net/test/bbs.cgi*"
+        "*://*.5ch.net/test/bbs.cgi*"
         "*://*.bbspink.com/test/bbs.cgi*"
         "*://*.2ch.sc/test/bbs.cgi*"
         "*://*.open2ch.net/test/bbs.cgi*"
@@ -106,7 +106,8 @@ app.boot("/write/write.html", ->
     return
   )
 
-  app.WriteHistory.getByUrl(arg.url).then( (data) ->
+  do ->
+    data = await app.WriteHistory.getByUrl(arg.url)
     names = []
     mails = []
     for {input_name, input_mail} in data
@@ -131,7 +132,6 @@ app.boot("/write/write.html", ->
     $$.I("main").addLast($names)
     $$.I("main").addLast($mails)
     return
-  )
 
   $notice = $view.C("notice")[0]
   onError = (message) ->
@@ -301,7 +301,7 @@ app.boot("/write/write.html", ->
 
   # 忍法帳関連処理
   do ->
-    return if app.URL.tsld(arg.url) isnt "2ch.net"
+    return if app.URL.tsld(arg.url) isnt "5ch.net"
 
     app.Ninja.getCookie( (cookies) ->
       backup = app.Ninja.getBackup()

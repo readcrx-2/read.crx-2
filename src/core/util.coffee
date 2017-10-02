@@ -46,7 +46,7 @@ class app.util.Anchor
     return data
 
 do ->
-  boardUrlReg = /^https?:\/\/\w+\.2ch\.net\/(\w+)\/$/
+  boardUrlReg = /^https?:\/\/\w+\.5ch\.net\/(\w+)\/$/
   #2chの鯖移転検出関数
   #移転を検出した場合は移転先のURLをresolveに載せる
   #検出出来なかった場合はrejectする
@@ -54,60 +54,53 @@ do ->
   app.util.chServerMoveDetect = (oldBoardUrl, html) ->
     if app.URL.getScheme(oldBoardUrl) is "https"
       oldBoardUrl = app.URL.changeScheme(oldBoardUrl)
-    return new Promise( (resolve, reject) ->
-      if typeof html is "string"
-        resolve(html)
-      reject()
-    ).catch(->
+    unless typeof html is "string"
       #htmlが渡されなかった場合は通信する
-      request = new app.HTTP.Request("GET", oldBoardUrl,
+      {status, body} = await new app.HTTP.Request("GET", oldBoardUrl,
         mimeType: "text/html; charset=Shift_JIS"
         cache: false
       )
-      return request.send().then( ({status, body}) ->
-        return body if status is 200
-        return Promise.reject()
-      )
-    ).then( (html) ->
-      #htmlから移転を判定
-      res = ///location\.href="(https?://\w+\.2ch\.net/\w*/)"///.exec(html)
+      unless status is 200
+        throw new Error("サーバー移転判定のための通信に失敗しました")
 
-      if res
-        newBoardUrl = app.URL.setScheme(res[1], "http")
-        if newBoardUrl isnt oldBoardUrl
-          return newBoardUrl
-      return Promise.reject()
-    ).catch( ->
-      #bbsmenuから検索
-      return new Promise( (resolve, reject) ->
-        app.BBSMenu.get( ({data}) ->
-          unless data?
+    #htmlから移転を判定
+    res = ///location\.href="(https?://\w+\.5ch\.net/\w*/)"///.exec(html)
+    if res
+      newBoardUrlTmp = app.URL.setScheme(res[1], "http")
+      if newBoardUrlTmp isnt oldBoardUrl
+        newBoardUrl = newBoardUrlTmp
+
+    #bbsmenuから検索
+    unless newBoardUrl?
+      try
+        newBoardUrl = await new Promise( (resolve, reject) ->
+          app.BBSMenu.get( ({data}) ->
+            unless data?
+              reject()
+              return
+            match = oldBoardUrl.match(boardUrlReg)
+            unless match.length > 0
+              reject()
+              return
+            for category in data
+              for board in category.board
+                m = board.url.match(boardUrlReg)
+                if m?
+                  oldUrl = app.URL.setScheme(match[0], "http")
+                  newUrl = app.URL.setScheme(m[0], "http")
+                  if match[1] is m[1] and oldUrl isnt newUrl
+                    resolve(oldUrl)
+                    return
             reject()
             return
-          match = oldBoardUrl.match(boardUrlReg)
-          unless match.length > 0
-            reject()
-            return
-          for category in data
-            for board in category.board
-              m = board.url.match(boardUrlReg)
-              if m?
-                oldUrl = app.URL.setScheme(match[0], "http")
-                newUrl = app.URL.setScheme(m[0], "http")
-                if match[1] is m[1] and oldUrl isnt newUrl
-                  resolve(oldUrl)
-                  return
-          reject()
+          )
           return
         )
-        return
-      )
-    ).then( (newBoardUrl) ->
-      #移転を検出した場合は移転検出メッセージを送出
-      app.message.send("detected_ch_server_move",
-        {before: oldBoardUrl, after: newBoardUrl})
-      return newBoardUrl
-    )
+
+    #移転を検出した場合は移転検出メッセージを送出
+    app.message.send("detected_ch_server_move",
+      {before: oldBoardUrl, after: newBoardUrl})
+    return newBoardUrl
 
   #文字参照をデコード
   span = document.createElement("span")
@@ -152,21 +145,21 @@ do ->
     boardUrl = app.URL.threadToBoard(threadUrl)
     threadTitle = app.util.normalize(threadTitle)
 
-    return app.Board.get(boardUrl).then( ({ data }) ->
-      return Promise.reject() unless data?
-      data = data.filter( (thread) ->
-        return (thread.url isnt threadUrl and thread.resCount < 1001)
-      ).map( (thread) ->
-        return {
-          score: app.Util.levenshteinDistance(threadTitle, app.util.normalize(thread.title), false)
-          title: thread.title
-          url: thread.url
-        }
-      ).sort( (a, b) ->
-        return a.score - b.score
-      )
-      return data[0...5]
+    {data} = await app.Board.get(boardUrl)
+    unless data?
+      throw new Error("板の取得に失敗しました")
+    data = data.filter( (thread) ->
+      return (thread.url isnt threadUrl and thread.resCount < 1001)
+    ).map( (thread) ->
+      return {
+        score: app.Util.levenshteinDistance(threadTitle, app.util.normalize(thread.title), false)
+        title: thread.title
+        url: thread.url
+      }
+    ).sort( (a, b) ->
+      return a.score - b.score
     )
+    return data[0...5]
 
   wideSlimReg = ///[
     \uff10-\uff19 #０-９

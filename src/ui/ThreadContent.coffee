@@ -523,267 +523,258 @@ class UI.ThreadContent
   @param {Object | Array}
   ###
   addItem: (items) ->
-    return new Promise( (resolve, reject) =>
-      items = [items] unless Array.isArray(items)
+    items = [items] unless Array.isArray(items)
 
-      unless items.length > 0
-        resolve()
-        return
+    unless items.length > 0
+      return
 
-      resNum = @container.child().length
-      {bbsType} = app.URL.guessType(@url)
+    resNum = @container.child().length
+    {bbsType} = app.URL.guessType(@url)
+    writtenRes = await app.WriteHistory.getByUrl(@url)
 
-      app.WriteHistory.getByUrl(@url).then( (writtenRes) =>
-        html = ""
+    html = ""
 
-        for res in items
-          resNum++
+    for res in items
+      resNum++
 
-          res.num = resNum
-          res.class = []
-          res.attr = []
-          scheme = app.URL.getScheme(@url)
+      res.num = resNum
+      res.class = []
+      res.attr = []
+      scheme = app.URL.getScheme(@url)
 
-          res = app.ReplaceStrTxt.do(@url, document.title, res)
+      res = app.ReplaceStrTxt.do(@url, document.title, res)
 
-          if /(?:\u3000{5}|\u3000\u0020|[^>]\u0020\u3000)(?!<br>|$)/i.test(res.message)
-            res.class.push("aa")
+      if /(?:\u3000{5}|\u3000\u0020|[^>]\u0020\u3000)(?!<br>|$)/i.test(res.message)
+        res.class.push("aa")
 
-          for writtenHistory in writtenRes when writtenHistory.res is resNum
-            res.class.push("written")
-            break
+      for writtenHistory in writtenRes when writtenHistory.res is resNum
+        res.class.push("written")
+        break
 
-          articleHtml = "<header>"
+      articleHtml = "<header>"
 
-          #.num
-          articleHtml += """<span class="num">#{resNum}</span> """
+      #.num
+      articleHtml += """<span class="num">#{resNum}</span> """
 
-          #.name
-          articleHtml += """<span class="name"""
-          if /^\s*(?:&gt;|\uff1e){0,2}([\d\uff10-\uff19]+(?:[\-\u30fc][\d\uff10-\uff19]+)?(?:\s*,\s*[\d\uff10-\uff19]+(?:[\-\u30fc][\d\uff10-\uff19]+)?)*)\s*$/.test(res.name)
-            articleHtml += " name_anchor"
-          tmp = (
-            res.name
-              .replace(/<(?!(?:\/?b|\/?font(?: color="?[#a-zA-Z0-9]+"?)?)>)/g, "&lt;")
-              .replace(/<\/b>\(([^<>]+? [^<>]+?)\)<b>$/, ($0, $1) =>
-                res.slip = $1
+      #.name
+      articleHtml += """<span class="name"""
+      if /^\s*(?:&gt;|\uff1e){0,2}([\d\uff10-\uff19]+(?:[\-\u30fc][\d\uff10-\uff19]+)?(?:\s*,\s*[\d\uff10-\uff19]+(?:[\-\u30fc][\d\uff10-\uff19]+)?)*)\s*$/.test(res.name)
+        articleHtml += " name_anchor"
+      tmp = (
+        res.name
+          .replace(/<(?!(?:\/?b|\/?font(?: color="?[#a-zA-Z0-9]+"?)?)>)/g, "&lt;")
+          .replace(/<\/b>\(([^<>]+? [^<>]+?)\)<b>$/, ($0, $1) =>
+            res.slip = $1
 
-                @slipIndex.set($1, new Set()) unless @slipIndex.has($1)
-                @slipIndex.get($1).add(resNum)
+            @slipIndex.set($1, new Set()) unless @slipIndex.has($1)
+            @slipIndex.get($1).add(resNum)
 
-                return ""
-               )
-              .replace(/<\/b>(◆[^<>]+?) <b>/, ($0, $1) =>
-                res.trip = $1
+            return ""
+           )
+          .replace(/<\/b>(◆[^<>]+?) <b>/, ($0, $1) =>
+            res.trip = $1
 
-                @tripIndex.set($1, new Set()) unless @tripIndex.has($1)
-                @tripIndex.get($1).add(resNum)
+            @tripIndex.set($1, new Set()) unless @tripIndex.has($1)
+            @tripIndex.get($1).add(resNum)
 
-                return """<span class="trip">#{$1}</span>"""
-              )
-              .replace(/<\/b>(.*?)<b>/g, """<span class="ob">$1</span>""")
-              .replace(/&lt;span.*?>(.*?)&lt;\/span>/g, "<span class=\"ob\">$1</span>")
-              .replace(/&lt;small.*?>(.*?)&lt;\/small>/g, "<small>$1</small>")
+            return """<span class="trip">#{$1}</span>"""
           )
-          articleHtml += """">#{tmp}</span>"""
+          .replace(/<\/b>(.*?)<b>/g, """<span class="ob">$1</span>""")
+          .replace(/&lt;span.*?>(.*?)&lt;\/span>/g, "<span class=\"ob\">$1</span>")
+          .replace(/&lt;small.*?>(.*?)&lt;\/small>/g, "<small>$1</small>")
+      )
+      articleHtml += """">#{tmp}</span>"""
 
-          #.mail
-          tmp = res.mail.replace(/<.*?(?:>|$)/g, "")
-          articleHtml += """ [<span class="mail">#{tmp}</span>] """
+      #.mail
+      tmp = res.mail.replace(/<.*?(?:>|$)/g, "")
+      articleHtml += """ [<span class="mail">#{tmp}</span>] """
 
-          #.other
-          tmp = (
-            res.other
-              #be
-              .replace(/<\/div><div class="be .*?"><a href="(https?:\/\/be\.2ch\.net\/user\/\d+?)".*?>(.*?)<\/a>/, "<a class=\"beid\" href=\"$1\" target=\"_blank\">$2</a>")
-              #タグ除去
-              .replace(/<(?!(?:a class="beid".*?|\/a)>).*?(?:>|$)/g, "")
-              #.id
-              .replace(/(?:^| |(\d))(ID:(?!\?\?\?)[^ <>"']+|発信元:\d+.\d+.\d+.\d+)/, ($0, $1, $2) =>
-                fixedId = $2.replace(/\u25cf$/, "") #末尾●除去
+      #.other
+      tmp = (
+        res.other
+          #be
+          .replace(/<\/div><div class="be .*?"><a href="(https?:\/\/be\.[25]ch\.net\/user\/\d+?)".*?>(.*?)<\/a>/, "<a class=\"beid\" href=\"$1\" target=\"_blank\">$2</a>")
+          #タグ除去
+          .replace(/<(?!(?:a class="beid".*?|\/a)>).*?(?:>|$)/g, "")
+          #.id
+          .replace(/(?:^| |(\d))(ID:(?!\?\?\?)[^ <>"']+|発信元:\d+.\d+.\d+.\d+)/, ($0, $1, $2) =>
+            fixedId = $2.replace(/\u25cf$/, "") #末尾●除去
 
-                res.id = fixedId
-
-                if resNum is 1
-                  @oneId = fixedId
-                  @_existIdAtFirstRes = true
-
-                if fixedId is @oneId
-                  res.class.push("one")
-
-                if fixedId.endsWith(".net")
-                  res.class.push("net")
-
-                @idIndex.set(fixedId, new Set()) unless @idIndex.has(fixedId)
-                @idIndex.get(fixedId).add(resNum)
-
-                return """#{$1 ? ""}<span class="id">#{$2}</span>"""
-              )
-              #.beid
-              .replace /(?:^| )(BE:(\d+)\-[A-Z\d]+\(\d+\))/,
-                """<a class="beid" href="#{scheme}://be.2ch.net/test/p.php?i=$3" target="_blank">$1</a>"""
-          )
-          # slip追加
-          if res.slip?
-            if (index = tmp.indexOf("<span class=\"id\">")) isnt -1
-              tmp = tmp.slice(0, index) + """<span class="slip">SLIP:#{res.slip}</span>""" + tmp.slice(index, tmp.length)
-            else
-              tmp += """<span class="slip">SLIP:#{res.slip}</span>"""
+            res.id = fixedId
             if resNum is 1
-              @_existSlipAtFirstRes = true
+              @oneId = fixedId
+              @_existIdAtFirstRes = true
 
-          articleHtml += """<span class="other">#{tmp}</span>"""
+            if fixedId is @oneId
+              res.class.push("one")
 
-          articleHtml += "</header>"
+            if fixedId.endsWith(".net")
+              res.class.push("net")
 
-          # スレッド終端の自動追加メッセージの確認
+            @idIndex.set(fixedId, new Set()) unless @idIndex.has(fixedId)
+            @idIndex.get(fixedId).add(resNum)
+
+            return """#{$1 ? ""}<span class="id">#{$2}</span>"""
+          )
+          #.beid
+          .replace /(?:^| )(BE:(\d+)\-[A-Z\d]+\(\d+\))/,
+            """<a class="beid" href="#{scheme}://be.5ch.net/test/p.php?i=$3" target="_blank">$1</a>"""
+      )
+      # slip追加
+      if res.slip?
+        if (index = tmp.indexOf("<span class=\"id\">")) isnt -1
+          tmp = tmp.slice(0, index) + """<span class="slip">SLIP:#{res.slip}</span>""" + tmp.slice(index, tmp.length)
+        else
+          tmp += """<span class="slip">SLIP:#{res.slip}</span>"""
+        if resNum is 1
+          @_existSlipAtFirstRes = true
+
+      articleHtml += """<span class="other">#{tmp}</span>"""
+
+      articleHtml += "</header>"
+
+      # スレッド終端の自動追加メッセージの確認
+      if (
+        bbsType is "2ch" and
+        tmp.startsWith(_OVER1000_DATA)
+      )
+        @_over1000Res = true
+
+      #文字色
+      color = res.message.match(/<font color="(.*?)">/i)
+
+      # id, slip, tripが取り終わったタイミングでNG判定を行う
+      # NG判定されるものは、ReplaceStrTxtで置き換え後のテキストなので注意すること
+      if ngType = app.NG.checkNGThread(res)
+        res.class.push("ng")
+        res.attr["ng-type"] = ngType
+      else
+        if bbsType is "2ch" and !@_over1000Res
+          # idなしをNG
           if (
-            bbsType is "2ch" and
-            tmp.startsWith(_OVER1000_DATA)
+            app.config.isOn("nothing_id_ng") and !res.id? and
+            ((app.config.get("how_to_judgment_id") is "first_res" and @_existIdAtFirstRes) or
+             (app.config.get("how_to_judgment_id") is "exists_once" and @idIndex.size isnt 0))
           )
-            @_over1000Res = true
-
-          #文字色
-          color = res.message.match(/<font color="(.*?)">/i)
-
-          # id, slip, tripが取り終わったタイミングでNG判定を行う
-          # NG判定されるものは、ReplaceStrTxtで置き換え後のテキストなので注意すること
-          if ngType = app.NG.checkNGThread(res)
             res.class.push("ng")
-            res.attr["ng-type"] = ngType
+            res.attr["ng-type"] = "IDなし"
+          # slipなしをNG
+          else if (
+            app.config.isOn("nothing_slip_ng") and !res.slip? and
+            ((app.config.get("how_to_judgment_id") is "first_res" and @_existSlipAtFirstRes) or
+             (app.config.get("how_to_judgment_id") is "exists_once" and @slipIndex.size isnt 0))
+          )
+            res.class.push("ng")
+            res.attr["ng-type"] = "SLIPなし"
+
+      tmp = (
+        res.message
+          #imgタグ変換
+          .replace(/<img src="([\w]+):\/\/(.*?)".*?>/ig, "$1://$2")
+          .replace(/<img src="\/\/(.*?)".*?>/ig, "#{scheme}://$1")
+          #Rock54
+          .replace(/(?:<small.*?>&#128064;|<i>&#128064;<\/i>)<br>Rock54: (Caution|Warning)\((.+?)\) ?.*?(?:<\/small>)?/ig, "<div class=\"rock54\">&#128064; Rock54: $1($2)</div>")
+          #SLIPが変わったという表示
+          .replace(/<hr>VIPQ2_EXTDAT: (.+): EXT was configured /i, "<div class=\"slipchange\">VIPQ2_EXTDAT: $1: EXT configure</div>")
+          #タグ除去
+          .replace(/<(?!(?:br|hr|div class="(?:rock54|slipchange)"|\/?b)>).*?(?:>|$)/ig, "")
+          #URLリンク
+          .replace(/(h)?(ttps?:\/\/(?!img\.[25]ch\.net\/(?:ico|emoji|premium)\/[\w\-_]+\.gif)(?:[a-hj-zA-HJ-Z\d_\-.!~*'();\/?:@=+$,%#]|\&(?!gt;)|[iI](?![dD]:)+)+)/g,
+            '<a href="h$2" target="_blank">$1$2</a>')
+          #Beアイコン埋め込み表示
+          .replace(///^(?:\s*sssp|https?)://(img\.[25]ch\.net/(?:ico|premium)/[\w\-_]+\.gif)\s*<br>///, ($0, $1) =>
+            if app.URL.tsld(@url) in ["5ch.net", "bbspink.com", "2ch.sc"]
+              return """<img class="beicon" src="/img/dummy_1x1.webp" data-src="#{scheme}://#{$1}"><br>"""
+            return $0
+          )
+          #エモーティコン埋め込み表示
+          .replace(///(?:\s*sssp|https?)://(img\.[25]ch\.net/emoji/[\w\-_]+\.gif)\s*///g, ($0, $1) =>
+            if app.URL.tsld(@url) in ["5ch.net", "bbspink.com", "2ch.sc"]
+              return """<img class="beicon emoticon" src="/img/dummy_1x1.webp" data-src="#{scheme}://#{$1}">"""
+            return $0
+          )
+          #アンカーリンク
+          .replace(app.util.Anchor.reg.ANCHOR, ($0) =>
+            anchor = app.util.Anchor.parseAnchor($0)
+
+            if anchor.targetCount >= 25
+              disabled = true
+              disabledReason = "指定されたレスの量が極端に多いため、ポップアップを表示しません"
+            else if anchor.targetCount is 0
+              disabled = true
+              disabledReason = "指定されたレスが存在しません"
+            else
+              disabled = false
+
+            #グロ/死ねの返信レス
+            isThatHarmImg = @findHarmfulFlag and @harmfulReg.test(res.message)
+
+            #rep_index更新
+            if not disabled
+              for segment in anchor.segments
+                target = segment[0]
+                while target <= segment[1]
+                  @repIndex.set(target, new Set()) unless @repIndex.has(target)
+                  @repIndex.get(target).add(resNum)
+                  @harmImgIndex.add(target) if isThatHarmImg
+                  target++
+
+            return "<a href=\"javascript:undefined;\" class=\"anchor" +
+            (if disabled then " disabled\" data-disabled-reason=\"#{disabledReason}\"" else "\"") +
+            ">#{$0}</a>"
+          )
+          #IDリンク
+          .replace(/id:(?:[a-hj-z\d_\+\/\.\!]|i(?!d:))+/ig, "<a href=\"javascript:undefined;\" class=\"anchor_id\">$&</a>")
+      )
+
+      articleHtml += "<div class=\"message\""
+      if color? then articleHtml += " style=\"color:##{color[1]};\""
+      articleHtml += ">#{tmp}</div>"
+
+      if app.config.isOn("display_ng") and res.class.includes("ng")
+        res.class.push("disp_ng")
+
+      tmp = ""
+      tmp += " class=\"#{res.class.join(" ")}\""
+      tmp += " data-id=\"#{res.id}\"" if res.id?
+      tmp += " data-slip=\"#{res.slip}\"" if res.slip?
+      tmp += " data-trip=\"#{res.trip}\"" if res.trip?
+      for key, val of res.attr
+        tmp += " #{key}=\"#{val}\""
+
+      articleHtml = """<article#{tmp}>#{articleHtml}</article>"""
+      html += articleHtml
+
+    @container.insertAdjacentHTML("BeforeEnd", html)
+
+    @updateIds()
+
+    #サムネイル追加処理
+    try
+      await Promise.all(
+        Array.from(@container.$$(
+          ".message > a:not(.anchor):not(.thumbnail):not(.has_thumbnail):not(.expandedURL):not(.has_expandedURL)"
+        )).map( (a) =>
+          {a, link} = await @checkUrlExpand(a)
+          {res, err} = app.ImageReplaceDat.do(link)
+          unless err?
+            href = res.text
           else
-            if bbsType is "2ch" and !@_over1000Res
-              # idなしをNG
-              if (
-                app.config.isOn("nothing_id_ng") and !res.id? and
-                ((app.config.get("how_to_judgment_id") is "first_res" and @_existIdAtFirstRes) or
-                 (app.config.get("how_to_judgment_id") is "exists_once" and @idIndex.size isnt 0))
-              )
-                res.class.push("ng")
-                res.attr["ng-type"] = "IDなし"
-              # slipなしをNG
-              else if (
-                app.config.isOn("nothing_slip_ng") and !res.slip? and
-                ((app.config.get("how_to_judgment_id") is "first_res" and @_existSlipAtFirstRes) or
-                 (app.config.get("how_to_judgment_id") is "exists_once" and @slipIndex.size isnt 0))
-              )
-                res.class.push("ng")
-                res.attr["ng-type"] = "SLIPなし"
-
-          tmp = (
-            res.message
-              #imgタグ変換
-              .replace(/<img src="([\w]+):\/\/(.*?)".*?>/ig, "$1://$2")
-              .replace(/<img src="\/\/(.*?)".*?>/ig, "#{scheme}://$1")
-              #Rock54
-              .replace(/(?:<small.*?>&#128064;|<i>&#128064;<\/i>)<br>Rock54: (Caution|Warning)\((.+?)\) ?.*?(?:<\/small>)?/ig, "<div class=\"rock54\">&#128064; Rock54: $1($2)</div>")
-              #SLIPが変わったという表示
-              .replace(/<hr>VIPQ2_EXTDAT: (.+): EXT was configured /i, "<div class=\"slipchange\">VIPQ2_EXTDAT: $1: EXT configure</div>")
-              #タグ除去
-              .replace(/<(?!(?:br|hr|div class="(?:rock54|slipchange)"|\/?b)>).*?(?:>|$)/ig, "")
-              #URLリンク
-              .replace(/(h)?(ttps?:\/\/(?!img\.2ch\.net\/(?:ico|emoji|premium)\/[\w\-_]+\.gif)(?:[a-hj-zA-HJ-Z\d_\-.!~*'();\/?:@=+$,%#]|\&(?!gt;)|[iI](?![dD]:)+)+)/g,
-                '<a href="h$2" target="_blank">$1$2</a>')
-              #Beアイコン埋め込み表示
-              .replace(///^(?:\s*sssp|https?)://(img\.2ch\.net/(?:ico|premium)/[\w\-_]+\.gif)\s*<br>///, ($0, $1) =>
-                if app.URL.tsld(@url) in ["2ch.net", "bbspink.com", "2ch.sc"]
-                  return """<img class="beicon" src="/img/dummy_1x1.webp" data-src="#{scheme}://#{$1}"><br>"""
-                return $0
-              )
-              #エモーティコン埋め込み表示
-              .replace(///(?:\s*sssp|https?)://(img\.2ch\.net/emoji/[\w\-_]+\.gif)\s*///g, ($0, $1) =>
-                if app.URL.tsld(@url) in ["2ch.net", "bbspink.com", "2ch.sc"]
-                  return """<img class="beicon emoticon" src="/img/dummy_1x1.webp" data-src="#{scheme}://#{$1}">"""
-                return $0
-              )
-              #アンカーリンク
-              .replace(app.util.Anchor.reg.ANCHOR, ($0) =>
-                anchor = app.util.Anchor.parseAnchor($0)
-
-                if anchor.targetCount >= 25
-                  disabled = true
-                  disabledReason = "指定されたレスの量が極端に多いため、ポップアップを表示しません"
-                else if anchor.targetCount is 0
-                  disabled = true
-                  disabledReason = "指定されたレスが存在しません"
-                else
-                  disabled = false
-
-                #グロ/死ねの返信レス
-                isThatHarmImg = @findHarmfulFlag and @harmfulReg.test(res.message)
-
-                #rep_index更新
-                if not disabled
-                  for segment in anchor.segments
-                    target = segment[0]
-                    while target <= segment[1]
-                      @repIndex.set(target, new Set()) unless @repIndex.has(target)
-                      @repIndex.get(target).add(resNum)
-                      @harmImgIndex.add(target) if isThatHarmImg
-                      target++
-
-                return "<a href=\"javascript:undefined;\" class=\"anchor" +
-                (if disabled then " disabled\" data-disabled-reason=\"#{disabledReason}\"" else "\"") +
-                ">#{$0}</a>"
-              )
-              #IDリンク
-              .replace(/id:(?:[a-hj-z\d_\+\/\.\!]|i(?!d:))+/ig, "<a href=\"javascript:undefined;\" class=\"anchor_id\">$&</a>")
+            href = a.href
+          mediaType = app.URL.getExtType(
+            href
+            audio: app.config.isOn("audio_supported")
+            video: app.config.isOn("audio_supported")
+            oggIsAudio: app.config.isOn("audio_supported_ogg")
+            oggIsVideo: app.config.isOn("video_supported_ogg")
           )
-
-          articleHtml += "<div class=\"message\""
-          if color? then articleHtml += " style=\"color:##{color[1]};\""
-          articleHtml += ">#{tmp}</div>"
-
-          if app.config.isOn("display_ng") and res.class.includes("ng")
-            res.class.push("disp_ng")
-
-          tmp = ""
-          tmp += " class=\"#{res.class.join(" ")}\""
-          tmp += " data-id=\"#{res.id}\"" if res.id?
-          tmp += " data-slip=\"#{res.slip}\"" if res.slip?
-          tmp += " data-trip=\"#{res.trip}\"" if res.trip?
-          for key, val of res.attr
-            tmp += " #{key}=\"#{val}\""
-
-          articleHtml = """<article#{tmp}>#{articleHtml}</article>"""
-          html += articleHtml
-
-        @container.insertAdjacentHTML("BeforeEnd", html)
-
-        @updateIds()
-
-        #サムネイル追加処理
-        Promise.all(
-          Array.from(@container.$$(
-            ".message > a:not(.anchor):not(.thumbnail):not(.has_thumbnail):not(.expandedURL):not(.has_expandedURL)"
-          )).map( (a) =>
-            return @checkUrlExpand(a).then( ({a, link}) =>
-              {res, err} = app.ImageReplaceDat.do(link)
-              unless err?
-                href = res.text
-              else
-                href = a.href
-              mediaType = app.URL.getExtType(
-                href
-                audio: app.config.isOn("audio_supported")
-                video: app.config.isOn("audio_supported")
-                oggIsAudio: app.config.isOn("audio_supported_ogg")
-                oggIsVideo: app.config.isOn("video_supported_ogg")
-              )
-              mediaType ?= "image" unless err?
-              # サムネイルの追加
-              @addThumbnail(a, href, mediaType, res) if mediaType
-              return
-            )
-          )
-        ).catch( -> return).then( ->
-          resolve()
+          mediaType ?= "image" unless err?
+          # サムネイルの追加
+          @addThumbnail(a, href, mediaType, res) if mediaType
           return
         )
-        return
       )
-      return
-    )
+    return
 
   ###*
   @method updateId
@@ -995,24 +986,16 @@ class UI.ThreadContent
   @param {HTMLAElement} a
   ###
   checkUrlExpand: (a) ->
-    return new Promise( (resolve, reject) =>
-      if (
-        app.config.get("expand_short_url") isnt "none" and
-        app.URL.SHORT_URL_LIST.has(app.URL.getDomain(a.href))
-      )
-        # 短縮URLの展開
-        app.URL.expandShortURL(a.href).then( (finalUrl) =>
-          newLink = @addExpandedURL(a, finalUrl)
-          if finalUrl
-            resolve({a, link: newLink.href})
-          else
-            resolve({a, link: a.href})
-          return
-        )
-        return
-      resolve({a, link: a.href})
-      return
+    if (
+      app.config.get("expand_short_url") isnt "none" and
+      app.URL.SHORT_URL_LIST.has(app.URL.getDomain(a.href))
     )
+      # 短縮URLの展開
+      finalUrl = await app.URL.expandShortURL(a.href)
+      newLink = @addExpandedURL(a, finalUrl)
+      if finalUrl
+        return {a, link: newLink.href}
+    return {a, link: a.href}
 
   ###*
   @method addClassWithOrg

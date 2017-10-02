@@ -87,8 +87,8 @@ class app.BBSMenu
   ###
   @parse: (html) ->
     regCategory = ///<b>(.+?)</b>(?:.*[\r\n]+<a\s.*?>.+?</a>)+///gi
-    regBoard = ///<a\shref=(https?://(?!info\.2ch\.net/|headline\.bbspink\.com)
-      \w+\.(?:2ch\.net|machi\.to|open2ch\.net|2ch\.sc|bbspink\.com)/\w+/)(?:\s.*?)?>(.+?)</a>///gi
+    regBoard = ///<a\shref=(https?://(?!info\.[25]ch\.net/|headline\.bbspink\.com)
+      \w+\.(?:[25]ch\.net|machi\.to|open2ch\.net|2ch\.sc|bbspink\.com)/\w+/)(?:\s.*?)?>(.+?)</a>///gi
     menu = []
 
     while regCategoryRes = regCategory.exec(html)
@@ -110,23 +110,18 @@ class app.BBSMenu
   @_updating: false
   @_update: (forceReload) ->
     BBSMenu._updating = true
-    BBSMenu.fetch(app.config.get("bbsmenu"), forceReload).then( ({response, menu}) ->
-      #コールバック
+    try
+      {menu} = await BBSMenu.fetch(app.config.get("bbsmenu"), forceReload)
       BBSMenu._callbacks.call({status: "success", data: menu})
-      return {response, menu}
-    , ({response, menu}) ->
+    catch {menu}
       message = "板一覧の取得に失敗しました。"
       if menu?
         message += "キャッシュに残っていたデータを表示します。"
         BBSMenu._callbacks.call({status: "error", data: menu, message})
       else
         BBSMenu._callbacks.call({status: "error", message})
-      return {response, menu}
-    ).then( (arg) ->
-      BBSMenu._updating = false
-      BBSMenu._callbacks.destroy()
-      return arg
-    )
+    BBSMenu._updating = false
+    BBSMenu._callbacks.destroy()
     return
 
 app.module("bbsmenu", [], (callback) ->

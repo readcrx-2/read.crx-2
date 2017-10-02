@@ -14,15 +14,13 @@ class app.Thread
     return
 
   get: (forceUpdate, progress) ->
-    getCachedInfo = (do =>
+    getCachedInfo = do =>
       if @tsld in ["shitaraba.net", "machi.to"]
-        return app.Board.getCachedResCount(@url)
-      return Promise.reject()
-    ).then( (info) ->
-      return { status: "success" , cachedInfo}
-    , ->
-      return { status: "none" }
-    )
+        return {
+          status: "success",
+          cachedInfo: await app.Board.getCachedResCount(@url)
+        }
+      return {status: "none"}
 
     return new Promise( (resolve, reject) =>
       xhrInfo = Thread._getXhrInfo(@url)
@@ -35,30 +33,26 @@ class app.Thread
       readcgiVer = 5
       noChangeFlg = false
       isHtml = (
-        (app.config.get("format_2chnet") isnt "dat" and @tsld is "2ch.net") or
+        (app.config.get("format_2chnet") isnt "dat" and @tsld is "5ch.net") or
         @tsld is "bbspink.com"
       )
 
       #キャッシュ取得
-      cache.get().then( =>
-        return new Promise( (resolve, reject) =>
-          hasCache = true
-          if forceUpdate or Date.now() - cache.last_updated > 1000 * 3
-            #通信が生じる場合のみ、progressでキャッシュを送出する
-            app.defer( =>
-              tmp = cache.parsed ? Thread.parse(@url, cache.data)
-              return unless tmp?
-              @res = tmp.res
-              @title = tmp.title
-              progress()
-              return
-            )
-            reject()
-          else
-            resolve()
-          return
-        )
-      ).catch( =>
+      try
+        await cache.get()
+        hasCache = true
+        if forceUpdate or Date.now() - cache.last_updated > 1000 * 3
+          #通信が生じる場合のみ、progressでキャッシュを送出する
+          app.defer( =>
+            tmp = cache.parsed ? Thread.parse(@url, cache.data)
+            return unless tmp?
+            @res = tmp.res
+            @title = tmp.title
+            progress()
+            return
+          )
+          throw new Error("キャッシュの期限が切れているため通信します")
+      catch
         #通信
         if @tsld in ["shitaraba.net", "machi.to"]
           if hasCache
@@ -85,158 +79,92 @@ class app.Thread
           if cache.etag?
             request.headers["If-None-Match"] = cache.etag
 
-        return request.send()
-      ).then( (response) =>
-        #パース
-        return new Promise( (resolve, reject) =>
-          guessRes = app.URL.guessType(@url)
+        response = await request.send()
 
-          if (
-            response?.status is 200 or
-            (readcgiVer >= 6 and response?.status is 500)
-          )
-            if deltaFlg
-              # 2ch.netなら-nを使って前回取得したレスの後のレスからのものを取得する
-              if @tsld in ["2ch.net", "bbspink.com"]
-                threadCache = cache.parsed
-                # readcgi ver6,7だと変更がないと500が帰ってくる
-                if readcgiVer >= 6 and response.status is 500
-                  noChangeFlg = true
-                  thread = threadCache
-                else
-                  threadResponse = Thread.parse(@url, response.body, +cache.res_length)
-                  # 新しいレスがない場合は最後のレスのみ表示されるのでその場合はキャッシュを送る
-                  if readcgiVer < 6 and threadResponse.res.length is 1
-                    noChangeFlg = true
-                    thread = threadCache
-                  else
-                    if readcgiVer < 6
-                      threadResponse.res.splice(0, 1)
-                    thread = threadResponse
-                    thread.res = threadCache.res.concat(threadResponse.res)
-              else
-                thread = Thread.parse(@url, cache.data + response.body)
-            else
-              thread = Thread.parse(@url, response.body)
-          #2ch系BBSのdat落ち
-          else if guessRes.bbsType is "2ch" and response?.status is 203
-            if hasCache
-              if deltaFlg and @tsld in ["2ch.net", "bbspink.com"]
-                thread = cache.parsed
-              else
-                thread = Thread.parse(@url, cache.data)
-            else
-              thread = Thread.parse(@url, response.body)
-          else if hasCache
-            if isHtml
-              thread = cache.parsed
-            else
-              thread = Thread.parse(@url, cache.data)
+      #パース
+      guessRes = app.URL.guessType(@url)
 
-          #パース成功
-          if thread
-            #通信成功
-            if (
-              response?.status is 200 or
-              #通信成功（更新なし）
-              response?.status is 304 or
-              #通信成功（2ch read.cgi ver6,7の差分更新なし）
-              (readcgiVer >= 6 and response?.status is 500) or
-              #キャッシュが期限内だった場合
-              (not response and hasCache)
-            )
-              resolve({response, thread})
-            #2ch系BBSのdat落ち
-            else if guessRes.bbsType is "2ch" and response?.status is 203
-              reject({response, thread})
+      if (
+        response?.status is 200 or
+        (readcgiVer >= 6 and response?.status is 500)
+      )
+        if deltaFlg
+          # 2ch.netなら-nを使って前回取得したレスの後のレスからのものを取得する
+          if @tsld in ["5ch.net", "bbspink.com"]
+            threadCache = cache.parsed
+            # readcgi ver6,7だと変更がないと500が帰ってくる
+            if readcgiVer >= 6 and response.status is 500
+              noChangeFlg = true
+              thread = threadCache
             else
-              reject({response, thread})
-          #パース失敗
+              threadResponse = Thread.parse(@url, response.body, +cache.res_length)
+              # 新しいレスがない場合は最後のレスのみ表示されるのでその場合はキャッシュを送る
+              if readcgiVer < 6 and threadResponse.res.length is 1
+                noChangeFlg = true
+                thread = threadCache
+              else
+                if readcgiVer < 6
+                  threadResponse.res.splice(0, 1)
+                thread = threadResponse
+                thread.res = threadCache.res.concat(threadResponse.res)
           else
-            reject({response})
-          return
-        )
-      ).then( ({response, thread}) ->
+            thread = Thread.parse(@url, cache.data + response.body)
+        else
+          thread = Thread.parse(@url, response.body)
+      #2ch系BBSのdat落ち
+      else if guessRes.bbsType is "2ch" and response?.status is 203
+        if hasCache
+          if deltaFlg and @tsld in ["5ch.net", "bbspink.com"]
+            thread = cache.parsed
+          else
+            thread = Thread.parse(@url, cache.data)
+        else
+          thread = Thread.parse(@url, response.body)
+      else if hasCache
+        if isHtml
+          thread = cache.parsed
+        else
+          thread = Thread.parse(@url, cache.data)
+
+      try
+        #パース成功
+        if thread
+          #2ch系BBSのdat落ち
+          if guessRes.bbsType is "2ch" and response?.status is 203
+            throw {response, thread}
+          #通信失敗
+          unless (
+            response?.status is 200 or
+            #通信成功（更新なし）
+            response?.status is 304 or
+            #通信成功（2ch read.cgi ver6,7の差分更新なし）
+            (readcgiVer >= 6 and response?.status is 500) or
+            #キャッシュが期限内だった場合
+            (not response and hasCache)
+          )
+            throw {response, thread}
+        #パース失敗
+        else
+          throw {response}
+
         #したらば/まちBBS最新レス削除対策
-        return getCachedInfo.then( ({status, cachedInfo}) ->
-          if status is "sucess"
-            while thread.res.length < cachedInfo.resCount
-              thread.res.push(
-                name: "あぼーん"
-                mail: "あぼーん"
-                message: "あぼーん"
-                other: "あぼーん"
-              )
-          return {response, thread}
-        )
-      ).then( ({response, thread}) =>
+        {status, cachedInfo} = await getCachedInfo
+        if status is "sucess"
+          while thread.res.length < cachedInfo.resCount
+            thread.res.push(
+              name: "あぼーん"
+              mail: "あぼーん"
+              message: "あぼーん"
+              other: "あぼーん"
+            )
+
         #コールバック
         if thread
           @title = thread.title
           @res = thread.res
-        return {response, thread}
-      , ({response, thread}) =>
-        if thread
-          @title = thread.title
-          @res = thread.res
-        return Promise.reject({response, thread})
-      ).then( ({response, thread}) =>
         @message = ""
         resolve()
-        return {response, thread}
-      , ({response, thread}) =>
-        @message = ""
 
-        #2chでrejectされてる場合は移転を疑う
-        if @tsld is "2ch.net" and response
-          app.util.chServerMoveDetect(app.URL.threadToBoard(@url))
-            .then( (newBoardURL) =>
-              #移転検出時
-              tmp = ///^https?://(\w+)\.2ch\.net/ ///.exec(newBoardURL)[1]
-              newURL = @url.replace(
-                ///^(https?://)\w+(\.2ch\.net/test/read\.cgi/\w+/\d+/)$///,
-                ($0, $1, $2) -> $1 + tmp + $2
-              )
-
-              @message += """
-              スレッドの読み込みに失敗しました。
-              サーバーが移転している可能性が有ります
-              (<a href="#{app.escapeHtml(app.safeHref(newURL))}"
-                class="open_in_rcrx">#{app.escapeHtml(newURL)}</a>)
-              """
-              return
-            ).catch( =>
-              #移転検出出来なかった場合
-              if response?.status is 203
-                @message += "dat落ちしたスレッドです。"
-              else
-                @message += "スレッドの読み込みに失敗しました。"
-              return
-            ).then( =>
-              if hasCache and !thread
-                @message += "キャッシュに残っていたデータを表示します。"
-              reject()
-              return
-            )
-        else if @tsld is "shitaraba.net" and @url.includes("/read.cgi/")
-          newURL = @url.replace("/read.cgi/", "/read_archive.cgi/")
-          @message += """
-          スレッドの読み込みに失敗しました。
-          過去ログの可能性が有ります
-          (<a href="#{app.escapeHtml(app.safeHref(newURL))}"
-            class="open_in_rcrx">#{app.escapeHtml(newURL)}</a>)
-          """
-          reject()
-          return
-        else
-          @message += "スレッドの読み込みに失敗しました。"
-
-          if hasCache and !thread
-            @message += "キャッシュに残っていたデータを表示します。"
-
-          reject()
-        return {response, thread}
-      ).then( ({response, thread}) =>
         #キャッシュ更新部
         #通信に成功した場合
         if (
@@ -284,17 +212,62 @@ class app.Thread
         else if hasCache and response?.status is 304
           cache.last_updated = Date.now()
           cache.put()
-        return {response, thread}
-      ).then( ({response, thread}) =>
-        #ブックマーク更新部
+
+      catch {response, thread}
+        if thread
+          @title = thread.title
+          @res = thread.res
+        @message = ""
+
+        #2chでrejectされてる場合は移転を疑う
+        if @tsld is "5ch.net" and response
+          try
+            newBoardURL = await app.util.chServerMoveDetect(app.URL.threadToBoard(@url))
+            #移転検出時
+            tmp = ///^https?://(\w+)\.5ch\.net/ ///.exec(newBoardURL)[1]
+            newURL = @url.replace(
+              ///^(https?://)\w+(\.5ch\.net/test/read\.cgi/\w+/\d+/)$///,
+              ($0, $1, $2) -> $1 + tmp + $2
+            )
+
+            @message += """
+            スレッドの読み込みに失敗しました。
+            サーバーが移転している可能性が有ります
+            (<a href="#{app.escapeHtml(app.safeHref(newURL))}"
+              class="open_in_rcrx">#{app.escapeHtml(newURL)}</a>)
+            """
+          catch
+            #移転検出出来なかった場合
+            if response?.status is 203
+              @message += "dat落ちしたスレッドです。"
+            else
+              @message += "スレッドの読み込みに失敗しました。"
+          if hasCache and !thread
+            @message += "キャッシュに残っていたデータを表示します。"
+            reject()
+        else if @tsld is "shitaraba.net" and @url.includes("/read.cgi/")
+          newURL = @url.replace("/read.cgi/", "/read_archive.cgi/")
+          @message += """
+          スレッドの読み込みに失敗しました。
+          過去ログの可能性が有ります
+          (<a href="#{app.escapeHtml(app.safeHref(newURL))}"
+            class="open_in_rcrx">#{app.escapeHtml(newURL)}</a>)
+          """
+          reject()
+        else
+          @message += "スレッドの読み込みに失敗しました。"
+
+          if hasCache and !thread
+            @message += "キャッシュに残っていたデータを表示します。"
+
+          reject()
+
+      #ブックマーク更新部
         app.bookmark.updateResCount(@url, thread.res.length) if thread?
-        return {response, thread}
-      ).then( ({response: {status} = {}}) =>
-        #dat落ち検出
-        if status is 203
-          app.bookmark.updateExpired(@url, true)
-        return
-      )
+
+      #dat落ち検出
+      if response?.status is 203
+        app.bookmark.updateExpired(@url, true)
       return
     )
 
@@ -320,7 +293,7 @@ class app.Thread
           path: "#{tmp[1]}://jbbs.shitaraba.net/" +
             "bbs/rawmode.cgi/#{tmp[4]}/#{tmp[5]}/#{tmp[6]}/",
           charset: "EUC-JP"
-      when "2ch.net"
+      when "5ch.net"
         if app.config.get("format_2chnet") is "dat"
           path: "#{tmp[1]}://#{tmp[2]}/#{tmp[4]}/dat/#{tmp[5]}.dat",
           charset: "Shift_JIS"
@@ -353,7 +326,7 @@ class app.Thread
           Thread._parseJbbsArchive(text)
         else
           Thread._parseJbbs(text)
-      when "2ch.net"
+      when "5ch.net"
         if app.config.get("format_2chnet") is "dat"
           Thread._parseCh(text)
         else

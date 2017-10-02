@@ -60,7 +60,7 @@ class app.Board
       try
         # 2chで自動移動しているときはサーバー移転
         if (
-          app.URL.tsld(@url) is "2ch.net" and
+          app.URL.tsld(@url) is "5ch.net" and
           @url.split("/")[2] isnt response.responseURL.split("/")[2]
         )
           newBoardUrl = response.responseURL.slice(0, -"subject.txt".length)
@@ -116,7 +116,7 @@ class app.Board
             </a>)
             """
         #2chでrejectされている場合は移転を疑う
-        else if app.URL.tsld(@url) is "2ch.net" and response?
+        else if app.URL.tsld(@url) is "5ch.net" and response?
           try
             newBoardUrl = await app.util.chServerMoveDetect(@url)
             #移転検出時

@@ -81,13 +81,17 @@ class app.BoardTitleSolver
     ).send()
     if status isnt 200
       throw new Error("SETTING.TXTを取得する通信に失敗しました")
+    if res = /^BBS_TITLE_ORIG=(.+)$/m.exec(body)
+      title = res[1].replace("＠2ch掲示板", "")
+      switch app.URL.tsld(url)
+        when "2ch.sc" then title += "_sc"
+        when "open2ch.net" then title += "_op"
+      return title
     if res = /^BBS_TITLE=(.+)$/m.exec(body)
       title = res[1].replace("＠2ch掲示板", "")
-      tsld = app.URL.tsld(url)
-      if tsld is "2ch.sc"
-        title += "_sc"
-      else if tsld is "open2ch.net"
-        title += "_op"
+      switch app.URL.tsld(url)
+        when "2ch.sc" then title += "_sc"
+        when "open2ch.net" then title += "_op"
       return title
     throw new Error("SETTING.TXTに名前の情報がありません")
     return

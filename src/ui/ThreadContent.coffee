@@ -593,7 +593,7 @@ class UI.ThreadContent
       tmp = (
         res.other
           #be
-          .replace(/<\/div><div class="be .*?"><a href="(https?:\/\/be\.2ch\.net\/user\/\d+?)".*?>(.*?)<\/a>/, "<a class=\"beid\" href=\"$1\" target=\"_blank\">$2</a>")
+          .replace(/<\/div><div class="be .*?"><a href="(https?:\/\/be\.[25]ch\.net\/user\/\d+?)".*?>(.*?)<\/a>/, "<a class=\"beid\" href=\"$1\" target=\"_blank\">$2</a>")
           #タグ除去
           .replace(/<(?!(?:a class="beid".*?|\/a)>).*?(?:>|$)/g, "")
           #.id
@@ -618,7 +618,7 @@ class UI.ThreadContent
           )
           #.beid
           .replace /(?:^| )(BE:(\d+)\-[A-Z\d]+\(\d+\))/,
-            """<a class="beid" href="#{scheme}://be.2ch.net/test/p.php?i=$3" target="_blank">$1</a>"""
+            """<a class="beid" href="#{scheme}://be.5ch.net/test/p.php?i=$3" target="_blank">$1</a>"""
       )
       # slip追加
       if res.slip?
@@ -679,17 +679,17 @@ class UI.ThreadContent
           #タグ除去
           .replace(/<(?!(?:br|hr|div class="(?:rock54|slipchange)"|\/?b)>).*?(?:>|$)/ig, "")
           #URLリンク
-          .replace(/(h)?(ttps?:\/\/(?!img\.2ch\.net\/(?:ico|emoji|premium)\/[\w\-_]+\.gif)(?:[a-hj-zA-HJ-Z\d_\-.!~*'();\/?:@=+$,%#]|\&(?!gt;)|[iI](?![dD]:)+)+)/g,
+          .replace(/(h)?(ttps?:\/\/(?!img\.[25]ch\.net\/(?:ico|emoji|premium)\/[\w\-_]+\.gif)(?:[a-hj-zA-HJ-Z\d_\-.!~*'();\/?:@=+$,%#]|\&(?!gt;)|[iI](?![dD]:)+)+)/g,
             '<a href="h$2" target="_blank">$1$2</a>')
           #Beアイコン埋め込み表示
-          .replace(///^(?:\s*sssp|https?)://(img\.2ch\.net/(?:ico|premium)/[\w\-_]+\.gif)\s*<br>///, ($0, $1) =>
-            if app.URL.tsld(@url) in ["2ch.net", "bbspink.com", "2ch.sc"]
+          .replace(///^(?:\s*sssp|https?)://(img\.[25]ch\.net/(?:ico|premium)/[\w\-_]+\.gif)\s*<br>///, ($0, $1) =>
+            if app.URL.tsld(@url) in ["5ch.net", "bbspink.com", "2ch.sc"]
               return """<img class="beicon" src="/img/dummy_1x1.webp" data-src="#{scheme}://#{$1}"><br>"""
             return $0
           )
           #エモーティコン埋め込み表示
-          .replace(///(?:\s*sssp|https?)://(img\.2ch\.net/emoji/[\w\-_]+\.gif)\s*///g, ($0, $1) =>
-            if app.URL.tsld(@url) in ["2ch.net", "bbspink.com", "2ch.sc"]
+          .replace(///(?:\s*sssp|https?)://(img\.[25]ch\.net/emoji/[\w\-_]+\.gif)\s*///g, ($0, $1) =>
+            if app.URL.tsld(@url) in ["5ch.net", "bbspink.com", "2ch.sc"]
               return """<img class="beicon emoticon" src="/img/dummy_1x1.webp" data-src="#{scheme}://#{$1}">"""
             return $0
           )

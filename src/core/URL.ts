@@ -6,7 +6,7 @@ namespace app {
   export namespace URL {
     export const CH_BOARD_REG = /^(https?:\/\/[\w\.]+\/(?:\w+\/)?test\/(?:read\.cgi|-)\/\w+\/\d+).*$/;
     export const CH_BOARD_REG2 = /^(https?:\/\/[\w\.]+\/\w+)\/?(?!test)$/;
-    export const CH_BOARD_ULA_REG = /^(https?):\/\/ula\.2ch\.net\/2ch\/(\w+)\/([\w\.]+)\/(\d+).*$/;
+    export const CH_BOARD_ULA_REG = /^(https?):\/\/ula\.5ch\.net\/2ch\/(\w+)\/([\w\.]+)\/(\d+).*$/;
     export const MACHI_BOARD_REG = /^(https?:\/\/\w+\.machi\.to\/bbs\/read\.cgi\/\w+\/\d+).*$/;
     export const SHITARABA_BOARD_REG = /^(https?):\/\/jbbs\.(?:livedoor\.jp|shitaraba\.net)\/(bbs\/read(?:_archive)?\.cgi\/\w+\/\d+\/\d+).*$/;
     export const SHITARABA_ARCHIVE_REG = /^(https?):\/\/jbbs\.(?:livedoor\.jp|shitaraba\.net)\/(\w+\/\d+)\/storage\/(\d+)\.html$/;
@@ -15,6 +15,8 @@ namespace app {
     export function fix (url:string):string {
       return (
         url
+          //2ch.net->5ch.net
+          .replace(/^(https?):\/\/(\w+)\.2ch\.net\//, "$1://$2.5ch.net/")
           // スレ系 誤爆する事は考えられないので、パラメータ部分をバッサリ切ってしまう
           .replace(CH_BOARD_REG, "$1/")
           .replace(CH_BOARD_REG2, "$1/")
@@ -50,10 +52,10 @@ namespace app {
       else if (/^https?:\/\/[\w\.]+\/(?:\w+\/)?test\/(?:read\.cgi|-)\/\w+\/\d+\/$/.test(url)) {
         return {type: "thread", bbsType: "2ch"};
       }
-      else if (/^https?:\/\/(?:find|info|p2|ninja)\.2ch\.net\/\w+\/$/.test(url)) {
+      else if (/^https?:\/\/(?:find|info|p2|ninja)\.5ch\.net\/\w+\/$/.test(url)) {
         return {type: "unknown", bbsType: "unknown"};
       }
-      else if (/^https?:\/\/\w+\.(?:2ch|open2ch|bbspink)\.\w+\/(?:subback\/|test\/-\/)?\w+\/?$/.test(url)) {
+      else if (/^https?:\/\/\w+\.(?:5ch|open2ch|bbspink)\.\w+\/(?:subback\/|test\/-\/)?\w+\/?$/.test(url)) {
         return {type: "board", bbsType: "2ch"};
       }
       else {
@@ -101,7 +103,7 @@ namespace app {
       if (tmp !== null) {
         return tmp[1];
       }
-      tmp = /^https?:\/\/ula\.2ch\.net\/2ch\/\w+\/[\w\.]+\/\d+\/(\d+).*$/.exec(urlstr);
+      tmp = /^https?:\/\/ula\.5ch\.net\/2ch\/\w+\/[\w\.]+\/\d+\/(\d+).*$/.exec(urlstr);
       if (tmp !== null) {
         return tmp[1];
       }
@@ -291,9 +293,10 @@ namespace app {
       mode = tsld(url);
       switch (mode) {
         case "2ch.net":
+        case "5ch.net":
           regs = [
-            /(https?):\/\/itest\.2ch\.net\/(?:\w+\/)?test\/read\.cgi\/(\w+)\/(\d+)\//,
-            /(https?):\/\/itest\.2ch\.net\/(?:subback\/)?(\w+)(?:\/)?/,
+            /(https?):\/\/itest\.5ch\.net\/(?:\w+\/)?test\/read\.cgi\/(\w+)\/(\d+)\//,
+            /(https?):\/\/itest\.5ch\.net\/(?:subback\/)?(\w+)(?:\/)?/,
             /(https?):\/\/c\.2ch\.net\/test\/-\/(\w+)\/(\d+)\//,
             /(https?):\/\/c\.2ch\.net\/test\/-\/(\w+)\//
           ]
@@ -379,7 +382,10 @@ namespace app {
             break;
           }
         }
-      } else if (url.endsWith("menu.2ch.net/bbsmenu.html")) {
+      } else if (
+        url.endsWith("menu.2ch.net/bbsmenu.html") ||
+        url.endsWith("menu.5ch.net/bbsmenu.html")
+      ) {
         res.net = true;
       }
       return res;
@@ -393,7 +399,7 @@ namespace app {
 
       for (let category of menu) {
         for (let board of category.board) {
-          if (res.net && (tmp = /https?:\/\/(\w+)\.2ch\.net\/(\w+)\/.*?/.exec(board.url)) !== null) {
+          if (res.net && (tmp = /https?:\/\/(\w+)\.5ch\.net\/(\w+)\/.*?/.exec(board.url)) !== null) {
             boardNet.set(tmp[2], tmp[1]);
           }else if (res.sc && (tmp = /https?:\/\/(\w+)\.2ch\.sc\/(\w+)\/.*?/.exec(board.url)) !== null) {
             boardSc.set(tmp[2], tmp[1]);
@@ -435,25 +441,25 @@ namespace app {
       var target: string|null = null;
       var resUrl: string|null = null;
 
-      mode = /(https?):\/\/(\w+)\.2ch\.(net|sc)\/test\/read\.cgi\/(\w+)\/(\d+)\//.exec(url);
+      mode = /(https?):\/\/(\w+)\.(5ch\.net|2ch\.sc)\/test\/read\.cgi\/(\w+)\/(\d+)\//.exec(url);
       if (mode === null) {
         return null;
       }
 
-      if (mode[3] === "net") {
+      if (mode[3] === "5ch.net") {
         if (serverSc.has(mode[4]) === true) {
           server = serverSc.get(mode[4])!;
-          target = "sc";
+          target = "2ch.sc";
         }
       } else {
         if (serverNet.has(mode[4]) === true) {
           server = serverNet.get(mode[4])!;
-          target = "net";
+          target = "5ch.net";
         }
       }
 
       if (server !== null) {
-        resUrl = `${mode[1]}://${server}.2ch.${target}/test/read.cgi/${mode[4]}/${mode[5]}/`;
+        resUrl = `${mode[1]}://${server}.${target}/test/read.cgi/${mode[4]}/${mode[5]}/`;
       }
       return resUrl;
     }
@@ -468,7 +474,7 @@ namespace app {
         var tmpUrl: string;
         var tmp: string[]|null;
 
-        tmp = /(https?):\/\/(\w+)\.2ch\.net\/test\/read\.cgi\/(\w+\/\d+\/)/.exec(url);
+        tmp = /(https?):\/\/(\w+)\.5ch\.net\/test\/read\.cgi\/(\w+\/\d+\/)/.exec(url);
         if (tmp === null) {
           return Promise.reject(null);
         }

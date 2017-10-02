@@ -24,7 +24,7 @@ app.boot("/write/submit_thread.html", ->
       if (
         method is "POST" and isSameOrigin and
         (
-          ///^https?://\w+\.(2ch\.net|bbspink\.com|2ch\.sc|open2ch\.net)/test/bbs\.cgi ///.test(url) or
+          ///^https?://\w+\.(5ch\.net|bbspink\.com|2ch\.sc|open2ch\.net)/test/bbs\.cgi ///.test(url) or
           ///^https?://jbbs\.shitaraba\.net/bbs/write\.cgi/ ///.test(url)
         )
       )
@@ -47,7 +47,7 @@ app.boot("/write/submit_thread.html", ->
       tabId: id
       types: ["sub_frame"]
       urls: [
-        "*://*.2ch.net/test/bbs.cgi*"
+        "*://*.5ch.net/test/bbs.cgi*"
         "*://*.bbspink.com/test/bbs.cgi*"
         "*://*.2ch.sc/test/bbs.cgi*"
         "*://*.open2ch.net/test/bbs.cgi*"
@@ -144,12 +144,12 @@ app.boot("/write/submit_thread.html", ->
           name = $view.C("name")[0].value
           mail = $view.C("mail")[0].value
           title = $view.C("title")[0].value
-          if app.URL.tsld(arg.url) in ["2ch.net", "2ch.sc", "bbspink.com", "open2ch.net"]
+          if app.URL.tsld(arg.url) in ["5ch.net", "2ch.sc", "bbspink.com", "open2ch.net"]
             keys = key.match(/.*\/test\/read\.cgi\/(\w+?)\/(\d+)\/l\d+/)
             unless keys?
               $notice.textContent = "書き込み失敗 - 不明な転送場所"
             else
-              server = arg.url.match(/^(https?:\/\/\w+\.(?:2ch\.net|2ch\.sc|bbspink\.com|open2ch\.net)).*/)[1]
+              server = arg.url.match(/^(https?:\/\/\w+\.(?:5ch\.net|2ch\.sc|bbspink\.com|open2ch\.net)).*/)[1]
               url = "#{server}/test/read.cgi/#{keys[1]}/#{keys[2]}"
               chrome.runtime.sendMessage({type: "written", kind: "own", url: arg.url, thread_url: url, mes, name, mail, title})
           else if app.URL.tsld(arg.url) is "shitaraba.net"
@@ -284,7 +284,7 @@ app.boot("/write/submit_thread.html", ->
 
   # 忍法帳関連処理
   do ->
-    return if app.URL.tsld(arg.url) isnt "2ch.net"
+    return if app.URL.tsld(arg.url) isnt "5ch.net"
 
     app.Ninja.getCookie( (cookies) ->
       backup = app.Ninja.getBackup()

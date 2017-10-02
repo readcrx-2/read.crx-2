@@ -18,7 +18,7 @@ class ThreadSearch
     }
 
   read: ->
-    {status, body} = await new app.HTTP.Request("GET", "http://dig.2ch.net/?keywords=#{encodeURIComponent(@query)}&maxResult=500&json=1",
+    {status, body} = await new app.HTTP.Request("GET", "http://dig.5ch.net/?keywords=#{encodeURIComponent(@query)}&maxResult=500&json=1",
       cache: false
     ).send()
     unless status is 200

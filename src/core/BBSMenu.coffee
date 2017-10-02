@@ -87,8 +87,8 @@ class app.BBSMenu
   ###
   @parse: (html) ->
     regCategory = ///<b>(.+?)</b>(?:.*[\r\n]+<a\s.*?>.+?</a>)+///gi
-    regBoard = ///<a\shref=(https?://(?!info\.2ch\.net/|headline\.bbspink\.com)
-      \w+\.(?:2ch\.net|machi\.to|open2ch\.net|2ch\.sc|bbspink\.com)/\w+/)(?:\s.*?)?>(.+?)</a>///gi
+    regBoard = ///<a\shref=(https?://(?!info\.[25]ch\.net/|headline\.bbspink\.com)
+      \w+\.(?:[25]ch\.net|machi\.to|open2ch\.net|2ch\.sc|bbspink\.com)/\w+/)(?:\s.*?)?>(.+?)</a>///gi
     menu = []
 
     while regCategoryRes = regCategory.exec(html)

@@ -36,7 +36,7 @@ app.boot("/view/board.html", ["board"], (Board) ->
     return
 
   $writeButton = $view.C("button_write")[0]
-  if app.URL.tsld(url) in ["2ch.net", "shitaraba.net", "bbspink.com", "2ch.sc", "open2ch.net"]
+  if app.URL.tsld(url) in ["5ch.net", "shitaraba.net", "bbspink.com", "2ch.sc", "open2ch.net"]
     $writeButton.on("click", ->
       write()
       return

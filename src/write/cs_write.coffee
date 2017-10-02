@@ -19,7 +19,7 @@ do ->
     if submitThreadFlag
       exec("""
         var url = location.href;
-        if(url.includes("2ch.net") || url.includes("bbspink.com") || url.includes("open2ch.net")) {
+        if(url.includes("5ch.net") || url.includes("bbspink.com") || url.includes("open2ch.net")) {
           metas = document.getElementsByTagName("meta");
           for(var i = 0; i < metas.length; i++) {
             if(metas[i].getAttribute("http-equiv") === "refresh") {
@@ -66,7 +66,7 @@ do ->
 
   main = ->
     #2ch投稿確認
-    if ///^https?://\w+\.(2ch\.net|bbspink\.com|2ch\.sc)/test/bbs\.cgi///.test(location.href)
+    if ///^https?://\w+\.(5ch\.net|bbspink\.com|2ch\.sc)/test/bbs\.cgi///.test(location.href)
       if document.title.includes("書きこみました")
         sendMessageSuccess()
       else if document.title.includes("確認")

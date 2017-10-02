@@ -83,6 +83,7 @@ chrome.contextMenus.create(
   ]
   targetUrlPatterns: [
     "*://*.2ch.net/*"
+    "*://*.5ch.net/*"
     "*://*.2ch.sc/*"
     "*://*.open2ch.net/*"
     "*://*.bbspink.com/*"

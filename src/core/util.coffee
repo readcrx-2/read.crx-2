@@ -46,7 +46,7 @@ class app.util.Anchor
     return data
 
 do ->
-  boardUrlReg = /^https?:\/\/\w+\.2ch\.net\/(\w+)\/$/
+  boardUrlReg = /^https?:\/\/\w+\.5ch\.net\/(\w+)\/$/
   #2chの鯖移転検出関数
   #移転を検出した場合は移転先のURLをresolveに載せる
   #検出出来なかった場合はrejectする
@@ -64,7 +64,7 @@ do ->
         throw new Error("サーバー移転判定のための通信に失敗しました")
 
     #htmlから移転を判定
-    res = ///location\.href="(https?://\w+\.2ch\.net/\w*/)"///.exec(html)
+    res = ///location\.href="(https?://\w+\.5ch\.net/\w*/)"///.exec(html)
     if res
       newBoardUrlTmp = app.URL.setScheme(res[1], "http")
       if newBoardUrlTmp isnt oldBoardUrl

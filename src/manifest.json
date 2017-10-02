@@ -43,6 +43,7 @@
     {
       "matches" : [
         "*://*.2ch.net/*",
+        "*://*.5ch.net/*",
         "*://jbbs.shitaraba.net/*",
         "*://*.machi.to/*",
         "*://*.open2ch.net/*",

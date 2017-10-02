@@ -812,7 +812,7 @@ class app.view.TabContentView extends app.view.PaneContentView
     )
 
     # 2ch.net/2ch.scに切り替え
-    reg = /https?:\/\/\w+\.2ch\.(net|sc)\/\w+\/(.*?)/
+    reg = /https?:\/\/\w+\.(5ch\.net|2ch\.sc)\/\w+\/(.*?)/
     url = @$element.dataset.url
     mode = reg.exec(url)
     if mode

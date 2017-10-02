@@ -19,7 +19,7 @@ app.boot("/view/search.html", ["thread_search"], (ThreadSearch) ->
   unless app.config.isOn("no_history")
     app.History.add($view.dataset.url, document.title, openedAt)
 
-  $view.$(".button_link > a").href = "http://dig.2ch.net/search?maxResult=500&keywords=#{encodeURIComponent(query)}"
+  $view.$(".button_link > a").href = "http://dig.5ch.net/search?maxResult=500&keywords=#{encodeURIComponent(query)}"
 
   $table = $__("table")
   threadList = new UI.ThreadList($table,

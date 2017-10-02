@@ -1,7 +1,7 @@
 regs = [
-  ///^https?://(?!find|info|p2)\w+(?:\.2ch\.net|\.2ch\.sc|\.open2ch\.net|\.bbspink\.com)/(?:subback/)?\w+/?(?:index\.html)?(?:#\d+)?$///
-  ///^https?://\w+(?:\.2ch\.net|\.2ch\.sc|\.open2ch\.net|\.bbspink\.com)/(?:\w+/)?test/read\.cgi/\w+/\d+/?.*///
-  ///^https?://ula\.2ch\.net/2ch/\w+/[\w+\.]+/\d+/.*///
+  ///^https?://(?!find|info|p2)\w+(?:\.[25]ch\.net|\.2ch\.sc|\.open2ch\.net|\.bbspink\.com)/(?:subback/)?\w+/?(?:index\.html)?(?:#\d+)?$///
+  ///^https?://\w+(?:\.[25]ch\.net|\.2ch\.sc|\.open2ch\.net|\.bbspink\.com)/(?:\w+/)?test/read\.cgi/\w+/\d+/?.*///
+  ///^https?://ula\.[25]ch\.net/2ch/\w+/[\w+\.]+/\d+/.*///
   ///^https?://c\.2ch\.net/test/-/\w+/i?(?:\?.+)?///
   ///^https?://c\.2ch\.net/test/-/\w+/\d+/(?:i|g|\d+)?(?:\?.+)?///
   ///^https?://jbbs\.shitaraba\.net/\w+/\d+/(?:index\.html)?(?:#\d+)?$///

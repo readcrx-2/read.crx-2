@@ -87,7 +87,7 @@ app.boot("/view/thread.html", ->
 
   canWriteFlg = do ->
     tsld = app.URL.tsld(viewUrl)
-    if tsld in ["2ch.net", "bbspink.com", "2ch.sc", "open2ch.net"]
+    if tsld in ["5ch.net", "bbspink.com", "2ch.sc", "open2ch.net"]
       return true
     # したらばの過去ログ
     if tsld is "shitaraba.net" and not viewUrl.includes("/read_archive.cgi/")
@@ -454,7 +454,7 @@ app.boot("/view/thread.html", ->
       #2chタイプの板は誤爆率が高いので、もう少し細かく判定する
       if srcType is "board" and bbsType is "2ch"
         #2ch自体の場合の判断はguess_typeを信じて板判定
-        return true if app.URL.tsld(targetUrl) is "2ch.net"
+        return true if app.URL.tsld(targetUrl) is "5ch.net"
         #ブックマークされている場合も板として判定
         return true if app.bookmark.get(app.URL.fix(targetUrl))
       return false

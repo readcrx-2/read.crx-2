@@ -33,7 +33,7 @@ class app.Thread
       readcgiVer = 5
       noChangeFlg = false
       isHtml = (
-        (app.config.get("format_2chnet") isnt "dat" and @tsld is "2ch.net") or
+        (app.config.get("format_2chnet") isnt "dat" and @tsld is "5ch.net") or
         @tsld is "bbspink.com"
       )
 
@@ -90,7 +90,7 @@ class app.Thread
       )
         if deltaFlg
           # 2ch.netなら-nを使って前回取得したレスの後のレスからのものを取得する
-          if @tsld in ["2ch.net", "bbspink.com"]
+          if @tsld in ["5ch.net", "bbspink.com"]
             threadCache = cache.parsed
             # readcgi ver6,7だと変更がないと500が帰ってくる
             if readcgiVer >= 6 and response.status is 500
@@ -114,7 +114,7 @@ class app.Thread
       #2ch系BBSのdat落ち
       else if guessRes.bbsType is "2ch" and response?.status is 203
         if hasCache
-          if deltaFlg and @tsld in ["2ch.net", "bbspink.com"]
+          if deltaFlg and @tsld in ["5ch.net", "bbspink.com"]
             thread = cache.parsed
           else
             thread = Thread.parse(@url, cache.data)
@@ -220,13 +220,13 @@ class app.Thread
         @message = ""
 
         #2chでrejectされてる場合は移転を疑う
-        if @tsld is "2ch.net" and response
+        if @tsld is "5ch.net" and response
           try
             newBoardURL = await app.util.chServerMoveDetect(app.URL.threadToBoard(@url))
             #移転検出時
-            tmp = ///^https?://(\w+)\.2ch\.net/ ///.exec(newBoardURL)[1]
+            tmp = ///^https?://(\w+)\.5ch\.net/ ///.exec(newBoardURL)[1]
             newURL = @url.replace(
-              ///^(https?://)\w+(\.2ch\.net/test/read\.cgi/\w+/\d+/)$///,
+              ///^(https?://)\w+(\.5ch\.net/test/read\.cgi/\w+/\d+/)$///,
               ($0, $1, $2) -> $1 + tmp + $2
             )
 
@@ -293,7 +293,7 @@ class app.Thread
           path: "#{tmp[1]}://jbbs.shitaraba.net/" +
             "bbs/rawmode.cgi/#{tmp[4]}/#{tmp[5]}/#{tmp[6]}/",
           charset: "EUC-JP"
-      when "2ch.net"
+      when "5ch.net"
         if app.config.get("format_2chnet") is "dat"
           path: "#{tmp[1]}://#{tmp[2]}/#{tmp[4]}/dat/#{tmp[5]}.dat",
           charset: "Shift_JIS"
@@ -326,7 +326,7 @@ class app.Thread
           Thread._parseJbbsArchive(text)
         else
           Thread._parseJbbs(text)
-      when "2ch.net"
+      when "5ch.net"
         if app.config.get("format_2chnet") is "dat"
           Thread._parseCh(text)
         else

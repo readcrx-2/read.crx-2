@@ -55,6 +55,7 @@
     {
       "matches" : [
         "*://*.2ch.net/test/bbs.cgi*",
+        "*://*.5ch.net/test/bbs.cgi*",
         "*://*.bbspink.com/test/bbs.cgi*",
         "*://*.2ch.sc/test/bbs.cgi*",
         "*://*.open2ch.net/test/bbs.cgi*",

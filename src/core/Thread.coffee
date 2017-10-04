@@ -184,7 +184,7 @@ class app.Thread
               readcgiVer = 5
 
           if deltaFlg
-            if @tsld in ["2ch.net", "bbspink.com"] and noChangeFlg is false
+            if @tsld in ["5ch.net", "bbspink.com"] and noChangeFlg is false
               cache.parsed = thread
               cache.readcgi_ver = readcgiVer
             else if noChangeFlg is false

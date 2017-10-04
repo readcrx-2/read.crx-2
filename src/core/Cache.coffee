@@ -84,22 +84,17 @@ class app.Cache
   @return {Promise}
   ###
   @count: ->
-    return @_dbOpen.then( (db) ->
-      return new Promise( (resolve, reject) ->
-        req = db
-          .transaction("Cache")
-          .objectStore("Cache")
-          .count()
-        req.onsuccess = ({ target: {result} }) ->
-          resolve(result)
-          return
-        req.onerror = (e) ->
-          app.log("error", "Cache.count: トランザクション中断")
-          reject(e)
-          return
-        return
-      )
-    )
+    try
+      db = await @_dbOpen
+      req = db
+        .transaction("Cache")
+        .objectStore("Cache")
+        .count()
+      res = await app.util.indexedDBRequestToPromise(req)
+    catch e
+      app.log("error", "Cache.count: トランザクション中断")
+      throw new Error(e)
+    return res.target.result
 
   ###*
   @method delete
@@ -107,22 +102,17 @@ class app.Cache
   @return {Promise}
   ###
   @delete: ->
-    return @_dbOpen.then( (db) =>
-      return new Promise( (resolve, reject) =>
-        req = db
-          .transaction("Cache", "readwrite")
-          .objectStore("Cache")
-          .clear()
-        req.onsuccess = ->
-          resolve()
-          return
-        req.onerror = (e) ->
-          app.log("error", "Cache.delete: トランザクション中断")
-          reject(e)
-          return
-        return
-      )
-    )
+    try
+      db = await @_dbOpen
+      req = db
+        .transaction("Cache", "readwrite")
+        .objectStore("Cache")
+        .clear()
+      await app.util.indexedDBRequestToPromise(req)
+    catch e
+      app.log("error", "Cache.delete: トランザクション中断")
+      throw new Error(e)
+    return
 
   ###*
   @method clearRange
@@ -131,52 +121,42 @@ class app.Cache
   @return {Promise}
   ###
   @clearRange: (day) ->
-    return @_dbOpen.then( (db) ->
-      return new Promise( (resolve, reject) ->
-        dayUnix = Date.now() - day*24*60*60*1000
-        req = db
-          .transaction("Cache", "readwrite")
-          .objectStore("Cache")
-          .index("last_updated")
-          .openCursor(IDBKeyRange.upperBound(dayUnix, true))
-        req.onsuccess = ({ target: {result} }) ->
-          resolve(result)
-          return
-        req.onerror = (e) ->
-          app.log("error", "Cache.clearRange: トランザクション中断")
-          reject(e)
-          return
-        return
-      )
-    )
+    try
+      db = await @_dbOpen
+      dayUnix = Date.now() - day*24*60*60*1000
+      req = db
+        .transaction("Cache", "readwrite")
+        .objectStore("Cache")
+        .index("last_updated")
+        .openCursor(IDBKeyRange.upperBound(dayUnix, true))
+      res = await app.util.indexedDBRequestToPromise(req)
+    catch e
+      app.log("error", "Cache.clearRange: トランザクション中断")
+      throw new Error(e)
+    return res.target.result
 
   ###*
   @method get
   @return {Promise}
   ###
   get: ->
-    Cache._dbOpen.then( (db) =>
-      new Promise( (resolve, reject) =>
-        req = db
-          .transaction("Cache")
-          .objectStore("Cache")
-          .get(@key)
-        req.onsuccess = ({ target: {result} }) =>
-          unless result?
-            reject()
-            return
-          data = app.deepCopy(result)
-          for key, val of data
-            @[key] = val ? null
-          resolve()
-          return
-        req.onerror = (e) ->
-          app.log("error", "Cache::get: トランザクション中断")
-          reject(e)
-          return
-        return
-      )
-    )
+    try
+      db = await Cache._dbOpen
+      req = db
+        .transaction("Cache")
+        .objectStore("Cache")
+        .get(@key)
+      { target: {result} } = await app.util.indexedDBRequestToPromise(req)
+      unless result?
+        throw new Error("キャッシュが存在しません")
+      data = app.deepCopy(result)
+      for key, val of data
+        @[key] = val ? null
+    catch e
+      unless e.message is "キャッシュが存在しません"
+        app.log("error", "Cache::get: トランザクション中断")
+      throw new Error(e)
+    return
 
   ###*
   @method put
@@ -192,56 +172,46 @@ class app.Cache
         (not @dat_size? or Number.isFinite(@dat_size)) and
         (not @readcgi_ver? or Number.isFinite(@readcgi_ver))
       app.log("error", "Cache::put: データが不正です", @)
-      return Promise.reject()
+      throw new Error("キャッシュしようとしたデータが不正です")
 
-    return Cache._dbOpen.then( (db) =>
-      return new Promise( (resolve, reject) =>
-        req = db
-          .transaction("Cache", "readwrite")
-          .objectStore("Cache")
-          .put(
-            url: @key
-            data: if @data? then @data.replace(/\u0000/g, "\u0020") else null
-            parsed: @parsed or null
-            last_updated: @last_updated
-            last_modified: @last_modified or null
-            etag: @etag or null
-            res_length: @res_length or null
-            dat_size: @dat_size or null
-            readcgi_ver: @readcgi_ver or null
-          )
-        req.onsuccess = ->
-          resolve()
-          return
-        req.onerror = (e) ->
-          app.log("error", "Cache::put: トランザクション失敗")
-          reject(e)
-          return
-        return
-      )
-    )
+    try
+      db = await Cache._dbOpen
+      req = db
+        .transaction("Cache", "readwrite")
+        .objectStore("Cache")
+        .put(
+          url: @key
+          data: if @data? then @data.replace(/\u0000/g, "\u0020") else null
+          parsed: @parsed or null
+          last_updated: @last_updated
+          last_modified: @last_modified or null
+          etag: @etag or null
+          res_length: @res_length or null
+          dat_size: @dat_size or null
+          readcgi_ver: @readcgi_ver or null
+        )
+      await app.util.indexedDBRequestToPromise(req)
+    catch e
+      app.log("error", "Cache::put: トランザクション中断")
+      throw new Error(e)
+    return
 
   ###*
   @method delete
   @return {Promise}
   ###
   delete: ->
-    return Cache._dbOpen.then( (db) =>
-      return new Promise( (resolve, reject) =>
-        req = db
-          .transaction("Cache", "readwrite")
-          .objectStore("Cache")
-          .delete(url)
-        req.onsuccess = ->
-          resolve()
-          return
-        req.onerror = (e) ->
-          app.log("error", "Cache::delete: トランザクション中断")
-          reject(e)
-          return
-        return
-      )
-    )
+    try
+      db = await Cache._dbOpen
+      req = db
+        .transaction("Cache", "readwrite")
+        .objectStore("Cache")
+        .delete(url)
+      await app.util.indexedDBRequestToPromise(req)
+    catch e
+      app.log("error", "Cache::delete: トランザクション中断")
+      throw new Error(e)
+    return
 
 app.module("cache", [], (callback) ->
   callback(app.Cache)

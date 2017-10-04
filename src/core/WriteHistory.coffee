@@ -37,34 +37,29 @@ class app.WriteHistory
   ###
   @add: (url, res, title, name, mail, input_name, input_mail, message, date) ->
     if app.assertArg("WriteHistory.add", ["string", "number", "string", "string", "string", "string", "string", "string", "number"], arguments)
-      return Promise.reject()
+      throw new Error("書込履歴に追加しようとしたデータが不正です")
 
-    return @_openDB().then( (db) ->
-      return new Promise( (resolve, reject) ->
-        req = db
-          .transaction("WriteHistory", "readwrite")
-          .objectStore("WriteHistory")
-          .put({
-            url
-            res
-            title
-            name
-            mail
-            input_name
-            input_mail
-            message
-            date
-          })
-        req.onsuccess = ->
-          resolve()
-          return
-        req.onerror = (e) ->
-          app.log("error", "WriteHistory.add: データの格納に失敗しました")
-          reject(e)
-          return
-        return
-      )
-    )
+    try
+      db = await @_openDB()
+      req = db
+        .transaction("WriteHistory", "readwrite")
+        .objectStore("WriteHistory")
+        .put({
+          url
+          res
+          title
+          name
+          mail
+          input_name
+          input_mail
+          message
+          date
+        })
+      await app.util.indexedDBRequestToPromise(req)
+    catch e
+      app.log("error", "WriteHistory.add: データの格納に失敗しました")
+      throw new Error(e)
+    return
 
   ###*
   @method remove
@@ -147,69 +142,54 @@ class app.WriteHistory
   ###
   @getByUrl: (url) ->
     if app.assertArg("WriteHistory.getByUrl", ["string"], arguments)
-      return Promise.reject()
+      throw new Error("書込履歴を取得しようとしたデータが不正です")
 
-    return @_openDB().then( (db) ->
-      return new Promise( (resolve, reject) ->
-        req = db
-          .transaction("WriteHistory")
-          .objectStore("WriteHistory")
-          .index("url")
-          .getAll(IDBKeyRange.only(url))
-        req.onsuccess = ({ target: {result} }) ->
-          resolve(result)
-          return
-        req.onerror = (e) ->
-          app.log("error", "WriteHistory.remove: トランザクション中断")
-          reject(e)
-          return
-        return
-      )
-    )
+    try
+      db = await @_openDB()
+      req = db
+        .transaction("WriteHistory")
+        .objectStore("WriteHistory")
+        .index("url")
+        .getAll(IDBKeyRange.only(url))
+      res = await app.util.indexedDBRequestToPromise(req)
+    catch e
+      app.log("error", "WriteHistory.remove: トランザクション中断")
+      throw new Error(e)
+    return res.target.result
 
   ###*
   @method getAll
   @return {Promise}
   ###
   @getAll: () ->
-    return @_openDB().then( (db) ->
-      return new Promise( (resolve, reject) ->
-        req = db
-          .transaction("WriteHistory")
-          .objectStore("WriteHistory")
-          .getAll()
-        req.onsuccess = ({ target: {result} }) ->
-          resolve(result)
-          return
-        req.onerror = (e) ->
-          app.log("error", "WriteHistory.getAll: トランザクション中断")
-          reject(e)
-          return
-        return
-      )
-    )
+    try
+      db = await @_openDB()
+      req = db
+        .transaction("WriteHistory")
+        .objectStore("WriteHistory")
+        .getAll()
+      res = await app.util.indexedDBRequestToPromise(req)
+    catch e
+      app.log("error", "WriteHistory.getAll: トランザクション中断")
+      throw new Error(e)
+    return res.target.result
 
   ###*
   @method count
   @return {Promise}
   ###
   @count: ->
-    return @_openDB().then( (db) ->
-      return new Promise( (resolve, reject) ->
-        req = db
-          .transaction("WriteHistory")
-          .objectStore("WriteHistory")
-          .count()
-        req.onsuccess = ({ target: {result} }) ->
-          resolve(result)
-          return
-        req.onerror = (e) ->
-          app.log("error", "WriteHistory.count: トランザクション中断")
-          reject(e)
-          return
-        return
-      )
-    )
+    try
+      db = await @_openDB()
+      req = db
+        .transaction("WriteHistory")
+        .objectStore("WriteHistory")
+        .count()
+      res = await app.util.indexedDBRequestToPromise(req)
+    catch e
+      app.log("error", "WriteHistory.count: トランザクション中断")
+      throw new Error(e)
+    return res.target.result
 
   ###*
   @method clear

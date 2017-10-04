@@ -46,7 +46,7 @@ class app.ReadState
         not Number.isFinite(readState.received) or
         not (Number.isFinite(readState.offset) or readState.offset is null)
       app.log("error", "app.ReadState.set: 引数が不正です", arguments)
-      return Promise.reject()
+      throw new Error("既読情報に登録しようとしたデータが不正です")
 
     readState = app.deepCopy(readState)
 
@@ -55,134 +55,104 @@ class app.ReadState
     boardUrl = app.URL.threadToBoard(url.original)
     readState.board_url = @_urlFilter(boardUrl).replaced
 
-    return @_openDB.then( (db) =>
-      return new Promise( (resolve, reject) =>
-        req = db
-          .transaction("ReadState", "readwrite")
-          .objectStore("ReadState")
-          .put(readState)
-        req.onsuccess = ->
-          delete readState.board_url
-          readState.url = readState.url.replace(url.replaced, url.original)
-          app.message.send("read_state_updated", {board_url: boardUrl, read_state: readState})
-          resolve()
-          return
-        req.onerror = (e) ->
-          app.log("error", "app.ReadState.set: トランザクション失敗")
-          reject(e)
-          return
-        return
-      )
-    )
+    try
+      db = await @_openDB
+      req = db
+        .transaction("ReadState", "readwrite")
+        .objectStore("ReadState")
+        .put(readState)
+      await app.util.indexedDBRequestToPromise(req)
+      delete readState.board_url
+      readState.url = readState.url.replace(url.replaced, url.original)
+      app.message.send("read_state_updated", {board_url: boardUrl, read_state: readState})
+    catch e
+      app.log("error", "app.ReadState.set: トランザクション失敗")
+      throw new Error(e)
+    return
 
   @get: (url) ->
     if app.assertArg("app.read_state.get", ["string"], arguments)
-      return Promise.reject()
+      throw new Error("既読情報を取得しようとしたデータが不正です")
 
     url = @_urlFilter(url)
 
-    return @_openDB.then( (db) =>
-      new Promise( (resolve, reject) =>
-        req = db
-          .transaction("ReadState")
-          .objectStore("ReadState")
-          .get(url.replaced)
-        req.onsuccess = ({ target: {result} }) ->
-          data = app.deepCopy(result)
-          if data?
-            data.url = url.original
-          resolve(data)
-          return
-        req.onerror = (e) ->
-          app.log("error", "app.ReadState.get: トランザクション中断")
-          reject(e)
-          return
-        return
-      )
-    )
+    try
+      db = await @_openDB
+      req = db
+        .transaction("ReadState")
+        .objectStore("ReadState")
+        .get(url.replaced)
+      { target: {result} } = await app.util.indexedDBRequestToPromise(req)
+      data = app.deepCopy(result)
+      if data?
+        data.url = url.original
+    catch e
+      app.log("error", "app.ReadState.get: トランザクション中断")
+      throw new Error(e)
+    return data
 
   @getAll: ->
-    return @_openDB.then( (db) ->
-      return new Promise( (resolve, reject) ->
-        req = db
-          .transaction("ReadState")
-          .objectStore("ReadState")
-          .getAll()
-        req.onsuccess = ({ target: {result} }) ->
-          resolve(result)
-          return
-        req.onerror = (e) ->
-          app.log("error", "app.ReadState.getAll: トランザクション中断")
-          reject(e)
-          return
-        return
-      )
-    )
+    try
+      db = await @_openDB
+      req = db
+        .transaction("ReadState")
+        .objectStore("ReadState")
+        .getAll()
+      res = await app.util.indexedDBRequestToPromise(req)
+    catch e
+      app.log("error", "app.ReadState.getAll: トランザクション中断")
+      throw new Error(e)
+    return res.target.result
 
   @getByBoard: (url) ->
     if app.assertArg("app.ReadState.getByBoard", ["string"], arguments)
-      return Promise.reject()
+      throw new Error("既読情報を取得しようとしたデータが不正です")
 
     url = @_urlFilter(url)
 
-    return @_openDB.then( (db) ->
-      return new Promise( (resolve, reject) ->
-        req = db
-          .transaction("ReadState")
-          .objectStore("ReadState")
-          .index("board_url")
-          .getAll(IDBKeyRange.only(url.replaced))
-        req.onsuccess = ({ target: {result: data} }) ->
-          for key, val of data
-            data[key].url = val.url.replace(url.replacedOrigin, url.originalOrigin)
-          resolve(data)
-          return
-        req.onerror = (e) ->
-          app.log("error", "app.ReadState.getByBoard: トランザクション中断")
-          reject(e)
-          return
-        return
-      )
-    )
+    try
+      db = await @_openDB
+      req = db
+        .transaction("ReadState")
+        .objectStore("ReadState")
+        .index("board_url")
+        .getAll(IDBKeyRange.only(url.replaced))
+      { target: {result: data} } = await app.util.indexedDBRequestToPromise(req)
+      for key, val of data
+        data[key].url = val.url.replace(url.replacedOrigin, url.originalOrigin)
+    catch e
+      app.log("error", "app.ReadState.getByBoard: トランザクション中断")
+      throw new Error(e)
+    return data
 
   @remove: (url) ->
     if app.assertArg("app.ReadState.remove", ["string"], arguments)
-      return Promise.reject()
+      throw new Error("既読情報を削除しようとしたデータが不正です")
 
     url = @_urlFilter(url)
 
-    return @_openDB.then( (db) ->
-      return new Promise( (resolve, reject) ->
-        req = db
-          .transaction("ReadState", "readwrite")
-          .objectStore("ReadState")
-          .delete(url.replaced)
-        req.onsuccess = ->
-          app.message.send("read_state_removed", url: url.original)
-          resolve()
-          return
-        req.onerror = (e) ->
-          app.log("error", "app.ReadState.remove: トランザクション中断")
-          reject(e)
-          return
-        return
-      )
-    )
+    try
+      db = await @_openDB
+      req = db
+        .transaction("ReadState", "readwrite")
+        .objectStore("ReadState")
+        .delete(url.replaced)
+      await app.util.indexedDBRequestToPromise(req)
+      app.message.send("read_state_removed", url: url.original)
+    catch e
+      app.log("error", "app.ReadState.remove: トランザクション中断")
+      throw new Error(e)
+    return
 
   @clear: ->
-    return @_openDB.then( (db) ->
-      return new Promise( (resolve, reject) ->
-        req = db
-          .transaction("ReadState", "readwrite")
-          .objectStore("ReadState")
-          .clear()
-        req.onsuccess = ->
-          resolve()
-          return
-        req.onerror = (e) ->
-          app.log("error", "app.ReadState.clear: トランザクション中断")
-          reject(e)
-          return
-        return
-      )
-    )
+    try
+      db = await @_openDB
+      req = db
+        .transaction("ReadState", "readwrite")
+        .objectStore("ReadState")
+        .clear()
+      await app.util.indexedDBRequestToPromise(req)
+    catch e
+      app.log("error", "app.ReadState.clear: トランザクション中断")
+      throw new Error(e)
+    return

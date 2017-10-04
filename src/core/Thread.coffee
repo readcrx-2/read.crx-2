@@ -16,10 +16,13 @@ class app.Thread
   get: (forceUpdate, progress) ->
     getCachedInfo = do =>
       if @tsld in ["shitaraba.net", "machi.to"]
-        return {
-          status: "success",
-          cachedInfo: await app.Board.getCachedResCount(@url)
-        }
+        try
+          return {
+            status: "success",
+            cachedInfo: await app.Board.getCachedResCount(@url)
+          }
+        catch
+          return {status: "none"}
       return {status: "none"}
 
     return new Promise( (resolve, reject) =>

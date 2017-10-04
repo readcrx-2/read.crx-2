@@ -287,3 +287,14 @@ do ->
         return state
       promise: promise
     }
+
+  app.util.indexedDBRequestToPromise = (req) ->
+    return new Promise( (resolve, reject) ->
+      req.onsuccess = (e) ->
+        resolve(e)
+        return
+      req.onerror = (e) ->
+        reject(e)
+        return
+      return
+    )

@@ -32,24 +32,19 @@ class app.History
   ###
   @add: (url, title, date) ->
     if app.assertArg("History.add", ["string", "string", "number"], arguments)
-      return Promise.reject()
+      throw new Error("履歴に追加しようとしたデータが不正です")
 
-    return @_openDB().then( (db) ->
-      return new Promise( (resolve, reject) ->
-        req = db
-          .transaction("History", "readwrite")
-          .objectStore("History")
-          .put(url: url, title: title, date: date)
-        req.onsuccess = ->
-          resolve()
-          return
-        req.onerror = (e) ->
-          app.log("error", "History.add: データの格納に失敗しました")
-          reject(e)
-          return
-        return
-      )
-    )
+    try
+      db = await @_openDB()
+      req = db
+        .transaction("History", "readwrite")
+        .objectStore("History")
+        .put(url: url, title: title, date: date)
+      await app.util.indexedDBRequestToPromise(req)
+    catch e
+      app.log("error", "History.add: データの格納に失敗しました")
+      throw new Error(e)
+    return
 
   ###*
   @method remove
@@ -181,44 +176,34 @@ class app.History
   @return {Promise}
   ###
   @getAll: ->
-    return @_openDB().then( (db) ->
-      return new Promise( (resolve, reject) ->
-        req = db
-          .transaction("History")
-          .objectStore("History")
-          .getAll()
-        req.onsuccess = ({ target: {result} }) ->
-          resolve(result)
-          return
-        req.onerror = (e) ->
-          app.log("error", "History.getAll: トランザクション中断")
-          reject(e)
-          return
-        return
-      )
-    )
+    try
+      db = await @_openDB()
+      req = db
+        .transaction("History")
+        .objectStore("History")
+        .getAll()
+      res = await app.util.indexedDBRequestToPromise(req)
+    catch e
+      app.log("error", "History.getAll: トランザクション中断")
+      throw new Error(e)
+    return res.target.result
 
   ###*
   @method count
   @return {Promise}
   ###
   @count: ->
-    return @_openDB().then( (db) ->
-      return new Promise( (resolve, reject) ->
-        req = db
-          .transaction("History")
-          .objectStore("History")
-          .count()
-        req.onsuccess = ({ target: {result} }) ->
-          resolve(result)
-          return
-        req.onerror = (e) ->
-          app.log("error", "History.count: トランザクション中断")
-          reject(e)
-          return
-        return
-      )
-    )
+    try
+      db = await @_openDB()
+      req = db
+        .transaction("History")
+        .objectStore("History")
+        .count()
+      res = await app.util.indexedDBRequestToPromise(req)
+    catch e
+      app.log("error", "History.count: トランザクション中断")
+      throw new Error(e)
+    return res.target.result
 
   ###*
   @method clear

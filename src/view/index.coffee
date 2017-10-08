@@ -516,9 +516,9 @@ app.main = ->
     return
 
   #更新通知
-  chrome.runtime.onUpdateAvailable.addListener( ({newVer}) ->
-    {name, version} = await app.manifest
-    return if newVer is version
+  chrome.runtime.onUpdateAvailable.addListener( ({version: newVer}) ->
+    {name, version: oldVer} = await app.manifest
+    return if newVer is oldVer
     app.message.send("notify",
       html: """
         #{name} の #{newVer} が利用可能です

@@ -53,6 +53,7 @@ args =
       ts: "./src/core/URL.ts"
       coffee: [
         "./src/core/Ninja.coffee"
+        "./src/core/util.coffee"
         "./src/core/WriteHistory.coffee"
         "./src/ui/Animate.coffee"
         "./src/write/write.coffee"

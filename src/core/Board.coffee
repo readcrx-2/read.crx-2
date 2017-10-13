@@ -46,6 +46,7 @@ class app.Board
         #通信
         request = new app.HTTP.Request("GET", xhrPath,
           mimeType: "text/plain; charset=#{xhrCharset}"
+          preventCache: true
         )
         if hasCache
           if cache.last_modified?

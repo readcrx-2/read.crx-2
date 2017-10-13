@@ -112,8 +112,11 @@ app.boot("/view/thread.html", ->
     app.defer( ->
       jumpResNum = +(ex.written_res_num ? ex.param_res_num ? -1)
       if (
-        $view.hasClass("loading") or
-        $view.C("button_reload")[0].hasClass("disabled")
+        !ex.force_update and
+        (
+          $view.hasClass("loading") or
+          $view.C("button_reload")[0].hasClass("disabled")
+        )
       )
         threadContent.select(jumpResNum, false, true, -60) if jumpResNum > 0
         return

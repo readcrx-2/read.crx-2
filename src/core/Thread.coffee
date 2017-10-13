@@ -73,6 +73,7 @@ class app.Thread
 
         request = new app.HTTP.Request("GET", xhrPath,
           mimeType: "text/plain; charset=#{xhrCharset}"
+          preventCache: true
         )
 
         if hasCache

@@ -5,6 +5,17 @@
 @requires app.Cache
 ###
 class app.BBSMenu
+  @target: $__("div")
+  @serverInfoTriggered: false
+
+  ###*
+  @method triggerCreatedServerInfo
+  ###
+  @triggerCreatedServerInfo: ->
+    BBSMenu.triggeredServerInfo = true
+    BBSMenu.target.dispatchEvent(new Event("serverinfo-created"))
+    return
+
   ###*
   @method fetch
   @param {String} url
@@ -75,10 +86,15 @@ class app.BBSMenu
   @param {Function} Callback
   @param {Boolean} [ForceReload=false]
   ###
-  @get: (callback, forceReload = false) ->
-    BBSMenu._callbacks.add(callback)
-    BBSMenu._update(forceReload) unless BBSMenu._updating
-    return
+  @get: (forceReload = false) ->
+    BBSMenu._updatingPromise = BBSMenu._update(forceReload) unless BBSMenu._updatingPromise?
+    try
+      {menu} = await BBSMenu._updatingPromise
+      BBSMenu.target.dispatchEvent(new CustomEvent("change", detail: {status: "success", menu}))
+    catch {menu, message}
+      BBSMenu.target.dispatchEvent(new CustomEvent("change", detail: {status: "error", menu, message}))
+      throw {menu, message}
+    return {menu}
 
   ###*
   @method parse
@@ -106,23 +122,18 @@ class app.BBSMenu
         menu.push(category)
     return menu
 
-  @_callbacks: new app.Callbacks({persistent: true})
-  @_updating: false
+  @_updatingPromise: null
   @_update: (forceReload) ->
-    BBSMenu._updating = true
     try
       {menu} = await BBSMenu.fetch(app.config.get("bbsmenu"), forceReload)
-      BBSMenu._callbacks.call({status: "success", data: menu})
     catch {menu}
       message = "板一覧の取得に失敗しました。"
       if menu?
         message += "キャッシュに残っていたデータを表示します。"
-        BBSMenu._callbacks.call({status: "error", data: menu, message})
+        throw new Error({menu, message})
       else
-        BBSMenu._callbacks.call({status: "error", message})
-    BBSMenu._updating = false
-    BBSMenu._callbacks.destroy()
-    return
+        throw new Error({message})
+    return {menu}
 
 app.module("bbsmenu", [], (callback) ->
   callback(app.BBSMenu)

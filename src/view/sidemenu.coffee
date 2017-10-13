@@ -72,19 +72,18 @@ app.boot("/view/sidemenu.html", ["bbsmenu"], (BBSMenu) ->
     load = ->
       $view.addClass("loading")
       # 表示用板一覧の取得
-      BBSMenu.get( ({message, data}) ->
+      BBSMenu.get()
+      BBSMenu.target.on("change", ({detail: {status, menu, message}}) ->
         for dom in $view.$$("h3:not(:first-of-type), ul:not(:first-of-type)")
           dom.remove()
-
-        if message?
+        if status is "error"
           app.message.send("notify",
             message: message
             background_color: "red"
           )
-
-        if data?
+        if menu?
           frag = $_F()
-          for category in data
+          for category in menu
             $h3 = $__("h3")
             $h3.textContent = category.title
             frag.addLast($h3)
@@ -98,7 +97,8 @@ app.boot("/view/sidemenu.html", ["bbsmenu"], (BBSMenu) ->
         $view.removeClass("loading")
 
         # 2ch.net/2ch.sc/bbspinkの板/サーバー情報の登録
-        app.URL.pushServerInfo(app.config.get("bbsmenu"), data)
+        await app.URL.pushServerInfo(app.config.get("bbsmenu"), menu)
+        BBSMenu.triggerCreatedServerInfo()
         return
       )
       return

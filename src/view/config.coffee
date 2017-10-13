@@ -352,18 +352,14 @@ app.boot("/view/config.html", ["cache", "bbsmenu"], (Cache, BBSMenu) ->
     $status.setClass("loading")
     $status.textContent = "更新中"
 
-    BBSMenu.get( (res) ->
-      $button.disabled = false
-      if res.status is "success"
-        $status.setClass("done")
-        $status.textContent = "更新完了"
-
-        # sidemenuの表示時に設定されたコールバックが実行されるので、特別なことはしない
-      else
-        $status.setClass("fail")
-        $status.textContent = "更新失敗"
-      return
-    , true)
+    try
+      await BBSMenu.get(true)
+      $status.setClass("done")
+      $status.textContent = "更新完了"
+    catch
+      $status.setClass("fail")
+      $status.textContent = "更新失敗"
+    $button.disabled = false
     return
   )
 

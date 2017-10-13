@@ -414,7 +414,7 @@ namespace app {
       if (boardPink.size > 0) serverPink = boardPink;
     }
 
-    export function pushServerInfo (url: string, menu: any[][]): void {
+    export async function pushServerInfo (url: string, menu: any[][]): Promise<void> {
       var res = bbsmenuParam(url);
 
       applyServerInfo(res, menu);
@@ -429,10 +429,9 @@ namespace app {
       if (!res.bbspink) param += "p0.";
       param += "99";
       var url = `http://kita.jikkyo.org/cbm/cbm.cgi/${param}/-all/bbsmenu.html`;
-      app.BBSMenu.fetch(url, false).then( ({menu}) => {
-        var res = bbsmenuParam(url);
-        applyServerInfo(res, menu);
-      });
+      var menu = <any[][]>(await app.BBSMenu.fetch(url, false)).menu
+      var res = bbsmenuParam(url);
+      applyServerInfo(res, menu);
     }
 
     function exchangeNetSc (url: string): string|null {

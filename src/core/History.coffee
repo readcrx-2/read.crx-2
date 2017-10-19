@@ -39,7 +39,7 @@ class app.History
       req = db
         .transaction("History", "readwrite")
         .objectStore("History")
-        .put(url: url, title: title, date: date)
+        .put({url, title, date})
       await app.util.indexedDBRequestToPromise(req)
     catch e
       app.log("error", "History.add: データの格納に失敗しました")

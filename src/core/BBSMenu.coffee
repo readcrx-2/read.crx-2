@@ -24,43 +24,39 @@ class app.BBSMenu
   @fetch: (url, force) ->
     #キャッシュ取得
     cache = new app.Cache(url)
-    promise = cache.get().then( ->
-      if force
-        return Promise.reject()
-      else if Date.now() - cache.last_updated < +app.config.get("bbsmenu_update_interval")*1000*60*60*24
-        return Promise.resolve()
-      return Promise.reject()
-    ).catch( ->
-      #通信
-      request = new app.HTTP.Request("GET", url,
-        mimeType: "text/plain; charset=Shift_JIS"
-      )
+    promise = new Promise( (resolve, reject) ->
+      try
+        await cache.get()
+        if force
+          throw new Error("最新のものを取得するために通信します")
+        if Date.now() - cache.last_updated > +app.config.get("bbsmenu_update_interval")*1000*60*60*24
+          throw new Error("キャッシュが期限切れなので通信します")
+      catch
+        #通信
+        request = new app.HTTP.Request("GET", url,
+          mimeType: "text/plain; charset=Shift_JIS"
+        )
+        if cache.last_modified?
+          request.headers["If-Modified-Since"] = new Date(cache.last_modified).toUTCString()
 
-      if cache.last_modified?
-        request.headers["If-Modified-Since"] = new Date(cache.last_modified).toUTCString()
+        if cache.etag?
+          request.headers["If-None-Match"] = cache.etag
+        response = await request.send()
 
-      if cache.etag?
-        request.headers["If-None-Match"] = cache.etag
+      if response?.status is 200
+        menu = BBSMenu.parse(response.body)
+      else if cache.data?
+        menu = BBSMenu.parse(cache.data)
 
-      return request.send()
-    ).then(fn = (response) ->
-      #パース
-      return new Promise( (resolve, reject) ->
-        if response?.status is 200
-          menu = BBSMenu.parse(response.body)
-        else if cache.data?
-          menu = BBSMenu.parse(cache.data)
-
-        if menu?.length > 0
-          if response?.status is 200 or response?.status is 304 or (not response and cache.data?)
-            resolve({response, menu})
-          else
-            reject({response, menu})
+      if menu?.length > 0
+        if response?.status is 200 or response?.status is 304 or (not response and cache.data?)
+          resolve({response, menu})
         else
-          reject({response})
-        return
-      )
-    , fn)
+          reject({response, menu})
+      else
+        reject({response})
+      return
+    )
     promise.catch(-> return).then( ({response, menu}) ->
       #キャッシュ更新
       if response?.status is 200

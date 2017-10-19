@@ -200,50 +200,48 @@ namespace app {
       "xrl.us"
     ]);
 
-    export function expandShortURL (shortUrl: string): any {
-      return new Promise( (resolve, reject) => {
-        var cache = new app.Cache(shortUrl);
+    export async function expandShortURL (shortUrl: string): Promise<string> {
+      var res, finalUrl = "";
+      var cache = new app.Cache(shortUrl);
 
-        cache.get()
-          .then( () => {
-            return Promise.resolve({data: cache.data, url: null});
-          })
-          .catch( () => {
-            var req = new app.HTTP.Request("HEAD", shortUrl);
-            req.timeout = parseInt(app.config.get("expand_short_url_timeout")!);
+      res = await ( async () => {
+        try {
+          await cache.get();
+          return {data: cache.data, url: null};
+        } catch {
+          var req = new app.HTTP.Request("HEAD", shortUrl);
+          req.timeout = parseInt(app.config.get("expand_short_url_timeout")!);
 
-            return req.send().then( ({status, responseURL: resUrl}) => {
-              if (status >= 400) {
-                return {data: null, url: null};
-              }
-              // 無限ループの防止
-              if (resUrl === shortUrl) {
-                return {data: null, url: null};
-              }
-              // 取得したURLが短縮URLだった場合は再帰呼出しする
-              if (SHORT_URL_LIST.has(getDomain(resUrl))) {
-                return expandShortURL(resUrl).then( (resUrl) => {
-                  return {data: null, url: resUrl};
-                });
-              // 短縮URL以外なら終了
-              } else {
-                return {data: null, url: resUrl};
-              }
-            });
-          })
-          .then( (res) => {
-            var finalUrl: string = "";
-            if (res.data === null && res.url !== null) {
-              cache.last_updated = Date.now();
-              cache.data = res.url;
-              cache.put();
-              finalUrl = res.url;
-            } else if (res.data !== null && res.url === null) {
-              finalUrl = res.data;
-            }
-            return resolve(finalUrl);
-          });
-      });
+          var {status, responseURL: resUrl} = await req.send();
+
+          if (status >= 400) {
+            return {data: null, url: null};
+          }
+          // 無限ループの防止
+          if (resUrl === shortUrl) {
+            return {data: null, url: null};
+          }
+
+          // 取得したURLが短縮URLだった場合は再帰呼出しする
+          if (SHORT_URL_LIST.has(getDomain(resUrl))) {
+            resUrl = await expandShortURL(resUrl)
+            return {data: null, url: resUrl};
+          // 短縮URL以外なら終了
+          } else {
+            return {data: null, url: resUrl};
+          }
+        }
+      })();
+
+      if (res.data === null && res.url !== null) {
+        cache.last_updated = Date.now();
+        cache.data = res.url;
+        cache.put();
+        finalUrl = res.url;
+      } else if (res.data !== null && res.url === null) {
+        finalUrl = res.data;
+      }
+      return finalUrl;
     }
 
     const AUDIO_REG = /\.(?:mp3|m4a|wav|oga|spx)(?:[\?#:&].*)?$/;
@@ -463,38 +461,36 @@ namespace app {
       return resUrl;
     }
 
-    export function convertNetSc (url: string): Promise<string> {
+    export async function convertNetSc (url: string): Promise<string> {
       var newUrl = exchangeNetSc(url);
 
       if (newUrl) {
-        return Promise.resolve(newUrl);
-      } else {
-        var scheme: string;
-        var tmpUrl: string;
-        var tmp: string[]|null;
-
-        tmp = /(https?):\/\/(\w+)\.5ch\.net\/test\/read\.cgi\/(\w+\/\d+\/)/.exec(url);
-        if (tmp === null) {
-          return Promise.reject(null);
-        }
-        tmpUrl = `http://${tmp[2]}.2ch.sc/test/read.cgi/${tmp[3]}`;
-        scheme = tmp[1];
-
-        var req = new app.HTTP.Request("HEAD", tmpUrl);
-        return req.send().then( ({status, responseURL: resUrl}) => {
-          if (status >= 400) {
-            return Promise.reject(null);
-          }
-          tmp = /https?:\/\/(\w+)\.2ch\.sc\/test\/read\.cgi\/(\w+)\/(\d+)\//.exec(resUrl);
-          if (tmp !== null) {
-            if (serverSc.has(tmp[2]) === false) {
-              serverSc.set(tmp[2], tmp[1]);
-            }
-            resUrl = `${scheme}://${tmp[1]}.2ch.sc/test/read.cgi/${tmp[2]}/${tmp[3]}/`;
-          }
-          return Promise.resolve(resUrl);
-        });
+        return newUrl;
       }
+      var scheme: string;
+      var tmpUrl: string;
+      var tmp: string[]|null;
+
+      tmp = /(https?):\/\/(\w+)\.5ch\.net\/test\/read\.cgi\/(\w+\/\d+\/)/.exec(url);
+      if (tmp === null) {
+        throw new Error("不明なURL形式です");
+      }
+      tmpUrl = `http://${tmp[2]}.2ch.sc/test/read.cgi/${tmp[3]}`;
+      scheme = tmp[1];
+
+      var req = new app.HTTP.Request("HEAD", tmpUrl);
+      var {status, responseURL: resUrl} = await req.send();
+      if (status >= 400) {
+        throw new Error("移動先情報の取得の通信に失敗しました");
+      }
+      tmp = /https?:\/\/(\w+)\.2ch\.sc\/test\/read\.cgi\/(\w+)\/(\d+)\//.exec(resUrl);
+      if (tmp !== null) {
+        if (serverSc.has(tmp[2]) === false) {
+          serverSc.set(tmp[2], tmp[1]);
+        }
+        resUrl = `${scheme}://${tmp[1]}.2ch.sc/test/read.cgi/${tmp[2]}/${tmp[3]}/`;
+      }
+      return resUrl;
     }
   }
 }

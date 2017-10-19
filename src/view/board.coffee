@@ -137,7 +137,7 @@ app.boot("/view/board.html", ["board"], (Board) ->
         else
           for thread in board when thread.title.includes(ex.title)
             if writeFlag
-              app.WriteHistory.add(thread.url, 1, ex.title, ex.name, ex.mail, ex.name, ex.mail, ex.mes, thread.created_at)
+              app.WriteHistory.add(thread.url, 1, ex.title, ex.name, ex.mail, ex.name, ex.mail, ex.mes, thread.createdAt)
             app.message.send("open", url: thread.url, new_tab: true)
             break
 

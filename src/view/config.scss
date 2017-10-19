@@ -110,28 +110,6 @@ section button {
   }
 }
 
-.ninja_info:empty::after {
-  content: "忍法帳データが有りません。";
-}
-
-.ninja_item {
-  > div {
-    display: inline-block;
-  }
-
-  > .site_name {
-    display: none; //現状2ch以外の忍法帳に対応していないため
-  }
-
-  &:not(.ninja_item_cookie_found) .ninja_item_cookie_found,
-  &.ninja_item_cookie_found .ninja_item_cookie_notfound,
-  &:not(.ninja_item_backup_available) .ninja_item_backup_available,
-  &:not(.ninja_item_backup_available) .ninja_item_cookie_notfound button,
-  &.ninja_item_backup_available .ninja_item_backup_unavailable {
-    display: none;
-  }
-}
-
 #bbsmenu_reload_status {
   &.done {
     color: var(--color-success);

@@ -472,8 +472,6 @@ app.main = ->
     document.title = (await app.manifest).name
     return
 
-  app.Ninja.enableAutoBackup()
-
   app.message.on("notify", ({message: text, html, background_color = "#777"}) ->
     $div = $__("div")
     $div.style["background-color"] = background_color

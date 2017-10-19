@@ -14,7 +14,6 @@ do ->
       "ImageReplaceDat"
       "module"
       "ReplaceStrTxt"
-      "Ninja"
       "NG"
       "Notification"
       "ReadState"

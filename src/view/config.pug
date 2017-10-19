@@ -381,11 +381,6 @@ block body
               td: input.direct(type="text" name="default_mail")
 
     section
-      h2 忍法帖
-      div
-        .ninja_info
-
-    section
       h2 データ
       div
         |インポートは大量にすると時間がかかります
@@ -501,24 +496,3 @@ block body
         span#history_from_1151_status
         br
         |(1.15.1以降へ移行時に一度だけ実行してください)
-
-block temp
-  template#template_ninja_item
-    .ninja_item
-      span.site_name
-
-      div
-        |Cookie:
-        span.ninja_item_cookie_found
-          |あり
-          |button Cookieを削除
-        span.ninja_item_cookie_notfound
-          |無し
-          |button バックアップから復元
-
-      div
-        |バックアップ:
-        span.ninja_item_backup_available
-          |あり
-          button バックアップを削除
-        span.ninja_item_backup_unavailable 無し

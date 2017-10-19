@@ -40,7 +40,7 @@ class app.Board
       try
         await cache.get()
         hasCache = true
-        unless Date.now() - cache.last_updated < 1000 * 3
+        unless Date.now() - cache.lastUpdated < 1000 * 3
           throw new Error("キャッシュの期限が切れているため通信します")
       catch
         #通信
@@ -49,9 +49,9 @@ class app.Board
           preventCache: true
         )
         if hasCache
-          if cache.last_modified?
+          if cache.lastModified?
             request.headers["If-Modified-Since"] =
-              new Date(cache.last_modified).toUTCString()
+              new Date(cache.lastModified).toUTCString()
           if cache.etag?
             request.headers["If-None-Match"] = cache.etag
 
@@ -84,14 +84,14 @@ class app.Board
         #キャッシュ更新部
         if response?.status is 200
           cache.data = response.body
-          cache.last_updated = Date.now()
+          cache.lastUpdated = Date.now()
 
           lastModified = new Date(
             response.headers["Last-Modified"] or "dummy"
           ).getTime()
 
           if Number.isFinite(lastModified)
-            cache.last_modified = lastModified
+            cache.lastModified = lastModified
 
           if etag = response.headers["ETag"]
             cache.etag = etag
@@ -102,7 +102,7 @@ class app.Board
             app.bookmark.updateResCount(thread.url, thread.resCount)
 
         else if hasCache and response?.status is 304
-          cache.last_updated = Date.now()
+          cache.lastUpdated = Date.now()
           cache.put()
 
       catch {response, threadList, newBoardUrl}
@@ -256,7 +256,7 @@ class app.Board
     cache = new app.Cache(xhrPath)
     try
       await cache.get()
-      lastModified = cache.last_modified
+      {lastModified} = cache
       for thread in Board.parse(boardUrl, cache.data) when thread.url is threadUrl
         return {
           resCount: thread.resCount

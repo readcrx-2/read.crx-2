@@ -234,7 +234,7 @@ namespace app {
       })();
 
       if (res.data === null && res.url !== null) {
-        cache.last_updated = Date.now();
+        cache.lastUpdated = Date.now();
         cache.data = res.url;
         cache.put();
         finalUrl = res.url;

@@ -29,15 +29,15 @@ class app.BBSMenu
         await cache.get()
         if force
           throw new Error("最新のものを取得するために通信します")
-        if Date.now() - cache.last_updated > +app.config.get("bbsmenu_update_interval")*1000*60*60*24
+        if Date.now() - cache.lastUpdated > +app.config.get("bbsmenu_update_interval")*1000*60*60*24
           throw new Error("キャッシュが期限切れなので通信します")
       catch
         #通信
         request = new app.HTTP.Request("GET", url,
           mimeType: "text/plain; charset=Shift_JIS"
         )
-        if cache.last_modified?
-          request.headers["If-Modified-Since"] = new Date(cache.last_modified).toUTCString()
+        if cache.lastModified?
+          request.headers["If-Modified-Since"] = new Date(cache.lastModified).toUTCString()
 
         if cache.etag?
           request.headers["If-None-Match"] = cache.etag
@@ -61,17 +61,17 @@ class app.BBSMenu
       #キャッシュ更新
       if response?.status is 200
         cache.data = response.body
-        cache.last_updated = Date.now()
+        cache.lastUpdated = Date.now()
 
         lastModified = new Date(
           response.headers["Last-Modified"] or "dummy"
         ).getTime()
 
         if Number.isFinite(lastModified)
-          cache.last_modified = lastModified
+          cache.lastModified = lastModified
         cache.put()
       else if cache.data? and response?.status is 304
-        cache.last_updated = Date.now()
+        cache.lastUpdated = Date.now()
         cache.put()
       return
     )

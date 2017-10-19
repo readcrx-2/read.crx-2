@@ -55,7 +55,7 @@ namespace app {
       else if (/^https?:\/\/(?:find|info|p2|ninja)\.5ch\.net\/\w+\/$/.test(url)) {
         return {type: "unknown", bbsType: "unknown"};
       }
-      else if (/^https?:\/\/\w+\.(?:5ch|open2ch|bbspink)\.\w+\/(?:subback\/|test\/-\/)?\w+\/?$/.test(url)) {
+      else if (/^https?:\/\/\w+\.(?:[25]ch|open2ch|bbspink)\.\w+\/(?:subback\/|test\/-\/)?\w+\/?$/.test(url)) {
         return {type: "board", bbsType: "2ch"};
       }
       else {

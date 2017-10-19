@@ -251,25 +251,6 @@ namespace app {
       var ready = new Callbacks();
       this.ready = ready.add.bind(ready);
 
-      // localStorageからの移行処理
-      {
-        let found:{[index:string]:string;} = {}, key:string, val:string;
-
-        for (key in localStorage) {
-          if (key.startsWith("config_")) {
-            val = localStorage.getItem(key)!;
-            this._cache.set(key, val);
-            found[key] = val;
-          }
-        }
-
-        chrome.storage.local.set(found);
-
-        for (key in found) {
-          localStorage.removeItem(key);
-        }
-      }
-
       chrome.storage.local.get(null, (res) => {
         var key:string, val:string;
         if (this._cache !== null) {

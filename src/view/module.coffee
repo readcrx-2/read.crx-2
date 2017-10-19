@@ -178,13 +178,19 @@ class app.view.IframeView extends app.view.View
 
     if @$element.hasClass("view_thread")
       # 返信レス
-      if (m = /^w([1-9][0-9]?[0-9]?[0-9]?)$/.exec(command))
-        @_write(message: ">>#{m[1]}\n")
-      else if (m = /^w-([1-9][0-9]?[0-9]?[0-9]?)$/.exec(command))
-        @_write(message: """
-        >>#{m[1]}
-        #{@$element.C("content")[0].child()[m[1]-1].$(".message").textContent.replace(/^/gm, '>')}\n
-        """)
+      if (m = /^w(\d+(?:-\d+)?(?:,\d+(?:-\d+)?)*)$/.exec(command))
+        message = ""
+        for num in m[1].split(",")
+          message += ">>#{num}\n"
+        @_write({message})
+      else if (m = /^w-(\d+(?:,\d+)*)$/.exec(command))
+        message = ""
+        for num in m[1].split(",")
+          message += """
+            >>#{num}
+            #{@$element.C("content")[0].child()[num-1].$(".message").textContent.replace(/^/gm, '>')}\n
+            """
+        @_write({message})
     if @$element.hasClass("view_thread") or @$element.hasClass("view_board")
       if command is "w"
         @_write()

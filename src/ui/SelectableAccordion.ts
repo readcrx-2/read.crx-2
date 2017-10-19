@@ -10,8 +10,6 @@ interface Element {
 }
 
 namespace UI {
-  "use strict";
-
   export class SelectableAccordion extends Accordion {
     constructor ($element: HTMLElement) {
       super($element);

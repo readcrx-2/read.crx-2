@@ -1,8 +1,6 @@
 ///<reference path="global.d.ts" />
 
 namespace app {
-  "use strict";
-
   type logLevel = "log" | "debug" | "info" | "warn" | "error";
   var logLevels: logLevel[] = ["log", "debug", "info", "warn", "error"];
 

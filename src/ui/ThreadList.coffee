@@ -18,8 +18,6 @@ window.UI ?= {}
   @param {Element} [option.searchbox]
 ###
 class UI.ThreadList
-  "use Strict"
-
   constructor: (@table, option) ->
     ###*
     @property _flg

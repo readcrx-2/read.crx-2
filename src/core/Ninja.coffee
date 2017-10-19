@@ -4,8 +4,6 @@
 @static
 ###
 class app.Ninja
-  "use strict"
-
   @_siteInfo =
     "2ch":
       siteId: "2ch"

@@ -1,6 +1,4 @@
 namespace app.HTTP {
-  "use strict";
-
   export class Request {
     method: string;
     url: string;

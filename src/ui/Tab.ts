@@ -2,8 +2,6 @@
 ///<reference path="VirtualNotch.ts" />
 
 namespace UI {
-  "use strict";
-
   export class Tab {
     private static idSeed = 0;
     private static tabA: Tab|null = null;

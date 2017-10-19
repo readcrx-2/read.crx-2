@@ -1,8 +1,6 @@
 ///<reference path="../global.d.ts" />
 
 namespace UI {
-  "use strict";
-
   declare var app: any;
 
   export class SearchNextThread {

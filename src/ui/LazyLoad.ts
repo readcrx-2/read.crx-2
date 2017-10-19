@@ -3,8 +3,6 @@
 ///<reference path="../core/HTTP.ts" />
 
 namespace UI {
-  "use strict";
-
   type HTMLMediaElement = HTMLImageElement | HTMLAudioElement | HTMLVideoElement;
 
   export class LazyLoad {

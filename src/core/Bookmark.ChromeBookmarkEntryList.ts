@@ -14,8 +14,6 @@ interface BookmarkTreeNode {
 }
 
 module app.Bookmark {
-  "use strict";
-
   export class ChromeBookmarkEntryList extends SyncableEntryList {
     rootNodeId: string;
     nodeIdStore = new Map<string, string>();

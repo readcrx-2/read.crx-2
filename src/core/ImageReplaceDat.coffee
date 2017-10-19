@@ -64,9 +64,9 @@ class app.ImageReplaceDat
       continue unless r[0]?
       obj =
         baseUrl: r[0]
-        replaceUrl: if r[1]? then r[1] else ""
-        referrerUrl: if r[2]? then r[2] else ""
-        userAgent: if r[5]? then r[5] else ""
+        replaceUrl: r[1] ? ""
+        referrerUrl: r[2] ? ""
+        userAgent: r[5] ? ""
 
       if r[3]?
         obj.param = {}
@@ -75,11 +75,11 @@ class app.ImageReplaceDat
           obj.param =
             type: "extract"
             pattern: r[4]
-            referrerUrl: if rurl? then rurl else ""
+            referrerUrl: rurl ? ""
         else if r[4].includes("$COOKIE")
           obj.param =
             type: "cookie"
-            referrerUrl: if rurl? then rurl else ""
+            referrerUrl: rurl ? ""
       dat.add(obj)
     return dat
 

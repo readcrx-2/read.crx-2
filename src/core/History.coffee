@@ -39,7 +39,7 @@ class app.History
       req = db
         .transaction("History", "readwrite")
         .objectStore("History")
-        .put(url: url, title: title, date: date)
+        .put({url, title, date})
       await app.util.indexedDBRequestToPromise(req)
     catch e
       app.log("error", "History.add: データの格納に失敗しました")
@@ -113,7 +113,7 @@ class app.History
                 cursor.advance(offset)
                 return
             {value} = cursor
-            value.is_https = (app.URL.getScheme(value.url) is "https")
+            value.isHttps = (app.URL.getScheme(value.url) is "https")
             histories.push(value)
             cursor.continue()
           else
@@ -156,7 +156,7 @@ class app.History
                 return
             {value} = cursor
             unless inserted.has(value.url)
-              value.is_https = (app.URL.getScheme(value.url) is "https")
+              value.isHttps = (app.URL.getScheme(value.url) is "https")
               histories.push(value)
               inserted.add(value.url)
             cursor.continue()

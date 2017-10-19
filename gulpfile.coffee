@@ -81,11 +81,12 @@ args =
     bare: true
   tsOptions:
     typescript: tsCompiler
-    target: "es2015"
+    target: "es2017"
     lib: [
       "dom"
       "es2015"
       "es2016"
+      "es2017"
     ]
     skipLibCheck: true
     noUnusedLocals: true

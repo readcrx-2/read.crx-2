@@ -17,25 +17,17 @@ class app.BoardTitleSolver
   @return {Promise}
   ###
   @getBBSMenu: ->
-    return new Promise( (resolve, reject) =>
-      if @_bbsmenu?
-        resolve(@_bbsmenu)
-        return
+    return @_bbsmenu if @_bbsmenu?
 
-      app.BBSMenu.get( ({data}) =>
-        unless data?
-          reject()
-          return
+    {menu} = await app.BBSMenu.get()
+    unless menu?
+      throw new Error("板一覧が取得できませんでした")
 
-        @_bbsmenu = {}
-        for {board} in data
-          for {url, title} in board
-            @_bbsmenu[url] = title
-        resolve(@_bbsmenu)
-        return
-      )
-      return
-    )
+    @_bbsmenu = {}
+    for {board} in menu
+      for {url, title} in board
+        @_bbsmenu[url] = title
+    return @_bbsmenu
 
   ###*
   @method searchFromBBSMenu

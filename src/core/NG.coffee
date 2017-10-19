@@ -163,7 +163,12 @@ class app.NG
   @param {Array} res
   ###
   @checkNGThread: (res) ->
-    tmpTxt1 = res.name + " " + res.mail + " " + res.other + " " + res.message
+    decodedName = app.util.decodeCharReference(res.name)
+    decodedMail = app.util.decodeCharReference(res.mail)
+    decodedOther = app.util.decodeCharReference(res.other)
+    decodedMes = app.util.decodeCharReference(res.message)
+
+    tmpTxt1 = decodedName + " " + decodedMail + " " + decodedOther + " " + decodedMes
     tmpTxt2 = app.util.normalize(tmpTxt1)
 
     for n from @get()
@@ -171,16 +176,16 @@ class app.NG
         continue
       if (
         (n.type is "regExp" and n.reg.test(tmpTxt1)) or
-        (n.type is "regExpName" and n.reg.test(res.name)) or
-        (n.type is "regExpMail" and n.reg.test(res.mail)) or
+        (n.type is "regExpName" and n.reg.test(decodedName)) or
+        (n.type is "regExpMail" and n.reg.test(decodedMail)) or
         (n.type is "regExpId" and res.id? and n.reg.test(res.id)) or
         (n.type is "regExpSlip" and res.slip? and n.reg.test(res.slip)) or
-        (n.type is "regExpBody" and n.reg.test(res.message)) or
-        (n.type is "name" and app.util.normalize(res.name).includes(n.word)) or
-        (n.type is "mail" and app.util.normalize(res.mail).includes(n.word)) or
+        (n.type is "regExpBody" and n.reg.test(decodedMes)) or
+        (n.type is "name" and app.util.normalize(decodedName).includes(n.word)) or
+        (n.type is "mail" and app.util.normalize(decodedMail).includes(n.word)) or
         (n.type is "id" and res.id?.includes(n.word)) or
         (n.type is "slip" and res.slip?.includes(n.word)) or
-        (n.type is "body" and app.util.normalize(res.message).includes(n.word)) or
+        (n.type is "body" and app.util.normalize(decodedMes).includes(n.word)) or
         (n.type is "word" and tmpTxt2.includes(n.word))
       )
         return n.type

@@ -44,7 +44,7 @@ class app.Thread
       try
         await cache.get()
         hasCache = true
-        if forceUpdate or Date.now() - cache.last_updated > 1000 * 3
+        if forceUpdate or Date.now() - cache.lastUpdated > 1000 * 3
           #通信が生じる場合のみ、progressでキャッシュを送出する
           app.defer( =>
             tmp = cache.parsed ? Thread.parse(@url, cache.data)
@@ -60,16 +60,16 @@ class app.Thread
         if @tsld in ["shitaraba.net", "machi.to"]
           if hasCache
             deltaFlg = true
-            xhrPath += (+cache.res_length + 1) + "-"
+            xhrPath += (+cache.resLength + 1) + "-"
         # 2ch.netは差分を-nで取得
         else if isHtml
           if hasCache
             deltaFlg = true
-            readcgiVer = cache.readcgi_ver
+            {readcgiVer} = cache
             if readcgiVer >= 6
-              xhrPath += (+cache.res_length + 1) + "-n"
+              xhrPath += (+cache.resLength + 1) + "-n"
             else
-              xhrPath += (+cache.res_length) + "-n"
+              xhrPath += (+cache.resLength) + "-n"
 
         request = new app.HTTP.Request("GET", xhrPath,
           mimeType: "text/plain; charset=#{xhrCharset}"
@@ -77,9 +77,9 @@ class app.Thread
         )
 
         if hasCache
-          if cache.last_modified?
+          if cache.lastModified?
             request.headers["If-Modified-Since"] =
-              new Date(cache.last_modified).toUTCString()
+              new Date(cache.lastModified).toUTCString()
           if cache.etag?
             request.headers["If-None-Match"] = cache.etag
 
@@ -101,7 +101,7 @@ class app.Thread
               noChangeFlg = true
               thread = threadCache
             else
-              threadResponse = Thread.parse(@url, response.body, +cache.res_length)
+              threadResponse = Thread.parse(@url, response.body, +cache.resLength)
               # 新しいレスがない場合は最後のレスのみ表示されるのでその場合はキャッシュを送る
               if readcgiVer < 6 and threadResponse.res.length is 1
                 noChangeFlg = true
@@ -175,7 +175,7 @@ class app.Thread
           (response?.status is 200 and thread) or
           (readcgiVer >= 6 and response?.status is 500)
         )
-          cache.last_updated = Date.now()
+          cache.lastUpdated = Date.now()
 
           if isHtml
             readcgiPlace = response.body.indexOf("<div class=\"footer push\">read.cgi ver ")
@@ -187,24 +187,24 @@ class app.Thread
           if deltaFlg
             if @tsld in ["5ch.net", "bbspink.com"] and noChangeFlg is false
               cache.parsed = thread
-              cache.readcgi_ver = readcgiVer
+              cache.readcgiVer = readcgiVer
             else if noChangeFlg is false
               cache.data += response.body
-            cache.res_length = thread.res.length
+            cache.resLength = thread.res.length
           else
             if isHtml
               cache.parsed = thread
-              cache.readcgi_ver = readcgiVer
+              cache.readcgiVer = readcgiVer
             else
               cache.data = response.body
-            cache.res_length = thread.res.length
+            cache.resLength = thread.res.length
 
           lastModified = new Date(
             response.headers["Last-Modified"] or "dummy"
           ).getTime()
 
           if Number.isFinite(lastModified)
-            cache.last_modified = lastModified
+            cache.lastModified = lastModified
 
           etag = response.headers["ETag"]
           if etag
@@ -214,7 +214,7 @@ class app.Thread
 
         #304だった場合はアップデート時刻のみ更新
         else if hasCache and response?.status is 304
-          cache.last_updated = Date.now()
+          cache.lastUpdated = Date.now()
           cache.put()
 
       catch {response, thread}

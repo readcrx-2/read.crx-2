@@ -121,7 +121,7 @@ class app.WriteHistory
                 cursor.advance(offset)
                 return
             value = cursor.value
-            value.is_https = (app.URL.getScheme(value.url) is "https")
+            value.isHttps = (app.URL.getScheme(value.url) is "https")
             histories.push(value)
             cursor.continue()
           else

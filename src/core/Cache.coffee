@@ -19,16 +19,16 @@ class app.Cache
     @parsed = null
 
     ###*
-    @property last_updated
+    @property lastUpdated
     @type Number
     ###
-    @last_updated = null
+    @lastUpdated = null
 
     ###*
-    @property last_modified
+    @property lastModified
     @type Number
     ###
-    @last_modified = null
+    @lastModified = null
 
     ###*
     @property etag
@@ -37,22 +37,22 @@ class app.Cache
     @etag = null
 
     ###*
-    @property res_length
+    @property resLength
     @type Number
     ###
-    @res_length = null
+    @resLength = null
 
     ###*
-    @property dat_size
+    @property datSize
     @type Number
     ###
-    @dat_size = null
+    @datSize = null
 
     ###*
-    @property readcgi_ver
+    @property readcgiVer
     @type Number
     ###
-    @readcgi_ver = null
+    @readcgiVer = null
 
   ###*
   @property _dbOpen
@@ -151,7 +151,14 @@ class app.Cache
         throw new Error("キャッシュが存在しません")
       data = app.deepCopy(result)
       for key, val of data
-        @[key] = val ? null
+        newKey = switch key
+          when "last_updated" then "lastUpdated"
+          when "last_modified" then "lastModified"
+          when "res_length" then "resLength"
+          when "dat_size" then "datSize"
+          when "readcgi_ver" then "readcgiVer"
+          else key
+        @[newKey] = val ? null
     catch e
       unless e.message is "キャッシュが存在しません"
         app.log("error", "Cache::get: トランザクション中断")
@@ -165,12 +172,12 @@ class app.Cache
   put: ->
     unless typeof @key is "string" and
         ((@data? and typeof @data is "string") or (@parsed? and @parsed instanceof Object)) and
-        typeof @last_updated is "number" and
-        (not @last_modified? or typeof @last_modified is "number") and
+        typeof @lastUpdated is "number" and
+        (not @lastModified? or typeof @lastModified is "number") and
         (not @etag? or typeof @etag is "string") and
-        (not @res_length? or Number.isFinite(@res_length)) and
-        (not @dat_size? or Number.isFinite(@dat_size)) and
-        (not @readcgi_ver? or Number.isFinite(@readcgi_ver))
+        (not @resLength? or Number.isFinite(@resLength)) and
+        (not @datSize? or Number.isFinite(@datSize)) and
+        (not @readcgiVer? or Number.isFinite(@readcgiVer))
       app.log("error", "Cache::put: データが不正です", @)
       throw new Error("キャッシュしようとしたデータが不正です")
 
@@ -183,12 +190,12 @@ class app.Cache
           url: @key
           data: if @data? then @data.replace(/\u0000/g, "\u0020") else null
           parsed: @parsed or null
-          last_updated: @last_updated
-          last_modified: @last_modified or null
+          last_updated: @lastUpdated
+          last_modified: @lastModified or null
           etag: @etag or null
-          res_length: @res_length or null
-          dat_size: @dat_size or null
-          readcgi_ver: @readcgi_ver or null
+          res_length: @resLength or null
+          dat_size: @datSize or null
+          readcgi_ver: @readcgiVer or null
         )
       await app.util.indexedDBRequestToPromise(req)
     catch e

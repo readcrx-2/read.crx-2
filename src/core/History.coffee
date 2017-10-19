@@ -113,7 +113,7 @@ class app.History
                 cursor.advance(offset)
                 return
             {value} = cursor
-            value.is_https = (app.URL.getScheme(value.url) is "https")
+            value.isHttps = (app.URL.getScheme(value.url) is "https")
             histories.push(value)
             cursor.continue()
           else
@@ -156,7 +156,7 @@ class app.History
                 return
             {value} = cursor
             unless inserted.has(value.url)
-              value.is_https = (app.URL.getScheme(value.url) is "https")
+              value.isHttps = (app.URL.getScheme(value.url) is "https")
               histories.push(value)
               inserted.add(value.url)
             cursor.continue()

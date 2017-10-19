@@ -94,7 +94,7 @@ class app.Thread
       )
         if deltaFlg
           # 2ch.netなら-nを使って前回取得したレスの後のレスからのものを取得する
-          if @tsld in ["5ch.net", "bbspink.com"]
+          if isHtml
             threadCache = cache.parsed
             # readcgi ver6,7だと変更がないと500が帰ってくる
             if readcgiVer >= 6 and response.status is 500
@@ -118,7 +118,7 @@ class app.Thread
       #2ch系BBSのdat落ち
       else if guessRes.bbsType is "2ch" and response?.status is 203
         if hasCache
-          if deltaFlg and @tsld in ["5ch.net", "bbspink.com"]
+          if deltaFlg and isHtml
             thread = cache.parsed
           else
             thread = Thread.parse(@url, cache.data)
@@ -185,7 +185,7 @@ class app.Thread
               readcgiVer = 5
 
           if deltaFlg
-            if @tsld in ["5ch.net", "bbspink.com"] and noChangeFlg is false
+            if isHtml and !noChangeFlg
               cache.parsed = thread
               cache.readcgiVer = readcgiVer
             else if noChangeFlg is false

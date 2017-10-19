@@ -1028,7 +1028,7 @@ class UI.ThreadContent
     name = $res.C("name")[0].textContent
     mail = $res.C("mail")[0].textContent
     message = $res.C("message")[0].textContent
-    date = @stringToDate($res.C("other")[0].textContent)
+    date = app.util.stringToDate($res.C("other")[0].textContent)
     if date?
       app.WriteHistory.add(@url, resnum, document.title, name, mail, name, mail, message, date.valueOf())
     return
@@ -1041,17 +1041,3 @@ class UI.ThreadContent
     resnum = parseInt($res.C("num")[0].textContent)
     app.WriteHistory.remove(@url, resnum)
     return
-
-  ###*
-  @method stringToDate
-  @param {String} string
-  @return {Date}
-  ###
-  stringToDate: (string) ->
-    date1 = string.match(/(\d+)\/(\d+)\/(\d+)\(.\)\s?(\d+):(\d+):(\d+)(?:\.(\d+))?.*/)
-    if date1.length >= 6
-      return new Date(date1[1], date1[2]-1, date1[3], date1[4], date1[5], date1[6])
-    else if date1.length >= 5
-      return new Date(date1[1], date1[2]-1, date1[3], date1[4], date1[5])
-    else
-      return null

@@ -22,7 +22,7 @@ namespace app {
       console[<string>level](...data);
     }
     else {
-      log("error", "app.log: 引数levelが不正な値です", arguments);
+      log("error", "app.log: 引数levelが不正な値です", level);
     }
   }
 

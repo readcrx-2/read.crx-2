@@ -39,19 +39,13 @@ class SettingIO
       if @importFile isnt ""
         @$status.setClass("loading")
         @$status.textContent = "更新中"
-        new Promise( (resolve, reject) =>
-          @importFunc(@importFile)
-          resolve()
-          return
-        ).then( =>
+        try
+          await @importFunc(@importFile)
           @$status.addClass("done")
           @$status.textContent = "インポート完了"
-          return
-        , ->
+        catch
           @$status.addClass("fail")
           @$status.textContent = "インポート失敗"
-          return
-        )
       else
         @$status.addClass("fail")
         @$status.textContent = "ファイルを選択してください"
@@ -290,21 +284,20 @@ app.boot("/view/config.html", ["cache", "bbsmenu"], (Cache, BBSMenu) ->
     name: "history"
     countFunc: ->
       return app.History.count()
-    importFunc: (inputObj) ->
+    importFunc: ({history, read_state: readState}) ->
       return Promise.all(
-        inputObj.history.map( (his) ->
-          return app.History.add(his.url, his.title, his.date)
-        ).concat(inputObj.read_state.map( (rs) ->
+        history.map( ({url, title, date}) ->
+          return app.History.add(url, title, date)
+        ).concat(readState.map( (rs) ->
           return app.ReadState.set(rs)
         ))
       )
     exportFunc: ->
-      return Promise.all([
-        app.ReadState.getAll(),
+      [readState, history] = await Promise.all([
+        app.ReadState.getAll()
         app.History.getAll()
-      ]).then( ([read_state_res, history_res]) ->
-        return {"read_state": read_state_res, "history": history_res}
-      )
+      ])
+      return {"read_state": readState, "history": history}
     clearFunc: ->
       return Promise.all([app.History.clear(), app.ReadState.clear()])
     clearRangeFunc: (day) ->
@@ -315,17 +308,15 @@ app.boot("/view/config.html", ["cache", "bbsmenu"], (Cache, BBSMenu) ->
     name: "writehistory"
     countFunc: ->
       return app.WriteHistory.count()
-    importFunc: (inputObj) ->
-      if inputObj.writehistory
-        return Promise.all(inputObj.writehistory.map( (whis) ->
+    importFunc: ({writehistory = null}) ->
+      if writehistory
+        return Promise.all(writehistory.map( (whis) ->
           return app.WriteHistory.add(whis.url, whis.res, whis.title, whis.name, whis.mail, whis.input_name, whis.input_mail, whis.message, whis.date)
         ))
       else
         return Promise.resolve()
     exportFunc: ->
-      return app.WriteHistory.getAll().then( (data) ->
-        return {"writehistory": data}
-      )
+      return {"writehistory": await app.WriteHistory.getAll()}
     clearFunc: ->
       return app.WriteHistory.clear()
     clearRangeFunc: (day) ->
@@ -380,8 +371,8 @@ app.boot("/view/config.html", ["cache", "bbsmenu"], (Cache, BBSMenu) ->
         $$.I("bookmark_source_name").textContent = folder.title
         return
       )
-    app.message.on("config_updated", (message) ->
-      updateName() if message.key is "bookmark_id"
+    app.message.on("config_updated", ({key}) ->
+      updateName() if key is "bookmark_id"
       return
     )
     return
@@ -438,9 +429,9 @@ app.boot("/view/config.html", ["cache", "bbsmenu"], (Cache, BBSMenu) ->
   if app.config.get("theme_id") is "none"
     $view.C("theme_none")[0].checked = true
 
-  app.message.on("config_updated", (message) ->
-    if message.key is "theme_id"
-      $view.C("theme_none")[0].checked = (message.val is "none")
+  app.message.on("config_updated", ({key, val}) ->
+    if key is "theme_id"
+      $view.C("theme_none")[0].checked = (val is "none")
     return
   )
 
@@ -500,8 +491,8 @@ app.boot("/view/config.html", ["cache", "bbsmenu"], (Cache, BBSMenu) ->
          #config_theme_idは「テーマなし」の場合があるので特例化
          else
            if value is "none"
-             $theme_none = $view.C("theme_none")[0]
-             $theme_none.click() unless $theme_none.checked
+             $themeNone = $view.C("theme_none")[0]
+             $themeNone.click() unless $themeNone.checked
            else
              $view.$("input[name=\"theme_id\"]").value = value
              $view.$("input[name=\"theme_id\"]").dispatchEvent(new Event("change"))

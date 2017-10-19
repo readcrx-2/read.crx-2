@@ -252,12 +252,12 @@ namespace app {
         video = true,
         oggIsAudio = false,
         oggIsVideo = true
-      }: {
-        audio?: boolean,
-        video?: boolean,
-        oggIsAudio?: boolean,
-        oggIsVideo?: boolean
-      } = {}
+      }: Partial<{
+        audio: boolean,
+        video: boolean,
+        oggIsAudio: boolean,
+        oggIsVideo: boolean
+      }> = {}
     ): string|null {
       if (audio && AUDIO_REG.test(filename)) {
         return "audio";

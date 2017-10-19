@@ -1,30 +1,37 @@
 namespace app.HTTP {
+  type headerList = {[index:string]: string;}
+
   export class Request {
     method: string;
     url: string;
     mimeType: string|null;
     timeout: number;
-    headers: {[index:string]: string;};
+    headers: headerList;
     preventCache: boolean;
     private xhr: XMLHttpRequest;
 
     constructor (
       method: string,
       url: string,
-      params: {
-        mimeType?: string;
-        headers?: {[index:string]: string;};
-        timeout?: number;
-        preventCache?: boolean;
-      } = {}
+      {
+        mimeType = null,
+        headers = {},
+        timeout = 30000,
+        preventCache = false
+      }: Partial<{
+        mimeType: string|null,
+        headers: headerList,
+        timeout: number,
+        preventCache: boolean
+      }> = {}
     ) {
       this.method = method;
       this.url = url;
 
-      this.mimeType = params.mimeType || null;
-      this.timeout = params.timeout || 30000;
-      this.headers = params.headers || {}
-      this.preventCache = params.preventCache || false;
+      this.mimeType = mimeType;
+      this.timeout = timeout;
+      this.headers = headers;
+      this.preventCache = preventCache;
     }
 
     send ():Promise<Response> {
@@ -91,7 +98,7 @@ namespace app.HTTP {
       this.xhr.abort();
     }
 
-    static parseHTTPHeader (str: string):{[index:string]: string;} {
+    static parseHTTPHeader (str: string):headerList {
       var reg, res, headers, last;
 
       reg = /^(?:([a-z\-]+):\s*|([ \t]+))(.+)\s*$/gim;
@@ -115,7 +122,7 @@ namespace app.HTTP {
   export class Response {
     constructor (
       public status:number,
-      public headers:{[index:string]:string;} = {},
+      public headers:headerList = {},
       public body:string,
       public responseURL: string
     ) {

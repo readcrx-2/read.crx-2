@@ -161,7 +161,7 @@ class app.WriteHistory
   @method getAll
   @return {Promise}
   ###
-  @getAll: () ->
+  @getAll: ->
     try
       db = await @_openDB()
       req = db

@@ -125,7 +125,7 @@ app.boot("/view/thread.html", ->
       return unless ex.mes? and not app.config.isOn("no_writehistory")
       postMes = ex.mes.replace(/\s/g, "")
       for t, i in thread.res by -1 when postMes is app.util.decodeCharReference(app.util.stripTags(t.message)).replace(/\s/g, "")
-        date = threadContent.stringToDate(t.other)
+        date = app.util.stringToDate(t.other)
         name = app.util.decodeCharReference(t.name)
         mail = app.util.decodeCharReference(t.mail)
         app.WriteHistory.add(viewUrl, i+1, document.title, name, mail, ex.name, ex.mail, ex.mes, date.valueOf()) if date?

@@ -89,7 +89,7 @@ class app.ReplaceStrTxt
         s = /(?:<(\w{2,3})>)?(.*)\t(.+)\t(name|mail|date|msg|all)(?:\t(?:<(\d)>)?(.+))?/.exec(r)
         if s?
           obj =
-            type: if s[1]? then s[1] else "ex"
+            type: s[1] ? "ex"
             place: s[4]
             before: s[2]
             after: s[3]

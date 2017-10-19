@@ -10,7 +10,7 @@ class ThreadSearch
       boardTitle = ""
     return {
       url
-      createdAt: new Date(key * 1000)
+      createdAt: app.util.stampToDate(key)
       title: app.util.decodeCharReference(subject)
       resCount: +resno
       boardUrl: "#{scheme}://#{server}/#{ita}/"

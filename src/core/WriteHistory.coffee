@@ -39,29 +39,16 @@ class app.WriteHistory
   @return {Promise}
   ###
   @add: ({url, res, title, name, mail, inputName = null, inputMail = null, message, date}) ->
-    if (
-      inputName? and not typeof inputName is "string"
-      inputMail? and not typeof inputMail is "string"
-    )
-      app.log("error", "WriteHistory.add: 不正な引数", inputName, inputMail)
-      throw new Error("書込履歴に追加しようとしたデータが不正です")
-
     if app.assertArg("WriteHistory.add", [
-      "string"
-      "number"
-      "string"
-      "string"
-      "string"
-      "string"
-      "number"
-    ], [
-      url
-      res
-      title
-      name
-      mail
-      message
-      date
+      [url, "string"]
+      [res, "number"]
+      [title, "string"]
+      [name, "string"]
+      [mail, "string"]
+      [inputName, "string", true]
+      [inputMail, "string", true]
+      [message, "string"]
+      [date, "number"]
     ])
       throw new Error("書込履歴に追加しようとしたデータが不正です")
 
@@ -94,7 +81,10 @@ class app.WriteHistory
   @return {Promise}
   ###
   @remove: (url, res) ->
-    if app.assertArg("WriteHistory.remove", ["string", "number"], arguments)
+    if app.assertArg("WriteHistory.remove", [
+      [url, "string"]
+      [res, "number"]
+    ])
       return Promise.reject()
 
     return @_openDB().then( (db) ->
@@ -127,7 +117,10 @@ class app.WriteHistory
   @return {Promise}
   ###
   @get: (offset = -1, limit = -1) ->
-    if app.assertArg("WriteHistory.get", ["number", "number"], [offset, limit])
+    if app.assertArg("WriteHistory.get", [
+      [offset, "number"],
+      [limit, "number"]
+    ])
       return Promise.reject()
 
     return @_openDB().then( (db) ->
@@ -167,7 +160,7 @@ class app.WriteHistory
   @return {Promise}
   ###
   @getByUrl: (url) ->
-    if app.assertArg("WriteHistory.getByUrl", ["string"], arguments)
+    if app.assertArg("WriteHistory.getByUrl", [[url, "string"]])
       throw new Error("書込履歴を取得しようとしたデータが不正です")
 
     try
@@ -223,7 +216,7 @@ class app.WriteHistory
   @return {Promise}
   ###
   @clear = (offset = -1) ->
-    if app.assertArg("WriteHistory.clear", ["number"], [offset])
+    if app.assertArg("WriteHistory.clear", [[offset, "number"]])
       return Promise.reject()
 
     return @_openDB().then( (db) ->
@@ -259,7 +252,7 @@ class app.WriteHistory
   @return {Promise}
   ###
   @clearRange = (day) ->
-    if app.assertArg("WriteHistory.clearRange", ["number"], arguments)
+    if app.assertArg("WriteHistory.clearRange", [[day, "number"]])
       return Promise.reject()
 
     return @_openDB().then( (db) ->

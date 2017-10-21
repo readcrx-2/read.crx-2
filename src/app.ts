@@ -55,16 +55,16 @@ namespace app {
     setTimeout(fn, 1000 * 5);
   }
 
-  export function assertArg (name:string, rule:string[], arg:any[]):boolean {
-    var key:number, val:any;
-
-    for ([key, val] of rule.entries()) {
-      if (typeof arg[key] !== val) {
-        log("error", `${name}: 不正な引数`, deepCopy(arg));
-        return true;
+  export function assertArg (name:string, rules:[any, string, boolean|undefined][]):boolean {
+    for (let [val, type, canbeNull] of rules) {
+      if (
+        !(canbeNull && val === null) &&
+        typeof val !== type
+      ) {
+        log("error", `${name}: 不正な引数(予期していた型: ${type}, 受け取った型: ${typeof val})`, deepCopy(val));
+        return true
       }
     }
-
     return false;
   }
 

@@ -26,17 +26,43 @@ class app.WriteHistory
 
   ###*
   @method add
-  @param {String} url
-  @param {Number} res
-  @param {String} title
-  @param {String} name
-  @param {String} mail
-  @param {String} message
-  @param {Number} date
+  @param {Object}
+    @param {String} [url]
+    @param {Number} [res]
+    @param {String} [title]
+    @param {String} [name]
+    @param {String} [mail]
+    @param {String} [inputName]
+    @param {String} [inputMail]
+    @param {String} [message]
+    @param {Number} [date]
   @return {Promise}
   ###
-  @add: (url, res, title, name, mail, input_name, input_mail, message, date) ->
-    if app.assertArg("WriteHistory.add", ["string", "number", "string", "string", "string", "string", "string", "string", "number"], arguments)
+  @add: ({url, res, title, name, mail, inputName = null, inputMail = null, message, date}) ->
+    if (
+      inputName? and not typeof inputName is "string"
+      inputMail? and not typeof inputMail is "string"
+    )
+      app.log("error", "WriteHistory.add: 不正な引数", inputName, inputMail)
+      throw new Error("書込履歴に追加しようとしたデータが不正です")
+
+    if app.assertArg("WriteHistory.add", [
+      "string"
+      "number"
+      "string"
+      "string"
+      "string"
+      "string"
+      "number"
+    ], [
+      url
+      res
+      title
+      name
+      mail
+      message
+      date
+    ])
       throw new Error("書込履歴に追加しようとしたデータが不正です")
 
     try
@@ -50,8 +76,8 @@ class app.WriteHistory
           title
           name
           mail
-          input_name
-          input_mail
+          input_name: inputName ? name
+          input_mail: inputMail ? mail
           message
           date
         })

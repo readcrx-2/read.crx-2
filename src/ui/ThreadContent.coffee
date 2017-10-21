@@ -1024,13 +1024,19 @@ class UI.ThreadContent
   @param {Element} $res
   ###
   addWriteHistory: ($res) ->
-    resnum = parseInt($res.C("num")[0].textContent)
     name = $res.C("name")[0].textContent
     mail = $res.C("mail")[0].textContent
-    message = $res.C("message")[0].textContent
-    date = app.util.stringToDate($res.C("other")[0].textContent)
+    date = app.util.stringToDate($res.C("other")[0].textContent).valueOf()
     if date?
-      app.WriteHistory.add(@url, resnum, document.title, name, mail, name, mail, message, date.valueOf())
+      app.WriteHistory.add({
+        url: @url
+        res: parseInt($res.C("num")[0].textContent)
+        title: document.title
+        name
+        mail
+        message: $res.C("message")[0].textContent
+        date
+      })
     return
 
   ###*

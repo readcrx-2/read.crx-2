@@ -311,7 +311,9 @@ app.boot("/view/config.html", ["cache", "bbsmenu"], (Cache, BBSMenu) ->
     importFunc: ({writehistory = null}) ->
       if writehistory
         return Promise.all(writehistory.map( (whis) ->
-          return app.WriteHistory.add(whis.url, whis.res, whis.title, whis.name, whis.mail, whis.input_name, whis.input_mail, whis.message, whis.date)
+          whis.inputName = whis.input_name
+          whis.inputMail = whis.input_mail
+          return app.WriteHistory.add(whis)
         ))
       else
         return Promise.resolve()

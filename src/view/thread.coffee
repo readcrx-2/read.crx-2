@@ -112,24 +112,34 @@ app.boot("/view/thread.html", ->
     app.defer( ->
       jumpResNum = +(ex.written_res_num ? ex.param_res_num ? -1)
       if (
-        $view.hasClass("loading") or
-        $view.C("button_reload")[0].hasClass("disabled")
+        !ex.force_update and
+        (
+          $view.hasClass("loading") or
+          $view.C("button_reload")[0].hasClass("disabled")
+        )
       )
         threadContent.select(jumpResNum, false, true, -60) if jumpResNum > 0
         return
 
-      app.viewThread._draw($view, { forceUpdate: ex.force_update, jumpResNum }).then( (thread) ->
-        return unless ex?.mes? and not app.config.isOn("no_writehistory")
-        postMes = ex.mes.replace(/\s/g, "")
-        for t, i in thread.res by -1 when postMes is app.util.decodeCharReference(app.util.stripTags(t.message)).replace(/\s/g, "")
-          date = threadContent.stringToDate(t.other)
-          name = app.util.decodeCharReference(t.name)
-          mail = app.util.decodeCharReference(t.mail)
-          app.WriteHistory.add(viewUrl, i+1, document.title, name, mail, ex.name, ex.mail, ex.mes, date.valueOf()) if date?
-          threadContent.addClassWithOrg($content.child()[i], "written")
-          break
-        return
-      )
+      thread = await app.viewThread._draw($view, { forceUpdate: ex.force_update, jumpResNum })
+      return unless ex.mes? and not app.config.isOn("no_writehistory")
+      postMes = ex.mes.replace(/\s/g, "")
+      for t, i in thread.res by -1 when postMes is app.util.decodeCharReference(app.util.stripTags(t.message)).replace(/\s/g, "")
+        if date?
+          app.WriteHistory.add({
+            url: viewUrl
+            res: i+1
+            title: document.title
+            name: app.util.decodeCharReference(t.name)
+            mail: app.util.decodeCharReference(t.mail)
+            inputName: ex.name
+            inputMail: ex.mail
+            message: ex.mes
+            date: app.util.stringToDate(t.other).valueOf()
+          })
+        threadContent.addClassWithOrg($content.child()[i], "written")
+        break
+      return
     )
     return
   )
@@ -208,10 +218,10 @@ app.boot("/view/thread.html", ->
       jumpResNum = +iframe.dataset.writtenResNum
       jumpResNum = +iframe.dataset.paramResNum if jumpResNum < 1
 
-    app.viewThread._draw($view, {jumpResNum}).catch( -> return).then( ->
-      app.History.add(viewUrl, document.title, openedAt) unless app.config.isOn("no_history")
-      return
-    )
+
+    try
+      await app.viewThread._draw($view, {jumpResNum})
+    app.History.add(viewUrl, document.title, openedAt) unless app.config.isOn("no_history")
     return
 
   #レスメニュー表示(ヘッダー上)

@@ -315,11 +315,13 @@ app.boot("/view/index.html", ["bbsmenu"], (BBSMenu) ->
   paramResNumFlag = app.config.isOn("enable_link_with_res_number")
   paramResNum = if paramResNumFlag then app.URL.getResNumber(query) else null
   # 後ほど実行するためにCallbacksに登録する
-  app.BBSMenu.boardTableCallbacks = new app.Callbacks({persistent: false})
-  app.BBSMenu.boardTableCallbacks.add( ->
+  if app.BBSMenu.serverInfoTriggered
     app.message.send("open", url: query, new_tab: true, param_res_num: paramResNum)
-    return
-  )
+  else
+    app.BBSMenu.target.on("serverinfo-created", ->
+      app.message.send("open", url: query, new_tab: true, param_res_num: paramResNum)
+      return
+    )
   return
 )
 
@@ -469,8 +471,6 @@ app.main = ->
   do ->
     document.title = (await app.manifest).name
     return
-
-  app.Ninja.enableAutoBackup()
 
   app.message.on("notify", ({message: text, html, background_color = "#777"}) ->
     $div = $__("div")

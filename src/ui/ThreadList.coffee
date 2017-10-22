@@ -18,8 +18,6 @@ window.UI ?= {}
   @param {Element} [option.searchbox]
 ###
 class UI.ThreadList
-  "use Strict"
-
   constructor: (@table, option) ->
     ###*
     @property _flg
@@ -277,7 +275,7 @@ class UI.ThreadList
                 when e.target.hasClass("del_bookmark")
                   app.bookmark.remove(threadURL)
                 when e.target.hasClass("del_history")
-                  app.History.remove(threadURL, ThreadList._stringToDate(date))
+                  app.History.remove(threadURL, app.util.stringToDate(date))
                   $tr.remove()
                 when e.target.hasClass("del_writehistory")
                   app.WriteHistory.remove(threadURL, threadWrittenRes)
@@ -331,17 +329,6 @@ class UI.ThreadList
         "/" + fn(date.getDate()) +
         " " + fn(date.getHours()) +
         ":" + fn(date.getMinutes())
-
-  ###*
-  @method _stringToDate
-  @static
-  @private
-  @param {String}
-  @return {Date}
-  ###
-  @_stringToDate: (date) ->
-    date_ = /(\d{4})\/(\d\d)\/(\d\d) (\d\d):(\d\d)/.exec(date)
-    return new Date(date_[1], date_[2]-1, date_[3], date_[4], date_[5]).valueOf()
 
   ###*
   @method addItem

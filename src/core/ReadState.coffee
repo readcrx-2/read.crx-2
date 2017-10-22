@@ -38,14 +38,21 @@ class app.ReadState
     }
 
   @set: (readState) ->
-    if not readState? or
-        typeof readState isnt "object" or
-        typeof readState.url isnt "string" or
-        not Number.isFinite(readState.last) or
-        not Number.isFinite(readState.read) or
-        not Number.isFinite(readState.received) or
-        not (Number.isFinite(readState.offset) or readState.offset is null)
+    if (
+      not readState? or
+      typeof readState isnt "object"
+    )
       app.log("error", "app.ReadState.set: 引数が不正です", arguments)
+      throw new Error("既読情報に登録しようとしたデータが不正です")
+    if (
+      app.assertArg("app.ReadState.set", [
+        [readState.url, "string"]
+        [readState.last, "number"]
+        [readState.read, "number"]
+        [readState.received, "number"]
+        [readState.offset, "number", true]
+      ])
+    )
       throw new Error("既読情報に登録しようとしたデータが不正です")
 
     readState = app.deepCopy(readState)
@@ -71,7 +78,7 @@ class app.ReadState
     return
 
   @get: (url) ->
-    if app.assertArg("app.read_state.get", ["string"], arguments)
+    if app.assertArg("app.read_state.get", [[url, "string"]])
       throw new Error("既読情報を取得しようとしたデータが不正です")
 
     url = @_urlFilter(url)
@@ -105,7 +112,7 @@ class app.ReadState
     return res.target.result
 
   @getByBoard: (url) ->
-    if app.assertArg("app.ReadState.getByBoard", ["string"], arguments)
+    if app.assertArg("app.ReadState.getByBoard", [[url, "string"]])
       throw new Error("既読情報を取得しようとしたデータが不正です")
 
     url = @_urlFilter(url)
@@ -126,7 +133,7 @@ class app.ReadState
     return data
 
   @remove: (url) ->
-    if app.assertArg("app.ReadState.remove", ["string"], arguments)
+    if app.assertArg("app.ReadState.remove", [[url, "string"]])
       throw new Error("既読情報を削除しようとしたデータが不正です")
 
     url = @_urlFilter(url)

@@ -1,8 +1,6 @@
 ///<reference path="global.d.ts" />
 
 namespace app {
-  "use strict";
-
   type logLevel = "log" | "debug" | "info" | "warn" | "error";
   var logLevels: logLevel[] = ["log", "debug", "info", "warn", "error"];
 
@@ -24,7 +22,7 @@ namespace app {
       console[<string>level](...data);
     }
     else {
-      log("error", "app.log: 引数levelが不正な値です", arguments);
+      log("error", "app.log: 引数levelが不正な値です", level);
     }
   }
 
@@ -57,16 +55,16 @@ namespace app {
     setTimeout(fn, 1000 * 5);
   }
 
-  export function assertArg (name:string, rule:string[], arg:any[]):boolean {
-    var key:number, val:any;
-
-    for ([key, val] of rule.entries()) {
-      if (typeof arg[key] !== val) {
-        log("error", `${name}: 不正な引数`, deepCopy(arg));
-        return true;
+  export function assertArg (name:string, rules:[any, string, boolean|undefined][]):boolean {
+    for (let [val, type, canbeNull] of rules) {
+      if (
+        !(canbeNull && val === null) &&
+        typeof val !== type
+      ) {
+        log("error", `${name}: 不正な引数(予期していた型: ${type}, 受け取った型: ${typeof val})`, deepCopy(val));
+        return true
       }
     }
-
     return false;
   }
 
@@ -252,25 +250,6 @@ namespace app {
     constructor () {
       var ready = new Callbacks();
       this.ready = ready.add.bind(ready);
-
-      // localStorageからの移行処理
-      {
-        let found:{[index:string]:string;} = {}, key:string, val:string;
-
-        for (key in localStorage) {
-          if (key.startsWith("config_")) {
-            val = localStorage.getItem(key)!;
-            this._cache.set(key, val);
-            found[key] = val;
-          }
-        }
-
-        chrome.storage.local.set(found);
-
-        for (key in found) {
-          localStorage.removeItem(key);
-        }
-      }
 
       chrome.storage.local.get(null, (res) => {
         var key:string, val:string;

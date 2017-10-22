@@ -132,12 +132,28 @@ app.boot("/view/board.html", ["board"], (Board) ->
         writeFlag = (not app.config.isOn("no_writehistory"))
         if ex.kind is "own"
           if writeFlag
-            app.WriteHistory.add(ex.thread_url, 1, ex.title, ex.name, ex.mail, ex.name, ex.mail, ex.mes, Date.now().valueOf())
+            app.WriteHistory.add(
+              url: ex.thread_url
+              res: 1
+              title: ex.title
+              name: ex.name
+              mail: ex.mail
+              message: ex.mes
+              date: Date.now().valueOf()
+            )
           app.message.send("open", url: ex.thread_url, new_tab: true)
         else
           for thread in board when thread.title.includes(ex.title)
             if writeFlag
-              app.WriteHistory.add(thread.url, 1, ex.title, ex.name, ex.mail, ex.name, ex.mail, ex.mes, thread.created_at)
+              app.WriteHistory.add(
+                url: thread.url
+                res: 1
+                title: ex.title
+                name: ex.name
+                mail: ex.mail
+                message: ex.mes
+                date: thread.createdAt
+              )
             app.message.send("open", url: thread.url, new_tab: true)
             break
 

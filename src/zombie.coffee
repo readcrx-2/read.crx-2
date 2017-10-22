@@ -6,14 +6,14 @@ app.boot("/zombie.html", ->
       new app.Bookmark.ChromeBookmarkEntryList(app.config.get("bookmark_id"))
     )
 
-    app.bookmark.promiseFirstScan.then( ->
+    try
+      await app.bookmark.promiseFirstScan
+
       rsarray = (app.ReadState.set(rs).catch(->return) for rs in arrayOfReadState)
       bkarray = (app.bookmark.updateReadState(rs).catch(->return) for rs in arrayOfReadState)
-      return Promise.all(rsarray.concat(bkarray))
-    ).then( ->
-      close()
-      return
-    )
+      await Promise.all(rsarray.concat(bkarray))
+
+    close()
 
     delete localStorage.zombie_read_state
     return

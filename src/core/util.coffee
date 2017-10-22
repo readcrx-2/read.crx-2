@@ -72,30 +72,23 @@ do ->
 
     #bbsmenuから検索
     unless newBoardUrl?
-      try
-        newBoardUrl = await new Promise( (resolve, reject) ->
-          app.BBSMenu.get( ({data}) ->
-            unless data?
-              reject()
-              return
-            match = oldBoardUrl.match(boardUrlReg)
-            unless match.length > 0
-              reject()
-              return
-            for category in data
-              for board in category.board
-                m = board.url.match(boardUrlReg)
-                if m?
-                  oldUrl = app.URL.setScheme(match[0], "http")
-                  newUrl = app.URL.setScheme(m[0], "http")
-                  if match[1] is m[1] and oldUrl isnt newUrl
-                    resolve(oldUrl)
-                    return
-            reject()
-            return
-          )
-          return
-        )
+      newBoardUrl = do ->
+        {data} = await app.BBSMenu.get
+        unless data?
+          throw new Error("BBSMenuの取得に失敗しました")
+        match = oldBoardUrl.match(boardUrlReg)
+        unless match.length > 0
+          throw new Error("板のURL形式が不明です")
+        for category in data
+          for board in category.board
+            m = board.url.match(boardUrlReg)
+            if m?
+              oldUrl = app.URL.setScheme(match[0], "http")
+              newUrl = app.URL.setScheme(m[0], "http")
+              if match[1] is m[1] and oldUrl isnt newUrl
+                return oldUrl
+        throw new Error("BBSMenuにその板のサーバー情報が存在しません")
+        return
 
     #移転を検出した場合は移転検出メッセージを送出
     app.message.send("detected_ch_server_move",
@@ -298,3 +291,12 @@ do ->
         return
       return
     )
+
+  app.util.stampToDate = (stamp) ->
+    return new Date(stamp * 1000)
+
+  app.util.stringToDate = (string) ->
+    date = string.match(/(\d{4})\/(\d{1,2})\/(\d{1,2})(?:\(.\))?\s?(\d{1,2}):(\d\d)(?::(\d\d)(?:\.\d+)?)?/)
+    if date.length >= 5
+      return new Date(date[1], date[2], date[3], date[4], date[5], date[6] ? 0)
+    return null

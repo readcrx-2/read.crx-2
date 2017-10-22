@@ -39,19 +39,13 @@ class SettingIO
       if @importFile isnt ""
         @$status.setClass("loading")
         @$status.textContent = "更新中"
-        new Promise( (resolve, reject) =>
-          @importFunc(@importFile)
-          resolve()
-          return
-        ).then( =>
+        try
+          await @importFunc(@importFile)
           @$status.addClass("done")
           @$status.textContent = "インポート完了"
-          return
-        , ->
+        catch
           @$status.addClass("fail")
           @$status.textContent = "インポート失敗"
-          return
-        )
       else
         @$status.addClass("fail")
         @$status.textContent = "ファイルを選択してください"
@@ -266,84 +260,6 @@ app.boot("/view/config.html", ["cache", "bbsmenu"], (Cache, BBSMenu) ->
     return
   )
 
-  #忍法帖関連機能
-  do ->
-    $ninjaInfo = $view.C("ninja_info")[0]
-
-    updateNinjaInfo = ->
-      app.Ninja.getCookie( (cookies) ->
-        $ninjaInfo.removeChildren()
-
-        backup = app.Ninja.getBackup()
-
-        data = {}
-
-        for item in cookies
-          data[item.site.siteId] =
-            site: item.site
-            hasCookie: true
-            hasBackup: false
-
-        for item in backup
-          if data[item.site.siteId]?
-            data[item.site.siteId].hasBackup = true
-          else
-            data[item.site.siteId] =
-              site: item.site
-              hasCookie: false
-              hasBackup: true
-
-        for siteId, item of data
-          $div = $$.I("template_ninja_item").content.$(".ninja_item").cloneNode(true)
-
-          $div.dataset.siteid = item.site.siteId
-          $div.C("site_name")[0].textContent = item.site.siteName
-
-          if item.hasCookie
-            $div.addClass("ninja_item_cookie_found")
-
-          if item.hasBackup
-            $div.addClass("ninja_item_backup_available")
-
-          $ninjaInfo.addLast($div)
-        return
-      )
-      return
-
-    updateNinjaInfo()
-
-    # 「Cookieを削除」ボタン
-    $ninjaInfo.on("click", ({target}) ->
-      return unless target.matches(".ninja_item_cookie_found > button")
-      siteId = target.closest(".ninja_item").dataset.siteid
-      app.Ninja.deleteCookie(siteId, updateNinjaInfo)
-      return
-    )
-
-    # 「バックアップから復元」ボタン
-    $ninjaInfo.on("click", ({target}) ->
-      return unless target.matches(".ninja_item_cookie_notfound > button")
-      siteId = target.closest(".ninja_item").dataset.siteid
-      app.Ninja.restore(siteId, updateNinjaInfo)
-      return
-    )
-
-    # 「バックアップを削除」ボタン
-    $ninjaInfo.on("click", ({target}) ->
-      return unless target.matches(".ninja_item_backup_available > button")
-      siteId = target.closest(".ninja_item").dataset.siteid
-      UI.Dialog("confirm",
-        message: "本当に削除しますか？"
-      ).then( (result) ->
-        return unless result
-        app.Ninja.deleteBackup(siteId)
-        updateNinjaInfo()
-        return
-      )
-      return
-    )
-    return
-
   #板覧更新ボタン
   $view.C("bbsmenu_reload")[0].on("click", ({currentTarget: $button}) ->
     $status = $$.I("bbsmenu_reload_status")
@@ -352,18 +268,14 @@ app.boot("/view/config.html", ["cache", "bbsmenu"], (Cache, BBSMenu) ->
     $status.setClass("loading")
     $status.textContent = "更新中"
 
-    BBSMenu.get( (res) ->
-      $button.disabled = false
-      if res.status is "success"
-        $status.setClass("done")
-        $status.textContent = "更新完了"
-
-        # sidemenuの表示時に設定されたコールバックが実行されるので、特別なことはしない
-      else
-        $status.setClass("fail")
-        $status.textContent = "更新失敗"
-      return
-    , true)
+    try
+      await BBSMenu.get(true)
+      $status.setClass("done")
+      $status.textContent = "更新完了"
+    catch
+      $status.setClass("fail")
+      $status.textContent = "更新失敗"
+    $button.disabled = false
     return
   )
 
@@ -372,21 +284,20 @@ app.boot("/view/config.html", ["cache", "bbsmenu"], (Cache, BBSMenu) ->
     name: "history"
     countFunc: ->
       return app.History.count()
-    importFunc: (inputObj) ->
+    importFunc: ({history, read_state: readState}) ->
       return Promise.all(
-        inputObj.history.map( (his) ->
-          return app.History.add(his.url, his.title, his.date)
-        ).concat(inputObj.read_state.map( (rs) ->
+        history.map( ({url, title, date}) ->
+          return app.History.add(url, title, date)
+        ).concat(readState.map( (rs) ->
           return app.ReadState.set(rs)
         ))
       )
     exportFunc: ->
-      return Promise.all([
-        app.ReadState.getAll(),
+      [readState, history] = await Promise.all([
+        app.ReadState.getAll()
         app.History.getAll()
-      ]).then( ([read_state_res, history_res]) ->
-        return {"read_state": read_state_res, "history": history_res}
-      )
+      ])
+      return {"read_state": readState, "history": history}
     clearFunc: ->
       return Promise.all([app.History.clear(), app.ReadState.clear()])
     clearRangeFunc: (day) ->
@@ -397,17 +308,17 @@ app.boot("/view/config.html", ["cache", "bbsmenu"], (Cache, BBSMenu) ->
     name: "writehistory"
     countFunc: ->
       return app.WriteHistory.count()
-    importFunc: (inputObj) ->
-      if inputObj.writehistory
-        return Promise.all(inputObj.writehistory.map( (whis) ->
-          return app.WriteHistory.add(whis.url, whis.res, whis.title, whis.name, whis.mail, whis.input_name, whis.input_mail, whis.message, whis.date)
+    importFunc: ({writehistory = null}) ->
+      if writehistory
+        return Promise.all(writehistory.map( (whis) ->
+          whis.inputName = whis.input_name
+          whis.inputMail = whis.input_mail
+          return app.WriteHistory.add(whis)
         ))
       else
         return Promise.resolve()
     exportFunc: ->
-      return app.WriteHistory.getAll().then( (data) ->
-        return {"writehistory": data}
-      )
+      return {"writehistory": await app.WriteHistory.getAll()}
     clearFunc: ->
       return app.WriteHistory.clear()
     clearRangeFunc: (day) ->
@@ -462,67 +373,19 @@ app.boot("/view/config.html", ["cache", "bbsmenu"], (Cache, BBSMenu) ->
         $$.I("bookmark_source_name").textContent = folder.title
         return
       )
-    app.message.on("config_updated", (message) ->
-      updateName() if message.key is "bookmark_id"
+    app.message.on("config_updated", ({key}) ->
+      updateName() if key is "bookmark_id"
       return
     )
     return
-
-  #ブックマークインポートボタン
-  $view.C("import_bookmark")[0].on("click", ({currentTarget: $button}) ->
-    rcrx_webstore = "hhjpdicibjffnpggdiecaimdgdghainl"
-    rcrx_debug = "bhffdiookpgmjkaeiagoecflopbnphhi"
-    req = "export_bookmark"
-
-    $status = $$.I("import_bookmark_status")
-
-    $button.disabled = true
-    $status.textContent = "インポート中"
-
-    new Promise( (resolve, reject) ->
-      parent.chrome.runtime.sendMessage(rcrx_webstore, req, (res) ->
-        if res
-          resolve(res)
-        else
-          reject()
-        return
-      )
-      return
-    ).catch( ->
-      return new Promise( (resolve, reject) ->
-        parent.chrome.runtime.sendMessage(rcrx_debug, req, (res) ->
-          if res
-            resolve(res)
-          else
-            reject()
-          return
-        )
-        return
-      )
-    ).then( (res) ->
-      for url, bookmark of res.bookmark when typeof(url) is typeof(bookmark.title) is "string"
-        app.bookmark.add(url, bookmark.title)
-      for url, bookmark of res.bookmark_board when typeof(url) is typeof(bookmark.title) is "string"
-        app.bookmark.add(url, bookmark.title)
-      $status.textContent = "インポート完了"
-      return
-    , ->
-      $status.textContent = "インポートに失敗しました。read.crx v0.73以降がインストールされている事を確認して下さい。"
-      return
-    ).then( ->
-      $button.disabled = false
-      return
-    )
-    return
-  )
 
   #「テーマなし」設定
   if app.config.get("theme_id") is "none"
     $view.C("theme_none")[0].checked = true
 
-  app.message.on("config_updated", (message) ->
-    if message.key is "theme_id"
-      $view.C("theme_none")[0].checked = (message.val is "none")
+  app.message.on("config_updated", ({key, val}) ->
+    if key is "theme_id"
+      $view.C("theme_none")[0].checked = (val is "none")
     return
   )
 
@@ -582,8 +445,8 @@ app.boot("/view/config.html", ["cache", "bbsmenu"], (Cache, BBSMenu) ->
          #config_theme_idは「テーマなし」の場合があるので特例化
          else
            if value is "none"
-             $theme_none = $view.C("theme_none")[0]
-             $theme_none.click() unless $theme_none.checked
+             $themeNone = $view.C("theme_none")[0]
+             $themeNone.click() unless $themeNone.checked
            else
              $view.$("input[name=\"theme_id\"]").value = value
              $view.$("input[name=\"theme_id\"]").dispatchEvent(new Event("change"))
@@ -614,89 +477,4 @@ app.boot("/view/config.html", ["cache", "bbsmenu"], (Cache, BBSMenu) ->
       replacestrDom.dispatchEvent(new Event("input"))
       return
   )
-
-  #過去の履歴をインポート
-  $replacestrStatus = $$.I("history_from_1151_status")
-  $view.C("history_from_1151")[0].on( "click", ->
-    $replacestrStatus.setClass("loading")
-    $replacestrStatus.textContent = "インポート中"
-    hisPro = new Promise( (resolve, reject) ->
-      openDatabase("History", "", "History", 0).transaction( (tx) ->
-        tx.executeSql("SELECT * FROM History", [], (t, his) ->
-          h = Array.from(his.rows)
-          h.map( ({url, title, date}) ->
-            return app.History.add(url, title, date)
-          )
-          try
-            await Promise.all(h)
-            t.executeSql("drop table History", [])
-            resolve()
-          catch e
-            reject(e)
-          return
-        , (e) ->
-          if e.code?
-            reject(e)
-          else
-            resolve()
-          return
-        )
-      )
-    )
-    whisPro = new Promise( (resolve, reject) ->
-      openDatabase("WriteHistory", "", "WriteHistory", 0).transaction( (tx) ->
-        tx.executeSql("SELECT * FROM WriteHistory", [], (t, whis) ->
-          w = Array.from(whis.rows)
-          w.map( ({url, res, title, name, mail, input_name, message, date}) ->
-            return app.WriteHistory.add(url, res, title, name, mail, input_name, mail, message, date)
-          )
-          try
-            await Promise.all(w)
-            t.executeSql("drop table WriteHistory", [])
-            resolve()
-          catch e
-            reject(e)
-          return
-        , (e) ->
-          if e.code?
-            reject(e)
-          else
-            resolve()
-          return
-        )
-      )
-    )
-    rsPro = new Promise( (resolve, reject) ->
-      openDatabase("ReadState", "", "Read State", 0).transaction( (tx) ->
-        tx.executeSql("SELECT * FROM ReadState", [], (t, rs) ->
-          r = Array.from(rs.rows)
-          r.map( (a) ->
-            return app.ReadState.set(a)
-          )
-          try
-            await Promise.all(r)
-            t.executeSql("drop table ReadState", [])
-            resolve()
-          catch e
-            reject(e)
-          return
-        , (e) ->
-          if e.code?
-            reject(e)
-          else
-            resolve()
-          return
-        )
-      )
-    )
-    try
-      await Promise.all([hisPro, whisPro, rsPro])
-      $replacestrStatus.addClass("done")
-      $replacestrStatus.textContent = "インポート完了"
-    catch e
-      $replacestrStatus.addClass("fail")
-      $replacestrStatus.textContent = "インポート失敗 - #{e}"
-    return
-  )
-  return
 )

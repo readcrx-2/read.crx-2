@@ -2,8 +2,6 @@
 ///<reference path="URL.ts" />
 
 namespace app {
-  "use strict";
-
   export namespace Bookmark {
     export interface ReadState {
       url: string;

@@ -7,8 +7,6 @@ window.UI ?= {}
 @param {Element} table
 ###
 class UI.TableSorter
-  "use strict"
-
   constructor: (@table) ->
     @table.addClass("table_sort")
     @table.on("click", ({target}) =>

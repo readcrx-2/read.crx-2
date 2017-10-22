@@ -52,7 +52,6 @@ args =
     write:
       ts: "./src/core/URL.ts"
       coffee: [
-        "./src/core/Ninja.coffee"
         "./src/core/util.coffee"
         "./src/core/WriteHistory.coffee"
         "./src/ui/Animate.coffee"
@@ -61,7 +60,6 @@ args =
     submit_thread:
       ts: "./src/core/URL.ts"
       coffee:[
-        "./src/core/Ninja.coffee"
         "./src/ui/Animate.coffee"
         "./src/write/submit_thread.coffee"
       ]
@@ -81,11 +79,12 @@ args =
     bare: true
   tsOptions:
     typescript: tsCompiler
-    target: "es2015"
+    target: "es2017"
     lib: [
       "dom"
       "es2015"
       "es2016"
+      "es2017"
     ]
     skipLibCheck: true
     noUnusedLocals: true
@@ -206,24 +205,21 @@ gulp.task "scan", ->
     return exec("clamscan -ir debug")
   )
 
-gulp.task "crx", (cb) ->
+gulp.task "crx", ->
   tmpDir = path.join(os.tmpdir(), "debug")
-  return fs.copy(args.outputPath, tmpDir).then( ->
+  try
+    await fs.copy(args.outputPath, tmpDir)
     if process.env["read.crx-2-pem-path"]?
-      return Promise.resolve(process.env["read.crx-2-pem-path"])
-    return putsPromise("秘密鍵のパスを入力して下さい: ")
-  ).then( (pemPath) ->
-    return fs.readFile(pemPath)
-  ).then( (pem) ->
+      pemPath = Promise.resolve(process.env["read.crx-2-pem-path"])
+    else
+      pemPath = await putsPromise("秘密鍵のパスを入力して下さい: ")
+    pem = await fs.readFile(pemPath)
     rcrx = new crx(privateKey: pem)
-    return rcrx.load(tmpDir)
-  ).then( (rcrx) ->
-    return rcrx.pack()
-  ).then( (rcrxBuffer) ->
-    return fs.writeFile("./read.crx_2.#{manifest.version}.crx", rcrxBuffer)
-  ).then( ->
-    return fs.remove(tmpDir)
-  )
+    loadedCrx = await rcrx.load(tmpDir)
+    rcrxBuffer = await loadedCrx.pack()
+    await fs.writeFile("./read.crx_2.#{manifest.version}.crx", rcrxBuffer)
+    await fs.remove(tmpDir)
+  return
 
 #compile
 ##js
@@ -369,57 +365,57 @@ gulp.task "writehtml", ->
 gulp.task "img", ["webp&png", "ico", "logo128", "loading.webp"]
 
 gulp.task "webp&png", ->
-  return fs.mkdirp(args.webpBinPath).then( ->
+  try
+    await fs.mkdirp(args.webpBinPath)
     promiseArray = []
     for img in imgs
-      do ->
+      promise = do ->
         m = img.match(/^(.+)_(\d+)x(\d+)(?:_([a-fA-F0-9]*))?(?:_r(\-?\d+))?\.(webp|png)$/)
         src = "#{args.webpSrcPath}/#{m[1]}.svg"
         bin = "#{args.webpBinPath}/#{img}"
 
-        promise = fs.readFile(src).then( (data) ->
-          buf = new Buffer(data)
-          # 塗りつぶし
-          if m[4]?
-            str = buf.toString("utf8").replace(/#333/g, "##{m[4]}")
-            buf = Buffer.from(str, "utf8")
-          sh = sharp(buf)
-          # 回転
-          if m[5]?
-            degrees = parseInt(m[5])
-            degrees = 270 if degrees is -90
-            sh.rotate(degrees)
-          sh.resize(parseInt(m[2]), parseInt(m[3]))
-          sh[m[6]]()
-          sh.toBuffer()
-          return sh.toFile(bin)
-        )
-        promiseArray.push(promise)
+        data = await fs.readFile(src)
+        buf = new Buffer(data)
+        # 塗りつぶし
+        if m[4]?
+          str = buf.toString("utf8").replace(/#333/g, "##{m[4]}")
+          buf = Buffer.from(str, "utf8")
+        sh = sharp(buf)
+        # 回転
+        if m[5]?
+          degrees = parseInt(m[5])
+          degrees = 270 if degrees is -90
+          sh.rotate(degrees)
+        sh.resize(parseInt(m[2]), parseInt(m[3]))
+        sh[m[6]]()
+        sh.toBuffer()
+        await sh.toFile(bin)
         return
-    return Promise.all(promiseArray)
-  )
+      promiseArray.push(promise)
+    await Promise.all(promiseArray)
+  return
 
 gulp.task "ico", ->
-  return fs.mkdirp(args.webpBinPath).then( ->
-    return Promise.all([
+  try
+    await fs.mkdirp(args.webpBinPath)
+    filebuf = await Promise.all([
       sharp(args.icoSrcPath)
         .resize(16, 16)
         .png()
-        .toBuffer(),
+        .toBuffer()
       sharp(args.icoSrcPath)
         .resize(32, 32)
         .png()
         .toBuffer()
-    ]).then( (filebuf) ->
-      return toIco(filebuf)
-    ).then( (buf) ->
-      return fs.writeFile(args.icoBinPath, buf)
-    )
-  )
+    ])
+    buf = await toIco(filebuf)
+    await fs.writeFile(args.icoBinPath, buf)
+  return
 
 gulp.task "logo128", ->
-  return fs.mkdirp(args.webpBinPath).then( ->
-    return sharp(null,
+  try
+    await fs.mkdirp(args.webpBinPath)
+    await sharp(null,
       create:
         width: 128
         height: 128
@@ -429,14 +425,14 @@ gulp.task "logo128", ->
       top: 16
       left: 16
     ).toFile(args.logo128BinPath)
-  )
+  return
 
 gulp.task "loading.webp", ->
-  return fs.mkdirp(args.webpBinPath).then( ->
-    return sharp(args.loadingSrcPath)
-      .resize(100, 100)
-      .toFile(args.loadingBinPath)
-  )
+  await fs.mkdirp(args.webpBinPath)
+  await sharp(args.loadingSrcPath)
+    .resize(100, 100)
+    .toFile(args.loadingBinPath)
+  return
 
 ##manifest
 gulp.task "manifest", ->

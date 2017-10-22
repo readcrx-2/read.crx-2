@@ -31,7 +31,11 @@ class app.History
   @return {Promise}
   ###
   @add: (url, title, date) ->
-    if app.assertArg("History.add", ["string", "string", "number"], arguments)
+    if app.assertArg("History.add", [
+      [url, "string"]
+      [title, "string"]
+      [date, "number"]
+    ])
       throw new Error("履歴に追加しようとしたデータが不正です")
 
     try
@@ -39,7 +43,7 @@ class app.History
       req = db
         .transaction("History", "readwrite")
         .objectStore("History")
-        .put(url: url, title: title, date: date)
+        .put({url, title, date})
       await app.util.indexedDBRequestToPromise(req)
     catch e
       app.log("error", "History.add: データの格納に失敗しました")
@@ -52,11 +56,11 @@ class app.History
   @param {Number} date
   @return {Promise}
   ###
-  @remove: (url, date) ->
-    if (
-      (date? and app.assertArg("History.remove", ["string", "number"], arguments)) or
-      app.assertArg("History.remove", ["string"], arguments)
-    )
+  @remove: (url, date = null) ->
+    if app.assertArg("History.remove", [
+      [url, "string"]
+      [date, "number", true]
+    ])
       return Promise.reject()
 
     return @_openDB().then( (db) ->
@@ -93,7 +97,10 @@ class app.History
   @return {Promise}
   ###
   @get: (offset = -1, limit = -1) ->
-    if app.assertArg("History.get", ["number", "number"], [offset, limit])
+    if app.assertArg("History.get", [
+      [offset, "number"]
+      [limit, "number"]
+    ])
       return Promise.reject()
 
     return @_openDB().then( (db) ->
@@ -113,7 +120,7 @@ class app.History
                 cursor.advance(offset)
                 return
             {value} = cursor
-            value.is_https = (app.URL.getScheme(value.url) is "https")
+            value.isHttps = (app.URL.getScheme(value.url) is "https")
             histories.push(value)
             cursor.continue()
           else
@@ -134,7 +141,10 @@ class app.History
   @return {Promise}
   ###
   @getUnique: (offset = -1, limit = -1) ->
-    if app.assertArg("History.getUnique", ["number", "number"], [offset, limit])
+    if app.assertArg("History.getUnique", [
+      [offset, "number"]
+      [limit, "number"]
+    ])
       return Promise.reject()
 
     return @_openDB().then( (db) ->
@@ -156,7 +166,7 @@ class app.History
                 return
             {value} = cursor
             unless inserted.has(value.url)
-              value.is_https = (app.URL.getScheme(value.url) is "https")
+              value.isHttps = (app.URL.getScheme(value.url) is "https")
               histories.push(value)
               inserted.add(value.url)
             cursor.continue()
@@ -211,7 +221,7 @@ class app.History
   @return {Promise}
   ###
   @clear = (offset = -1) ->
-    if app.assertArg("History.clear", ["number"], [offset])
+    if app.assertArg("History.clear", [[offset, "number"]])
       return Promise.reject()
 
     return @_openDB().then( (db) ->
@@ -247,7 +257,7 @@ class app.History
   @return {Promise}
   ###
   @clearRange = (day) ->
-    if app.assertArg("History.clearRange", ["number"], arguments)
+    if app.assertArg("History.clearRange", [[day, "number"]])
       return Promise.reject()
 
     return @_openDB().then( (db) ->

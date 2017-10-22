@@ -26,17 +26,30 @@ class app.WriteHistory
 
   ###*
   @method add
-  @param {String} url
-  @param {Number} res
-  @param {String} title
-  @param {String} name
-  @param {String} mail
-  @param {String} message
-  @param {Number} date
+  @param {Object}
+    @param {String} [url]
+    @param {Number} [res]
+    @param {String} [title]
+    @param {String} [name]
+    @param {String} [mail]
+    @param {String} [inputName]
+    @param {String} [inputMail]
+    @param {String} [message]
+    @param {Number} [date]
   @return {Promise}
   ###
-  @add: (url, res, title, name, mail, input_name, input_mail, message, date) ->
-    if app.assertArg("WriteHistory.add", ["string", "number", "string", "string", "string", "string", "string", "string", "number"], arguments)
+  @add: ({url, res, title, name, mail, inputName = null, inputMail = null, message, date}) ->
+    if app.assertArg("WriteHistory.add", [
+      [url, "string"]
+      [res, "number"]
+      [title, "string"]
+      [name, "string"]
+      [mail, "string"]
+      [inputName, "string", true]
+      [inputMail, "string", true]
+      [message, "string"]
+      [date, "number"]
+    ])
       throw new Error("書込履歴に追加しようとしたデータが不正です")
 
     try
@@ -50,8 +63,8 @@ class app.WriteHistory
           title
           name
           mail
-          input_name
-          input_mail
+          input_name: inputName ? name
+          input_mail: inputMail ? mail
           message
           date
         })
@@ -68,7 +81,10 @@ class app.WriteHistory
   @return {Promise}
   ###
   @remove: (url, res) ->
-    if app.assertArg("WriteHistory.remove", ["string", "number"], arguments)
+    if app.assertArg("WriteHistory.remove", [
+      [url, "string"]
+      [res, "number"]
+    ])
       return Promise.reject()
 
     return @_openDB().then( (db) ->
@@ -101,7 +117,10 @@ class app.WriteHistory
   @return {Promise}
   ###
   @get: (offset = -1, limit = -1) ->
-    if app.assertArg("WriteHistory.get", ["number", "number"], [offset, limit])
+    if app.assertArg("WriteHistory.get", [
+      [offset, "number"],
+      [limit, "number"]
+    ])
       return Promise.reject()
 
     return @_openDB().then( (db) ->
@@ -121,7 +140,7 @@ class app.WriteHistory
                 cursor.advance(offset)
                 return
             value = cursor.value
-            value.is_https = (app.URL.getScheme(value.url) is "https")
+            value.isHttps = (app.URL.getScheme(value.url) is "https")
             histories.push(value)
             cursor.continue()
           else
@@ -141,7 +160,7 @@ class app.WriteHistory
   @return {Promise}
   ###
   @getByUrl: (url) ->
-    if app.assertArg("WriteHistory.getByUrl", ["string"], arguments)
+    if app.assertArg("WriteHistory.getByUrl", [[url, "string"]])
       throw new Error("書込履歴を取得しようとしたデータが不正です")
 
     try
@@ -161,7 +180,7 @@ class app.WriteHistory
   @method getAll
   @return {Promise}
   ###
-  @getAll: () ->
+  @getAll: ->
     try
       db = await @_openDB()
       req = db
@@ -197,7 +216,7 @@ class app.WriteHistory
   @return {Promise}
   ###
   @clear = (offset = -1) ->
-    if app.assertArg("WriteHistory.clear", ["number"], [offset])
+    if app.assertArg("WriteHistory.clear", [[offset, "number"]])
       return Promise.reject()
 
     return @_openDB().then( (db) ->
@@ -233,7 +252,7 @@ class app.WriteHistory
   @return {Promise}
   ###
   @clearRange = (day) ->
-    if app.assertArg("WriteHistory.clearRange", ["number"], arguments)
+    if app.assertArg("WriteHistory.clearRange", [[day, "number"]])
       return Promise.reject()
 
     return @_openDB().then( (db) ->

@@ -210,7 +210,7 @@ gulp.task "crx", ->
   try
     await fs.copy(args.outputPath, tmpDir)
     if process.env["read.crx-2-pem-path"]?
-      pemPath = Promise.resolve(process.env["read.crx-2-pem-path"])
+      pemPath = process.env["read.crx-2-pem-path"]
     else
       pemPath = await putsPromise("秘密鍵のパスを入力して下さい: ")
     pem = await fs.readFile(pemPath)

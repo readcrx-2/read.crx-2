@@ -1,7 +1,5 @@
 ///<reference path="../global.d.ts" />
 namespace UI {
-  "use strict";
-
   export class VirtualNotch {
     private wheelDelta = 0;
     private lastMouseWheel = Date.now();

@@ -282,36 +282,6 @@ app.boot("/write/submit_thread.html", ->
     return
   )
 
-  # 忍法帳関連処理
-  do ->
-    return if app.URL.tsld(arg.url) isnt "5ch.net"
-
-    app.Ninja.getCookie( (cookies) ->
-      backup = app.Ninja.getBackup()
-
-      availableCookie = cookies.some(({site}) -> site.siteId is "2ch")
-      availableBackup = backup.some(({site}) -> site.siteId is "2ch")
-
-      if (not availableCookie) and availableBackup
-        $notice.innerHTML = """
-          忍法帳クッキーが存在しませんが、バックアップが利用可能です。
-          <button class="ninja_restore">バックアップから復元</button>
-        """
-      return
-    )
-
-    $view.on("click", (e) ->
-      return unless e.target.hasClass("ninja_restore")
-      e.preventDefault()
-      $notice.textContent = "復元中です。"
-      app.Ninja.restore("2ch", ->
-        $notice.textContent = "忍法帳クッキーの復元が完了しました。"
-        return
-      )
-      return
-    )
-    return
-
   window.on("beforeunload", ->
     chrome.runtime.sendMessage(type: "writesize", x: screenX, y: screenY)
     return

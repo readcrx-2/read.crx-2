@@ -52,7 +52,6 @@ args =
     write:
       ts: "./src/core/URL.ts"
       coffee: [
-        "./src/core/Ninja.coffee"
         "./src/core/util.coffee"
         "./src/core/WriteHistory.coffee"
         "./src/ui/Animate.coffee"
@@ -61,7 +60,6 @@ args =
     submit_thread:
       ts: "./src/core/URL.ts"
       coffee:[
-        "./src/core/Ninja.coffee"
         "./src/ui/Animate.coffee"
         "./src/write/submit_thread.coffee"
       ]

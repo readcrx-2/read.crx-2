@@ -8,8 +8,6 @@ declare namespace app {
 }
 
 namespace app.Bookmark {
-  "use strict";
-
   export class CompatibilityLayer {
     private cbel: ChromeBookmarkEntryList;
     promiseFirstScan;

@@ -1,6 +1,4 @@
 namespace app.Util {
-  "use strict";
-
   export function levenshteinDistance (
     a:string,
     b:string,

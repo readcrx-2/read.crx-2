@@ -291,3 +291,12 @@ do ->
         return
       return
     )
+
+  app.util.stampToDate = (stamp) ->
+    return new Date(stamp * 1000)
+
+  app.util.stringToDate = (string) ->
+    date = string.match(/(\d{4})\/(\d{1,2})\/(\d{1,2})(?:\(.\))?\s?(\d{1,2}):(\d\d)(?::(\d\d)(?:\.\d+)?)?/)
+    if date.length >= 5
+      return new Date(date[1], date[2], date[3], date[4], date[5], date[6] ? 0)
+    return null

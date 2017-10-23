@@ -596,6 +596,8 @@ class UI.ThreadContent
           .replace(/<\/div><div class="be .*?"><a href="(https?:\/\/be\.[25]ch\.net\/user\/\d+?)".*?>(.*?)<\/a>/, "<a class=\"beid\" href=\"$1\" target=\"_blank\">$2</a>")
           #タグ除去
           .replace(/<(?!(?:a class="beid".*?|\/a)>).*?(?:>|$)/g, "")
+          #.date
+          .replace(/\d{4}\/\d{1,2}\/\d{1,2}\(.\)\s\d{1,2}:\d\d(?::\d\d(?:\.\d+)?)?/, "<time class=\"date\">$&</time>")
           #.id
           .replace(/(?:^| |(\d))(ID:(?!\?\?\?)[^ <>"']+|発信元:\d+.\d+.\d+.\d+)/, ($0, $1, $2) =>
             fixedId = $2.replace(/\u25cf$/, "") #末尾●除去

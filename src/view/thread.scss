@@ -121,6 +121,13 @@ header {
   cursor: pointer;
 }
 
+.mail::before {
+  content: "["
+}
+.mail::after {
+  content: "]"
+}
+
 .one:not(:first-child), .popup > .one {
   > header > .name::before {
     content: "(>>1)";

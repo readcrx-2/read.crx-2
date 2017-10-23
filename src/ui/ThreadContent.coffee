@@ -587,7 +587,7 @@ class UI.ThreadContent
 
       #.mail
       tmp = res.mail.replace(/<.*?(?:>|$)/g, "")
-      articleHtml += """ [<span class="mail">#{tmp}</span>] """
+      articleHtml += """ <span class="mail">#{tmp}</span> """
 
       #.other
       tmp = (

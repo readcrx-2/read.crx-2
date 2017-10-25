@@ -44,9 +44,10 @@ class app.Board
           throw new Error("キャッシュの期限が切れているため通信します")
       catch
         #通信
+        #open2ch.netは～subject.txt?=****という形式だとエラーをする
         request = new app.HTTP.Request("GET", xhrPath,
           mimeType: "text/plain; charset=#{xhrCharset}"
-          preventCache: true
+          preventCache: (app.URL.tsld(@url) isnt "open2ch.net")
         )
         if hasCache
           if cache.lastModified?

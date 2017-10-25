@@ -71,9 +71,10 @@ class app.Thread
             else
               xhrPath += (+cache.resLength) + "-n"
 
+        #open2ch.netは～subject.txt?=****という形式だとエラーをする
         request = new app.HTTP.Request("GET", xhrPath,
           mimeType: "text/plain; charset=#{xhrCharset}"
-          preventCache: true
+          preventCache: (app.URL.tsld(@url) isnt "open2ch.net")
         )
 
         if hasCache

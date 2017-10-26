@@ -504,7 +504,8 @@ app.boot("/view/thread.html", ->
       else
         return
 
-    app.BoardTitleSolver.ask(boardUrl).then( (title) =>
+    try
+      title = await app.BoardTitleSolver.ask(boardUrl)
       popupHelper(target, e, =>
         $div = $__("div")
         $div.addClass("popup_linkinfo")
@@ -513,8 +514,6 @@ app.boot("/view/thread.html", ->
         $div.addLast($div2)
         return $div
       )
-      return
-    )
     return
   , true)
 
@@ -895,16 +894,17 @@ app.boot("/view/thread.html", ->
   #パンくずリスト表示
   do ->
     boardUrl = app.URL.threadToBoard(viewUrl)
-    app.BoardTitleSolver.ask(boardUrl).catch( -> return).then( (title) ->
-      $a = $view.$(".breadcrumb > li > a")
-      $a.href = boardUrl
-      $a.textContent = if title? then "#{title.replace(/板$/, "")}板" else "板"
-      $a.addClass("hidden")
-      # Windows版Chromeで描画が崩れる現象を防ぐため、わざとリフローさせる。
-      app.defer( ->
-        $view.$(".breadcrumb > li > a").style.display = "inline-block"
-        return
-      )
+    try
+      title = (await app.BoardTitleSolver.ask(boardUrl)).replace(/板$/, "")
+    catch
+      title = ""
+    $a = $view.$(".breadcrumb > li > a")
+    $a.href = app.URL.threadToBoard(viewUrl)
+    $a.textContent = "#{title}板"
+    $a.addClass("hidden")
+    # Windows版Chromeで描画が崩れる現象を防ぐため、わざとリフローさせる。
+    app.defer( ->
+      $view.$(".breadcrumb > li > a").style.display = "inline-block"
       return
     )
     return
@@ -992,37 +992,35 @@ app.viewThread._readStateManager = ($view) ->
   $view.on("view_loaded", ({ detail: {jumpResNum, loadCount} }) ->
     if loadCount is 1
       # 初回の処理
-      getReadState.then( ({readState, readStateUpdated}) ->
-        $content.C("last")[0]?.removeClass("last")
-        $content.C("read")[0]?.removeClass("read")
-        $content.C("received")[0]?.removeClass("received")
+      {readState, readStateUpdated} = await getReadState
+      $content.C("last")[0]?.removeClass("last")
+      $content.C("read")[0]?.removeClass("read")
+      $content.C("received")[0]?.removeClass("received")
 
-        # キャッシュの内容が古い場合にreadStateの内容の方が大きくなることがあるので
-        # その場合は次回の処理に委ねる
-        contentLength = $content.child().length
-        if readState.last <= contentLength
-          $content.child()[readState.last - 1]?.addClass("last")
-          $content.child()[readState.last - 1]?.attr("last-offset", readState.offset)
-          attachedReadState.last = -999
-        else
-          attachedReadState.last = readState.last
-          attachedReadState.offset = readState.offset
-        if readState.read <= contentLength
-          $content.child()[readState.read - 1]?.addClass("read")
-          attachedReadState.read = -999
-        else
-          attachedReadState.read = readState.read
-        if readState.received <= contentLength
-          $content.child()[readState.received - 1]?.addClass("received")
-          attachedReadState.received = -999
-        else
-          attachedReadState.received = readState.received
+      # キャッシュの内容が古い場合にreadStateの内容の方が大きくなることがあるので
+      # その場合は次回の処理に委ねる
+      contentLength = $content.child().length
+      if readState.last <= contentLength
+        $content.child()[readState.last - 1]?.addClass("last")
+        $content.child()[readState.last - 1]?.attr("last-offset", readState.offset)
+        attachedReadState.last = -999
+      else
+        attachedReadState.last = readState.last
+        attachedReadState.offset = readState.offset
+      if readState.read <= contentLength
+        $content.child()[readState.read - 1]?.addClass("read")
+        attachedReadState.read = -999
+      else
+        attachedReadState.read = readState.read
+      if readState.received <= contentLength
+        $content.child()[readState.received - 1]?.addClass("received")
+        attachedReadState.received = -999
+      else
+        attachedReadState.received = readState.received
 
-        $view.dispatchEvent(new CustomEvent("read_state_attached", detail: {jumpResNum, requestReloadFlag, loadCount}))
-        if attachedReadState.read > 0 and attachedReadState.received > 0
-          app.message.send("read_state_updated", {board_url: boardUrl, read_state: readState})
-        return
-      )
+      $view.dispatchEvent(new CustomEvent("read_state_attached", detail: {jumpResNum, requestReloadFlag, loadCount}))
+      if attachedReadState.read > 0 and attachedReadState.received > 0
+        app.message.send("read_state_updated", {board_url: boardUrl, read_state: readState})
       return
     # 2回目の処理
     # 画像のロードにより位置がずれることがあるので初回処理時の内容を使用する

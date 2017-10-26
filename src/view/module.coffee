@@ -817,25 +817,21 @@ class app.view.TabContentView extends app.view.PaneContentView
     )
 
     # 2ch.net/2ch.scに切り替え
-    reg = /https?:\/\/\w+\.(5ch\.net|2ch\.sc)\/\w+\/(.*?)/
     url = @$element.dataset.url
-    mode = reg.exec(url)
-    if mode
+    if /https?:\/\/\w+\.(5ch\.net|2ch\.sc)\/\w+\/(.*?)/.test(url)
       @$element.C("button_change_netsc")[0]?.on("click", =>
-        app.URL.convertNetSc(url).then( (res) ->
+        try
           app.message.send("open",
-            url: res,
+            url: await app.URL.convertNetSc(url),
             new_tab: app.config.isOn("button_change_netsc_newtab")
           )
-          return
-        ).catch( ->
+        catch
           msg = """
-          スレッドのURLが古いか新しいため、板一覧に2ch.netと2ch.scのペアが存在しません。
+          スレッドのURLが古いか新しいため、板一覧に5ch.netと2ch.scのペアが存在しません。
           板一覧が更新されるのを待つか、板一覧を更新してみてください。
           """
           new app.Notification("現在この機能は使用できません", msg, "", "invalid")
-          return
-        )
+        return
       )
     else
       @$element.C("button_change_netsc")[0]?.remove()

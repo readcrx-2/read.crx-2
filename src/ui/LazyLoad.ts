@@ -76,7 +76,7 @@ namespace UI {
     }
 
     private async load ($media: HTMLMediaElement): Promise<void> {
-      var $newImg: HTMLImageElement, attr: Attr, attrs: Attr[];
+      var $newImg: HTMLImageElement, attrs: Attr[];
       var imgFlg: boolean = ($media.tagName === "IMG");
       var faviconFlg: boolean = $media.hasClass("favicon");
 
@@ -87,9 +87,9 @@ namespace UI {
 
       if (imgFlg && !faviconFlg) {
         attrs = <Attr[]>Array.from($media.attributes);
-        for (attr of attrs) {
-          if (!this.noNeedAttrs.includes(attr.name)) {
-            $newImg.setAttr(attr.name, attr.value);
+        for (var {name, value} of attrs) {
+          if (!this.noNeedAttrs.includes(name)) {
+            $newImg.setAttr(name, value);
           }
         }
       }

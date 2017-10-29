@@ -148,8 +148,7 @@ namespace app {
 
       param = new URLSearchParams();
 
-      for (key in data) {
-        val = data[key];
+      for ([key, val] of Object.entries(data)) {
         param.append(key, val);
       }
 

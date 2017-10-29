@@ -67,10 +67,12 @@ app.boot("/view/writehistory.html", ->
   , passive: true)
 
   $view.C("button_history_clear")[0].on("click", ->
-    res = await UI.Dialog("confirm",
+    if await UI.Dialog("confirm",
       message: "履歴を削除しますか？"
     )
-    app.WriteHistory.clear().then(load) if res
+      try
+        await app.WriteHistory.clear()
+        load()
     return
   )
   return

@@ -213,7 +213,7 @@ app.boot("/view/config.html", ["cache", "bbsmenu"], (Cache, BBSMenu) ->
   for dom in $view.$$("input.direct[type=\"number\"]")
     dom.value = app.config.get(dom.name) or "0"
     dom.on("input", ->
-      app.config.set(@name, if Number.isInteger(+@value) then @value else "0")
+      app.config.set(@name, if Number.isNaN(@valueAsNumber) then "0" else @value)
       return
     )
 

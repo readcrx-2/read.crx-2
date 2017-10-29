@@ -66,8 +66,7 @@ namespace app.HTTP {
 
         xhr.timeout = this.timeout;
 
-        for (key in this.headers) {
-          val = this.headers[key];
+        for ([key, val] of Object.entries(this.headers)) {
           xhr.setRequestHeader(key, val);
         }
 

@@ -254,8 +254,7 @@ namespace app {
       chrome.storage.local.get(null, (res) => {
         var key:string, val:string;
         if (this._cache !== null) {
-          for (key in res) {
-            val = res[key];
+          for ([key, val] of Object.entries(res)) {
             if (
               key.startsWith("config_") &&
               (typeof val === "string" || typeof val ==="number")
@@ -268,11 +267,10 @@ namespace app {
       });
 
       this._onChanged = (change, area) => {
-        var key:string;
+        var key:string, newValue:string;
 
         if (area === "local") {
-          for (key in change) {
-            var {newValue} = change[key];
+          for ([key, {newValue}] of Object.entries(change)) {
             if (!key.startsWith("config_")) continue;
 
             if (typeof newValue === "string") {
@@ -450,7 +448,7 @@ namespace app {
       });
 
       // このモジュールが初期化された事で依存関係が満たされたモジュールを初期化
-      for (var val of pendingModules.values()) {
+      for (var val of pendingModules) {
         if (val.dependencies.includes(this.moduleId)) {
           if (!val.dependencies.some((a) => { return !readyModules.get(a); } )) {
             fireDefinition(val.moduleId, val.dependencies, val.definition);

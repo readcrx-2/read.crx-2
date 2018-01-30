@@ -3,20 +3,29 @@
 @static
 ###
 class app.WriteHistory
+  @DB_VERSION = 2
+
   @_openDB: ->
-    return new Promise( (resolve, reject) ->
-      req = indexedDB.open("WriteHistory", 1)
+    return new Promise( (resolve, reject) =>
+      req = indexedDB.open("WriteHistory", @DB_VERSION)
       req.onerror = (e) ->
         reject(e)
         return
-      req.onupgradeneeded = ({ target: {result: db, transaction: tx} }) ->
-        objStore = db.createObjectStore("WriteHistory", keyPath: "id", autoIncrement: true)
-        objStore.createIndex("url", "url", unique: false)
-        objStore.createIndex("res", "res", unique: false)
-        objStore.createIndex("title", "title", unique: false)
-        objStore.createIndex("date", "date", unique: false)
-        tx.oncomplete = ->
-          resolve(db)
+      req.onupgradeneeded = ({ target: {result: db, transaction: tx}, oldVersion: oldVer }) =>
+        if oldVer < 1
+          objStore = db.createObjectStore("WriteHistory", keyPath: "id", autoIncrement: true)
+          objStore.createIndex("url", "url", unique: false)
+          objStore.createIndex("res", "res", unique: false)
+          objStore.createIndex("title", "title", unique: false)
+          objStore.createIndex("date", "date", unique: false)
+          tx.oncomplete = ->
+            resolve(db)
+
+        if oldVer is 1
+          @_recoveryOfDate(db, tx)
+          tx.oncomplete = ->
+            resolve(db)
+
         return
       req.onsuccess = ({ target: {result: db} }) ->
         resolve(db)
@@ -276,4 +285,40 @@ class app.WriteHistory
           return
         return
       )
+    )
+
+  ###*
+  @method recoveryOfDate
+  @param {Object} db
+  @param {Object} tx
+  @return {Promise}
+  @private
+  ###
+  @_recoveryOfDate: (db, tx) ->
+    return new Promise( (resolve, reject) ->
+      req = tx
+        .objectStore("WriteHistory")
+        .openCursor()
+      req.onsuccess = ({ target: {result: cursor} }) ->
+        if cursor
+          date = new Date(+cursor.value.date)
+          year = date.getFullYear()
+          month = date.getMonth()
+          if (year > 2017 or (year is 2017 and month > 9)) and cursor.value.res > 1
+            month--
+            if month < 0
+              date.setFullYear(date.getFullYear() - 1)
+              month = 11
+            date.setMonth(month)
+            cursor.value.date = date.valueOf()
+            cursor.update(cursor.value)
+          cursor.continue()
+        else
+          resolve()
+        return
+      req.onerror = (e) ->
+        app.log("error", "WriteHistory._recoveryOfDate: トランザクション中断")
+        reject(e)
+        return
+      return
     )

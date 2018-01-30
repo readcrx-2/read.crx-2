@@ -944,7 +944,7 @@ class UI.ThreadContent
         if not pre.hasClass("thumbnail")
           pre.addAfter($__("br"))
         break
-      return
+    return
 
   ###*
   @method addExpandedURL

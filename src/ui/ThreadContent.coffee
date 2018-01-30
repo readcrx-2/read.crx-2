@@ -776,6 +776,15 @@ class UI.ThreadContent
           return
         )
       )
+      #harmImg更新
+      do =>
+        for res from @harmImgIndex
+          elm = @container.child()[res - 1]
+          continue unless elm
+          elm.addClass("has_blur_word")
+          if elm.hasClass("has_image") and app.config.isOn("image_blur")
+            UI.MediaContainer.setImageBlur(elm, true)
+        return
     return
 
   ###*
@@ -806,16 +815,6 @@ class UI.ThreadContent
     @updateId("id", @idIndex, "")
     @updateId("slip", @slipIndex, "SLIP:")
     @updateId("trip", @tripIndex, "")
-
-    #harmImg更新
-    do =>
-      for res from @harmImgIndex
-        elm = @container.child()[res - 1]
-        continue unless elm
-        elm.addClass("has_blur_word")
-        if elm.hasClass("has_image") and app.config.isOn("image_blur")
-          UI.MediaContainer.setImageBlur(elm, true)
-      return
 
     #参照関係再構築
     do =>

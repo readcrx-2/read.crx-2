@@ -767,7 +767,7 @@ class app.view.TabContentView extends app.view.PaneContentView
       {url} = @$element.dataset
 
       if url is "bookmark"
-        url = "chrome://bookmarks/##{app.config.get("bookmark_id")}"
+        url = "chrome://bookmarks/?id=#{app.config.get("bookmark_id")}"
       else if url?.startsWith("search:")
         return
       else

@@ -116,6 +116,20 @@ class UI.ThreadContent
     ###
     @_rawResData = []
 
+    ###*
+    @property _ngIdForChain
+    @type Object
+    @private
+    ###
+    @_ngIdForChain = new Set()
+
+    ###*
+    @property _ngSlipForChain
+    @type Object
+    @private
+    ###
+    @_ngSlipForChain = new Set()
+
     try
       @harmfulReg = new RegExp(app.config.get("image_blur_word"))
       @findHarmfulFlag = true
@@ -642,7 +656,7 @@ class UI.ThreadContent
 
       # id, slip, tripが取り終わったタイミングでNG判定を行う
       # NG判定されるものは、ReplaceStrTxtで置き換え後のテキストなので注意すること
-      if ngType = @_getNgType(res, bbsType)
+      if ngType = @_checkNG(res, bbsType)
         res.class.push("ng")
         res.attr["ng-type"] = ngType
 
@@ -730,6 +744,14 @@ class UI.ThreadContent
     @container.insertAdjacentHTML("BeforeEnd", html)
 
     @updateIds()
+
+    # NG判定されたIDとSLIPの連鎖NG
+    if app.config.isOn("chain_ng_id")
+      for id from @_ngIdForChain
+        @_chainNgById(id)
+    if app.config.isOn("chain_ng_slip")
+      for slip from @_ngSlipForChain
+        @_chainNgBySlip(slip)
 
     #サムネイル追加処理
     try
@@ -839,8 +861,75 @@ class UI.ThreadContent
       getRes.addClass("ng")
       getRes.addClass("disp_ng") if app.config.isOn("display_ng")
       getRes.setAttr("ng-type", "chain")
+      # NG連鎖IDの登録
+      if app.config.isOn("chain_ng_id") and app.config.isOn("chain_ng_id_by_chain")
+        if id = getRes.getAttr("data-id")
+          @_ngIdForChain.add(id) unless @_ngIdForChain.has(id)
+          @_chainNgById(id)
+      # NG連鎖SLIPの登録
+      if app.config.isOn("chain_ng_slip") and app.config.isOn("chain_ng_slip_by_chain")
+        if slip = getRes.getAttr("data-slip")
+          @_ngSlipForChain.add(slip) unless @_ngSlipForChain.has(slip)
+          @_chainNgBySlip(slip)
       @_chainNG(getRes)
     return
+
+  ###*
+  @method _chainNgById
+  @param {String} id
+  @private
+  ###
+  _chainNgById: (id) =>
+    # 連鎖IDのNG
+    for r in @container.$$("article[data-id=\"#{id}\"]")
+      continue if r.hasClass("ng")
+      r.addClass("ng")
+      r.addClass("disp_ng") if app.config.isOn("display_ng")
+      r.setAttr("ng-type", "chainID")
+      # 連鎖NG
+      @_chainNG(r) if app.config.isOn("chain_ng")
+    return
+
+  ###*
+  @method _chainNgBySlip
+  @param {String} slip
+  @private
+  ###
+  _chainNgBySlip: (slip) =>
+    # 連鎖SLIPのNG
+    for r in @container.$$("article[data-slip=\"#{slip}\"]")
+      continue if r.hasClass("ng")
+      r.addClass("ng")
+      r.addClass("disp_ng") if app.config.isOn("display_ng")
+      r.setAttr("ng-type", "chainSLIP")
+      # 連鎖NG
+      @_chainNG(r) if app.config.isOn("chain_ng")
+    return
+
+  ###*
+  @method _checkNG
+  @param {Object} objRes
+  @param {String} bbsType
+  @return {String|null}
+  @private
+  ###
+  _checkNG: (objRes, bbsType) =>
+    if ngType = @_getNgType(objRes, bbsType)
+      # NG連鎖IDの登録
+      if (
+        app.config.isOn("chain_ng_id") and
+        objRes.id? and
+        not (ngType in ["id", "chainID"])
+      )
+        @_ngIdForChain.add(objRes.id) unless @_ngIdForChain.has(objRes.id)
+      # NG連鎖SLIPの登録
+      if (
+        app.config.isOn("chain_ng_slip") and
+        objRes.slip? and
+        not (ngType in ["slip", "chainSLIP"])
+      )
+        @_ngSlipForChain.add(objRes.slip) unless @_ngSlipForChain.has(objRes.slip)
+    return ngType
 
   ###*
   @method _getNgType
@@ -870,6 +959,21 @@ class UI.ThreadContent
       )
         return "SLIPなし"
 
+    # 連鎖IDのNG
+    if (
+      app.config.isOn("chain_ng_id") and
+      objRes.id? and
+      @_ngIdForChain.has(objRes.id)
+    )
+      return "chainID"
+    # 連鎖SLIPのNG
+    if (
+      app.config.isOn("chain_ng_slip") and
+      objRes.slip? and
+      @_ngSlipForChain.has(objRes.slip)
+    )
+      return "chainSLIP"
+
     return null
 
   ###*
@@ -877,6 +981,8 @@ class UI.ThreadContent
   ###
   refreshNG: =>
     {bbsType} = app.URL.guessType(@url)
+    @_ngIdForChain.clear()
+    @_ngSlipForChain.clear()
     # NGの解除
     for res in @container.$$("article.ng")
       res.removeClass("ng")
@@ -886,13 +992,20 @@ class UI.ThreadContent
     for res in @container.$$("article")
       continue if res.hasClass("ng")
       resNum = +res.C("num")[0].textContent
-      if ngType = @_getNgType(@_rawResData[resNum], bbsType)
+      if ngType = @_checkNG(@_rawResData[resNum], bbsType)
         res.addClass("ng")
         res.addClass("disp_ng") if app.config.isOn("display_ng")
         res.setAttr("ng-type", ngType)
         # 連鎖NG
         if app.config.isOn("chain_ng") and @repIndex.has(resNum)
           @_chainNG(res)
+    # NG判定されたIDとSLIPの連鎖NG
+    if app.config.isOn("chain_ng_id")
+      for id from @_ngIdForChain
+        @_chainNgById(id)
+    if app.config.isOn("chain_ng_slip")
+      for slip from @_ngSlipForChain
+        @_chainNgBySlip(slip)
     return
 
   ###*

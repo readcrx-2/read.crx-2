@@ -103,11 +103,18 @@ class UI.ThreadContent
     @_scrollRequestID = 0
 
     ###*
-    @property _over1000Res
-    @type Boolean
+    @property _over1000ResNum
+    @type Number
     @private
     ###
-    @_over1000Res = false
+    @_over1000ResNum = null
+
+    ###*
+    @property _rawResData
+    @type Array
+    @private
+    ###
+    @_rawResData = []
 
     try
       @harmfulReg = new RegExp(app.config.get("image_blur_word"))
@@ -625,36 +632,22 @@ class UI.ThreadContent
       # スレッド終端の自動追加メッセージの確認
       if (
         bbsType is "2ch" and
-        tmp.startsWith(_OVER1000_DATA)
+        tmp.startsWith(_OVER1000_DATA) and
+        !@_over1000ResNum
       )
-        @_over1000Res = true
+        @_over1000ResNum = resNum
 
       #文字色
       color = res.message.match(/<font color="(.*?)">/i)
 
       # id, slip, tripが取り終わったタイミングでNG判定を行う
       # NG判定されるものは、ReplaceStrTxtで置き換え後のテキストなので注意すること
-      if ngType = app.NG.checkNGThread(res)
+      if ngType = @_getNgType(res, bbsType)
         res.class.push("ng")
         res.attr["ng-type"] = ngType
-      else
-        if bbsType is "2ch" and !@_over1000Res
-          # idなしをNG
-          if (
-            app.config.isOn("nothing_id_ng") and !res.id? and
-            ((app.config.get("how_to_judgment_id") is "first_res" and @_existIdAtFirstRes) or
-             (app.config.get("how_to_judgment_id") is "exists_once" and @idIndex.size isnt 0))
-          )
-            res.class.push("ng")
-            res.attr["ng-type"] = "IDなし"
-          # slipなしをNG
-          else if (
-            app.config.isOn("nothing_slip_ng") and !res.slip? and
-            ((app.config.get("how_to_judgment_id") is "first_res" and @_existSlipAtFirstRes) or
-             (app.config.get("how_to_judgment_id") is "exists_once" and @slipIndex.size isnt 0))
-          )
-            res.class.push("ng")
-            res.attr["ng-type"] = "SLIPなし"
+
+      # resデータの保管
+      @_rawResData[resNum] = res
 
       tmp = (
         res.message
@@ -847,6 +840,59 @@ class UI.ThreadContent
       getRes.addClass("disp_ng") if app.config.isOn("display_ng")
       getRes.setAttr("ng-type", "chain")
       @_chainNG(getRes)
+    return
+
+  ###*
+  @method _getNgType
+  @param {Object} objRes
+  @param {String} bbsType
+  @return {String|null}
+  @private
+  ###
+  _getNgType: (objRes, bbsType) =>
+    return null if @_over1000ResNum? and objRes.num >= @_over1000ResNum
+    ngType = app.NG.checkNGThread(objRes)
+    return ngType if ngType
+
+    if bbsType is "2ch"
+      # idなしをNG
+      if (
+        app.config.isOn("nothing_id_ng") and !objRes.id? and
+        ((app.config.get("how_to_judgment_id") is "first_res" and @_existIdAtFirstRes) or
+         (app.config.get("how_to_judgment_id") is "exists_once" and @idIndex.size isnt 0))
+      )
+        return "IDなし"
+      # slipなしをNG
+      if (
+        app.config.isOn("nothing_slip_ng") and !objRes.slip? and
+        ((app.config.get("how_to_judgment_id") is "first_res" and @_existSlipAtFirstRes) or
+         (app.config.get("how_to_judgment_id") is "exists_once" and @slipIndex.size isnt 0))
+      )
+        return "SLIPなし"
+
+    return null
+
+  ###*
+  @method refreshNG
+  ###
+  refreshNG: =>
+    {bbsType} = app.URL.guessType(@url)
+    # NGの解除
+    for res in @container.$$("article.ng")
+      res.removeClass("ng")
+      res.removeClass("disp_ng")
+      res.removeAttr("ng-type")
+    # NGの再設定
+    for res in @container.$$("article")
+      continue if res.hasClass("ng")
+      resNum = +res.C("num")[0].textContent
+      if ngType = @_getNgType(@_rawResData[resNum], bbsType)
+        res.addClass("ng")
+        res.addClass("disp_ng") if app.config.isOn("display_ng")
+        res.setAttr("ng-type", ngType)
+        # 連鎖NG
+        if app.config.isOn("chain_ng") and @repIndex.has(resNum)
+          @_chainNG(res)
     return
 
   ###*

@@ -108,6 +108,7 @@ app.boot("/view/thread.html", ->
 
   #リロード処理
   $view.on("request_reload", ({ detail: ex = {} }) ->
+    threadContent.refreshNG()
     #先にread_state更新処理を走らせるために、処理を飛ばす
     app.defer( ->
       jumpResNum = +(ex.written_res_num ? ex.param_res_num ? -1)
@@ -315,7 +316,9 @@ app.boot("/view/thread.html", ->
     app.contextMenus.update("add_selection_to_ngwords", {
       onclick: (info, tab) ->
         selectedText = getSelection().toString()
-        app.NG.add(selectedText) if selectedText.length > 0
+        if selectedText.length > 0
+          app.NG.add(selectedText)
+          threadContent.refreshNG()
         return
     })
     return
@@ -346,9 +349,11 @@ app.boot("/view/thread.html", ->
 
     else if target.hasClass("add_id_to_ngwords")
       app.NG.add($res.dataset.id)
+      threadContent.refreshNG()
 
     else if target.hasClass("add_slip_to_ngwords")
       app.NG.add("Slip:" + $res.dataset.slip)
+      threadContent.refreshNG()
 
     else if target.hasClass("jump_to_this")
       threadContent.scrollTo($res, true)
@@ -635,6 +640,7 @@ app.boot("/view/thread.html", ->
       enabled: enableFlg
       onclick: (info, tab) =>
         app.NG.add(target.href)
+        threadContent.refreshNG()
         return
     })
     # レス番号を指定してリンクを開く
@@ -668,6 +674,7 @@ app.boot("/view/thread.html", ->
           enabled: true,
           onclick: (info, tab) =>
             app.NG.add(target.parent().href)
+            threadContent.refreshNG()
             return
         })
       when "VIDEO"
@@ -679,6 +686,7 @@ app.boot("/view/thread.html", ->
       title: menuTitle,
       onclick: (info, tab) =>
         app.NG.add(@src)
+        threadContent.refreshNG()
         return
     })
     return
@@ -1050,14 +1058,14 @@ app.viewThread._readStateManager = ($view) ->
   )
 
   {readState, readStateUpdated} = await getReadState
-  scan = ->
+  scan = (byScroll = false) ->
     received = $content.child().length
     #onbeforeunload内で呼び出された時に、この値が0になる場合が有る
     return if received is 0
 
     last = threadContent.getRead()
 
-    scanCountByReloaded++ if requestReloadFlag
+    scanCountByReloaded++ if requestReloadFlag and !byScroll
 
     if readState.received isnt received
       readState.received = received
@@ -1110,7 +1118,7 @@ app.viewThread._readStateManager = ($view) ->
   scrollWatcher = setInterval( ->
     if scrollFlg
       scrollFlg = false
-      scan()
+      scan(true)
       if readStateUpdated
         app.message.send("read_state_updated", {board_url: boardUrl, read_state: readState})
     return

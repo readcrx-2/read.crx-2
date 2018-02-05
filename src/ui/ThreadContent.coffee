@@ -824,16 +824,29 @@ class UI.ThreadContent
           res.C("other")[0].addLast(elm)
         #連鎖NG
         if app.config.isOn("chain_ng") and res.hasClass("ng")
-          for r from index
-            continue if @container.child()[r - 1].hasClass("ng")
-            @container.child()[r - 1].addClass("ng")
-            @container.child()[r - 1].setAttr("ng-type", "chain")
-            if app.config.isOn("display_ng")
-              @container.child()[r - 1].addClass("disp_ng")
+          @_chainNG(res)
         #自分に対してのレス
         if res.hasClass("written")
           for r from index
             @container.child()[r - 1].addClass("to_written")
+    return
+
+  ###*
+  @method _chainNG
+  @param {Element} res
+  @private
+  ###
+  _chainNG: (res) =>
+    resNum = +res.C("num")[0].textContent
+    return unless @repIndex.has(resNum)
+    for r from @repIndex.get(resNum)
+      continue if r <= resNum
+      getRes = @container.child()[r - 1]
+      continue if getRes.hasClass("ng")
+      getRes.addClass("ng")
+      getRes.addClass("disp_ng") if app.config.isOn("display_ng")
+      getRes.setAttr("ng-type", "chain")
+      @_chainNG(getRes)
     return
 
   ###*

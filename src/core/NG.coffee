@@ -25,6 +25,7 @@ class app.NG
   @NG_TYPE_AUTO_NOTHING_ID = "nothingID"
   @NG_TYPE_AUTO_NOTHING_SLIP = "nothingSLIP"
   @NG_TYPE_AUTO_REPEAT_MESSAGE = "repeatMessage"
+  @NG_TYPE_AUTO_FORWORD_LINK = "forwordLink"
 
   _ng = null
   _configName = "ngobj"

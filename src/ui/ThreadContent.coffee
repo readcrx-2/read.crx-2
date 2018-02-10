@@ -1002,6 +1002,29 @@ class UI.ThreadContent
       if @_resMessageMap.get(resMessage).size >= app.config.get("repeat_message_ng_count")
         return app.NG.NG_TYPE_AUTO_REPEAT_MESSAGE
 
+    # 前方参照をNG
+    if app.config.isOn("forword_link_ng")
+      ngFlag = false
+      resMessage = (
+        objRes.message
+          # <a>タグの削除
+          .replace(/<a [^>]*>(.*)<\/a>/g, "$1")
+      )
+      m = resMessage.match(app.util.Anchor.reg.ANCHOR)
+      if m
+        for anc in m
+          anchor = app.util.Anchor.parseAnchor(anc)
+          for segment in anchor.segments
+            target = segment[0]
+            while target <= segment[1]
+              if target > objRes.num
+                ngFlag = true
+                break
+              target++
+            break if ngFlag
+          break if ngFlag
+      return app.NG.NG_TYPE_AUTO_FORWORD_LINK if ngFlag
+
     return null
 
   ###*

@@ -24,6 +24,7 @@ class app.NG
   @NG_TYPE_AUTO_CHAIN_SLIP = "chainSLIP"
   @NG_TYPE_AUTO_NOTHING_ID = "nothingID"
   @NG_TYPE_AUTO_NOTHING_SLIP = "nothingSLIP"
+  @NG_TYPE_AUTO_REPEAT_MESSAGE = "repeatMessage"
 
   _ng = null
   _configName = "ngobj"

@@ -130,6 +130,13 @@ class UI.ThreadContent
     ###
     @_ngSlipForChain = new Set()
 
+    ###*
+    @property _resMessageMap
+    @type Object
+    @private
+    ###
+    @_resMessageMap = new Map()
+
     try
       @harmfulReg = new RegExp(app.config.get("image_blur_word"))
       @findHarmfulFlag = true
@@ -974,6 +981,27 @@ class UI.ThreadContent
     )
       return app.NG.NG_TYPE_AUTO_CHAIN_SLIP
 
+    # 連投レスをNG
+    if app.config.get("repeat_message_ng_count") > 1
+      resMessage = (
+        objRes.message
+          # アンカーの削除
+          .replace(/<a [^>]*>(?:&gt;){1,2}[\d]+(?:(?:-|,)[\d]+)*<\/a>/g, "")
+          # <a>タグの削除
+          .replace(/<a [^>]*>(.*)<\/a>/g, "$1")
+          # 行末ブランクの削除
+          .replace(/(?:[\s]+)<br>/g, "<br>")
+          # 空行の削除
+          .replace(/^<br>(.*)/, "$1")
+          .replace(/(?:<br>){2,}/g, "<br>")
+          # 前後ブランクの削除
+          .trim()
+      )
+      @_resMessageMap.set(resMessage, new Set()) unless @_resMessageMap.has(resMessage)
+      @_resMessageMap.get(resMessage).add(objRes.num)
+      if @_resMessageMap.get(resMessage).size >= app.config.get("repeat_message_ng_count")
+        return app.NG.NG_TYPE_AUTO_REPEAT_MESSAGE
+
     return null
 
   ###*
@@ -983,6 +1011,7 @@ class UI.ThreadContent
     {bbsType} = app.URL.guessType(@url)
     @_ngIdForChain.clear()
     @_ngSlipForChain.clear()
+    @_resMessageMap.clear()
     # NGの解除
     for res in @container.$$("article.ng")
       res.removeClass("ng")

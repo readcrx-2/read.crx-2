@@ -135,6 +135,13 @@ class app.NG
         when ngWord.startsWith("Body:")
           ngElement.type = app.NG.NG_TYPE_BODY
           ngElement.word = app.util.normalize(ngWord.substr(5))
+        when ngWord.startsWith("Auto:")
+          ngElement.type = app.NG.NG_TYPE_AUTO
+          ngElement.word = ngWord.substr(5)
+          if ngElement.word is ""
+            ngElement.word = "*"
+          else if tmp = /\$\((.*)\):/.exec(ngElement.word)
+            ngElement.subType = tmp[1].split(",")
         else
           ngElement.type = app.NG.NG_TYPE_WORD
           ngElement.word = app.util.normalize(ngWord)
@@ -214,3 +221,17 @@ class app.NG
       )
         return n.type
     return null
+
+  ###*
+  @method isIgnoreResNumForAuto
+  @param {Number} resNum
+  @param {String} subType
+  @return {Boolean}
+  ###
+  @isIgnoreResNumForAuto: (resNum, subType = "") ->
+    for n from @get()
+      continue if n.type isnt app.NG.NG_TYPE_AUTO
+      continue if n.subType? and (n.subType.indexOf(subType) is -1)
+      if n.start? and ((n.finish? and n.start <= resNum and resNum <= n.finish) or (parseInt(n.start) is resNum))
+        return true
+    return false

@@ -865,6 +865,8 @@ class UI.ThreadContent
       continue if r <= resNum
       getRes = @container.child()[r - 1]
       continue if getRes.hasClass("ng")
+      rn = +getRes.C("num")[0].textContent
+      continue if app.NG.isIgnoreResNumForAuto(rn, app.NG.NG_TYPE_AUTO_CHAIN)
       getRes.addClass("ng")
       getRes.addClass("disp_ng") if app.config.isOn("display_ng")
       getRes.setAttr("ng-type", app.NG.NG_TYPE_AUTO_CHAIN)
@@ -890,6 +892,8 @@ class UI.ThreadContent
     # 連鎖IDのNG
     for r in @container.$$("article[data-id=\"#{id}\"]")
       continue if r.hasClass("ng")
+      rn = +r.C("num")[0].textContent
+      continue if app.NG.isIgnoreResNumForAuto(rn, app.NG.NG_TYPE_AUTO_CHAIN_ID)
       r.addClass("ng")
       r.addClass("disp_ng") if app.config.isOn("display_ng")
       r.setAttr("ng-type", app.NG.NG_TYPE_AUTO_CHAIN_ID)
@@ -906,6 +910,8 @@ class UI.ThreadContent
     # 連鎖SLIPのNG
     for r in @container.$$("article[data-slip=\"#{slip}\"]")
       continue if r.hasClass("ng")
+      rn = +r.C("num")[0].textContent
+      continue if app.NG.isIgnoreResNumForAuto(rn, app.NG.NG_TYPE_AUTO_CHAIN_SLIP)
       r.addClass("ng")
       r.addClass("disp_ng") if app.config.isOn("display_ng")
       r.setAttr("ng-type", app.NG.NG_TYPE_AUTO_CHAIN_SLIP)
@@ -955,14 +961,16 @@ class UI.ThreadContent
       if (
         app.config.isOn("nothing_id_ng") and !objRes.id? and
         ((app.config.get("how_to_judgment_id") is "first_res" and @_existIdAtFirstRes) or
-         (app.config.get("how_to_judgment_id") is "exists_once" and @idIndex.size isnt 0))
+         (app.config.get("how_to_judgment_id") is "exists_once" and @idIndex.size isnt 0)) and
+        !app.NG.isIgnoreResNumForAuto(objRes.num, app.NG.NG_TYPE_AUTO_NOTHING_ID)
       )
         return app.NG.NG_TYPE_AUTO_NOTHING_ID
       # slipなしをNG
       if (
         app.config.isOn("nothing_slip_ng") and !objRes.slip? and
         ((app.config.get("how_to_judgment_id") is "first_res" and @_existSlipAtFirstRes) or
-         (app.config.get("how_to_judgment_id") is "exists_once" and @slipIndex.size isnt 0))
+         (app.config.get("how_to_judgment_id") is "exists_once" and @slipIndex.size isnt 0)) and
+        !app.NG.isIgnoreResNumForAuto(objRes.num, app.NG.NG_TYPE_AUTO_NOTHING_SLIP)
       )
         return app.NG.NG_TYPE_AUTO_NOTHING_SLIP
 
@@ -970,14 +978,16 @@ class UI.ThreadContent
     if (
       app.config.isOn("chain_ng_id") and
       objRes.id? and
-      @_ngIdForChain.has(objRes.id)
+      @_ngIdForChain.has(objRes.id) and
+      !app.NG.isIgnoreResNumForAuto(objRes.num, app.NG.NG_TYPE_AUTO_CHAIN_ID)
     )
       return app.NG.NG_TYPE_AUTO_CHAIN_ID
     # 連鎖SLIPのNG
     if (
       app.config.isOn("chain_ng_slip") and
       objRes.slip? and
-      @_ngSlipForChain.has(objRes.slip)
+      @_ngSlipForChain.has(objRes.slip) and
+      !app.NG.isIgnoreResNumForAuto(objRes.num, app.NG.NG_TYPE_AUTO_CHAIN_SLIP)
     )
       return app.NG.NG_TYPE_AUTO_CHAIN_SLIP
 
@@ -999,11 +1009,17 @@ class UI.ThreadContent
       )
       @_resMessageMap.set(resMessage, new Set()) unless @_resMessageMap.has(resMessage)
       @_resMessageMap.get(resMessage).add(objRes.num)
-      if @_resMessageMap.get(resMessage).size >= app.config.get("repeat_message_ng_count")
+      if (
+        @_resMessageMap.get(resMessage).size >= +app.config.get("repeat_message_ng_count") and
+        !app.NG.isIgnoreResNumForAuto(objRes.num, app.NG.NG_TYPE_AUTO_REPEAT_MESSAGE)
+      )
         return app.NG.NG_TYPE_AUTO_REPEAT_MESSAGE
 
     # 前方参照をNG
-    if app.config.isOn("forword_link_ng")
+    if (
+      app.config.isOn("forword_link_ng") and
+      !app.NG.isIgnoreResNumForAuto(objRes.num, app.NG.NG_TYPE_AUTO_FORWORD_LINK)
+    )
       ngFlag = false
       resMessage = (
         objRes.message

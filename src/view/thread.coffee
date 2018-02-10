@@ -945,7 +945,7 @@ app.viewThread._draw = ($view, {forceUpdate = false, jumpResNum = -1} = {}) ->
 
     document.title = thread.title
 
-    await app.DOMData.get($view, "threadContent").addItem(thread.res.slice($view.C("content")[0].child().length))
+    await app.DOMData.get($view, "threadContent").addItem(thread.res.slice($view.C("content")[0].child().length), thread.title)
     loadCount++
     app.DOMData.get($view, "lazyload").scan()
 

@@ -950,14 +950,14 @@ class UI.ThreadContent
         ((app.config.get("how_to_judgment_id") is "first_res" and @_existIdAtFirstRes) or
          (app.config.get("how_to_judgment_id") is "exists_once" and @idIndex.size isnt 0))
       )
-        return "IDなし"
+        return "nothingID"
       # slipなしをNG
       if (
         app.config.isOn("nothing_slip_ng") and !objRes.slip? and
         ((app.config.get("how_to_judgment_id") is "first_res" and @_existSlipAtFirstRes) or
          (app.config.get("how_to_judgment_id") is "exists_once" and @slipIndex.size isnt 0))
       )
-        return "SLIPなし"
+        return "nothingSLIP"
 
     # 連鎖IDのNG
     if (

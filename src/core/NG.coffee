@@ -4,6 +4,27 @@
 @static
 ###
 class app.NG
+  @NG_TYPE_REG_EXP = "regExp"
+  @NG_TYPE_REG_EXP_TITLE = "regExpTitle"
+  @NG_TYPE_REG_EXP_NAME = "regExpName"
+  @NG_TYPE_REG_EXP_MAIL = "regExpMail"
+  @NG_TYPE_REG_EXP_ID = "regExpId"
+  @NG_TYPE_REG_EXP_SLIP = "regExpSlip"
+  @NG_TYPE_REG_EXP_BODY = "regExpBody"
+  @NG_TYPE_TITLE = "title"
+  @NG_TYPE_NAME = "name"
+  @NG_TYPE_MAIL = "mail"
+  @NG_TYPE_ID = "id"
+  @NG_TYPE_SLIP = "slip"
+  @NG_TYPE_BODY = "body"
+  @NG_TYPE_WORD = "word"
+  @NG_TYPE_AUTO = "auto"
+  @NG_TYPE_AUTO_CHAIN = "chain"
+  @NG_TYPE_AUTO_CHAIN_ID = "chainID"
+  @NG_TYPE_AUTO_CHAIN_SLIP = "chainSLIP"
+  @NG_TYPE_AUTO_NOTHING_ID = "nothingID"
+  @NG_TYPE_AUTO_NOTHING_SLIP = "nothingSLIP"
+
   _ng = null
   _configName = "ngobj"
   _configStringName = "ngwords"
@@ -13,7 +34,7 @@ class app.NG
   #それを展開
   _setupReg = (obj) ->
     for n from obj
-      continue if !n.type.startsWith("regExp")
+      continue if !n.type.startsWith(app.NG.NG_TYPE_REG_EXP)
       try
         n.reg = new RegExp n.word
       catch e
@@ -74,46 +95,46 @@ class app.NG
       # キーワードごとのNG処理
       switch true
         when ngWord.startsWith("RegExp:")
-          ngElement.type = "regExp"
+          ngElement.type = app.NG.NG_TYPE_REG_EXP
           ngElement.word = ngWord.substr(7)
         when ngWord.startsWith("RegExpTitle:")
-          ngElement.type = "regExpTitle"
+          ngElement.type = app.NG.NG_TYPE_REG_EXP_TITLE
           ngElement.word = ngWord.substr(12)
         when ngWord.startsWith("RegExpName:")
-          ngElement.type = "regExpName"
+          ngElement.type = app.NG.NG_TYPE_REG_EXP_NAME
           ngElement.word = ngWord.substr(11)
         when ngWord.startsWith("RegExpMail:")
-          ngElement.type = "regExpMail"
+          ngElement.type = app.NG.NG_TYPE_REG_EXP_MAIL
           ngElement.word = ngWord.substr(11)
         when ngWord.startsWith("RegExpID:")
-          ngElement.type = "regExpId"
+          ngElement.type = app.NG.NG_TYPE_REG_EXP_ID
           ngElement.word = ngWord.substr(9)
         when ngWord.startsWith("RegExpSlip:")
-          ngElement.type = "regExpSlip"
+          ngElement.type = app.NG.NG_TYPE_REG_EXP_SLIP
           ngElement.word = ngWord.substr(11)
         when ngWord.startsWith("RegExpBody:")
-          ngElement.type = "regExpBody"
+          ngElement.type = app.NG.NG_TYPE_REG_EXP_BODY
           ngElement.word = ngWord.substr(11)
         when ngWord.startsWith("Title:")
-          ngElement.type = "title"
+          ngElement.type = app.NG.NG_TYPE_TITLE
           ngElement.word = app.util.normalize(ngWord.substr(6))
         when ngWord.startsWith("Name:")
-          ngElement.type = "name"
+          ngElement.type = app.NG.NG_TYPE_NAME
           ngElement.word = app.util.normalize(ngWord.substr(5))
         when ngWord.startsWith("Mail:")
-          ngElement.type = "mail"
+          ngElement.type = app.NG.NG_TYPE_MAIL
           ngElement.word = app.util.normalize(ngWord.substr(5))
         when ngWord.startsWith("ID:")
-          ngElement.type = "id"
+          ngElement.type = app.NG.NG_TYPE_ID
           ngElement.word = ngWord
         when ngWord.startsWith("Slip:")
-          ngElement.type = "slip"
+          ngElement.type = app.NG.NG_TYPE_SLIP
           ngElement.word = ngWord.substr(5)
         when ngWord.startsWith("Body:")
-          ngElement.type = "body"
+          ngElement.type = app.NG.NG_TYPE_BODY
           ngElement.word = app.util.normalize(ngWord.substr(5))
         else
-          ngElement.type = "word"
+          ngElement.type = app.NG.NG_TYPE_WORD
           ngElement.word = app.util.normalize(ngWord)
       ng.add(ngElement) unless ngElement.word is ""
     return ng
@@ -150,17 +171,18 @@ class app.NG
     tmpTitle = app.util.normalize(title)
     for n from @get()
       if (
-        (n.type is "regExp" and n.reg.test(title)) or
-        (n.type is "regExpTitle" and n.reg.test(title)) or
-        (n.type is "title" and tmpTitle.includes(n.word)) or
-        (n.type is "word" and tmpTitle.includes(n.word))
+        (n.type is app.NG.NG_TYPE_REG_EXP and n.reg.test(title)) or
+        (n.type is app.NG.NG_TYPE_REG_EXP_TITLE and n.reg.test(title)) or
+        (n.type is app.NG.NG_TYPE_TITLE and tmpTitle.includes(n.word)) or
+        (n.type is app.NG.NG_TYPE_WORD and tmpTitle.includes(n.word))
       )
         return true
     return false
 
   ###*
   @method checkNGThread
-  @param {Array} res
+  @param {Object} res
+  @return {String|null}
   ###
   @checkNGThread: (res) ->
     decodedName = app.util.decodeCharReference(res.name)
@@ -175,18 +197,18 @@ class app.NG
       if n.start? and ((n.finish? and n.start <= res.num and res.num <= n.finish) or (parseInt(n.start) is res.num))
         continue
       if (
-        (n.type is "regExp" and n.reg.test(tmpTxt1)) or
-        (n.type is "regExpName" and n.reg.test(decodedName)) or
-        (n.type is "regExpMail" and n.reg.test(decodedMail)) or
-        (n.type is "regExpId" and res.id? and n.reg.test(res.id)) or
-        (n.type is "regExpSlip" and res.slip? and n.reg.test(res.slip)) or
-        (n.type is "regExpBody" and n.reg.test(decodedMes)) or
-        (n.type is "name" and app.util.normalize(decodedName).includes(n.word)) or
-        (n.type is "mail" and app.util.normalize(decodedMail).includes(n.word)) or
-        (n.type is "id" and res.id?.includes(n.word)) or
-        (n.type is "slip" and res.slip?.includes(n.word)) or
-        (n.type is "body" and app.util.normalize(decodedMes).includes(n.word)) or
-        (n.type is "word" and tmpTxt2.includes(n.word))
+        (n.type is app.NG.NG_TYPE_REG_EXP and n.reg.test(tmpTxt1)) or
+        (n.type is app.NG.NG_TYPE_REG_EXP_NAME and n.reg.test(decodedName)) or
+        (n.type is app.NG.NG_TYPE_REG_EXP_MAIL and n.reg.test(decodedMail)) or
+        (n.type is app.NG.NG_TYPE_REG_EXP_ID and res.id? and n.reg.test(res.id)) or
+        (n.type is app.NG.NG_TYPE_REG_EXP_SLIP and res.slip? and n.reg.test(res.slip)) or
+        (n.type is app.NG.NG_TYPE_REG_EXP_BODY and n.reg.test(decodedMes)) or
+        (n.type is app.NG.NG_TYPE_NAME and app.util.normalize(decodedName).includes(n.word)) or
+        (n.type is app.NG.NG_TYPE_MAIL and app.util.normalize(decodedMail).includes(n.word)) or
+        (n.type is app.NG.NG_TYPE_ID and res.id?.includes(n.word)) or
+        (n.type is app.NG.NG_TYPE_SLIP and res.slip?.includes(n.word)) or
+        (n.type is app.NG.NG_TYPE_BODY and app.util.normalize(decodedMes).includes(n.word)) or
+        (n.type is app.NG.NG_TYPE_WORD and tmpTxt2.includes(n.word))
       )
         return n.type
     return null

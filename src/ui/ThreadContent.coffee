@@ -860,7 +860,7 @@ class UI.ThreadContent
       continue if getRes.hasClass("ng")
       getRes.addClass("ng")
       getRes.addClass("disp_ng") if app.config.isOn("display_ng")
-      getRes.setAttr("ng-type", "chain")
+      getRes.setAttr("ng-type", app.NG.NG_TYPE_AUTO_CHAIN)
       # NG連鎖IDの登録
       if app.config.isOn("chain_ng_id") and app.config.isOn("chain_ng_id_by_chain")
         if id = getRes.getAttr("data-id")
@@ -885,7 +885,7 @@ class UI.ThreadContent
       continue if r.hasClass("ng")
       r.addClass("ng")
       r.addClass("disp_ng") if app.config.isOn("display_ng")
-      r.setAttr("ng-type", "chainID")
+      r.setAttr("ng-type", app.NG.NG_TYPE_AUTO_CHAIN_ID)
       # 連鎖NG
       @_chainNG(r) if app.config.isOn("chain_ng")
     return
@@ -901,7 +901,7 @@ class UI.ThreadContent
       continue if r.hasClass("ng")
       r.addClass("ng")
       r.addClass("disp_ng") if app.config.isOn("display_ng")
-      r.setAttr("ng-type", "chainSLIP")
+      r.setAttr("ng-type", app.NG.NG_TYPE_AUTO_CHAIN_SLIP)
       # 連鎖NG
       @_chainNG(r) if app.config.isOn("chain_ng")
     return
@@ -919,14 +919,14 @@ class UI.ThreadContent
       if (
         app.config.isOn("chain_ng_id") and
         objRes.id? and
-        not (ngType in ["id", "chainID"])
+        not (ngType in [app.NG.NG_TYPE_ID, app.NG.NG_TYPE_AUTO_CHAIN_ID])
       )
         @_ngIdForChain.add(objRes.id) unless @_ngIdForChain.has(objRes.id)
       # NG連鎖SLIPの登録
       if (
         app.config.isOn("chain_ng_slip") and
         objRes.slip? and
-        not (ngType in ["slip", "chainSLIP"])
+        not (ngType in [app.NG.NG_TYPE_SLIP, app.NG.NG_TYPE_AUTO_CHAIN_SLIP])
       )
         @_ngSlipForChain.add(objRes.slip) unless @_ngSlipForChain.has(objRes.slip)
     return ngType
@@ -950,14 +950,14 @@ class UI.ThreadContent
         ((app.config.get("how_to_judgment_id") is "first_res" and @_existIdAtFirstRes) or
          (app.config.get("how_to_judgment_id") is "exists_once" and @idIndex.size isnt 0))
       )
-        return "nothingID"
+        return app.NG.NG_TYPE_AUTO_NOTHING_ID
       # slipなしをNG
       if (
         app.config.isOn("nothing_slip_ng") and !objRes.slip? and
         ((app.config.get("how_to_judgment_id") is "first_res" and @_existSlipAtFirstRes) or
          (app.config.get("how_to_judgment_id") is "exists_once" and @slipIndex.size isnt 0))
       )
-        return "nothingSLIP"
+        return app.NG.NG_TYPE_AUTO_NOTHING_SLIP
 
     # 連鎖IDのNG
     if (
@@ -965,14 +965,14 @@ class UI.ThreadContent
       objRes.id? and
       @_ngIdForChain.has(objRes.id)
     )
-      return "chainID"
+      return app.NG.NG_TYPE_AUTO_CHAIN_ID
     # 連鎖SLIPのNG
     if (
       app.config.isOn("chain_ng_slip") and
       objRes.slip? and
       @_ngSlipForChain.has(objRes.slip)
     )
-      return "chainSLIP"
+      return app.NG.NG_TYPE_AUTO_CHAIN_SLIP
 
     return null
 

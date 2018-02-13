@@ -297,6 +297,14 @@ do ->
 
   app.util.stringToDate = (string) ->
     date = string.match(/(\d{4})\/(\d{1,2})\/(\d{1,2})(?:\(.\))?\s?(\d{1,2}):(\d\d)(?::(\d\d)(?:\.\d+)?)?/)
-    if date.length >= 5
-      return new Date(date[1], date[2], date[3], date[4], date[5], date[6] ? 0)
+    flg = false
+    if date?
+      flg = true if date[1]?
+      flg = false unless date[2]? and 1 <= +date[2] <= 12
+      flg = false unless date[3]? and 1 <= +date[3] <= 31
+      flg = false unless date[4]? and 0 <= +date[4] <= 23
+      flg = false unless date[5]? and 0 <= +date[5] <= 59
+      date[6] = 0 unless date[6]? and 0 <= +date[6] <= 59
+    if flg
+      return new Date(date[1], date[2] - 1, date[3], date[4], date[5], date[6])
     return null

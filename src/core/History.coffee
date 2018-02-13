@@ -75,9 +75,7 @@ class app.History
             resolve()
             return
           if date?
-            ddate = cursor.value.date
-            if date < ddate < date + 60*1000
-              cursor.delete()
+            cursor.delete() if date is cursor.value.date
           else
             cursor.delete()
           cursor.continue()

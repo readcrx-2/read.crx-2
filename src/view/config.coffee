@@ -284,11 +284,17 @@ app.boot("/view/config.html", ["cache", "bbsmenu"], (Cache, BBSMenu) ->
     name: "history"
     countFunc: ->
       return app.History.count()
-    importFunc: ({history, read_state: readState}) ->
+    importFunc: ({history, read_state: readState, historyVersion = 1}) ->
       return Promise.all(
-        history.map( ({url, title, date}) ->
-          return app.History.add(url, title, date)
-        ).concat(readState.map( (rs) ->
+        if historyVersion > 1
+          historyData = history.map( ({url, title, date, boardTitle}) ->
+            return app.History.add(url, title, date, boardTitle)
+          )
+        else
+          historyData = history.map( ({url, title, date}) ->
+            return app.History.add(url, title, date, "")
+          )
+        historyData.concat(readState.map( (rs) ->
           return app.ReadState.set(rs)
         ))
       )
@@ -297,7 +303,7 @@ app.boot("/view/config.html", ["cache", "bbsmenu"], (Cache, BBSMenu) ->
         app.ReadState.getAll()
         app.History.getAll()
       ])
-      return {"read_state": readState, "history": history}
+      return {"read_state": readState, "history": history, "historyVersion": app.History.DB_VERSION}
     clearFunc: ->
       return Promise.all([app.History.clear(), app.ReadState.clear()])
     clearRangeFunc: (day) ->

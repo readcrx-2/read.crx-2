@@ -17,7 +17,7 @@ app.boot("/view/search.html", ["thread_search"], (ThreadSearch) ->
 
   document.title = "検索:#{query}"
   unless app.config.isOn("no_history")
-    app.History.add($view.dataset.url, document.title, openedAt)
+    app.History.add($view.dataset.url, document.title, openedAt, "")
 
   $view.$(".button_link > a").href = "http://dig.5ch.net/search?maxResult=500&keywords=#{encodeURIComponent(query)}"
 

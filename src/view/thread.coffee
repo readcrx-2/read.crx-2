@@ -222,7 +222,12 @@ app.boot("/view/thread.html", ->
 
     try
       await app.viewThread._draw($view, {jumpResNum})
-    app.History.add(viewUrl, document.title, openedAt) unless app.config.isOn("no_history")
+    boardUrl = app.URL.threadToBoard(viewUrl)
+    try
+      boardTitle = await app.BoardTitleSolver.ask(boardUrl)
+    catch
+      boardTitle = ""
+    app.History.add(viewUrl, document.title, openedAt, boardTitle) unless app.config.isOn("no_history")
     return
 
   #レスメニュー表示(ヘッダー上)

@@ -337,28 +337,17 @@ class UI.ThreadContent
   @return {Number} 現在読んでいると推測されるレスの番号
   ###
   getRead: ->
-    {left, height, bottom} = @container.getBoundingClientRect()
-    y = bottom - 1
-    res = document.elementFromPoint(left, y)
+    containerBottom = @container.scrollTop + @container.clientHeight
+    read = @container.child().length
+    for res, key in @container.child() when res.offsetTop + res.offsetHeight > containerBottom
+      read = key
+      break
 
-    while true
-      if res?
-        if res.closest("article")?
-          resNum = parseInt(res.closest("article").C("num")[0].textContent)
-          # 最後のレスがすべて表示されているとき
-          if (
-            (resNum is @container.child().length) and
-            (y+1 < height)
-          )
-            return resNum
-          return Math.max(resNum-1, 1)
-        else if res is @container
-          return @container.child().length
-      else
-        return 1
-      y -= res.getBoundingClientRect().height
-      res = document.elementFromPoint(left, y)
-    return
+    # >>1の底辺が表示領域外にはみ出していた場合対策
+    if read is 0
+      read = 1
+
+    return read
 
   ###*
   @method getDisplay
@@ -375,13 +364,11 @@ class UI.ThreadContent
       resRead.bottom = true
 
     # スクロール位置のレスを抽出
-    {top, left} = @container.getBoundingClientRect()
-    res = document.elementFromPoint(left, top)
-    if res?.closest("article")?
-      res = res.closest("article")
-      {top: resTop, height: resHeight} = res.getBoundingClientRect()
-      resRead.resNum = parseInt(res.C("num")[0].textContent)
-      resRead.offset = (top - resTop) / resHeight
+    for res, key in @container.child() when res.offsetTop + res.offsetHeight > containerTop
+      resRead.resNum = key + 1
+      resRead.offset = (containerTop - res.offsetTop) / res.offsetHeight
+      break
+
     return resRead
 
   ###*

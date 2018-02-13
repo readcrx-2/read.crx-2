@@ -81,7 +81,7 @@ app.boot("/view/board.html", ["board"], (Board) ->
     title = await app.BoardTitleSolver.ask(url)
     document.title = title if title
     unless app.config.isOn("no_history")
-      app.History.add(url, title or url, openedAt)
+      app.History.add(url, title or url, openedAt, title or url)
     return
 
   load = (ex) ->

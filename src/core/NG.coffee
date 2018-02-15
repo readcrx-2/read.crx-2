@@ -12,6 +12,7 @@ class app.NG
   @NG_TYPE_REG_EXP_ID = "RegExpId"
   @NG_TYPE_REG_EXP_SLIP = "RegExpSlip"
   @NG_TYPE_REG_EXP_BODY = "RegExpBody"
+  @NG_TYPE_REG_EXP_URL = "RegExpUrl"
   @NG_TYPE_TITLE = "Title"
   @NG_TYPE_NAME = "Name"
   @NG_TYPE_MAIL = "Mail"
@@ -19,6 +20,7 @@ class app.NG
   @NG_TYPE_SLIP = "Slip"
   @NG_TYPE_BODY = "Body"
   @NG_TYPE_WORD = "Word"
+  @NG_TYPE_URL = "Url"
   @NG_TYPE_AUTO = "Auto"
   @NG_TYPE_AUTO_CHAIN = "Chain"
   @NG_TYPE_AUTO_CHAIN_ID = "ChainID"
@@ -128,6 +130,9 @@ class app.NG
         when ngWord.startsWith("RegExpBody:")
           ngElement.type = app.NG.NG_TYPE_REG_EXP_BODY
           ngElement.word = ngWord.substr(11)
+        when ngWord.startsWith("RegExpUrl:")
+          ngElement.type = app.NG.NG_TYPE_REG_EXP_URL
+          ngElement.word = ngWord.substr(10)
         when ngWord.startsWith("Title:")
           ngElement.type = app.NG.NG_TYPE_TITLE
           ngElement.word = app.util.normalize(ngWord.substr(6))
@@ -146,6 +151,9 @@ class app.NG
         when ngWord.startsWith("Body:")
           ngElement.type = app.NG.NG_TYPE_BODY
           ngElement.word = app.util.normalize(ngWord.substr(5))
+        when ngWord.startsWith("Url:")
+          ngElement.type = app.NG.NG_TYPE_URL
+          ngElement.word = ngWord.substr(4)
         when ngWord.startsWith("Auto:")
           ngElement.type = app.NG.NG_TYPE_AUTO
           ngElement.word = ngWord.substr(5)
@@ -284,13 +292,15 @@ class app.NG
         (n.type is app.NG.NG_TYPE_REG_EXP_SLIP and res.slip? and n.reg.test(res.slip)) or
         (n.type is app.NG.NG_TYPE_REG_EXP_BODY and n.reg.test(decodedMes)) or
         (n.type is app.NG.NG_TYPE_REG_EXP_TITLE and n.reg.test(tmpTitle)) or
+        (n.type is app.NG.NG_TYPE_REG_EXP_URL and n.reg.test(url)) or
         (n.type is app.NG.NG_TYPE_TITLE and tmpTitle.includes(n.word)) or
         (n.type is app.NG.NG_TYPE_NAME and app.util.normalize(decodedName).includes(n.word)) or
         (n.type is app.NG.NG_TYPE_MAIL and app.util.normalize(decodedMail).includes(n.word)) or
         (n.type is app.NG.NG_TYPE_ID and res.id?.includes(n.word)) or
         (n.type is app.NG.NG_TYPE_SLIP and res.slip?.includes(n.word)) or
         (n.type is app.NG.NG_TYPE_BODY and app.util.normalize(decodedMes).includes(n.word)) or
-        (n.type is app.NG.NG_TYPE_WORD and tmpTxt2.includes(n.word))
+        (n.type is app.NG.NG_TYPE_WORD and tmpTxt2.includes(n.word)) or
+        (n.type is app.NG.NG_TYPE_URL and url.includes(n.word))
       )
         return n.type
       return null
@@ -299,7 +309,7 @@ class app.NG
       continue if n.type is app.NG.NG_TYPE_INVALID
       continue if n.exception isnt exceptionFlg
       if isBoard
-        unless n.type in [app.NG.NG_TYPE_REG_EXP, app.NG.NG_TYPE_REG_EXP_TITLE, app.NG.NG_TYPE_TITLE, app.NG.NG_TYPE_WORD]
+        unless n.type in [app.NG.NG_TYPE_REG_EXP, app.NG.NG_TYPE_REG_EXP_TITLE, app.NG.NG_TYPE_TITLE, app.NG.NG_TYPE_WORD, app.NG.NG_TYPE_REG_EXP_URL, app.NG.NG_TYPE_URL]
           continue
       if n.start? and ((n.finish? and n.start <= res.num and res.num <= n.finish) or (parseInt(n.start) is res.num))
         continue
@@ -341,13 +351,14 @@ class app.NG
   @method isIgnoreNgType
   @param {Object} res
   @param {String} threadTitle
+  @param {String} url
   @param {String} ngType
   @return {Boolean}
   ###
-  @isIgnoreNgType: (res, threadTitle, ngType) ->
+  @isIgnoreNgType: (res, threadTitle, url, ngType) ->
     if (
-      @isNGBoard(threadTitle, "", true, ngType) or
-      @checkNGThread(res, threadTitle, "", true, ngType)
+      @isNGBoard(threadTitle, url, true, ngType) or
+      @checkNGThread(res, threadTitle, url, true, ngType)
     )
       return true
     return false

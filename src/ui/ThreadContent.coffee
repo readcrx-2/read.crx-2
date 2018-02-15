@@ -875,7 +875,7 @@ class UI.ThreadContent
       continue if getRes.hasClass("ng")
       rn = +getRes.C("num")[0].textContent
       continue if app.NG.isIgnoreResNumForAuto(rn, app.NG.NG_TYPE_AUTO_CHAIN)
-      continue if app.NG.isIgnoreNgType(@_rawResData[rn], @_threadTitle, app.NG.NG_TYPE_AUTO_CHAIN)
+      continue if app.NG.isIgnoreNgType(@_rawResData[rn], @_threadTitle, @url, app.NG.NG_TYPE_AUTO_CHAIN)
       getRes.addClass("ng")
       getRes.addClass("disp_ng") if app.config.isOn("display_ng")
       getRes.setAttr("ng-type", app.NG.NG_TYPE_AUTO_CHAIN)
@@ -903,7 +903,7 @@ class UI.ThreadContent
       continue if r.hasClass("ng")
       rn = +r.C("num")[0].textContent
       continue if app.NG.isIgnoreResNumForAuto(rn, app.NG.NG_TYPE_AUTO_CHAIN_ID)
-      continue if app.NG.isIgnoreNgType(@_rawResData[rn], @_threadTitle, app.NG.NG_TYPE_AUTO_CHAIN_ID)
+      continue if app.NG.isIgnoreNgType(@_rawResData[rn], @_threadTitle, @url, app.NG.NG_TYPE_AUTO_CHAIN_ID)
       r.addClass("ng")
       r.addClass("disp_ng") if app.config.isOn("display_ng")
       r.setAttr("ng-type", app.NG.NG_TYPE_AUTO_CHAIN_ID)
@@ -922,7 +922,7 @@ class UI.ThreadContent
       continue if r.hasClass("ng")
       rn = +r.C("num")[0].textContent
       continue if app.NG.isIgnoreResNumForAuto(rn, app.NG.NG_TYPE_AUTO_CHAIN_SLIP)
-      continue if app.NG.isIgnoreNgType(@_rawResData[rn], @_threadTitle, app.NG.NG_TYPE_AUTO_CHAIN_SLIP)
+      continue if app.NG.isIgnoreNgType(@_rawResData[rn], @_threadTitle, @url, app.NG.NG_TYPE_AUTO_CHAIN_SLIP)
       r.addClass("ng")
       r.addClass("disp_ng") if app.config.isOn("display_ng")
       r.setAttr("ng-type", app.NG.NG_TYPE_AUTO_CHAIN_SLIP)
@@ -968,7 +968,7 @@ class UI.ThreadContent
     # 登録ワードのNG
     if (
       (ngType = app.NG.checkNGThread(objRes, @_threadTitle, @url)) and
-      !app.NG.isIgnoreNgType(objRes, @_threadTitle, ngType)
+      !app.NG.isIgnoreNgType(objRes, @_threadTitle, @url, ngType)
     )
       return ngType
 
@@ -979,7 +979,7 @@ class UI.ThreadContent
         ((app.config.get("how_to_judgment_id") is "first_res" and @_existIdAtFirstRes) or
          (app.config.get("how_to_judgment_id") is "exists_once" and @idIndex.size isnt 0)) and
         !app.NG.isIgnoreResNumForAuto(objRes.num, app.NG.NG_TYPE_AUTO_NOTHING_ID) and
-        !app.NG.isIgnoreNgType(objRes, @_threadTitle, app.NG.NG_TYPE_AUTO_NOTHING_ID)
+        !app.NG.isIgnoreNgType(objRes, @_threadTitle, @url, app.NG.NG_TYPE_AUTO_NOTHING_ID)
       )
         return app.NG.NG_TYPE_AUTO_NOTHING_ID
       # slipなしをNG
@@ -988,7 +988,7 @@ class UI.ThreadContent
         ((app.config.get("how_to_judgment_id") is "first_res" and @_existSlipAtFirstRes) or
          (app.config.get("how_to_judgment_id") is "exists_once" and @slipIndex.size isnt 0)) and
         !app.NG.isIgnoreResNumForAuto(objRes.num, app.NG.NG_TYPE_AUTO_NOTHING_SLIP) and
-        !app.NG.isIgnoreNgType(objRes, @_threadTitle, app.NG.NG_TYPE_AUTO_NOTHING_SLIP)
+        !app.NG.isIgnoreNgType(objRes, @_threadTitle, @url, app.NG.NG_TYPE_AUTO_NOTHING_SLIP)
       )
         return app.NG.NG_TYPE_AUTO_NOTHING_SLIP
 
@@ -998,7 +998,7 @@ class UI.ThreadContent
       objRes.id? and
       @_ngIdForChain.has(objRes.id) and
       !app.NG.isIgnoreResNumForAuto(objRes.num, app.NG.NG_TYPE_AUTO_CHAIN_ID) and
-      !app.NG.isIgnoreNgType(objRes, @_threadTitle, app.NG.NG_TYPE_AUTO_CHAIN_ID)
+      !app.NG.isIgnoreNgType(objRes, @_threadTitle, @url, app.NG.NG_TYPE_AUTO_CHAIN_ID)
     )
       return app.NG.NG_TYPE_AUTO_CHAIN_ID
     # 連鎖SLIPのNG
@@ -1007,7 +1007,7 @@ class UI.ThreadContent
       objRes.slip? and
       @_ngSlipForChain.has(objRes.slip) and
       !app.NG.isIgnoreResNumForAuto(objRes.num, app.NG.NG_TYPE_AUTO_CHAIN_SLIP) and
-      !app.NG.isIgnoreNgType(objRes, @_threadTitle, app.NG.NG_TYPE_AUTO_CHAIN_SLIP)
+      !app.NG.isIgnoreNgType(objRes, @_threadTitle, @url, app.NG.NG_TYPE_AUTO_CHAIN_SLIP)
     )
       return app.NG.NG_TYPE_AUTO_CHAIN_SLIP
 
@@ -1032,7 +1032,7 @@ class UI.ThreadContent
       if (
         @_resMessageMap.get(resMessage).size >= +app.config.get("repeat_message_ng_count") and
         !app.NG.isIgnoreResNumForAuto(objRes.num, app.NG.NG_TYPE_AUTO_REPEAT_MESSAGE) and
-        !app.NG.isIgnoreNgType(objRes, @_threadTitle, app.NG.NG_TYPE_AUTO_REPEAT_MESSAGE)
+        !app.NG.isIgnoreNgType(objRes, @_threadTitle, @url, app.NG.NG_TYPE_AUTO_REPEAT_MESSAGE)
       )
         return app.NG.NG_TYPE_AUTO_REPEAT_MESSAGE
 
@@ -1040,7 +1040,7 @@ class UI.ThreadContent
     if (
       app.config.isOn("forward_link_ng") and
       !app.NG.isIgnoreResNumForAuto(objRes.num, app.NG.NG_TYPE_AUTO_FORWARD_LINK) and
-      !app.NG.isIgnoreNgType(objRes, app.NG.NG_TYPE_AUTO_FORWARD_LINK)
+      !app.NG.isIgnoreNgType(objRes, @_threadTitle, @url, app.NG.NG_TYPE_AUTO_FORWARD_LINK)
     )
       ngFlag = false
       resMessage = (

@@ -35,6 +35,7 @@ class app.NG
   _configStringName = "ngwords"
   _ignoreResRegNumber = /^ignoreResNumber:(\d+)(?:-?(\d+))?,(.*)$/
   _ignoreNgType = /^ignoreNgType:(?:\$\((.*?)\):)?(.*)$/
+  _expireDate = /^expireDate:(\d{4}\/\d{1,2}\/\d{1,2}),(.*)$/
   _expNgWords = /^\$\[(.*?)\]\$:(.*)$/
 
   #jsonには正規表現のオブジェクトが含めれないので
@@ -203,6 +204,13 @@ class app.NG
           exception: true
           subType: m[1]?.split(",")
         ngWord = m[2]
+      # 有効期限の指定
+      else if _expireDate.test(ngWord)
+        m = ngWord.match(_expireDate)
+        d = app.util.stringToDate(m[1] + " 23:59:59")
+        ngElement =
+          expire: d.valueOf() + 1000
+        ngWord = m[2]
       # キーワードごとの取り出し
       elm = _getNgElement(ngWord)
       ngElement.type = elm.type
@@ -307,12 +315,20 @@ class app.NG
 
     for n from @get()
       continue if n.type is app.NG.NG_TYPE_INVALID
-      continue if n.exception isnt exceptionFlg
       if isBoard
+        # isNGBoard用の項目チェック
         unless n.type in [app.NG.NG_TYPE_REG_EXP, app.NG.NG_TYPE_REG_EXP_TITLE, app.NG.NG_TYPE_TITLE, app.NG.NG_TYPE_WORD, app.NG.NG_TYPE_REG_EXP_URL, app.NG.NG_TYPE_URL]
           continue
-      if n.start? and ((n.finish? and n.start <= res.num and res.num <= n.finish) or (parseInt(n.start) is res.num))
-        continue
+      else
+        # ignoreResNumber用レス番号のチェック
+        if n.start? and ((n.finish? and n.start <= res.num and res.num <= n.finish) or (parseInt(n.start) is res.num))
+          continue
+      # 有効期限のチェック
+      continue if n.expire? and Date.now() > n.expire
+      # ignoreNgType用例外フラグのチェック
+      continue if n.exception isnt exceptionFlg
+      # ng-typeのチエック
+      continue if n.subType? and subType and n.subType.indexOf(subType) is -1
 
       # サブ条件のチェック
       if n.subElements?
@@ -326,11 +342,7 @@ class app.NG
       # メイン条件のチェック
       if n.type isnt "" and n.word isnt ""
         ngType = _checkWord(n)
-        # ng-typeのチエック
-        if ngType and n.subType? and subType and n.subType.indexOf(subType) is -1
-          continue
-      # 全てNGの場合のみNG
-      return ngType if ngType
+        return ngType if ngType
     return null
 
   ###*
@@ -362,3 +374,34 @@ class app.NG
     )
       return true
     return false
+
+  ###*
+  @method execExpire
+  ###
+  @execExpire: ->
+    configStr = _config.getString()
+    newConfigStr = ""
+    updateFlag = false
+
+    ngStrSplit = configStr.split("\n")
+    for ngWord in ngStrSplit
+      # 有効期限の確認
+      if _expireDate.test(ngWord)
+        m = ngWord.match(_expireDate)
+        d = app.util.stringToDate(m[1] + " 23:59:59")
+        if d.valueOf() + 1000 < Date.now()
+          updateFlag = true
+        else
+          newConfigStr += "\n" if newConfigStr isnt ""
+          newConfigStr += ngWord
+      else
+        newConfigStr += "\n" if newConfigStr isnt ""
+        newConfigStr += ngWord
+    # 期限切れデータが存在した場合はNG情報を更新する
+    if updateFlag
+      _config.setString(newConfigStr)
+      _ng = @parse(newConfigStr)
+      _config.set(Array.from(_ng))
+      _setupReg(_ng)
+
+    return

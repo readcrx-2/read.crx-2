@@ -394,6 +394,57 @@ block body
         label
           input.direct(type="checkbox" name="forward_link_ng")
           |未来へのアンカーをNG
+        br
+        br
+        |【コンテキストメニューの設定】
+        div
+          |IDをNG指定でセットする有効期限の指定方法:
+          label
+            input.direct(type="radio" name="ng_id_expire" value="none" checked)
+            |セットしない
+          label
+            input.direct(type="radio" name="ng_id_expire" value="date")
+            |期間指定
+          label
+            input.direct(type="radio" name="ng_id_expire" value="day")
+            |曜日指定
+          br
+          input.direct(type="number" name="ng_id_expire_date" min="0" max="180")
+          |日後まで(0は当日のみ有効)
+          |次の
+          select.direct(name="ng_id_expire_day")
+            option(value="0") 日
+            option(value="1") 月
+            option(value="2") 火
+            option(value="3") 水
+            option(value="4") 木
+            option(value="5") 金
+            option(value="6") 土
+          |曜日まで
+        div
+          |SLIPをNG指定でセットする有効期限の指定方法:
+          label
+            input.direct(type="radio" name="ng_slip_expire" value="none" checked)
+            |セットしない
+          label
+            input.direct(type="radio" name="ng_slip_expire" value="date")
+            |期間指定
+          label
+            input.direct(type="radio" name="ng_slip_expire" value="day")
+            |曜日指定
+          br
+          input.direct(type="number" name="ng_slip_expire_date" min="0" max="180")
+          |日後まで(0は当日のみ有効)
+          |次の
+          select.direct(name="ng_slip_expire_day")
+            option(value="0") 日
+            option(value="1") 月
+            option(value="2") 火
+            option(value="3") 水
+            option(value="4") 木
+            option(value="5") 金
+            option(value="6") 土
+          |曜日まで
 
     section
       h2 書き込み

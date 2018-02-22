@@ -382,7 +382,7 @@ app.view_setup_resizer = ->
     )
     $div.on("mouseup", ->
       @remove()
-      app.config.set("tab_a_#{val}", parseInt($tabA.style[val], 10))
+      app.config.set("tab_a_#{val}", ""+parseInt($tabA.style[val], 10))
       return
     )
     document.body.addLast($div)

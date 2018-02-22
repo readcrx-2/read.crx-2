@@ -345,6 +345,22 @@ block body
           |NGを連鎖させる
         br
         label
+          input.direct(type="checkbox" name="chain_ng_id")
+          |NG対象のIDを連鎖させる
+        label
+          |(
+          input.direct(type="checkbox" name="chain_ng_id_by_chain")
+          |連鎖NGを含む)
+        br
+        label
+          input.direct(type="checkbox" name="chain_ng_slip")
+          |NG対象のSLIPを連鎖させる
+        label
+          |(
+          input.direct(type="checkbox" name="chain_ng_slip_by_chain")
+          |連鎖NGを含む)
+        br
+        label
           input.direct(type="checkbox" name="display_ng")
           |あぼーん表示する
         br

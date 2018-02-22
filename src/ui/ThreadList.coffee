@@ -267,7 +267,7 @@ class UI.ThreadList
               threadTitle = $tr.$(selector.title)?.textContent
               threadRes = $tr.$(selector.res)?.textContent
               threadWrittenRes = parseInt($tr.$(selector.writtenRes)?.textContent ? 0)
-              date = $tr.$(selector.viewedDate)?.textContent
+              dateValue = $tr.$(selector.viewedDate)?.getAttr("date-value")
 
               switch true
                 when e.target.hasClass("add_bookmark")
@@ -275,7 +275,7 @@ class UI.ThreadList
                 when e.target.hasClass("del_bookmark")
                   app.bookmark.remove(threadURL)
                 when e.target.hasClass("del_history")
-                  app.History.remove(threadURL, app.util.stringToDate(date))
+                  app.History.remove(threadURL, +dateValue)
                   $tr.remove()
                 when e.target.hasClass("del_writehistory")
                   app.WriteHistory.remove(threadURL, threadWrittenRes)
@@ -424,7 +424,7 @@ class UI.ThreadList
 
       #閲覧日時
       if @_flg.viewedDate
-        tmpHTML += "<td>"
+        tmpHTML += "<td date-value=\"#{item.date}\">"
         tmpHTML += app.escapeHtml(ThreadList._dateToString(new Date(item.date)))
         tmpHTML += "</td>"
 

@@ -3,19 +3,28 @@
 @static
 ###
 class app.History
+  @DB_VERSION = 2
+
   @_openDB: ->
-    return new Promise( (resolve, reject) ->
-      req = indexedDB.open("History", 1)
+    return new Promise( (resolve, reject) =>
+      req = indexedDB.open("History", @DB_VERSION)
       req.onerror = (e) ->
         reject(e)
         return
-      req.onupgradeneeded = ({ target: {result: db, transaction: tx} }) ->
-        objStore = db.createObjectStore("History", keyPath: "id", autoIncrement: true)
-        objStore.createIndex("url", "url", unique: false)
-        objStore.createIndex("title", "title", unique: false)
-        objStore.createIndex("date", "date", unique: false)
-        tx.oncomplete = ->
-          resolve(db)
+      req.onupgradeneeded = ({ target: {result: db, transaction: tx}, oldVersion: oldVer }) =>
+        if oldVer < 1
+          objStore = db.createObjectStore("History", keyPath: "id", autoIncrement: true)
+          objStore.createIndex("url", "url", unique: false)
+          objStore.createIndex("title", "title", unique: false)
+          objStore.createIndex("date", "date", unique: false)
+          tx.oncomplete = ->
+            resolve(db)
+
+        if oldVer is 1
+          @_recoveryOfBoardTitle(db, tx)
+          tx.oncomplete = ->
+            resolve(db)
+
         return
       req.onsuccess = ({ target: {result: db} }) ->
         resolve(db)
@@ -28,13 +37,15 @@ class app.History
   @param {String} url
   @param {String} title
   @param {Number} date
+  @param {String} boardTitle
   @return {Promise}
   ###
-  @add: (url, title, date) ->
+  @add: (url, title, date, boardTitle) ->
     if app.assertArg("History.add", [
       [url, "string"]
       [title, "string"]
       [date, "number"]
+      [boardTitle, "string"]
     ])
       throw new Error("履歴に追加しようとしたデータが不正です")
 
@@ -43,7 +54,7 @@ class app.History
       req = db
         .transaction("History", "readwrite")
         .objectStore("History")
-        .put({url, title, date})
+        .put({url, title, date, boardTitle})
       await app.util.indexedDBRequestToPromise(req)
     catch e
       app.log("error", "History.add: データの格納に失敗しました")
@@ -75,9 +86,7 @@ class app.History
             resolve()
             return
           if date?
-            ddate = cursor.value.date
-            if date < ddate < date + 60*1000
-              cursor.delete()
+            cursor.delete() if date is cursor.value.date
           else
             cursor.delete()
           cursor.continue()
@@ -281,4 +290,31 @@ class app.History
           return
         return
       )
+    )
+
+  ###*
+  @method _recoveryOfBoardTitle
+  @param {Object} db
+  @param {Object} tx
+  @return {Promise}
+  @private
+  ###
+  @_recoveryOfBoardTitle: (db, tx) ->
+    return new Promise( (resolve, reject) ->
+      req = tx
+        .objectStore("History")
+        .openCursor()
+      req.onsuccess = ({ target: {result: cursor} }) ->
+        if cursor
+          cursor.value.boardTitle = ""
+          cursor.update(cursor.value)
+          cursor.continue()
+        else
+          resolve()
+        return
+      req.onerror = (e) ->
+        app.log("error", "History._recoveryOfBoardTitle: トランザクション中断")
+        reject(e)
+        return
+      return
     )

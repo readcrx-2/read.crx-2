@@ -3,11 +3,10 @@ namespace UI {
   export class VirtualNotch {
     private wheelDelta = 0;
     private lastMouseWheel = Date.now();
-    private interval: number;
 
     constructor (private element: Element, private threshold: number = 100) {
       this.element.on("wheel", this.onMouseWheel.bind(this), { passive: true });
-      this.interval = setInterval(this.onInterval.bind(this), 500);
+      setInterval(this.onInterval.bind(this), 500);
     }
 
     private onInterval (): void {

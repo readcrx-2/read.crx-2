@@ -221,6 +221,10 @@ namespace app {
       ["ngwords", "RegExpTitle:.+\\.2ch\\.netの人気スレ\nTitle:【漫画あり】コンビニで浪人を購入する方法\nTitle:★★ ２ちゃんねる\(sc\)のご案内 ★★★\nTitle:浪人はこんなに便利\nTitle:2ちゃんねるの運営を支えるサポーター募集"],
       ["ngobj", "[{\"type\":\"regExpTitle\",\"word\":\".+\\\\.2ch\\\\.netの人気スレ\"},{\"type\":\"title\",\"word\":\"【漫画あり】こんびにで浪人を購入する方法\"},{\"type\":\"title\",\"word\":\"★★2ちゃんねる\\\\(sc\\\\)のご案内★★★\"},{\"type\":\"title\",\"word\":\"浪人はこんなに便利\"},{\"type\":\"title\",\"word\":\"2ちゃんねるの運営を支えるさぽーたー募集\"}]"],
       ["chain_ng", "off"],
+      ["chain_ng_id", "off"],
+      ["chain_ng_id_by_chain", "off"],
+      ["chain_ng_slip", "off"],
+      ["chain_ng_slip_by_chain", "off"],
       ["display_ng", "off"],
       ["nothing_id_ng", "off"],
       ["nothing_slip_ng", "off"],
@@ -252,14 +256,14 @@ namespace app {
       this.ready = ready.add.bind(ready);
 
       chrome.storage.local.get(null, (res) => {
-        var key:string, val:string;
+        var key:string, val:any;
         if (this._cache !== null) {
           for ([key, val] of Object.entries(res)) {
             if (
               key.startsWith("config_") &&
-              (typeof val === "string" || typeof val ==="number")
+              (typeof val === "string" || typeof val === "number")
             ) {
-              this._cache.set(key, val);
+              this._cache.set(key, val.toString());
             }
           }
           ready.call();
@@ -267,11 +271,12 @@ namespace app {
       });
 
       this._onChanged = (change, area) => {
-        var key:string, newValue:string;
+        var key:string, val:any, newValue:string;
 
         if (area === "local") {
-          for ([key, {newValue}] of Object.entries(change)) {
+          for ([key, val] of Object.entries(change)) {
             if (!key.startsWith("config_")) continue;
+            newValue = val.newValue.toString();
 
             if (typeof newValue === "string") {
               this._cache.set(key, newValue);

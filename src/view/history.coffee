@@ -6,7 +6,7 @@ app.boot("/view/history.html", ->
 
   $table = $__("table")
   threadList = new UI.ThreadList($table,
-    th: ["title", "viewedDate"]
+    th: ["title", "boardTitle", "viewedDate"]
     searchbox: $view.C("searchbox")[0]
   )
   app.DOMData.set($view, "threadList", threadList)

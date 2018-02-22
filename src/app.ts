@@ -256,14 +256,14 @@ namespace app {
       this.ready = ready.add.bind(ready);
 
       chrome.storage.local.get(null, (res) => {
-        var key:string, val:string;
+        var key:string, val:any;
         if (this._cache !== null) {
           for ([key, val] of Object.entries(res)) {
             if (
               key.startsWith("config_") &&
-              (typeof val === "string" || typeof val ==="number")
+              (typeof val === "string" || typeof val === "number")
             ) {
-              this._cache.set(key, val);
+              this._cache.set(key, val.toString());
             }
           }
           ready.call();
@@ -271,11 +271,12 @@ namespace app {
       });
 
       this._onChanged = (change, area) => {
-        var key:string, newValue:string;
+        var key:string, val:any, newValue:string;
 
         if (area === "local") {
-          for ([key, {newValue}] of Object.entries(change)) {
+          for ([key, val] of Object.entries(change)) {
             if (!key.startsWith("config_")) continue;
+            newValue = val.newValue.toString();
 
             if (typeof newValue === "string") {
               this._cache.set(key, newValue);

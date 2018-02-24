@@ -685,7 +685,7 @@ app.boot("/view/thread.html", ->
     app.contextMenus.update("add_media_to_ngwords", {
       title: menuTitle,
       onclick: (info, tab) =>
-        app.NG.add(@src)
+        app.NG.add(target.src)
         threadContent.refreshNG()
         return
     })

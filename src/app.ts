@@ -229,6 +229,8 @@ namespace app {
       ["nothing_id_ng", "off"],
       ["nothing_slip_ng", "off"],
       ["how_to_judgment_id", "first_res"],
+      ["repeat_message_ng_count", "0"],
+      ["forword_link_ng", "off"],
       ["bookmark_show_dat", "on"],
       ["default_name", ""],
       ["default_mail", ""],

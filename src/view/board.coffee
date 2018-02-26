@@ -44,10 +44,6 @@ app.boot("/view/board.html", ["board"], (Board) ->
   else
     $writeButton.remove()
 
-  # 現状ではしたらばはhttpsに対応していないので切り替えボタンを隠す
-  if app.URL.tsld(url) is "shitaraba.net"
-    $view.C("button_scheme")[0].remove()
-
   # ソート関連
   do ->
     lastBoardSort = app.config.get("last_board_sort_config")

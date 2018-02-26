@@ -1030,9 +1030,9 @@ class UI.ThreadContent
 
     # 前方参照をNG
     if (
-      app.config.isOn("forword_link_ng") and
-      !app.NG.isIgnoreResNumForAuto(objRes.num, app.NG.NG_TYPE_AUTO_FORWORD_LINK) and
-      !app.NG.isIgnoreNgType(objRes, app.NG.NG_TYPE_AUTO_FORWORD_LINK)
+      app.config.isOn("forward_link_ng") and
+      !app.NG.isIgnoreResNumForAuto(objRes.num, app.NG.NG_TYPE_AUTO_FORWARD_LINK) and
+      !app.NG.isIgnoreNgType(objRes, app.NG.NG_TYPE_AUTO_FORWARD_LINK)
     )
       ngFlag = false
       resMessage = (
@@ -1053,7 +1053,7 @@ class UI.ThreadContent
               target++
             break if ngFlag
           break if ngFlag
-      return app.NG.NG_TYPE_AUTO_FORWORD_LINK if ngFlag
+      return app.NG.NG_TYPE_AUTO_FORWARD_LINK if ngFlag
 
     return null
 

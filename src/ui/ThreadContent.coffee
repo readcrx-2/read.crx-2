@@ -671,8 +671,10 @@ class UI.ThreadContent
 
       # id, slip, tripが取り終わったタイミングでNG判定を行う
       # NG判定されるものは、ReplaceStrTxtで置き換え後のテキストなので注意すること
-      if ngType = @_checkNG(res, bbsType)
+      if ngObj = @_checkNG(res, bbsType)
         res.class.push("ng")
+        ngType = ngObj.type
+        ngType += ":" + ngObj.name if ngObj.name?
         res.attr["ng-type"] = ngType
 
       # resデータの保管
@@ -934,32 +936,32 @@ class UI.ThreadContent
   @method _checkNG
   @param {Object} objRes
   @param {String} bbsType
-  @return {String|null}
+  @return {Object|null}
   @private
   ###
   _checkNG: (objRes, bbsType) =>
-    if ngType = @_getNgType(objRes, bbsType)
+    if ngObj = @_getNgType(objRes, bbsType)
       # NG連鎖IDの登録
       if (
         app.config.isOn("chain_ng_id") and
         objRes.id? and
-        not (ngType in [app.NG.NG_TYPE_ID, app.NG.NG_TYPE_AUTO_CHAIN_ID])
+        not (ngObj.type in [app.NG.NG_TYPE_ID, app.NG.NG_TYPE_AUTO_CHAIN_ID])
       )
         @_ngIdForChain.add(objRes.id) unless @_ngIdForChain.has(objRes.id)
       # NG連鎖SLIPの登録
       if (
         app.config.isOn("chain_ng_slip") and
         objRes.slip? and
-        not (ngType in [app.NG.NG_TYPE_SLIP, app.NG.NG_TYPE_AUTO_CHAIN_SLIP])
+        not (ngObj.type in [app.NG.NG_TYPE_SLIP, app.NG.NG_TYPE_AUTO_CHAIN_SLIP])
       )
         @_ngSlipForChain.add(objRes.slip) unless @_ngSlipForChain.has(objRes.slip)
-    return ngType
+    return ngObj
 
   ###*
   @method _getNgType
   @param {Object} objRes
   @param {String} bbsType
-  @return {String|null}
+  @return {Object|null}
   @private
   ###
   _getNgType: (objRes, bbsType) =>
@@ -967,10 +969,10 @@ class UI.ThreadContent
 
     # 登録ワードのNG
     if (
-      (ngType = app.NG.checkNGThread(objRes, @_threadTitle, @url)) and
-      !app.NG.isIgnoreNgType(objRes, @_threadTitle, @url, ngType)
+      (ngObj = app.NG.checkNGThread(objRes, @_threadTitle, @url)) and
+      !app.NG.isIgnoreNgType(objRes, @_threadTitle, @url, ngObj.type)
     )
-      return ngType
+      return ngObj
 
     if bbsType is "2ch"
       # idなしをNG
@@ -981,7 +983,7 @@ class UI.ThreadContent
         !app.NG.isIgnoreResNumForAuto(objRes.num, app.NG.NG_TYPE_AUTO_NOTHING_ID) and
         !app.NG.isIgnoreNgType(objRes, @_threadTitle, @url, app.NG.NG_TYPE_AUTO_NOTHING_ID)
       )
-        return app.NG.NG_TYPE_AUTO_NOTHING_ID
+        return {type: app.NG.NG_TYPE_AUTO_NOTHING_ID}
       # slipなしをNG
       if (
         app.config.isOn("nothing_slip_ng") and !objRes.slip? and
@@ -990,7 +992,7 @@ class UI.ThreadContent
         !app.NG.isIgnoreResNumForAuto(objRes.num, app.NG.NG_TYPE_AUTO_NOTHING_SLIP) and
         !app.NG.isIgnoreNgType(objRes, @_threadTitle, @url, app.NG.NG_TYPE_AUTO_NOTHING_SLIP)
       )
-        return app.NG.NG_TYPE_AUTO_NOTHING_SLIP
+        return {type: app.NG.NG_TYPE_AUTO_NOTHING_SLIP}
 
     # 連鎖IDのNG
     if (
@@ -1000,7 +1002,7 @@ class UI.ThreadContent
       !app.NG.isIgnoreResNumForAuto(objRes.num, app.NG.NG_TYPE_AUTO_CHAIN_ID) and
       !app.NG.isIgnoreNgType(objRes, @_threadTitle, @url, app.NG.NG_TYPE_AUTO_CHAIN_ID)
     )
-      return app.NG.NG_TYPE_AUTO_CHAIN_ID
+      return {type: app.NG.NG_TYPE_AUTO_CHAIN_ID}
     # 連鎖SLIPのNG
     if (
       app.config.isOn("chain_ng_slip") and
@@ -1009,7 +1011,7 @@ class UI.ThreadContent
       !app.NG.isIgnoreResNumForAuto(objRes.num, app.NG.NG_TYPE_AUTO_CHAIN_SLIP) and
       !app.NG.isIgnoreNgType(objRes, @_threadTitle, @url, app.NG.NG_TYPE_AUTO_CHAIN_SLIP)
     )
-      return app.NG.NG_TYPE_AUTO_CHAIN_SLIP
+      return {type: app.NG.NG_TYPE_AUTO_CHAIN_SLIP}
 
     # 連投レスをNG
     if app.config.get("repeat_message_ng_count") > 1
@@ -1034,7 +1036,7 @@ class UI.ThreadContent
         !app.NG.isIgnoreResNumForAuto(objRes.num, app.NG.NG_TYPE_AUTO_REPEAT_MESSAGE) and
         !app.NG.isIgnoreNgType(objRes, @_threadTitle, @url, app.NG.NG_TYPE_AUTO_REPEAT_MESSAGE)
       )
-        return app.NG.NG_TYPE_AUTO_REPEAT_MESSAGE
+        return {type: app.NG.NG_TYPE_AUTO_REPEAT_MESSAGE}
 
     # 前方参照をNG
     if (
@@ -1061,7 +1063,7 @@ class UI.ThreadContent
               target++
             break if ngFlag
           break if ngFlag
-      return app.NG.NG_TYPE_AUTO_FORWARD_LINK if ngFlag
+      return {type: app.NG.NG_TYPE_AUTO_FORWARD_LINK} if ngFlag
 
     return null
 
@@ -1082,9 +1084,11 @@ class UI.ThreadContent
     for res in @container.$$("article")
       continue if res.hasClass("ng")
       resNum = +res.C("num")[0].textContent
-      if ngType = @_checkNG(@_rawResData[resNum], bbsType)
+      if ngObj = @_checkNG(@_rawResData[resNum], bbsType)
         res.addClass("ng")
         res.addClass("disp_ng") if app.config.isOn("display_ng")
+        ngType = ngObj.type
+        ngType += ":" + ngObj.name if ngObj.name?
         res.setAttr("ng-type", ngType)
         # 連鎖NG
         if app.config.isOn("chain_ng") and @repIndex.has(resNum)

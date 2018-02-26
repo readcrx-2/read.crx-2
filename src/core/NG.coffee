@@ -36,6 +36,7 @@ class app.NG
   _ignoreResRegNumber = /^ignoreResNumber:(\d+)(?:-?(\d+))?,(.*)$/
   _ignoreNgType = /^ignoreNgType:(?:\$\((.*?)\):)?(.*)$/
   _expireDate = /^expireDate:(\d{4}\/\d{1,2}\/\d{1,2}),(.*)$/
+  _attachName = /^attachName:([^,]*),(.*)$/
   _expNgWords = /^\$\[(.*?)\]\$:(.*)$/
 
   #jsonには正規表現のオブジェクトが含めれないので
@@ -211,6 +212,12 @@ class app.NG
         ngElement =
           expire: d.valueOf() + 1000
         ngWord = m[2]
+      # 名前の付与
+      else if _attachName.test(ngWord)
+        m = ngWord.match(_attachName)
+        ngElement =
+          name: m[1]
+        ngWord = m[2]
       # キーワードごとの取り出し
       elm = _getNgElement(ngWord)
       ngElement.type = elm.type
@@ -264,6 +271,7 @@ class app.NG
   @param {String} url
   @param {Boolean} exceptionFlg
   @param {String} subType
+  @return {Object|null}
   ###
   @isNGBoard: (title, url, exceptionFlg = false, subType = null) ->
     return @checkNGThread({}, title, url, exceptionFlg, subType, true)
@@ -276,7 +284,7 @@ class app.NG
   @param {Boolean} exceptionFlg
   @param {String} subType
   @param {Boolean} isBoard
-  @return {String|null}
+  @return {Object|null}
   ###
   @checkNGThread: (res, threadTitle, url, exceptionFlg = false, subType = null, isBoard = false) ->
     tmpTitle = app.util.normalize(threadTitle)
@@ -342,7 +350,7 @@ class app.NG
       # メイン条件のチェック
       if n.type isnt "" and n.word isnt ""
         ngType = _checkWord(n)
-        return ngType if ngType
+        return {type: ngType, name: n.name} if ngType
     return null
 
   ###*

@@ -1088,6 +1088,8 @@ class UI.ThreadContent
     if app.config.isOn("chain_ng_slip")
       for slip from @_ngSlipForChain
         @_chainNgBySlip(slip)
+    # 表示更新通知
+    @container.dispatchEvent(new Event("view_refreshed", {"bubbles": true}))
     return
 
   ###*

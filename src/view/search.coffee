@@ -4,11 +4,16 @@ app.boot("/view/search.html", ["thread_search"], (ThreadSearch) ->
   catch
     alert("不正な引数です")
     return
+  if app.URL.parseQuery(location.search).has("https")
+    scheme = "https"
+  else
+    scheme = "http"
 
   openedAt = Date.now()
 
   $view = document.documentElement
   $view.dataset.url = "search:#{query}"
+  $view.setAttr("scheme", scheme)
 
   $messageBar = $view.C("message_bar")[0]
   $buttonReload = $view.C("button_reload")[0]
@@ -19,7 +24,7 @@ app.boot("/view/search.html", ["thread_search"], (ThreadSearch) ->
   unless app.config.isOn("no_history")
     app.History.add($view.dataset.url, document.title, openedAt, "")
 
-  $view.$(".button_link > a").href = "http://dig.5ch.net/search?maxResult=500&keywords=#{encodeURIComponent(query)}"
+  $view.$(".button_link > a").href = "#{scheme}://dig.5ch.net/search?maxResult=500&keywords=#{encodeURIComponent(query)}"
 
   $table = $__("table")
   threadList = new UI.ThreadList($table,
@@ -47,6 +52,9 @@ app.boot("/view/search.html", ["thread_search"], (ThreadSearch) ->
       $messageBar.removeClass("error")
       $messageBar.removeChildren()
 
+      for r in result
+        r.url = app.URL.setScheme(r.url, scheme)
+        r.isHttps = (scheme is "https")
       threadList.addItem(result)
 
       if $tbody.child().length is 0
@@ -79,6 +87,11 @@ app.boot("/view/search.html", ["thread_search"], (ThreadSearch) ->
     threadList.empty()
     threadSearch = new ThreadSearch(query)
     load()
+    return
+  )
+
+  window.on("view_unload", ->
+    app.config.set("thread_search_last_mode", scheme)
     return
   )
 

@@ -29,6 +29,11 @@ td {
   }
 }
 
+tr.https td:nth-child(2)::before {
+    content: url(/img/lock_12x12_3a5.webp);
+    vertical-align: middle;
+}
+
 .theme_default {
   .more:hover {
     background: #e8e8e8;

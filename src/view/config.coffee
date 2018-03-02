@@ -452,7 +452,9 @@ app.boot("/view/config.html", ["cache", "bbsmenu"], (Cache, BBSMenu) ->
                 $key.checked = (value is "on")
                 $key.dispatchEvent(new Event("change"))
               when "radio"
-                $key.value = value
+                for dom in $view.$$("input.direct[name=\"#{key}\"]")
+                  if dom.value is value
+                    dom.checked = true
                 $key.dispatchEvent(new Event("change"))
           else
             $keyTextArea = $view.$("textarea[name=\"#{key}\"]")

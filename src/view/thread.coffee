@@ -685,7 +685,7 @@ app.boot("/view/thread.html", ->
     app.contextMenus.update("add_media_to_ngwords", {
       title: menuTitle,
       onclick: (info, tab) =>
-        app.NG.add(@src)
+        app.NG.add(target.src)
         threadContent.refreshNG()
         return
     })
@@ -811,6 +811,10 @@ app.boot("/view/thread.html", ->
     setObserve = ->
       observer.disconnect()
       ele = $content.lastElementChild
+      while ele.offsetHeight is 0
+        rn = +ele.C("num")[0].textContent - 1
+        break if rn < 0
+        ele = $content.child()[rn - 1]
       observer.observe(ele) if ele?
       return
 
@@ -885,6 +889,11 @@ app.boot("/view/thread.html", ->
       return
     )
     $view.on("view_loaded", ->
+      setObserve()
+      updateThreadFooter()
+      return
+    )
+    $view.on("view_refreshed", ->
       setObserve()
       updateThreadFooter()
       return
@@ -1145,6 +1154,10 @@ app.viewThread._readStateManager = ($view) ->
   $view.on("request_reload", ->
     requestReloadFlag = true
     scanCountByReloaded = 0
+    scanAndSave()
+    return
+  )
+  $view.on("view_refreshed", ->
     scanAndSave()
     return
   )

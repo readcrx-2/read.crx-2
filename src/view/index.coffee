@@ -671,6 +671,8 @@ app.main = ->
 
   # コンテキストメニューの作成
   app.contextMenus.createAll()
+  # NGデータの有効期限設定
+  app.NG.execExpire()
 
   window.on("unload", ->
     #コンテキストメニューの削除

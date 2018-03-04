@@ -137,6 +137,13 @@ class UI.ThreadContent
     ###
     @_resMessageMap = new Map()
 
+    ###*
+    @property _threadTitle
+    @type String|null
+    @private
+    ###
+    @_threadTitle = null
+
     try
       @harmfulReg = new RegExp(app.config.get("image_blur_word"))
       @findHarmfulFlag = true
@@ -537,7 +544,7 @@ class UI.ThreadContent
   @method addItem
   @param {Object | Array}
   ###
-  addItem: (items) ->
+  addItem: (items, threadTitle) ->
     items = [items] unless Array.isArray(items)
 
     unless items.length > 0
@@ -546,6 +553,7 @@ class UI.ThreadContent
     resNum = @container.child().length
     {bbsType} = app.URL.guessType(@url)
     writtenRes = await app.WriteHistory.getByUrl(@url)
+    @_threadTitle = threadTitle
 
     html = ""
 
@@ -663,8 +671,10 @@ class UI.ThreadContent
 
       # id, slip, tripが取り終わったタイミングでNG判定を行う
       # NG判定されるものは、ReplaceStrTxtで置き換え後のテキストなので注意すること
-      if ngType = @_checkNG(res, bbsType)
+      if ngObj = @_checkNG(res, bbsType)
         res.class.push("ng")
+        ngType = ngObj.type
+        ngType += ":" + ngObj.name if ngObj.name?
         res.attr["ng-type"] = ngType
 
       # resデータの保管
@@ -867,7 +877,7 @@ class UI.ThreadContent
       continue if getRes.hasClass("ng")
       rn = +getRes.C("num")[0].textContent
       continue if app.NG.isIgnoreResNumForAuto(rn, app.NG.NG_TYPE_AUTO_CHAIN)
-      continue if app.NG.isIgnoreNgType(@_rawResData[rn], app.NG.NG_TYPE_AUTO_CHAIN)
+      continue if app.NG.isIgnoreNgType(@_rawResData[rn], @_threadTitle, @url, app.NG.NG_TYPE_AUTO_CHAIN)
       getRes.addClass("ng")
       getRes.addClass("disp_ng") if app.config.isOn("display_ng")
       getRes.setAttr("ng-type", app.NG.NG_TYPE_AUTO_CHAIN)
@@ -895,7 +905,7 @@ class UI.ThreadContent
       continue if r.hasClass("ng")
       rn = +r.C("num")[0].textContent
       continue if app.NG.isIgnoreResNumForAuto(rn, app.NG.NG_TYPE_AUTO_CHAIN_ID)
-      continue if app.NG.isIgnoreNgType(@_rawResData[rn], app.NG.NG_TYPE_AUTO_CHAIN_ID)
+      continue if app.NG.isIgnoreNgType(@_rawResData[rn], @_threadTitle, @url, app.NG.NG_TYPE_AUTO_CHAIN_ID)
       r.addClass("ng")
       r.addClass("disp_ng") if app.config.isOn("display_ng")
       r.setAttr("ng-type", app.NG.NG_TYPE_AUTO_CHAIN_ID)
@@ -914,7 +924,7 @@ class UI.ThreadContent
       continue if r.hasClass("ng")
       rn = +r.C("num")[0].textContent
       continue if app.NG.isIgnoreResNumForAuto(rn, app.NG.NG_TYPE_AUTO_CHAIN_SLIP)
-      continue if app.NG.isIgnoreNgType(@_rawResData[rn], app.NG.NG_TYPE_AUTO_CHAIN_SLIP)
+      continue if app.NG.isIgnoreNgType(@_rawResData[rn], @_threadTitle, @url, app.NG.NG_TYPE_AUTO_CHAIN_SLIP)
       r.addClass("ng")
       r.addClass("disp_ng") if app.config.isOn("display_ng")
       r.setAttr("ng-type", app.NG.NG_TYPE_AUTO_CHAIN_SLIP)
@@ -926,32 +936,32 @@ class UI.ThreadContent
   @method _checkNG
   @param {Object} objRes
   @param {String} bbsType
-  @return {String|null}
+  @return {Object|null}
   @private
   ###
   _checkNG: (objRes, bbsType) =>
-    if ngType = @_getNgType(objRes, bbsType)
+    if ngObj = @_getNgType(objRes, bbsType)
       # NG連鎖IDの登録
       if (
         app.config.isOn("chain_ng_id") and
         objRes.id? and
-        not (ngType in [app.NG.NG_TYPE_ID, app.NG.NG_TYPE_AUTO_CHAIN_ID])
+        not (ngObj.type in [app.NG.NG_TYPE_ID, app.NG.NG_TYPE_AUTO_CHAIN_ID])
       )
         @_ngIdForChain.add(objRes.id) unless @_ngIdForChain.has(objRes.id)
       # NG連鎖SLIPの登録
       if (
         app.config.isOn("chain_ng_slip") and
         objRes.slip? and
-        not (ngType in [app.NG.NG_TYPE_SLIP, app.NG.NG_TYPE_AUTO_CHAIN_SLIP])
+        not (ngObj.type in [app.NG.NG_TYPE_SLIP, app.NG.NG_TYPE_AUTO_CHAIN_SLIP])
       )
         @_ngSlipForChain.add(objRes.slip) unless @_ngSlipForChain.has(objRes.slip)
-    return ngType
+    return ngObj
 
   ###*
   @method _getNgType
   @param {Object} objRes
   @param {String} bbsType
-  @return {String|null}
+  @return {Object|null}
   @private
   ###
   _getNgType: (objRes, bbsType) =>
@@ -959,10 +969,10 @@ class UI.ThreadContent
 
     # 登録ワードのNG
     if (
-      (ngType = app.NG.checkNGThread(objRes)) and
-      !app.NG.isIgnoreNgType(objRes, ngType)
+      (ngObj = app.NG.checkNGThread(objRes, @_threadTitle, @url)) and
+      !app.NG.isIgnoreNgType(objRes, @_threadTitle, @url, ngObj.type)
     )
-      return ngType
+      return ngObj
 
     if bbsType is "2ch"
       # idなしをNG
@@ -971,18 +981,18 @@ class UI.ThreadContent
         ((app.config.get("how_to_judgment_id") is "first_res" and @_existIdAtFirstRes) or
          (app.config.get("how_to_judgment_id") is "exists_once" and @idIndex.size isnt 0)) and
         !app.NG.isIgnoreResNumForAuto(objRes.num, app.NG.NG_TYPE_AUTO_NOTHING_ID) and
-        !app.NG.isIgnoreNgType(objRes, app.NG.NG_TYPE_AUTO_NOTHING_ID)
+        !app.NG.isIgnoreNgType(objRes, @_threadTitle, @url, app.NG.NG_TYPE_AUTO_NOTHING_ID)
       )
-        return app.NG.NG_TYPE_AUTO_NOTHING_ID
+        return {type: app.NG.NG_TYPE_AUTO_NOTHING_ID}
       # slipなしをNG
       if (
         app.config.isOn("nothing_slip_ng") and !objRes.slip? and
         ((app.config.get("how_to_judgment_id") is "first_res" and @_existSlipAtFirstRes) or
          (app.config.get("how_to_judgment_id") is "exists_once" and @slipIndex.size isnt 0)) and
         !app.NG.isIgnoreResNumForAuto(objRes.num, app.NG.NG_TYPE_AUTO_NOTHING_SLIP) and
-        !app.NG.isIgnoreNgType(objRes, app.NG.NG_TYPE_AUTO_NOTHING_SLIP)
+        !app.NG.isIgnoreNgType(objRes, @_threadTitle, @url, app.NG.NG_TYPE_AUTO_NOTHING_SLIP)
       )
-        return app.NG.NG_TYPE_AUTO_NOTHING_SLIP
+        return {type: app.NG.NG_TYPE_AUTO_NOTHING_SLIP}
 
     # 連鎖IDのNG
     if (
@@ -990,18 +1000,18 @@ class UI.ThreadContent
       objRes.id? and
       @_ngIdForChain.has(objRes.id) and
       !app.NG.isIgnoreResNumForAuto(objRes.num, app.NG.NG_TYPE_AUTO_CHAIN_ID) and
-      !app.NG.isIgnoreNgType(objRes, app.NG.NG_TYPE_AUTO_CHAIN_ID)
+      !app.NG.isIgnoreNgType(objRes, @_threadTitle, @url, app.NG.NG_TYPE_AUTO_CHAIN_ID)
     )
-      return app.NG.NG_TYPE_AUTO_CHAIN_ID
+      return {type: app.NG.NG_TYPE_AUTO_CHAIN_ID}
     # 連鎖SLIPのNG
     if (
       app.config.isOn("chain_ng_slip") and
       objRes.slip? and
       @_ngSlipForChain.has(objRes.slip) and
       !app.NG.isIgnoreResNumForAuto(objRes.num, app.NG.NG_TYPE_AUTO_CHAIN_SLIP) and
-      !app.NG.isIgnoreNgType(objRes, app.NG.NG_TYPE_AUTO_CHAIN_SLIP)
+      !app.NG.isIgnoreNgType(objRes, @_threadTitle, @url, app.NG.NG_TYPE_AUTO_CHAIN_SLIP)
     )
-      return app.NG.NG_TYPE_AUTO_CHAIN_SLIP
+      return {type: app.NG.NG_TYPE_AUTO_CHAIN_SLIP}
 
     # 連投レスをNG
     if app.config.get("repeat_message_ng_count") > 1
@@ -1024,15 +1034,15 @@ class UI.ThreadContent
       if (
         @_resMessageMap.get(resMessage).size >= +app.config.get("repeat_message_ng_count") and
         !app.NG.isIgnoreResNumForAuto(objRes.num, app.NG.NG_TYPE_AUTO_REPEAT_MESSAGE) and
-        !app.NG.isIgnoreNgType(objRes, app.NG.NG_TYPE_AUTO_REPEAT_MESSAGE)
+        !app.NG.isIgnoreNgType(objRes, @_threadTitle, @url, app.NG.NG_TYPE_AUTO_REPEAT_MESSAGE)
       )
-        return app.NG.NG_TYPE_AUTO_REPEAT_MESSAGE
+        return {type: app.NG.NG_TYPE_AUTO_REPEAT_MESSAGE}
 
     # 前方参照をNG
     if (
       app.config.isOn("forward_link_ng") and
       !app.NG.isIgnoreResNumForAuto(objRes.num, app.NG.NG_TYPE_AUTO_FORWARD_LINK) and
-      !app.NG.isIgnoreNgType(objRes, app.NG.NG_TYPE_AUTO_FORWARD_LINK)
+      !app.NG.isIgnoreNgType(objRes, @_threadTitle, @url, app.NG.NG_TYPE_AUTO_FORWARD_LINK)
     )
       ngFlag = false
       resMessage = (
@@ -1053,7 +1063,7 @@ class UI.ThreadContent
               target++
             break if ngFlag
           break if ngFlag
-      return app.NG.NG_TYPE_AUTO_FORWARD_LINK if ngFlag
+      return {type: app.NG.NG_TYPE_AUTO_FORWARD_LINK} if ngFlag
 
     return null
 
@@ -1074,9 +1084,11 @@ class UI.ThreadContent
     for res in @container.$$("article")
       continue if res.hasClass("ng")
       resNum = +res.C("num")[0].textContent
-      if ngType = @_checkNG(@_rawResData[resNum], bbsType)
+      if ngObj = @_checkNG(@_rawResData[resNum], bbsType)
         res.addClass("ng")
         res.addClass("disp_ng") if app.config.isOn("display_ng")
+        ngType = ngObj.type
+        ngType += ":" + ngObj.name if ngObj.name?
         res.setAttr("ng-type", ngType)
         # 連鎖NG
         if app.config.isOn("chain_ng") and @repIndex.has(resNum)

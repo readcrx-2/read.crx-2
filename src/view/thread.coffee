@@ -348,11 +348,17 @@ app.boot("/view/thread.html", ->
       app.clipboardWrite($res.dataset.trip)
 
     else if target.hasClass("add_id_to_ngwords")
-      app.NG.add($res.dataset.id)
+      addString = $res.dataset.id
+      exDate = _getExpireDateString("id")
+      addString = "expireDate:#{exDate},#{addString}" if exDate
+      app.NG.add(addString)
       threadContent.refreshNG()
 
     else if target.hasClass("add_slip_to_ngwords")
-      app.NG.add("Slip:" + $res.dataset.slip)
+      addString = "Slip:" + $res.dataset.slip
+      exDate = _getExpireDateString("slip")
+      addString = "expireDate:#{exDate},#{addString}" if exDate
+      app.NG.add(addString)
       threadContent.refreshNG()
 
     else if target.hasClass("jump_to_this")
@@ -701,6 +707,24 @@ app.boot("/view/thread.html", ->
     return
   )
 
+  _getExpireDateString = (type) ->
+    dStr = null
+    exDate = null
+    if type in ["id", "slip"]
+      switch app.config.get("ng_#{type}_expire")
+        when "date"
+          d = Date.now() + +app.config.get("ng_#{type}_expire_date") * 86400 * 1000
+          exDate = new Date(d)
+        when "day"
+          t = new Date()
+          dDay = +app.config.get("ng_#{type}_expire_day") - t.getDay()
+          dDay += 7 if dDay < 1
+          d = Date.now() + dDay * 86400 * 1000
+          exDate = new Date(d)
+    if exDate
+      dStr = exDate.getFullYear() + "/" + (exDate.getMonth() + 1) + "/" + exDate.getDate()
+    return dStr
+
   #クイックジャンプパネル
   do ->
     jumpArticleSelector =
@@ -954,7 +978,7 @@ app.viewThread._draw = ($view, {forceUpdate = false, jumpResNum = -1} = {}) ->
 
     document.title = thread.title
 
-    await app.DOMData.get($view, "threadContent").addItem(thread.res.slice($view.C("content")[0].child().length))
+    await app.DOMData.get($view, "threadContent").addItem(thread.res.slice($view.C("content")[0].child().length), thread.title)
     loadCount++
     app.DOMData.get($view, "lazyload").scan()
 

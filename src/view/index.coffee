@@ -424,7 +424,7 @@ app.main = ->
           modal: true
     if res = /^search:(.+)$/.exec(url)
       return
-        src: "/view/search.html?#{app.URL.buildQuery(query: res[1])}"
+        src: "/view/search.html?#{res[1]}"
         url: url
     if guessResult.type is "board"
       return
@@ -671,6 +671,8 @@ app.main = ->
 
   # コンテキストメニューの作成
   app.contextMenus.createAll()
+  # NGデータの有効期限設定
+  app.NG.execExpire()
 
   window.on("unload", ->
     #コンテキストメニューの削除

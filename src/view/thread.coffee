@@ -348,11 +348,17 @@ app.boot("/view/thread.html", ->
       app.clipboardWrite($res.dataset.trip)
 
     else if target.hasClass("add_id_to_ngwords")
-      app.NG.add($res.dataset.id)
+      addString = $res.dataset.id
+      exDate = _getExpireDateString("id")
+      addString = "expireDate:#{exDate},#{addString}" if exDate
+      app.NG.add(addString)
       threadContent.refreshNG()
 
     else if target.hasClass("add_slip_to_ngwords")
-      app.NG.add("Slip:" + $res.dataset.slip)
+      addString = "Slip:" + $res.dataset.slip
+      exDate = _getExpireDateString("slip")
+      addString = "expireDate:#{exDate},#{addString}" if exDate
+      app.NG.add(addString)
       threadContent.refreshNG()
 
     else if target.hasClass("jump_to_this")
@@ -685,7 +691,7 @@ app.boot("/view/thread.html", ->
     app.contextMenus.update("add_media_to_ngwords", {
       title: menuTitle,
       onclick: (info, tab) =>
-        app.NG.add(@src)
+        app.NG.add(target.src)
         threadContent.refreshNG()
         return
     })
@@ -700,6 +706,24 @@ app.boot("/view/thread.html", ->
     $view.dispatchEvent(new Event("request_reload"))
     return
   )
+
+  _getExpireDateString = (type) ->
+    dStr = null
+    exDate = null
+    if type in ["id", "slip"]
+      switch app.config.get("ng_#{type}_expire")
+        when "date"
+          d = Date.now() + +app.config.get("ng_#{type}_expire_date") * 86400 * 1000
+          exDate = new Date(d)
+        when "day"
+          t = new Date()
+          dDay = +app.config.get("ng_#{type}_expire_day") - t.getDay()
+          dDay += 7 if dDay < 1
+          d = Date.now() + dDay * 86400 * 1000
+          exDate = new Date(d)
+    if exDate
+      dStr = exDate.getFullYear() + "/" + (exDate.getMonth() + 1) + "/" + exDate.getDate()
+    return dStr
 
   #クイックジャンプパネル
   do ->
@@ -811,6 +835,10 @@ app.boot("/view/thread.html", ->
     setObserve = ->
       observer.disconnect()
       ele = $content.lastElementChild
+      while ele.offsetHeight is 0
+        rn = +ele.C("num")[0].textContent - 1
+        break if rn < 0
+        ele = $content.child()[rn - 1]
       observer.observe(ele) if ele?
       return
 
@@ -889,6 +917,11 @@ app.boot("/view/thread.html", ->
       updateThreadFooter()
       return
     )
+    $view.on("view_refreshed", ->
+      setObserve()
+      updateThreadFooter()
+      return
+    )
     app.message.on("bookmark_updated", ->
       if canBeShown
         $nextUnread.show()
@@ -945,7 +978,7 @@ app.viewThread._draw = ($view, {forceUpdate = false, jumpResNum = -1} = {}) ->
 
     document.title = thread.title
 
-    await app.DOMData.get($view, "threadContent").addItem(thread.res.slice($view.C("content")[0].child().length))
+    await app.DOMData.get($view, "threadContent").addItem(thread.res.slice($view.C("content")[0].child().length), thread.title)
     loadCount++
     app.DOMData.get($view, "lazyload").scan()
 
@@ -1145,6 +1178,10 @@ app.viewThread._readStateManager = ($view) ->
   $view.on("request_reload", ->
     requestReloadFlag = true
     scanCountByReloaded = 0
+    scanAndSave()
+    return
+  )
+  $view.on("view_refreshed", ->
     scanAndSave()
     return
   )

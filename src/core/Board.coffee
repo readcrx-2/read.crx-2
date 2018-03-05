@@ -230,7 +230,7 @@ class app.Board
         title: title
         resCount: +regRes[3]
         createdAt: +regRes[1] * 1000
-        ng: app.NG.isNGBoard(title)
+        ng: app.NG.isNGBoard(title, url)
         isNet: if scFlg then !title.startsWith("★") else null
       )
 

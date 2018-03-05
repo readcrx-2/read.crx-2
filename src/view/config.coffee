@@ -242,6 +242,13 @@ app.boot("/view/config.html", ["cache", "bbsmenu"], (Cache, BBSMenu) ->
       return
     )
 
+  for dom in $view.$$("select.direct")
+    dom.value = app.config.get(dom.name) or ""
+    dom.on("change", ->
+      app.config.set(@name, @value)
+      return
+    )
+
   #バージョン情報表示
   do ->
     {name, version} = await app.manifest
@@ -452,13 +459,19 @@ app.boot("/view/config.html", ["cache", "bbsmenu"], (Cache, BBSMenu) ->
                 $key.checked = (value is "on")
                 $key.dispatchEvent(new Event("change"))
               when "radio"
-                $key.value = value
+                for dom in $view.$$("input.direct[name=\"#{key}\"]")
+                  if dom.value is value
+                    dom.checked = true
                 $key.dispatchEvent(new Event("change"))
           else
             $keyTextArea = $view.$("textarea[name=\"#{key}\"]")
             if $keyTextArea?
               $keyTextArea.value = value
               $keyTextArea.dispatchEvent(new Event("input"))
+            $keySelect = $view.$("select[name=\"#{key}\"]")
+            if $keySelect?
+              $keySelect.value = value
+              $keySelect.dispatchEvent(new Event("change"))
          #config_theme_idは「テーマなし」の場合があるので特例化
          else
            if value is "none"

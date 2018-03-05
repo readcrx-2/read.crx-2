@@ -203,7 +203,7 @@ class app.NG
         m = ngWord.match(_ignoreNgType)
         ngElement =
           exception: true
-          subType: m[1]?.split(",")
+          subType: m[1].split(",") if m[1]?
         ngWord = m[2]
       # 有効期限の指定
       else if _expireDate.test(ngWord)

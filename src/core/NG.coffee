@@ -307,7 +307,7 @@ class app.NG
         (n.type is app.NG.NG_TYPE_REG_EXP_ID and res.id? and n.reg.test(res.id)) or
         (n.type is app.NG.NG_TYPE_REG_EXP_SLIP and res.slip? and n.reg.test(res.slip)) or
         (n.type is app.NG.NG_TYPE_REG_EXP_BODY and n.reg.test(decodedMes)) or
-        (n.type is app.NG.NG_TYPE_REG_EXP_TITLE and n.reg.test(tmpTitle)) or
+        (n.type is app.NG.NG_TYPE_REG_EXP_TITLE and n.reg.test(threadTitle)) or
         (n.type is app.NG.NG_TYPE_REG_EXP_URL and n.reg.test(url)) or
         (n.type is app.NG.NG_TYPE_TITLE and tmpTitle.includes(n.word)) or
         (n.type is app.NG.NG_TYPE_NAME and app.util.normalize(decodedName).includes(n.word)) or

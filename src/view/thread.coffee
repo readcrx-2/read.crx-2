@@ -102,10 +102,6 @@ app.boot("/view/thread.html", ->
   else
     $view.C("button_write")[0].remove()
 
-  # 現状ではしたらばはhttpsに対応していないので切り替えボタンを隠す
-  if app.URL.tsld(viewUrl) is "shitaraba.net"
-    $view.C("button_scheme")[0].remove()
-
   #リロード処理
   $view.on("request_reload", ({ detail: ex = {} }) ->
     threadContent.refreshNG()

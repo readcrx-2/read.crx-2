@@ -366,7 +366,7 @@ gulp.task "img", ["webp&png", "ico", "logo128", "loading.webp"]
 
 gulp.task "webp&png", ->
   try
-    await fs.mkdirp(args.webpBinPath)
+    await fs.ensureDir(args.webpBinPath)
     promiseArray = []
     for img in imgs
       promise = do ->
@@ -397,7 +397,7 @@ gulp.task "webp&png", ->
 
 gulp.task "ico", ->
   try
-    await fs.mkdirp(args.webpBinPath)
+    await fs.ensureDir(args.webpBinPath)
     filebuf = await Promise.all([
       sharp(args.icoSrcPath)
         .resize(16, 16)
@@ -414,7 +414,7 @@ gulp.task "ico", ->
 
 gulp.task "logo128", ->
   try
-    await fs.mkdirp(args.webpBinPath)
+    await fs.ensureDir(args.webpBinPath)
     await sharp(null,
       create:
         width: 128
@@ -428,7 +428,7 @@ gulp.task "logo128", ->
   return
 
 gulp.task "loading.webp", ->
-  await fs.mkdirp(args.webpBinPath)
+  await fs.ensureDir(args.webpBinPath)
   await sharp(args.loadingSrcPath)
     .resize(100, 100)
     .toFile(args.loadingBinPath)

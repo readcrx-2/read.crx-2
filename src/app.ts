@@ -58,7 +58,7 @@ namespace app {
   export function assertArg (name:string, rules:[any, string, boolean|undefined][]):boolean {
     for (let [val, type, canbeNull] of rules) {
       if (
-        !(canbeNull && val === null) &&
+        !(canbeNull && (val === null || val === void 0)) &&
         typeof val !== type
       ) {
         log("error", `${name}: 不正な引数(予期していた型: ${type}, 受け取った型: ${typeof val})`, deepCopy(val));

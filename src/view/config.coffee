@@ -535,4 +535,12 @@ app.boot("/view/config.html", ["cache", "bbsmenu"], (Cache, BBSMenu) ->
     $view.C("indexeddb_max")[0].textContent = formatBytes(quota)
     $view.C("indexeddb_using")[0].textContent = formatBytes(usage)
     return
+
+  # localstorageの使用状況
+  do ->
+    chrome.storage.local.getBytesInUse( (usage) ->
+      $view.C("localstorage_using")[0].textContent = formatBytes(usage)
+      return
+    )
+    return
 )

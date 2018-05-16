@@ -115,6 +115,7 @@ li:not(.bookmark) + li.bookmark::before {
   $bookmark-separator-border-color,
   $searchbox-background-color,
   $searchbox-color,
+  $searchbox-focus-color,
   $searchbox-item-border-color,
   $searchbox-submit-background-color,
   $searchbox-submit-background-image
@@ -158,10 +159,16 @@ li:not(.bookmark) + li.bookmark::before {
     &[type="search"] {
       background-color: $searchbox-background-color;
       color: $searchbox-color;
+      &:focus {
+        border-color: $searchbox-focus-color;
+      }
     }
     &[type="submit"] {
       background-color: $searchbox-submit-background-color;
       background-image: $searchbox-submit-background-image;
+    }
+    &[type="search"]:focus + [type="submit"] {
+      border-color: $searchbox-focus-color;
     }
   }
 }
@@ -181,6 +188,7 @@ li:not(.bookmark) + li.bookmark::before {
     $bookmark-separator-border-color: #072a8a,
     $searchbox-background-color: #fff,
     $searchbox-color: #111,
+    $searchbox-focus-color: #9bf,
     $searchbox-item-border-color: #999,
     $searchbox-submit-background-color: hsl(0, 0%, 100%),
     $searchbox-submit-background-image: (
@@ -205,6 +213,7 @@ li:not(.bookmark) + li.bookmark::before {
     $bookmark-separator-border-color: #9d9,
     $searchbox-background-color: transparent,
     $searchbox-color: #eee,
+    $searchbox-focus-color: #57e,
     $searchbox-item-border-color: #999,
     $searchbox-submit-background-color: transparent,
     $searchbox-submit-background-image: (

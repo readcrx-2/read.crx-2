@@ -129,6 +129,7 @@ $z-indexes:(
   $message-bar-info-border-color,
   $message-bar-error-background-color,
   $message-bar-error-border-color,
+  $search-focus-color,
   $icon-color,
   $active-icon-color,
   $search-icon-color,
@@ -145,6 +146,9 @@ $z-indexes:(
     }
     > label {
       background: url(/img/search2_19x19_#{$search-icon-color}.webp) no-repeat;
+      &:focus-within {
+        border-color: $search-focus-color;
+      }
       > input {
         color: $color;
       }
@@ -254,6 +258,7 @@ $z-indexes:(
       height: 19px;
       border-style: solid;
       border-width: 1px;
+      cursor: text;
       > input {
         width: 80px;
         height: 100%;
@@ -411,6 +416,7 @@ $z-indexes:(
       $message-bar-info-border-color: #ccd,
       $message-bar-error-background-color: #ecc,
       $message-bar-error-border-color: #ebb,
+      $search-focus-color: #9bf,
       $icon-color: "333",
       $active-icon-color: "007fff",
       $search-icon-color: "777",
@@ -430,6 +436,7 @@ $z-indexes:(
       $message-bar-info-border-color: #345,
       $message-bar-error-background-color: #933,
       $message-bar-error-border-color: #933,
+      $search-focus-color: #57e,
       $icon-color: "ddd",
       $active-icon-color: "f93",
       $search-icon-color: "aaa",

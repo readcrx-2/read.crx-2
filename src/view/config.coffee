@@ -72,6 +72,7 @@ class HistoryIO extends SettingIO
     exportFunc
     clearFunc: @clearFunc
     clearRangeFunc: @clearRangeFunc
+    afterChangedFunc: @afterChangedFunc
   }) ->
     super({
       name
@@ -109,6 +110,7 @@ class HistoryIO extends SettingIO
       catch
         @$status.textContent = "削除失敗"
 
+      @afterChangedFunc()
       @$clearButton.removeClass("hidden")
       return
     )
@@ -129,6 +131,7 @@ class HistoryIO extends SettingIO
       catch
         @$status.textContent = "範囲指定削除失敗"
 
+      @afterChangedFunc()
       @$clearRangeButton.removeClass("hidden")
       return
     )
@@ -147,6 +150,7 @@ class HistoryIO extends SettingIO
         catch
           @$status.setClass("fail")
           @$status.textContent = "インポート失敗"
+        @afterChangedFunc()
       else
         @$status.addClass("fail")
         @$status.textContent = "ファイルを選択してください"
@@ -315,6 +319,9 @@ app.boot("/view/config.html", ["cache", "bbsmenu"], (Cache, BBSMenu) ->
       return Promise.all([app.History.clear(), app.ReadState.clear()])
     clearRangeFunc: (day) ->
       return app.History.clearRange(day)
+    afterChangedFunc: ->
+      updateIndexedDBUsage()
+      return
   )
 
   new HistoryIO(
@@ -347,6 +354,9 @@ app.boot("/view/config.html", ["cache", "bbsmenu"], (Cache, BBSMenu) ->
       return app.WriteHistory.clear()
     clearRangeFunc: (day) ->
       return app.WriteHistory.clearRange(day)
+    afterChangedFunc: ->
+      updateIndexedDBUsage()
+      return
   )
 
   do ->
@@ -368,6 +378,8 @@ app.boot("/view/config.html", ["cache", "bbsmenu"], (Cache, BBSMenu) ->
         $status.textContent = "削除完了"
       catch
         $status.textContent = "削除失敗"
+
+      updateIndexedDBUsage()
       return
     )
     #キャッシュ範囲削除ボタン
@@ -380,6 +392,8 @@ app.boot("/view/config.html", ["cache", "bbsmenu"], (Cache, BBSMenu) ->
         $status.textContent = "削除完了"
       catch
         $status.textContent = "削除失敗"
+
+      updateIndexedDBUsage()
       return
     )
     return
@@ -507,4 +521,18 @@ app.boot("/view/config.html", ["cache", "bbsmenu"], (Cache, BBSMenu) ->
       replacestrDom.dispatchEvent(new Event("input"))
       return
   )
+
+  formatBytes = (bytes) ->
+    if bytes < 1048576
+      return (bytes/1024).toFixed(2) + "KB"
+    if bytes < 1073741824
+      return (bytes/1048576).toFixed(2) + "MB"
+    return (bytes/1073741824).toFixed(2) + "GB"
+
+  # indexeddbの使用状況
+  do updateIndexedDBUsage = ->
+    {quota, usage} = await navigator.storage.estimate()
+    $view.C("indexeddb_max")[0].textContent = formatBytes(quota)
+    $view.C("indexeddb_using")[0].textContent = formatBytes(usage)
+    return
 )

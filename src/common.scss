@@ -13,7 +13,7 @@ $z-indexes:(
 
 :root {
   @each $name in $z-indexes {
-    --z-index-#{$name}: index($z-indexes, $name);
+    --z-index-#{$name}: #{index($z-indexes, $name)};
   }
   --z-index-thumnail-zoom: 20;
 

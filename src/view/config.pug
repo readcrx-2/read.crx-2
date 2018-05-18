@@ -508,6 +508,14 @@ block body
           input(type="file" class="config_file_hide hidden" accept=".json")
           button.config_import_button(type="button") インポート
           span#config_status
+        .info
+          |IndexedDB(履歴、キャッシュ)の使用状況:
+          span.indexeddb_using
+          |/
+          span.indexeddb_max
+          br
+          |拡張機能LocalStorage(設定)の使用状況:
+          span.localstorage_using
 
     section
       h2 2ch.netのスレッド読み込み形式

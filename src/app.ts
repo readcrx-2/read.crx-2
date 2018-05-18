@@ -47,18 +47,22 @@ namespace app {
     return copy;
   }
 
-  export function defer (fn:Function):void {
-    setTimeout(fn, 100);
+  export function defer (): Promise<void> {
+    return new Promise<void>( (resolve) => {
+      setTimeout(resolve, 100);
+    });
   }
 
-  export function defer5 (fn:Function):void {
-    setTimeout(fn, 1000 * 5);
+  export function defer5 ():Promise<void> {
+    return new Promise<void>( (resolve) => {
+      setTimeout(resolve, 5 * 1000);
+    });
   }
 
   export function assertArg (name:string, rules:[any, string, boolean|undefined][]):boolean {
     for (let [val, type, canbeNull] of rules) {
       if (
-        !(canbeNull && val === null) &&
+        !(canbeNull && (val === null || val === void 0)) &&
         typeof val !== type
       ) {
         log("error", `${name}: 不正な引数(予期していた型: ${type}, 受け取った型: ${typeof val})`, deepCopy(val));
@@ -145,14 +149,13 @@ namespace app {
       });
     }
 
-    private _fire (type:string, message:any):void {
+    private async _fire (type:string, message:any):Promise<void> {
       var message = deepCopy(message);
 
-      defer(() => {
-        if (this._listenerStore[type]) {
-          this._listenerStore[type].call(message);
-        }
-      });
+      await defer();
+      if (this._listenerStore[type]) {
+        this._listenerStore[type].call(message);
+      }
     }
 
     send (type:string, message:any = {}):void {
@@ -431,7 +434,7 @@ namespace app {
     let readyModules = new Map<string, any>();
     let fireDefinition, addReadyModule;
 
-    fireDefinition = (moduleId, dependencies, definition) => {
+    fireDefinition = async (moduleId, dependencies, definition) => {
       var depModules:any[] = [], depModuleId, callback;
 
       for (depModuleId of dependencies) {
@@ -443,14 +446,12 @@ namespace app {
           moduleId,
           dependencies
         });
-        defer( () => {
-          definition(...depModules.concat(callback));
-        });
+        await defer();
+        definition(...depModules.concat(callback));
       }
       else {
-        defer( () => {
-          definition(...depModules);
-        });
+        await defer();
+        definition(...depModules);
       }
     };
 

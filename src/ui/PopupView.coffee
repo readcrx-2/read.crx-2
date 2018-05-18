@@ -183,10 +183,8 @@ class UI.PopupView
       # popupの表示
       @_popupArea.addLast(@popup)
       # ノードのアクティブ化
-      app.defer( =>
-        @_activateNode()
-        return
-      )
+      await app.defer()
+      @_activateNode()
 
     # 遅延表示の場合
     else

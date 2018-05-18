@@ -754,19 +754,17 @@ class app.view.TabContentView extends app.view.PaneContentView
       $ul = currentTarget.T("ul")[0]
       $ul.toggleClass("hidden")
       return unless $ul.hasClass("hidden")
-      app.defer( =>
-        @$element.on("click", ({target}) =>
-          if not target.hasClass("button_tool")
-            @$element.$(".button_tool > ul").addClass("hidden")
-          return
-        , once: true)
-        @$element.on("contextmenu", ({target}) =>
-          if not target.hasClass("button_tool")
-            @$element.$(".button_tool > ul").addClass("hidden")
-          return
-        , once: true)
+      await app.defer()
+      @$element.on("click", ({target}) =>
+        if not target.hasClass("button_tool")
+          @$element.$(".button_tool > ul").addClass("hidden")
         return
-      )
+      , once: true)
+      @$element.on("contextmenu", ({target}) =>
+        if not target.hasClass("button_tool")
+          @$element.$(".button_tool > ul").addClass("hidden")
+        return
+      , once: true)
       return
     )
 

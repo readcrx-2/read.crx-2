@@ -67,10 +67,8 @@ class UI.ThreadList
     #項目のツールチップ表示
     $table.on("mouseenter", ({target}) ->
       if target.tagName is "TD"
-        app.defer( ->
-          target.title = target.textContent
-          return
-        )
+        await app.defer()
+        target.title = target.textContent
       return
     , true)
     $table.on("mouseleave", ({target}) ->
@@ -239,59 +237,57 @@ class UI.ThreadList
           if e.type is "contextmenu"
             e.preventDefault()
 
-          app.defer( =>
-            $menu = $$.I("template_thread_list_contextmenu").content.$(".thread_list_contextmenu").cloneNode(true)
-            $table.closest(".view").addLast($menu)
+          await app.defer()
+          $menu = $$.I("template_thread_list_contextmenu").content.$(".thread_list_contextmenu").cloneNode(true)
+          $table.closest(".view").addLast($menu)
 
-            url = target.dataset.href
+          url = target.dataset.href
 
-            if app.bookmark.get(url)
-              $menu.C("add_bookmark")[0]?.remove()
-            else
-              $menu.C("del_bookmark")[0]?.remove()
+          if app.bookmark.get(url)
+            $menu.C("add_bookmark")[0]?.remove()
+          else
+            $menu.C("del_bookmark")[0]?.remove()
 
-            if (
-              not @_flg.unread or
-              not /^\d+$/.test(target.$(selector.unread).textContent) or
-              app.bookmark.get(url)?
-            )
-              $menu.C("del_read_state")[0]?.remove()
+          if (
+            not @_flg.unread or
+            not /^\d+$/.test(target.$(selector.unread).textContent) or
+            app.bookmark.get(url)?
+          )
+            $menu.C("del_read_state")[0]?.remove()
 
-            $menu.on("click", fn = (e) ->
-              return if e.target.tagName isnt "LI"
-              $menu.off("click", fn)
+          $menu.on("click", fn = (e) ->
+            return if e.target.tagName isnt "LI"
+            $menu.off("click", fn)
 
-              $tr = target
+            $tr = target
 
-              threadURL = $tr.dataset.href
-              threadTitle = $tr.$(selector.title)?.textContent
-              threadRes = $tr.$(selector.res)?.textContent
-              threadWrittenRes = parseInt($tr.$(selector.writtenRes)?.textContent ? 0)
-              dateValue = $tr.$(selector.viewedDate)?.getAttr("date-value")
+            threadURL = $tr.dataset.href
+            threadTitle = $tr.$(selector.title)?.textContent
+            threadRes = $tr.$(selector.res)?.textContent
+            threadWrittenRes = parseInt($tr.$(selector.writtenRes)?.textContent ? 0)
+            dateValue = $tr.$(selector.viewedDate)?.getAttr("date-value")
 
-              switch true
-                when e.target.hasClass("add_bookmark")
-                  app.bookmark.add(threadURL, threadTitle, threadRes)
-                when e.target.hasClass("del_bookmark")
-                  app.bookmark.remove(threadURL)
-                when e.target.hasClass("del_history")
-                  app.History.remove(threadURL, +dateValue)
-                  $tr.remove()
-                when e.target.hasClass("del_writehistory")
-                  app.WriteHistory.remove(threadURL, threadWrittenRes)
-                  $tr.remove()
-                when e.target.hasClass("ignore_res_number")
-                  $tr.setAttr("ignore-res-number", "on")
-                  $tr.dispatchEvent(new Event("mousedown", {bubbles: true}))
-                when e.target.hasClass("del_read_state")
-                  app.ReadState.remove(threadURL)
+            switch true
+              when e.target.hasClass("add_bookmark")
+                app.bookmark.add(threadURL, threadTitle, threadRes)
+              when e.target.hasClass("del_bookmark")
+                app.bookmark.remove(threadURL)
+              when e.target.hasClass("del_history")
+                app.History.remove(threadURL, +dateValue)
+                $tr.remove()
+              when e.target.hasClass("del_writehistory")
+                app.WriteHistory.remove(threadURL, threadWrittenRes)
+                $tr.remove()
+              when e.target.hasClass("ignore_res_number")
+                $tr.setAttr("ignore-res-number", "on")
+                $tr.dispatchEvent(new Event("mousedown", {bubbles: true}))
+              when e.target.hasClass("del_read_state")
+                app.ReadState.remove(threadURL)
 
-              @remove()
-              return
-            )
-            UI.ContextMenu($menu, e.clientX, e.clientY)
+            @remove()
             return
           )
+          UI.ContextMenu($menu, e.clientX, e.clientY)
           return
         )
       return

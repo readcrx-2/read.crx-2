@@ -239,7 +239,7 @@ namespace UI {
       return tabId;
     }
 
-    update (
+    async update (
       tabId: string,
       param: Partial<{
         url: string,
@@ -249,7 +249,7 @@ namespace UI {
         restore: boolean,
         _internal: boolean
       }>
-    ): void {
+    ): Promise<void> {
       var history, $tmptab, $iframe, tmp;
 
       if (typeof param.url === "string") {
@@ -288,20 +288,19 @@ namespace UI {
           }
         }
 
+        $iframe.dispatchEvent(new Event("tab_selected", {"bubbles": true}));
+
         // 遅延ロード指定のタブをロードする
         // 連続でlazy指定のタブがaddされた時のために非同期処理
-        app.defer( () => {
-          var selectedTab, iframe: HTMLIFrameElement;
+        await app.defer();
+        var selectedTab, iframe: HTMLIFrameElement;
 
-          if (selectedTab = this.getSelected()) {
-            iframe = <HTMLIFrameElement>this.$element.$(`iframe[data-tabid=\"${selectedTab.tabId}\"]`);
-            if (iframe.getAttr("src") !== selectedTab.url) {
-              iframe.src = selectedTab.url;
-            }
+        if (selectedTab = this.getSelected()) {
+          iframe = <HTMLIFrameElement>this.$element.$(`iframe[data-tabid=\"${selectedTab.tabId}\"]`);
+          if (iframe.getAttr("src") !== selectedTab.url) {
+            iframe.src = selectedTab.url;
           }
-        });
-
-        $iframe.dispatchEvent(new Event("tab_selected", {"bubbles": true}));
+        }
       }
       if (param.locked) {
         $tmptab = this.$element.$(`li[data-tabid=\"${tabId}\"]`);

@@ -40,17 +40,15 @@ class app.view.Index extends app.view.View
       return unless target.hasClass("tab_content")
       for dom in target.parent().$$(":scope > .tab_content") when dom isnt target
         return
-      app.defer( =>
-        for $tab in $$.C("tab") when $tab.C("tab_selected")?
-          $tmp = $tab
-          break
-        if $tmp?.$(".tab_selected.tab_content")?
-          @focus($tmp.$(".tab_selected.tab_content"))
-        else
-          #フォーカス対象のタブが無い場合、板一覧にフォーカスする
-          @focus($$.I("left_pane"))
-        return
-      )
+      await app.defer()
+      for $tab in $$.C("tab") when $tab.C("tab_selected")?
+        $tmp = $tab
+        break
+      if $tmp?.$(".tab_selected.tab_content")?
+        @focus($tmp.$(".tab_selected.tab_content"))
+      else
+        #フォーカス対象のタブが無い場合、板一覧にフォーカスする
+        @focus($$.I("left_pane"))
       return
     )
 
@@ -573,10 +571,8 @@ app.main = ->
             +app.config.get("window_width")
             +app.config.get("window_height")
             ->
-              app.defer( ->
-                adjustWindowSize.call()
-                return
-              )
+              await app.defer()
+              adjustWindowSize.call()
               return
           )
         else
@@ -956,11 +952,9 @@ app.main = ->
         $menu.remove()
         return
       )
-      app.defer( ->
-        document.body.addLast($menu)
-        UI.ContextMenu($menu, e.clientX, e.clientY)
-        return
-      )
+      await app.defer()
+      document.body.addLast($menu)
+      UI.ContextMenu($menu, e.clientX, e.clientY)
       return
     )
 

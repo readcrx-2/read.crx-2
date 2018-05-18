@@ -48,10 +48,8 @@ app.boot("/view/history.html", ->
     return if add and data.length is 0
     $view.dispatchEvent(new Event("view_loaded"))
     $view.C("button_reload")[0].addClass("disabled")
-    app.defer5(->
-      $view.C("button_reload")[0].removeClass("disabled")
-      return
-    )
+    await app.defer5()
+    $view.C("button_reload")[0].removeClass("disabled")
     return
 
   $view.on("request_reload", load)

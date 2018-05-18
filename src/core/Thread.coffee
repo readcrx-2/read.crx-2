@@ -46,14 +46,12 @@ class app.Thread
         hasCache = true
         if forceUpdate or Date.now() - cache.lastUpdated > 1000 * 3
           #通信が生じる場合のみ、progressでキャッシュを送出する
-          app.defer( =>
-            tmp = cache.parsed ? Thread.parse(@url, cache.data)
-            return unless tmp?
+          await app.defer()
+          tmp = cache.parsed ? Thread.parse(@url, cache.data)
+          if tmp?
             @res = tmp.res
             @title = tmp.title
             progress()
-            return
-          )
           throw new Error("キャッシュの期限が切れているため通信します")
       catch
         #通信

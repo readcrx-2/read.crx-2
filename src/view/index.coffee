@@ -312,14 +312,13 @@ app.boot("/view/index.html", ["bbsmenu"], (BBSMenu) ->
   return unless query
   paramResNumFlag = app.config.isOn("enable_link_with_res_number")
   paramResNum = if paramResNumFlag then app.URL.getResNumber(query) else null
-  # 後ほど実行するためにCallbacksに登録する
-  if app.BBSMenu.serverInfoTriggered
-    app.message.send("open", url: query, new_tab: true, param_res_num: paramResNum)
-  else
-    app.BBSMenu.target.on("serverinfo-created", ->
-      app.message.send("open", url: query, new_tab: true, param_res_num: paramResNum)
-      return
-    )
+
+  {menu} = await BBSMenu.get()
+  await app.URL.pushServerInfo(app.config.get("bbsmenu"), menu)
+  BBSMenu.target.on("change", ({detail: {menu}}) ->
+    app.URL.pushServerInfo(app.config.get("bbsmenu"), menu)
+  )
+  app.message.send("open", url: query, new_tab: true, param_res_num: paramResNum)
   return
 )
 

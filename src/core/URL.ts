@@ -368,11 +368,13 @@ namespace app {
           switch (mode) {
             case "20":
             case "2r":
+            case "5r":
               res.net = true; break;
             case "sc":
               res.sc = true; break;
             case "p0":
             case "p1":
+            case "p5":
               res.bbspink = true; break;
           }
           if (res.net && res.sc && res.bbspink) {
@@ -384,6 +386,11 @@ namespace app {
         url.endsWith("menu.5ch.net/bbsmenu.html")
       ) {
         res.net = true;
+        res.bbspink = true;
+      } else if (
+        url.endsWith("www.2ch.sc/bbsmenu.html")
+      ) {
+        res.sc = true;
       }
       return res;
     }

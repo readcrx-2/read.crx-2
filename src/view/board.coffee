@@ -85,13 +85,12 @@ app.boot("/view/board.html", ["board"], (Board) ->
     app.message.send("request_update_read_state", {board_url: url})
 
     getReadStatePromise = do ->
-      return new Promise( (resolve, reject) ->
-        # request_update_read_stateを待つ
+      # request_update_read_stateを待つ
+      await new Promise( (resolve) ->
         setTimeout(resolve, 150)
         return
-      ).then( ->
-        return app.ReadState.getByBoard(url)
       )
+      return await app.ReadState.getByBoard(url)
     getBoardPromise = do ->
       {status, message, data} = await Board.get(url)
       $messageBar = $view.C("message_bar")[0]
@@ -101,8 +100,7 @@ app.boot("/view/board.html", ["board"], (Board) ->
       else
         $messageBar.removeClass("error")
         $messageBar.removeChildren()
-      if data?
-        return data
+      return data if data?
       throw new Error("板の取得に失敗しました")
       return
 

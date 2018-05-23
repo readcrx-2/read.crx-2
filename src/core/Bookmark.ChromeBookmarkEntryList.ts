@@ -50,19 +50,19 @@ module app.Bookmark {
     }
 
     static URLToEntry (url:string):Entry|null {
-      var fixedURL:string, guessRes:app.URL.GuessResult, arg, entry:Entry, reg;
+      var fixedURL:string, arg, entry:Entry, reg;
 
       fixedURL = app.URL.fix(url);
-      guessRes = app.URL.guessType(fixedURL);
+      var {type, bbsType}:app.URL.GuessResult = app.URL.guessType(fixedURL);
       arg = app.URL.parseHashQuery(url);
 
-      if (guessRes.type === "unknown") {
+      if (type === "unknown") {
         return null;
       }
 
       entry = {
-        type: guessRes.type,
-        bbsType: guessRes.bbsType,
+        type,
+        bbsType,
         url: fixedURL,
         title: fixedURL,
         resCount: null,

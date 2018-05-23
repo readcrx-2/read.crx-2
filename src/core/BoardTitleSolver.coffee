@@ -38,12 +38,24 @@ class app.BoardTitleSolver
     bbsmenu = await @getBBSMenu()
     # スキーム違いについても確認をする
     url2 = app.URL.changeScheme(url)
-    if bbsmenu[url]?
-      return bbsmenu[url]
-    if bbsmenu[url2]?
-      return bbsmenu[url2]
+    boardName = bbsmenu[url] ? bbsmenu[url2]
+    return boardName if boardName?
     throw new Error("板一覧にその板は存在しません")
     return
+
+  ###*
+  @method _formatBoardTitle
+  @param {String} title
+  @param {String} url
+  @private
+  @return {String}
+  ###
+  @_formatBoardTitle: (title, url) ->
+    switch app.URL.tsld(url)
+      when "5ch.net" then title = title.replace("＠2ch掲示板", "")
+      when "2ch.sc" then title += "_sc"
+      when "open2ch.net" then title += "_op"
+    return title
 
   ###*
   @method searchFromBookmark
@@ -55,9 +67,7 @@ class app.BoardTitleSolver
     url2 = app.URL.changeScheme(url)
     bookmark = app.bookmark.get(url) ? app.bookmark.get(url2)
     if bookmark
-      if app.URL.tsld(bookmark.url) is "2ch.net"
-        return bookmark.title.replace("＠2ch掲示板", "")
-      return bookmark.title
+      return @_formatBoardTitle(bookmark.title, bookmark.url)
     throw new Error("ブックマークにその板は存在しません")
     return
 
@@ -74,17 +84,9 @@ class app.BoardTitleSolver
     if status isnt 200
       throw new Error("SETTING.TXTを取得する通信に失敗しました")
     if res = /^BBS_TITLE_ORIG=(.+)$/m.exec(body)
-      title = res[1].replace("＠2ch掲示板", "")
-      switch app.URL.tsld(url)
-        when "2ch.sc" then title += "_sc"
-        when "open2ch.net" then title += "_op"
-      return title
+      return @_formatBoardTitle(res[1], url)
     if res = /^BBS_TITLE=(.+)$/m.exec(body)
-      title = res[1].replace("＠2ch掲示板", "")
-      switch app.URL.tsld(url)
-        when "2ch.sc" then title += "_sc"
-        when "open2ch.net" then title += "_op"
-      return title
+      return @_formatBoardTitle(res[1], url)
     throw new Error("SETTING.TXTに名前の情報がありません")
     return
 
@@ -127,9 +129,8 @@ class app.BoardTitleSolver
       #SETTING.TXTからの取得を試みる
       if app.URL.guessType(url).bbsType is "2ch"
         return await @searchFromSettingTXT(url)
-    try
       #したらばのAPIから取得を試みる
-      if app.URL.guessType(url).bbsType is"jbbs"
+      if app.URL.guessType(url).bbsType is "jbbs"
         return await @searchFromJbbsAPI(url)
     throw new Error("板名の取得に失敗しました")
     return

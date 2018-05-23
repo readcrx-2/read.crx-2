@@ -551,11 +551,12 @@ class UI.ThreadContent
       return
 
     resNum = @container.child().length
+    startResNum = resNum+1
     {bbsType} = app.URL.guessType(@url)
     writtenRes = await app.WriteHistory.getByUrl(@url)
     @_threadTitle = threadTitle
 
-    html = ""
+    $fragment = $_F()
 
     for res in items
       resNum++
@@ -574,16 +575,21 @@ class UI.ThreadContent
         res.class.push("written")
         break
 
-      articleHtml = "<header>"
+      $article = $__("article")
+      $header = $__("header")
 
       #.num
-      articleHtml += """<span class="num">#{resNum}</span> """
+      $num = $__("span")
+      $num.addClass("num")
+      $num.textContent = resNum
+      $header.addLast($num)
 
       #.name
-      articleHtml += """<span class="name"""
+      $name = $__("span")
+      $name.addClass("name")
       if /^\s*(?:&gt;|\uff1e){0,2}([\d\uff10-\uff19]+(?:[\-\u30fc][\d\uff10-\uff19]+)?(?:\s*,\s*[\d\uff10-\uff19]+(?:[\-\u30fc][\d\uff10-\uff19]+)?)*)\s*$/.test(res.name)
-        articleHtml += " name_anchor"
-      tmp = (
+        $name.addClass("name_anchor")
+      $name.innerHTML = (
         res.name
           .replace(/<(?!(?:\/?b|\/?font(?: color="?[#a-zA-Z0-9]+"?)?)>)/g, "&lt;")
           .replace(/<\/b>\(([^<>]+? [^<>]+?)\)<b>$/, ($0, $1) =>
@@ -606,13 +612,16 @@ class UI.ThreadContent
           .replace(/&lt;span.*?>(.*?)&lt;\/span>/g, "<span class=\"ob\">$1</span>")
           .replace(/&lt;small.*?>(.*?)&lt;\/small>/g, "<small>$1</small>")
       )
-      articleHtml += """">#{tmp}</span>"""
+      $header.addLast($name)
 
       #.mail
-      tmp = res.mail.replace(/<.*?(?:>|$)/g, "")
-      articleHtml += """ <span class="mail">#{tmp}</span> """
+      $mail = $__("span")
+      $mail.addClass("mail")
+      $mail.innerHTML = res.mail.replace(/<.*?(?:>|$)/g, "")
+      $header.addLast($mail)
 
       #.other
+      $other = $__("span")
       tmp = (
         res.other
           #be
@@ -653,10 +662,9 @@ class UI.ThreadContent
           tmp += """<span class="slip">SLIP:#{res.slip}</span>"""
         if resNum is 1
           @_existSlipAtFirstRes = true
-
-      articleHtml += """<span class="other">#{tmp}</span>"""
-
-      articleHtml += "</header>"
+      $other.innerHTML = tmp
+      $header.addLast($other)
+      $article.addLast($header)
 
       # スレッド終端の自動追加メッセージの確認
       if (
@@ -740,27 +748,30 @@ class UI.ThreadContent
           .replace(/id:(?:[a-hj-z\d_\+\/\.\!]|i(?!d:))+/ig, "<a href=\"javascript:undefined;\" class=\"anchor_id\">$&</a>")
       )
 
-      articleHtml += "<div class=\"message\""
-      if color? then articleHtml += " style=\"color:##{color[1]};\""
-      articleHtml += ">#{tmp}</div>"
+      $message = $__("div")
+      $message.addClass("message")
+      if color?
+        $message.style.color = "##{color[1]}"
+      $message.innerHTML = tmp
+      $article.addLast($message)
 
       if app.config.isOn("display_ng") and res.class.includes("ng")
         res.class.push("disp_ng")
 
-      tmp = ""
-      tmp += " class=\"#{res.class.join(" ")}\""
-      tmp += " data-id=\"#{res.id}\"" if res.id?
-      tmp += " data-slip=\"#{res.slip}\"" if res.slip?
-      tmp += " data-trip=\"#{res.trip}\"" if res.trip?
+      $article.setClass(res.class.join(" "))
+      $article.dataset.id = res.id if res.id?
+      $article.dataset.slip = res.slip if res.slip?
+      $article.dataset.trip = res.trip if res.trip?
       for key, val of res.attr
-        tmp += " #{key}=\"#{val}\""
+        $article.setAttr(key, val)
 
-      articleHtml = """<article#{tmp}>#{articleHtml}</article>"""
-      html += articleHtml
+      $fragment.addLast($article)
 
-    @container.insertAdjacentHTML("BeforeEnd", html)
+    @updateFragmentIds($fragment, startResNum)
 
-    @updateIds()
+    @container.addLast($fragment)
+
+    @updateIds(startResNum)
 
     # NG判定されたIDとSLIPの連鎖NG
     if app.config.isOn("chain_ng_id")
@@ -812,12 +823,12 @@ class UI.ThreadContent
   @param {Map} map
   @param {String} prefix
   ###
-  updateId: (className, map, prefix) ->
+  updateId: ({startRes = 1, endRes, dom}, className, map, prefix) ->
     numbersReg = /(?:\(\d+\))?$/
     for [id, index] from map
       count = index.size
-      for resNum from index
-        elm = @container.child()[resNum - 1].C(className)[0]
+      for resNum from index when startRes <= resNum and (!endRes? or resNum <= endRes)
+        elm = dom.child()[resNum - startRes].C(className)[0]
         elm.textContent = "#{prefix}#{id}(#{count})"
         if count >= 5
           elm.removeClass("link")
@@ -827,13 +838,23 @@ class UI.ThreadContent
     return
 
   ###*
+  @method updateFragmentIds
+  ###
+  updateFragmentIds: ($fragment, startRes) ->
+    #id, slip, trip更新
+    @updateId({ startRes, dom: $fragment }, "id", @idIndex, "")
+    @updateId({ startRes, dom: $fragment }, "slip", @slipIndex, "SLIP:")
+    @updateId({ startRes, dom: $fragment }, "trip", @tripIndex, "")
+    return
+
+  ###*
   @method updateIds
   ###
-  updateIds: ->
+  updateIds: (endRes) ->
     #id, slip, trip更新
-    @updateId("id", @idIndex, "")
-    @updateId("slip", @slipIndex, "SLIP:")
-    @updateId("trip", @tripIndex, "")
+    @updateId({ endRes, dom: @container }, "id", @idIndex, "")
+    @updateId({ endRes, dom: @container }, "slip", @slipIndex, "SLIP:")
+    @updateId({ endRes, dom: @container }, "trip", @tripIndex, "")
 
     #参照関係再構築
     do =>

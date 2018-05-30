@@ -622,6 +622,7 @@ class UI.ThreadContent
 
       #.other
       $other = $__("span")
+      $other.addClass("other")
       tmp = (
         res.other
           #be
@@ -882,6 +883,7 @@ class UI.ThreadContent
         if res.hasClass("written")
           for r from index
             @container.child()[r - 1].addClass("to_written")
+      return
     return
 
   ###*

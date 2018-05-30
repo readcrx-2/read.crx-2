@@ -257,10 +257,10 @@ class app.Board
     cache = new app.Cache(xhrPath)
     try
       await cache.get()
-      {lastModified} = cache
-      for thread in Board.parse(boardUrl, cache.data) when thread.url is threadUrl
+      {lastModified, data} = cache
+      for {url, resCount} in Board.parse(boardUrl, data) when url is threadUrl
         return {
-          resCount: thread.resCount
+          resCount
           modified: lastModified
         }
     throw new Error("板のスレ一覧にそのスレが存在しません")

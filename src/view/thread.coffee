@@ -288,7 +288,7 @@ app.boot("/view/thread.html", ->
     if getSelection().toString().length is 0
       $menu.C("copy_selection")[0].remove()
       $menu.C("search_selection")[0].remove()
-    
+
     $menu.removeClass("hidden")
     UI.ContextMenu($menu, e.clientX, e.clientY)
     return
@@ -831,8 +831,8 @@ app.boot("/view/thread.html", ->
       show: ->
         next = null
 
-        bookmarks = app.bookmark.getAll().filter( (bookmark) ->
-          return (bookmark.type is "thread") and (bookmark.url isnt viewUrl)
+        bookmarks = app.bookmark.getAll().filter( ({type, url}) ->
+          return (type is "thread") and (url isnt viewUrl)
         )
 
         #閲覧中のスレッドに新着が有った場合は優先して扱う
@@ -947,12 +947,13 @@ app.viewThread._draw = ($view, {forceUpdate = false, jumpResNum = -1} = {}) ->
   loadCount = 0
 
   fn = (thread, error) ->
+    $messageBar = $view.C("message_bar")[0]
     if error
-      $view.C("message_bar")[0].addClass("error")
-      $view.C("message_bar")[0].innerHTML = thread.message
+      $messageBar.addClass("error")
+      $messageBar.innerHTML = thread.message
     else
-      $view.C("message_bar")[0].removeClass("error")
-      $view.C("message_bar")[0].removeChildren()
+      $messageBar.removeClass("error")
+      $messageBar.removeChildren()
 
     unless thread.res?
       throw new Error("スレの取得に失敗しました")

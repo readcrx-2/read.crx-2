@@ -97,10 +97,6 @@ app.boot("/view/sidemenu.html", ["bbsmenu"], (BBSMenu) ->
         document.body.addLast(frag)
         accordion.update()
         $view.removeClass("loading")
-
-        # 2ch.net/2ch.sc/bbspinkの板/サーバー情報の登録
-        await app.URL.pushServerInfo(app.config.get("bbsmenu"), menu)
-        BBSMenu.triggerCreatedServerInfo()
         return
       )
       return

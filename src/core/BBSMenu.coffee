@@ -5,16 +5,8 @@
 @requires app.Cache
 ###
 class app.BBSMenu
+  @data: null
   @target: $__("div")
-  @serverInfoTriggered: false
-
-  ###*
-  @method triggerCreatedServerInfo
-  ###
-  @triggerCreatedServerInfo: ->
-    BBSMenu.triggeredServerInfo = true
-    BBSMenu.target.dispatchEvent(new Event("serverinfo-created"))
-    return
 
   ###*
   @method fetch
@@ -22,6 +14,8 @@ class app.BBSMenu
   @param {Boolean} [force=false]
   ###
   @fetch: (url, force) ->
+    if data? and not force
+      return if data.success then data.content else Promise.reject(data.content)
     #キャッシュ取得
     cache = new app.Cache(url)
     promise = new Promise( (resolve, reject) ->
@@ -50,10 +44,13 @@ class app.BBSMenu
 
       if menu?.length > 0
         if response?.status is 200 or response?.status is 304 or (not response and cache.data?)
+          BBSMenu.data = {content: {response, menu}, success: true}
           resolve({response, menu})
         else
+          BBSMenu.data = {content: {response, menu}, success: false}
           reject({response, menu})
       else
+        BBSMenu.data = {content: {response}, success: false}
         reject({response})
       return
     )

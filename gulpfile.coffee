@@ -18,7 +18,7 @@ pug = require "gulp-pug"
 sharp = require "sharp"
 toIco = require "to-ico"
 crx = require "crx"
-execSync = require("child_process").exec
+spawn = require("child_process").spawn
 
 manifest = require "./src/manifest.json"
 
@@ -135,13 +135,13 @@ sass.compiler = sassCompiler
 sortForExtend =
   comparator: (file1, file2) ->
     return file1.path.split(".").length - file2.path.split(".").length
-exec = (command) ->
+exec = (command, args) ->
   return new Promise( (resolve, reject) ->
-    CP = execSync(command, (err, stdout, stderr) ->
-      if err then reject(err) else resolve()
+    cp = spawn(command, args, {stdio: "inherit"})
+    cp.on("close", ->
+      resolve()
       return
     )
-    CP.stdout.pipe(process.stdout)
     return
   )
 putsPromise = (mes) ->
@@ -308,63 +308,55 @@ gulp.task "html", gulp.parallel("viewhtml", "zombie.html", "writehtml")
 
 ##img
 gulp.task "webp&png", ->
-  try
-    await fs.ensureDir(args.webpBinPath)
-    await Promise.all(imgs.map( (img) ->
-      m = img.match(/^(.+)_(\d+)x(\d+)(?:_([a-fA-F0-9]*))?(?:_r(\-?\d+))?\.(webp|png)$/)
-      src = "#{args.webpSrcPath}/#{m[1]}.svg"
-      bin = "#{args.webpBinPath}/#{img}"
+  await fs.ensureDir(args.webpBinPath)
+  await Promise.all(imgs.map( (img) ->
+    m = img.match(/^(.+)_(\d+)x(\d+)(?:_([a-fA-F0-9]*))?(?:_r(\-?\d+))?\.(?:webp|png)$/)
+    src = "#{args.webpSrcPath}/#{m[1]}.svg"
+    bin = "#{args.webpBinPath}/#{img}"
 
-      data = await fs.readFile(src)
-      buf = new Buffer(data)
-      # 塗りつぶし
-      if m[4]?
-        str = buf.toString("utf8").replace(/#333/g, "##{m[4]}")
-        buf = Buffer.from(str, "utf8")
-      sh = sharp(buf)
-      # 回転
-      if m[5]?
-        degrees = parseInt(m[5])
-        degrees = 270 if degrees is -90
-        sh.rotate(degrees)
-      sh.resize(parseInt(m[2]), parseInt(m[3]))
-      sh[m[6]]()
-      sh.toBuffer()
-      await sh.toFile(bin)
-      return
-    ))
+    data = await fs.readFile(src, "utf-8")
+    # 塗りつぶし
+    if m[4]?
+      data = data.replace(/#333/g, "##{m[4]}")
+    buf = Buffer.from(data, "utf8")
+    sh = sharp(buf)
+    # 回転
+    if m[5]?
+      sh.rotate(parseInt(m[5]))
+    sh.resize(parseInt(m[2]), parseInt(m[3]))
+    await sh.toFile(bin)
+    return
+  ))
   return
 
 gulp.task "ico", ->
-  try
-    await fs.ensureDir(args.webpBinPath)
-    filebuf = await Promise.all([
-      sharp(args.icoSrcPath)
-        .resize(16, 16)
-        .png()
-        .toBuffer()
-      sharp(args.icoSrcPath)
-        .resize(32, 32)
-        .png()
-        .toBuffer()
-    ])
-    buf = await toIco(filebuf)
-    await fs.writeFile(args.icoBinPath, buf)
+  await fs.ensureDir(args.webpBinPath)
+  filebuf = await Promise.all([
+    sharp(args.icoSrcPath)
+      .resize(16, 16)
+      .png()
+      .toBuffer()
+    sharp(args.icoSrcPath)
+      .resize(32, 32)
+      .png()
+      .toBuffer()
+  ])
+  buf = await toIco(filebuf)
+  await fs.writeFile(args.icoBinPath, buf)
   return
 
 gulp.task "logo128", ->
-  try
-    await fs.ensureDir(args.webpBinPath)
-    await sharp(null,
-      create:
-        width: 128
-        height: 128
-        channels: 4
-        background: { r: 0, g: 0, b: 0, alpha: 0}
-    ).overlayWith(args.logo128SrcPath,
-      top: 16
-      left: 16
-    ).toFile(args.logo128BinPath)
+  await fs.ensureDir(args.webpBinPath)
+  await sharp(null,
+    create:
+      width: 128
+      height: 128
+      channels: 4
+      background: { r: 0, g: 0, b: 0, alpha: 0}
+  ).overlayWith(args.logo128SrcPath,
+    top: 16
+    left: 16
+  ).toFile(args.logo128BinPath)
   return
 
 gulp.task "loading.webp", ->
@@ -406,24 +398,20 @@ gulp.task "clean", ->
   ])
 
 gulp.task "scan", ->
-  await exec("freshclam")
-  await exec("clamscan -ir debug")
+  await exec("freshclam", [])
+  await exec("clamscan", ["-ir", "debug"])
   return
 
 gulp.task "crx", ->
   tmpDir = path.join(os.tmpdir(), "debug")
-  try
-    await fs.copy(args.outputPath, tmpDir)
-    if process.env["read.crx-2-pem-path"]?
-      pemPath = process.env["read.crx-2-pem-path"]
-    else
-      pemPath = await putsPromise("秘密鍵のパスを入力して下さい: ")
-    pem = await fs.readFile(pemPath)
-    rcrx = new crx(privateKey: pem)
-    loadedCrx = await rcrx.load(tmpDir)
-    rcrxBuffer = await loadedCrx.pack()
-    await fs.writeFile("./read.crx_2.#{manifest.version}.crx", rcrxBuffer)
-    await fs.remove(tmpDir)
+  await fs.copy(args.outputPath, tmpDir)
+  pemPath = process.env["read.crx-2-pem-path"] ? await putsPromise("秘密鍵のパスを入力して下さい: ")
+  pem = await fs.readFile(pemPath)
+  rcrx = new crx(privateKey: pem)
+  loadedCrx = await rcrx.load(tmpDir)
+  rcrxBuffer = await loadedCrx.pack()
+  await fs.writeFile("./read.crx_2.#{manifest.version}.crx", rcrxBuffer)
+  await fs.remove(tmpDir)
   return
 
 gulp.task "pack", gulp.series("clean", "default", "scan", "crx")

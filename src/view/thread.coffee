@@ -534,36 +534,49 @@ app.boot("/view/thread.html", ->
     e.preventDefault()
 
     popupHelper(target, e, =>
+      $article = target.closest("article")
+      $popup = $__("div")
+
       id = ""
       slip = ""
       trip = ""
-      if target.hasClass("id") or target.hasClass("anchor_id")
+      if target.hasClass("anchor_id")
         id = target.textContent
           .replace(/^id:/i, "ID:")
           .replace(/\(\d+\)$/, "")
           .replace(/\u25cf$/, "") #末尾●除去
-      if target.hasClass("slip")
-        slip = target.textContent
-          .replace(/^slip:/i, "")
-          .replace(/\(\d+\)$/i, "")
-      if target.hasClass("trip")
-        trip = target.textContent
-          .replace(/\(\d+\)$/i, "")
+        $popup.addClass("popup_id")
+      else if target.hasClass("id")
+        id = $article.dataset.id
+        $popup.addClass("popup_id")
+      else if target.hasClass("slip")
+        slip = $article.dataset.slip
+        $popup.addClass("popup_slip")
+      else if target.hasClass("trip")
+        trip = $article.dataset.trip
+        $popup.addClass("popup_trip")
 
-      $popup = $__("div")
-      $popup.addClass("popup_id")
-      $article = target.closest("article")
-
+      nowPopuping = ""
+      $parentArticle = $article.parent()
       if (
-        $article.parent().hasClass("popup_id") and
-        (
-          $article.dataset.id is id or
-          $article.dataset.slip is slip or
-          $article.dataset.trip is trip
-        )
+        $parentArticle.hasClass("popup_id") and
+        $article.dataset.id is id
       )
+        nowPopuping = "IP/ID"
+      else if (
+        $parentArticle.hasClass("popup_slip") and
+        $article.dataset.slip is slip
+      )
+        nowPopuping = "SLIP"
+      else if (
+        $parentArticle.hasClass("popup_trip") and
+        $article.dataset.trip is trip
+      )
+        nowPopuping = "トリップ"
+
+      if nowPopuping isnt ""
         $div = $__("div")
-        $div.textContent = "現在ポップアップしているIP/ID/SLIP/トリップです"
+        $div.textContent = "現在ポップアップしている#{nowPopuping}です"
         $div.addClass("popup_disabled")
         $popup.addLast($div)
       else if threadContent.idIndex.has(id)

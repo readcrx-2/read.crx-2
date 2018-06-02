@@ -149,7 +149,7 @@ class UI.ThreadContent
       @findHarmfulFlag = true
     catch e
       app.message.send("notify",
-        html: """
+        message: """
           画像ぼかしの正規表現を読み込むのに失敗しました
           画像ぼかし機能は無効化されます
         """

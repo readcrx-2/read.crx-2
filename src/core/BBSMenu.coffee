@@ -14,65 +14,62 @@ class app.BBSMenu
   @param {Boolean} [force=false]
   ###
   @fetch: (url, force) ->
-    if data? and not force
-      return if data.success then data.content else Promise.reject(data.content)
+    if BBSMenu.data? and not force
+      return BBSMenu.data.content
     #キャッシュ取得
     cache = new app.Cache(url)
-    promise = new Promise( (resolve, reject) ->
-      try
-        await cache.get()
-        if force
-          throw new Error("最新のものを取得するために通信します")
-        if Date.now() - cache.lastUpdated > +app.config.get("bbsmenu_update_interval")*1000*60*60*24
-          throw new Error("キャッシュが期限切れなので通信します")
-      catch
-        #通信
-        request = new app.HTTP.Request("GET", url,
-          mimeType: "text/plain; charset=Shift_JIS"
-        )
-        if cache.lastModified?
-          request.headers["If-Modified-Since"] = new Date(cache.lastModified).toUTCString()
 
-        if cache.etag?
-          request.headers["If-None-Match"] = cache.etag
-        response = await request.send()
+    try
+      await cache.get()
+      if force
+        throw new Error("最新のものを取得するために通信します")
+      if Date.now() - cache.lastUpdated > +app.config.get("bbsmenu_update_interval")*1000*60*60*24
+        throw new Error("キャッシュが期限切れなので通信します")
+    catch
+      #通信
+      request = new app.HTTP.Request("GET", url,
+        mimeType: "text/plain; charset=Shift_JIS"
+      )
+      if cache.lastModified?
+        request.headers["If-Modified-Since"] = new Date(cache.lastModified).toUTCString()
 
-      if response?.status is 200
-        menu = BBSMenu.parse(response.body)
-      else if cache.data?
-        menu = BBSMenu.parse(cache.data)
+      if cache.etag?
+        request.headers["If-None-Match"] = cache.etag
+      response = await request.send()
 
-      if menu?.length > 0
-        if response?.status is 200 or response?.status is 304 or (not response and cache.data?)
-          BBSMenu.data = {content: {response, menu}, success: true}
-          resolve({response, menu})
-        else
-          BBSMenu.data = {content: {response, menu}, success: false}
-          reject({response, menu})
-      else
-        BBSMenu.data = {content: {response}, success: false}
-        reject({response})
-      return
-    )
-    promise.catch(-> return).then( ({response, menu}) ->
+    if response?.status is 200
+      menu = BBSMenu.parse(response.body)
+
       #キャッシュ更新
-      if response?.status is 200
-        cache.data = response.body
-        cache.lastUpdated = Date.now()
+      cache.data = response.body
+      cache.lastUpdated = Date.now()
 
-        lastModified = new Date(
-          response.headers["Last-Modified"] or "dummy"
-        ).getTime()
+      lastModified = new Date(
+        response.headers["Last-Modified"] or "dummy"
+      ).getTime()
 
-        if Number.isFinite(lastModified)
-          cache.lastModified = lastModified
-        cache.put()
-      else if cache.data? and response?.status is 304
+      if Number.isFinite(lastModified)
+        cache.lastModified = lastModified
+      cache.put()
+
+    else if cache.data?
+      menu = BBSMenu.parse(cache.data)
+
+      #キャッシュ更新
+      if response?.status is 304
         cache.lastUpdated = Date.now()
         cache.put()
-      return
-    )
-    return promise
+
+    unless menu?.length > 0
+      BBSMenu.data = {content: {response}, success: false}
+      throw {response}
+
+    unless response?.status is 200 or response?.status is 304 or (not response and cache.data?)
+      BBSMenu.data = {content: {response, menu}, success: false}
+      throw {response, menu}
+
+    BBSMenu.data = {content: {response, menu}, success: true}
+    return {response, menu}
 
   ###*
   @method get
@@ -123,9 +120,9 @@ class app.BBSMenu
       message = "板一覧の取得に失敗しました。"
       if menu?
         message += "キャッシュに残っていたデータを表示します。"
-        throw new Error({menu, message})
+        throw {menu, message}
       else
-        throw new Error({message})
+        throw {message}
     return {menu}
 
 app.module("bbsmenu", [], (callback) ->

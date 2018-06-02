@@ -30,9 +30,8 @@ class UI.TableSorter
     @param {String} [param.sortIndex]
     @param {String} [param.sortAttribute]
     @param {String} [param.sortOrder]
-    @param {String} [param.sortType]
   ###
-  update: ({sortIndex, sortAttribute, sortOrder, sortType} = {}) ->
+  update: ({sortIndex, sortAttribute, sortOrder} = {}) ->
     event = new Event("table_sort_before_update")
     @table.dispatchEvent(event)
     return if event.defaultPrevented
@@ -42,7 +41,6 @@ class UI.TableSorter
       @table.C("table_sort_desc")[0]?.removeClass("table_sort_desc")
       $th = @table.$("th:nth-child(#{sortIndex + 1})")
       $th.addClass("table_sort_#{sortOrder}")
-      sortType ?= $th.dataset.tableSortType
     else if not sortAttribute?
       $th = @table.$(".table_sort_asc, .table_sort_desc")
 
@@ -56,7 +54,6 @@ class UI.TableSorter
       sortOrder = if $th.hasClass("table_sort_asc") then "asc" else "desc"
 
     if sortIndex?
-      sortType ?= $th.dataset.tableSortType or "str"
       data = {}
       for $td in @table.$$("td:nth-child(#{sortIndex + 1})")
         data[$td.textContent] or= []
@@ -65,8 +62,6 @@ class UI.TableSorter
       @table.C("table_sort_asc")[0]?.removeClass("table_sort_asc")
       @table.C("table_sort_desc")[0]?.removeClass("table_sort_desc")
 
-      sortType ?= "str"
-
       data = {}
       for $tr in @table.$("tbody").T("tr")
         value = $tr.getAttr(sortAttribute)
@@ -74,13 +69,12 @@ class UI.TableSorter
         data[value].push($tr)
 
     dataKeys = Object.keys(data)
-    if sortType is "num"
-      dataKeys.sort((a, b) -> a - b)
-    else
-      dataKeys.sort()
 
-    if sortOrder is "desc"
-      dataKeys.reverse()
+    dataKeys.sort( (a, b) ->
+      diff = a.localeCompare(b, "ja", { numeric: true })
+      diff *= -1  if sortOrder is "desc"
+      return diff
+    )
 
     $tbody = @table.$("tbody")
     $tbody.innerHTML = ""
@@ -88,9 +82,7 @@ class UI.TableSorter
       for $tr in data[key]
         $tbody.addLast($tr)
 
-    exparam =
-      sort_order: sortOrder
-      sort_type: sortType
+    exparam = {sort_order: sortOrder}
 
     if sortIndex?
       exparam.sort_index = sortIndex
@@ -106,13 +98,11 @@ class UI.TableSorter
     @param {String} [param.sort_index]
     @param {String} [param.sort_attribute]
     @param {String} [param.sort_order]
-    @param {String} [param.sort_type]
   ###
-  updateSnake: ({sort_index = null, sort_attribute = null, sort_order = null, sort_type = null}) ->
+  updateSnake: ({sort_index = null, sort_attribute = null, sort_order = null}) ->
     @update(
       sortIndex: sort_index
       sortAttribute: sort_attribute
       sortOrder: sort_order
-      sortType: sort_type
     )
     return

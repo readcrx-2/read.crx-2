@@ -620,9 +620,6 @@ class app.view.TabContentView extends app.view.PaneContentView
       else
         config.sortAttribute = @value
 
-      if (tmp = selected.dataset.sortType)?
-        config.sortType = tmp
-
       app.DOMData.get($table, "tableSorter").update(config)
       return
     )

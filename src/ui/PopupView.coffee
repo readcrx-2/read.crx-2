@@ -101,6 +101,9 @@ class UI.PopupView
       clearTimeout(@_delayTimeoutID)
       @_delayTimeoutID = 0
 
+    # コンテキストメニューの破棄
+    UI.ContextMenu.remove()
+
     # 表示位置の決定
     setDispPosition = (popupNode) =>
       margin = 20
@@ -147,11 +150,12 @@ class UI.PopupView
           popupNode.style.maxHeight = "#{viewHeight - cssTop - margin}px"
       return
 
-    # マウス座標の監視
+    # マウス座標とコンテキストメニューの監視
     if @_popupStack.length is 0
       @_currentX = @mouseX
       @_currentY = @mouseY
       @defaultParent.on("mousemove", @_onMouseMove)
+      @_popupArea.on("contextmenu_removed", @_onRemoveContextmenu)
 
     # 新規ノードの設定
     setupNewNode = (sourceNode, popupNode) =>
@@ -210,6 +214,7 @@ class UI.PopupView
   @param {Boolean} forceRemove
   ###
   _remove: (forceRemove) ->
+    return if @_popupArea.hasClass("has_contextmenu")
     for {popup, source} in @_popupStack by -1
       # 末端の非アクティブ・ノードを選択
       break if (
@@ -228,10 +233,14 @@ class UI.PopupView
       source.removeAttr("stack-index")
       popup.remove()
       @_popupStack.pop()
+      # コンテキストメニューの破棄
+      if @_popupArea.hasClass("has_contextmenu")
+        UI.ContextMenu.remove()
 
-    # マウス座標の監視終了
+    # マウス座標とコンテキストメニューの監視終了
     if @_popupStack.length is 0
       @defaultParent.off("mousemove", @_onMouseMove)
+      @_popupArea.off("contextmenu_removed", @_onRemoveContextmenu)
     return
 
   ###*
@@ -271,6 +280,7 @@ class UI.PopupView
   ###
   _onMouseLeave: ({ currentTarget: target }) =>
     target.removeClass("active")
+    return if @_popupArea.hasClass("has_contextmenu")
     @_delayRemove(false)
     return
 
@@ -300,6 +310,14 @@ class UI.PopupView
       @source.removeClass("active")
       @popup.removeClass("active")
       @_delayRemove(false)
+    return
+
+  ###*
+  @method _onRemoveContextmenu
+  ###
+  _onRemoveContextmenu: =>
+    @_activateNode()
+    @_remove(false)
     return
 
   ###*

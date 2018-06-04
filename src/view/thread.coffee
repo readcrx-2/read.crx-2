@@ -243,7 +243,13 @@ app.boot("/view/thread.html", ->
     $article = target.parent()
     $menu = $$.I("template_res_menu").content.$(".res_menu").cloneNode(true)
     $menu.addClass("hidden")
-    $article.addLast($menu)
+    altParent = null
+    if $article.parent().hasClass("popup")
+      altParent = $view.C("popup_area")[0]
+      altParent.addLast($menu)
+      $menu.setAttr("resnum", $article.C("num")[0].textContent)
+    else
+      $article.addLast($menu)
 
     $toggleAaMode = $menu.C("toggle_aa_mode")[0]
     if $article.parent().hasClass("config_use_aa_font")
@@ -290,7 +296,7 @@ app.boot("/view/thread.html", ->
       $menu.C("search_selection")[0].remove()
 
     $menu.removeClass("hidden")
-    UI.ContextMenu($menu, e.clientX, e.clientY)
+    UI.ContextMenu($menu, e.clientX, e.clientY, altParent)
     return
 
   $view.on("click", onHeaderMenu)
@@ -315,6 +321,9 @@ app.boot("/view/thread.html", ->
   $view.on("click", ({target}) ->
     return unless target.matches(".res_menu > li")
     $res = target.closest("article")
+    unless $res
+      rn = +target.closest(".res_menu").getAttr("resnum")
+      $res = $content.child()[rn - 1]
 
     if target.hasClass("copy_selection")
       selectedText = getSelection().toString()

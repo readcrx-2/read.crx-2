@@ -282,12 +282,12 @@ namespace app {
       });
 
       this._onChanged = (change, area) => {
-        var key:string, val:any, newValue:string;
+        var key:string, val:any;
 
         if (area === "local") {
           for ([key, val] of Object.entries(change)) {
             if (!key.startsWith("config_")) continue;
-            newValue = val.newValue.toString();
+            var {newValue} = val;
 
             if (typeof newValue === "string") {
               this._cache.set(key, newValue);

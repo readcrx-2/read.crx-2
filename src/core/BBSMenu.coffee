@@ -123,6 +123,8 @@ class app.BBSMenu
         throw {menu, message}
       else
         throw {message}
+    finally
+      BBSMenu._updatingPromise = null
     return {menu}
 
 app.module("bbsmenu", [], (callback) ->

@@ -62,9 +62,7 @@ class app.Cache
   ###
   @_dbOpen: new Promise( (resolve, reject) ->
       req = indexedDB.open("Cache", 1)
-      req.onerror = (e) ->
-        reject(e)
-        return
+      req.onerror = reject
       req.onupgradeneeded = ({ target: {result: db, transaction: tx} }) ->
         objStore = db.createObjectStore("Cache", keyPath: "url")
         objStore.createIndex("last_updated", "last_updated", unique: false)

@@ -8,9 +8,7 @@ class app.History
   @_openDB: ->
     return new Promise( (resolve, reject) =>
       req = indexedDB.open("History", @DB_VERSION)
-      req.onerror = (e) ->
-        reject(e)
-        return
+      req.onerror = reject
       req.onupgradeneeded = ({ target: {result: db, transaction: tx}, oldVersion: oldVer }) =>
         if oldVer < 1
           objStore = db.createObjectStore("History", keyPath: "id", autoIncrement: true)
@@ -19,12 +17,12 @@ class app.History
           objStore.createIndex("date", "date", unique: false)
           tx.oncomplete = ->
             resolve(db)
-
+            return
         if oldVer is 1
           @_recoveryOfBoardTitle(db, tx)
           tx.oncomplete = ->
             resolve(db)
-
+            return
         return
       req.onsuccess = ({ target: {result: db} }) ->
         resolve(db)

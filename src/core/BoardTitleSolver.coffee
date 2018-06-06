@@ -22,13 +22,13 @@ class app.BoardTitleSolver
     try
       {menu} = await app.BBSMenu.get()
     catch {menu, message}
-      app.defer().then( ->
+      do ->
+        await app.defer()
         app.message.send("notify",
           message: message
           background_color: "red"
         )
         return
-      )
     unless menu?
       throw new Error("板一覧が取得できませんでした")
 

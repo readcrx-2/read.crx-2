@@ -137,7 +137,7 @@ do ->
     boardUrl = app.URL.threadToBoard(threadUrl)
     threadTitle = app.util.normalize(threadTitle)
 
-    {threads} = await app.Board.get(boardUrl)
+    {data: threads} = await app.Board.get(boardUrl)
     unless threads?
       throw new Error("板の取得に失敗しました")
     threads = threads.filter( ({url, resCount}) ->

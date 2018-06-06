@@ -73,7 +73,7 @@ do ->
     #bbsmenuから検索
     unless newBoardUrl?
       newBoardUrl = do ->
-        {data} = await app.BBSMenu.get
+        {data} = await app.BBSMenu.get()
         unless data?
           throw new Error("BBSMenuの取得に失敗しました")
         match = oldBoardUrl.match(boardUrlReg)
@@ -129,8 +129,7 @@ do ->
     def = {newTab: false, newWindow: false, background: false}
     if type is "mousedown"
       key = "" + which + shiftKey + ctrlKey
-      if openMap.has(key)
-        return openMap.get(key)
+      return openMap.get(key) if openMap.has(key)
     return def
 
   app.util.searchNextThread = (threadUrl, threadTitle) ->
@@ -138,21 +137,21 @@ do ->
     boardUrl = app.URL.threadToBoard(threadUrl)
     threadTitle = app.util.normalize(threadTitle)
 
-    {data} = await app.Board.get(boardUrl)
-    unless data?
+    {threads} = await app.Board.get(boardUrl)
+    unless threads?
       throw new Error("板の取得に失敗しました")
-    data = data.filter( (thread) ->
-      return (thread.url isnt threadUrl and thread.resCount < 1001)
-    ).map( (thread) ->
+    threads = threads.filter( ({url, resCount}) ->
+      return (url isnt threadUrl and resCount < 1001)
+    ).map( ({title, url}) ->
       return {
-        score: app.Util.levenshteinDistance(threadTitle, app.util.normalize(thread.title), false)
-        title: thread.title
-        url: thread.url
+        score: app.Util.levenshteinDistance(threadTitle, app.util.normalize(title), false)
+        title
+        url
       }
     ).sort( (a, b) ->
       return a.score - b.score
     )
-    return data[0...5]
+    return threads[0...5]
 
   wideSlimReg = ///[
     \uff10-\uff19 #０-９
@@ -278,17 +277,13 @@ do ->
         return state is "rejected"
       getState: ->
         return state
-      promise: promise
+      promise
     }
 
   app.util.indexedDBRequestToPromise = (req) ->
     return new Promise( (resolve, reject) ->
-      req.onsuccess = (e) ->
-        resolve(e)
-        return
-      req.onerror = (e) ->
-        reject(e)
-        return
+      req.onsuccess = resolve
+      req.onerror = reject
       return
     )
 

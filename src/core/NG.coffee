@@ -48,7 +48,7 @@ class app.NG
         reg = new RegExp ngElement.word
       catch e
         app.message.send "notify", {
-          html: """
+          message: """
             NG機能の正規表現(#{ngElement.type}: #{ngElement.word})を読み込むのに失敗しました
             この行は無効化されます
           """

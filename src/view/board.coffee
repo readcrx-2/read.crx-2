@@ -19,8 +19,6 @@ app.boot("/view/board.html", ["board"], (Board) ->
   app.DOMData.set($view, "selectableItemList", threadList)
   tableSorter = new UI.TableSorter($table)
   app.DOMData.set($table, "tableSorter", tableSorter)
-  for dom in $table.$$("th.res, th.unread, th.heat")
-    dom.dataset.tableSortType = "num"
   $$.C("content")[0].addLast($table)
 
   write = (param = {}) ->
@@ -63,7 +61,6 @@ app.boot("/view/board.html", ["board"], (Board) ->
         tableSorter.update(
           sortAttribute: "data-thread-number"
           sortOrder: "asc"
-          sortType: "num"
         )
         return
       , once: true)
@@ -85,13 +82,12 @@ app.boot("/view/board.html", ["board"], (Board) ->
     app.message.send("request_update_read_state", {board_url: url})
 
     getReadStatePromise = do ->
-      return new Promise( (resolve, reject) ->
-        # request_update_read_stateを待つ
+      # request_update_read_stateを待つ
+      await new Promise( (resolve) ->
         setTimeout(resolve, 150)
         return
-      ).then( ->
-        return app.ReadState.getByBoard(url)
       )
+      return await app.ReadState.getByBoard(url)
     getBoardPromise = do ->
       {status, message, data} = await Board.get(url)
       $messageBar = $view.C("message_bar")[0]
@@ -101,8 +97,7 @@ app.boot("/view/board.html", ["board"], (Board) ->
       else
         $messageBar.removeClass("error")
         $messageBar.removeChildren()
-      if data?
-        return data
+      return data if data?
       throw new Error("板の取得に失敗しました")
       return
 
@@ -164,10 +159,8 @@ app.boot("/view/board.html", ["board"], (Board) ->
 
     $button = $view.C("button_reload")[0]
     $button.addClass("disabled")
-    app.defer5( ->
-      $button.removeClass("disabled")
-      return
-    )
+    await app.defer5()
+    $button.removeClass("disabled")
     return
 
   $view.on("request_reload", ({detail}) ->

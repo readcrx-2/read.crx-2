@@ -47,18 +47,22 @@ namespace app {
     return copy;
   }
 
-  export function defer (fn:Function):void {
-    setTimeout(fn, 100);
+  export function defer (): Promise<void> {
+    return new Promise<void>( (resolve) => {
+      setTimeout(resolve, 100);
+    });
   }
 
-  export function defer5 (fn:Function):void {
-    setTimeout(fn, 1000 * 5);
+  export function defer5 ():Promise<void> {
+    return new Promise<void>( (resolve) => {
+      setTimeout(resolve, 5 * 1000);
+    });
   }
 
   export function assertArg (name:string, rules:[any, string, boolean|undefined][]):boolean {
     for (let [val, type, canbeNull] of rules) {
       if (
-        !(canbeNull && val === null) &&
+        !(canbeNull && (val === null || val === void 0)) &&
         typeof val !== type
       ) {
         log("error", `${name}: 不正な引数(予期していた型: ${type}, 受け取った型: ${typeof val})`, deepCopy(val));
@@ -145,14 +149,13 @@ namespace app {
       });
     }
 
-    private _fire (type:string, message:any):void {
+    private async _fire (type:string, message:any):Promise<void> {
       var message = deepCopy(message);
 
-      defer(() => {
-        if (this._listenerStore[type]) {
-          this._listenerStore[type].call(message);
-        }
-      });
+      await defer();
+      if (this._listenerStore[type]) {
+        this._listenerStore[type].call(message);
+      }
     }
 
     send (type:string, message:any = {}):void {
@@ -218,8 +221,8 @@ namespace app {
       ["aa_font", "aa"],
       ["popup_trigger", "click"],
       ["popup_delay_time", "0"],
-      ["ngwords", "RegExpTitle:.+\\.2ch\\.netの人気スレ\nTitle:【漫画あり】コンビニで浪人を購入する方法\nTitle:★★ ２ちゃんねる\(sc\)のご案内 ★★★\nTitle:浪人はこんなに便利\nTitle:2ちゃんねるの運営を支えるサポーター募集"],
-      ["ngobj", "[{\"type\":\"regExpTitle\",\"word\":\".+\\\\.2ch\\\\.netの人気スレ\"},{\"type\":\"title\",\"word\":\"【漫画あり】こんびにで浪人を購入する方法\"},{\"type\":\"title\",\"word\":\"★★2ちゃんねる\\\\(sc\\\\)のご案内★★★\"},{\"type\":\"title\",\"word\":\"浪人はこんなに便利\"},{\"type\":\"title\",\"word\":\"2ちゃんねるの運営を支えるさぽーたー募集\"}]"],
+      ["ngwords", "Title: 5ちゃんねるへようこそ\nTitle:【新着情報】5chブラウザがやってきた！"],
+      ["ngobj", "[{\"type\":\"Title\",\"word\":\"5ちゃんねるへようこそ\"},{\"type\":\"Title\",\"word\":\"【新着情報】5chぶらうざがやってきた！\"}]"],
       ["chain_ng", "off"],
       ["chain_ng_id", "off"],
       ["chain_ng_id_by_chain", "off"],
@@ -279,12 +282,12 @@ namespace app {
       });
 
       this._onChanged = (change, area) => {
-        var key:string, val:any, newValue:string;
+        var key:string, val:any;
 
         if (area === "local") {
           for ([key, val] of Object.entries(change)) {
             if (!key.startsWith("config_")) continue;
-            newValue = val.newValue.toString();
+            var {newValue} = val;
 
             if (typeof newValue === "string") {
               this._cache.set(key, newValue);
@@ -431,7 +434,7 @@ namespace app {
     let readyModules = new Map<string, any>();
     let fireDefinition, addReadyModule;
 
-    fireDefinition = (moduleId, dependencies, definition) => {
+    fireDefinition = async (moduleId, dependencies, definition) => {
       var depModules:any[] = [], depModuleId, callback;
 
       for (depModuleId of dependencies) {
@@ -443,14 +446,12 @@ namespace app {
           moduleId,
           dependencies
         });
-        defer( () => {
-          definition(...depModules.concat(callback));
-        });
+        await defer();
+        definition(...depModules.concat(callback));
       }
       else {
-        defer( () => {
-          definition(...depModules);
-        });
+        await defer();
+        definition(...depModules);
       }
     };
 

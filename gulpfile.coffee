@@ -3,7 +3,6 @@ readline = require "readline"
 os = require "os"
 path = require "path"
 fs = require "fs-extra"
-runSequence = require "run-sequence"
 merge = require "merge2"
 notify = require "gulp-notify"
 plumber = require "gulp-plumber"
@@ -19,7 +18,7 @@ pug = require "gulp-pug"
 sharp = require "sharp"
 toIco = require "to-ico"
 crx = require "crx"
-execSync = require("child_process").exec
+spawn = require("child_process").spawn
 
 manifest = require "./src/manifest.json"
 
@@ -136,13 +135,13 @@ sass.compiler = sassCompiler
 sortForExtend =
   comparator: (file1, file2) ->
     return file1.path.split(".").length - file2.path.split(".").length
-exec = (command) ->
+exec = (command, args) ->
   return new Promise( (resolve, reject) ->
-    CP = execSync(command, (err, stdout, stderr) ->
-      if err then reject(err) else resolve()
+    cp = spawn(command, args, {stdio: "inherit"})
+    cp.on("close", ->
+      resolve()
       return
     )
-    CP.stdout.pipe(process.stdout)
     return
   )
 putsPromise = (mes) ->
@@ -163,68 +162,10 @@ putsPromise = (mes) ->
   )
 #--------
 
-gulp.task "default", ["js", "html", "css", "img", "manifest", "lib"]
-
-gulp.task "pack", (cb) ->
-  return runSequence(
-    "clean"
-    "default"
-    "scan"
-    "crx"
-    cb
-  )
-
-gulp.task "watch", ["default"], ->
-  gulp.watch([args.appTsPath, "./src/global.d.ts"], ["app.js"])
-  gulp.watch(args.backgroundCoffeePath, ["background.js"])
-  gulp.watch(args.csaddlinkCoffeePath, ["cs_addlink.js"])
-  gulp.watch([args.appCoreTsPath, args.appCoreCoffeePath], ["app_core.js"])
-  gulp.watch([args.uiTsPath, args.uiCoffeePath], ["ui.js"])
-  gulp.watch(args.viewCoffeePath, ["viewjs"])
-  gulp.watch(args.zobieCoffeePath, ["zombie.js"])
-  gulp.watch(args.writePath.cs.coffee, ["cs_write.js"])
-  gulp.watch([args.writePath.write.ts, args.writePath.write.coffee], ["write.js"])
-  gulp.watch([args.writePath.submit_thread.ts, args.writePath.submit_thread.coffee], ["submit_thread.js"])
-  gulp.watch(args.cssPath, ["css"])
-  gulp.watch(args.viewHtmlPath, ["viewhtml"])
-  gulp.watch(args.zombieHtmlPath, ["zombie.html"])
-  gulp.watch(args.writeHtmlPath, ["writehtml"])
-  gulp.watch(args.webpSrcPath, ["img"])
-  gulp.watch(args.manifestPath, ["manifest"])
-  gulp.watch(args.shortQueryPath, ["shortQuery"])
-  return
-
-gulp.task "clean", ->
-  return Promise.all([
-    fs.remove("./debug")
-    fs.remove("./read.crx_2.zip")
-  ])
-
-gulp.task "scan", ->
-  return exec("freshclam").then( ->
-    return exec("clamscan -ir debug")
-  )
-
-gulp.task "crx", ->
-  tmpDir = path.join(os.tmpdir(), "debug")
-  try
-    await fs.copy(args.outputPath, tmpDir)
-    if process.env["read.crx-2-pem-path"]?
-      pemPath = process.env["read.crx-2-pem-path"]
-    else
-      pemPath = await putsPromise("秘密鍵のパスを入力して下さい: ")
-    pem = await fs.readFile(pemPath)
-    rcrx = new crx(privateKey: pem)
-    loadedCrx = await rcrx.load(tmpDir)
-    rcrxBuffer = await loadedCrx.pack()
-    await fs.writeFile("./read.crx_2.#{manifest.version}.crx", rcrxBuffer)
-    await fs.remove(tmpDir)
-  return
-
-#compile
+###
+  compile
+###
 ##js
-gulp.task "js", ["app.js", "background.js", "cs_addlink.js", "app_core.js", "ui.js", "viewjs", "zombie.js", "writejs"]
-
 gulp.task "app.js", ->
   return gulp.src args.appTsPath
     .pipe(plumber(errorHandler: notify.onError("Error: <%= error.toString() %>")))
@@ -283,8 +224,6 @@ gulp.task "zombie.js", ->
     .pipe(coffee(args.coffeeOptions))
     .pipe(gulp.dest(args.outputPath))
 
-gulp.task "writejs", ["cs_write.js", "write.js", "submit_thread.js"]
-
 gulp.task "cs_write.js", ->
   return gulp.src args.writePath.cs.coffee
     .pipe(plumber(errorHandler: notify.onError("Error: <%= error.toString() %>")))
@@ -316,9 +255,11 @@ gulp.task "submit_thread.js", ->
   .pipe(concat("submit_thread.js"))
   .pipe(gulp.dest("#{args.outputPath}/write"))
 
-##css
-gulp.task "css", ["ui.css", "viewcss", "writecss"]
+gulp.task "writejs", gulp.parallel("cs_write.js", "write.js", "submit_thread.js")
+gulp.task "js", gulp.parallel("app.js", "background.js", "cs_addlink.js", "app_core.js", "ui.js", "viewjs", "zombie.js", "writejs")
 
+
+##css
 gulp.task "ui.css", ->
   return gulp.src args.uiCssPath
     .pipe(plumber(errorHandler: notify.onError("Error: <%= error.toString() %>")))
@@ -337,9 +278,10 @@ gulp.task "writecss", ->
     .pipe(sass(args.sassOptions))
     .pipe(gulp.dest("#{args.outputPath}/write"))
 
-##html
-gulp.task "html", ["viewhtml", "zombie.html", "writehtml"]
+gulp.task "css", gulp.parallel("ui.css", "viewcss", "writecss")
 
+
+##html
 gulp.task "viewhtml", ->
   return gulp.src args.viewHtmlPath
     .pipe(plumber(errorHandler: notify.onError("Error: <%= error.toString() %>")))
@@ -361,78 +303,71 @@ gulp.task "writehtml", ->
     .pipe(pug(args.pugOptions))
     .pipe(gulp.dest("#{args.outputPath}/write"))
 
+gulp.task "html", gulp.parallel("viewhtml", "zombie.html", "writehtml")
+
+
 ##img
-gulp.task "img", ["webp&png", "ico", "logo128", "loading.webp"]
-
 gulp.task "webp&png", ->
-  try
-    await fs.mkdirp(args.webpBinPath)
-    promiseArray = []
-    for img in imgs
-      promise = do ->
-        m = img.match(/^(.+)_(\d+)x(\d+)(?:_([a-fA-F0-9]*))?(?:_r(\-?\d+))?\.(webp|png)$/)
-        src = "#{args.webpSrcPath}/#{m[1]}.svg"
-        bin = "#{args.webpBinPath}/#{img}"
+  await fs.ensureDir(args.webpBinPath)
+  await Promise.all(imgs.map( (img) ->
+    m = img.match(/^(.+)_(\d+)x(\d+)(?:_([a-fA-F0-9]*))?(?:_r(\-?\d+))?\.(?:webp|png)$/)
+    src = "#{args.webpSrcPath}/#{m[1]}.svg"
+    bin = "#{args.webpBinPath}/#{img}"
 
-        data = await fs.readFile(src)
-        buf = new Buffer(data)
-        # 塗りつぶし
-        if m[4]?
-          str = buf.toString("utf8").replace(/#333/g, "##{m[4]}")
-          buf = Buffer.from(str, "utf8")
-        sh = sharp(buf)
-        # 回転
-        if m[5]?
-          degrees = parseInt(m[5])
-          degrees = 270 if degrees is -90
-          sh.rotate(degrees)
-        sh.resize(parseInt(m[2]), parseInt(m[3]))
-        sh[m[6]]()
-        sh.toBuffer()
-        await sh.toFile(bin)
-        return
-      promiseArray.push(promise)
-    await Promise.all(promiseArray)
+    data = await fs.readFile(src, "utf-8")
+    # 塗りつぶし
+    if m[4]?
+      data = data.replace(/#333/g, "##{m[4]}")
+    buf = Buffer.from(data, "utf8")
+    sh = sharp(buf)
+    # 回転
+    if m[5]?
+      sh.rotate(parseInt(m[5]))
+    sh.resize(parseInt(m[2]), parseInt(m[3]))
+    await sh.toFile(bin)
+    return
+  ))
   return
 
 gulp.task "ico", ->
-  try
-    await fs.mkdirp(args.webpBinPath)
-    filebuf = await Promise.all([
-      sharp(args.icoSrcPath)
-        .resize(16, 16)
-        .png()
-        .toBuffer()
-      sharp(args.icoSrcPath)
-        .resize(32, 32)
-        .png()
-        .toBuffer()
-    ])
-    buf = await toIco(filebuf)
-    await fs.writeFile(args.icoBinPath, buf)
+  await fs.ensureDir(args.webpBinPath)
+  filebuf = await Promise.all([
+    sharp(args.icoSrcPath)
+      .resize(16, 16)
+      .png()
+      .toBuffer()
+    sharp(args.icoSrcPath)
+      .resize(32, 32)
+      .png()
+      .toBuffer()
+  ])
+  buf = await toIco(filebuf)
+  await fs.writeFile(args.icoBinPath, buf)
   return
 
 gulp.task "logo128", ->
-  try
-    await fs.mkdirp(args.webpBinPath)
-    await sharp(null,
-      create:
-        width: 128
-        height: 128
-        channels: 4
-        background: { r: 0, g: 0, b: 0, alpha: 0}
-    ).overlayWith(args.logo128SrcPath,
-      top: 16
-      left: 16
-    ).toFile(args.logo128BinPath)
+  await fs.ensureDir(args.webpBinPath)
+  await sharp(null,
+    create:
+      width: 128
+      height: 128
+      channels: 4
+      background: { r: 0, g: 0, b: 0, alpha: 0}
+  ).overlayWith(args.logo128SrcPath,
+    top: 16
+    left: 16
+  ).toFile(args.logo128BinPath)
   return
 
 gulp.task "loading.webp", ->
-  await fs.mkdirp(args.webpBinPath)
+  await fs.ensureDir(args.webpBinPath)
   await sharp(args.loadingSrcPath)
     .resize(100, 100)
     .toFile(args.loadingBinPath)
   return
+
+gulp.task "img", gulp.parallel("webp&png", "ico", "logo128", "loading.webp")
+
 
 ##manifest
 gulp.task "manifest", ->
@@ -440,11 +375,64 @@ gulp.task "manifest", ->
     .pipe(changed(args.outputPath))
     .pipe(gulp.dest(args.outputPath))
 
-##lib
-gulp.task "lib", ["shortQuery"]
 
+##lib
 gulp.task "shortQuery", ->
   return gulp.src args.shortQueryPath
     .pipe(rename("shortQuery.min.js"))
     .pipe(changed("#{args.outputPath}/lib", transformPath: (p) -> return path.join(path.dirname(p), "shortQuery.min.js")))
     .pipe(gulp.dest("#{args.outputPath}/lib"))
+
+gulp.task "lib", gulp.parallel("shortQuery")
+
+
+###
+  general
+###
+gulp.task "default", gulp.parallel("js", "html", "css", "img", "manifest", "lib")
+
+gulp.task "clean", ->
+  return Promise.all([
+    fs.remove("./debug")
+    fs.remove("./read.crx_2.zip")
+  ])
+
+gulp.task "scan", ->
+  await exec("freshclam", [])
+  await exec("clamscan", ["-ir", "debug"])
+  return
+
+gulp.task "crx", ->
+  tmpDir = path.join(os.tmpdir(), "debug")
+  await fs.copy(args.outputPath, tmpDir)
+  pemPath = process.env["read.crx-2-pem-path"] ? await putsPromise("秘密鍵のパスを入力して下さい: ")
+  pem = await fs.readFile(pemPath)
+  rcrx = new crx(privateKey: pem)
+  loadedCrx = await rcrx.load(tmpDir)
+  rcrxBuffer = await loadedCrx.pack()
+  await fs.writeFile("./read.crx_2.#{manifest.version}.crx", rcrxBuffer)
+  await fs.remove(tmpDir)
+  return
+
+gulp.task "pack", gulp.series("clean", "default", "scan", "crx")
+
+gulp.task "watch", gulp.series("default", ->
+  gulp.watch([args.appTsPath, "./src/global.d.ts"], gulp.task("app.js"))
+  gulp.watch(args.backgroundCoffeePath, gulp.task("background.js"))
+  gulp.watch(args.csaddlinkCoffeePath, gulp.task("cs_addlink.js"))
+  gulp.watch([args.appCoreTsPath, args.appCoreCoffeePath], gulp.task("app_core.js"))
+  gulp.watch([args.uiTsPath, args.uiCoffeePath], gulp.task("ui.js"))
+  gulp.watch(args.viewCoffeePath, gulp.task("viewjs"))
+  gulp.watch(args.zobieCoffeePath, gulp.task("zombie.js"))
+  gulp.watch(args.writePath.cs.coffee, gulp.task("cs_write.js"))
+  gulp.watch([args.writePath.write.ts, args.writePath.write.coffee], gulp.task("write.js"))
+  gulp.watch([args.writePath.submit_thread.ts, args.writePath.submit_thread.coffee], gulp.task("submit_thread.js"))
+  gulp.watch(args.cssPath, gulp.task("css"))
+  gulp.watch(args.viewHtmlPath, gulp.task("viewhtml"))
+  gulp.watch(args.zombieHtmlPath, gulp.task("zombie.html"))
+  gulp.watch(args.writeHtmlPath, gulp.task("writehtml"))
+  gulp.watch(args.webpSrcPath, gulp.task("img"))
+  gulp.watch(args.manifestPath, gulp.task("manifest"))
+  gulp.watch(args.shortQueryPath, gulp.task("shortQuery"))
+  return
+)

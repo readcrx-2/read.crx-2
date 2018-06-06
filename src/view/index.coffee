@@ -40,17 +40,15 @@ class app.view.Index extends app.view.View
       return unless target.hasClass("tab_content")
       for dom in target.parent().$$(":scope > .tab_content") when dom isnt target
         return
-      app.defer( =>
-        for $tab in $$.C("tab") when $tab.C("tab_selected")?
-          $tmp = $tab
-          break
-        if $tmp?.$(".tab_selected.tab_content")?
-          @focus($tmp.$(".tab_selected.tab_content"))
-        else
-          #フォーカス対象のタブが無い場合、板一覧にフォーカスする
-          @focus($$.I("left_pane"))
-        return
-      )
+      await app.defer()
+      for $tab in $$.C("tab") when $tab.C("tab_selected")?
+        $tmp = $tab
+        break
+      if $tmp?.$(".tab_selected.tab_content")?
+        @focus($tmp.$(".tab_selected.tab_content"))
+      else
+        #フォーカス対象のタブが無い場合、板一覧にフォーカスする
+        @focus($$.I("left_pane"))
       return
     )
 
@@ -314,14 +312,13 @@ app.boot("/view/index.html", ["bbsmenu"], (BBSMenu) ->
   return unless query
   paramResNumFlag = app.config.isOn("enable_link_with_res_number")
   paramResNum = if paramResNumFlag then app.URL.getResNumber(query) else null
-  # 後ほど実行するためにCallbacksに登録する
-  if app.BBSMenu.serverInfoTriggered
-    app.message.send("open", url: query, new_tab: true, param_res_num: paramResNum)
-  else
-    app.BBSMenu.target.on("serverinfo-created", ->
-      app.message.send("open", url: query, new_tab: true, param_res_num: paramResNum)
-      return
-    )
+
+  {menu} = await BBSMenu.get()
+  await app.URL.pushServerInfo(app.config.get("bbsmenu"), menu)
+  BBSMenu.target.on("change", ({detail: {menu}}) ->
+    app.URL.pushServerInfo(app.config.get("bbsmenu"), menu)
+  )
+  app.message.send("open", url: query, new_tab: true, param_res_num: paramResNum)
   return
 )
 
@@ -520,7 +517,7 @@ app.main = ->
     {name, version: oldVer} = await app.manifest
     return if newVer is oldVer
     app.message.send("notify",
-      html: """
+      message: """
         #{name} の #{newVer} が利用可能です
       """
       background_color: "green"
@@ -573,10 +570,8 @@ app.main = ->
             +app.config.get("window_width")
             +app.config.get("window_height")
             ->
-              app.defer( ->
-                adjustWindowSize.call()
-                return
-              )
+              await app.defer()
+              adjustWindowSize.call()
               return
           )
         else
@@ -956,11 +951,9 @@ app.main = ->
         $menu.remove()
         return
       )
-      app.defer( ->
-        document.body.addLast($menu)
-        UI.ContextMenu($menu, e.clientX, e.clientY)
-        return
-      )
+      await app.defer()
+      document.body.addLast($menu)
+      UI.ContextMenu($menu, e.clientX, e.clientY)
       return
     )
 

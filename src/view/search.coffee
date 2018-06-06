@@ -1,13 +1,11 @@
 app.boot("/view/search.html", ["thread_search"], (ThreadSearch) ->
   try
-    query = app.URL.parseQuery(location.search).get("query")
+    queries = app.URL.parseQuery(location.search)
+    query = queries.get("query")
   catch
     alert("不正な引数です")
     return
-  if app.URL.parseQuery(location.search).has("https")
-    scheme = "https"
-  else
-    scheme = "http"
+  scheme = if queries.has("https") then "https" else "http"
 
   openedAt = Date.now()
 
@@ -35,8 +33,6 @@ app.boot("/view/search.html", ["thread_search"], (ThreadSearch) ->
   app.DOMData.set($view, "selectableItemList", threadList)
   tableSorter = new UI.TableSorter($table)
   app.DOMData.set($table, "tableSorter", tableSorter)
-  for dom in $table.$$("th.res, th.heat")
-    dom.dataset.tableSortType = "num"
   $$.C("content")[0].addFirst($table)
 
   threadSearch = new ThreadSearch(query)
@@ -76,10 +72,8 @@ app.boot("/view/search.html", ["thread_search"], (ThreadSearch) ->
       $view.removeClass("loading")
 
     $view.C("more")[0].addClass("hidden")
-    app.defer5( ->
-      $buttonReload.removeClass("disabled")
-      return
-    )
+    await app.defer5()
+    $buttonReload.removeClass("disabled")
     return
 
   $buttonReload.on("click", ->

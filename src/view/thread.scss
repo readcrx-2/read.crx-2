@@ -119,6 +119,9 @@ header {
   display: inline-block;
   font-size: 14px;
   cursor: pointer;
+  > span {
+    padding-right: 5px;
+  }
 }
 
 .mail::before {

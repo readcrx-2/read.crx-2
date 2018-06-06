@@ -1,7 +1,13 @@
 window.UI ?= {}
 do ->
+  altParent = null
+
   cleanup = ->
     $$.C("contextmenu_menu")[0]?.remove()
+    if altParent
+      altParent.removeClass("has_contextmenu")
+      altParent.dispatchEvent(new Event("contextmenu_removed"))
+      altParent = null
     return
 
   eventFn = (e) ->
@@ -24,7 +30,7 @@ do ->
     return
   )
 
-  UI.ContextMenu = ($menu, x, y) ->
+  UI.ContextMenu = ($menu, x, y, $parent = null) ->
     cleanup()
 
     $menu.addClass("contextmenu_menu")
@@ -32,6 +38,9 @@ do ->
     menuWidth = $menu.offsetWidth
     $menu.style.left = "#{x}px"
     $menu.style.top = "#{y}px"
+    if $parent
+      altParent = $parent
+      altParent.addClass("has_contextmenu")
 
     if window.innerWidth < $menu.offsetLeft + menuWidth
       $menu.style.left = ""
@@ -39,3 +48,6 @@ do ->
     if window.innerHeight < $menu.offsetTop + $menu.offsetHeight
       $menu.style.top = "#{Math.max($menu.offsetTop - $menu.offsetHeight, 0)}px"
     return
+
+  UI.ContextMenu.remove = ->
+    cleanup()

@@ -78,11 +78,9 @@ app.boot("/view/thread.html", ->
     #ポップアップ内のサムネイルの遅延ロードを解除
     for dom in $popup.$$("img[data-src], video[data-src]")
       app.DOMData.get($view, "lazyload").immediateLoad(dom)
-    app.defer( ->
-      # popupの表示
-      popupView.show($popup, e.clientX, e.clientY, that)
-      return
-    )
+    await app.defer()
+    # popupの表示
+    popupView.show($popup, e.clientX, e.clientY, that)
     return
 
   canWriteFlg = do ->
@@ -106,39 +104,37 @@ app.boot("/view/thread.html", ->
   $view.on("request_reload", ({ detail: ex = {} }) ->
     threadContent.refreshNG()
     #先にread_state更新処理を走らせるために、処理を飛ばす
-    app.defer( ->
-      jumpResNum = +(ex.written_res_num ? ex.param_res_num ? -1)
-      if (
-        !ex.force_update and
-        (
-          $view.hasClass("loading") or
-          $view.C("button_reload")[0].hasClass("disabled")
-        )
+    await app.defer()
+    jumpResNum = +(ex.written_res_num ? ex.param_res_num ? -1)
+    if (
+      !ex.force_update and
+      (
+        $view.hasClass("loading") or
+        $view.C("button_reload")[0].hasClass("disabled")
       )
-        threadContent.select(jumpResNum, false, true, -60) if jumpResNum > 0
-        return
-
-      thread = await app.viewThread._draw($view, { forceUpdate: ex.force_update, jumpResNum })
-      return unless ex.mes? and not app.config.isOn("no_writehistory")
-      postMes = ex.mes.replace(/\s/g, "")
-      for t, i in thread.res by -1 when postMes is app.util.decodeCharReference(app.util.stripTags(t.message)).replace(/\s/g, "")
-        date = app.util.stringToDate(t.other).valueOf()
-        if date?
-          app.WriteHistory.add({
-            url: viewUrl
-            res: i+1
-            title: document.title
-            name: app.util.decodeCharReference(t.name)
-            mail: app.util.decodeCharReference(t.mail)
-            inputName: ex.name
-            inputMail: ex.mail
-            message: ex.mes
-            date
-          })
-        threadContent.addClassWithOrg($content.child()[i], "written")
-        break
-      return
     )
+      threadContent.select(jumpResNum, false, true, -60) if jumpResNum > 0
+      return
+
+    thread = await app.viewThread._draw($view, { forceUpdate: ex.force_update, jumpResNum })
+    return unless ex.mes? and not app.config.isOn("no_writehistory")
+    postMes = ex.mes.replace(/\s/g, "")
+    for t, i in thread.res by -1 when postMes is app.util.decodeCharReference(app.util.stripTags(t.message)).replace(/\s/g, "")
+      date = app.util.stringToDate(t.other).valueOf()
+      if date?
+        app.WriteHistory.add({
+          url: viewUrl
+          res: i+1
+          title: document.title
+          name: app.util.decodeCharReference(t.name)
+          mail: app.util.decodeCharReference(t.mail)
+          inputName: ex.name
+          inputMail: ex.mail
+          message: ex.mes
+          date
+        })
+      threadContent.addClassWithOrg($content.child()[i], "written")
+      break
     return
   )
 
@@ -247,14 +243,13 @@ app.boot("/view/thread.html", ->
     $article = target.parent()
     $menu = $$.I("template_res_menu").content.$(".res_menu").cloneNode(true)
     $menu.addClass("hidden")
-    $article.addLast($menu)
-
-    app.defer( ->
-      if getSelection().toString().length is 0
-        $menu.C("copy_selection")[0].remove()
-        $menu.C("search_selection")[0].remove()
-      return
-    )
+    altParent = null
+    if $article.parent().hasClass("popup")
+      altParent = $view.C("popup_area")[0]
+      altParent.addLast($menu)
+      $menu.setAttr("resnum", $article.C("num")[0].textContent)
+    else
+      $article.addLast($menu)
 
     $toggleAaMode = $menu.C("toggle_aa_mode")[0]
     if $article.parent().hasClass("config_use_aa_font")
@@ -295,11 +290,13 @@ app.boot("/view/thread.html", ->
       else
         $menu.C("reset_image_blur")[0].remove()
 
-    app.defer( ->
-      $menu.removeClass("hidden")
-      UI.ContextMenu($menu, e.clientX, e.clientY)
-      return
-    )
+    await app.defer()
+    if getSelection().toString().length is 0
+      $menu.C("copy_selection")[0].remove()
+      $menu.C("search_selection")[0].remove()
+
+    $menu.removeClass("hidden")
+    UI.ContextMenu($menu, e.clientX, e.clientY, altParent)
     return
 
   $view.on("click", onHeaderMenu)
@@ -324,6 +321,9 @@ app.boot("/view/thread.html", ->
   $view.on("click", ({target}) ->
     return unless target.matches(".res_menu > li")
     $res = target.closest("article")
+    unless $res
+      rn = +target.closest(".res_menu").getAttr("resnum")
+      $res = $content.child()[rn - 1]
 
     if target.hasClass("copy_selection")
       selectedText = getSelection().toString()
@@ -491,10 +491,8 @@ app.boot("/view/thread.html", ->
       if srcType is "thread"
         paramResNum = app.URL.getResNumber(target.dataset.href)
         target.dataset.paramResNum = paramResNum if paramResNum
-      app.defer( ->
-        target.dispatchEvent(e)
-        return
-      )
+      await app.defer()
+      target.dispatchEvent(e)
     return
 
   $view.on("click", onLink)
@@ -536,36 +534,49 @@ app.boot("/view/thread.html", ->
     e.preventDefault()
 
     popupHelper(target, e, =>
+      $article = target.closest("article")
+      $popup = $__("div")
+
       id = ""
       slip = ""
       trip = ""
-      if target.hasClass("id") or target.hasClass("anchor_id")
+      if target.hasClass("anchor_id")
         id = target.textContent
           .replace(/^id:/i, "ID:")
           .replace(/\(\d+\)$/, "")
           .replace(/\u25cf$/, "") #末尾●除去
-      if target.hasClass("slip")
-        slip = target.textContent
-          .replace(/^slip:/i, "")
-          .replace(/\(\d+\)$/i, "")
-      if target.hasClass("trip")
-        trip = target.textContent
-          .replace(/\(\d+\)$/i, "")
+        $popup.addClass("popup_id")
+      else if target.hasClass("id")
+        id = $article.dataset.id
+        $popup.addClass("popup_id")
+      else if target.hasClass("slip")
+        slip = $article.dataset.slip
+        $popup.addClass("popup_slip")
+      else if target.hasClass("trip")
+        trip = $article.dataset.trip
+        $popup.addClass("popup_trip")
 
-      $popup = $__("div")
-      $popup.addClass("popup_id")
-      $article = target.closest("article")
-
+      nowPopuping = ""
+      $parentArticle = $article.parent()
       if (
-        $article.parent().hasClass("popup_id") and
-        (
-          $article.dataset.id is id or
-          $article.dataset.slip is slip or
-          $article.dataset.trip is trip
-        )
+        $parentArticle.hasClass("popup_id") and
+        $article.dataset.id is id
       )
+        nowPopuping = "IP/ID"
+      else if (
+        $parentArticle.hasClass("popup_slip") and
+        $article.dataset.slip is slip
+      )
+        nowPopuping = "SLIP"
+      else if (
+        $parentArticle.hasClass("popup_trip") and
+        $article.dataset.trip is trip
+      )
+        nowPopuping = "トリップ"
+
+      if nowPopuping isnt ""
         $div = $__("div")
-        $div.textContent = "現在ポップアップしているIP/ID/SLIP/トリップです"
+        $div.textContent = "現在ポップアップしている#{nowPopuping}です"
         $div.addClass("popup_disabled")
         $popup.addLast($div)
       else if threadContent.idIndex.has(id)
@@ -656,10 +667,8 @@ app.boot("/view/thread.html", ->
       enabled: enableFlg
       onclick: (info, tab) =>
         target.setAttr("toggle-param-res-num", "on")
-        app.defer( =>
-          target.dispatchEvent(new Event("mousedown", {"bubbles": true}))
-          return
-        )
+        await app.defer()
+        target.dispatchEvent(new Event("mousedown", {"bubbles": true}))
         return
     })
     return
@@ -844,8 +853,8 @@ app.boot("/view/thread.html", ->
       show: ->
         next = null
 
-        bookmarks = app.bookmark.getAll().filter( (bookmark) ->
-          return (bookmark.type is "thread") and (bookmark.url isnt viewUrl)
+        bookmarks = app.bookmark.getAll().filter( ({type, url}) ->
+          return (type is "thread") and (url isnt viewUrl)
         )
 
         #閲覧中のスレッドに新着が有った場合は優先して扱う
@@ -945,10 +954,8 @@ app.boot("/view/thread.html", ->
     $a.textContent = "#{title}板"
     $a.addClass("hidden")
     # Windows版Chromeで描画が崩れる現象を防ぐため、わざとリフローさせる。
-    app.defer( ->
-      $view.$(".breadcrumb > li > a").style.display = "inline-block"
-      return
-    )
+    await app.defer()
+    $view.$(".breadcrumb > li > a").style.display = "inline-block"
     return
 
   return
@@ -962,12 +969,13 @@ app.viewThread._draw = ($view, {forceUpdate = false, jumpResNum = -1} = {}) ->
   loadCount = 0
 
   fn = (thread, error) ->
+    $messageBar = $view.C("message_bar")[0]
     if error
-      $view.C("message_bar")[0].addClass("error")
-      $view.C("message_bar")[0].innerHTML = thread.message
+      $messageBar.addClass("error")
+      $messageBar.innerHTML = thread.message
     else
-      $view.C("message_bar")[0].removeClass("error")
-      $view.C("message_bar")[0].removeChildren()
+      $messageBar.removeClass("error")
+      $messageBar.removeChildren()
 
     unless thread.res?
       throw new Error("スレの取得に失敗しました")
@@ -1003,12 +1011,10 @@ app.viewThread._draw = ($view, {forceUpdate = false, jumpResNum = -1} = {}) ->
     ok = false
   $view.removeClass("loading")
   $view.style.cursor = "auto"
-  app.defer5( ->
-    $reloadButton.removeClass("disabled")
-    return
-  )
   unless ok
     throw new Error("スレの表示に失敗しました")
+  await app.defer5()
+  $reloadButton.removeClass("disabled")
   return thread
 
 app.viewThread._readStateManager = ($view) ->

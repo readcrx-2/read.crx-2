@@ -8,9 +8,7 @@ class app.WriteHistory
   @_openDB: ->
     return new Promise( (resolve, reject) =>
       req = indexedDB.open("WriteHistory", @DB_VERSION)
-      req.onerror = (e) ->
-        reject(e)
-        return
+      req.onerror = reject
       req.onupgradeneeded = ({ target: {result: db, transaction: tx}, oldVersion: oldVer }) =>
         if oldVer < 1
           objStore = db.createObjectStore("WriteHistory", keyPath: "id", autoIncrement: true)
@@ -20,12 +18,12 @@ class app.WriteHistory
           objStore.createIndex("date", "date", unique: false)
           tx.oncomplete = ->
             resolve(db)
-
+            return
         if oldVer is 1
           @_recoveryOfDate(db, tx)
           tx.oncomplete = ->
             resolve(db)
-
+            return
         return
       req.onsuccess = ({ target: {result: db} }) ->
         resolve(db)
@@ -296,20 +294,16 @@ class app.WriteHistory
   ###
   @_recoveryOfDate: (db, tx) ->
     return new Promise( (resolve, reject) ->
+      unixTime201710 = 1506783600 # 2017/10/01 0:00:00
       req = tx
         .objectStore("WriteHistory")
-        .openCursor()
+        .index("date")
+        .openCursor(IDBKeyRange.lowerBound(unixTime201710, true))
       req.onsuccess = ({ target: {result: cursor} }) ->
         if cursor
-          date = new Date(+cursor.value.date)
-          year = date.getFullYear()
-          month = date.getMonth()
-          if (year > 2017 or (year is 2017 and month > 9)) and cursor.value.res > 1
-            month--
-            if month < 0
-              date.setFullYear(date.getFullYear() - 1)
-              month = 11
-            date.setMonth(month)
+          if cursor.value.res > 1
+            date = new Date(+cursor.value.date)
+            date.setMonth(date.getMonth()-1)
             cursor.value.date = date.valueOf()
             cursor.update(cursor.value)
           cursor.continue()

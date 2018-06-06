@@ -1,11 +1,11 @@
 {
   "name" : "read.crx 2",
-  "version" : "1.25.2",
+  "version" : "1.26.0",
   "update_url": "https://readcrx-2.github.io/read.crx-2/updates.xml",
   "homepage_url": "https://readcrx-2.github.io/read.crx-2/",
   "description" : "2chブラウザ",
   "manifest_version": 2,
-  "minimum_chrome_version" : "56",
+  "minimum_chrome_version" : "61",
   "content_security_policy": "default-src 'self'; img-src 'self' http://* https://* data:; style-src 'self' 'unsafe-inline'; connect-src 'self' http://*; child-src 'self' http://*; font-src data:; media-src 'self' http://* https://*",
   "incognito" : "split",
   "options_page" : "view/index.html?q=config",

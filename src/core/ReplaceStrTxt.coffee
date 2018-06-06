@@ -30,7 +30,7 @@ class app.ReplaceStrTxt
           d.beforeReg = new RegExp(d.before.replace(/[-\/\\^$*+?.()|[\]{}]/g, "\\$&"), "ig")
       catch e
         app.message.send "notify", {
-          html: """
+          message: """
             ReplaceStr.txtの置換対象正規表現(#{d.before})を読み込むのに失敗しました
             この行は無効化されます
           """
@@ -43,7 +43,7 @@ class app.ReplaceStrTxt
           d.urlReg = new RegExp(d.url)
       catch e
         app.message.send "notify", {
-          html: """
+          message: """
             ReplaceStr.txtの対象URL/タイトル正規表現(#{d.url})を読み込むのに失敗しました
             この行は無効化されます
           """

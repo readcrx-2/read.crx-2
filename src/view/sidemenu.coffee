@@ -94,7 +94,7 @@ app.boot("/view/sidemenu.html", ["bbsmenu"], (BBSMenu) ->
             for board in category.board
               $ul.addLast(boardToLi(board))
             frag.addLast($ul)
-        document.body.addLast(frag)
+          document.body.addLast(frag)
         accordion.update()
         $view.removeClass("loading")
         return

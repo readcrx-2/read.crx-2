@@ -517,7 +517,7 @@ app.main = ->
     {name, version: oldVer} = await app.manifest
     return if newVer is oldVer
     app.message.send("notify",
-      html: """
+      message: """
         #{name} の #{newVer} が利用可能です
       """
       background_color: "green"

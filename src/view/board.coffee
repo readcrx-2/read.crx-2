@@ -19,8 +19,6 @@ app.boot("/view/board.html", ["board"], (Board) ->
   app.DOMData.set($view, "selectableItemList", threadList)
   tableSorter = new UI.TableSorter($table)
   app.DOMData.set($table, "tableSorter", tableSorter)
-  for dom in $table.$$("th.res, th.unread, th.heat")
-    dom.dataset.tableSortType = "num"
   $$.C("content")[0].addLast($table)
 
   write = (param = {}) ->
@@ -63,7 +61,6 @@ app.boot("/view/board.html", ["board"], (Board) ->
         tableSorter.update(
           sortAttribute: "data-thread-number"
           sortOrder: "asc"
-          sortType: "num"
         )
         return
       , once: true)

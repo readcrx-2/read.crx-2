@@ -221,8 +221,8 @@ namespace app {
       ["aa_font", "aa"],
       ["popup_trigger", "click"],
       ["popup_delay_time", "0"],
-      ["ngwords", "RegExpTitle:.+\\.2ch\\.netの人気スレ\nTitle:【漫画あり】コンビニで浪人を購入する方法\nTitle:★★ ２ちゃんねる\(sc\)のご案内 ★★★\nTitle:浪人はこんなに便利\nTitle:2ちゃんねるの運営を支えるサポーター募集"],
-      ["ngobj", "[{\"type\":\"regExpTitle\",\"word\":\".+\\\\.2ch\\\\.netの人気スレ\"},{\"type\":\"title\",\"word\":\"【漫画あり】こんびにで浪人を購入する方法\"},{\"type\":\"title\",\"word\":\"★★2ちゃんねる\\\\(sc\\\\)のご案内★★★\"},{\"type\":\"title\",\"word\":\"浪人はこんなに便利\"},{\"type\":\"title\",\"word\":\"2ちゃんねるの運営を支えるさぽーたー募集\"}]"],
+      ["ngwords", "Title: 5ちゃんねるへようこそ\nTitle:【新着情報】5chブラウザがやってきた！"],
+      ["ngobj", "[{\"type\":\"Title\",\"word\":\"5ちゃんねるへようこそ\"},{\"type\":\"Title\",\"word\":\"【新着情報】5chぶらうざがやってきた！\"}]"],
       ["chain_ng", "off"],
       ["chain_ng_id", "off"],
       ["chain_ng_id_by_chain", "off"],
@@ -282,12 +282,12 @@ namespace app {
       });
 
       this._onChanged = (change, area) => {
-        var key:string, val:any, newValue:string;
+        var key:string, val:any;
 
         if (area === "local") {
           for ([key, val] of Object.entries(change)) {
             if (!key.startsWith("config_")) continue;
-            newValue = val.newValue.toString();
+            var {newValue} = val;
 
             if (typeof newValue === "string") {
               this._cache.set(key, newValue);

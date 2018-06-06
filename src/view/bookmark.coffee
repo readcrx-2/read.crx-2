@@ -11,8 +11,6 @@ app.boot("/view/bookmark.html", ["board"], (Board) ->
   app.DOMData.set($view, "threadList", threadList)
   app.DOMData.set($view, "selectableItemList", threadList)
   $$.C("content")[0].addLast($table)
-  for dom in $table.$$("th.res, th.unread, th.heat")
-    dom.dataset.tableSortType = "num"
   $table.$("th.unread").addClass("table_sort_desc")
   tableSorter = new UI.TableSorter($table)
   app.DOMData.set($table, "tableSorter", tableSorter)

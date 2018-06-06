@@ -17,7 +17,7 @@ class app.ImageReplaceDat
         d.baseUrlReg = new RegExp(d.baseUrl, "i")
       catch e
         app.message.send "notify", {
-          html: """
+          message: """
             ImageViewURLReplace.datの一致URLの正規表現(#{d.baseUrl})を読み込むのに失敗しました
             この行は無効化されます
           """

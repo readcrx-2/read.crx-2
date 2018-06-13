@@ -55,17 +55,22 @@ do ->
     oldBoardUrl = app.URL.changeScheme(oldBoardUrl, "http")
     unless typeof html is "string"
       #htmlが渡されなかった場合は通信する
-      {status, body} = await new app.HTTP.Request("GET", oldBoardUrl,
+      {status, body: html} = await (new app.HTTP.Request("GET", oldBoardUrl,
         mimeType: "text/html; charset=Shift_JIS"
         cache: false
-      )
+      )).send()
       unless status is 200
         throw new Error("サーバー移転判定のための通信に失敗しました")
 
     #htmlから移転を判定
-    res = ///location\.href="(https?://\w+\.5ch\.net/\w*/)"///.exec(html)
+    res = ///location\.href="(https?://(\w+\.)?5ch\.net/\w*/)"///.exec(html)
     if res
-      newBoardUrlTmp = app.URL.setScheme(res[1], "http")
+      if res[2]?
+        newBoardUrlTmp = res[1]
+      else
+        {responseURL} = await (new app.HTTP.Request("GET", res[1])).send()
+        newBoardUrlTmp = responseURL
+      newBoardUrlTmp = app.URL.setScheme(newBoardUrlTmp, "http")
       if newBoardUrlTmp isnt oldBoardUrl
         newBoardUrl = newBoardUrlTmp
 

@@ -209,11 +209,11 @@ app.boot("/write/submit_thread.html", ->
     $iframe = $__("iframe")
     $iframe.src = "/view/empty.html"
     $iframe.on("load", ->
+      tmp = arg.url.split("/")
       #2ch
       if bbsType is "2ch"
         #open2ch
         if app.URL.tsld(arg.url) is "open2ch.net"
-          tmp = arg.url.split("/")
           formData =
             action: "#{scheme}://#{tmp[2]}/test/bbs.cgi"
             charset: "UTF-8"
@@ -226,7 +226,6 @@ app.boot("/write/submit_thread.html", ->
             textarea:
               MESSAGE: iframeArg.rcrxMessage
         else
-          tmp = arg.url.split("/")
           formData =
             action: "#{scheme}://#{tmp[2]}/test/bbs.cgi"
             charset: "Shift_JIS"
@@ -241,7 +240,6 @@ app.boot("/write/submit_thread.html", ->
               MESSAGE: iframeArg.rcrxMessage
       #したらば
       else if bbsType is "jbbs"
-        tmp = arg.url.split("/")
         formData =
           action: "#{scheme}://jbbs.shitaraba.net/bbs/write.cgi/#{tmp[3]}/#{tmp[4]}/new/"
           charset: "EUC-JP"

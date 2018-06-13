@@ -52,8 +52,7 @@ do ->
   #検出出来なかった場合はrejectする
   #htmlを渡す事で通信をスキップする事が出来る
   app.util.chServerMoveDetect = (oldBoardUrl, html) ->
-    if app.URL.getScheme(oldBoardUrl) is "https"
-      oldBoardUrl = app.URL.changeScheme(oldBoardUrl)
+    oldBoardUrl = app.URL.changeScheme(oldBoardUrl, "http")
     unless typeof html is "string"
       #htmlが渡されなかった場合は通信する
       {status, body} = await new app.HTTP.Request("GET", oldBoardUrl,

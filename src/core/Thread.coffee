@@ -85,7 +85,7 @@ class app.Thread
         response = await request.send()
 
       #パース
-      guessRes = app.URL.guessType(@url)
+      {bbsType} = app.URL.guessType(@url)
 
       if (
         response?.status is 200 or
@@ -115,7 +115,7 @@ class app.Thread
         else
           thread = Thread.parse(@url, response.body)
       #2ch系BBSのdat落ち
-      else if guessRes.bbsType is "2ch" and response?.status is 203
+      else if bbsType is "2ch" and response?.status is 203
         if hasCache
           if deltaFlg and isHtml
             thread = cache.parsed
@@ -133,7 +133,7 @@ class app.Thread
         #パース成功
         if thread
           #2ch系BBSのdat落ち
-          if guessRes.bbsType is "2ch" and response?.status is 203
+          if bbsType is "2ch" and response?.status is 203
             throw {response, thread}
           #通信失敗
           unless (

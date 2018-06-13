@@ -100,8 +100,8 @@ class app.view.View
          target.getAttr("toggle-param-res-num") is "on")
       )
       paramResNum = if paramResFlg then target.dataset.paramResNum else null
-      target.removeAttribute("toggle-param-res-num")
-      target.removeAttribute("ignore-res-number")
+      target.removeAttr("toggle-param-res-num")
+      target.removeAttr("ignore-res-number")
       {newTab, newWindow, background} = app.util.getHowToOpen(e)
       newTab or= app.config.isOn("always_new_tab") or newWindow
 

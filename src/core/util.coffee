@@ -96,7 +96,6 @@ do ->
     return newBoardUrl
 
   #文字参照をデコード
-  span = document.createElement("span")
   app.util.decodeCharReference = (str) ->
     return str.replace(/\&(?:#(\d+)|#x([\dA-Fa-f]+)|([\da-zA-Z]+));/g, ($0, $1, $2, $3) ->
       #数値文字参照 - 10進数
@@ -107,8 +106,9 @@ do ->
         return String.fromCodePoint(parseInt($2, 16))
       #文字実体参照
       if $3?
-        span.innerHTML = $0
-        return span.textContent
+        $span = $__("span")
+        $span.innerHTML = $0
+        return $span.textContent
       return $0
     )
 

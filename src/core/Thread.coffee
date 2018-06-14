@@ -247,7 +247,7 @@ class app.Thread
               @message += "スレッドの読み込みに失敗しました。"
           if hasCache and !thread
             @message += "キャッシュに残っていたデータを表示します。"
-            reject()
+          reject()
         else if @tsld is "shitaraba.net" and @url.includes("/read.cgi/")
           newURL = @url.replace("/read.cgi/", "/read_archive.cgi/")
           @message += """

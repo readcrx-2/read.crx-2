@@ -23,18 +23,15 @@ class app.ReadState
 
   @_urlFilter = (originalUrl) ->
     originalUrl = app.URL.fix(originalUrl)
-    scheme = app.URL.getScheme(originalUrl)
 
     return {
       original: originalUrl
       replaced: originalUrl
-        .replace(/// ^https?://\w+\.5ch\.net/ ///, "#{scheme}://*.5ch.net/")
-        .replace(/// ^https?://\w+\.2ch\.net/ ///, "#{scheme}://*.2ch.net/")
+        .replace(/// ^(https?)://\w+\.5ch\.net/ ///, "$1://*.5ch.net/")
       originalOrigin: originalUrl
         .replace(/// ^(https?://\w+\.5ch\.net)/.* ///, "$1")
-        .replace(/// ^(https?://\w+\.2ch\.net)/.* ///, "$1")
       replacedOrigin: originalUrl
-        .replace(/// ^(https?)://\w+\.([25])ch\.net/.* ///, "$1://*.$2ch.net")
+        .replace(/// ^(https?)://\w+\.5ch\.net/.* ///, "$1://*.5ch.net")
     }
 
   @set: (readState) ->
@@ -91,8 +88,7 @@ class app.ReadState
         .get(url.replaced)
       { target: {result} } = await app.util.indexedDBRequestToPromise(req)
       data = app.deepCopy(result)
-      if data?
-        data.url = url.original
+      data.url = url.original if data?
     catch e
       app.log("error", "app.ReadState.get: トランザクション中断")
       throw new Error(e)

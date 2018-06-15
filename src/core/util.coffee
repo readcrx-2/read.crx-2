@@ -52,21 +52,25 @@ do ->
   #検出出来なかった場合はrejectする
   #htmlを渡す事で通信をスキップする事が出来る
   app.util.chServerMoveDetect = (oldBoardUrl, html) ->
-    if app.URL.getScheme(oldBoardUrl) is "https"
-      oldBoardUrl = app.URL.changeScheme(oldBoardUrl)
+    oldBoardUrl = app.URL.changeScheme(oldBoardUrl, "http")
     unless typeof html is "string"
       #htmlが渡されなかった場合は通信する
-      {status, body} = await new app.HTTP.Request("GET", oldBoardUrl,
+      {status, body: html} = await (new app.HTTP.Request("GET", oldBoardUrl,
         mimeType: "text/html; charset=Shift_JIS"
         cache: false
-      )
+      )).send()
       unless status is 200
         throw new Error("サーバー移転判定のための通信に失敗しました")
 
     #htmlから移転を判定
-    res = ///location\.href="(https?://\w+\.5ch\.net/\w*/)"///.exec(html)
+    res = ///location\.href="(https?://(\w+\.)?5ch\.net/\w*/)"///.exec(html)
     if res
-      newBoardUrlTmp = app.URL.setScheme(res[1], "http")
+      if res[2]?
+        newBoardUrlTmp = res[1]
+      else
+        {responseURL} = await (new app.HTTP.Request("GET", res[1])).send()
+        newBoardUrlTmp = responseURL
+      newBoardUrlTmp = app.URL.setScheme(newBoardUrlTmp, "http")
       if newBoardUrlTmp isnt oldBoardUrl
         newBoardUrl = newBoardUrlTmp
 
@@ -96,7 +100,6 @@ do ->
     return newBoardUrl
 
   #文字参照をデコード
-  span = document.createElement("span")
   app.util.decodeCharReference = (str) ->
     return str.replace(/\&(?:#(\d+)|#x([\dA-Fa-f]+)|([\da-zA-Z]+));/g, ($0, $1, $2, $3) ->
       #数値文字参照 - 10進数
@@ -107,8 +110,9 @@ do ->
         return String.fromCodePoint(parseInt($2, 16))
       #文字実体参照
       if $3?
-        span.innerHTML = $0
-        return span.textContent
+        $span = $__("span")
+        $span.innerHTML = $0
+        return $span.textContent
       return $0
     )
 

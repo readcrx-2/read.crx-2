@@ -110,13 +110,15 @@ class app.Board
         #コールバック
         @message = "板の読み込みに失敗しました。"
 
-        if newBoardUrl?
-          @message += """
-            サーバーが移転しています
-            (<a href="#{app.escapeHtml(app.safeHref(newBoardUrl))}"
-            class="open_in_rcrx">#{app.escapeHtml(newBoardUrl)}
-            </a>)
-            """
+        if newBoardUrl? and app.URL.tsld(@url) is "5ch.net"
+          try
+            newBoardUrl = await app.util.chServerMoveDetect(@url)
+            @message += """
+              サーバーが移転しています
+              (<a href="#{app.escapeHtml(app.safeHref(newBoardUrl))}"
+              class="open_in_rcrx">#{app.escapeHtml(newBoardUrl)}
+              </a>)
+              """
         #2chでrejectされている場合は移転を疑う
         else if app.URL.tsld(@url) is "5ch.net" and response?
           try

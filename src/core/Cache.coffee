@@ -119,19 +119,26 @@ class app.Cache
   @return {Promise}
   ###
   @clearRange: (day) ->
+    dayUnix = Date.now() - day*24*60*60*1000
     try
       db = await @_dbOpen
-      dayUnix = Date.now() - day*24*60*60*1000
-      req = db
+      store = db
         .transaction("Cache", "readwrite")
         .objectStore("Cache")
+      req = store
         .index("last_updated")
-        .openCursor(IDBKeyRange.upperBound(dayUnix, true))
-      res = await app.util.indexedDBRequestToPromise(req)
+        .getAllKeys(IDBKeyRange.upperBound(dayUnix, true))
+      { target: { result: keys } } = await app.util.indexedDBRequestToPromise(req)
+
+      await Promise.all(keys.map( (key) ->
+        req = store.delete(key)
+        await app.util.indexedDBRequestToPromise(req)
+        return
+      ))
     catch e
       app.log("error", "Cache.clearRange: トランザクション中断")
       throw new Error(e)
-    return res.target.result
+    return
 
   ###*
   @method get

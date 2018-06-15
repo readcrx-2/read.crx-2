@@ -94,28 +94,26 @@ class app.WriteHistory
     ])
       return Promise.reject()
 
-    return @_openDB().then( (db) ->
-      return new Promise( (resolve, reject) ->
-        req = db
-          .transaction("WriteHistory", "readwrite")
-          .objectStore("WriteHistory")
-          .index("url")
-          .openCursor(IDBKeyRange.only(url))
-        req.onsuccess = ({ target: {result: cursor} }) ->
-          if cursor
-            if cursor.value.res is res
-              cursor.delete()
-            cursor.continue()
-          else
-            resolve()
-          return
-        req.onerror = (e) ->
-          app.log("error", "WriteHistory.remove: トランザクション中断")
-          reject(e)
-          return
+    try
+      db = await @_openDB()
+      store = db
+        .transaction("WriteHistory", "readwrite")
+        .objectStore("WriteHistory")
+      req = store
+        .index("url")
+        .getAll(IDBKeyRange.only(url))
+      { target: { result: data } } = await app.util.indexedDBRequestToPromise(req)
+
+      await Promise.all(data.map( (datum) ->
+        if datum.res is res
+          req = store.delete(datum.id)
+          await app.util.indexedDBRequestToPromise(req)
         return
-      )
-    )
+      ))
+    catch e
+      app.log("error", "WriteHistory.remove: トランザクション中断")
+      throw new Error(e)
+    return
 
   ###*
   @method get
@@ -262,28 +260,26 @@ class app.WriteHistory
     if app.assertArg("WriteHistory.clearRange", [[day, "number"]])
       return Promise.reject()
 
-    return @_openDB().then( (db) ->
-      return new Promise( (resolve, reject) ->
-        dayUnix = Date.now() - day*24*60*60*1000
-        req = db
-          .transaction("WriteHistory", "readwrite")
-          .objectStore("WriteHistory")
-          .index("date")
-          .openCursor(IDBKeyRange.upperBound(dayUnix, true))
-        req.onsuccess = ({ target: {result: cursor} }) ->
-          if cursor
-            cursor.delete()
-            cursor.continue()
-          else
-            resolve()
-          return
-        req.onerror = (e) ->
-          app.log("error", "WriteHistory.clearRange: トランザクション中断")
-          reject(e)
-          return
+    dayUnix = Date.now() - day*24*60*60*1000
+    try
+      db = await @_openDB()
+      store = db
+        .transaction("WriteHistory", "readwrite")
+        .objectStore("WriteHistory")
+      req = store
+        .index("date")
+        .getAllKeys(IDBKeyRange.upperBound(dayUnix, true))
+      { target: { result: keys } } = await app.util.indexedDBRequestToPromise(req)
+
+      await Promise.all(keys.map( (key) ->
+        req = store.delete(key)
+        await app.util.indexedDBRequestToPromise(req)
         return
-      )
-    )
+      ))
+    catch
+      app.log("error", "WriteHistory.clearRange: トランザクション中断")
+      throw new Error(e)
+    return
 
   ###*
   @method recoveryOfDate

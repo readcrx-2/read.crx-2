@@ -70,32 +70,40 @@ class app.History
       [url, "string"]
       [date, "number", true]
     ])
-      return Promise.reject()
+      return new Error("履歴から削除しようとしたデータが不正です")
 
-    return @_openDB().then( (db) ->
-      return new Promise( (resolve, reject) ->
-        req = db
-          .transaction("History", "readwrite")
-          .objectStore("History")
+    try
+      db = await @_openDB()
+      store = db
+        .transaction("History", "readwrite")
+        .objectStore("History")
+      if date?
+        req = store
           .index("url")
-          .openCursor(IDBKeyRange.only(url))
-        req.onsuccess = ({ target: {result: cursor} }) ->
-          unless cursor
-            resolve()
-            return
-          if date?
-            cursor.delete() if date is cursor.value.date
-          else
-            cursor.delete()
-          cursor.continue()
+          .getAll(IDBKeyRange.only(url))
+      else
+        req = store
+          .index("url")
+          .getAllKeys(IDBKeyRange.only(url))
+      { target: { result: data } } = await app.util.indexedDBRequestToPromise(req)
+
+      if date?
+        await Promise.all(data.map( (datum) ->
+          return if datum.date isnt date
+          req = store.delete(datum.id)
+          await app.util.indexedDBRequestToPromise(req)
           return
-        req.onerror = (e) ->
-          app.log("error", "History.remove: トランザクション中断")
-          reject(e)
+        ))
+      else
+        await Promise.all(data.map( (datum) ->
+          req = store.delete(datum)
+          await app.util.indexedDBRequestToPromise(req)
           return
-        return
-      )
-    )
+        ))
+    catch e
+      app.log("error", "History.remove: トランザクション中断")
+      throw new Error(e)
+    return
 
   ###*
   @method get
@@ -267,28 +275,26 @@ class app.History
     if app.assertArg("History.clearRange", [[day, "number"]])
       return Promise.reject()
 
-    return @_openDB().then( (db) ->
-      return new Promise( (resolve, reject) ->
-        dayUnix = Date.now() - day*24*60*60*1000
-        req = db
-          .transaction("History", "readwrite")
-          .objectStore("History")
-          .index("date")
-          .openCursor(IDBKeyRange.upperBound(dayUnix, true))
-        req.onsuccess = ({ target: {result: cursor} }) ->
-          if cursor
-            cursor.delete()
-            cursor.continue()
-          else
-            resolve()
-          return
-        req.onerror = (e) ->
-          app.log("error", "History.clearRange: トランザクション中断")
-          reject(e)
-          return
+    dayUnix = Date.now() - day*24*60*60*1000
+    try
+      db = await @_openDB()
+      store = db
+        .transaction("History", "readwrite")
+        .objectStore("History")
+      req = store
+        .index("date")
+        .getAllKeys(IDBKeyRange.upperBound(dayUnix, true))
+      { target: { result: keys } } = await app.util.indexedDBRequestToPromise(req)
+
+      await Promise.all(keys.map( (key) ->
+        req = store.delete(key)
+        await app.util.indexedDBRequestToPromise(req)
         return
-      )
-    )
+      ))
+    catch e
+      app.log("error", "History.clearRange: トランザクション中断")
+      throw new Error(e)
+    return
 
   ###*
   @method _recoveryOfBoardTitle

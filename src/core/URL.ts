@@ -144,15 +144,7 @@ namespace app {
     }
 
     export function buildQuery (data:{[index:string]:any;}) {
-      var param, key:string, val:any;
-
-      param = new URLSearchParams();
-
-      for ([key, val] of Object.entries(data)) {
-        param.append(key, val);
-      }
-
-      return param.toString();
+      return (new URLSearchParams(<any>data)).toString();
     }
 
     export const SHORT_URL_LIST = new Set([

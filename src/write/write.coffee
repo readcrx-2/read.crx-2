@@ -21,23 +21,16 @@ app.boot("/write/write.html", ->
       isSameOrigin = requestHeaders.some( ({name, value}) ->
         return name is "Origin" and (value is origin or value is "null")
       )
-      if (
-        method is "POST" and isSameOrigin and
-        (
-          ///^https?://\w+\.(5ch\.net|bbspink\.com|2ch\.sc|open2ch\.net)/test/bbs\.cgi ///.test(url) or
-          ///^https?://jbbs\.shitaraba\.net/bbs/write\.cgi/ ///.test(url)
-        )
-      )
-        if app.URL.tsld(arg.url) is "2ch.sc"
-          refUrl = app.URL.setScheme(arg.url, "http")
-        else
-          refUrl = arg.url
+      if method is "POST" and isSameOrigin
+        refUrl = arg.url
+        if app.URL.tsld(refUrl) is "2ch.sc"
+          refUrl = app.URL.setScheme(refUrl, "http")
         requestHeaders.push(name: "Referer", value: refUrl)
 
         # UA変更処理
         ua = app.config.get("useragent").trim()
         if ua.length > 0
-          for header, i in requestHeaders when header.name is "User-Agent"
+          for {name}, i in requestHeaders when name is "User-Agent"
             requestHeaders[i].value = ua
             break
 

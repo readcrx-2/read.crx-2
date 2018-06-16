@@ -58,6 +58,9 @@ namespace app {
       else if (/^https?:\/\/\w+\.(?:[25]ch|open2ch|bbspink)\.\w+\/(?:subback\/|test\/-\/)?\w+\/?$/.test(url)) {
         return {type: "board", bbsType: "2ch"};
       }
+      else if (/^https?:\/\/\w+\.\w+\.\w+\/(?:subback\/|test\/-\/)?\w+\/?$/.test(url)) {
+        return {type: "board", bbsType: "2ch"};
+      }
       else {
         return {type: "unknown", bbsType: "unknown"};
       }

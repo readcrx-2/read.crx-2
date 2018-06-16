@@ -22,7 +22,7 @@ namespace UI {
       UI.Animate.fadeOut(this.$element);
     }
 
-    async search (url:string, title:string): Promise<void> {
+    async search (url:string, title:string, resString: string): Promise<void> {
       var $ol = this.$element.T("ol")[0];
 
       $ol.innerHTML = "";
@@ -30,7 +30,7 @@ namespace UI {
       this.$element.C("status")[0].textContent = "検索中";
 
       try {
-        var res = await app.util.searchNextThread(url, title);
+        var res = await app.util.searchNextThread(url, title, resString);
 
         for(var thread of res) {
           var $li = $__("li");

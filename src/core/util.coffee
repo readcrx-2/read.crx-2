@@ -136,7 +136,7 @@ do ->
       return openMap.get(key) if openMap.has(key)
     return def
 
-  app.util.searchNextThread = (threadUrl, threadTitle) ->
+  app.util.searchNextThread = (threadUrl, threadTitle, resString) ->
     threadUrl = app.URL.fix(threadUrl)
     boardUrl = app.URL.threadToBoard(threadUrl)
     threadTitle = app.util.normalize(threadTitle)
@@ -147,11 +147,11 @@ do ->
     threads = threads.filter( ({url, resCount}) ->
       return (url isnt threadUrl and resCount < 1001)
     ).map( ({title, url}) ->
-      return {
-        score: app.Util.levenshteinDistance(threadTitle, app.util.normalize(title), false)
-        title
-        url
-      }
+      score = app.Util.levenshteinDistance(threadTitle, app.util.normalize(title), false)
+      m = url.match(/(?:https:\/\/)?(?:\w+(\.[25]ch\.net\/.+)|(.+))$/)
+      if resString.includes(m[1] ? m[2] ? url)
+        score -= 5
+      return {score, title, url}
     ).sort( (a, b) ->
       return a.score - b.score
     )

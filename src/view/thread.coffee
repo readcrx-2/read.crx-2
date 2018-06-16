@@ -937,7 +937,7 @@ app.boot("/view/thread.html", ->
     for dom in $view.$$(".button_tool_search_next_thread, .search_next_thread")
       dom.on("click", ->
         searchNextThread.show()
-        searchNextThread.search(viewUrl, document.title)
+        searchNextThread.search(viewUrl, document.title, $content.textContent)
         return
       )
     return

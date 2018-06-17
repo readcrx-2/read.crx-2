@@ -40,14 +40,26 @@ app.boot("/write/write.html", ->
       tabId: id
       types: ["sub_frame"]
       urls: [
-        "*://*.5ch.net/test/bbs.cgi*"
-        "*://*.bbspink.com/test/bbs.cgi*"
-        "*://*.2ch.sc/test/bbs.cgi*"
-        "*://*.open2ch.net/test/bbs.cgi*"
+        "*://*/test/bbs.cgi*"
         "*://jbbs.shitaraba.net/bbs/write.cgi/*"
       ]
     }
     ["requestHeaders", "blocking"])
+    chrome.webRequest.onHeadersReceived.addListener( ({responseHeaders}) ->
+      # X-Frame-Options回避
+      for {name}, i in responseHeaders when name is "X-Frame-Options"
+        responseHeaders.splice(i, 1)
+        return {responseHeaders}
+      return
+    {
+      tabId: id
+      types: ["sub_frame"]
+      urls: [
+        "*://*/test/bbs.cgi*"
+        "*://jbbs.shitaraba.net/bbs/write.cgi/*"
+      ]
+    }
+    ["blocking", "responseHeaders"])
     return
   )
 

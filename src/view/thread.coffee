@@ -83,14 +83,8 @@ app.boot("/view/thread.html", ->
     popupView.show($popup, e.clientX, e.clientY, that)
     return
 
-  canWriteFlg = do ->
-    tsld = app.URL.tsld(viewUrl)
-    if tsld in ["5ch.net", "bbspink.com", "2ch.sc", "open2ch.net"]
-      return true
-    # したらばの過去ログ
-    if tsld is "shitaraba.net" and not viewUrl.includes("/read_archive.cgi/")
-      return true
-    return false
+  # したらばの過去ログ
+  canWriteFlg = !(app.URL.tsld(viewUrl) is "shitaraba.net" and viewUrl.includes("/read_archive.cgi/"))
 
   if canWriteFlg
     $view.C("button_write")[0].on("click", ->

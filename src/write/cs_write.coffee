@@ -65,17 +65,8 @@ do ->
     return
 
   main = ->
-    #2ch投稿確認
-    if ///^https?://\w+\.(5ch\.net|bbspink\.com|2ch\.sc)/test/bbs\.cgi///.test(location.href)
-      if document.title.includes("書きこみました")
-        sendMessageSuccess()
-      else if document.title.includes("確認")
-        setTimeout(sendMessageConfirm , 1000 * 6)
-      else if document.title.includes("ＥＲＲＯＲ")
-        sendMessageError()
-
     #したらば投稿確認
-    else if ///^https?://jbbs\.shitaraba\.net/bbs/write.cgi/\w+/\d+/(?:\d+|new)/$///.test(location.href)
+    if ///^https?://jbbs\.shitaraba\.net/bbs/write.cgi/\w+/\d+/(?:\d+|new)/$///.test(location.href)
       if document.title.includes("書きこみました")
         sendMessageSuccess()
       else if document.title.includes("ERROR") or document.title.includes("スレッド作成規制中")
@@ -91,6 +82,15 @@ do ->
       else if text.includes("確認")
         setTimeout(sendMessageConfirm , 1000 * 6)
       else if text.includes("ＥＲＲＯＲ")
+        sendMessageError()
+
+    #2ch型投稿確認
+    else if ///^https?://\w+\.\w+\.\w+/test/bbs\.cgi///.test(location.href)
+      if document.title.includes("書きこみました")
+        sendMessageSuccess()
+      else if document.title.includes("確認")
+        setTimeout(sendMessageConfirm , 1000 * 6)
+      else if document.title.includes("ＥＲＲＯＲ")
         sendMessageError()
     return
 

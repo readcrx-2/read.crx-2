@@ -46,10 +46,51 @@ header {
   overflow: auto;
 }
 
+.tabbar {
+  display: flex;
+  flex-flow: wrap;
+  margin: 0;
+  padding: 5px 0 0 5px;
+  list-style-type: none;
+  font-size: 14px;
+  line-height: 1.3;
+  min-height: 25px;
+  background: #666;
+  > li {
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+    cursor: default;
+    margin-right: 3px;
+    padding: 3px 7px;
+    border-top-left-radius: 2px;
+    border-top-right-radius: 2px;
+    min-width: 1em;
+    min-height: 1em;
+    background: #CCC;
+    &.selected {
+      background: #FFF;
+    }
+  }
+}
+
+.tabcontent:not(.selected) {
+  display: none;
+}
+
 section {
   padding: 1em;
 
   display: flex;
+  > h2 {
+    font-size: 1.125em;
+    font-weight: normal;
+    margin: 0 1em 0 0;
+    text-align: right;
+    width: 10em;
+    flex-shrink: 0;
+  }
+
   > div {
     flex-grow: 1;
   }
@@ -60,14 +101,6 @@ section {
   ul {
     margin: 0;
   }
-}
-
-section > h2 {
-  font-size: 1.125em;
-  font-weight: normal;
-  margin: 0 1em 0 0;
-  text-align: right;
-  width: 10em;
 }
 
 label {
@@ -127,14 +160,14 @@ input[type="text"]:invalid {
   vertical-align: top;
 }
 
+.date_range {
+  width: 40px;
+}
+
 .image_blur_word {
   width: 350px;
 }
 
-.bbsmenu {
-  width: 450px;
-}
-
-.useragent {
+.bbsmenu, .useragent {
   width: 560px;
 }

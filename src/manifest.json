@@ -54,11 +54,7 @@
     },
     {
       "matches" : [
-        "*://*.2ch.net/test/bbs.cgi*",
-        "*://*.5ch.net/test/bbs.cgi*",
-        "*://*.bbspink.com/test/bbs.cgi*",
-        "*://*.2ch.sc/test/bbs.cgi*",
-        "*://*.open2ch.net/test/bbs.cgi*",
+        "*://*/test/bbs.cgi*",
         "*://jbbs.shitaraba.net/bbs/write.cgi/*"
       ],
       "js" : ["/write/cs_write.js"],

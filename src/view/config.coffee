@@ -176,6 +176,23 @@ app.boot("/view/config.html", ["cache", "bbsmenu"], (Cache, BBSMenu) ->
 
   new app.view.IframeView($view)
 
+  # タブ
+  $tabbar = $view.C("tabbar")[0]
+  $tabs = $view.C("container")[0]
+  $tabbar.on("click", ({target}) ->
+    if target.tagName isnt "LI"
+      target = target.closest("li")
+    return unless target?
+    return if target.hasClass("selected")
+
+    $tabbar.C("selected")[0].removeClass("selected")
+    target.addClass("selected")
+
+    $tabs.C("selected")[0].removeClass("selected")
+    $tabs.$("[name=\"#{target.dataset.name}\"]").addClass("selected")
+    return
+  )
+
   whenClose = ->
     #NG設定
     app.NG.set($view.$("textarea[name=\"ngwords\"]").value)

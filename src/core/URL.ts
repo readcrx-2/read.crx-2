@@ -58,6 +58,9 @@ namespace app {
       else if (/^https?:\/\/\w+\.(?:[25]ch|open2ch|bbspink)\.\w+\/(?:subback\/|test\/-\/)?\w+\/?$/.test(url)) {
         return {type: "board", bbsType: "2ch"};
       }
+      else if (/^https?:\/\/\w+\.\w+\.\w+\/(?:subback\/|test\/-\/)?\w+\/?$/.test(url)) {
+        return {type: "board", bbsType: "2ch"};
+      }
       else {
         return {type: "unknown", bbsType: "unknown"};
       }
@@ -144,15 +147,7 @@ namespace app {
     }
 
     export function buildQuery (data:{[index:string]:any;}) {
-      var param, key:string, val:any;
-
-      param = new URLSearchParams();
-
-      for ([key, val] of Object.entries(data)) {
-        param.append(key, val);
-      }
-
-      return param.toString();
+      return (new URLSearchParams(<any>data)).toString();
     }
 
     export const SHORT_URL_LIST = new Set([

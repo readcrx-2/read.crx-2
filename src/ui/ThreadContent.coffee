@@ -600,7 +600,7 @@ class UI.ThreadContent
 
             return ""
            )
-          .replace(/<\/b>(◆[^<>]+?) <b>/, ($0, $1) =>
+          .replace(/<\/b> ?(◆[^<>]+?) ?<b>/, ($0, $1) =>
             res.trip = $1
 
             @tripIndex.set($1, new Set()) unless @tripIndex.has($1)

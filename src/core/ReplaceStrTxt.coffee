@@ -149,8 +149,8 @@ class app.ReplaceStrTxt
           res.message = res.message.replace(before, d.after)
         when "all"
           res =
-            name: name.replace(before, d.after)
-            mail: mail.replace(before, d.after)
-            other: other.replace(before, d.after)
-            message: message.replace(before, d.after)
+            name: res.name.replace(before, d.after)
+            mail: res.mail.replace(before, d.after)
+            other: res.other.replace(before, d.after)
+            message: res.message.replace(before, d.after)
     return res

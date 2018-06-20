@@ -32,7 +32,350 @@
         <p class="header">This project is maintained by <a class="header name" href="https://github.com/readcrx-2">readcrx-2</a> team</p>
       </header>
       <section>
-        <h4><a href="changelog.html">&#x2190; Changes after v1.10.0</a></h4>
+        <h4><a href="changelog.html">&#x2190; Changes after v1.20.0</a></h4>
+        <h2 id="v1.19.2">v1.19.2 (2017-07-20)</h2>
+        <ul>
+          <li>ブックマークとスレッド一覧で既読情報の更新に一部漏れがあったのを修正（Thank you, <a href="https://github.com/awazi">awazi</a>）</li>
+          <li>設定情報のインポートでTextAreaの情報が取り込めていなかったのを修正（Thank you, <a href="https://github.com/awazi">awazi</a>）</li>
+          <li>read.cgi ver 06の仕様変更に対応（Thank you, <a href="https://github.com/awazi">awazi</a>）</li>
+          <li>※反映させるためには、該当スレッドのキャッシュを削除する必要があります。設定画面を開いてデータ→キャッシュから削除を行ってください。</li>
+        </ul>
+        <h2 id="v1.19.1">v1.19.1 (2017-07-03)</h2>
+        <ul>
+          <li>書込履歴にも「レス番号を無視してリンクを開く」を追加（Thank you, <a href="https://github.com/awazi">awazi</a>）</li>
+          <li>タブが保存されないことがあるのを修正</li>
+          <li>beの入っている2chスレが正常に読み込めないのを修正</li>
+          <li>smallタグの入っている2chスレを読み込めないのを修正</li>
+          <li>ユーザーCSSを適用していると履歴の無限スクロールができないのを修正</li>
+          <li>スレ一覧のソート無しができないのを修正</li>
+        </ul>
+        <h2 id="v1.19.0">v1.19.0 (2017-07-03)</h2>
+        <ul>
+          <li>
+            新機能/動作の改善
+            <ul>
+              <li>最終既読位置をより正確に記録できるように（Thank you, <a href="https://github.com/awazi">awazi</a>）</li>
+              <li>閲覧・書込履歴を無限に遡れるように</li>
+              <li>携帯・スマホ用のURLを開けるように（Thank you, <a href="https://github.com/awazi">awazi</a>）</li>
+              <li>ID,SLIPのないレスをNGにできるように（Thank you, <a href="https://github.com/awazi">awazi</a>）</li>
+              <li>あぼーん表示ができるように（Thank you, <a href="https://github.com/awazi">awazi</a>）</li>
+            </ul>
+          </li>
+          <li>
+            バグ修正/その他
+            <ul>
+              <li>httpsだと2ch.scに書き込み/スレ立てができないのを修正（Thank you, <a href="https://github.com/awazi">awazi</a>）</li>
+              <li>スレッド一覧の未読数にブックマークの既読情報が反映されていないのを修正（Thank you, <a href="https://github.com/awazi">awazi</a>）</li>
+              <li>2ch.netのサーバー移転エラーが出ないのを修正</li>
+              <li>ブックマークの既読情報の反映に失敗しているのを修正</li>
+              <li>ブックマークの初回並び替えが正しく動作していないのを修正</li>
+              <li>右クリックメニューの「レス番号を無視してリンクを開く」が使えないのを修正（Thank you, <a href="https://github.com/awazi">awazi</a>）</li>
+              <li>中クリックでChromeのタブが開いてしまうのを修正</li>
+              <li>スレ内での右メニューがはみ出るのを修正</li>
+              <li>2ch.scへの切り替えが効かない板があるのを修正（Thank you, <a href="https://github.com/awazi">awazi</a>）</li>
+              <li>一度「更新失敗」が出ると正常に更新されても表示が消えないのを修正</li>
+              <li>zombieが起動しない可能性があるのを修正</li>
+              <li>NGの既定値がおかしいのを修正</li>
+              <li>設定の「関連リンク」がひとつなぎに表示されるのを修正（Thank you, <a href="https://github.com/awazi">awazi</a>）</li>
+              <li>スレの読み込みの高速化</li>
+              <li>スクロールの高速化</li>
+              <li>その他最適化（Thank you, <a href="https://github.com/awazi">awazi</a>）</li>
+            </ul>
+          </li>
+          <li>Developers information
+            <ul>
+              <li>ShortQueryを0.3.1にアップデート</li>
+              <li>TypeScriptを2.4.0にアップデート</li>
+              <li>CoffeeScriptを1.12.6にアップデート</li>
+              <li>Sharpを0.18.1にアップデート</li>
+              <li>jQueryを廃止</li>
+            </ul>
+          </li>
+        </ul>
+        <h2 id="v1.18.0">v1.18.0 (2017-06-03)</h2>
+        <ul>
+          <li>
+            ChromeアプリからChrome拡張へ変更（Thank you, <a href="https://github.com/awazi">awazi</a>）
+            <ul>
+              <li>アプリ一覧からread-crx2のアイコンが消え、アドレスバー横のツールアイコン群にread.crx2のアイコンが追加されます</li>
+              <li>キャッシュ・閲覧履歴・書込履歴・既読情報・ブックマークはそのまま引き継がれますが、設定の内容は初期化されます</li>
+              <li>以前から告知していた通り、エクスポートしていた設定をインポートすることにより、設定を引き継ぐことが出来ます</li>
+            </ul>
+          </li>
+          <li>open2chで書き込み・スレ立ての不具合を修正（Thank you, <a href="https://github.com/awazi">awazi</a>）</li>
+          <li>zombie.htmlが閉じないことがあるのを修正（再）</li>
+          <li>readcrx-2.github.ioへのリンクやリソースの読み込みをhttps化</li>
+          <li>ブックマーク更新の高速化</li>
+          <li>書込履歴から該当レスへジャンプできる機能を追加（Thank you, <a href="https://github.com/awazi">awazi</a>）</li>
+          <li>
+            URLからスレッド開く際にレス番号指定があった場合、その番号へジャンプした状態で開く機能を追加（Thank you, <a href="https://github.com/awazi">awazi</a>）
+            <ul>
+              <li>設定画面内の「リンク: URLで指定されたレス番号を有効にする(範囲指定は無視します)」からオプション指定可能です</li>
+              <li>デフォルトは、onになっています。特にonで問題を上げる人がいなければ将来的にオプションを廃止する予定です</li>
+            </ul>
+          </li>
+          <li>v1.17.0で追加したextensionへの以降告知機能を削除</li>
+          <li>Developers information: 依存関係からRuby(Bundler)がなくなり、Node.js(npm)のみになりました。</li>
+        </ul>
+        <h2 id="v1.17.2">v1.17.2 (2017-05-25)</h2>
+        <ul>
+          <li>zombieが閉じないことがあるのを修正</li>
+          <li>背景が黒のときに検索欄の表示が変になるのを修正</li>
+          <li>画像がロードされない場合、必要のない画像がロードされる場合があるのを修正（Thank you, <a href="https://github.com/awazi">awazi</a>）</li>
+          <li>スレ立てでメール欄の入力内容がundefinedになるのを修正（Thank you, <a href="https://github.com/awazi">awazi</a>）</li>
+        </ul>
+        <h2 id="v1.17.1">v1.17.1 (2017-05-20)</h2>
+        <ul>
+          <li>v1.17.0の更新通知用のURLを修正</li>
+        </ul>
+        <h2 id="v1.17.0">v1.17.0 (2017-05-20)</h2>
+        <ul>
+          <li>
+            Chromeアプリが廃止に向けた通知アップデート（Thank you, <a href="https://github.com/awazi">awazi</a>）
+            <ul>
+              <li>Googleによる<a href="https://blog.chromium.org/2016/08/from-chrome-apps-to-web.html">Chromeアプリのサポート終了</a>方針に従い、read.crx-2はChromeアプリからChrome拡張へと変わることとなりました。バージョンアップにより以下の変更がありますので注意をお願いします。</li>
+              <li>アプリ一覧からread-crx2のアイコンが消え、アドレスバー横のツールアイコン群にread.crx2のアイコンが追加されることとなります。</li>
+              <li>キャッシュ・閲覧履歴・書込履歴・既読情報・ブックマークはそのまま引き継がれますが、設定の内容は初期化されます。</li>
+              <li>バージョンアップ前に設定画面より設定情報をエクスポートしておき、新バージョンでそれをインポートすることにより、旧バージョンでの設定を引き継ぐ必要があります。</li>
+              <li>新バージョンのリリースは、2週間後の2017年6月3日を予定しています。</li>
+            </ul>
+          </li>
+        </ul>
+        <h2 id="v1.16.8">v1.16.8 (2017-05-17)</h2>
+        <ul>
+          <li>板一覧の取得時に無限ループにより、著しく重くなる場合があるのを修正(再)（Thank you, <a href="https://github.com/awazi">awazi</a>）</li>
+        </ul>
+        <h2 id="v1.16.7">v1.16.7 (2017-05-17)</h2>
+        <ul>
+          <li>read.cgi ver7系のページで、「read.crx 2 で開く」ボタンの表示がヘッダーと重なるのを修正（Thank you, <a href="https://github.com/awazi">awazi</a>）</li>
+          <li>板一覧の取得時に無限ループにより、著しく重くなる場合があるのを修正（Thank you, <a href="https://github.com/awazi">awazi</a>）</li>
+        </ul>
+        <h2 id="v1.16.6">v1.16.6 (2017-05-13)</h2>
+        <ul>
+          <li>右クリックメニューの並び替えをしやすいように</li>
+          <li>キーボードショートカットでレス/スレ立てができるように</li>
+          <li>検索ボックス内の入力文字と～hitが重ならないように</li>
+          <li>スレ立てが正常にできないのを修正（Thank you, <a href="https://github.com/awazi">awazi</a>）</li>
+          <li>新しいタブで開くなどが正常に動作していなかったのを修正</li>
+          <li>終了後の既読情報保存がうまくいっていなかったのを修正</li>
+          <li>板などの～hitが表示されていなかったのを修正</li>
+          <li>起動時のタブ復元処理中に終了するとタブが復元されない可能性があるのを修正</li>
+          <li>新規インストール後に設定を一度も開かずにスレを開くと読み込みに失敗するのを修正</li>
+          <li>ショートカット一覧にフォーカスがずれないのを修正</li>
+          <li>キーボートショートカットのEnterなどが正常に動作していなかったのを修正</li>
+          <li>その他最適化/軽量化</li>
+        </ul>
+        <h2 id="v1.16.5">v1.16.5 (2017-05-12)</h2>
+        <ul>
+          <li>書き込めないのを修正</li>
+        </ul>
+        <h2 id="v1.16.4">v1.16.4 (2017-05-12)</h2>
+        <ul>
+          <li>中クリックでChromeのタブを開いてしまうのを修正</li>
+          <li>板一覧の表示に失敗することがあるのを修正</li>
+          <li>BBSPINKのread.cgi ver05を読み込めないのを修正（Thank you, <a href="https://github.com/awazi">awazi</a>）</li>
+          <li>スレ読み込み失敗時のエラーを修正（Thank you, <a href="https://github.com/awazi">awazi</a>）</li>
+          <li>sageで書き込むとき、書き込みに失敗したときにメール欄を入力できるようになってしまっていたのを修正</li>
+          <li>書込履歴テーブル削除ボタンを削除</li>
+          <li>その他最適化</li>
+          <li>Developers information: ShortQueryを0.2.1にアップデート</li>
+        </ul>
+        <h2 id="v1.16.3">v1.16.3 (2017-05-10)</h2>
+        <ul>
+          <li>既読されないのを修正</li>
+          <li>板やブックマークで右クリックメニューが出ないのを修正</li>
+          <li>サムネイルをホバーで拡大できないのを修正</li>
+          <li>タブ切り替え時にフォーカスが移らなかったのを修正</li>
+          <li>設定で履歴の出力ができないのを修正</li>
+          <li>設定で履歴が削除できないのを修正</li>
+          <li>テーマが黒のときに自動更新一時停止ボタンが表示されないのを修正</li>
+        </ul>
+        <h2 id="v1.16.2">v1.16.2 (2017-05-10)</h2>
+        <ul>
+          <li>タブが切り替えられないのを修正</li>
+          <li>サムネのファビコンが表示されないのを修正</li>
+          <li>履歴/書込履歴が古いものを表示していたのを修正</li>
+        </ul>
+        <h2 id="v1.16.1">v1.16.1 (2017-05-10)</h2>
+        <ul>
+          <li>「既読情報を削除」がエラーするのを修正</li>
+          <li>レスの右クリックメニューがはみ出るのを修正</li>
+          <li>dat形式での読み込みができないのを修正（Thank you, <a href="https://github.com/awazi">awazi</a>）</li>
+          <li>「新スレを立てる」と「書き込む」の文字列が入れ替わっていたのを修正</li>
+          <li>その他最適化</li>
+          <li>Developers information: TypeScriptを2.3.2にアップデート</li>
+          <li>Developers information: jQueryを3.2.1にアップデート</li>
+          <li>Developers information: ShortQueryを0.2.0にアップデート</li>
+        </ul>
+        <h2 id="v1.16.0">v1.16.0 (2017-05-06)</h2>
+        <ul>
+          <li>したらばの過去ログに対応（Thank you, <a href="https://github.com/awazi">awazi</a>）</li>
+          <li>自動更新の一時停止ボタンを追加</li>
+          <li>更新時に検索が解除されないように</li>
+          <li>短縮URLの対応URLを拡大（Thank you, <a href="https://github.com/awazi">awazi</a>）</li>
+          <li>read.cgi ver 07.0.1の仕様変更に対応（Thank you, <a href="https://github.com/awazi">awazi</a>）</li>
+          <li>net/sc切り替え機能の修正（Thank you, <a href="https://github.com/awazi">awazi</a>）</li>
+          <li>設定のbbsmenu編集の修正（Thank you, <a href="https://github.com/awazi">awazi</a>）</li>
+          <li>スレ立てのボタンの文字を変更</li>
+          <li>設定のインポートボタンの位置の変更</li>
+          <li>スレ読み込みの高速化</li>
+          <li>短縮URLの高速化（Thank you, <a href="https://github.com/awazi">awazi</a>）</li>
+          <li>その他高速化</li>
+          <li style="list-style: none;">※ 判定正規表現にひっかかるレスの画像にぼかしを入れる設定の正規表現の既定文字列が「.{0,5}[^ァ-ヺ^ー]グロ(?:[^ァ-ヺ^ー].{0,5}|$)|.{0,5}死ね.{0,5}」に変更されました</li>
+          <li style="list-style: none;">※ 履歴/書込履歴/既読情報がリセットされています インポートしたい方は設定の一番下からインポートボタンを押してください</li>
+        </ul>
+        <h2 id="v1.15.2">v1.15.2 (2017-05-04)</h2>
+        <ul>
+          <li>read.cgi ver 07.0.1の仕様変更に対応（Thank you, <a href="https://github.com/awazi">awazi</a>）</li>
+        </ul>
+        <h2 id="v1.15.1">v1.15.1 (2017-04-26)</h2>
+        <ul>
+          <li>スクロールでのタブの切り替え方向が逆になっていたのを修正</li>
+          <li>スレ立てできなかったのを修正</li>
+          <li>更新通知が来なかったのを修正</li>
+          <li>特定のスレッドを開いたときに応答しなくなっていたのを修正</li>
+          <li style="list-style: none;">※ 判定正規表現にひっかかるレスの画像にぼかしを入れる設定の正規表現の既定文字列が「.{1,5}[^ァ-ヺ^ー]グロ([^ァ-ヺ^ー].{1,5}|$)|.{1,5}死ね.{1,5}」に変更されました</li>
+          <li>read.cgi ver 07.0.0の仕様変更に対応（Thank you, <a href="https://github.com/awazi">awazi</a>）</li>
+        </ul>
+        <h2 id="v1.15.0">v1.15.0 (2017-04-24)</h2>
+        <ul>
+          <li>read.cgi ver 07.0.0に対応（Thank you, <a href="https://github.com/awazi">awazi</a>）</li>
+          <li>※反映させるためには、該当スレッドのキャッシュを削除する必要があります。設定画面を開いてデータ→キャッシュから削除を行ってください。</li>
+          <li>
+            httpsでのスレッドオープンに対応（Thank you, <a href="https://github.com/awazi">awazi</a>）
+            <ul>
+              <li style="color: red;">この機能には、net/scの切り替えと併用した場合の<a href="https://github.com/readcrx-2/read.crx-2/issues/270">既知のバグ</a>があります。</li>
+            </ul>
+          </li>
+          <li>ブックマークのdat落ち表示がされてなかったのを修正</li>
+          <li>
+            戻る/進むボタンの挙動を変更（Thank you, <a href="https://github.com/awazi">awazi</a>）
+            <ul>
+              <li>デフォルトでは“常に新しいタブで開く”がon、“2ch netとscの切り替え時に新しいタブで開く”がoffになっているが、この状態でnet/scの切替後、戻るボタンをクリックすると新しいタブが生成されてしまっていた。</li>
+            </ul>
+          </li>
+          <li>スレッドオープン時にスクロールが停止しないことがあるのを修正（Thank you, <a href="https://github.com/awazi">awazi</a>）</li>
+          <li>Developers information: Typescriptを2.2.2にアップデート</li>
+          <li>Developers information: Coffeescriptを1.12.5にアップデート</li>
+        </ul>
+        <h2 id="v1.14.4">v1.14.4 (2017-03-26)</h2>
+        <ul>
+          <li>お絵描き機能のo.8ch.netのサムネイルが表示されないのを修正（Thank you, <a href="https://github.com/awazi">awazi</a>）</li>
+        </ul>
+        <h2 id="v1.14.3">v1.14.3 (2017-03-24)</h2>
+        <ul>
+          <li>2ch.netの新仕様に対応するように修正（Thank you, <a href="https://github.com/awazi">awazi</a>）</li>
+          <li>bbspinkでレス番がずれるのを修正（Thank you, <a href="https://github.com/awazi">awazi</a>）</li>
+          <li>※反映させるためには、該当スレッドのキャッシュを削除する必要があります。設定画面を開いてデータ→キャッシュから削除を行ってください。</li>
+        </ul>
+        <h2 id="v1.14.2">v1.14.2 (2017-03-16)</h2>
+        <ul>
+          <li>
+            bbspinkを閲覧できるように修正（Thank you, <a href="https://github.com/awazi">awazi</a>）
+            <ul>
+              <li>反映させるためには、該当スレッドのキャッシュを削除する必要があります。設定画面を開いてデータ→キャッシュから削除を行ってください。</li>
+            </ul>
+          </li>
+        </ul>
+        <h2 id="v1.14.1">v1.14.1 (2017-03-09)</h2>
+        <ul>
+          <li>IDとSLIPのNG判定が効かないのを修正</li>
+          <li>ignoreResNumberが機能しないのを修正
+            <ul>
+              <li>反映させるためには、NGキャッシュの再構築が必要になります。設定画面を開いてNGを一度編集してください。</li>
+            </ul>
+          </li>
+        </ul>
+        <h2 id="v1.14.0">v1.14.0 (2017-02-09)</h2>
+        <ul>
+          <li>スレッドのロード中はマウス・ポインタの表示を変更する機能を追加（Thank you, <a href="https://github.com/awazi">awazi</a>）</li>
+          <li>ここから新着の線が表示されない場合があるのを修正（Thank you, <a href="https://github.com/awazi">awazi</a>）</li>
+          <li>不要なスレ機能をNG機能に統合</li>
+          <li>NGワードを適用する本文を純粋なテキストになるように修正</li>
+          <li>コンテキストメニューを拡張し、選択範囲/リンクのアドレス/画像(動画・音声)のアドレスのNG指定ができるように変更（Thank you, <a href="https://github.com/awazi">awazi</a>）</li>
+          <li>展開をサポートする短縮URLにredd.itを追加（Thank you, <a href="https://github.com/awazi">awazi</a>）</li>
+          <li>設定のインポート時に一部の値が保存されてなかったのを修正（Thank you, <a href="https://github.com/awazi">awazi</a>）</li>
+          <li>ポップアップのディレイ表示機能を追加（Thank you, <a href="https://github.com/awazi">awazi</a>）</li>
+          <li>1ページ目のみに画像が存在していた場合に遅延スクロールが実行されないのを修正（Thank you, <a href="https://github.com/awazi">awazi</a>）</li>
+          <li>Developers information: Typescriptを2.1.4にアップデート</li>
+          <li>Developers information: Coffeescriptを1.12.2にアップデート</li>
+        </ul>
+        <h2 id="v1.13.0">v1.13.0 (2016-11-27)</h2>
+        <ul>
+          <li>NGで、ignoreResNumberを使用すると正常に動作しないのを修正</li>
+          <li>更新可能の通知が繰り返し表示されるのを修正</li>
+          <li>設定のインポート時にぼかし具合が正常にインポートできないのを修正 (Thank you, <a href="https://github.com/awazi">awazi</a>）</li>
+          <li>サムネイル表示のサイズ指定をできるように変更 (Thank you, <a href="https://github.com/awazi">awazi</a>）</li>
+          <li>マウスオーバーによるサムネイル表示の拡大機能を追加 (Thank you, <a href="https://github.com/awazi">awazi</a>）</li>
+          <li>音声・映像のURLの再生機能を追加 (Thank you, <a href="https://github.com/awazi">awazi</a>）</li>
+          <li>短縮URLの展開機能を追加 (Thank you, <a href="https://github.com/awazi">awazi</a>）</li>
+        </ul>
+        <h2 id="v1.12.0">v1.12.0 (2016-10-16)</h2>
+        <ul>
+          <li>更新可能かを通知するように変更</li>
+          <li>画像ぼかしのキーワードを任意に設定できるように変更</li>
+          <li>設定画面を開いたままread.crxを閉じたときにNGなどが保存されないのを修正</li>
+          <li>レス選択中の右クリックメニューの押下時にドラッグしてしまうと動作しないのを修正</li>
+          <li>ポップアップが残ってしまうことが有るのを修正 (Thank you, <a href="https://github.com/awazi">awazi</a>）</li>
+          <li>レス検索で画像が表示されないことがあるのを修正 (Thank you, <a href="https://github.com/awazi">awazi</a>）</li>
+          <li>画像がローディング表示のままになることがある現象の修正 (Thank you, <a href="https://github.com/awazi">awazi</a>）</li>
+          <li>最後へのスクロールや検索時に画像の大量ロードが行われるのを防止するように修正 (Thank you, <a href="https://github.com/awazi">awazi</a>）</li>
+          <li>ポップアップがたまに表示されないのを修正 (Thank you, <a href="https://github.com/awazi">awazi</a>）</li>
+        </ul>
+        <h2 id="v1.11.3">v1.11.3 (2016-10-13)</h2>
+        <ul>
+          <li>ポップアップの位置の修正 (Thank you, <a href="https://github.com/awazi">awazi</a>）</li>
+          <li>IMEが有効な場合にスレッド・レス検索が正常に動作しないのを修正 (Thank you, <a href="https://github.com/awazi">awazi</a>）</li>
+        </ul>
+        <h2 id="v1.11.2">v1.11.2 (2016-10-10)</h2>
+        <ul>
+          <li>ブックマークで3ペイン（横一列）表示時に幅が狭くなった時に省略されるカラムが変わったのを修正</li>
+          <li>ブックマークで板名でソート出来ないのを修正（ブックマークのソート順表示がおかしいのを修正）</li>
+          <li>ブックマークの表示順のプルダウン表示が変わらない場合があるのを修正</li>
+          <li>ブックマークマネージャを開くが動作しないのを修正</li>
+        </ul>
+        <h2 id="v1.11.1">v1.11.1 (2016-10-09)</h2>
+        <ul>
+          <li>ブックマークに板名を追加</li>
+          <li>通知をクリックすると閉じるように</li>
+          <li>検索で変換中の文字は無視するように</li>
+          <li>ポップアップの位置の修正 (Thank you, <a href="https://github.com/awazi">awazi</a>）</li>
+        </ul>
+        <h2 id="v1.11.0">v1.11.0 (2016-10-03)</h2>
+        <ul>
+          <li>板/ブックマークの自動更新ができるように</li>
+          <li>2chの表示されるアイコンを増加</li>
+          <li>ブックマークに新規レスがあった場合通知を送るように</li>
+          <li>2chの鯖移転検出をより拡大</li>
+          <li>ポップアップの位置の修正 (Thank you, <a href="https://github.com/awazi">awazi</a>）</li>
+          <li>自動スクロールする先がNGだった場合にうまく動作しないのを修正</li>
+          <li>黒背景テーマでスレッド検索欄の中身が白背景になっているのを修正</li>
+          <li>選択範囲をコピー時に範囲が解除されないように</li>
+          <li>ブックマーク更新の修正</li>
+          <li>read.crxで開くをchrome既定の開き方に</li>
+          <li>ImageReplaceDat/NG/その他の高速化</li>
+        </ul>
+        <h2 id="v1.10.0">v1.10.0 (2016-10-02)</h2>
+        <ul>
+          <li>タブの戻る/進むボタンを中クリックしたときに新しいタブで開くように</li>
+          <li>範囲を指定してキャッシュを削除できるように</li>
+          <li>ブックマークの更新失敗したスレがどれかを表示するように</li>
+          <li>スレ立て画面に建てる板を表示するように</li>
+          <li>ImageReplaceDatの正規表現で大文字小文字を無視するように</li>
+          <li>検索時に非表示のスレはhitしないように</li>
+          <li>2chで読み込み失敗が終わらないのを修正</li>
+          <li>ポップアップの位置の修正 (Thank you, <a href="https://github.com/awazi">awazi</a>）</li>
+          <li>NGになっているスレより上のスレがすべてNGのときでも自動スクロールするように修正</li>
+          <li>板/ブックマークで中クリックでスレを開いたとき自動スクロールがでるのを修正</li>
+          <li>スレ表示の高速化</li>
+          <li>起動の高速化</li>
+          <li>画像読み込みの高速化</li>
+          <li>アニメーションの最適化</li>
+          <li>Developers information: Typescriptを2.0.3にアップデート</li>
+          <li>Developers information: Coffeescriptを1.11.0にアップデート</li>
+          <li>Developers information: jQueryを3.1.1にアップデート</li>
+          <li>Developers information: typingsから@typesに移行</li>
+        </ul>
         <h2>v1.9.3 (2016-09-19)</h2>
         <ul>
           <li>ポップアップ内の画像読み込み時にローディング表示がされないのを修正 (Thank you, <a href="https://github.com/awazi">awazi</a>）</li>

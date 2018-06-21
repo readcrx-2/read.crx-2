@@ -70,20 +70,15 @@ article {
 
     .popup & {
       display: block;
-      color: #666;
-      border: 1px dashed;
-      padding: 5px;
-      margin: 5px;
 
       &::after {
         display: block;
-        margin: 0px;
-        min-width: 10em;
-        content: "NG";
-        text-align: center;
+        margin: 5px 10px;
+        color: gray;
+        content: "あぼーん (" attr(ng-type) ")";
       }
 
-      > header, > .message {
+      > .message {
         display: none;
       }
     }
@@ -269,6 +264,21 @@ header {
     background-color: rgba(black, 0.8);
     color: #eeeeee;
     animation: fade_in 150ms ease-out;
+  }
+  .ng_count {
+    display: block;
+    color: #666;
+    border: 1px dashed;
+    padding: 5px;
+    margin: 5px;
+    &::after {
+      display: block;
+      margin: 0px;
+      min-width: 10em;
+      color: gray;
+      content: "他 NG " attr(ng-count) "件";
+      text-align: center;
+    }
   }
 }
 .popup_disabled {

@@ -158,6 +158,7 @@ namespace app {
       "cas.st",
       "cos.lv",
       "dlvr.it",
+      "ekaz10.xyz",
       "fb.me",
       "g.co",
       "goo.gl",
@@ -168,6 +169,7 @@ namespace app {
       "j.mp",
       "jump.cx",
       "kkbox.fm",
+      "morimo2.info",
       "ow.ly",
       "p.tl",
       "prt.nu",
@@ -180,6 +182,8 @@ namespace app {
       "tl.gd",
       "tr.im",
       "trib.al",
+      "qq4q.biz",
+      "u0u1.net",
       "ur0.biz",
       "ur0.work",
       "url.ie",
@@ -190,6 +194,8 @@ namespace app {
       "ur0.pw",
       "ur2.link",
       "ustre.am",
+      "ux.nu",
+      "wb2.biz",
       "wk.tk",
       "xrl.us"
     ]);

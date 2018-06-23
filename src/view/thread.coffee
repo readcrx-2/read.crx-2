@@ -399,6 +399,7 @@ app.boot("/view/thread.html", ->
 
     popupHelper(target, e, =>
       $popup = $__("div")
+      resCount = 0
 
       if target.hasClass("disabled")
         $div = $__("div")
@@ -414,17 +415,25 @@ app.boot("/view/thread.html", ->
           $div.addClass("popup_disabled")
           $popup.addLast($div)
         else if 0 < anchorData.targetCount
+          resCount = anchorData.targetCount
           tmp = $content.child()
           for [start, end] in anchorData.segments
             for i in [start..end]
               now = i-1
-              break unless tmp[now]
-              $popup.addLast(tmp[now].cloneNode(true))
+              break unless res = tmp[now]
+              continue if res.hasClass("ng") and !res.hasClass("disp_ng")
+              $popup.addLast(res.cloneNode(true))
 
-      if $popup.child().length is 0
+      popupCount = $popup.child().length
+      if popupCount is 0
         $div = $__("div")
         $div.textContent = "対象のレスが見つかりません"
         $div.addClass("popup_disabled")
+        $popup.addLast($div)
+      else if popupCount < resCount
+        $div = $__("div")
+        $div.addClass("ng_count")
+        $div.setAttr("ng-count", resCount - popupCount)
         $popup.addLast($div)
 
       return $popup
@@ -568,24 +577,41 @@ app.boot("/view/thread.html", ->
       )
         nowPopuping = "トリップ"
 
+      resCount = 0
       if nowPopuping isnt ""
         $div = $__("div")
         $div.textContent = "現在ポップアップしている#{nowPopuping}です"
         $div.addClass("popup_disabled")
         $popup.addLast($div)
       else if threadContent.idIndex.has(id)
+        resCount = threadContent.idIndex.get(id).size
         for resNum from threadContent.idIndex.get(id)
-          $popup.addLast($content.child()[resNum - 1].cloneNode(true))
+          targetRes = $content.child()[resNum - 1]
+          continue if targetRes.hasClass("ng") and !targetRes.hasClass("disp_ng")
+          $popup.addLast(targetRes.cloneNode(true))
       else if threadContent.slipIndex.has(slip)
+        resCount = threadContent.slipIndex.get(slip).size
         for resNum from threadContent.slipIndex.get(slip)
-          $popup.addLast($content.child()[resNum - 1].cloneNode(true))
+          targetRes = $content.child()[resNum - 1]
+          continue if targetRes.hasClass("ng") and !targetRes.hasClass("disp_ng")
+          $popup.addLast(targetRes.cloneNode(true))
       else if threadContent.tripIndex.has(trip)
+        resCount = threadContent.tripIndex.get(trip).size
         for resNum from threadContent.tripIndex.get(trip)
-          $popup.addLast($content.child()[resNum - 1].cloneNode(true))
-      else
+          targetRes = $content.child()[resNum - 1]
+          continue if targetRes.hasClass("ng") and !targetRes.hasClass("disp_ng")
+          $popup.addLast(targetRes.cloneNode(true))
+
+      popupCount = $popup.child().length
+      if popupCount is 0
         $div = $__("div")
         $div.textContent = "対象のレスが見つかりません"
         $div.addClass("popup_disabled")
+        $popup.addLast($div)
+      else if popupCount < resCount
+        $div = $__("div")
+        $div.addClass("ng_count")
+        $div.setAttr("ng-count", resCount - popupCount)
         $popup.addLast($div)
       return $popup
     )
@@ -600,12 +626,26 @@ app.boot("/view/thread.html", ->
       tmp = $content.child()
 
       frag = $_F()
-      res_num = +target.closest("article").C("num")[0].textContent
-      for target_res_num from threadContent.repIndex.get(res_num)
-        frag.addLast(tmp[target_res_num - 1].cloneNode(true))
+      resNum = +target.closest("article").C("num")[0].textContent
+      for targetResNum from threadContent.repIndex.get(resNum)
+        targetRes = tmp[targetResNum - 1]
+        continue if targetRes.hasClass("ng") and !targetRes.hasClass("disp_ng")
+        frag.addLast(targetRes.cloneNode(true))
 
       $popup = $__("div")
       $popup.addLast(frag)
+      resCount = threadContent.repIndex.get(resNum).size
+      popupCount = $popup.child().length
+      if popupCount is 0
+        $div = $__("div")
+        $div.textContent = "対象のレスが見つかりません"
+        $div.addClass("popup_disabled")
+        $popup.addLast($div)
+      else if popupCount < resCount
+        $div = $__("div")
+        $div.addClass("ng_count")
+        $div.setAttr("ng-count", resCount - popupCount)
+        $popup.addLast($div)
       return $popup
     )
     return

@@ -70,20 +70,15 @@ article {
 
     .popup & {
       display: block;
-      color: #666;
-      border: 1px dashed;
-      padding: 5px;
-      margin: 5px;
 
       &::after {
         display: block;
-        margin: 0px;
-        min-width: 10em;
-        content: "NG";
-        text-align: center;
+        margin: 5px 10px;
+        color: gray;
+        content: "あぼーん (" attr(ng-type) ")";
       }
 
-      > header, > .message {
+      > .message {
         display: none;
       }
     }
@@ -270,6 +265,21 @@ header {
     color: #eeeeee;
     animation: fade_in 150ms ease-out;
   }
+  .ng_count {
+    display: block;
+    color: #666;
+    border: 1px dashed;
+    padding: 5px;
+    margin: 5px;
+    &::after {
+      display: block;
+      margin: 0px;
+      min-width: 10em;
+      color: gray;
+      content: "他 NG " attr(ng-count) "件";
+      text-align: center;
+    }
+  }
 }
 .popup_disabled {
   background-color: #666;
@@ -434,6 +444,15 @@ header {
   $res-name-to-own-ob-color,
   $link-color,
   $freq-color,
+  $ng-res-header-color,
+  $ng-res-name-color,
+  $ng-res-name-ob-color,
+  $ng-res-name-own-color,
+  $ng-res-name-own-ob-color,
+  $ng-res-name-to-own-color,
+  $ng-res-name-to-own-ob-color,
+  $ng-link-color,
+  $ng-freq-color,
   $anchor-color,
   $anchor-active-color,
   $anchor-visited-color,
@@ -501,6 +520,40 @@ header {
     color: $freq-color;
   }
 
+    .ng {
+      header {
+        color: $ng-res-header-color;
+      }
+      .name {
+        color: $ng-res-name-color;
+      }
+      .ob {
+        color: $ng-res-name-ob-color;
+      }
+      .link, .beid, .beid:visited {
+        color: $ng-link-color;
+      }
+      .freq {
+        color: $ng-freq-color;
+      }
+      &.to_written {
+        .name {
+          color: $ng-res-name-to-own-color;
+        }
+        .ob {
+          color: $ng-res-name-to-own-ob-color;
+        }
+      }
+      &.written {
+        .name {
+          color: $ng-res-name-own-color;
+        }
+        .ob {
+          color: $ng-res-name-own-ob-color;
+        }
+      }
+    }
+
   .anchor.disabled {
     color: $anchor-disabled-color;
   }
@@ -559,6 +612,15 @@ header {
     $res-name-to-own-ob-color: #cd853f,
     $link-color: #00a,
     $freq-color: #a00,
+    $ng-res-header-color: #888,
+    $ng-res-name-color: #7a7,
+    $ng-res-name-ob-color: #58a,
+    $ng-res-name-own-color: #ff6540,
+    $ng-res-name-own-ob-color: #ff9b40,
+    $ng-res-name-to-own-color: #ffac40,
+    $ng-res-name-to-own-ob-color: #efaa6f,
+    $ng-link-color: #88b,
+    $ng-freq-color: #b88,
     $anchor-color: #00e,
     $anchor-active-color: hsl(10, 50%, 50%),
     $anchor-visited-color: #551A8B,
@@ -588,6 +650,15 @@ header {
     $res-name-to-own-ob-color: #cd853f,
     $link-color: #69d,
     $freq-color: #d99,
+    $ng-res-header-color: #888,
+    $ng-res-name-color: #6a6,
+    $ng-res-name-ob-color: #67b,
+    $ng-res-name-own-color: #c22530,
+    $ng-res-name-own-ob-color: #c25b30,
+    $ng-res-name-to-own-color: #c07730,
+    $ng-res-name-to-own-ob-color: #b4752f,
+    $ng-link-color: #66b,
+    $ng-freq-color: #a66,
     $anchor-color: #6af,
     $anchor-active-color: hsl(30, 50%, 50%),
     $anchor-visited-color: #99f,

@@ -37,6 +37,18 @@ class UI.ThreadContent
     @repIndex = new Map()
 
     ###*
+    @property repNgIndex
+    @type Object
+    ###
+    @repNgIndex = new Map()
+
+    ###*
+    @property ancIndex
+    @type Object
+    ###
+    @ancIndex = new Map()
+
+    ###*
     @property harmImgIndex
     @type Array
     ###
@@ -563,7 +575,6 @@ class UI.ThreadContent
 
       res.num = resNum
       res.class = []
-      res.attr = []
       scheme = app.URL.getScheme(@url)
 
       res = app.ReplaceStrTxt.do(@url, document.title, res)
@@ -684,7 +695,6 @@ class UI.ThreadContent
         res.class.push("ng")
         ngType = ngObj.type
         ngType += ":" + ngObj.name if ngObj.name?
-        res.attr["ng-type"] = ngType
 
       # resデータの保管
       @_rawResData[resNum] = res
@@ -739,6 +749,8 @@ class UI.ThreadContent
                   @repIndex.set(target, new Set()) unless @repIndex.has(target)
                   @repIndex.get(target).add(resNum)
                   @harmImgIndex.add(target) if isThatHarmImg
+                  @ancIndex.set(resNum, new Set()) unless @ancIndex.has(resNum)
+                  @ancIndex.get(resNum).add(target)
                   target++
 
             return "<a href=\"javascript:undefined;\" class=\"anchor" +
@@ -756,15 +768,12 @@ class UI.ThreadContent
       $message.innerHTML = tmp
       $article.addLast($message)
 
-      if app.config.isOn("display_ng") and res.class.includes("ng")
-        res.class.push("disp_ng")
-
       $article.setClass(res.class.join(" "))
       $article.dataset.id = res.id if res.id?
       $article.dataset.slip = res.slip if res.slip?
       $article.dataset.trip = res.trip if res.trip?
-      for key, val of res.attr
-        $article.setAttr(key, val)
+      if res.class.includes("ng")
+        @setNG($article, ngType)
 
       $fragment.addLast($article)
 
@@ -781,6 +790,8 @@ class UI.ThreadContent
     if app.config.isOn("chain_ng_slip")
       for slip from @_ngSlipForChain
         @_chainNgBySlip(slip)
+    # 返信数の更新
+    @updateRepCount()
 
     #サムネイル追加処理
     try
@@ -862,20 +873,6 @@ class UI.ThreadContent
       for [resKey, index] from @repIndex
         res = @container.child()[resKey - 1]
         continue unless res
-        resCount = index.size
-        if elm = res.C("rep")[0]
-          newFlg = false
-        else
-          newFlg = true
-          elm = $__("span")
-        elm.textContent = "返信 (#{resCount})"
-        elm.className = if resCount >= 5 then "rep freq" else "rep link"
-        res.dataset.rescount = [1..resCount].join(" ")
-        if newFlg
-          res.C("other")[0].addLast(
-            document.createTextNode(" ")
-          )
-          res.C("other")[0].addLast(elm)
         #連鎖NG
         if app.config.isOn("chain_ng") and res.hasClass("ng")
           @_chainNG(res)
@@ -884,6 +881,51 @@ class UI.ThreadContent
           for r from index
             @container.child()[r - 1].addClass("to_written")
       return
+    return
+
+  ###*
+  @method updateRepCount
+  ###
+  updateRepCount: ->
+    for [resKey, index] from @repIndex
+      res = @container.child()[resKey - 1]
+      continue unless res
+      resCount = index.size
+      if app.config.isOn("reject_ng_rep") and @repNgIndex.has(resKey)
+        resCount -= @repNgIndex.get(resKey).size
+      if elm = res.C("rep")[0]
+        newFlg = false
+      else
+        newFlg = true
+        elm = $__("span") if resCount > 0
+      if resCount > 0
+        elm.textContent = "返信 (#{resCount})"
+        elm.className = if resCount >= 5 then "rep freq" else "rep link"
+        res.dataset.rescount = [1..resCount].join(" ")
+        if newFlg
+          res.C("other")[0].addLast(
+            document.createTextNode(" ")
+          )
+          res.C("other")[0].addLast(elm)
+      else if elm
+        res.removeAttr("data-rescount")
+        elm.remove()
+    return
+
+  ###*
+  @method setNG
+  @param {Element} res
+  @param {string} ngType
+  ###
+  setNG: (res, ngType) =>
+    res.addClass("ng")
+    res.addClass("disp_ng") if app.config.isOn("display_ng")
+    res.setAttr("ng-type", ngType)
+    resNum = +res.C("num")[0].textContent
+    if @ancIndex.has(resNum)
+      for rn from @ancIndex.get(resNum)
+        @repNgIndex.set(rn, new Set()) unless @repNgIndex.has(rn)
+        @repNgIndex.get(rn).add(resNum)
     return
 
   ###*
@@ -901,9 +943,7 @@ class UI.ThreadContent
       rn = +getRes.C("num")[0].textContent
       continue if app.NG.isIgnoreResNumForAuto(rn, app.NG.NG_TYPE_AUTO_CHAIN)
       continue if app.NG.isIgnoreNgType(@_rawResData[rn], @_threadTitle, @url, app.NG.NG_TYPE_AUTO_CHAIN)
-      getRes.addClass("ng")
-      getRes.addClass("disp_ng") if app.config.isOn("display_ng")
-      getRes.setAttr("ng-type", app.NG.NG_TYPE_AUTO_CHAIN)
+      @setNG(getRes, app.NG.NG_TYPE_AUTO_CHAIN)
       # NG連鎖IDの登録
       if app.config.isOn("chain_ng_id") and app.config.isOn("chain_ng_id_by_chain")
         if id = getRes.getAttr("data-id")
@@ -929,9 +969,7 @@ class UI.ThreadContent
       rn = +r.C("num")[0].textContent
       continue if app.NG.isIgnoreResNumForAuto(rn, app.NG.NG_TYPE_AUTO_CHAIN_ID)
       continue if app.NG.isIgnoreNgType(@_rawResData[rn], @_threadTitle, @url, app.NG.NG_TYPE_AUTO_CHAIN_ID)
-      r.addClass("ng")
-      r.addClass("disp_ng") if app.config.isOn("display_ng")
-      r.setAttr("ng-type", app.NG.NG_TYPE_AUTO_CHAIN_ID)
+      @setNG(r, app.NG.NG_TYPE_AUTO_CHAIN_ID)
       # 連鎖NG
       @_chainNG(r) if app.config.isOn("chain_ng")
     return
@@ -948,9 +986,7 @@ class UI.ThreadContent
       rn = +r.C("num")[0].textContent
       continue if app.NG.isIgnoreResNumForAuto(rn, app.NG.NG_TYPE_AUTO_CHAIN_SLIP)
       continue if app.NG.isIgnoreNgType(@_rawResData[rn], @_threadTitle, @url, app.NG.NG_TYPE_AUTO_CHAIN_SLIP)
-      r.addClass("ng")
-      r.addClass("disp_ng") if app.config.isOn("display_ng")
-      r.setAttr("ng-type", app.NG.NG_TYPE_AUTO_CHAIN_SLIP)
+      @setNG(r, app.NG.NG_TYPE_AUTO_CHAIN_SLIP)
       # 連鎖NG
       @_chainNG(r) if app.config.isOn("chain_ng")
     return
@@ -1098,6 +1134,7 @@ class UI.ThreadContent
     @_ngIdForChain.clear()
     @_ngSlipForChain.clear()
     @_resMessageMap.clear()
+    @repNgIndex.clear()
     # NGの解除
     for res in @container.$$("article.ng")
       res.removeClass("ng")
@@ -1108,11 +1145,9 @@ class UI.ThreadContent
       continue if res.hasClass("ng")
       resNum = +res.C("num")[0].textContent
       if ngObj = @_checkNG(@_rawResData[resNum], bbsType)
-        res.addClass("ng")
-        res.addClass("disp_ng") if app.config.isOn("display_ng")
         ngType = ngObj.type
         ngType += ":" + ngObj.name if ngObj.name?
-        res.setAttr("ng-type", ngType)
+        @setNG(res, ngType)
         # 連鎖NG
         if app.config.isOn("chain_ng") and @repIndex.has(resNum)
           @_chainNG(res)
@@ -1123,6 +1158,8 @@ class UI.ThreadContent
     if app.config.isOn("chain_ng_slip")
       for slip from @_ngSlipForChain
         @_chainNgBySlip(slip)
+    # 返信数の更新
+    @updateRepCount()
     # 表示更新通知
     @container.dispatchEvent(new Event("view_refreshed", {"bubbles": true}))
     return

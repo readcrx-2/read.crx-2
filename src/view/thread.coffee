@@ -242,6 +242,7 @@ app.boot("/view/thread.html", ->
       altParent = $view.C("popup_area")[0]
       altParent.addLast($menu)
       $menu.setAttr("resnum", $article.C("num")[0].textContent)
+      $article.parent().addClass("has_contextmenu")
     else
       $article.addLast($menu)
 
@@ -316,8 +317,11 @@ app.boot("/view/thread.html", ->
     return unless target.matches(".res_menu > li")
     $res = target.closest("article")
     unless $res
-      rn = +target.closest(".res_menu").getAttr("resnum")
-      $res = $content.child()[rn - 1]
+      rn = target.closest(".res_menu").getAttr("resnum")
+      for res in $view.$$(".popup.has_contextmenu > article")
+        if res.C("num")[0].textContent is rn
+          $res = res
+          break
 
     if target.hasClass("copy_selection")
       selectedText = getSelection().toString()

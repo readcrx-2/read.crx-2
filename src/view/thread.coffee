@@ -629,7 +629,7 @@ app.boot("/view/thread.html", ->
       resNum = +target.closest("article").C("num")[0].textContent
       for targetResNum from threadContent.repIndex.get(resNum)
         targetRes = tmp[targetResNum - 1]
-        continue if targetRes.hasClass("ng") and !targetRes.hasClass("disp_ng")
+        continue if targetRes.hasClass("ng") and (!targetRes.hasClass("disp_ng") or app.config.isOn("reject_ng_rep"))
         frag.addLast(targetRes.cloneNode(true))
 
       $popup = $__("div")
@@ -641,7 +641,7 @@ app.boot("/view/thread.html", ->
         $div.textContent = "対象のレスが見つかりません"
         $div.addClass("popup_disabled")
         $popup.addLast($div)
-      else if popupCount < resCount
+      else if popupCount < resCount and !app.config.isOn("reject_ng_rep")
         $div = $__("div")
         $div.addClass("ng_count")
         $div.setAttr("ng-count", resCount - popupCount)

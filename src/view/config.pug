@@ -119,19 +119,19 @@ block body
                 tr
                   td スレ
                   td
-                    input.direct(type="number" name="auto_load_second" min="0")
+                    input.direct.seconds(type="number" name="auto_load_second" min="0")
                     |ms
                   td (最小5000ms、勢いが遅いスレで30000ms未満にするとエラーがでます)
                 tr
                   td 板
                   td
-                    input.direct(type="number" name="auto_load_second_board" min="0")
+                    input.direct.seconds(type="number" name="auto_load_second_board" min="0")
                     |ms
                   td (最小20000ms)
                 tr
                   td ブックマーク
                   td
-                    input.direct(type="number" name="auto_load_second_bookmark" min="0")
+                    input.direct.seconds(type="number" name="auto_load_second_bookmark" min="0")
                     |ms
                   td (最小20000ms)
 
@@ -198,16 +198,18 @@ block body
         section
           h2 サムネイルサイズ
           div
-            label
-              |最大幅:
-              input.direct(type="range" name="image_width" min="150" max="800" step="10")
-              span.image_width_text
-              |px
-            label
-              |最大高さ:
-              input.direct(type="range" name="image_height" min="100" max="600" step="10")
-              span.image_height_text
-              |px
+            div
+              label
+                |最大幅:
+                input.direct(type="range" name="image_width" min="150" max="800" step="10")
+                span.image_width_text
+                |px
+            div
+              label
+                |最大高さ:
+                input.direct(type="range" name="image_height" min="100" max="600" step="10")
+                span.image_height_text
+                |px
 
         section
           h2 音声と動画の再生
@@ -242,6 +244,7 @@ block body
               input.direct(type="range" name="video_width" min="160" max="800" step="10")
               span.video_width_text
               |px
+            br
             label
               |最大高さ:
               input.direct(type="range" name="video_height" min="160" max="600" step="10")
@@ -294,7 +297,7 @@ block body
             br
             label
               |遅延スクロールの待機時間:
-              input.direct(type="number" name="delay_scroll_time" min="0" max="5000")
+              input.direct.seconds(type="number" name="delay_scroll_time" min="0" max="5000")
               |ms
 
       .tabcontent(name="popup")
@@ -312,7 +315,7 @@ block body
           h2 ポップアップの遅延時間
           div
             label
-              input.direct(type="number" name="popup_delay_time" min="0" max="5000")
+              input.direct.seconds(type="number" name="popup_delay_time" min="0" max="5000")
               |ms (最小100ms)
             br
             |ポップアップの表示タイミングを遅らせる場合に指定してください。100ms未満の値が指定された場合は即時に表示されます。(アンカー/ID/参照全て共通)
@@ -332,7 +335,7 @@ block body
             br
             label
               |タイムアウト:
-              input.direct(type="number" name="expand_short_url_timeout" min="0")
+              input.direct.seconds(type="number" name="expand_short_url_timeout" min="0")
               |ms
 
       .tabcontent(name="ng")
@@ -412,7 +415,7 @@ block body
             label
               |連投レス(コピペ)をNGとする回数:
               input.direct(type="number" name="repeat_message_ng_count" min="0" max="99")
-              |2未満の場合はoffとなります。
+              |(2未満の場合はoffとなります)
               br
               |offからonへの変更時にはスレッドを開き直す必要があります。アンカーの違いは無視します。
 
@@ -430,7 +433,7 @@ block body
               input.direct(type="radio" name="ng_id_expire" value="day")
               |曜日指定
             br
-            input.direct(type="number" name="ng_id_expire_date" min="0" max="180")
+            input.direct.days(type="number" name="ng_id_expire_date" min="0" max="180")
             |日後まで(0は当日のみ有効)
             |次の
             select.direct(name="ng_id_expire_day")
@@ -455,7 +458,7 @@ block body
               input.direct(type="radio" name="ng_slip_expire" value="day")
               |曜日指定
             br
-            input.direct(type="number" name="ng_slip_expire_date" min="0" max="180")
+            input.direct.days(type="number" name="ng_slip_expire_date" min="0" max="180")
             |日後まで(0は当日のみ有効)
             |次の
             select.direct(name="ng_slip_expire_day")
@@ -495,7 +498,7 @@ block body
             button.bbsmenu_reload(type="button") 板一覧の更新
             span#bbsmenu_reload_status
             |更新間隔:
-            input.direct(type="number" name="bbsmenu_update_interval" min="1" value="7")
+            input.direct.days(type="number" name="bbsmenu_update_interval" min="1" value="7")
             |日
 
         section

@@ -351,25 +351,19 @@ app.boot("/view/config.html", ["cache", "bbsmenu"], (Cache, BBSMenu) ->
     countFunc: ->
       return app.WriteHistory.count()
     importFunc: ({writehistory = null, dbVersion = 1}) ->
-      if writehistory
-        return Promise.all(writehistory.map( (whis) ->
-          whis.inputName = whis.input_name
-          whis.inputMail = whis.input_mail
-          if dbVersion < 2
+      return Promise.resolve() unless writehistory
+
+      unixTime201710 = 1506783600 # 2017/10/01 0:00:00
+      return Promise.all(writehistory.map( (whis) ->
+        whis.inputName = whis.input_name
+        whis.inputMail = whis.input_mail
+        if dbVersion < 2
+          if +whis.date <= unixTime201710 and whis.res > 1
             date = new Date(+whis.date)
-            year = date.getFullYear()
-            month = date.getMonth()
-            if (year > 2017 or (year is 2017 and month > 9)) and whis.res > 1
-              month--
-              if month < 0
-                date.setFullYear(date.getFullYear() - 1)
-                month = 11
-              date.setMonth(month)
-              whis.date = date.valueOf()
-          return app.WriteHistory.add(whis)
-        ))
-      else
-        return Promise.resolve()
+            date.setMonth(date.getMonth()-1)
+            whis.date = date.valueOf()
+        return app.WriteHistory.add(whis)
+      ))
     exportFunc: ->
       return {"writehistory": await app.WriteHistory.getAll(), "dbVersion": app.WriteHistory.DB_VERSION}
     clearFunc: ->

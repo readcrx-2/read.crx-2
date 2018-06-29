@@ -553,6 +553,7 @@ block body
         section
           h2 閲覧履歴
           div.history
+            span#history_count
             span#history_status
             br
             button.history_clear(type="button") 削除
@@ -572,6 +573,7 @@ block body
         section
           h2 書込履歴
           div.writehistory
+            span#writehistory_count
             span#writehistory_status
             br
             button.writehistory_clear(type="button") 削除
@@ -591,6 +593,7 @@ block body
         section
           h2 キャッシュ
           div.cache
+            span#cache_count
             span#cache_status
             br
             button.cache_clear(type="button") 削除

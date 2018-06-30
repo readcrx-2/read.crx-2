@@ -7,6 +7,8 @@ window.UI ?= {}
 @param {Element} table
 ###
 class UI.TableSorter
+  @collator: new Intl.Collator("ja", { numeric: true })
+
   constructor: (@table) ->
     @table.addClass("table_sort")
     @table.on("click", ({target}) =>
@@ -71,7 +73,7 @@ class UI.TableSorter
     dataKeys = Object.keys(data)
 
     dataKeys.sort( (a, b) ->
-      diff = a.localeCompare(b, "ja", { numeric: true })
+      diff = UI.TableSorter.collator.compare(a, b)
       diff *= -1  if sortOrder is "desc"
       return diff
     )

@@ -856,8 +856,9 @@ app.boot("/view/thread.html", ->
         $content.addClass("searching")
         for dom in $content.child()
           if (
-            (searchRegExp and searchRegExp.test(dom.textContent)) or
-            app.util.normalize(dom.textContent).includes(query)
+            ((searchRegExp and searchRegExp.test(dom.textContent)) or
+             app.util.normalize(dom.textContent).includes(query)) and
+            (!dom.hasClass("ng") or dom.hasClass("disp_ng"))
           )
             dom.addClass("search_hit")
             hitCount++

@@ -7,7 +7,7 @@ app.util = {}
 ###
 class app.util.Anchor
   @reg =
-    ANCHOR: /(?:&gt;|＞){1,2}[\d\uff10-\uff19]+(?:[\-\u30fc][\d\uff10-\uff19]+)?(?:\s*,\s*[\d\uff10-\uff19]+(?:[\-\u30fc][\d\uff10-\uff19]+)?)*/g
+    ANCHOR: /(?:&gt;|＞){1,2}[\d\uff10-\uff19]+(?:[\-\u30fc][\d\uff10-\uff19]+)?(?:\s*[,、]\s*[\d\uff10-\uff19]+(?:[\-\u30fc][\d\uff10-\uff19]+)?)*/g
     _FW_DASH: /\u30fc/g
     _FW_NUMBER: /[\uff10-\uff19]/g
 
@@ -21,7 +21,7 @@ class app.util.Anchor
       return String.fromCharCode($0.charCodeAt(0) - 65248)
     )
 
-    if not /^(?:&gt;|＞){0,2}([\d]+(?:-\d+)?(?:\s*,\s*\d+(?:-\d+)?)*)$/.test(str)
+    if not /^(?:&gt;|＞){0,2}([\d]+(?:-\d+)?(?:\s*[,、]\s*\d+(?:-\d+)?)*)$/.test(str)
       return data
 
     segReg = /(\d+)(?:-(\d+))?/g

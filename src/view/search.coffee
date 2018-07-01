@@ -13,6 +13,7 @@ app.boot("/view/search.html", ["thread_search"], (ThreadSearch) ->
   $view.dataset.url = "search:#{query}"
   $view.setAttr("scheme", scheme)
 
+  $content = $$.C("content")[0]
   $messageBar = $view.C("message_bar")[0]
   $buttonReload = $view.C("button_reload")[0]
 
@@ -33,13 +34,13 @@ app.boot("/view/search.html", ["thread_search"], (ThreadSearch) ->
   app.DOMData.set($view, "selectableItemList", threadList)
   tableSorter = new UI.TableSorter($table)
   app.DOMData.set($table, "tableSorter", tableSorter)
-  $$.C("content")[0].addFirst($table)
+  $content.addFirst($table)
 
-  threadSearch = new ThreadSearch(query)
+  threadSearch = new ThreadSearch(query, scheme)
   $tbody = $view.T("tbody")[0]
 
-  load = ->
-    return if $view.hasClass("loading")
+  load = (add = false) ->
+    return if $view.hasClass("loading") and not add
     $view.addClass("loading")
     $buttonReload.addClass("disabled")
     $view.C("more")[0].textContent = "検索中"
@@ -48,9 +49,6 @@ app.boot("/view/search.html", ["thread_search"], (ThreadSearch) ->
       $messageBar.removeClass("error")
       $messageBar.removeChildren()
 
-      for r in result
-        r.url = app.URL.setScheme(r.url, scheme)
-        r.isHttps = (scheme is "https")
       threadList.addItem(result)
 
       if $tbody.child().length is 0
@@ -72,15 +70,29 @@ app.boot("/view/search.html", ["thread_search"], (ThreadSearch) ->
       $view.removeClass("loading")
 
     $view.C("more")[0].addClass("hidden")
-    await app.defer5()
-    $buttonReload.removeClass("disabled")
+    do ->
+      await app.defer5()
+      $buttonReload.removeClass("disabled")
+      return
     return
+
+  onScroll =  ->
+    {offsetHeight, scrollHeight, scrollTop} = $content
+    scrollPosition = offsetHeight + scrollTop
+
+    if scrollHeight - scrollPosition < 100
+      $content.off("scroll", onScroll)
+      load(true)
+    return
+  $content.on("scroll", onScroll, passive: true)
 
   $buttonReload.on("click", ->
     return if $buttonReload.hasClass("disabled")
     threadList.empty()
     threadSearch = new ThreadSearch(query)
-    load()
+    await load()
+    onScroll() # 20件分がスクロールなしで表示できる場合
+    $content.on("scroll", onScroll, passive: true)
     return
   )
 
@@ -89,6 +101,7 @@ app.boot("/view/search.html", ["thread_search"], (ThreadSearch) ->
     return
   )
 
-  load()
+  await load()
+  onScroll() # 20件分がスクロールなしで表示できる場合
   return
 )

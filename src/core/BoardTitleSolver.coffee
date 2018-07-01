@@ -8,7 +8,7 @@ class app.BoardTitleSolver
   ###*
   @property _bbsmenu
   @private
-  @type Object | null
+  @type Map | null
   ###
   @_bbsmenu: null
 
@@ -32,10 +32,10 @@ class app.BoardTitleSolver
     unless menu?
       throw new Error("板一覧が取得できませんでした")
 
-    @_bbsmenu = {}
+    @_bbsmenu = new Map()
     for {board} in menu
       for {url, title} in board
-        @_bbsmenu[url] = title
+        @_bbsmenu.set(app.URL.fix(url), title)
     return @_bbsmenu
 
   ###*
@@ -47,7 +47,7 @@ class app.BoardTitleSolver
     bbsmenu = await @getBBSMenu()
     # スキーム違いについても確認をする
     url2 = app.URL.changeScheme(url)
-    boardName = bbsmenu[url] ? bbsmenu[url2]
+    boardName = bbsmenu.get(url) ? bbsmenu.get(url2)
     return boardName if boardName?
     throw new Error("板一覧にその板は存在しません")
     return

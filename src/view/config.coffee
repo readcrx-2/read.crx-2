@@ -83,6 +83,8 @@ class HistoryIO extends SettingIO
     @importFunc = importFunc
     @exportFunc = exportFunc
 
+    @$count = $$.I("#{@name}_count")
+
     @$clearButton = $$.C("#{@name}_clear")[0]
     @$clearRangeButton = $$.C("#{@name}_range_clear")[0]
 
@@ -92,7 +94,7 @@ class HistoryIO extends SettingIO
     return
   showCount: ->
     count = await @countFunc()
-    @$status.textContent = "#{count}件"
+    @$count.textContent = "#{count}件"
     return
   setupClearButton: ->
     @$clearButton.on("click", =>
@@ -101,15 +103,16 @@ class HistoryIO extends SettingIO
       )
       return unless result
       @$clearButton.addClass("hidden")
-      @$status.textContent = "削除中"
+      @$status.textContent = ":削除中"
 
       try
         await @clearFunc()
-        @$status.textContent = "削除完了"
+        @$status.textContent = ":削除完了"
         parent.$$.$("iframe[src=\"/view/#{@name}.html\"]")?.contentWindow.C("view")[0].dispatchEvent(new Event("request_reload"))
       catch
-        @$status.textContent = "削除失敗"
+        @$status.textContent = ":削除失敗"
 
+      @showCount()
       @afterChangedFunc()
       @$clearButton.removeClass("hidden")
       return
@@ -122,15 +125,16 @@ class HistoryIO extends SettingIO
       )
       return unless result
       @$clearRangeButton.addClass("hidden")
-      @$status.textContent = "範囲指定削除中"
+      @$status.textContent = ":範囲指定削除中"
 
       try
         await @clearRangeFunc(parseInt($$.C("#{@name}_date_range")[0].value))
-        @$status.textContent = "範囲指定削除完了"
+        @$status.textContent = ":範囲指定削除完了"
         parent.$$.$("iframe[src=\"/view/#{@name}.html\"]")?.contentWindow.C("view")[0].dispatchEvent(new Event("request_reload"))
       catch
-        @$status.textContent = "範囲指定削除失敗"
+        @$status.textContent = ":範囲指定削除失敗"
 
+      @showCount()
       @afterChangedFunc()
       @$clearRangeButton.removeClass("hidden")
       return
@@ -140,20 +144,21 @@ class HistoryIO extends SettingIO
     @$importButton.on("click", =>
       if @importFile isnt ""
         @$status.setClass("loading")
-        @$status.textContent = "更新中"
+        @$status.textContent = ":更新中"
         await @importFunc(JSON.parse(@importFile))
         try
           count = await @countFunc()
           @$status.setClass("done")
-          @$status.textContent = "#{count}件 インポート完了"
+          @$status.textContent = ":インポート完了"
           @$clearButton.removeClass("hidden")
         catch
           @$status.setClass("fail")
-          @$status.textContent = "インポート失敗"
+          @$status.textContent = ":インポート失敗"
+        @showCount()
         @afterChangedFunc()
       else
         @$status.addClass("fail")
-        @$status.textContent = "ファイルを選択してください"
+        @$status.textContent = ":ファイルを選択してください"
       return
     )
     return
@@ -346,25 +351,19 @@ app.boot("/view/config.html", ["cache", "bbsmenu"], (Cache, BBSMenu) ->
     countFunc: ->
       return app.WriteHistory.count()
     importFunc: ({writehistory = null, dbVersion = 1}) ->
-      if writehistory
-        return Promise.all(writehistory.map( (whis) ->
-          whis.inputName = whis.input_name
-          whis.inputMail = whis.input_mail
-          if dbVersion < 2
+      return Promise.resolve() unless writehistory
+
+      unixTime201710 = 1506783600 # 2017/10/01 0:00:00
+      return Promise.all(writehistory.map( (whis) ->
+        whis.inputName = whis.input_name
+        whis.inputMail = whis.input_mail
+        if dbVersion < 2
+          if +whis.date <= unixTime201710 and whis.res > 1
             date = new Date(+whis.date)
-            year = date.getFullYear()
-            month = date.getMonth()
-            if (year > 2017 or (year is 2017 and month > 9)) and whis.res > 1
-              month--
-              if month < 0
-                date.setFullYear(date.getFullYear() - 1)
-                month = 11
-              date.setMonth(month)
-              whis.date = date.valueOf()
-          return app.WriteHistory.add(whis)
-        ))
-      else
-        return Promise.resolve()
+            date.setMonth(date.getMonth()-1)
+            whis.date = date.valueOf()
+        return app.WriteHistory.add(whis)
+      ))
     exportFunc: ->
       return {"writehistory": await app.WriteHistory.getAll(), "dbVersion": app.WriteHistory.DB_VERSION}
     clearFunc: ->
@@ -380,36 +379,38 @@ app.boot("/view/config.html", ["cache", "bbsmenu"], (Cache, BBSMenu) ->
     #キャッシュ削除ボタン
     $clearButton = $view.C("cache_clear")[0]
     $status = $$.I("cache_status")
+    $count = $$.I("cache_count")
 
-    do ->
+    do setCount = ->
       count = await Cache.count()
-      $status.textContent = "#{count}件"
+      $count.textContent = "#{count}件"
       return
 
     $clearButton.on("click", ->
-      $clearButton.remove()
-      $status.textContent = "削除中"
+      $status.textContent = ":削除中"
 
       try
         await Cache.delete()
-        $status.textContent = "削除完了"
+        $status.textContent = ":削除完了"
       catch
-        $status.textContent = "削除失敗"
+        $status.textContent = ":削除失敗"
 
+      setCount()
       updateIndexedDBUsage()
       return
     )
     #キャッシュ範囲削除ボタン
     $clearRangeButton = $view.C("cache_range_clear")[0]
     $clearRangeButton.on("click", ->
-      $status.textContent = "範囲指定削除中"
+      $status.textContent = ":範囲指定削除中"
 
       try
         await Cache.clearRange(parseInt($view.C("cache_date_range")[0].value))
-        $status.textContent = "削除完了"
+        $status.textContent = ":削除完了"
       catch
-        $status.textContent = "削除失敗"
+        $status.textContent = ":削除失敗"
 
+      setCount()
       updateIndexedDBUsage()
       return
     )

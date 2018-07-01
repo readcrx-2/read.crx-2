@@ -116,6 +116,8 @@ imgs = [
   "unlock_19x19_333.webp"
   "pause_19x19_333.webp"
   "pause_19x19_811.webp"
+  "regexp_19x19_333.webp"
+  "regexp_19x19_06e.webp"
 
   "arrow_19x19_ddd_r90.webp"
   "arrow_19x19_ddd_r-90.webp"
@@ -129,6 +131,8 @@ imgs = [
   "unlock_19x19_ddd.webp"
   "pause_19x19_ddd.webp"
   "pause_19x19_a33.webp"
+  "regexp_19x19_ddd.webp"
+  "regexp_19x19_f93.webp"
 ]
 # -------
 sass.compiler = sassCompiler

@@ -466,6 +466,7 @@ class app.view.TabContentView extends app.view.PaneContentView
     @_setupSortItemSelector()
     @_setupSchemeButton()
     @_setupAutoReload()
+    @_setupRegExpButton()
     @_setupToolMenu()
     return
 
@@ -737,6 +738,30 @@ class app.view.TabContentView extends app.view.PaneContentView
 
     window.on("view_unload", ->
       clearInterval(autoLoadInterval)
+      return
+    )
+    return
+
+  ###*
+  @method _setupRegExpButton
+  @private
+  ###
+  _setupRegExpButton: ->
+    $button = @$element.C("button_regexp")[0]
+
+    return unless $button
+    unless @$element.hasClass("view_thread")
+      $button.remove() if $button
+      return
+
+    if @$element.hasClass("search_regexp")
+      $button.addClass("regexp")
+    else
+      $button.removeClass("regexp")
+
+    $button.on("click", =>
+      $button.toggleClass("regexp")
+      @$element.dispatchEvent(new Event("change_search_regexp"))
       return
     )
     return

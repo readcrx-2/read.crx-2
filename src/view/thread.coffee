@@ -811,10 +811,17 @@ app.boot("/view/thread.html", ->
     )
     return
 
+  # 検索モードの切り替え
+  $view.on("change_search_regexp", ->
+    $content.toggleClass("search_regexp")
+    return
+  )
+
   #検索ボックス
   do ->
     searchStoredScrollTop = null
     $searchbox = $view.C("searchbox")[0]
+    searchRegExpEnter = false
 
     $searchbox.on("compositionend", ->
       @dispatchEvent(new Event("input"))
@@ -822,6 +829,20 @@ app.boot("/view/thread.html", ->
     )
     $searchbox.on("input", ({isComposing}) ->
       return if isComposing
+      searchRegExpMode = $content.hasClass("search_regexp")
+      return if searchRegExpMode and !searchRegExpEnter
+      searchRegExpEnter = false
+      searchRegExp = null
+      if searchRegExpMode and @value isnt ""
+        try
+          searchRegExp = new RegExp(@value, "i")
+        catch e
+          app.message.send("notify",
+            message: "正規表現が正しくありません。"
+            background_color: "red"
+          )
+          return
+
       $content.dispatchEvent(new Event("searchstart"))
       if @value isnt ""
         if typeof searchStoredScrollTop isnt "number"
@@ -834,7 +855,11 @@ app.boot("/view/thread.html", ->
 
         $content.addClass("searching")
         for dom in $content.child()
-          if app.util.normalize(dom.textContent).includes(query)
+          if (
+            ((searchRegExp and searchRegExp.test(dom.textContent)) or
+             app.util.normalize(dom.textContent).includes(query)) and
+            (!dom.hasClass("ng") or dom.hasClass("disp_ng"))
+          )
             dom.addClass("search_hit")
             hitCount++
           else
@@ -858,7 +883,13 @@ app.boot("/view/thread.html", ->
       return
     )
 
-    $searchbox.on("keyup", ({which}) ->
+    $searchbox.on("keydown", ({which}) ->
+      if $content.hasClass("search_regexp")
+        if which is 13 or which is 27 # Enter|Esc
+          @value = "" if which is 27
+          searchRegExpEnter = true
+          @dispatchEvent(new Event("input"))
+        return
       if which is 27 #Esc
         if @value isnt ""
           @value = ""

@@ -101,6 +101,19 @@ block body
               input.direct(name="format_2chnet" type="radio" value="dat" checked)
               |dat形式(要Proxy)
 
+        section
+          h2 ブックマークのソート順の保持
+          div
+            label
+              input.direct(name="bookmark_sort_save_type" type="radio" value="none" checked)
+              |しない
+            label
+              input.direct(name="bookmark_sort_save_type" type="radio" value="board")
+              |板と連動させる
+            label
+              input.direct(name="bookmark_sort_save_type" type="radio" value="bookmark")
+              |板とは別で保持する
+
       .tabcontent(name="reload")
         section
           h2 更新

@@ -11,9 +11,25 @@ app.boot("/view/bookmark.html", ["board"], (Board) ->
   app.DOMData.set($view, "threadList", threadList)
   app.DOMData.set($view, "selectableItemList", threadList)
   $$.C("content")[0].addLast($table)
-  $table.$("th.unread").addClass("table_sort_desc")
   tableSorter = new UI.TableSorter($table)
   app.DOMData.set($table, "tableSorter", tableSorter)
+
+  # ソート関連
+  do ->
+    DEFAULT_SORT = {sort_index: 3, sort_order: "desc"}
+    lastSort = switch app.config.get("bookmark_sort_save_type")
+      when "none" then DEFAULT_SORT
+      when "board" then JSON.parse(app.config.get("last_board_sort_config"))
+      when "bookmark" then JSON.parse(app.config.get("last_bookmark_sort_config"))
+    if lastSort.sort_attribute is "data-thread-number"
+      lastSort = DEFAULT_SORT
+    tableSorter.updateSnake(lastSort)
+
+    $table.on("table_sort_updated", ({detail}) ->
+      app.config.set("last_bookmark_sort_config", JSON.stringify(detail))
+      return
+    )
+    return
 
   new app.view.TabContentView($view)
 

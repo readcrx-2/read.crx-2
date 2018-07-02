@@ -190,6 +190,7 @@ namespace app {
       ["button_change_scheme_newtab", "off"],
       ["open_all_unread_lazy", "on"],
       ["enable_link_with_res_number", "on"],
+      ["bookmark_sort_save_type", "none"],
       ["dblclick_reload", "on"],
       ["auto_load_second", "0"],
       ["auto_load_second_board", "0"],

@@ -50,7 +50,7 @@ header {
   display: flex;
   flex-flow: wrap;
   margin: 0;
-  padding: 5px 0 0 5px;
+  padding: 8px 0 0 8px;
   list-style-type: none;
   font-size: 14px;
   line-height: 1.3;
@@ -111,6 +111,30 @@ input[type="text"], input[type="number"], textarea {
   @include input-text;
 }
 
+input[type="range"] {
+  -webkit-appearance: none;
+  background-color: #ccc;
+  height: 4px;
+  border-radius: 2px;
+  margin: 8px 2px;
+
+  &:focus, &:active {
+    outline: none;
+  }
+
+  &::-webkit-slider-thumb {
+    -webkit-appearance: none;
+    cursor: pointer;
+    position: relative;
+    width: 12px;
+    height: 12px;
+    display: block;
+    border: 3px solid #aaa;
+    background-color: #444;
+    border-radius: 50%;
+  }
+}
+
 section button {
   @include button;
 }
@@ -160,12 +184,20 @@ input[type="text"]:invalid {
   vertical-align: top;
 }
 
+.seconds {
+  width: 100px;
+}
+
+.days {
+  width: 40px;
+}
+
 .date_range {
   width: 40px;
 }
 
 .image_blur_word {
-  width: 350px;
+  width: 500px;
 }
 
 .bbsmenu, .useragent {

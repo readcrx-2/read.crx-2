@@ -6,6 +6,7 @@ do ->
     $$.C("contextmenu_menu")[0]?.remove()
     if altParent
       altParent.removeClass("has_contextmenu")
+      altParent.$(".popup.has_contextmenu").removeClass("has_contextmenu")
       altParent.dispatchEvent(new Event("contextmenu_removed"))
       altParent = null
     return

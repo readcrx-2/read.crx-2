@@ -242,6 +242,7 @@ app.boot("/view/thread.html", ->
       altParent = $view.C("popup_area")[0]
       altParent.addLast($menu)
       $menu.setAttr("resnum", $article.C("num")[0].textContent)
+      $article.parent().addClass("has_contextmenu")
     else
       $article.addLast($menu)
 
@@ -316,8 +317,11 @@ app.boot("/view/thread.html", ->
     return unless target.matches(".res_menu > li")
     $res = target.closest("article")
     unless $res
-      rn = +target.closest(".res_menu").getAttr("resnum")
-      $res = $content.child()[rn - 1]
+      rn = target.closest(".res_menu").getAttr("resnum")
+      for res in $view.$$(".popup.has_contextmenu > article")
+        if res.C("num")[0].textContent is rn
+          $res = res
+          break
 
     if target.hasClass("copy_selection")
       selectedText = getSelection().toString()
@@ -399,6 +403,7 @@ app.boot("/view/thread.html", ->
 
     popupHelper(target, e, =>
       $popup = $__("div")
+      resCount = 0
 
       if target.hasClass("disabled")
         $div = $__("div")
@@ -414,17 +419,25 @@ app.boot("/view/thread.html", ->
           $div.addClass("popup_disabled")
           $popup.addLast($div)
         else if 0 < anchorData.targetCount
+          resCount = anchorData.targetCount
           tmp = $content.child()
           for [start, end] in anchorData.segments
             for i in [start..end]
               now = i-1
-              break unless tmp[now]
-              $popup.addLast(tmp[now].cloneNode(true))
+              break unless res = tmp[now]
+              continue if res.hasClass("ng") and !res.hasClass("disp_ng")
+              $popup.addLast(res.cloneNode(true))
 
-      if $popup.child().length is 0
+      popupCount = $popup.child().length
+      if popupCount is 0
         $div = $__("div")
         $div.textContent = "対象のレスが見つかりません"
         $div.addClass("popup_disabled")
+        $popup.addLast($div)
+      else if popupCount < resCount
+        $div = $__("div")
+        $div.addClass("ng_count")
+        $div.setAttr("ng-count", resCount - popupCount)
         $popup.addLast($div)
 
       return $popup
@@ -568,24 +581,41 @@ app.boot("/view/thread.html", ->
       )
         nowPopuping = "トリップ"
 
+      resCount = 0
       if nowPopuping isnt ""
         $div = $__("div")
         $div.textContent = "現在ポップアップしている#{nowPopuping}です"
         $div.addClass("popup_disabled")
         $popup.addLast($div)
       else if threadContent.idIndex.has(id)
+        resCount = threadContent.idIndex.get(id).size
         for resNum from threadContent.idIndex.get(id)
-          $popup.addLast($content.child()[resNum - 1].cloneNode(true))
+          targetRes = $content.child()[resNum - 1]
+          continue if targetRes.hasClass("ng") and !targetRes.hasClass("disp_ng")
+          $popup.addLast(targetRes.cloneNode(true))
       else if threadContent.slipIndex.has(slip)
+        resCount = threadContent.slipIndex.get(slip).size
         for resNum from threadContent.slipIndex.get(slip)
-          $popup.addLast($content.child()[resNum - 1].cloneNode(true))
+          targetRes = $content.child()[resNum - 1]
+          continue if targetRes.hasClass("ng") and !targetRes.hasClass("disp_ng")
+          $popup.addLast(targetRes.cloneNode(true))
       else if threadContent.tripIndex.has(trip)
+        resCount = threadContent.tripIndex.get(trip).size
         for resNum from threadContent.tripIndex.get(trip)
-          $popup.addLast($content.child()[resNum - 1].cloneNode(true))
-      else
+          targetRes = $content.child()[resNum - 1]
+          continue if targetRes.hasClass("ng") and !targetRes.hasClass("disp_ng")
+          $popup.addLast(targetRes.cloneNode(true))
+
+      popupCount = $popup.child().length
+      if popupCount is 0
         $div = $__("div")
         $div.textContent = "対象のレスが見つかりません"
         $div.addClass("popup_disabled")
+        $popup.addLast($div)
+      else if popupCount < resCount
+        $div = $__("div")
+        $div.addClass("ng_count")
+        $div.setAttr("ng-count", resCount - popupCount)
         $popup.addLast($div)
       return $popup
     )
@@ -600,12 +630,26 @@ app.boot("/view/thread.html", ->
       tmp = $content.child()
 
       frag = $_F()
-      res_num = +target.closest("article").C("num")[0].textContent
-      for target_res_num from threadContent.repIndex.get(res_num)
-        frag.addLast(tmp[target_res_num - 1].cloneNode(true))
+      resNum = +target.closest("article").C("num")[0].textContent
+      for targetResNum from threadContent.repIndex.get(resNum)
+        targetRes = tmp[targetResNum - 1]
+        continue if targetRes.hasClass("ng") and (!targetRes.hasClass("disp_ng") or app.config.isOn("reject_ng_rep"))
+        frag.addLast(targetRes.cloneNode(true))
 
       $popup = $__("div")
       $popup.addLast(frag)
+      resCount = threadContent.repIndex.get(resNum).size
+      popupCount = $popup.child().length
+      if popupCount is 0
+        $div = $__("div")
+        $div.textContent = "対象のレスが見つかりません"
+        $div.addClass("popup_disabled")
+        $popup.addLast($div)
+      else if popupCount < resCount and !app.config.isOn("reject_ng_rep")
+        $div = $__("div")
+        $div.addClass("ng_count")
+        $div.setAttr("ng-count", resCount - popupCount)
+        $popup.addLast($div)
       return $popup
     )
     return
@@ -767,10 +811,17 @@ app.boot("/view/thread.html", ->
     )
     return
 
+  # 検索モードの切り替え
+  $view.on("change_search_regexp", ->
+    $content.toggleClass("search_regexp")
+    return
+  )
+
   #検索ボックス
   do ->
     searchStoredScrollTop = null
     $searchbox = $view.C("searchbox")[0]
+    searchRegExpEnter = false
 
     $searchbox.on("compositionend", ->
       @dispatchEvent(new Event("input"))
@@ -778,6 +829,20 @@ app.boot("/view/thread.html", ->
     )
     $searchbox.on("input", ({isComposing}) ->
       return if isComposing
+      searchRegExpMode = $content.hasClass("search_regexp")
+      return if searchRegExpMode and !searchRegExpEnter
+      searchRegExpEnter = false
+      searchRegExp = null
+      if searchRegExpMode and @value isnt ""
+        try
+          searchRegExp = new RegExp(@value, "i")
+        catch e
+          app.message.send("notify",
+            message: "正規表現が正しくありません。"
+            background_color: "red"
+          )
+          return
+
       $content.dispatchEvent(new Event("searchstart"))
       if @value isnt ""
         if typeof searchStoredScrollTop isnt "number"
@@ -790,7 +855,11 @@ app.boot("/view/thread.html", ->
 
         $content.addClass("searching")
         for dom in $content.child()
-          if app.util.normalize(dom.textContent).includes(query)
+          if (
+            ((searchRegExp and searchRegExp.test(dom.textContent)) or
+             app.util.normalize(dom.textContent).includes(query)) and
+            (!dom.hasClass("ng") or dom.hasClass("disp_ng"))
+          )
             dom.addClass("search_hit")
             hitCount++
           else
@@ -814,7 +883,13 @@ app.boot("/view/thread.html", ->
       return
     )
 
-    $searchbox.on("keyup", ({which}) ->
+    $searchbox.on("keydown", ({which}) ->
+      if $content.hasClass("search_regexp")
+        if which is 13 or which is 27 # Enter|Esc
+          @value = "" if which is 27
+          searchRegExpEnter = true
+          @dispatchEvent(new Event("input"))
+        return
       if which is 27 #Esc
         if @value isnt ""
           @value = ""

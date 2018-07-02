@@ -22,3 +22,9 @@ block body
     li: a.open_in_rcrx(data-href="inputurl" title="URL指定で開く") URL指定で開く
     li: a.open_in_rcrx(data-href="config" title="設定") 設定
   .loading_message Loading
+
+block temp
+  template#template_contextmenu
+    menu.contextmenu
+      li.add_bookmark ブックマークに追加
+      li.del_bookmark ブックマークを解除

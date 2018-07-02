@@ -69,6 +69,40 @@ app.boot("/view/sidemenu.html", ["bbsmenu"], (BBSMenu) ->
       return
     )
 
+    $view.on("contextmenu", (e) =>
+      target = e.target.closest("a")
+      return unless target
+
+      url = target.getAttr("href")
+      title = target.getAttr("title")
+      return unless url?
+      e.preventDefault()
+
+      await app.defer()
+      $menu = $$.I("template_contextmenu").content.$(".contextmenu").cloneNode(true)
+      $view.addLast($menu)
+
+      if app.bookmark.get(url)
+        $menu.C("add_bookmark")[0]?.remove()
+      else
+        $menu.C("del_bookmark")[0]?.remove()
+
+      $menu.on("click", fn = ({target}) ->
+        return if target.tagName isnt "LI"
+        $menu.off("click", fn)
+
+        if target.hasClass("add_bookmark")
+          app.bookmark.add(url, title)
+        else if target.hasClass("del_bookmark")
+          app.bookmark.remove(url)
+        @remove()
+        return
+      )
+      UI.ContextMenu($menu, e.clientX, e.clientY)
+      return
+    )
+    return
+
   #板覧関連
   do ->
     load = ->

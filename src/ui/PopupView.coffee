@@ -168,6 +168,8 @@ class UI.PopupView
       sourceNode.on("mouseenter", @_onMouseEnter)
       sourceNode.on("mouseleave", @_onMouseLeave)
       popupNode.addClass("popup")
+      if app.config.get("aa_font") is "aa"
+        popupNode.addClass("config_use_aa_font")
       popupNode.setAttr("stack-index", @_popupStack.length)
       popupNode.on("mouseenter", @_onMouseEnter)
       popupNode.on("mouseleave", @_onMouseLeave)

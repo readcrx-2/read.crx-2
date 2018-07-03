@@ -232,16 +232,15 @@ class UI.ThreadList
     if @_flg.bookmark or @_flg.bookmarkAddRm or @_flg.writtenRes or @_flg.viewedDate
       do =>
         $table.on("contextmenu", (e) =>
-          target = e.target.closest("tbody > tr")
-          return unless target
-          if e.type is "contextmenu"
-            e.preventDefault()
+          $tr = e.target.closest("tbody > tr")
+          return unless $tr
+          e.preventDefault()
 
           await app.defer()
           $menu = $$.I("template_thread_list_contextmenu").content.$(".thread_list_contextmenu").cloneNode(true)
           $table.closest(".view").addLast($menu)
 
-          url = target.dataset.href
+          url = $tr.dataset.href
 
           if app.bookmark.get(url)
             $menu.C("add_bookmark")[0]?.remove()
@@ -250,16 +249,16 @@ class UI.ThreadList
 
           if (
             not @_flg.unread or
-            not /^\d+$/.test(target.$(selector.unread).textContent) or
+            not /^\d+$/.test($tr.$(selector.unread).textContent) or
             app.bookmark.get(url)?
           )
             $menu.C("del_read_state")[0]?.remove()
 
-          $menu.on("click", fn = (e) ->
-            return if e.target.tagName isnt "LI"
+          $menu.on("click", fn = ({target}) ->
+            return if target.tagName isnt "LI"
             $menu.off("click", fn)
 
-            $tr = target
+            return unless $tr?
 
             threadURL = $tr.dataset.href
             threadTitle = $tr.$(selector.title)?.textContent
@@ -268,20 +267,20 @@ class UI.ThreadList
             dateValue = $tr.$(selector.viewedDate)?.getAttr("date-value")
 
             switch true
-              when e.target.hasClass("add_bookmark")
+              when target.hasClass("add_bookmark")
                 app.bookmark.add(threadURL, threadTitle, threadRes)
-              when e.target.hasClass("del_bookmark")
+              when target.hasClass("del_bookmark")
                 app.bookmark.remove(threadURL)
-              when e.target.hasClass("del_history")
+              when target.hasClass("del_history")
                 app.History.remove(threadURL, +dateValue)
                 $tr.remove()
-              when e.target.hasClass("del_writehistory")
+              when target.hasClass("del_writehistory")
                 app.WriteHistory.remove(threadURL, threadWrittenRes)
                 $tr.remove()
-              when e.target.hasClass("ignore_res_number")
+              when target.hasClass("ignore_res_number")
                 $tr.setAttr("ignore-res-number", "on")
                 $tr.dispatchEvent(new Event("mousedown", {bubbles: true}))
-              when e.target.hasClass("del_read_state")
+              when target.hasClass("del_read_state")
                 app.ReadState.remove(threadURL)
 
             @remove()
@@ -336,103 +335,115 @@ class UI.ThreadList
     $tbody = @table.$("tbody")
     now = Date.now()
 
-    html = ""
+    $fragment = $_F()
 
     for item in arg
-      trClassName = "open_in_rcrx"
-      trClassName += " expired" if item.expired
-      trClassName += " ng_thread" if item.ng
-      trClassName += " net" if item.isNet
-      trClassName += " https" if item.isHttps
-      if item.expired and not app.config.isOn("bookmark_show_dat")
-        trClassName += " hidden"
+      $tr = $__("tr")
 
-      tmpHeadHTML = " data-href=\"#{app.escapeHtml(item.url)}\""
-      tmpHeadHTML += " data-title=\"#{app.escapeHtml(item.title)}\""
+      $tr.addClass("open_in_rcrx")
+      $tr.addClass("expired") if item.expired
+      $tr.addClass("ng_thread") if item.ng
+      $tr.addClass("net") if item.isNet
+      $tr.addClass("https") if item.isHttps
+
+      if item.expired and not app.config.isOn("bookmark_show_dat")
+        $tr.addClass("hidden")
+
+      $tr.dataset.href = app.escapeHtml(item.url)
+      $tr.dataset.title = app.escapeHtml(item.title)
 
       if item.threadNumber?
-        tmpHeadHTML += " data-thread-number=\"#{app.escapeHtml(""+item.threadNumber)}\""
+        $tr.dataset.threadNumber = app.escapeHtml(""+item.threadNumber)
       if @_flg.writtenRes and item.res > 0
-        tmpHeadHTML += " data-written-res-num=\"#{item.res}\""
-
-      tmpHTML = ""
+        $tr.dataset.writtenResNum = item.res
 
       #ブックマーク状況
       if @_flg.bookmark
-        tmpHTML += "<td>"
+        $td = $__("td")
         if app.bookmark.get(item.url)
-          tmpHTML += "★"
-        tmpHTML += "</td>"
+          $td.textContent = "★"
+        $tr.addLast($td)
 
       #タイトル
       if @_flg.title
-        tmpHTML += "<td>#{app.escapeHtml(item.title)}</td>"
+        $td = $__("td")
+        $td.textContent = item.title
+        $tr.addLast($td)
 
       #板名
       if @_flg.boardTitle
-        tmpHTML += "<td>#{app.escapeHtml(item.boardTitle)}</td>"
+        $td = $__("td")
+        $td.textContent = item.boardTitle
+        $tr.addLast($td)
 
       #レス数
       if @_flg.res
-        tmpHTML += "<td>"
+        $td = $__("td")
         if item.resCount > 0
-          tmpHTML += app.escapeHtml(""+item.resCount)
-        tmpHTML += "</td>"
+          $td.textContent = item.resCount
+        $tr.addLast($td)
 
       #レス番号
       if @_flg.writtenRes
-        tmpHTML += "<td>"
+        $td = $__("td")
         if item.res > 0
-          tmpHTML += app.escapeHtml(""+item.res)
-        tmpHTML += "</td>"
+          $td.textContent = item.res
+        $tr.addLast($td)
 
       #未読数
       if @_flg.unread
-        tmpHTML += "<td>"
+        $td = $__("td")
         if item.readState and item.resCount > item.readState.read
-          trClassName += " updated"
-          tmpHTML += app.escapeHtml(""+(item.resCount - item.readState.read))
-        tmpHTML += "</td>"
+          $td.textContent = (item.resCount - item.readState.read)
+          $tr.addClass("updated")
+        $tr.addLast($td)
 
       #勢い
       if @_flg.heat
-        tmpHTML += "<td>"
-        tmpHTML += app.escapeHtml(ThreadList._calcHeat(now, item.createdAt, item.resCount))
-        tmpHTML += "</td>"
+        $td = $__("td")
+        $td.textContent = ThreadList._calcHeat(now, item.createdAt, item.resCount)
+        $tr.addLast($td)
 
       #名前
       if @_flg.name
-        tmpHTML += "<td>#{app.escapeHtml(item.name)}</td>"
+        $td = $__("td")
+        $td.textContent = item.name
+        $tr.addLast($td)
 
       #メール
       if @_flg.mail
-        tmpHTML += "<td>#{app.escapeHtml(item.mail)}</td>"
+        $td = $__("td")
+        $td.textContent = item.mail
+        $tr.addLast($td)
 
       #本文
       if @_flg.message
-        tmpHTML += "<td>#{app.escapeHtml(item.message)}</td>"
+        $td = $__("td")
+        $td.textContent = item.message
+        $tr.addLast($td)
 
       #作成日時
       if @_flg.createdDate
-        tmpHTML += "<td>"
-        tmpHTML += app.escapeHtml(ThreadList._dateToString(new Date(item.createdAt)))
-        tmpHTML += "</td>"
+        $td = $__("td")
+        $td.textContent = ThreadList._dateToString(new Date(item.createdAt))
+        $tr.addLast($td)
 
       #閲覧日時
       if @_flg.viewedDate
-        tmpHTML += "<td date-value=\"#{item.date}\">"
-        tmpHTML += app.escapeHtml(ThreadList._dateToString(new Date(item.date)))
-        tmpHTML += "</td>"
+        $td = $__("td")
+        $td.setAttr("date-value", item.date)
+        $td.textContent = ThreadList._dateToString(new Date(item.date))
+        $tr.addLast($td)
 
       #書込日時
       if @_flg.writtenDate
-        tmpHTML += "<td>"
-        tmpHTML += app.escapeHtml(ThreadList._dateToString(new Date(item.date)))
-        tmpHTML += "</td>"
+        $td = $__("td")
+        $td.textContent = ThreadList._dateToString(new Date(item.date))
+        $tr.addLast($td)
 
-      html += "<tr class=\"#{trClassName}\"#{tmpHeadHTML}>#{tmpHTML}</tr>"
+      $fragment.addLast($tr)
 
-    $tbody.insertAdjacentHTML("BeforeEnd", html)
+    $tbody.addLast($fragment)
     return
 
   ###*

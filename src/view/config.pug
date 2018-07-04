@@ -101,6 +101,19 @@ block body
               input.direct(name="format_2chnet" type="radio" value="dat" checked)
               |dat形式(要Proxy)
 
+        section
+          h2 ブックマークのソート順の保持
+          div
+            label
+              input.direct(name="bookmark_sort_save_type" type="radio" value="none" checked)
+              |しない
+            label
+              input.direct(name="bookmark_sort_save_type" type="radio" value="board")
+              |板と連動させる
+            label
+              input.direct(name="bookmark_sort_save_type" type="radio" value="bookmark")
+              |板とは別で保持する
+
       .tabcontent(name="reload")
         section
           h2 更新
@@ -489,6 +502,22 @@ block body
                   td: input.direct(type="text" name="default_mail")
 
         section
+          h2 板一覧
+          div
+            button.bbsmenu_reload(type="button") 更新
+            span#bbsmenu_reload_status
+            br
+            |更新間隔:
+            input.direct.days(type="number" name="bbsmenu_update_interval" min="1" value="7")
+            |日
+            br
+            |URL(
+            a(href="http://kita.jikkyo.org/cbm/" target="_blank") 詳細
+            |):
+            input.direct.bbsmenu(type="text" name="bbsmenu")
+            button.bbsmenu_reset(type="button") リセット
+
+        section
           h2 その他
           div
             button.bookmark_source_change ブックマークのフォルダを変更する
@@ -496,30 +525,6 @@ block body
               |(現在のフォルダ:
               span#bookmark_source_name
               |)
-
-            br
-
-            button.bbsmenu_reload(type="button") 板一覧の更新
-            span#bbsmenu_reload_status
-            |更新間隔:
-            input.direct.days(type="number" name="bbsmenu_update_interval" min="1" value="7")
-            |日
-
-        section
-          h2
-            |ReplaceStr.txt(
-            a(href="https://github.com/readcrx-2/read.crx-2/wiki/ReplaceStr.txt%E3%81%AE%E4%BB%95%E6%A7%98" target="_blank") 詳細
-            |)
-          div
-            |ここに ReplaceStr.txt を記述してください
-            br
-            label
-              textarea.direct(name="replace_str_txt" rows="6" cols="80")
-            br
-            button.replacestr_file_show(type="button") ファイル読み込み(UTF-8)
-            input.hidden.replacestr_file_hide(type="file" accept=".txt")
-            button.replacestr_import_button(type="button") インポート
-            span#replacestr_status
 
         section
           h2: strong 上級者向け機能
@@ -539,12 +544,19 @@ block body
 
         section
           h2
-            |板一覧URL(
-            a(href="http://kita.jikkyo.org/cbm/" target="_blank") 詳細
+            |ReplaceStr.txt(
+            a(href="https://github.com/readcrx-2/read.crx-2/wiki/ReplaceStr.txt%E3%81%AE%E4%BB%95%E6%A7%98" target="_blank") 詳細
             |)
           div
-            input.direct.bbsmenu(type="text" name="bbsmenu")
-            button.bbsmenu_reset(type="button") リセット
+            |ここに ReplaceStr.txt を記述してください
+            br
+            label
+              textarea.direct(name="replace_str_txt" rows="6" cols="80")
+            br
+            button.replacestr_file_show(type="button") ファイル読み込み(UTF-8)
+            input.hidden.replacestr_file_hide(type="file" accept=".txt")
+            button.replacestr_import_button(type="button") インポート
+            span#replacestr_status
 
         section
           h2 UserAgent

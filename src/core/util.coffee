@@ -158,22 +158,19 @@ do ->
     return threads[0...5]
 
   wideSlimNormalizeReg = ///[
-    # 全角英数
-    \uff10-\uff19 #０-９
-    \uff21-\uff3a #Ａ-Ｚ
-    \uff41-\uff5a #ａ-ｚ
-    # 半角カタカナ(\uff70は半カナではない)
-    \uff66-\uff6f #ｦ-ｯ
-    \uff71-\uff9d #ｱ-ﾝ
+    # 全角記号/英数(０-９,Ａ-Ｚ,ａ-ｚ,その他記号)
+    \uff01-\uff5d #＼→\も含む
+    # 半角カタカナ(ｦ-ｯ, ｱ-ﾝ, ｰ)
+    \uff66-\uff9d #\uff70はｰ(半角カタカナ長音符)
   ]+///g
   kataHiraReg = ///[
-    \u30a2-\u30f3 #ア-ン
+    \u30a1-\u30f3 #ァ-ン
   ]///g
   spaceReg = /[\u0020\u3000]/g
   # 検索用に全角/半角や大文字/小文字を揃える
   app.util.normalize = (str) ->
     return str
-      # 全角英数を半角英数に、半角カタカナを全角ひらがなに変換
+      # 全角記号/英数を半角記号/英数に、半角カタカナを全角カタカナに変換
       .replace(
         wideSlimNormalizeReg
         (s) -> s.normalize("NFKC")

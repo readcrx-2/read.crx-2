@@ -157,100 +157,32 @@ do ->
     )
     return threads[0...5]
 
-  wideSlimReg = ///[
-    \uff10-\uff19 #０-９
-    \uff21-\uff3a #Ａ-Ｚ
-    \uff41-\uff5a #ａ-ｚ
-  ]///g
+  wideSlimNormalizeReg = ///[
+    # 全角記号/英数(０-９,Ａ-Ｚ,ａ-ｚ,その他記号)
+    \uff01-\uff5d #＼→\も含む
+    # 半角カタカナ(ｦ-ｯ, ｱ-ﾝ, ｰ)
+    \uff66-\uff9d #\uff70はｰ(半角カタカナ長音符)
+  ]+///g
   kataHiraReg = ///[
-    \u30a2-\u30f3 #ア-ン
+    \u30a1-\u30f3 #ァ-ン
   ]///g
-  slimKataReg = ///[
-    \uff66-\uff6f #ｦ-ｯ
-    #\uff70は半カナではない
-    \uff71-\uff9d #ｱ-ﾝ
-  ]///g
-  slimKataTable = new Map([
-    [0xff66, 0x3092]
-    [0xff67, 0x3041]
-    [0xff68, 0x3043]
-    [0xff69, 0x3045]
-    [0xff6a, 0x3047]
-    [0xff6b, 0x3049]
-    [0xff6c, 0x3083]
-    [0xff6d, 0x3085]
-    [0xff6e, 0x3087]
-    [0xff6f, 0x3063]
-    [0xff71, 0x3042]
-    [0xff72, 0x3044]
-    [0xff73, 0x3046]
-    [0xff74, 0x3048]
-    [0xff75, 0x304a]
-    [0xff76, 0x304b]
-    [0xff77, 0x304d]
-    [0xff78, 0x304f]
-    [0xff79, 0x3051]
-    [0xff7a, 0x3053]
-    [0xff7b, 0x3055]
-    [0xff7c, 0x3057]
-    [0xff7d, 0x3059]
-    [0xff7e, 0x305b]
-    [0xff7f, 0x305d]
-    [0xff80, 0x305f]
-    [0xff81, 0x3061]
-    [0xff82, 0x3064]
-    [0xff83, 0x3066]
-    [0xff84, 0x3068]
-    [0xff85, 0x306a]
-    [0xff86, 0x306b]
-    [0xff87, 0x306c]
-    [0xff88, 0x306d]
-    [0xff89, 0x306e]
-    [0xff8a, 0x306f]
-    [0xff8b, 0x3072]
-    [0xff8c, 0x3075]
-    [0xff8d, 0x3078]
-    [0xff8e, 0x307b]
-    [0xff8f, 0x307e]
-    [0xff90, 0x307f]
-    [0xff91, 0x3080]
-    [0xff92, 0x3081]
-    [0xff93, 0x3082]
-    [0xff94, 0x3084]
-    [0xff95, 0x3086]
-    [0xff96, 0x3088]
-    [0xff97, 0x3089]
-    [0xff98, 0x308a]
-    [0xff99, 0x308b]
-    [0xff9a, 0x308c]
-    [0xff9b, 0x308d]
-    [0xff9c, 0x308f]
-    [0xff9d, 0x3093]
-  ])
-
   spaceReg = /[\u0020\u3000]/g
-  #検索用に全角/半角や大文字/小文字を揃える
+  # 検索用に全角/半角や大文字/小文字を揃える
   app.util.normalize = (str) ->
     return str
-      #全角英数を半角英数に変換
+      # 全角記号/英数を半角記号/英数に、半角カタカナを全角カタカナに変換
       .replace(
-        wideSlimReg
-        ($0) -> String.fromCharCode($0.charCodeAt(0) - 65248)
+        wideSlimNormalizeReg
+        (s) -> s.normalize("NFKC")
       )
-      #カタカナをひらがなに変換
+      # カタカナをひらがなに変換
       .replace(
         kataHiraReg
         ($0) -> String.fromCharCode($0.charCodeAt(0) - 96)
       )
-      #半角カタカナを平仮名に変換
-      .replace(
-        slimKataReg
-        ($0) ->
-          String.fromCharCode(slimKataTable.get($0.charCodeAt(0)))
-      )
-      #全角スペース/半角スペースを削除
+      # 全角スペース/半角スペースを削除
       .replace(spaceReg, "")
-      #大文字を小文字に変換
+      # 大文字を小文字に変換
       .toLowerCase()
 
   # striptags

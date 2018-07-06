@@ -4,18 +4,20 @@ namespace app.Util {
     b:string,
     allowReplace:boolean = true
   ):number {
-    var repCost:number, table:number[][], ac:number, bc:number;
+    var repCost:number, table:Uint16Array[], ac:number, bc:number;
 
     repCost = allowReplace ? 1 : 2;
 
-    table = [[]];
+    table = [];
 
+    table[0] = new Uint16Array(b.length+1);
     for (bc = 0; bc <= b.length; bc++) {
-      table[0].push(bc);
+      table[0][bc] = bc;
     }
 
     for (ac = 1; ac <= a.length; ac++) {
-      table[ac] = [ac];
+      table[ac] = new Uint16Array(b.length+1);
+      table[ac][0] = ac;
     }
 
     for (ac = 1; ac <= a.length; ac++) {

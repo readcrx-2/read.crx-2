@@ -1,16 +1,14 @@
 # 現在のタブが自分自身であるか確認する
 isCurrentTab = ->
-  return new Promise( (resolve, reject) ->
+  return new Promise( (resolve) ->
     id = chrome.runtime.id
     chrome.tabs.query(
       {active: true, lastFocusedWindow: true},
       ([tab]) ->
-        if tab.url.startsWith("chrome-extension://#{id}")
-          resolve(tab)
-        else
-          reject()
+        resolve(tab.url.startsWith("chrome-extension://#{id}"))
         return
     )
+    return
   )
 
 # 実行中のread.crxを探す
@@ -26,20 +24,20 @@ searchRcrx = ->
           resolve(tabs[0])
         return
     )
+    return
   )
 
 # アイコンクリック時の動作
 chrome.browserAction.onClicked.addListener( ->
   # 現在のタブが自分自身なら何もしない
+  return if await isCurrentTab()
+
   try
-    {windowId, id} = await isCurrentTab()
+    {windowId, id} = await searchRcrx()
   catch
-    try
-      {windowId, id} = await searchRcrx()
-    catch
-      # 存在しなければタブを作成する
-      chrome.tabs.create(url: "/view/index.html")
-      return
+    # 存在しなければタブを作成する
+    chrome.tabs.create(url: "/view/index.html")
+    return
   # 実行中のread.crxが存在すればそれを開く
   chrome.windows.update(windowId, {focused: true})
   chrome.tabs.update(id, {highlighted: true})
@@ -62,14 +60,14 @@ chrome.runtime.onMessage.addListener( ({type}) ->
 )
 
 # 対応URLのチェック
-supportedURL = [
-  /^https?:\/\/[\w\.]+\/test\/read\.cgi\/\w+\/\d+\/.*?/
-  /^https?:\/\/\w+\.machi\.to\/bbs\/read\.cgi\/\w+\/\d+\/.*?/
-  /^https?:\/\/jbbs\.(?:livedoor\.jp|shitaraba\.net)\/bbs\/read(?:_archive)?\.cgi\/\w+\/\d+\/\d+\/.*?/
-  /^https?:\/\/jbbs\.(?:livedoor\.jp|shitaraba\.net)\/\w+\/\d+\/storage\/\d+\.html$/
-  /^https?:\/\/[\w\.]+\/\w+\/(?:#.*)?/
-  /^https?:\/\/jbbs\.(?:livedoor\.jp|shitaraba\.net)\/\w+\/\d+\/(?:#.*)?/
-]
+supportedURL = ///https?:\/\/(?:
+  (?:[\w\.]+\/test\/read\.cgi\/\w+\/\d+\/.*?/)|
+  (?:\w+\.machi\.to\/bbs\/read\.cgi\/\w+\/\d+\/.*?/)|
+  (?:jbbs\.(?:livedoor\.jp|shitaraba\.net)\/bbs\/read(?:_archive)?\.cgi\/\w+\/\d+\/\d+\/.*?/)|
+  (?:jbbs\.(?:livedoor\.jp|shitaraba\.net)\/\w+\/\d+\/storage\/\d+\.html$/)|
+  (?:[\w\.]+\/\w+\/(?:#.*)?/)|
+  (?:jbbs\.(?:livedoor\.jp|shitaraba\.net)\/\w+\/\d+\/(?:#.*)?/)
+  )///
 
 # コンテキストメニューの作成
 chrome.contextMenus.create(
@@ -98,7 +96,7 @@ chrome.contextMenus.onClicked.addListener( ({menuItemId, linkUrl: url}, tab) ->
   return unless menuItemId is "open_link_in_rcrx"
 
   # 対応URLであるか確認
-  unless supportedURL.some((a) -> a.test(url))
+  unless supportedURL.test(url)
     new Notification("未対応のURLです")
     return
   try

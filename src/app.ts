@@ -2,7 +2,7 @@
 
 namespace app {
   type logLevel = "log" | "debug" | "info" | "warn" | "error";
-  var logLevels: logLevel[] = ["log", "debug", "info", "warn", "error"];
+  var logLevels = <Set<logLevel>>new Set(["log", "debug", "info", "warn", "error"]);
 
   export function criticalError (message:string):void {
     new Notification(
@@ -18,8 +18,8 @@ namespace app {
   }
 
   export function log (level:logLevel, ...data:any[]) {
-    if (logLevels.includes(level)) {
-      console[<string>level](...data);
+    if (logLevels.has(level)) {
+      console[level](...data);
     }
     else {
       log("error", "app.log: 引数levelが不正な値です", level);
@@ -33,12 +33,7 @@ namespace app {
       return src;
     }
 
-    if (Array.isArray(src)) {
-      copy = [];
-    }
-    else {
-      copy = {};
-    }
+    copy = Array.isArray(src) ? [] : {};
 
     for (key in src) {
       copy[key] = deepCopy(src[key]);

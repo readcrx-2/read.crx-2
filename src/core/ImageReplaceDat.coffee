@@ -15,14 +15,14 @@ class app.ImageReplaceDat
     for d from _dat
       try
         d.baseUrlReg = new RegExp(d.baseUrl, "i")
-      catch e
-        app.message.send "notify", {
+      catch
+        app.message.send("notify",
           message: """
             ImageViewURLReplace.datの一致URLの正規表現(#{d.baseUrl})を読み込むのに失敗しました
             この行は無効化されます
           """
           background_color: "red"
-        }
+        )
         d.baseUrl = _INVALID_URL
     return
 
@@ -43,7 +43,7 @@ class app.ImageReplaceDat
   @return {Object}
   ###
   @get: ->
-    if !_dat?
+    unless _dat?
       _dat = new Set(_config.get())
       _setupReg()
     return _dat
@@ -89,7 +89,7 @@ class app.ImageReplaceDat
   ###
   @set: (string) ->
     _dat = @parse(string)
-    _config.set(Array.from(_dat))
+    _config.set([_dat...])
     _setupReg()
     return
 

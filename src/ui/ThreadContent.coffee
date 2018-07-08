@@ -169,13 +169,14 @@ class UI.ThreadContent
       )
       @findHarmfulFlag = false
 
-    @container.on "scrollstart", =>
+    @container.on("scrollstart", =>
       @_isScrolling = true
       return
-
-    @container.on "scrollfinish", =>
+    )
+    @container.on("scrollfinish", =>
       @_isScrolling = false
       return
+    )
 
     return
 
@@ -1034,20 +1035,27 @@ class UI.ThreadContent
       return ngObj
 
     if bbsType is "2ch"
+      judgementIdType = app.config.get("how_to_judgment_id")
       # idなしをNG
       if (
-        app.config.isOn("nothing_id_ng") and !objRes.id? and
-        ((app.config.get("how_to_judgment_id") is "first_res" and @_existIdAtFirstRes) or
-         (app.config.get("how_to_judgment_id") is "exists_once" and @idIndex.size isnt 0)) and
+        app.config.isOn("nothing_id_ng") and
+        !objRes.id? and
+        (
+          (judgementIdType is "first_res" and @_existIdAtFirstRes) or
+          (judgementIdType is "exists_once" and @idIndex.size isnt 0)
+        ) and
         !app.NG.isIgnoreResNumForAuto(objRes.num, app.NG.TYPE.AUTO_NOTHING_ID) and
         !app.NG.isIgnoreNgType(objRes, @_threadTitle, @url, app.NG.TYPE.AUTO_NOTHING_ID)
       )
         return {type: app.NG.TYPE.AUTO_NOTHING_ID}
       # slipなしをNG
       if (
-        app.config.isOn("nothing_slip_ng") and !objRes.slip? and
-        ((app.config.get("how_to_judgment_id") is "first_res" and @_existSlipAtFirstRes) or
-         (app.config.get("how_to_judgment_id") is "exists_once" and @slipIndex.size isnt 0)) and
+        app.config.isOn("nothing_slip_ng") and
+        !objRes.slip? and
+        (
+          (judgementIdType is "first_res" and @_existSlipAtFirstRes) or
+          (judgementIdType is "exists_once" and @slipIndex.size isnt 0)
+        ) and
         !app.NG.isIgnoreResNumForAuto(objRes.num, app.NG.TYPE.AUTO_NOTHING_SLIP) and
         !app.NG.isIgnoreNgType(objRes, @_threadTitle, @url, app.NG.TYPE.AUTO_NOTHING_SLIP)
       )
@@ -1340,16 +1348,14 @@ class UI.ThreadContent
   @param {Element} $res
   ###
   addWriteHistory: ($res) ->
-    name = $res.C("name")[0].textContent
-    mail = $res.C("mail")[0].textContent
     date = app.util.stringToDate($res.C("other")[0].textContent).valueOf()
     if date?
       app.WriteHistory.add({
         url: @url
         res: parseInt($res.C("num")[0].textContent)
         title: document.title
-        name
-        mail
+        name: $res.C("name")[0].textContent
+        mail: $res.C("mail")[0].textContent
         message: $res.C("message")[0].textContent
         date
       })

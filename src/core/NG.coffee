@@ -44,18 +44,18 @@ class app.NG
   #jsonには正規表現のオブジェクトが含めれないので
   #それを展開
   _setupReg = (obj) ->
-    _convReg = (ngElement) ->
+    _convReg = ({type, word}) ->
       reg = null
       try
-        reg = new RegExp ngElement.word
-      catch e
-        app.message.send "notify", {
+        reg = new RegExp(word)
+      catch
+        app.message.send("notify",
           message: """
-            NG機能の正規表現(#{ngElement.type}: #{ngElement.word})を読み込むのに失敗しました
+            NG機能の正規表現(#{type}: #{word})を読み込むのに失敗しました
             この行は無効化されます
           """
           background_color: "red"
-        }
+        )
       return reg
 
     for n from obj
@@ -91,7 +91,7 @@ class app.NG
   @return {Object}
   ###
   @get: ->
-    if !_ng?
+    unless _ng?
       _ng = new Set(_config.get())
       _setupReg(_ng)
     return _ng
@@ -179,8 +179,7 @@ class app.NG
             ngElement.type = elm.type
             ngElement.word = elm.word
             if elm.subElements? and elm.subElements.length > 0
-              for e in elm.subElements
-                ngElement.subElements.push(e)
+              ngElement.subElements.concat(elm.subElements)
         else
           ngElement.type = NG.TYPE.WORD
           ngElement.word = app.util.normalize(ngWord)
@@ -194,29 +193,25 @@ class app.NG
       ngElement = {}
 
       # 指定したレス番号はNG除外する
-      if _ignoreResRegNumber.test(ngWord)
-        m = ngWord.match(_ignoreResRegNumber)
+      if (m = ngWord.match(_ignoreResRegNumber))?
         ngElement =
           start: m[1]
           finish: m[2]
         ngWord = m[3]
       # 例外NgTypeの指定
-      else if _ignoreNgType.test(ngWord)
-        m = ngWord.match(_ignoreNgType)
+      else if (m = ngWord.match(_ignoreNgType))?
         ngElement =
           exception: true
           subType: m[1].split(",") if m[1]?
         ngWord = m[2]
       # 有効期限の指定
-      else if _expireDate.test(ngWord)
-        m = ngWord.match(_expireDate)
-        d = app.util.stringToDate(m[1] + " 23:59:59")
+      else if (m = ngWord.match(_expireDate))?
+        expire = app.util.stringToDate("#{m[1]} 23:59:59")
         ngElement =
-          expire: d.valueOf() + 1000
+          expire: expire.valueOf() + 1000
         ngWord = m[2]
       # 名前の付与
-      else if _attachName.test(ngWord)
-        m = ngWord.match(_attachName)
+      else if (m = ngWord.match(_attachName))?
         ngElement =
           name: m[1]
         ngWord = m[2]
@@ -230,15 +225,12 @@ class app.NG
       unless ngElement.exception?
         ngElement.exception = false
       if ngElement.subType?
-        i = 0
-        while i < ngElement.subType.length
-          ngElement.subType[i] = ngElement.subType[i].trim()
+        for st, i in ngElement.subType by -1
+          ngElement.subType[i] = st.trim()
           if ngElement.subType[i] is ""
             ngElement.subType.splice(i, 1)
-          else
-            i++
         if ngElement.subType.length is 0
-          delete ngElement.subType
+          ngElement.subType = null
 
       ng.add(ngElement) if ngElement.word isnt ""
     return ng
@@ -249,7 +241,7 @@ class app.NG
   ###
   @set: (string) ->
     _ng = @parse(string)
-    _config.set(Array.from(_ng))
+    _config.set([_ng...])
     _setupReg(_ng)
     return
 
@@ -260,7 +252,7 @@ class app.NG
   @add: (string) ->
     _config.setString(string + "\n" + _config.getString())
     addNg = @parse(string)
-    _config.set(Array.from(_config.get()).concat(Array.from(addNg)))
+    _config.set([_config.get()...].concat([addNg...]))
 
     _setupReg(addNg)
     for ang from addNg
@@ -323,6 +315,7 @@ class app.NG
         return n.type
       return null
 
+    now = Date.now()
     for n from @get()
       continue if n.type is NG.TYPE.INVALID
       if isBoard
@@ -331,14 +324,14 @@ class app.NG
           continue
       else
         # ignoreResNumber用レス番号のチェック
-        if n.start? and ((n.finish? and n.start <= res.num and res.num <= n.finish) or (parseInt(n.start) is res.num))
+        if n.start? and ((n.finish? and n.start <= res.num <= n.finish) or (parseInt(n.start) is res.num))
           continue
       # 有効期限のチェック
-      continue if n.expire? and Date.now() > n.expire
+      continue if n.expire? and now > n.expire
       # ignoreNgType用例外フラグのチェック
       continue if n.exception isnt exceptionFlg
       # ng-typeのチエック
-      continue if n.subType? and subType and n.subType.indexOf(subType) is -1
+      continue if n.subType? and subType and not n.subType.includes(subType)
 
       # サブ条件のチェック
       if n.subElements?
@@ -363,9 +356,9 @@ class app.NG
   ###
   @isIgnoreResNumForAuto: (resNum, subType = "") ->
     for n from @get()
-      continue if n.subType? and (n.subType.indexOf(subType) is -1)
-      if n.start? and ((n.finish? and n.start <= resNum and resNum <= n.finish) or (parseInt(n.start) is resNum))
       continue if n.type isnt NG.TYPE.AUTO
+      continue if n.subType? and not n.subType.includes(subType)
+      if n.start? and ((n.finish? and n.start <= resNum <= n.finish) or (parseInt(n.start) is resNum))
         return true
     return false
 
@@ -378,12 +371,10 @@ class app.NG
   @return {Boolean}
   ###
   @isIgnoreNgType: (res, threadTitle, url, ngType) ->
-    if (
+    return (
       @isNGBoard(threadTitle, url, true, ngType) or
       @checkNGThread(res, threadTitle, url, true, ngType)
     )
-      return true
-    return false
 
   ###*
   @method execExpire
@@ -394,24 +385,21 @@ class app.NG
     updateFlag = false
 
     ngStrSplit = configStr.split("\n")
+    now = Date.now()
     for ngWord in ngStrSplit
       # 有効期限の確認
       if _expireDate.test(ngWord)
         m = ngWord.match(_expireDate)
-        d = app.util.stringToDate(m[1] + " 23:59:59")
-        if d.valueOf() + 1000 < Date.now()
+        expire = app.util.stringToDate(m[1] + " 23:59:59")
+        if expire.valueOf() + 1000 < now
           updateFlag = true
-        else
-          newConfigStr += "\n" if newConfigStr isnt ""
-          newConfigStr += ngWord
-      else
-        newConfigStr += "\n" if newConfigStr isnt ""
-        newConfigStr += ngWord
+          continue
+      newConfigStr += "\n" if newConfigStr isnt ""
+      newConfigStr += ngWord
     # 期限切れデータが存在した場合はNG情報を更新する
     if updateFlag
       _config.setString(newConfigStr)
       _ng = @parse(newConfigStr)
-      _config.set(Array.from(_ng))
+      _config.set([_ng...])
       _setupReg(_ng)
-
     return

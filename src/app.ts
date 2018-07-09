@@ -220,6 +220,7 @@ namespace app {
       ["expand_short_url", "none"],
       ["expand_short_url_timeout", "3000"],
       ["aa_font", "aa"],
+      ["aa_min_ratio", "40"],
       ["popup_trigger", "click"],
       ["popup_delay_time", "0"],
       ["ngwords", "Title: 5ちゃんねるへようこそ\nTitle:【新着情報】5chブラウザがやってきた！"],

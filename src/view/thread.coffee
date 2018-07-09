@@ -55,6 +55,7 @@ app.boot("/view/thread.html", ->
 
   if app.config.get("aa_font") is "aa"
     $content.addClass("config_use_aa_font")
+    new UI.AANoOverflow($view, {minRatio: app.config.get("aa_min_ratio")})
 
   write = (param = {}) ->
     param.url = viewUrl

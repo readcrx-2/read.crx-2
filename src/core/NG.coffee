@@ -4,35 +4,37 @@
 @static
 ###
 class app.NG
-  @NG_TYPE_INVALID = "invalid"
-  @NG_TYPE_REG_EXP = "RegExp"
-  @NG_TYPE_REG_EXP_TITLE = "RegExpTitle"
-  @NG_TYPE_REG_EXP_NAME = "RegExpName"
-  @NG_TYPE_REG_EXP_MAIL = "RegExpMail"
-  @NG_TYPE_REG_EXP_ID = "RegExpId"
-  @NG_TYPE_REG_EXP_SLIP = "RegExpSlip"
-  @NG_TYPE_REG_EXP_BODY = "RegExpBody"
-  @NG_TYPE_REG_EXP_URL = "RegExpUrl"
-  @NG_TYPE_TITLE = "Title"
-  @NG_TYPE_NAME = "Name"
-  @NG_TYPE_MAIL = "Mail"
-  @NG_TYPE_ID = "ID"
-  @NG_TYPE_SLIP = "Slip"
-  @NG_TYPE_BODY = "Body"
-  @NG_TYPE_WORD = "Word"
-  @NG_TYPE_URL = "Url"
-  @NG_TYPE_AUTO = "Auto"
-  @NG_TYPE_AUTO_CHAIN = "Chain"
-  @NG_TYPE_AUTO_CHAIN_ID = "ChainID"
-  @NG_TYPE_AUTO_CHAIN_SLIP = "ChainSLIP"
-  @NG_TYPE_AUTO_NOTHING_ID = "NothingID"
-  @NG_TYPE_AUTO_NOTHING_SLIP = "NothingSLIP"
-  @NG_TYPE_AUTO_REPEAT_MESSAGE = "RepeatMessage"
-  @NG_TYPE_AUTO_FORWARD_LINK = "ForwardLink"
+  @TYPE =
+    INVALID: "invalid"
+    REG_EXP: "RegExp"
+    REG_EXP_TITLE: "RegExpTitle"
+    REG_EXP_NAME: "RegExpName"
+    REG_EXP_MAIL: "RegExpMail"
+    REG_EXP_ID: "RegExpId"
+    REG_EXP_SLIP: "RegExpSlip"
+    REG_EXP_BODY: "RegExpBody"
+    REG_EXP_URL: "RegExpUrl"
+    TITLE: "Title"
+    NAME: "Name"
+    MAIL: "Mail"
+    ID: "ID"
+    SLIP: "Slip"
+    BODY: "Body"
+    WORD: "Word"
+    URL: "Url"
+    AUTO: "Auto"
+    AUTO_CHAIN: "Chain"
+    AUTO_CHAIN_ID: "ChainID"
+    AUTO_CHAIN_SLIP: "ChainSLIP"
+    AUTO_NOTHING_ID: "NothingID"
+    AUTO_NOTHING_SLIP: "NothingSLIP"
+    AUTO_REPEAT_MESSAGE: "RepeatMessage"
+    AUTO_FORWARD_LINK: "ForwardLink"
+
+  _CONFIG_NAME = "ngobj"
+  _CONFIG_STRING_NAME = "ngwords"
 
   _ng = null
-  _configName = "ngobj"
-  _configStringName = "ngwords"
   _ignoreResRegNumber = /^ignoreResNumber:(\d+)(?:-?(\d+))?,(.*)$/
   _ignoreNgType = /^ignoreNgType:(?:\$\((.*?)\):)?(.*)$/
   _expireDate = /^expireDate:(\d{4}\/\d{1,2}\/\d{1,2}),(.*)$/
@@ -60,28 +62,28 @@ class app.NG
       convFlag = true
       if n.subElements?
         for subElement in n.subElements
-          continue unless subElement.type.startsWith(app.NG.NG_TYPE_REG_EXP)
+          continue unless subElement.type.startsWith(NG.TYPE.REG_EXP)
           subElement.reg = _convReg(subElement)
           unless subElement.reg
-            subElement.type = app.NG.NG_TYPE_INVALID
+            subElement.type = NG.TYPE.INVALID
             convFlag = false
             break
-      if convFlag and n.type.startsWith(app.NG.NG_TYPE_REG_EXP)
+      if convFlag and n.type.startsWith(NG.TYPE.REG_EXP)
         n.reg = _convReg(n)
         convFlag = false unless n.reg
-      n.type = app.NG.NG_TYPE_INVALID unless convFlag
+      n.type = NG.TYPE.INVALID unless convFlag
     return
 
   _config =
     get: ->
-      return JSON.parse(app.config.get(_configName))
+      return JSON.parse(app.config.get(_CONFIG_NAME))
     set: (str) ->
-      app.config.set(_configName, JSON.stringify(str))
+      app.config.set(_CONFIG_NAME, JSON.stringify(str))
       return
     getString: ->
-      return app.config.get(_configStringName)
+      return app.config.get(_CONFIG_STRING_NAME)
     setString: (str) ->
-      app.config.set(_configStringName, str)
+      app.config.set(_CONFIG_STRING_NAME, str)
       return
 
   ###*
@@ -112,52 +114,52 @@ class app.NG
       # キーワードごとのNG処理
       switch true
         when ngWord.startsWith("RegExp:")
-          ngElement.type = app.NG.NG_TYPE_REG_EXP
+          ngElement.type = NG.TYPE.REG_EXP
           ngElement.word = ngWord.substr(7)
         when ngWord.startsWith("RegExpTitle:")
-          ngElement.type = app.NG.NG_TYPE_REG_EXP_TITLE
+          ngElement.type = NG.TYPE.REG_EXP_TITLE
           ngElement.word = ngWord.substr(12)
         when ngWord.startsWith("RegExpName:")
-          ngElement.type = app.NG.NG_TYPE_REG_EXP_NAME
+          ngElement.type = NG.TYPE.REG_EXP_NAME
           ngElement.word = ngWord.substr(11)
         when ngWord.startsWith("RegExpMail:")
-          ngElement.type = app.NG.NG_TYPE_REG_EXP_MAIL
+          ngElement.type = NG.TYPE.REG_EXP_MAIL
           ngElement.word = ngWord.substr(11)
         when ngWord.startsWith("RegExpID:")
-          ngElement.type = app.NG.NG_TYPE_REG_EXP_ID
+          ngElement.type = NG.TYPE.REG_EXP_ID
           ngElement.word = ngWord.substr(9)
         when ngWord.startsWith("RegExpSlip:")
-          ngElement.type = app.NG.NG_TYPE_REG_EXP_SLIP
+          ngElement.type = NG.TYPE.REG_EXP_SLIP
           ngElement.word = ngWord.substr(11)
         when ngWord.startsWith("RegExpBody:")
-          ngElement.type = app.NG.NG_TYPE_REG_EXP_BODY
+          ngElement.type = NG.TYPE.REG_EXP_BODY
           ngElement.word = ngWord.substr(11)
         when ngWord.startsWith("RegExpUrl:")
-          ngElement.type = app.NG.NG_TYPE_REG_EXP_URL
+          ngElement.type = NG.TYPE.REG_EXP_URL
           ngElement.word = ngWord.substr(10)
         when ngWord.startsWith("Title:")
-          ngElement.type = app.NG.NG_TYPE_TITLE
+          ngElement.type = NG.TYPE.TITLE
           ngElement.word = app.util.normalize(ngWord.substr(6))
         when ngWord.startsWith("Name:")
-          ngElement.type = app.NG.NG_TYPE_NAME
+          ngElement.type = NG.TYPE.NAME
           ngElement.word = app.util.normalize(ngWord.substr(5))
         when ngWord.startsWith("Mail:")
-          ngElement.type = app.NG.NG_TYPE_MAIL
+          ngElement.type = NG.TYPE.MAIL
           ngElement.word = app.util.normalize(ngWord.substr(5))
         when ngWord.startsWith("ID:")
-          ngElement.type = app.NG.NG_TYPE_ID
+          ngElement.type = NG.TYPE.ID
           ngElement.word = ngWord
         when ngWord.startsWith("Slip:")
-          ngElement.type = app.NG.NG_TYPE_SLIP
+          ngElement.type = NG.TYPE.SLIP
           ngElement.word = ngWord.substr(5)
         when ngWord.startsWith("Body:")
-          ngElement.type = app.NG.NG_TYPE_BODY
+          ngElement.type = NG.TYPE.BODY
           ngElement.word = app.util.normalize(ngWord.substr(5))
         when ngWord.startsWith("Url:")
-          ngElement.type = app.NG.NG_TYPE_URL
+          ngElement.type = NG.TYPE.URL
           ngElement.word = ngWord.substr(4)
         when ngWord.startsWith("Auto:")
-          ngElement.type = app.NG.NG_TYPE_AUTO
+          ngElement.type = NG.TYPE.AUTO
           ngElement.word = ngWord.substr(5)
           if ngElement.word is ""
             ngElement.word = "*"
@@ -180,7 +182,7 @@ class app.NG
               for e in elm.subElements
                 ngElement.subElements.push(e)
         else
-          ngElement.type = app.NG.NG_TYPE_WORD
+          ngElement.type = NG.TYPE.WORD
           ngElement.word = app.util.normalize(ngWord)
       return ngElement
 
@@ -301,31 +303,31 @@ class app.NG
 
     _checkWord = (n) ->
       if (
-        (n.type is app.NG.NG_TYPE_REG_EXP and n.reg.test(tmpTxt1)) or
-        (n.type is app.NG.NG_TYPE_REG_EXP_NAME and n.reg.test(decodedName)) or
-        (n.type is app.NG.NG_TYPE_REG_EXP_MAIL and n.reg.test(decodedMail)) or
-        (n.type is app.NG.NG_TYPE_REG_EXP_ID and res.id? and n.reg.test(res.id)) or
-        (n.type is app.NG.NG_TYPE_REG_EXP_SLIP and res.slip? and n.reg.test(res.slip)) or
-        (n.type is app.NG.NG_TYPE_REG_EXP_BODY and n.reg.test(decodedMes)) or
-        (n.type is app.NG.NG_TYPE_REG_EXP_TITLE and n.reg.test(threadTitle)) or
-        (n.type is app.NG.NG_TYPE_REG_EXP_URL and n.reg.test(url)) or
-        (n.type is app.NG.NG_TYPE_TITLE and tmpTitle.includes(n.word)) or
-        (n.type is app.NG.NG_TYPE_NAME and app.util.normalize(decodedName).includes(n.word)) or
-        (n.type is app.NG.NG_TYPE_MAIL and app.util.normalize(decodedMail).includes(n.word)) or
-        (n.type is app.NG.NG_TYPE_ID and res.id?.includes(n.word)) or
-        (n.type is app.NG.NG_TYPE_SLIP and res.slip?.includes(n.word)) or
-        (n.type is app.NG.NG_TYPE_BODY and app.util.normalize(decodedMes).includes(n.word)) or
-        (n.type is app.NG.NG_TYPE_WORD and tmpTxt2.includes(n.word)) or
-        (n.type is app.NG.NG_TYPE_URL and url.includes(n.word))
+        (n.type is NG.TYPE.REG_EXP and n.reg.test(tmpTxt1)) or
+        (n.type is NG.TYPE.REG_EXP_NAME and n.reg.test(decodedName)) or
+        (n.type is NG.TYPE.REG_EXP_MAIL and n.reg.test(decodedMail)) or
+        (n.type is NG.TYPE.REG_EXP_ID and res.id? and n.reg.test(res.id)) or
+        (n.type is NG.TYPE.REG_EXP_SLIP and res.slip? and n.reg.test(res.slip)) or
+        (n.type is NG.TYPE.REG_EXP_BODY and n.reg.test(decodedMes)) or
+        (n.type is NG.TYPE.REG_EXP_TITLE and n.reg.test(threadTitle)) or
+        (n.type is NG.TYPE.REG_EXP_URL and n.reg.test(url)) or
+        (n.type is NG.TYPE.TITLE and tmpTitle.includes(n.word)) or
+        (n.type is NG.TYPE.NAME and app.util.normalize(decodedName).includes(n.word)) or
+        (n.type is NG.TYPE.MAIL and app.util.normalize(decodedMail).includes(n.word)) or
+        (n.type is NG.TYPE.ID and res.id?.includes(n.word)) or
+        (n.type is NG.TYPE.SLIP and res.slip?.includes(n.word)) or
+        (n.type is NG.TYPE.BODY and app.util.normalize(decodedMes).includes(n.word)) or
+        (n.type is NG.TYPE.WORD and tmpTxt2.includes(n.word)) or
+        (n.type is NG.TYPE.URL and url.includes(n.word))
       )
         return n.type
       return null
 
     for n from @get()
-      continue if n.type is app.NG.NG_TYPE_INVALID
+      continue if n.type is NG.TYPE.INVALID
       if isBoard
         # isNGBoard用の項目チェック
-        unless n.type in [app.NG.NG_TYPE_REG_EXP, app.NG.NG_TYPE_REG_EXP_TITLE, app.NG.NG_TYPE_TITLE, app.NG.NG_TYPE_WORD, app.NG.NG_TYPE_REG_EXP_URL, app.NG.NG_TYPE_URL]
+        unless n.type in [NG.TYPE.REG_EXP, NG.TYPE.REG_EXP_TITLE, NG.TYPE.TITLE, NG.TYPE.WORD, NG.TYPE.REG_EXP_URL, NG.TYPE.URL]
           continue
       else
         # ignoreResNumber用レス番号のチェック
@@ -361,9 +363,9 @@ class app.NG
   ###
   @isIgnoreResNumForAuto: (resNum, subType = "") ->
     for n from @get()
-      continue if n.type isnt app.NG.NG_TYPE_AUTO
       continue if n.subType? and (n.subType.indexOf(subType) is -1)
       if n.start? and ((n.finish? and n.start <= resNum and resNum <= n.finish) or (parseInt(n.start) is resNum))
+      continue if n.type isnt NG.TYPE.AUTO
         return true
     return false
 

@@ -5,15 +5,21 @@
 ###
 class app.ReplaceStrTxt
   _replaceTable = null
-  _configName = "replace_str_txt_obj"
-  _configStringName = "replace_str_txt"
-  _urlPattern =
-    contain: 0
-    dontContain: 1
-    match: 2
-    dontMatch: 3
-    regex: 4
-    dontRegex: 5
+  _CONFIG_NAME = "replace_str_txt_obj"
+  _CONFIG_STRING_NAME = "replace_str_txt"
+  _URL_PATTERN =
+    CONTAIN: 0
+    DONTCONTAIN: 1
+    MATCH: 2
+    DONTMATCH: 3
+    REGEX: 4
+    DONTREGEX: 5
+  _PLACE_TABLE = new Map([
+    ["name", "name"]
+    ["mail", "mail"]
+    ["date", "other"]
+    ["msg", "message"]
+  ])
   _INVALID_BEFORE = "#^##invalid##^#"
   _INVALID_URL = "invalid://invalid"
 
@@ -39,7 +45,7 @@ class app.ReplaceStrTxt
         d.before = _INVALID_BEFORE
 
       try
-        if d.urlPattern is _urlPattern.regex or d.urlPattern is _urlPattern.dontRegex
+        if d.urlPattern in [_URL_PATTERN.REGEX, _URL_PATTERN.DONTREGEX]
           d.urlReg = new RegExp(d.url)
       catch e
         app.message.send "notify", {
@@ -54,14 +60,14 @@ class app.ReplaceStrTxt
 
   _config =
     get: ->
-      return JSON.parse(app.config.get(_configName))
+      return JSON.parse(app.config.get(_CONFIG_NAME))
     set: (str) ->
-      app.config.set(_configName, JSON.stringify(str))
+      app.config.set(_CONFIG_NAME, JSON.stringify(str))
       return
     getString: ->
-      return app.config.get(_configStringName)
+      return app.config.get(_CONFIG_STRING_NAME)
     setString: (str) ->
-      app.config.set(_configStringName, str)
+      app.config.set(_CONFIG_STRING_NAME, str)
       return
 
   ###*
@@ -125,13 +131,13 @@ class app.ReplaceStrTxt
       continue if d.before is _INVALID_BEFORE
       continue if d.url is _INVALID_URL
       if d.url?
-        if d.urlPattern is _urlPattern.contain or d.urlPattern is _urlPattern.dontContain
+        if d.urlPattern is _URL_PATTERN.CONTAIN or d.urlPattern is _URL_PATTERN.DONTCONTAIN
           flag = (url.includes(d.url) or title.includes(d.url))
-        else if d.urlPattern is _urlPattern.match or d.urlPattern is _urlPattern.dontMatch
+        else if d.urlPattern is _URL_PATTERN.MATCH or d.urlPattern is _URL_PATTERN.DONTMATCH
           flag = (url is d.url or title is d.url)
         if (
-          ((d.urlPattern is _urlPattern.contain or d.urlPattern is _urlPattern.match) and !flag) or
-          ((d.urlPattern is _urlPattern.dontContain or d.urlPattern is _urlPattern.dontMatch) and flag)
+          ((d.urlPattern is _URL_PATTERN.CONTAIN or d.urlPattern is _URL_PATTERN.MATCH) and !flag) or
+          ((d.urlPattern is _URL_PATTERN.DONTCONTAIN or d.urlPattern is _URL_PATTERN.DONTMATCH) and flag)
         )
           continue
       if d.type is "ex2"

@@ -5,8 +5,8 @@
 ###
 class app.ImageReplaceDat
   _dat = null
-  _configName = "image_replace_dat_obj"
-  _configStringName = "image_replace_dat"
+  _CONFIG_NAME = "image_replace_dat_obj"
+  _CONFIG_STRING_NAME = "image_replace_dat"
   _INVALID_URL = "invalid://invalid"
 
   #jsonには正規表現のオブジェクトが含めれないので
@@ -28,14 +28,14 @@ class app.ImageReplaceDat
 
   _config =
     get: ->
-      return JSON.parse(app.config.get(_configName))
+      return JSON.parse(app.config.get(_CONFIG_NAME))
     set: (str) ->
-      app.config.set(_configName, JSON.stringify(str))
+      app.config.set(_CONFIG_NAME, JSON.stringify(str))
       return
     getString: ->
-      return app.config.get(_configStringName)
+      return app.config.get(_CONFIG_STRING_NAME)
     setString: (str) ->
-      app.config.set(_configStringName, str)
+      app.config.set(_CONFIG_STRING_NAME, str)
       return
 
   ###*

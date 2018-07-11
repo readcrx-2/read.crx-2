@@ -163,6 +163,14 @@ header {
 
 .config_use_aa_font > .aa > .message {
   @include ascii-art;
+
+  &.mini_aa {
+    transform-origin: 0 0;
+    white-space: nowrap;
+  }
+  &.scroll_aa {
+    overflow-x: scroll;
+  }
 }
 
 .beicon[src="/img/loading.webp"] {

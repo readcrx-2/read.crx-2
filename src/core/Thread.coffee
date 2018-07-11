@@ -107,7 +107,7 @@ class app.Thread
                 thread = threadCache
               else
                 if readcgiVer < 6
-                  threadResponse.res.splice(0, 1)
+                  threadResponse.res.shift()
                 thread = threadResponse
                 thread.res = threadCache.res.concat(threadResponse.res)
           else

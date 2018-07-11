@@ -91,6 +91,14 @@ block body
               |通常の文章と同じフォントで表示
 
         section
+          h2 アスキーアートの縮小表示の最小値
+          div
+            label
+              input.direct(name="aa_min_ratio" type="range" min="1" max="100")
+              span.aa_min_ratio_text
+              |% (100%のときは縮小表示しません)
+
+        section
           h2 2ch.netのスレッド読み込み形式
           div
             label

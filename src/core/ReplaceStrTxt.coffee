@@ -5,15 +5,21 @@
 ###
 class app.ReplaceStrTxt
   _replaceTable = null
-  _configName = "replace_str_txt_obj"
-  _configStringName = "replace_str_txt"
-  _urlPattern =
-    contain: 0
-    dontContain: 1
-    match: 2
-    dontMatch: 3
-    regex: 4
-    dontRegex: 5
+  _CONFIG_NAME = "replace_str_txt_obj"
+  _CONFIG_STRING_NAME = "replace_str_txt"
+  _URL_PATTERN =
+    CONTAIN: 0
+    DONTCONTAIN: 1
+    MATCH: 2
+    DONTMATCH: 3
+    REGEX: 4
+    DONTREGEX: 5
+  _PLACE_TABLE = new Map([
+    ["name", "name"]
+    ["mail", "mail"]
+    ["date", "other"]
+    ["msg", "message"]
+  ])
   _INVALID_BEFORE = "#^##invalid##^#"
   _INVALID_URL = "invalid://invalid"
 
@@ -22,46 +28,47 @@ class app.ReplaceStrTxt
   _setupReg = () ->
     for d from _replaceTable
       try
-        if d.type is "rx"
-          d.beforeReg = new RegExp(d.before, "g")
-        else if d.type is "rx2"
-          d.beforeReg = new RegExp(d.before, "ig")
-        else if d.type is "ex"
-          d.beforeReg = new RegExp(d.before.replace(/[-\/\\^$*+?.()|[\]{}]/g, "\\$&"), "ig")
-      catch e
-        app.message.send "notify", {
+        d.beforeReg = switch d.type
+          when "rx"
+            new RegExp(d.before, "g")
+          when "rx2"
+            new RegExp(d.before, "ig")
+          when "ex"
+            new RegExp(d.before.replace(/[-\/\\^$*+?.()|[\]{}]/g, "\\$&"), "ig")
+      catch
+        app.message.send("notify",
           message: """
             ReplaceStr.txtの置換対象正規表現(#{d.before})を読み込むのに失敗しました
             この行は無効化されます
           """
           background_color: "red"
-        }
+        )
         d.before = _INVALID_BEFORE
 
       try
-        if d.urlPattern is _urlPattern.regex or d.urlPattern is _urlPattern.dontRegex
+        if d.urlPattern in [_URL_PATTERN.REGEX, _URL_PATTERN.DONTREGEX]
           d.urlReg = new RegExp(d.url)
-      catch e
-        app.message.send "notify", {
+      catch
+        app.message.send("notify",
           message: """
             ReplaceStr.txtの対象URL/タイトル正規表現(#{d.url})を読み込むのに失敗しました
             この行は無効化されます
           """
           background_color: "red"
-        }
+        )
         d.url = _INVALID_URL
     return
 
   _config =
     get: ->
-      return JSON.parse(app.config.get(_configName))
+      return JSON.parse(app.config.get(_CONFIG_NAME))
     set: (str) ->
-      app.config.set(_configName, JSON.stringify(str))
+      app.config.set(_CONFIG_NAME, JSON.stringify(str))
       return
     getString: ->
-      return app.config.get(_configStringName)
+      return app.config.get(_CONFIG_STRING_NAME)
     setString: (str) ->
-      app.config.set(_configStringName, str)
+      app.config.set(_CONFIG_STRING_NAME, str)
       return
 
   ###*
@@ -69,7 +76,7 @@ class app.ReplaceStrTxt
   @return {Object}
   ###
   @get: ->
-    if !_replaceTable?
+    unless _replaceTable?
       _replaceTable = new Set(_config.get())
       _setupReg()
     return _replaceTable
@@ -81,27 +88,27 @@ class app.ReplaceStrTxt
   ###
   @parse: (string) ->
     replaceTable = new Set()
-    if string isnt ""
-      replaceStrSplit = string.split("\n")
-      for r in replaceStrSplit
-        continue if r is ""
-        continue if ["//",";", "'"].some((ele) -> r.startsWith(ele))
-        s = /(?:<(\w{2,3})>)?(.*)\t(.+)\t(name|mail|date|msg|all)(?:\t(?:<(\d)>)?(.+))?/.exec(r)
-        if s?
-          obj =
-            type: s[1] ? "ex"
-            place: s[4]
-            before: s[2]
-            after: s[3]
-            urlPattern: s[5]
-            url: s[6]
-          if obj.type is ""
-            obj.type = "rx"
-          if obj.place is ""
-            obj.place = "all"
-          if s[6]? and !s[5]?
-            obj.urlPattern = 0
-          replaceTable.add(obj)
+    return replaceTable if string is ""
+    replaceStrSplit = string.split("\n")
+    for r in replaceStrSplit
+      continue if r is ""
+      continue if ["//",";", "'"].some((ele) -> r.startsWith(ele))
+      s = /(?:<(\w{2,3})>)?(.*)\t(.+)\t(name|mail|date|msg|all)(?:\t(?:<(\d)>)?(.+))?/.exec(r)
+      continue unless s?
+      obj =
+        type: s[1] ? "ex"
+        place: s[4]
+        before: s[2]
+        after: s[3]
+        urlPattern: s[5]
+        url: s[6]
+      if obj.type is ""
+        obj.type = "rx"
+      if obj.place is ""
+        obj.place = "all"
+      if s[6]? and !s[5]?
+        obj.urlPattern = 0
+      replaceTable.add(obj)
     return replaceTable
 
   ###*
@@ -110,7 +117,7 @@ class app.ReplaceStrTxt
   ###
   @set: (string) ->
     _replaceTable = @parse(string)
-    _config.set(Array.from(_replaceTable))
+    _config.set([_replaceTable...])
     _setupReg()
     return
 
@@ -125,32 +132,24 @@ class app.ReplaceStrTxt
       continue if d.before is _INVALID_BEFORE
       continue if d.url is _INVALID_URL
       if d.url?
-        if d.urlPattern is _urlPattern.contain or d.urlPattern is _urlPattern.dontContain
+        if d.urlPattern in [_URL_PATTERN.CONTAIN, _URL_PATTERN.DONTCONTAIN]
           flag = (url.includes(d.url) or title.includes(d.url))
-        else if d.urlPattern is _urlPattern.match or d.urlPattern is _urlPattern.dontMatch
-          flag = (url is d.url or title is d.url)
-        if (
-          ((d.urlPattern is _urlPattern.contain or d.urlPattern is _urlPattern.match) and !flag) or
-          ((d.urlPattern is _urlPattern.dontContain or d.urlPattern is _urlPattern.dontMatch) and flag)
-        )
-          continue
+        else if d.urlPattern in [_URL_PATTERN.MATCH, _URL_PATTERN.DONTMATCH]
+          flag = (d.url in [url, title])
+        if d.urlPattern in [_URL_PATTERN.DONTCONTAIN, _URL_PATTERN.DONTMATCH]
+          flag = !flag
+        continue unless flag
       if d.type is "ex2"
         before = d.before
       else
         before = d.beforeReg
-      switch d.place
-        when "name"
-          res.name = res.name.replace(before, d.after)
-        when "mail"
-          res.mail = res.mail.replace(before, d.after)
-        when "date"
-          res.other = res.other.replace(before, d.after)
-        when "msg"
-          res.message = res.message.replace(before, d.after)
-        when "all"
-          res =
-            name: res.name.replace(before, d.after)
-            mail: res.mail.replace(before, d.after)
-            other: res.other.replace(before, d.after)
-            message: res.message.replace(before, d.after)
+      if d.place is "all"
+        res =
+          name: res.name.replace(before, d.after)
+          mail: res.mail.replace(before, d.after)
+          other: res.other.replace(before, d.after)
+          message: res.message.replace(before, d.after)
+      else
+        place = _PLACE_TABLE.get(d.place)
+        res[place] = res[place].replace(before, d.after)
     return res

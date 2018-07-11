@@ -4,35 +4,37 @@
 @static
 ###
 class app.NG
-  @NG_TYPE_INVALID = "invalid"
-  @NG_TYPE_REG_EXP = "RegExp"
-  @NG_TYPE_REG_EXP_TITLE = "RegExpTitle"
-  @NG_TYPE_REG_EXP_NAME = "RegExpName"
-  @NG_TYPE_REG_EXP_MAIL = "RegExpMail"
-  @NG_TYPE_REG_EXP_ID = "RegExpId"
-  @NG_TYPE_REG_EXP_SLIP = "RegExpSlip"
-  @NG_TYPE_REG_EXP_BODY = "RegExpBody"
-  @NG_TYPE_REG_EXP_URL = "RegExpUrl"
-  @NG_TYPE_TITLE = "Title"
-  @NG_TYPE_NAME = "Name"
-  @NG_TYPE_MAIL = "Mail"
-  @NG_TYPE_ID = "ID"
-  @NG_TYPE_SLIP = "Slip"
-  @NG_TYPE_BODY = "Body"
-  @NG_TYPE_WORD = "Word"
-  @NG_TYPE_URL = "Url"
-  @NG_TYPE_AUTO = "Auto"
-  @NG_TYPE_AUTO_CHAIN = "Chain"
-  @NG_TYPE_AUTO_CHAIN_ID = "ChainID"
-  @NG_TYPE_AUTO_CHAIN_SLIP = "ChainSLIP"
-  @NG_TYPE_AUTO_NOTHING_ID = "NothingID"
-  @NG_TYPE_AUTO_NOTHING_SLIP = "NothingSLIP"
-  @NG_TYPE_AUTO_REPEAT_MESSAGE = "RepeatMessage"
-  @NG_TYPE_AUTO_FORWARD_LINK = "ForwardLink"
+  @TYPE =
+    INVALID: "invalid"
+    REG_EXP: "RegExp"
+    REG_EXP_TITLE: "RegExpTitle"
+    REG_EXP_NAME: "RegExpName"
+    REG_EXP_MAIL: "RegExpMail"
+    REG_EXP_ID: "RegExpId"
+    REG_EXP_SLIP: "RegExpSlip"
+    REG_EXP_BODY: "RegExpBody"
+    REG_EXP_URL: "RegExpUrl"
+    TITLE: "Title"
+    NAME: "Name"
+    MAIL: "Mail"
+    ID: "ID"
+    SLIP: "Slip"
+    BODY: "Body"
+    WORD: "Word"
+    URL: "Url"
+    AUTO: "Auto"
+    AUTO_CHAIN: "Chain"
+    AUTO_CHAIN_ID: "ChainID"
+    AUTO_CHAIN_SLIP: "ChainSLIP"
+    AUTO_NOTHING_ID: "NothingID"
+    AUTO_NOTHING_SLIP: "NothingSLIP"
+    AUTO_REPEAT_MESSAGE: "RepeatMessage"
+    AUTO_FORWARD_LINK: "ForwardLink"
+
+  _CONFIG_NAME = "ngobj"
+  _CONFIG_STRING_NAME = "ngwords"
 
   _ng = null
-  _configName = "ngobj"
-  _configStringName = "ngwords"
   _ignoreResRegNumber = /^ignoreResNumber:(\d+)(?:-?(\d+))?,(.*)$/
   _ignoreNgType = /^ignoreNgType:(?:\$\((.*?)\):)?(.*)$/
   _expireDate = /^expireDate:(\d{4}\/\d{1,2}\/\d{1,2}),(.*)$/
@@ -42,46 +44,46 @@ class app.NG
   #jsonには正規表現のオブジェクトが含めれないので
   #それを展開
   _setupReg = (obj) ->
-    _convReg = (ngElement) ->
+    _convReg = ({type, word}) ->
       reg = null
       try
-        reg = new RegExp ngElement.word
-      catch e
-        app.message.send "notify", {
+        reg = new RegExp(word)
+      catch
+        app.message.send("notify",
           message: """
-            NG機能の正規表現(#{ngElement.type}: #{ngElement.word})を読み込むのに失敗しました
+            NG機能の正規表現(#{type}: #{word})を読み込むのに失敗しました
             この行は無効化されます
           """
           background_color: "red"
-        }
+        )
       return reg
 
     for n from obj
       convFlag = true
       if n.subElements?
         for subElement in n.subElements
-          continue unless subElement.type.startsWith(app.NG.NG_TYPE_REG_EXP)
+          continue unless subElement.type.startsWith(NG.TYPE.REG_EXP)
           subElement.reg = _convReg(subElement)
           unless subElement.reg
-            subElement.type = app.NG.NG_TYPE_INVALID
+            subElement.type = NG.TYPE.INVALID
             convFlag = false
             break
-      if convFlag and n.type.startsWith(app.NG.NG_TYPE_REG_EXP)
+      if convFlag and n.type.startsWith(NG.TYPE.REG_EXP)
         n.reg = _convReg(n)
         convFlag = false unless n.reg
-      n.type = app.NG.NG_TYPE_INVALID unless convFlag
+      n.type = NG.TYPE.INVALID unless convFlag
     return
 
   _config =
     get: ->
-      return JSON.parse(app.config.get(_configName))
+      return JSON.parse(app.config.get(_CONFIG_NAME))
     set: (str) ->
-      app.config.set(_configName, JSON.stringify(str))
+      app.config.set(_CONFIG_NAME, JSON.stringify(str))
       return
     getString: ->
-      return app.config.get(_configStringName)
+      return app.config.get(_CONFIG_STRING_NAME)
     setString: (str) ->
-      app.config.set(_configStringName, str)
+      app.config.set(_CONFIG_STRING_NAME, str)
       return
 
   ###*
@@ -89,7 +91,7 @@ class app.NG
   @return {Object}
   ###
   @get: ->
-    if !_ng?
+    unless _ng?
       _ng = new Set(_config.get())
       _setupReg(_ng)
     return _ng
@@ -112,52 +114,52 @@ class app.NG
       # キーワードごとのNG処理
       switch true
         when ngWord.startsWith("RegExp:")
-          ngElement.type = app.NG.NG_TYPE_REG_EXP
+          ngElement.type = NG.TYPE.REG_EXP
           ngElement.word = ngWord.substr(7)
         when ngWord.startsWith("RegExpTitle:")
-          ngElement.type = app.NG.NG_TYPE_REG_EXP_TITLE
+          ngElement.type = NG.TYPE.REG_EXP_TITLE
           ngElement.word = ngWord.substr(12)
         when ngWord.startsWith("RegExpName:")
-          ngElement.type = app.NG.NG_TYPE_REG_EXP_NAME
+          ngElement.type = NG.TYPE.REG_EXP_NAME
           ngElement.word = ngWord.substr(11)
         when ngWord.startsWith("RegExpMail:")
-          ngElement.type = app.NG.NG_TYPE_REG_EXP_MAIL
+          ngElement.type = NG.TYPE.REG_EXP_MAIL
           ngElement.word = ngWord.substr(11)
         when ngWord.startsWith("RegExpID:")
-          ngElement.type = app.NG.NG_TYPE_REG_EXP_ID
+          ngElement.type = NG.TYPE.REG_EXP_ID
           ngElement.word = ngWord.substr(9)
         when ngWord.startsWith("RegExpSlip:")
-          ngElement.type = app.NG.NG_TYPE_REG_EXP_SLIP
+          ngElement.type = NG.TYPE.REG_EXP_SLIP
           ngElement.word = ngWord.substr(11)
         when ngWord.startsWith("RegExpBody:")
-          ngElement.type = app.NG.NG_TYPE_REG_EXP_BODY
+          ngElement.type = NG.TYPE.REG_EXP_BODY
           ngElement.word = ngWord.substr(11)
         when ngWord.startsWith("RegExpUrl:")
-          ngElement.type = app.NG.NG_TYPE_REG_EXP_URL
+          ngElement.type = NG.TYPE.REG_EXP_URL
           ngElement.word = ngWord.substr(10)
         when ngWord.startsWith("Title:")
-          ngElement.type = app.NG.NG_TYPE_TITLE
+          ngElement.type = NG.TYPE.TITLE
           ngElement.word = app.util.normalize(ngWord.substr(6))
         when ngWord.startsWith("Name:")
-          ngElement.type = app.NG.NG_TYPE_NAME
+          ngElement.type = NG.TYPE.NAME
           ngElement.word = app.util.normalize(ngWord.substr(5))
         when ngWord.startsWith("Mail:")
-          ngElement.type = app.NG.NG_TYPE_MAIL
+          ngElement.type = NG.TYPE.MAIL
           ngElement.word = app.util.normalize(ngWord.substr(5))
         when ngWord.startsWith("ID:")
-          ngElement.type = app.NG.NG_TYPE_ID
+          ngElement.type = NG.TYPE.ID
           ngElement.word = ngWord
         when ngWord.startsWith("Slip:")
-          ngElement.type = app.NG.NG_TYPE_SLIP
+          ngElement.type = NG.TYPE.SLIP
           ngElement.word = ngWord.substr(5)
         when ngWord.startsWith("Body:")
-          ngElement.type = app.NG.NG_TYPE_BODY
+          ngElement.type = NG.TYPE.BODY
           ngElement.word = app.util.normalize(ngWord.substr(5))
         when ngWord.startsWith("Url:")
-          ngElement.type = app.NG.NG_TYPE_URL
+          ngElement.type = NG.TYPE.URL
           ngElement.word = ngWord.substr(4)
         when ngWord.startsWith("Auto:")
-          ngElement.type = app.NG.NG_TYPE_AUTO
+          ngElement.type = NG.TYPE.AUTO
           ngElement.word = ngWord.substr(5)
           if ngElement.word is ""
             ngElement.word = "*"
@@ -177,10 +179,9 @@ class app.NG
             ngElement.type = elm.type
             ngElement.word = elm.word
             if elm.subElements? and elm.subElements.length > 0
-              for e in elm.subElements
-                ngElement.subElements.push(e)
+              ngElement.subElements.concat(elm.subElements)
         else
-          ngElement.type = app.NG.NG_TYPE_WORD
+          ngElement.type = NG.TYPE.WORD
           ngElement.word = app.util.normalize(ngWord)
       return ngElement
 
@@ -192,29 +193,25 @@ class app.NG
       ngElement = {}
 
       # 指定したレス番号はNG除外する
-      if _ignoreResRegNumber.test(ngWord)
-        m = ngWord.match(_ignoreResRegNumber)
+      if (m = ngWord.match(_ignoreResRegNumber))?
         ngElement =
           start: m[1]
           finish: m[2]
         ngWord = m[3]
       # 例外NgTypeの指定
-      else if _ignoreNgType.test(ngWord)
-        m = ngWord.match(_ignoreNgType)
+      else if (m = ngWord.match(_ignoreNgType))?
         ngElement =
           exception: true
           subType: m[1].split(",") if m[1]?
         ngWord = m[2]
       # 有効期限の指定
-      else if _expireDate.test(ngWord)
-        m = ngWord.match(_expireDate)
-        d = app.util.stringToDate(m[1] + " 23:59:59")
+      else if (m = ngWord.match(_expireDate))?
+        expire = app.util.stringToDate("#{m[1]} 23:59:59")
         ngElement =
-          expire: d.valueOf() + 1000
+          expire: expire.valueOf() + 1000
         ngWord = m[2]
       # 名前の付与
-      else if _attachName.test(ngWord)
-        m = ngWord.match(_attachName)
+      else if (m = ngWord.match(_attachName))?
         ngElement =
           name: m[1]
         ngWord = m[2]
@@ -228,15 +225,12 @@ class app.NG
       unless ngElement.exception?
         ngElement.exception = false
       if ngElement.subType?
-        i = 0
-        while i < ngElement.subType.length
-          ngElement.subType[i] = ngElement.subType[i].trim()
+        for st, i in ngElement.subType by -1
+          ngElement.subType[i] = st.trim()
           if ngElement.subType[i] is ""
             ngElement.subType.splice(i, 1)
-          else
-            i++
         if ngElement.subType.length is 0
-          delete ngElement.subType
+          ngElement.subType = null
 
       ng.add(ngElement) if ngElement.word isnt ""
     return ng
@@ -247,7 +241,7 @@ class app.NG
   ###
   @set: (string) ->
     _ng = @parse(string)
-    _config.set(Array.from(_ng))
+    _config.set([_ng...])
     _setupReg(_ng)
     return
 
@@ -258,7 +252,7 @@ class app.NG
   @add: (string) ->
     _config.setString(string + "\n" + _config.getString())
     addNg = @parse(string)
-    _config.set(Array.from(_config.get()).concat(Array.from(addNg)))
+    _config.set([_config.get()...].concat([addNg...]))
 
     _setupReg(addNg)
     for ang from addNg
@@ -301,42 +295,43 @@ class app.NG
 
     _checkWord = (n) ->
       if (
-        (n.type is app.NG.NG_TYPE_REG_EXP and n.reg.test(tmpTxt1)) or
-        (n.type is app.NG.NG_TYPE_REG_EXP_NAME and n.reg.test(decodedName)) or
-        (n.type is app.NG.NG_TYPE_REG_EXP_MAIL and n.reg.test(decodedMail)) or
-        (n.type is app.NG.NG_TYPE_REG_EXP_ID and res.id? and n.reg.test(res.id)) or
-        (n.type is app.NG.NG_TYPE_REG_EXP_SLIP and res.slip? and n.reg.test(res.slip)) or
-        (n.type is app.NG.NG_TYPE_REG_EXP_BODY and n.reg.test(decodedMes)) or
-        (n.type is app.NG.NG_TYPE_REG_EXP_TITLE and n.reg.test(threadTitle)) or
-        (n.type is app.NG.NG_TYPE_REG_EXP_URL and n.reg.test(url)) or
-        (n.type is app.NG.NG_TYPE_TITLE and tmpTitle.includes(n.word)) or
-        (n.type is app.NG.NG_TYPE_NAME and app.util.normalize(decodedName).includes(n.word)) or
-        (n.type is app.NG.NG_TYPE_MAIL and app.util.normalize(decodedMail).includes(n.word)) or
-        (n.type is app.NG.NG_TYPE_ID and res.id?.includes(n.word)) or
-        (n.type is app.NG.NG_TYPE_SLIP and res.slip?.includes(n.word)) or
-        (n.type is app.NG.NG_TYPE_BODY and app.util.normalize(decodedMes).includes(n.word)) or
-        (n.type is app.NG.NG_TYPE_WORD and tmpTxt2.includes(n.word)) or
-        (n.type is app.NG.NG_TYPE_URL and url.includes(n.word))
+        (n.type is NG.TYPE.REG_EXP and n.reg.test(tmpTxt1)) or
+        (n.type is NG.TYPE.REG_EXP_NAME and n.reg.test(decodedName)) or
+        (n.type is NG.TYPE.REG_EXP_MAIL and n.reg.test(decodedMail)) or
+        (n.type is NG.TYPE.REG_EXP_ID and res.id? and n.reg.test(res.id)) or
+        (n.type is NG.TYPE.REG_EXP_SLIP and res.slip? and n.reg.test(res.slip)) or
+        (n.type is NG.TYPE.REG_EXP_BODY and n.reg.test(decodedMes)) or
+        (n.type is NG.TYPE.REG_EXP_TITLE and n.reg.test(threadTitle)) or
+        (n.type is NG.TYPE.REG_EXP_URL and n.reg.test(url)) or
+        (n.type is NG.TYPE.TITLE and tmpTitle.includes(n.word)) or
+        (n.type is NG.TYPE.NAME and app.util.normalize(decodedName).includes(n.word)) or
+        (n.type is NG.TYPE.MAIL and app.util.normalize(decodedMail).includes(n.word)) or
+        (n.type is NG.TYPE.ID and res.id?.includes(n.word)) or
+        (n.type is NG.TYPE.SLIP and res.slip?.includes(n.word)) or
+        (n.type is NG.TYPE.BODY and app.util.normalize(decodedMes).includes(n.word)) or
+        (n.type is NG.TYPE.WORD and tmpTxt2.includes(n.word)) or
+        (n.type is NG.TYPE.URL and url.includes(n.word))
       )
         return n.type
       return null
 
+    now = Date.now()
     for n from @get()
-      continue if n.type is app.NG.NG_TYPE_INVALID
+      continue if n.type is NG.TYPE.INVALID
       if isBoard
         # isNGBoard用の項目チェック
-        unless n.type in [app.NG.NG_TYPE_REG_EXP, app.NG.NG_TYPE_REG_EXP_TITLE, app.NG.NG_TYPE_TITLE, app.NG.NG_TYPE_WORD, app.NG.NG_TYPE_REG_EXP_URL, app.NG.NG_TYPE_URL]
+        unless n.type in [NG.TYPE.REG_EXP, NG.TYPE.REG_EXP_TITLE, NG.TYPE.TITLE, NG.TYPE.WORD, NG.TYPE.REG_EXP_URL, NG.TYPE.URL]
           continue
       else
         # ignoreResNumber用レス番号のチェック
-        if n.start? and ((n.finish? and n.start <= res.num and res.num <= n.finish) or (parseInt(n.start) is res.num))
+        if n.start? and ((n.finish? and n.start <= res.num <= n.finish) or (parseInt(n.start) is res.num))
           continue
       # 有効期限のチェック
-      continue if n.expire? and Date.now() > n.expire
+      continue if n.expire? and now > n.expire
       # ignoreNgType用例外フラグのチェック
       continue if n.exception isnt exceptionFlg
       # ng-typeのチエック
-      continue if n.subType? and subType and n.subType.indexOf(subType) is -1
+      continue if n.subType? and subType and not n.subType.includes(subType)
 
       # サブ条件のチェック
       if n.subElements?
@@ -361,9 +356,9 @@ class app.NG
   ###
   @isIgnoreResNumForAuto: (resNum, subType = "") ->
     for n from @get()
-      continue if n.type isnt app.NG.NG_TYPE_AUTO
-      continue if n.subType? and (n.subType.indexOf(subType) is -1)
-      if n.start? and ((n.finish? and n.start <= resNum and resNum <= n.finish) or (parseInt(n.start) is resNum))
+      continue if n.type isnt NG.TYPE.AUTO
+      continue if n.subType? and not n.subType.includes(subType)
+      if n.start? and ((n.finish? and n.start <= resNum <= n.finish) or (parseInt(n.start) is resNum))
         return true
     return false
 
@@ -376,12 +371,10 @@ class app.NG
   @return {Boolean}
   ###
   @isIgnoreNgType: (res, threadTitle, url, ngType) ->
-    if (
+    return (
       @isNGBoard(threadTitle, url, true, ngType) or
       @checkNGThread(res, threadTitle, url, true, ngType)
     )
-      return true
-    return false
 
   ###*
   @method execExpire
@@ -392,24 +385,21 @@ class app.NG
     updateFlag = false
 
     ngStrSplit = configStr.split("\n")
+    now = Date.now()
     for ngWord in ngStrSplit
       # 有効期限の確認
       if _expireDate.test(ngWord)
         m = ngWord.match(_expireDate)
-        d = app.util.stringToDate(m[1] + " 23:59:59")
-        if d.valueOf() + 1000 < Date.now()
+        expire = app.util.stringToDate(m[1] + " 23:59:59")
+        if expire.valueOf() + 1000 < now
           updateFlag = true
-        else
-          newConfigStr += "\n" if newConfigStr isnt ""
-          newConfigStr += ngWord
-      else
-        newConfigStr += "\n" if newConfigStr isnt ""
-        newConfigStr += ngWord
+          continue
+      newConfigStr += "\n" if newConfigStr isnt ""
+      newConfigStr += ngWord
     # 期限切れデータが存在した場合はNG情報を更新する
     if updateFlag
       _config.setString(newConfigStr)
       _ng = @parse(newConfigStr)
-      _config.set(Array.from(_ng))
+      _config.set([_ng...])
       _setupReg(_ng)
-
     return

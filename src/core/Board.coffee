@@ -237,7 +237,7 @@ class app.Board
       )
 
     if bbsType is "jbbs"
-      board.splice(-1, 1)
+      board.pop()
 
     if board.length > 0
       return board

@@ -5,8 +5,8 @@
 ###
 class app.ImageReplaceDat
   _dat = null
-  _configName = "image_replace_dat_obj"
-  _configStringName = "image_replace_dat"
+  _CONFIG_NAME = "image_replace_dat_obj"
+  _CONFIG_STRING_NAME = "image_replace_dat"
   _INVALID_URL = "invalid://invalid"
 
   #jsonには正規表現のオブジェクトが含めれないので
@@ -15,27 +15,27 @@ class app.ImageReplaceDat
     for d from _dat
       try
         d.baseUrlReg = new RegExp(d.baseUrl, "i")
-      catch e
-        app.message.send "notify", {
+      catch
+        app.message.send("notify",
           message: """
             ImageViewURLReplace.datの一致URLの正規表現(#{d.baseUrl})を読み込むのに失敗しました
             この行は無効化されます
           """
           background_color: "red"
-        }
+        )
         d.baseUrl = _INVALID_URL
     return
 
   _config =
     get: ->
-      return JSON.parse(app.config.get(_configName))
+      return JSON.parse(app.config.get(_CONFIG_NAME))
     set: (str) ->
-      app.config.set(_configName, JSON.stringify(str))
+      app.config.set(_CONFIG_NAME, JSON.stringify(str))
       return
     getString: ->
-      return app.config.get(_configStringName)
+      return app.config.get(_CONFIG_STRING_NAME)
     setString: (str) ->
-      app.config.set(_configStringName, str)
+      app.config.set(_CONFIG_STRING_NAME, str)
       return
 
   ###*
@@ -43,7 +43,7 @@ class app.ImageReplaceDat
   @return {Object}
   ###
   @get: ->
-    if !_dat?
+    unless _dat?
       _dat = new Set(_config.get())
       _setupReg()
     return _dat
@@ -89,7 +89,7 @@ class app.ImageReplaceDat
   ###
   @set: (string) ->
     _dat = @parse(string)
-    _config.set(Array.from(_dat))
+    _config.set([_dat...])
     _setupReg()
     return
 

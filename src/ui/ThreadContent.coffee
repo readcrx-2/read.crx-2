@@ -169,13 +169,14 @@ class UI.ThreadContent
       )
       @findHarmfulFlag = false
 
-    @container.on "scrollstart", =>
+    @container.on("scrollstart", =>
       @_isScrolling = true
       return
-
-    @container.on "scrollfinish", =>
+    )
+    @container.on("scrollfinish", =>
       @_isScrolling = false
       return
+    )
 
     return
 
@@ -941,9 +942,9 @@ class UI.ThreadContent
       getRes = @container.child()[r - 1]
       continue if getRes.hasClass("ng")
       rn = +getRes.C("num")[0].textContent
-      continue if app.NG.isIgnoreResNumForAuto(rn, app.NG.NG_TYPE_AUTO_CHAIN)
-      continue if app.NG.isIgnoreNgType(@_rawResData[rn], @_threadTitle, @url, app.NG.NG_TYPE_AUTO_CHAIN)
-      @setNG(getRes, app.NG.NG_TYPE_AUTO_CHAIN)
+      continue if app.NG.isIgnoreResNumForAuto(rn, app.NG.TYPE.AUTO_CHAIN)
+      continue if app.NG.isIgnoreNgType(@_rawResData[rn], @_threadTitle, @url, app.NG.TYPE.AUTO_CHAIN)
+      @setNG(getRes, app.NG.TYPE.AUTO_CHAIN)
       # NG連鎖IDの登録
       if app.config.isOn("chain_ng_id") and app.config.isOn("chain_ng_id_by_chain")
         if id = getRes.getAttr("data-id")
@@ -967,9 +968,9 @@ class UI.ThreadContent
     for r in @container.$$("article[data-id=\"#{id}\"]")
       continue if r.hasClass("ng")
       rn = +r.C("num")[0].textContent
-      continue if app.NG.isIgnoreResNumForAuto(rn, app.NG.NG_TYPE_AUTO_CHAIN_ID)
-      continue if app.NG.isIgnoreNgType(@_rawResData[rn], @_threadTitle, @url, app.NG.NG_TYPE_AUTO_CHAIN_ID)
-      @setNG(r, app.NG.NG_TYPE_AUTO_CHAIN_ID)
+      continue if app.NG.isIgnoreResNumForAuto(rn, app.NG.TYPE.AUTO_CHAIN_ID)
+      continue if app.NG.isIgnoreNgType(@_rawResData[rn], @_threadTitle, @url, app.NG.TYPE.AUTO_CHAIN_ID)
+      @setNG(r, app.NG.TYPE.AUTO_CHAIN_ID)
       # 連鎖NG
       @_chainNG(r) if app.config.isOn("chain_ng")
     return
@@ -984,9 +985,9 @@ class UI.ThreadContent
     for r in @container.$$("article[data-slip=\"#{slip}\"]")
       continue if r.hasClass("ng")
       rn = +r.C("num")[0].textContent
-      continue if app.NG.isIgnoreResNumForAuto(rn, app.NG.NG_TYPE_AUTO_CHAIN_SLIP)
-      continue if app.NG.isIgnoreNgType(@_rawResData[rn], @_threadTitle, @url, app.NG.NG_TYPE_AUTO_CHAIN_SLIP)
-      @setNG(r, app.NG.NG_TYPE_AUTO_CHAIN_SLIP)
+      continue if app.NG.isIgnoreResNumForAuto(rn, app.NG.TYPE.AUTO_CHAIN_SLIP)
+      continue if app.NG.isIgnoreNgType(@_rawResData[rn], @_threadTitle, @url, app.NG.TYPE.AUTO_CHAIN_SLIP)
+      @setNG(r, app.NG.TYPE.AUTO_CHAIN_SLIP)
       # 連鎖NG
       @_chainNG(r) if app.config.isOn("chain_ng")
     return
@@ -1004,14 +1005,14 @@ class UI.ThreadContent
       if (
         app.config.isOn("chain_ng_id") and
         objRes.id? and
-        not (ngObj.type in [app.NG.NG_TYPE_ID, app.NG.NG_TYPE_AUTO_CHAIN_ID])
+        not (ngObj.type in [app.NG.TYPE.ID, app.NG.TYPE.AUTO_CHAIN_ID])
       )
         @_ngIdForChain.add(objRes.id) unless @_ngIdForChain.has(objRes.id)
       # NG連鎖SLIPの登録
       if (
         app.config.isOn("chain_ng_slip") and
         objRes.slip? and
-        not (ngObj.type in [app.NG.NG_TYPE_SLIP, app.NG.NG_TYPE_AUTO_CHAIN_SLIP])
+        not (ngObj.type in [app.NG.TYPE.SLIP, app.NG.TYPE.AUTO_CHAIN_SLIP])
       )
         @_ngSlipForChain.add(objRes.slip) unless @_ngSlipForChain.has(objRes.slip)
     return ngObj
@@ -1034,43 +1035,50 @@ class UI.ThreadContent
       return ngObj
 
     if bbsType is "2ch"
+      judgementIdType = app.config.get("how_to_judgment_id")
       # idなしをNG
       if (
-        app.config.isOn("nothing_id_ng") and !objRes.id? and
-        ((app.config.get("how_to_judgment_id") is "first_res" and @_existIdAtFirstRes) or
-         (app.config.get("how_to_judgment_id") is "exists_once" and @idIndex.size isnt 0)) and
-        !app.NG.isIgnoreResNumForAuto(objRes.num, app.NG.NG_TYPE_AUTO_NOTHING_ID) and
-        !app.NG.isIgnoreNgType(objRes, @_threadTitle, @url, app.NG.NG_TYPE_AUTO_NOTHING_ID)
+        app.config.isOn("nothing_id_ng") and
+        !objRes.id? and
+        (
+          (judgementIdType is "first_res" and @_existIdAtFirstRes) or
+          (judgementIdType is "exists_once" and @idIndex.size isnt 0)
+        ) and
+        !app.NG.isIgnoreResNumForAuto(objRes.num, app.NG.TYPE.AUTO_NOTHING_ID) and
+        !app.NG.isIgnoreNgType(objRes, @_threadTitle, @url, app.NG.TYPE.AUTO_NOTHING_ID)
       )
-        return {type: app.NG.NG_TYPE_AUTO_NOTHING_ID}
+        return {type: app.NG.TYPE.AUTO_NOTHING_ID}
       # slipなしをNG
       if (
-        app.config.isOn("nothing_slip_ng") and !objRes.slip? and
-        ((app.config.get("how_to_judgment_id") is "first_res" and @_existSlipAtFirstRes) or
-         (app.config.get("how_to_judgment_id") is "exists_once" and @slipIndex.size isnt 0)) and
-        !app.NG.isIgnoreResNumForAuto(objRes.num, app.NG.NG_TYPE_AUTO_NOTHING_SLIP) and
-        !app.NG.isIgnoreNgType(objRes, @_threadTitle, @url, app.NG.NG_TYPE_AUTO_NOTHING_SLIP)
+        app.config.isOn("nothing_slip_ng") and
+        !objRes.slip? and
+        (
+          (judgementIdType is "first_res" and @_existSlipAtFirstRes) or
+          (judgementIdType is "exists_once" and @slipIndex.size isnt 0)
+        ) and
+        !app.NG.isIgnoreResNumForAuto(objRes.num, app.NG.TYPE.AUTO_NOTHING_SLIP) and
+        !app.NG.isIgnoreNgType(objRes, @_threadTitle, @url, app.NG.TYPE.AUTO_NOTHING_SLIP)
       )
-        return {type: app.NG.NG_TYPE_AUTO_NOTHING_SLIP}
+        return {type: app.NG.TYPE.AUTO_NOTHING_SLIP}
 
     # 連鎖IDのNG
     if (
       app.config.isOn("chain_ng_id") and
       objRes.id? and
       @_ngIdForChain.has(objRes.id) and
-      !app.NG.isIgnoreResNumForAuto(objRes.num, app.NG.NG_TYPE_AUTO_CHAIN_ID) and
-      !app.NG.isIgnoreNgType(objRes, @_threadTitle, @url, app.NG.NG_TYPE_AUTO_CHAIN_ID)
+      !app.NG.isIgnoreResNumForAuto(objRes.num, app.NG.TYPE.AUTO_CHAIN_ID) and
+      !app.NG.isIgnoreNgType(objRes, @_threadTitle, @url, app.NG.TYPE.AUTO_CHAIN_ID)
     )
-      return {type: app.NG.NG_TYPE_AUTO_CHAIN_ID}
+      return {type: app.NG.TYPE.AUTO_CHAIN_ID}
     # 連鎖SLIPのNG
     if (
       app.config.isOn("chain_ng_slip") and
       objRes.slip? and
       @_ngSlipForChain.has(objRes.slip) and
-      !app.NG.isIgnoreResNumForAuto(objRes.num, app.NG.NG_TYPE_AUTO_CHAIN_SLIP) and
-      !app.NG.isIgnoreNgType(objRes, @_threadTitle, @url, app.NG.NG_TYPE_AUTO_CHAIN_SLIP)
+      !app.NG.isIgnoreResNumForAuto(objRes.num, app.NG.TYPE.AUTO_CHAIN_SLIP) and
+      !app.NG.isIgnoreNgType(objRes, @_threadTitle, @url, app.NG.TYPE.AUTO_CHAIN_SLIP)
     )
-      return {type: app.NG.NG_TYPE_AUTO_CHAIN_SLIP}
+      return {type: app.NG.TYPE.AUTO_CHAIN_SLIP}
 
     # 連投レスをNG
     if app.config.get("repeat_message_ng_count") > 1
@@ -1092,16 +1100,16 @@ class UI.ThreadContent
       @_resMessageMap.get(resMessage).add(objRes.num)
       if (
         @_resMessageMap.get(resMessage).size >= +app.config.get("repeat_message_ng_count") and
-        !app.NG.isIgnoreResNumForAuto(objRes.num, app.NG.NG_TYPE_AUTO_REPEAT_MESSAGE) and
-        !app.NG.isIgnoreNgType(objRes, @_threadTitle, @url, app.NG.NG_TYPE_AUTO_REPEAT_MESSAGE)
+        !app.NG.isIgnoreResNumForAuto(objRes.num, app.NG.TYPE.AUTO_REPEAT_MESSAGE) and
+        !app.NG.isIgnoreNgType(objRes, @_threadTitle, @url, app.NG.TYPE.AUTO_REPEAT_MESSAGE)
       )
-        return {type: app.NG.NG_TYPE_AUTO_REPEAT_MESSAGE}
+        return {type: app.NG.TYPE.AUTO_REPEAT_MESSAGE}
 
     # 前方参照をNG
     if (
       app.config.isOn("forward_link_ng") and
-      !app.NG.isIgnoreResNumForAuto(objRes.num, app.NG.NG_TYPE_AUTO_FORWARD_LINK) and
-      !app.NG.isIgnoreNgType(objRes, @_threadTitle, @url, app.NG.NG_TYPE_AUTO_FORWARD_LINK)
+      !app.NG.isIgnoreResNumForAuto(objRes.num, app.NG.TYPE.AUTO_FORWARD_LINK) and
+      !app.NG.isIgnoreNgType(objRes, @_threadTitle, @url, app.NG.TYPE.AUTO_FORWARD_LINK)
     )
       ngFlag = false
       resMessage = (
@@ -1122,7 +1130,7 @@ class UI.ThreadContent
               target++
             break if ngFlag
           break if ngFlag
-      return {type: app.NG.NG_TYPE_AUTO_FORWARD_LINK} if ngFlag
+      return {type: app.NG.TYPE.AUTO_FORWARD_LINK} if ngFlag
 
     return null
 
@@ -1340,16 +1348,14 @@ class UI.ThreadContent
   @param {Element} $res
   ###
   addWriteHistory: ($res) ->
-    name = $res.C("name")[0].textContent
-    mail = $res.C("mail")[0].textContent
     date = app.util.stringToDate($res.C("other")[0].textContent).valueOf()
     if date?
       app.WriteHistory.add({
         url: @url
         res: parseInt($res.C("num")[0].textContent)
         title: document.title
-        name
-        mail
+        name: $res.C("name")[0].textContent
+        mail: $res.C("mail")[0].textContent
         message: $res.C("message")[0].textContent
         date
       })

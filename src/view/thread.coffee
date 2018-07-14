@@ -7,7 +7,7 @@ do ->
   catch
     font = await new Promise( (resolve, reject) ->
       xhr = new XMLHttpRequest()
-      xhr.open("GET", "https://readcrx-2.github.io/read.crx-2/textar-min.woff")
+      xhr.open("GET", "https://readcrx-2.github.io/read.crx-2/textar-min.woff2")
       xhr.responseType = "arraybuffer"
       xhr.onload = ->
         if @status is 200
@@ -15,7 +15,7 @@ do ->
           s = ""
           for a in buffer
             s += String.fromCharCode(a)
-          font = "data:application/x-font-woff;base64,#{btoa(s)}"
+          font = "data:font/woff2;base64,#{btoa(s)}"
           localStorage.setItem("textar_font", font)
           resolve(font)
         return

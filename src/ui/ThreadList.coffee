@@ -266,7 +266,7 @@ class UI.ThreadList
             threadWrittenRes = parseInt($tr.$(selector.writtenRes)?.textContent ? 0)
             dateValue = $tr.$(selector.viewedDate)?.getAttr("date-value")
 
-            switch true
+            switch
               when target.hasClass("add_bookmark")
                 app.bookmark.add(threadURL, threadTitle, threadRes)
               when target.hasClass("del_bookmark")

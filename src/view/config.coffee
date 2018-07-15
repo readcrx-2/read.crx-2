@@ -261,9 +261,9 @@ app.boot("/view/config.html", ["cache", "bbsmenu"], (Cache, BBSMenu) ->
 
   for dom in $view.$$("input.direct[type=\"range\"]")
     dom.value = app.config.get(dom.name) or "0"
-    $view.C("#{dom.name}_text")[0].textContent = dom.value
+    $$.I("#{dom.name}_text").textContent = dom.value
     dom.on("input", ->
-      $view.C("#{@name}_text")[0].textContent = @value
+      $$.I("#{@name}_text").textContent = @value
       app.config.set(@name, @value)
       return
     )

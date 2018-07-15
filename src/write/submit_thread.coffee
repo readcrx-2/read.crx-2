@@ -224,7 +224,7 @@ app.boot("/write/submit_thread.html", ->
             charset: "Shift_JIS"
             input:
               submit: "新規スレッド作成"
-              time: Math.floor(Date.now() / 1000) - 60
+              time: (Date.now() // 1000) - 60
               bbs: tmp[3]
               subject: iframeArg.rcrxTitle
               FROM: iframeArg.rcrxName
@@ -238,7 +238,7 @@ app.boot("/write/submit_thread.html", ->
           charset: "EUC-JP"
           input:
             submit: "新規スレッド作成"
-            TIME: Math.floor(Date.now() / 1000) - 60
+            TIME: (Date.now() // 1000) - 60
             DIR: tmp[3]
             BBS: tmp[4]
             SUBJECT: iframeArg.rcrxTitle

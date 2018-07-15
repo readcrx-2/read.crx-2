@@ -112,7 +112,7 @@ class app.NG
         word: ""
         subElements: []
       # キーワードごとのNG処理
-      switch true
+      switch
         when ngWord.startsWith("RegExp:")
           ngElement.type = NG.TYPE.REG_EXP
           ngElement.word = ngWord.substr(7)

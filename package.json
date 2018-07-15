@@ -21,9 +21,9 @@
     "gulp-sort": "^2.0.0",
     "gulp-typescript": "^4.0.2",
     "merge2": "^1.2.2",
-    "node-sass": "^4.9.0",
+    "node-sass": "^4.9.2",
     "pug": "^2.0.3",
-    "sharp": "^0.20.3",
+    "sharp": "^0.20.5",
     "to-ico": "^1.1.5",
     "typescript": "^2.9.2"
   },

@@ -473,6 +473,13 @@ app.boot("/view/config.html", ["cache", "bbsmenu"], (Cache, BBSMenu) ->
     return
   )
 
+  for $dom in $view.$$("input[type=\"radio\"]") when $dom.name in ["ng_id_expire", "ng_slip_expire"]
+    $dom.on("change", ->
+      $$.I(@name).dataset.value = @value if @checked
+      return
+    )
+    $dom.dispatchEvent(new Event("change"))
+
   # 設定をインポート/エクスポート
   new SettingIO(
     name: "config"

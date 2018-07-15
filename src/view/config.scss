@@ -117,6 +117,7 @@ input[type="range"] {
   height: 4px;
   border-radius: 2px;
   margin: 8px 2px;
+  vertical-align: middle;
 
   &:focus, &:active {
     outline: none;
@@ -137,6 +138,11 @@ input[type="range"] {
 
 section button {
   @include button;
+  margin-bottom: 3px;
+
+  & + button{
+    margin-left: 3px;
+  }
 }
 
 .version {
@@ -182,6 +188,20 @@ input[type="text"]:invalid {
 
 .label_textarea, .label_textarea > a {
   vertical-align: top;
+}
+
+.ng_expire_input_container {
+  &[data-value="none"] {
+    .ng_expire_input_date, .ng_expire_input_day {
+      display: none;
+    }
+  }
+  &[data-value="date"] .ng_expire_input_day {
+    display: none;
+  }
+  &[data-value="day"] .ng_expire_input_date {
+    display: none;
+  }
 }
 
 .seconds {

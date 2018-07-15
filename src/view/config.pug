@@ -195,8 +195,8 @@ block body
             label
               textarea.direct(name="image_replace_dat" rows="6" cols="80")
             br
-            button.dat_file_show(type="button") ファイル読み込み(UTF-8)
             input(type="file" class="dat_file_hide hidden" accept=".dat")
+            button.dat_file_show(type="button") ファイル読み込み(UTF-8)
             button.dat_import_button(type="button") インポート
             span#dat_status
 
@@ -447,6 +447,8 @@ block body
         section
           h2 コンテキストメニューの設定
           div
+            |(期間指定の「0日後」は当日のみ有効)
+            br
             |IDをNG指定でセットする有効期限の指定方法:
             label
               input.direct(type="radio" name="ng_id_expire" value="none" checked)
@@ -457,20 +459,22 @@ block body
             label
               input.direct(type="radio" name="ng_id_expire" value="day")
               |曜日指定
-            br
-            input.direct.days(type="number" name="ng_id_expire_date" min="0" max="180")
-            |日後まで(0は当日のみ有効)
-            |次の
-            select.direct(name="ng_id_expire_day")
-              option(value="0") 日
-              option(value="1") 月
-              option(value="2") 火
-              option(value="3") 水
-              option(value="4") 木
-              option(value="5") 金
-              option(value="6") 土
-            |曜日まで
-            br
+            span#ng_id_expire.ng_expire_input_container
+              span.ng_expire_input_date
+                | (
+                input.direct.days(type="number" name="ng_id_expire_date" min="0" max="180")
+                |日後まで)
+              span.ng_expire_input_day
+                | (次の
+                select.direct(name="ng_id_expire_day")
+                  option(value="0") 日
+                  option(value="1") 月
+                  option(value="2") 火
+                  option(value="3") 水
+                  option(value="4") 木
+                  option(value="5") 金
+                  option(value="6") 土
+                |曜日まで)
             br
             |SLIPをNG指定でセットする有効期限の指定方法:
             label
@@ -482,32 +486,31 @@ block body
             label
               input.direct(type="radio" name="ng_slip_expire" value="day")
               |曜日指定
-            br
-            input.direct.days(type="number" name="ng_slip_expire_date" min="0" max="180")
-            |日後まで(0は当日のみ有効)
-            |次の
-            select.direct(name="ng_slip_expire_day")
-              option(value="0") 日
-              option(value="1") 月
-              option(value="2") 火
-              option(value="3") 水
-              option(value="4") 木
-              option(value="5") 金
-              option(value="6") 土
-            |曜日まで
+            span#ng_slip_expire.ng_expire_input_container
+              span.ng_expire_input_date
+                | (
+                input.direct.days(type="number" name="ng_slip_expire_date" min="0" max="180")
+                |日後まで)
+              span.ng_expire_input_day
+                | (次の
+                select.direct(name="ng_slip_expire_day")
+                  option(value="0") 日
+                  option(value="1") 月
+                  option(value="2") 火
+                  option(value="3") 水
+                  option(value="4") 木
+                  option(value="5") 金
+                  option(value="6") 土
+                |曜日まで)
 
       .tabcontent(name="other")
         section
           h2 書き込み
-          div
-            table
-              tbody
-                tr
-                  td デフォルトの名前
-                  td: input.direct(type="text" name="default_name")
-                tr
-                  td デフォルトのメールアドレス
-                  td: input.direct(type="text" name="default_mail")
+          .grid.grid_column_2
+            p デフォルトの名前
+            div: input.direct(type="text" name="default_name")
+            p デフォルトのメールアドレス
+            div: input.direct(type="text" name="default_mail")
 
         section
           h2 板一覧
@@ -561,8 +564,8 @@ block body
             label
               textarea.direct(name="replace_str_txt" rows="6" cols="80")
             br
-            button.replacestr_file_show(type="button") ファイル読み込み(UTF-8)
             input.hidden.replacestr_file_hide(type="file" accept=".txt")
+            button.replacestr_file_show(type="button") ファイル読み込み(UTF-8)
             button.replacestr_import_button(type="button") インポート
             span#replacestr_status
 
@@ -586,9 +589,9 @@ block body
             |日以上の前の履歴を
             button.history_range_clear(type="button") 削除
             br
+            input.hidden.history_file_hide(type="file" accept=".json")
             button.history_export_button(type="button") エクスポート
             button.history_file_show(type="button") ファイル読み込み
-            input.hidden.history_file_hide(type="file" accept=".json")
             button.history_import_button(type="button") インポート
             br
             input.direct(type="checkbox" name="no_history")
@@ -606,9 +609,9 @@ block body
             |日以上の前の履歴を
             button.writehistory_range_clear(type="button") 削除
             br
+            input.hidden.writehistory_file_hide(type="file" accept=".json")
             button.writehistory_export_button(type="button") エクスポート
             button.writehistory_file_show(type="button") ファイル読み込み
-            input.hidden.writehistory_file_hide(type="file" accept=".json")
             button.writehistory_import_button(type="button") インポート
             br
             input.direct(type="checkbox" name="no_writehistory")
@@ -629,9 +632,9 @@ block body
         section
           h2 設定
           div.config_import
+            input.config_file_hide.hidden(type="file" accept=".json")
             button.config_export_button(type="button") エクスポート
             button.config_file_show(type="button") ファイル読み込み
-            input.config_file_hide.hidden(type="file" accept=".json")
             button.config_import_button(type="button") インポート
             span#config_status
 

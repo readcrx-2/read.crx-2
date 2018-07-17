@@ -117,6 +117,7 @@ input[type="range"] {
   height: 4px;
   border-radius: 2px;
   margin: 8px 2px;
+  vertical-align: middle;
 
   &:focus, &:active {
     outline: none;
@@ -137,6 +138,11 @@ input[type="range"] {
 
 section button {
   @include button;
+  margin-bottom: 3px;
+
+  & + button{
+    margin-left: 3px;
+  }
 }
 
 .version {
@@ -176,12 +182,42 @@ section button {
   }
 }
 
+.grid {
+  display: grid;
+  grid-gap: 5px;
+
+  p {
+    margin: auto 0;
+  }
+
+  &.grid_column_2 {
+    grid-template-columns: repeat(2, fit-content(100%))
+  }
+  &.grid_column_3 {
+    grid-template-columns: repeat(3, fit-content(100%))
+  }
+}
+
 input[type="text"]:invalid {
   background-color: #fcc;
 }
 
 .label_textarea, .label_textarea > a {
   vertical-align: top;
+}
+
+.ng_expire_input_container {
+  &[data-value="none"] {
+    .ng_expire_input_date, .ng_expire_input_day {
+      display: none;
+    }
+  }
+  &[data-value="date"] .ng_expire_input_day {
+    display: none;
+  }
+  &[data-value="day"] .ng_expire_input_date {
+    display: none;
+  }
 }
 
 .seconds {

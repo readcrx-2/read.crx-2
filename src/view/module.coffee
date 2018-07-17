@@ -681,7 +681,7 @@ class app.view.TabContentView extends app.view.PaneContentView
       $button.remove() if $button
       return
 
-    switch true
+    switch
       when @$element.hasClass("view_thread")
         cfgName = ""
         minSeconds = 5000

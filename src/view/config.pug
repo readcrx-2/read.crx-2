@@ -95,7 +95,7 @@ block body
           div
             label
               input.direct(name="aa_min_ratio" type="range" min="1" max="100")
-              span.aa_min_ratio_text
+              span#aa_min_ratio_text
               |% (100%のときは縮小表示しません)
 
         section
@@ -135,26 +135,22 @@ block body
           div
             |最小値以下をセットすると無効になります
             br
-            table
-              tbody
-                tr
-                  td スレ
-                  td
-                    input.direct.seconds(type="number" name="auto_load_second" min="0")
-                    |ms
-                  td (最小5000ms、勢いが遅いスレで30000ms未満にするとエラーがでます)
-                tr
-                  td 板
-                  td
-                    input.direct.seconds(type="number" name="auto_load_second_board" min="0")
-                    |ms
-                  td (最小20000ms)
-                tr
-                  td ブックマーク
-                  td
-                    input.direct.seconds(type="number" name="auto_load_second_bookmark" min="0")
-                    |ms
-                  td (最小20000ms)
+            .grid.grid_column_3
+              p スレ
+              div
+                input.direct.seconds(type="number" name="auto_load_second" min="0")
+                |ms
+              p (最小5000ms、勢いが遅いスレで30000ms未満にするとエラーがでます)
+              p 板
+              div
+                input.direct.seconds(type="number" name="auto_load_second_board" min="0")
+                |ms
+              p (最小20000ms)
+              p ブックマーク
+              div
+                input.direct.seconds(type="number" name="auto_load_second_bookmark" min="0")
+                |ms
+              p (最小20000ms)
 
         section
           h2 自動更新の処理
@@ -195,8 +191,8 @@ block body
             label
               textarea.direct(name="image_replace_dat" rows="6" cols="80")
             br
-            button.dat_file_show(type="button") ファイル読み込み(UTF-8)
             input(type="file" class="dat_file_hide hidden" accept=".dat")
+            button.dat_file_show(type="button") ファイル読み込み(UTF-8)
             button.dat_import_button(type="button") インポート
             span#dat_status
 
@@ -210,7 +206,7 @@ block body
             |ぼかし具合:
             label
               input.direct(type="range" name="image_blur_length" min="1" max="9")
-              span.image_blur_length_text
+              span#image_blur_length_text
               |px
             br
             label
@@ -219,18 +215,17 @@ block body
         section
           h2 サムネイルサイズ
           div
-            div
-              label
-                |最大幅:
-                input.direct(type="range" name="image_width" min="150" max="800" step="10")
-                span.image_width_text
-                |px
-            div
-              label
-                |最大高さ:
-                input.direct(type="range" name="image_height" min="100" max="600" step="10")
-                span.image_height_text
-                |px
+            label
+              |最大幅:
+              input.direct(type="range" name="image_width" min="150" max="800" step="10")
+              span#image_width_text
+              |px
+          div
+            label
+              |最大高さ:
+              input.direct(type="range" name="image_height" min="100" max="600" step="10")
+              span#image_height_text
+              |px
 
         section
           h2 音声と動画の再生
@@ -246,7 +241,7 @@ block body
             label
               |最大幅:
               input.direct(type="range" name="audio_width" min="240" max="480" step="10")
-              span.audio_width_text
+              span#audio_width_text
               |px
           div
             label
@@ -263,13 +258,13 @@ block body
             label
               |最大幅:
               input.direct(type="range" name="video_width" min="160" max="800" step="10")
-              span.video_width_text
+              span#video_width_text
               |px
             br
             label
               |最大高さ:
               input.direct(type="range" name="video_height" min="160" max="600" step="10")
-              span.video_height_text
+              span#video_height_text
               |px
 
         section
@@ -284,7 +279,7 @@ block body
             label
               |拡大率:
               input.direct(type="range" name="zoom_ratio_image" min="100" max="500" step="5")
-              span.zoom_ratio_image_text
+              span#zoom_ratio_image_text
               |%
           div
             br
@@ -295,7 +290,7 @@ block body
             label
               |拡大率:
               input.direct(type="range" name="zoom_ratio_video" min="100" max="500" step="5")
-              span.zoom_ratio_video_text
+              span#zoom_ratio_video_text
               |%
 
         section
@@ -447,6 +442,8 @@ block body
         section
           h2 コンテキストメニューの設定
           div
+            |(期間指定の「0日後」は当日のみ有効)
+            br
             |IDをNG指定でセットする有効期限の指定方法:
             label
               input.direct(type="radio" name="ng_id_expire" value="none" checked)
@@ -457,20 +454,22 @@ block body
             label
               input.direct(type="radio" name="ng_id_expire" value="day")
               |曜日指定
-            br
-            input.direct.days(type="number" name="ng_id_expire_date" min="0" max="180")
-            |日後まで(0は当日のみ有効)
-            |次の
-            select.direct(name="ng_id_expire_day")
-              option(value="0") 日
-              option(value="1") 月
-              option(value="2") 火
-              option(value="3") 水
-              option(value="4") 木
-              option(value="5") 金
-              option(value="6") 土
-            |曜日まで
-            br
+            span#ng_id_expire.ng_expire_input_container
+              span.ng_expire_input_date
+                | (
+                input.direct.days(type="number" name="ng_id_expire_date" min="0" max="180")
+                |日後まで)
+              span.ng_expire_input_day
+                | (次の
+                select.direct(name="ng_id_expire_day")
+                  option(value="0") 日
+                  option(value="1") 月
+                  option(value="2") 火
+                  option(value="3") 水
+                  option(value="4") 木
+                  option(value="5") 金
+                  option(value="6") 土
+                |曜日まで)
             br
             |SLIPをNG指定でセットする有効期限の指定方法:
             label
@@ -482,32 +481,31 @@ block body
             label
               input.direct(type="radio" name="ng_slip_expire" value="day")
               |曜日指定
-            br
-            input.direct.days(type="number" name="ng_slip_expire_date" min="0" max="180")
-            |日後まで(0は当日のみ有効)
-            |次の
-            select.direct(name="ng_slip_expire_day")
-              option(value="0") 日
-              option(value="1") 月
-              option(value="2") 火
-              option(value="3") 水
-              option(value="4") 木
-              option(value="5") 金
-              option(value="6") 土
-            |曜日まで
+            span#ng_slip_expire.ng_expire_input_container
+              span.ng_expire_input_date
+                | (
+                input.direct.days(type="number" name="ng_slip_expire_date" min="0" max="180")
+                |日後まで)
+              span.ng_expire_input_day
+                | (次の
+                select.direct(name="ng_slip_expire_day")
+                  option(value="0") 日
+                  option(value="1") 月
+                  option(value="2") 火
+                  option(value="3") 水
+                  option(value="4") 木
+                  option(value="5") 金
+                  option(value="6") 土
+                |曜日まで)
 
       .tabcontent(name="other")
         section
           h2 書き込み
-          div
-            table
-              tbody
-                tr
-                  td デフォルトの名前
-                  td: input.direct(type="text" name="default_name")
-                tr
-                  td デフォルトのメールアドレス
-                  td: input.direct(type="text" name="default_mail")
+          .grid.grid_column_2
+            p デフォルトの名前
+            div: input.direct(type="text" name="default_name")
+            p デフォルトのメールアドレス
+            div: input.direct(type="text" name="default_mail")
 
         section
           h2 板一覧
@@ -561,8 +559,8 @@ block body
             label
               textarea.direct(name="replace_str_txt" rows="6" cols="80")
             br
-            button.replacestr_file_show(type="button") ファイル読み込み(UTF-8)
             input.hidden.replacestr_file_hide(type="file" accept=".txt")
+            button.replacestr_file_show(type="button") ファイル読み込み(UTF-8)
             button.replacestr_import_button(type="button") インポート
             span#replacestr_status
 
@@ -586,9 +584,9 @@ block body
             |日以上の前の履歴を
             button.history_range_clear(type="button") 削除
             br
+            input.hidden.history_file_hide(type="file" accept=".json")
             button.history_export_button(type="button") エクスポート
             button.history_file_show(type="button") ファイル読み込み
-            input.hidden.history_file_hide(type="file" accept=".json")
             button.history_import_button(type="button") インポート
             br
             input.direct(type="checkbox" name="no_history")
@@ -606,9 +604,9 @@ block body
             |日以上の前の履歴を
             button.writehistory_range_clear(type="button") 削除
             br
+            input.hidden.writehistory_file_hide(type="file" accept=".json")
             button.writehistory_export_button(type="button") エクスポート
             button.writehistory_file_show(type="button") ファイル読み込み
-            input.hidden.writehistory_file_hide(type="file" accept=".json")
             button.writehistory_import_button(type="button") インポート
             br
             input.direct(type="checkbox" name="no_writehistory")
@@ -629,9 +627,9 @@ block body
         section
           h2 設定
           div.config_import
+            input.config_file_hide.hidden(type="file" accept=".json")
             button.config_export_button(type="button") エクスポート
             button.config_file_show(type="button") ファイル読み込み
-            input.config_file_hide.hidden(type="file" accept=".json")
             button.config_import_button(type="button") インポート
             span#config_status
 

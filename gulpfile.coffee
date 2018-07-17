@@ -95,6 +95,8 @@ args =
   pugOptions:
     pug: pugCompiler
     locals: manifest
+  sharpWebpOptions:
+    lossless: true
 imgs = [
   "read.crx_48x48.png"
   "read.crx_38x38.png"
@@ -314,7 +316,7 @@ gulp.task "html", gulp.parallel("viewhtml", "zombie.html", "writehtml")
 gulp.task "webp&png", ->
   await fs.ensureDir(args.webpBinPath)
   await Promise.all(imgs.map( (img) ->
-    m = img.match(/^(.+)_(\d+)x(\d+)(?:_([a-fA-F0-9]*))?(?:_r(\-?\d+))?\.(?:webp|png)$/)
+    m = img.match(/^(.+)_(\d+)x(\d+)(?:_([a-fA-F0-9]*))?(?:_r(\-?\d+))?\.(webp|png)$/)
     src = "#{args.webpSrcPath}/#{m[1]}.svg"
     bin = "#{args.webpBinPath}/#{img}"
 
@@ -328,6 +330,8 @@ gulp.task "webp&png", ->
     if m[5]?
       sh.rotate(parseInt(m[5]))
     sh.resize(parseInt(m[2]), parseInt(m[3]))
+    if m[6] is "webp"
+      sh.webp(args.sharpWebpOptions)
     await sh.toFile(bin)
     return
   ))
@@ -367,6 +371,7 @@ gulp.task "loading.webp", ->
   await fs.ensureDir(args.webpBinPath)
   await sharp(args.loadingSrcPath)
     .resize(100, 100)
+    .webp(args.sharpWebpOptions)
     .toFile(args.loadingBinPath)
   return
 

@@ -254,7 +254,7 @@ app.boot("/write/write.html", ->
             charset: "Shift_JIS"
             input:
               submit: "書きこむ"
-              time: Math.floor(Date.now() / 1000) - 60
+              time: (Date.now() // 1000) - 60
               bbs: tmp[5]
               key: tmp[6]
               FROM: iframeArg.rcrxName
@@ -267,7 +267,7 @@ app.boot("/write/write.html", ->
           action: "#{scheme}://jbbs.shitaraba.net/bbs/write.cgi/#{tmp[5]}/#{tmp[6]}/#{tmp[7]}/"
           charset: "EUC-JP"
           input:
-            TIME: Math.floor(Date.now() / 1000) - 60
+            TIME: (Date.now() // 1000) - 60
             DIR: tmp[5]
             BBS: tmp[6]
             KEY: tmp[7]

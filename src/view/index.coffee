@@ -912,7 +912,7 @@ app.main = ->
         return unless target.tagName is "LI"
         $menu.off("click", func)
 
-        switch true
+        switch
           #閉じたタブを開く
           when target.hasClass("restore")
             if tmp = getLatestRestorableTabID()

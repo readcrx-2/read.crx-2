@@ -261,9 +261,9 @@ app.boot("/view/config.html", ["cache", "bbsmenu"], (Cache, BBSMenu) ->
 
   for dom in $view.$$("input.direct[type=\"range\"]")
     dom.value = app.config.get(dom.name) or "0"
-    $view.C("#{dom.name}_text")[0].textContent = dom.value
+    $$.I("#{dom.name}_text").textContent = dom.value
     dom.on("input", ->
-      $view.C("#{@name}_text")[0].textContent = @value
+      $$.I("#{@name}_text").textContent = @value
       app.config.set(@name, @value)
       return
     )
@@ -472,6 +472,13 @@ app.boot("/view/config.html", ["cache", "bbsmenu"], (Cache, BBSMenu) ->
     resetBBSMenu()
     return
   )
+
+  for $dom in $view.$$("input[type=\"radio\"]") when $dom.name in ["ng_id_expire", "ng_slip_expire"]
+    $dom.on("change", ->
+      $$.I(@name).dataset.value = @value if @checked
+      return
+    )
+    $dom.dispatchEvent(new Event("change"))
 
   # 設定をインポート/エクスポート
   new SettingIO(

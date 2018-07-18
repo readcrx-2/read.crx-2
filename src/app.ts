@@ -127,13 +127,12 @@ namespace app {
   }
 
   export class Message {
-    private _listenerStore:{[index:string]:Callbacks;} = {};
-    private _bc:any;
+    private _listenerStore:Map<string, Callbacks> = new Map();
+    private _bc:BroadcastChannel;
 
     constructor () {
       this._bc = new BroadcastChannel("readcrx");
-      this._bc.on("message", ({data}) => {
-        var {type, message} = JSON.parse(data);
+      this._bc.on("message", ({data: {type, message}}) => {
         this._fire(type, message);
       });
     }
@@ -142,27 +141,27 @@ namespace app {
       var message = deepCopy(message);
 
       await defer();
-      if (this._listenerStore[type]) {
-        this._listenerStore[type].call(message);
+      if (this._listenerStore.has(type)) {
+        this._listenerStore.get(type)!.call(message);
       }
     }
 
     send (type:string, message:any = {}):void {
       this._fire(type, message);
-      this._bc.postMessage(JSON.stringify({type, message}));
+      this._bc.postMessage({type, message});
       return
     }
 
     on (type:string, listener:Function) {
-      if (!this._listenerStore[type]) {
-        this._listenerStore[type] = new app.Callbacks({persistent: true});
+      if (!this._listenerStore.has(type)) {
+        this._listenerStore.set(type, new app.Callbacks({persistent: true}));
       }
-      this._listenerStore[type].add(listener);
+      this._listenerStore.get(type)!.add(listener);
     }
 
     off (type:string, listener:Function) {
-      if (this._listenerStore[type]) {
-        this._listenerStore[type].remove(listener);
+      if (this._listenerStore.has(type)) {
+        this._listenerStore.get(type)!.remove(listener);
       }
     }
   }

@@ -7,9 +7,7 @@ namespace app {
   export function criticalError (message:string):void {
     new Notification(
       "深刻なエラーが発生したのでread.crxを終了します",
-      {
-        body: `詳細 : ${message}`
-      }
+      { body: `詳細 : ${message}` }
     )
 
     parent.chrome.tabs.getCurrent( ({id}): void => {
@@ -20,8 +18,7 @@ namespace app {
   export function log (level:logLevel, ...data:any[]) {
     if (logLevels.has(level)) {
       console[level](...data);
-    }
-    else {
+    } else {
       log("error", "app.log: 引数levelが不正な値です", level);
     }
   }
@@ -83,8 +80,7 @@ namespace app {
     add (callback:Function):void {
       if (!this._config.persistent && this._latestCallArg) {
         callback(...deepCopy(this._latestCallArg));
-      }
-      else {
+      } else {
         this._callbackStore.add(callback);
       }
     }
@@ -92,8 +88,7 @@ namespace app {
     remove (callback:Function):void {
       if (this._callbackStore.has(callback)) {
         this._callbackStore.delete(callback);
-      }
-      else {
+      } else {
         log("error",
           "app.Callbacks: 存在しないコールバックを削除しようとしました。");
       }
@@ -105,8 +100,7 @@ namespace app {
       if (!this._config.persistent && this._latestCallArg) {
         app.log("error",
           "app.Callbacks: persistentでないCallbacksが複数回callされました。");
-      }
-      else {
+      } else {
         this.wasCalled = true;
 
         this._latestCallArg = deepCopy(arg);
@@ -282,22 +276,23 @@ namespace app {
       this._onChanged = (change, area) => {
         var key:string, val:any;
 
-        if (area === "local") {
-          for ([key, val] of Object.entries(change)) {
-            if (!key.startsWith("config_")) continue;
-            var {newValue} = val;
+        if (area !== "local") {
+          return;
+        }
 
-            if (typeof newValue === "string") {
-              this._cache.set(key, newValue);
+        for ([key, val] of Object.entries(change)) {
+          if (!key.startsWith("config_")) continue;
+          var {newValue} = val;
 
-              app.message.send("config_updated", {
-                key: key.slice(7),
-                val: newValue
-              });
-            }
-            else {
-              this._cache.delete(key);
-            }
+          if (typeof newValue === "string") {
+            this._cache.set(key, newValue);
+
+            app.message.send("config_updated", {
+              key: key.slice(7),
+              val: newValue
+            });
+          } else {
+            this._cache.delete(key);
           }
         }
       };
@@ -308,8 +303,7 @@ namespace app {
     get (key:string):string|null {
       if (this._cache.has(`config_${key}`)) {
         return this._cache.get(`config_${key}`)!;
-      }
-      else if (Config._default.has(key)) {
+      } else if (Config._default.has(key)) {
         return Config._default.get(key)!;
       }
       return null;
@@ -416,14 +410,14 @@ namespace app {
   })();
 
   export function clipboardWrite (str:string):void {
-    var textarea:HTMLTextAreaElement;
+    var $textarea:HTMLTextAreaElement;
 
-    textarea = <HTMLTextAreaElement>document.createElement("textarea");
-    textarea.value = str;
-    document.body.appendChild(textarea);
-    textarea.select();
+    $textarea = $__("textarea");
+    $textarea.value = str;
+    document.body.addLast($textarea);
+    $textarea.select();
     document.execCommand("copy");
-    document.body.removeChild(textarea);
+    $textarea.remove();
   }
 
   export var module;
@@ -446,8 +440,7 @@ namespace app {
         });
         await defer();
         definition(...depModules.concat(callback));
-      }
-      else {
+      } else {
         await defer();
         definition(...depModules);
       }
@@ -480,9 +473,8 @@ namespace app {
           dependencies,
           definition
         });
-      }
-      // 依存関係が満たされている場合、即座にモジュール初期化を開始する
-      else {
+      } else {
+        // 依存関係が満たされている場合、即座にモジュール初期化を開始する
         fireDefinition(moduleId, dependencies, definition);
       }
     };
@@ -509,21 +501,19 @@ namespace app {
       htmlVersion = document.documentElement.dataset.appVersion!;
       if ((await manifest).version !== htmlVersion) {
         location.reload(true);
-      }
-      else {
+      } else {
         let onload = () => {
-          app.config.ready(() => {
+          app.config.ready( () => {
             if (requirements) {
               app.module(null, requirements, fn);
-            }
-            else {
+            } else {
               fn();
             }
           });
         };
         // async関数のためDOMContentLoadedに間に合わないことがある
         if (document.readyState === "loading") {
-          document.addEventListener("DOMContentLoaded", onload);
+          document.on("DOMContentLoaded", onload);
         } else {
           onload();
         }

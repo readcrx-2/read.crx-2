@@ -52,3 +52,5 @@ do ->
 
   UI.ContextMenu.remove = ->
     cleanup()
+    return
+  return

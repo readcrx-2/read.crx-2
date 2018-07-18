@@ -23,7 +23,7 @@ namespace UI {
     }
 
     getSelected (): HTMLElement|null {
-      return (<HTMLElement>this.$element.$("h3.selected, a.selected")) || null;
+      return this.$element.$("h3.selected, a.selected") || null;
     }
 
     select (target: HTMLElement): void {
@@ -98,8 +98,8 @@ namespace UI {
         }
       }
       else {
-        current = <HTMLElement>this.$element.$(".accordion_open + ul a");
-        current = current || <HTMLElement>this.$element.$("h3");
+        current = this.$element.$(".accordion_open + ul a");
+        current = current || this.$element.$("h3");
       }
 
       if (current && current !== this.getSelected()) {
@@ -150,8 +150,8 @@ namespace UI {
         }
       }
       else {
-        current = <HTMLElement>this.$element.$(".accordion_open + ul a");
-        current = current || <HTMLElement>this.$element.$("h3");
+        current = this.$element.$(".accordion_open + ul a");
+        current = current || this.$element.$("h3");
       }
 
       if (current && current !== this.getSelected()) {

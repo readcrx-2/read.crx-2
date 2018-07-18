@@ -837,7 +837,6 @@ class UI.ThreadContent
   @param {String} prefix
   ###
   updateId: ({startRes = 1, endRes, dom}, className, map, prefix) ->
-    numbersReg = /(?:\(\d+\))?$/
     for [id, index] from map
       count = index.size
       for resNum from index when startRes <= resNum and (!endRes? or resNum <= endRes)

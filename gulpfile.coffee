@@ -11,7 +11,7 @@ sort = require "gulp-sort"
 concat = require "gulp-concat"
 rename = require "gulp-rename"
 
-coffee = require "gulp-coffeescript"
+coffee = require "gulp-coffee"
 ts = require "gulp-typescript"
 sass = require "gulp-sass"
 pug = require "gulp-pug"

@@ -6,7 +6,7 @@ do ->
   document.fonts.add(fontface)
   return
 
-app.boot("/write/write.html", ->
+app.boot("/write/submit_res.html", ->
   param = app.URL.parseQuery(location.search)
   arg =
     url: app.URL.fix(param.get("url"))

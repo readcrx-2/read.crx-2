@@ -48,13 +48,13 @@ args =
   writePath:
     cs:
       coffee: "./src/write/cs_write.coffee"
-    write:
+    submit_res:
       ts: "./src/core/URL.ts"
       coffee: [
         "./src/core/util.coffee"
         "./src/core/WriteHistory.coffee"
         "./src/ui/Animate.coffee"
-        "./src/write/write.coffee"
+        "./src/write/submit_res.coffee"
       ]
     submit_thread:
       ts: "./src/core/URL.ts"
@@ -237,16 +237,16 @@ gulp.task "cs_write.js", ->
     .pipe(coffee(args.coffeeOptions))
     .pipe(gulp.dest("#{args.outputPath}/write"))
 
-gulp.task "write.js", ->
+gulp.task "submit_res.js", ->
   return merge(
-    gulp.src args.writePath.write.ts
+    gulp.src args.writePath.submit_res.ts
       .pipe(plumber(errorHandler: notify.onError("Error: <%= error.toString() %>")))
       .pipe(ts(args.tsOptions, ts.reporter.nullReporter())),
-    gulp.src args.writePath.write.coffee
+    gulp.src args.writePath.submit_res.coffee
       .pipe(plumber(errorHandler: notify.onError("Error: <%= error.toString() %>")))
       .pipe(coffee(args.coffeeOptions))
   ).pipe(sort(sortForExtend))
-  .pipe(concat("write.js"))
+  .pipe(concat("submit_res.js"))
   .pipe(gulp.dest("#{args.outputPath}/write"))
 
 gulp.task "submit_thread.js", ->
@@ -261,7 +261,7 @@ gulp.task "submit_thread.js", ->
   .pipe(concat("submit_thread.js"))
   .pipe(gulp.dest("#{args.outputPath}/write"))
 
-gulp.task "writejs", gulp.parallel("cs_write.js", "write.js", "submit_thread.js")
+gulp.task "writejs", gulp.parallel("cs_write.js", "submit_res.js", "submit_thread.js")
 gulp.task "js", gulp.parallel("app.js", "background.js", "cs_addlink.js", "app_core.js", "ui.js", "viewjs", "zombie.js", "writejs")
 
 
@@ -434,7 +434,7 @@ gulp.task "watch", gulp.series("default", ->
   gulp.watch(args.viewCoffeePath, gulp.task("viewjs"))
   gulp.watch(args.zobieCoffeePath, gulp.task("zombie.js"))
   gulp.watch(args.writePath.cs.coffee, gulp.task("cs_write.js"))
-  gulp.watch([args.writePath.write.ts, args.writePath.write.coffee], gulp.task("write.js"))
+  gulp.watch([args.writePath.submit_res.ts, args.writePath.submit_res.coffee], gulp.task("submit_res.js"))
   gulp.watch([args.writePath.submit_thread.ts, args.writePath.submit_thread.coffee], gulp.task("submit_thread.js"))
   gulp.watch(args.cssPath, gulp.task("css"))
   gulp.watch(args.viewHtmlPath, gulp.task("viewhtml"))

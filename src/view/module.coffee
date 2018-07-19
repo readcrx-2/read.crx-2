@@ -149,7 +149,7 @@ class app.view.IframeView extends app.view.View
 
   _write: (param = {}) ->
     if @$element.hasClass("view_thread")
-      htmlname = "write"
+      htmlname = "submit_res"
       height = "300"
     else if @$element.hasClass("view_board")
       htmlname = "submit_thread"

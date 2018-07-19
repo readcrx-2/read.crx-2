@@ -92,6 +92,7 @@ args =
     noImplicitThis: true
   sassOptions:
     outputStyle: "compressed"
+    errLogToConsole: false
   pugOptions:
     pug: pugCompiler
     locals: manifest
@@ -268,19 +269,19 @@ gulp.task "js", gulp.parallel("app.js", "background.js", "cs_addlink.js", "app_c
 ##css
 gulp.task "ui.css", ->
   return gulp.src args.uiCssPath
-    .pipe(plumber(errorHandler: notify.onError("Error: <%= error.toString() %>")))
+    .pipe(plumber(errorHandler: notify.onError("Error: <%= error.message %>")))
     .pipe(sass(args.sassOptions))
     .pipe(gulp.dest(args.outputPath))
 
 gulp.task "viewcss", ->
   return gulp.src args.viewCssPath
-    .pipe(plumber(errorHandler: notify.onError("Error: <%= error.toString() %>")))
+    .pipe(plumber(errorHandler: notify.onError("Error: <%= error.message %>")))
     .pipe(sass(args.sassOptions))
     .pipe(gulp.dest("#{args.outputPath}/view"))
 
 gulp.task "writecss", ->
   return gulp.src args.writeCssPath
-    .pipe(plumber(errorHandler: notify.onError("Error: <%= error.toString() %>")))
+    .pipe(plumber(errorHandler: notify.onError("Error: <%= error.message %>")))
     .pipe(sass(args.sassOptions))
     .pipe(gulp.dest("#{args.outputPath}/write"))
 

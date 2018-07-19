@@ -1,0 +1,169 @@
+* {
+  box-sizing: border-box;
+}
+
+html, body {
+  height: 100%;
+  margin: 0;
+}
+
+body {
+  font-size: 14px;
+  padding: 8px;
+}
+
+header {
+  font-size: 14px;
+  margin: 0 0 5px 0;
+  display: flex;
+  > h1 {
+    flex-grow: 1;
+    font-size: 18px;
+    margin: 0;
+    &.https::before {
+      content: url(/img/lock_19x19_3a5.webp);
+      vertical-align: middle;
+      margin-right: 5px;
+    }
+  }
+}
+
+.preview {
+  position: fixed;
+  top: 0;
+  right: 0;
+  bottom: 0;
+  left: 0;
+  > pre {
+    @include ascii-art;
+    margin: 0;
+    padding: 5px;
+    width: 100%;
+    height: 100%;
+    overflow: auto;
+  }
+  > .close_preview {
+    position: absolute;
+    right: 10px;
+    top: 5px;
+  }
+}
+
+form {
+  margin: 0;
+  height: 100%;
+  display: flex;
+  flex-flow: column;
+}
+
+input[type="submit"], button {
+  @include button;
+}
+
+textarea, input:not([type="submit"]) {
+  @include input-text;
+}
+
+textarea {
+  display: block;
+  flex-grow: 1;
+  resize: none;
+  width: 100%;
+}
+
+.iframe_container {
+  position: fixed;
+  left: 0;
+  top: 0;
+  width: 100%;
+  height: 100%;
+  padding: 5%;
+  border: 3px solid;
+  background-color: rgba(black, 0.7);
+  box-shadow: 0 0 20px black inset;
+}
+
+.hide_iframe {
+  cursor: pointer;
+  position: absolute;
+  right: 4px;
+  top: 4px;
+  background-color: #333333;
+  border: 2px solid white;
+  box-shadow: 0 0 20px black;
+  box-sizing: content-box;
+  width: 16px;
+  height: 16px;
+  background-image: url(/img/close_16x16.webp);
+}
+
+iframe {
+  border: none;
+  width: 100%;
+  height: 100%;
+  box-shadow: 0 0 20px black;
+}
+
+@mixin view_write_theme (
+  $background-color,
+  $color,
+  $preview-background-color,
+  $preview-color,
+  $iframe-container-border-color,
+  $iframe-background-color
+) {
+  & {
+    background-color: $background-color;
+    color: $color;
+  }
+
+  header {
+    color: $color;
+  }
+
+  .preview {
+    background-color: $preview-background-color;
+    color: $preview-color;
+  }
+
+  .iframe_container {
+    border-color: $iframe-container-border-color;
+  }
+
+  iframe {
+    background-color: $iframe-background-color;
+  }
+}
+
+.view_write {
+  @include view_write_theme (
+    $background-color: #f5f5f5,
+    $color: #444,
+    $preview-background-color: #fff,
+    $preview-color: #000,
+    $iframe-container-border-color: #ccc,
+    $iframe-background-color: #fff
+  );
+}
+
+.view_write.theme_dark {
+  @include view_write_theme(
+    $background-color: #333,
+    $color: #eee,
+    $preview-background-color: #000,
+    $preview-color: #fff,
+    $iframe-container-border-color: #333,
+    $iframe-background-color: #000
+  );
+
+  textarea, input:not([type="submit"]) {
+    border-color: #999;
+    background-color: #333;
+    color: #eee;
+    box-shadow: 0 1px 1px #333 inset;
+
+    &[disabled] {
+      background-color: #ddd;
+    }
+  }
+}

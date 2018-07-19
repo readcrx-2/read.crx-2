@@ -54,15 +54,17 @@ args =
         "./src/core/util.coffee"
         "./src/core/WriteHistory.coffee"
         "./src/ui/Animate.coffee"
+        "./src/write/write.coffee"
         "./src/write/submit_res.coffee"
       ]
     submit_thread:
       ts: "./src/core/URL.ts"
       coffee:[
         "./src/ui/Animate.coffee"
+        "./src/write/write.coffee"
         "./src/write/submit_thread.coffee"
       ]
-  writeCssPath: "./src/write/*.scss"
+  writeCssPath: ["./src/write/*.scss", "!./src/write/write.scss"]
   writeHtmlPath: "./src/write/*.pug"
   webpSrcPath: "./src/image/svg"
   webpBinPath: "./debug/img"

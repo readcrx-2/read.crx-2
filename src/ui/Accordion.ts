@@ -18,8 +18,7 @@ namespace UI {
         openAccordions[i].removeClass("accordion_open");
       }
 
-      this.$element.on("click", (e) => {
-        var target = <HTMLElement>e.target;
+      this.$element.on("click", ({target}) => {
         if (target.parent() === this.$element && target.tagName === "H3") {
           if (target.hasClass("accordion_open")) {
             accordion.close(target);

@@ -837,12 +837,13 @@ class UI.ThreadContent
   @param {String} prefix
   ###
   updateId: ({startRes = 1, endRes, dom}, className, map, prefix) ->
-    numbersReg = /(?:\(\d+\))?$/
     for [id, index] from map
       count = index.size
+      i = 0
       for resNum from index when startRes <= resNum and (!endRes? or resNum <= endRes)
+        i++
         elm = dom.child()[resNum - startRes].C(className)[0]
-        elm.textContent = "#{prefix}#{id}(#{count})"
+        elm.textContent = "#{prefix}#{id}(#{i}/#{count})"
         if count >= 5
           elm.removeClass("link")
           elm.addClass("freq")

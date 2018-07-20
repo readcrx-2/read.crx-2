@@ -39,7 +39,7 @@ namespace UI {
 
           e.preventDefault();
 
-          if ((<any>e).wheelDelta < 0) {
+          if (e.wheelDelta < 0) {
             tmp = "prev";
           }
           else {
@@ -54,11 +54,11 @@ namespace UI {
         }
       });
       $ul.on("mousedown", (e) => {
-        if ((<HTMLElement>e.target).tagName === "IMG") {
+        if (e.target.tagName === "IMG") {
           e.preventDefault();
           return;
         }
-        var target = (<HTMLElement>(<HTMLElement>e.target).closest("li"))
+        var target = e.target.closest("li")
         if (target === null) return;
         if (e.which === 3) return;
 
@@ -71,7 +71,7 @@ namespace UI {
       });
       $ul.on("click", ({target}) => {
         if (target.tagName === "IMG") {
-          tab.remove(<string>target.parent().dataset.tabid);
+          tab.remove(target.parent().dataset.tabid);
         }
       });
       new UI.VirtualNotch($ul);
@@ -97,11 +97,11 @@ namespace UI {
           return;
         }
 
-        if (!(<HTMLElement>this.$element).contains(<HTMLElement>source.frameElement)) {
+        if (!this.$element.contains(source.frameElement)) {
           return;
         }
 
-        tabId = (<HTMLElement>source.frameElement).dataset.tabid!;
+        tabId = source.frameElement.dataset.tabid!;
         history = this.historyStore[tabId];
 
         switch (message.type) {
@@ -172,7 +172,7 @@ namespace UI {
     getSelected (): Object|null {
       var li: HTMLLIElement;
 
-      if (li = <HTMLLIElement>this.$element.$("li.tab_selected")) {
+      if (li = this.$element.$("li.tab_selected")) {
         return {
           tabId: li.dataset.tabid,
           url: li.dataset.tabsrc,
@@ -296,7 +296,7 @@ namespace UI {
         var selectedTab, iframe: HTMLIFrameElement;
 
         if (selectedTab = this.getSelected()) {
-          iframe = <HTMLIFrameElement>this.$element.$(`iframe[data-tabid=\"${selectedTab.tabId}\"]`);
+          iframe = this.$element.$(`iframe[data-tabid=\"${selectedTab.tabId}\"]`);
           if (iframe.getAttr("src") !== selectedTab.url) {
             iframe.src = selectedTab.url;
           }

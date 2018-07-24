@@ -30,8 +30,7 @@ class UI.AANoOverflow
     textMaxWidth = Math.max(charCountInLine...)
 
     # リセット
-    $message.removeClass(_MINI_AA_CLASS_NAME)
-    $message.removeClass(_SCROLL_AA_CLASS_NAME)
+    $message.removeClass(_MINI_AA_CLASS_NAME, _SCROLL_AA_CLASS_NAME)
     $message.style.transform = ""
     $message.style.width = ""
     $message.style["margin-bottom"] = ""

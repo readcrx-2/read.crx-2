@@ -67,7 +67,7 @@ namespace UI {
           prevCurrent = current;
 
           if (current.tagName === "A" && current.parent().next()) {
-            current = <HTMLElement>current.parent().next().firstElementChild;
+            current = <HTMLElement>current.parent().next().first();
           }
           else {
             if (current.tagName === "A") {
@@ -119,7 +119,7 @@ namespace UI {
           prevCurrent = current;
 
           if (current.tagName === "A" && current.parent().prev()) {
-            current = <HTMLElement>current.parent().prev().firstElementChild;
+            current = <HTMLElement>current.parent().prev().first();
           }
           else {
             if (current.tagName === "A") {

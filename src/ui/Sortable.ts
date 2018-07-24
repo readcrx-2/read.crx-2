@@ -15,8 +15,7 @@ namespace UI {
 
       this.container.addClass("sortable");
 
-      overlay = $__("div")
-      overlay.addClass("sortable_overlay");
+      overlay = $__("div").addClass("sortable_overlay");
 
       overlay.on("contextmenu", (e) => {
         e.preventDefault();
@@ -40,7 +39,7 @@ namespace UI {
             y: target.offsetTop + target.offsetHeight / 2
           };
 
-          tmp = <HTMLElement>this.container.firstElementChild;
+          tmp = <HTMLElement>this.container.first();
 
           while (tmp) {
             if (tmp !== target && !(

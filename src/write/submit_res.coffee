@@ -61,8 +61,7 @@ app.boot("/write/submit_res.html", ->
       $option = $__("option")
       $option.value = m
       $mails.addLast($option)
-    $$.I("main").addLast($names)
-    $$.I("main").addLast($mails)
+    $$.I("main").addLast($names, $mails)
     return
 
   onError = (message) ->

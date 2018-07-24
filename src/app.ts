@@ -40,13 +40,13 @@ namespace app {
   }
 
   export function defer (): Promise<void> {
-    return new Promise<void>( (resolve) => {
+    return new Promise( (resolve) => {
       setTimeout(resolve, 100);
     });
   }
 
   export function defer5 ():Promise<void> {
-    return new Promise<void>( (resolve) => {
+    return new Promise( (resolve) => {
       setTimeout(resolve, 5 * 1000);
     });
   }

@@ -29,10 +29,8 @@ namespace UI {
     constructor (private $element: Element) {
       var tab = this;
 
-      var $ele = this.$element;
-      $ele.addClass("tab");
-      var $ul = $__("ul");
-      $ul.addClass("tab_tabbar");
+      var $ele = this.$element.addClass("tab");
+      var $ul = $__("ul").addClass("tab_tabbar");
       $ul.on("notchedmousewheel", (e) => {
         if (app.config.isOn("mousewheel_change_tab")) {
           var tmp: string, next: HTMLElement;
@@ -75,10 +73,8 @@ namespace UI {
         }
       });
       new UI.VirtualNotch($ul);
-      $ele.addLast($ul);
-      var $div = $__("div");
-      $div.addClass("tab_container");
-      $ele.addLast($div);
+      var $div = $__("div").addClass("tab_container");
+      $ele.addLast($ul, $div);
 
       window.on("message", ({origin, data, source}) => {
         var message, tabId: string, history;
@@ -221,16 +217,14 @@ namespace UI {
       var $li = $__("li");
       $li.dataset.tabid = tabId;
       $li.dataset.tabsrc = url;
-      $li.addLast($__("span"));
       var $img = $__("img");
       $img.src = "/img/close_16x16.webp";
       $img.title = "閉じる";
-      $li.addLast($img);
+      $li.addLast($__("span"), $img);
       this.$element.$(".tab_tabbar").addLast($li);
 
-      var $iframe = $__("iframe");
+      var $iframe = $__("iframe").addClass("tab_content");
       $iframe.src = lazy ? "/view/empty.html" : url;
-      $iframe.addClass("tab_content");
       $iframe.dataset.tabid = tabId;
       this.$element.$(".tab_container").addLast($iframe);
 

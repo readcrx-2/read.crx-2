@@ -46,9 +46,7 @@ class app.view.View
   ###
   _changeTheme: (themeId) ->
     # テーマ適用
-    @$element.removeClass("theme_default")
-    @$element.removeClass("theme_dark")
-    @$element.removeClass("theme_none")
+    @$element.removeClass("theme_default", "theme_dark", "theme_none")
     @$element.addClass("theme_#{themeId}")
     return
 
@@ -241,8 +239,7 @@ class app.view.IframeView extends app.view.View
   @method _setupCommandBox
   ###
   _setupCommandBox: ->
-    $input = $__("input")
-    $input.addClass("command")
+    $input = $__("input").addClass("command", "hidden")
     $input.on("keydown", ({which, target}) =>
       switch which
         # Enter
@@ -254,7 +251,6 @@ class app.view.IframeView extends app.view.View
           @_closeCommandBox()
       return
     )
-    $input.addClass("hidden")
     @$element.addLast($input)
     return
 

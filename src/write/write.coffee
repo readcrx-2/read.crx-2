@@ -13,7 +13,7 @@ do ->
       return args
 
     beforeSendFunc: ({method, url, requestHeaders}) ->
-      origin = chrome.extension.getURL("")[...-1]
+      origin = chrome.runtime.getURL("")[...-1]
       isSameOrigin = requestHeaders.some( ({name, value}) ->
         return name is "Origin" and (value is origin or value is "null")
       )
@@ -41,9 +41,7 @@ do ->
 
     _changeTheme: (themeId) ->
       # テーマ適用
-      $view.removeClass("theme_default")
-      $view.removeClass("theme_dark")
-      $view.removeClass("theme_none")
+      $view.removeClass("theme_default", "theme_dark", "theme_none")
       $view.addClass("theme_#{themeId}")
       return
 
@@ -72,19 +70,16 @@ do ->
         #行頭のスペースは削除される。複数のスペースは一つに纏められる。
         text = text.replace(/^\u0020*/g, "").replace(/\u0020+/g, " ")
 
-        $div = $__("div")
-        $div.addClass("preview")
+        $div = $__("div").addClass("preview")
         $pre = $__("pre")
         $pre.textContent = text
-        $div.addLast($pre)
-        $button = $__("button")
-        $button.addClass("close_preview")
+        $button = $__("button").addClass("close_preview")
         $button.textContent = "戻る"
         $button.on("click", ->
-          @parentElement.remove()
+          @parent().remove()
           return
         )
-        $div.addLast($button)
+        $div.addLast($pre, $button)
         document.body.addLast($div)
         return
       )

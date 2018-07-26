@@ -817,11 +817,11 @@ class UI.ThreadContent
       #harmImg更新
       do =>
         for res from @harmImgIndex
-          elm = @container.child()[res - 1]
-          continue unless elm
-          elm.addClass("has_blur_word")
-          if elm.hasClass("has_image") and app.config.isOn("image_blur")
-            UI.MediaContainer.setImageBlur(elm, true)
+          ele = @container.child()[res - 1]
+          continue unless ele
+          ele.addClass("has_blur_word")
+          if ele.hasClass("has_image") and app.config.isOn("image_blur")
+            UI.MediaContainer.setImageBlur(ele, true)
         return
     return
 
@@ -837,13 +837,13 @@ class UI.ThreadContent
       i = 0
       for resNum from index when startRes <= resNum and (!endRes? or resNum <= endRes)
         i++
-        elm = dom.child()[resNum - startRes].C(className)[0]
-        elm.textContent = "#{prefix}#{id}(#{i}/#{count})"
+        ele = dom.child()[resNum - startRes].C(className)[0]
+        ele.textContent = "#{prefix}#{id}(#{i}/#{count})"
         if count >= 5
-          elm.removeClass("link")
-          elm.addClass("freq")
+          ele.removeClass("link")
+          ele.addClass("freq")
         else if count >= 2
-          elm.addClass("link")
+          ele.addClass("link")
     return
 
   ###*
@@ -890,23 +890,23 @@ class UI.ThreadContent
       resCount = index.size
       if app.config.isOn("reject_ng_rep") and @repNgIndex.has(resKey)
         resCount -= @repNgIndex.get(resKey).size
-      if elm = res.C("rep")[0]
+      if ele = res.C("rep")[0]
         newFlg = false
       else
         newFlg = true
-        elm = $__("span") if resCount > 0
+        ele = $__("span") if resCount > 0
       if resCount > 0
-        elm.textContent = "返信 (#{resCount})"
-        elm.className = if resCount >= 5 then "rep freq" else "rep link"
+        ele.textContent = "返信 (#{resCount})"
+        ele.className = if resCount >= 5 then "rep freq" else "rep link"
         res.dataset.rescount = [1..resCount].join(" ")
         if newFlg
           res.C("other")[0].addLast(
             document.createTextNode(" ")
-            elm
+            ele
           )
-      else if elm
+      else if ele
         res.removeAttr("data-rescount")
-        elm.remove()
+        ele.remove()
     return
 
   ###*

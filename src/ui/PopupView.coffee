@@ -198,8 +198,8 @@ class UI.PopupView
         @_delayTimeoutID = setTimeout( =>
           @_delayTimeoutID = 0
           # マウス座標がポップアップ元のままの場合のみ実行する
-          elm = document.elementFromPoint(@_currentX, @_currentY)
-          if elm is sourceNode
+          ele = document.elementFromPoint(@_currentX, @_currentY)
+          if ele is sourceNode
             # 新規ノードの設定
             setupNewNode(sourceNode, popupNode)
             # ノードのアクティブ化
@@ -299,15 +299,15 @@ class UI.PopupView
   @method _activateNode
   ###
   _activateNode: ->
-    elm = document.elementFromPoint(@_currentX, @_currentY)
-    if elm is @source
+    ele = document.elementFromPoint(@_currentX, @_currentY)
+    if ele is @source
       @source.addClass("active")
-    else if (elm is @popup) or (elm.closest(".popup") is @popup)
+    else if (ele is @popup) or (ele.closest(".popup") is @popup)
       @popup.addClass("active")
-    else if elm.hasClass("popup_source") or elm.hasClass("popup")
-      elm.addClass("active")
-    else if elm.closest(".popup")
-      elm.closest(".popup").addClass("active")
+    else if ele.hasClass("popup_source") or ele.hasClass("popup")
+      ele.addClass("active")
+    else if ele.closest(".popup")
+      ele.closest(".popup").addClass("active")
     else
       @source.removeClass("active")
       @popup.removeClass("active")
@@ -324,17 +324,17 @@ class UI.PopupView
 
   ###*
   @method _getOuterHeight
-  @param {Object} elm
+  @param {Object} ele
   @param {Boolean} margin
   ###
   # .outerHeight()の代用関数
-  _getOuterHeight: (elm, margin = false) ->
+  _getOuterHeight: (ele, margin = false) ->
     # 下層に表示してoffsetHeightを取得する
-    elm.style.zIndex = "-1"
-    @_popupArea.addLast(elm)
-    outerHeight = elm.offsetHeight
-    elm.remove()
-    elm.style.zIndex = "3"    # ソースでは"3"だが、getComputedStyleでは"0"になるため
+    ele.style.zIndex = "-1"
+    @_popupArea.addLast(ele)
+    outerHeight = ele.offsetHeight
+    ele.remove()
+    ele.style.zIndex = "3"    # ソースでは"3"だが、getComputedStyleでは"0"になるため
     # 表示済みのノードが存在すればCSSの値を取得する
     if @_popupStyle is null and @_popupStack.length > 0
       @_popupStyle = getComputedStyle(@_popupStack[0].popup, null)
@@ -349,5 +349,5 @@ class UI.PopupView
         @_popupMarginHeight += Math.abs(parseInt(tmp[2]))
         @_popupMarginHeight += Math.abs(parseInt(tmp[4]))
       outerHeight += @_popupMarginHeight
-    elm.style.zIndex = ""
+    ele.style.zIndex = ""
     return outerHeight

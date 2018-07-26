@@ -907,7 +907,7 @@ app.boot("/view/thread.html", ->
 
     #未読ブックマーク数表示
     $nextUnread =
-      _elm: $view.C("next_unread")[0]
+      _ele: $view.C("next_unread")[0]
       show: ->
         next = null
 
@@ -939,27 +939,27 @@ app.boot("/view/thread.html", ->
             text = "未読ブックマーク: #{next.title}"
           if next.resCount?
             text += " (未読#{next.resCount - (next.readState?.read or 0)}件)"
-          @_elm.href = app.safeHref(next.url)
-          @_elm.textContent = text
-          @_elm.dataset.title = next.title
-          @_elm.removeClass("hidden")
+          @_ele.href = app.safeHref(next.url)
+          @_ele.textContent = text
+          @_ele.dataset.title = next.title
+          @_ele.removeClass("hidden")
         else
           @hide()
         return
       hide: ->
-        @_elm.addClass("hidden")
+        @_ele.addClass("hidden")
         return
 
     $searchNextThread =
-      _elm: $view.C("search_next_thread")[0]
+      _ele: $view.C("search_next_thread")[0]
       show: ->
         if $content.child().length >= 1000 or $view.C("message_bar")[0].hasClass("error")
-          @_elm.removeClass("hidden")
+          @_ele.removeClass("hidden")
         else
           @hide()
         return
       hide: ->
-        @_elm.addClass("hidden")
+        @_ele.addClass("hidden")
         return
 
     updateThreadFooter = ->

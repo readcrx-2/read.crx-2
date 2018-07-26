@@ -169,17 +169,17 @@ class app.NG
         when _expNgWords.test(ngWord)
           m = _expNgWords.exec(ngWord)
           for i in [1..2]
-            elm = _getNgElement(m[i])
-            continue unless elm
+            ele = _getNgElement(m[i])
+            continue unless ele
             if ngElement.type isnt ""
               subElement =
                 type: ngElement.type
                 word: ngElement.word
               ngElement.subElements.push(subElement)
-            ngElement.type = elm.type
-            ngElement.word = elm.word
-            if elm.subElements?.length > 0
-              ngElement.subElements.push(elm.subElements...)
+            ngElement.type = ele.type
+            ngElement.word = ele.word
+            if ele.subElements?.length > 0
+              ngElement.subElements.push(ele.subElements...)
         else
           ngElement.type = NG.TYPE.WORD
           ngElement.word = app.util.normalize(ngWord)
@@ -216,11 +216,11 @@ class app.NG
           name: m[1]
         ngWord = m[2]
       # キーワードごとの取り出し
-      elm = _getNgElement(ngWord)
-      ngElement.type = elm.type
-      ngElement.word = elm.word
-      ngElement.subType = elm.subType if elm.subType?
-      ngElement.subElements = elm.subElements if elm.subElements?
+      ele = _getNgElement(ngWord)
+      ngElement.type = ele.type
+      ngElement.word = ele.word
+      ngElement.subType = ele.subType if ele.subType?
+      ngElement.subElements = ele.subElements if ele.subElements?
       # 拡張項目の設定
       unless ngElement.exception?
         ngElement.exception = false

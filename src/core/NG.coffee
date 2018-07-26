@@ -178,8 +178,8 @@ class app.NG
               ngElement.subElements.push(subElement)
             ngElement.type = elm.type
             ngElement.word = elm.word
-            if elm.subElements? and elm.subElements.length > 0
-              ngElement.subElements.concat(elm.subElements)
+            if elm.subElements?.length > 0
+              ngElement.subElements.push(elm.subElements...)
         else
           ngElement.type = NG.TYPE.WORD
           ngElement.word = app.util.normalize(ngWord)

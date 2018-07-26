@@ -59,8 +59,7 @@ class UI.ThreadList
 
     $table = @table
     $thead = $__("thead")
-    $table.addLast($thead)
-    $table.addLast($__("tbody"))
+    $table.addLast($thead, $__("tbody"))
     $tr = $__("tr")
     $thead.addLast($tr)
 
@@ -338,9 +337,8 @@ class UI.ThreadList
     $fragment = $_F()
 
     for item in arg
-      $tr = $__("tr")
+      $tr = $__("tr").addClass("open_in_rcrx")
 
-      $tr.addClass("open_in_rcrx")
       $tr.addClass("expired") if item.expired
       $tr.addClass("ng_thread") if item.ng
       $tr.addClass("net") if item.isNet

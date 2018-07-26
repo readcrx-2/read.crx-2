@@ -27,8 +27,7 @@ app.boot("/view/bookmark_source_selector.html", ->
   fn = (arrayOfTree, ul) ->
     for {title, id, children} in arrayOfTree when children?
       li = $__("li")
-      span = $__("span")
-      span.addClass("node")
+      span = $__("span").addClass("node")
       span.textContent = title
       span.dataset.bookmarkId = id
       li.addLast(span)

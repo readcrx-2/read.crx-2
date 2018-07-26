@@ -591,14 +591,12 @@ class UI.ThreadContent
       $header = $__("header")
 
       #.num
-      $num = $__("span")
-      $num.addClass("num")
+      $num = $__("span").addClass("num")
       $num.textContent = resNum
       $header.addLast($num)
 
       #.name
-      $name = $__("span")
-      $name.addClass("name")
+      $name = $__("span").addClass("name")
       if /^\s*(?:&gt;|\uff1e){0,2}([\d\uff10-\uff19]+(?:[\-\u30fc][\d\uff10-\uff19]+)?(?:\s*,\s*[\d\uff10-\uff19]+(?:[\-\u30fc][\d\uff10-\uff19]+)?)*)\s*$/.test(res.name)
         $name.addClass("name_anchor")
       $name.innerHTML = (
@@ -627,14 +625,12 @@ class UI.ThreadContent
       $header.addLast($name)
 
       #.mail
-      $mail = $__("span")
-      $mail.addClass("mail")
+      $mail = $__("span").addClass("mail")
       $mail.innerHTML = res.mail.replace(/<.*?(?:>|$)/g, "")
       $header.addLast($mail)
 
       #.other
-      $other = $__("span")
-      $other.addClass("other")
+      $other = $__("span").addClass("other")
       tmp = (
         res.other
           #be
@@ -762,14 +758,13 @@ class UI.ThreadContent
           .replace(/id:(?:[a-hj-z\d_\+\/\.\!]|i(?!d:))+/ig, "<a href=\"javascript:undefined;\" class=\"anchor_id\">$&</a>")
       )
 
-      $message = $__("div")
-      $message.addClass("message")
+      $message = $__("div").addClass("message")
       if color?
         $message.style.color = "##{color[1]}"
       $message.innerHTML = tmp
       $article.addLast($message)
 
-      $article.setClass(res.class.join(" "))
+      $article.setClass(res.class...)
       $article.dataset.id = res.id if res.id?
       $article.dataset.slip = res.slip if res.slip?
       $article.dataset.trip = res.trip if res.trip?
@@ -822,11 +817,11 @@ class UI.ThreadContent
       #harmImg更新
       do =>
         for res from @harmImgIndex
-          elm = @container.child()[res - 1]
-          continue unless elm
-          elm.addClass("has_blur_word")
-          if elm.hasClass("has_image") and app.config.isOn("image_blur")
-            UI.MediaContainer.setImageBlur(elm, true)
+          ele = @container.child()[res - 1]
+          continue unless ele
+          ele.addClass("has_blur_word")
+          if ele.hasClass("has_image") and app.config.isOn("image_blur")
+            UI.MediaContainer.setImageBlur(ele, true)
         return
     return
 
@@ -842,13 +837,13 @@ class UI.ThreadContent
       i = 0
       for resNum from index when startRes <= resNum and (!endRes? or resNum <= endRes)
         i++
-        elm = dom.child()[resNum - startRes].C(className)[0]
-        elm.textContent = "#{prefix}#{id}(#{i}/#{count})"
+        ele = dom.child()[resNum - startRes].C(className)[0]
+        ele.textContent = "#{prefix}#{id}(#{i}/#{count})"
         if count >= 5
-          elm.removeClass("link")
-          elm.addClass("freq")
+          ele.removeClass("link")
+          ele.addClass("freq")
         else if count >= 2
-          elm.addClass("link")
+          ele.addClass("link")
     return
 
   ###*
@@ -895,23 +890,23 @@ class UI.ThreadContent
       resCount = index.size
       if app.config.isOn("reject_ng_rep") and @repNgIndex.has(resKey)
         resCount -= @repNgIndex.get(resKey).size
-      if elm = res.C("rep")[0]
+      if ele = res.C("rep")[0]
         newFlg = false
       else
         newFlg = true
-        elm = $__("span") if resCount > 0
+        ele = $__("span") if resCount > 0
       if resCount > 0
-        elm.textContent = "返信 (#{resCount})"
-        elm.className = if resCount >= 5 then "rep freq" else "rep link"
+        ele.textContent = "返信 (#{resCount})"
+        ele.className = if resCount >= 5 then "rep freq" else "rep link"
         res.dataset.rescount = [1..resCount].join(" ")
         if newFlg
           res.C("other")[0].addLast(
             document.createTextNode(" ")
+            ele
           )
-          res.C("other")[0].addLast(elm)
-      else if elm
+      else if ele
         res.removeAttr("data-rescount")
-        elm.remove()
+        ele.remove()
     return
 
   ###*
@@ -1146,8 +1141,7 @@ class UI.ThreadContent
     @repNgIndex.clear()
     # NGの解除
     for res in @container.$$("article.ng")
-      res.removeClass("ng")
-      res.removeClass("disp_ng")
+      res.removeClass("ng", "disp_ng")
       res.removeAttr("ng-type")
     # NGの再設定
     for res in @container.$$("article")
@@ -1183,8 +1177,7 @@ class UI.ThreadContent
   addThumbnail: (sourceA, thumbnailPath, mediaType = "image", res) ->
     sourceA.addClass("has_thumbnail")
 
-    thumbnail = $__("div")
-    thumbnail.addClass("thumbnail")
+    thumbnail = $__("div").addClass("thumbnail")
     thumbnail.setAttr("media-type", mediaType)
 
     if mediaType in ["image", "video"]
@@ -1204,8 +1197,7 @@ class UI.ThreadContent
         thumbnailLink.href = app.safeHref(sourceA.href)
         thumbnailLink.target = "_blank"
 
-        thumbnailImg = $__("img")
-        thumbnailImg.addClass("image")
+        thumbnailImg = $__("img").addClass("image")
         thumbnailImg.src = "/img/dummy_1x1.webp"
         thumbnailImg.style.WebkitFilter = webkitFilter
         thumbnailImg.style.maxWidth = "#{app.config.get("image_width")}px"
@@ -1221,8 +1213,7 @@ class UI.ThreadContent
         if res.userAgent? then thumbnailImg.dataset.userAgent = res.userAgent
         thumbnailLink.addLast(thumbnailImg)
 
-        thumbnailFavicon = $__("img")
-        thumbnailFavicon.addClass("favicon")
+        thumbnailFavicon = $__("img").addClass("favicon")
         thumbnailFavicon.src = "/img/dummy_1x1.webp"
         thumbnailFavicon.dataset.src = "https://www.google.com/s2/favicons?domain=#{sourceA.hostname}"
         thumbnailLink.addLast(thumbnailFavicon)
@@ -1277,8 +1268,7 @@ class UI.ThreadContent
   addExpandedURL: (sourceA, finalUrl) ->
     sourceA.addClass("has_expandedURL")
 
-    expandedURL = $__("div")
-    expandedURL.addClass("expandedURL")
+    expandedURL = $__("div").addClass("expandedURL")
     expandedURL.setAttr("short-url", sourceA.href)
     if app.config.get("expand_short_url") is "popup"
       expandedURL.addClass("hide_data")

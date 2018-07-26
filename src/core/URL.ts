@@ -130,12 +130,11 @@ namespace app {
       );
     }
 
-    export function parseQuery (urlstr:string, fromSearch:boolean = true):{[index:string]:any;} {
-      var searchStr:string;
-
-      searchStr = fromSearch ? urlstr : (new window.URL(urlstr)).search;
-
-      return new URLSearchParams(searchStr.slice(1))
+    export function parseQuery (urlStr:string, fromSearch:boolean = true):{[index:string]:any;} {
+      if (fromSearch) {
+        return new URLSearchParams(urlStr.slice(1));
+      }
+      return (new window.URL(urlStr)).searchParams;
     }
 
     export function parseHashQuery (url:string):{[index:string]:any;} {

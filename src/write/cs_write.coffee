@@ -1,5 +1,5 @@
 do ->
-  origin = chrome.extension.getURL("").slice(0, -1)
+  origin = chrome.runtime.getURL("")[...-1]
 
   submitThreadFlag = false
 

@@ -14,7 +14,7 @@ reg = ///^https?://(?:
 
 openButtonId = "36e5cda5"
 closeButtonId = "92a5da13"
-url = chrome.extension.getURL("/view/index.html")
+url = chrome.runtime.getURL("/view/index.html")
 url += "?q=#{encodeURIComponent(location.href)}"
 
 return unless reg.test(location.href)

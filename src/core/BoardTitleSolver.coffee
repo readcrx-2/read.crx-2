@@ -48,17 +48,12 @@ class app.BoardTitleSolver
   @private
   ###
   @_setBBSMenu: ->
-    try
-      obj = await app.BBSMenu.get()
-      obj.status = "success"
-    catch obj
-      obj.status = "error"
-    finally
+    obj = await app.BBSMenu.get()
+    @_generateBBSMenu(obj)
+    app.BBSMenu.target.on("change", ({detail: obj}) =>
       @_generateBBSMenu(obj)
-      app.BBSMenu.target.on("change", ({detail: obj}) =>
-        @_generateBBSMenu(obj)
-        return
-      )
+      return
+    )
     return
 
   ###*

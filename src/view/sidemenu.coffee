@@ -132,13 +132,8 @@ app.boot("/view/sidemenu.html", ["bbsmenu"], (BBSMenu) ->
     load = ->
       $view.addClass("loading")
       # 表示用板一覧の取得
-      try
-        obj = await BBSMenu.get()
-        obj.status = "success"
-      catch obj
-        obj.status = "error"
-      finally
-        setupDOM(obj)
+      obj = await BBSMenu.get()
+      setupDOM(obj)
       BBSMenu.target.on("change", ({detail: obj}) ->
         setupDOM(obj)
         return

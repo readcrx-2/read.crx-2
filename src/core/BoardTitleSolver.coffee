@@ -11,14 +11,19 @@ class app.BoardTitleSolver
   @type Map | null
   ###
   @_bbsmenu: null
+  ###*
+  @property _bbsmenu
+  @private
+  @type Promise | null
+  ###
+  @_bbsmenuPromise: null
 
   ###*
-  @method getBBSMenu
+  @method _setupBBSMenu
   @return {Promise}
+  @private
   ###
-  @getBBSMenu: ->
-    return @_bbsmenu if @_bbsmenu?
-
+  @_setupBBSMenu: ->
     try
       {menu} = await app.BBSMenu.get()
     catch {menu, message}
@@ -36,6 +41,20 @@ class app.BoardTitleSolver
     for {board} in menu
       for {url, title} in board
         @_bbsmenu.set(app.URL.fix(url), title)
+    return
+
+  ###*
+  @method getBBSMenu
+  @return {Promise}
+  ###
+  @getBBSMenu: ->
+    return @_bbsmenu if @_bbsmenu?
+    if @_bbsmenuPromise?
+      await @_bbsmenuPromise
+    else
+      @_bbsmenuPromise = @_setupBBSMenu()
+      await @_bbsmenuPromise
+      @_bbsmenuPromise = null
     return @_bbsmenu
 
   ###*
@@ -145,7 +164,6 @@ class app.BoardTitleSolver
     return
 
 app.module("board_title_solver", [], (callback) ->
-  app.BoardTitleSolver.getBBSMenu()
   callback(app.BoardTitleSolver)
   return
 )

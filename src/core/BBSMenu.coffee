@@ -80,9 +80,11 @@ class app.BBSMenu
     BBSMenu._updatingPromise = BBSMenu._update(forceReload) unless BBSMenu._updatingPromise?
     try
       {menu} = await BBSMenu._updatingPromise
-      BBSMenu.target.dispatchEvent(new CustomEvent("change", detail: {status: "success", menu}))
+      if forceReload
+        BBSMenu.target.dispatchEvent(new CustomEvent("change", detail: {status: "success", menu}))
     catch {menu, message}
-      BBSMenu.target.dispatchEvent(new CustomEvent("change", detail: {status: "error", menu, message}))
+      if forceReload
+        BBSMenu.target.dispatchEvent(new CustomEvent("change", detail: {status: "error", menu, message}))
       throw {menu, message}
     return {menu}
 

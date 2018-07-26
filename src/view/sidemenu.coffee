@@ -105,32 +105,42 @@ app.boot("/view/sidemenu.html", ["bbsmenu"], (BBSMenu) ->
 
   #板覧関連
   do ->
+    setupDOM = ({status, menu, message}) ->
+      for dom in $view.$$("h3:not(:first-of-type), ul:not(:first-of-type)")
+        dom.remove()
+      if status is "error"
+        app.message.send("notify",
+          message: message
+          background_color: "red"
+        )
+      if menu?
+        frag = $_F()
+        for category in menu
+          $h3 = $__("h3")
+          $h3.textContent = category.title
+          frag.addLast($h3)
+
+          $ul = $__("ul")
+          for board in category.board
+            $ul.addLast(boardToLi(board))
+          frag.addLast($ul)
+        document.body.addLast(frag)
+      accordion.update()
+      $view.removeClass("loading")
+      return
+
     load = ->
       $view.addClass("loading")
       # 表示用板一覧の取得
-      BBSMenu.get()
-      BBSMenu.target.on("change", ({detail: {status, menu, message}}) ->
-        for dom in $view.$$("h3:not(:first-of-type), ul:not(:first-of-type)")
-          dom.remove()
-        if status is "error"
-          app.message.send("notify",
-            message: message
-            background_color: "red"
-          )
-        if menu?
-          frag = $_F()
-          for category in menu
-            $h3 = $__("h3")
-            $h3.textContent = category.title
-            frag.addLast($h3)
-
-            $ul = $__("ul")
-            for board in category.board
-              $ul.addLast(boardToLi(board))
-            frag.addLast($ul)
-          document.body.addLast(frag)
-        accordion.update()
-        $view.removeClass("loading")
+      try
+        obj = await BBSMenu.get()
+        obj.status = "success"
+      catch obj
+        obj.status = "error"
+      finally
+        setupDOM(obj)
+      BBSMenu.target.on("change", ({detail: obj}) ->
+        setupDOM(obj)
         return
       )
       return

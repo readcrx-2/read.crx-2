@@ -77,7 +77,7 @@ do ->
     #bbsmenuから検索
     unless newBoardUrl?
       newBoardUrl = do ->
-        {data} = await app.BBSMenu.get()
+        {menu: data} = await app.BBSMenu.get()
         unless data?
           throw new Error("BBSMenuの取得に失敗しました")
         match = oldBoardUrl.match(boardUrlReg)

@@ -17,48 +17,50 @@ closeButtonId = "92a5da13"
 url = chrome.runtime.getURL("/view/index.html")
 url += "?q=#{encodeURIComponent(location.href)}"
 
-return unless reg.test(location.href)
-document.body.addEventListener("mousedown", ({target, button, ctrlKey, shiftKey}) ->
-  if target.id is openButtonId
-    a = document.createElement("a")
-    a.href = url
-    event = new MouseEvent("click", {button, ctrlKey, shiftKey})
-    a.dispatchEvent(event)
-  else if target.id is closeButtonId
-    @removeChild(target.parentElement)
+do ->
+  return unless reg.test(location.href)
+  document.body.addEventListener("mousedown", ({target, button, ctrlKey, shiftKey}) ->
+    if target.id is openButtonId
+      a = document.createElement("a")
+      a.href = url
+      event = new MouseEvent("click", {button, ctrlKey, shiftKey})
+      a.dispatchEvent(event)
+    else if target.id is closeButtonId
+      @removeChild(target.parentElement)
+    return
+  )
+
+  container = document.createElement("div")
+  style =
+    position: "fixed"
+    right: "10px"
+    top: "60px"
+    "background-color": "rgba(255,255,255,0.8)"
+    color: "#000"
+    border: "1px solid black"
+    "border-radius": "4px"
+    padding: "5px"
+    "font-size": "14px"
+    "font-weight": "normal"
+    "z-index": "255"
+
+  for key, val of style
+    container.style[key] = val
+
+  openButton = document.createElement("span")
+  openButton.id = openButtonId
+  openButton.textContent = "read.crx 2 で開く"
+  openButton.style["cursor"] = "pointer"
+  openButton.style["text-decoration"] = "underline"
+  container.appendChild(openButton)
+
+  closeButton = document.createElement("span")
+  closeButton.id = closeButtonId
+  closeButton.textContent = " x"
+  closeButton.style["cursor"] = "pointer"
+  closeButton.style["display"] = "inline-block"
+  closeButton.style["margin-left"] = "5px"
+  container.appendChild(closeButton)
+
+  document.body.appendChild(container)
   return
-)
-
-container = document.createElement("div")
-style =
-  position: "fixed"
-  right: "10px"
-  top: "60px"
-  "background-color": "rgba(255,255,255,0.8)"
-  color: "#000"
-  border: "1px solid black"
-  "border-radius": "4px"
-  padding: "5px"
-  "font-size": "14px"
-  "font-weight": "normal"
-  "z-index": "255"
-
-for key, val of style
-  container.style[key] = val
-
-openButton = document.createElement("span")
-openButton.id = openButtonId
-openButton.textContent = "read.crx 2 で開く"
-openButton.style["cursor"] = "pointer"
-openButton.style["text-decoration"] = "underline"
-container.appendChild(openButton)
-
-closeButton = document.createElement("span")
-closeButton.id = closeButtonId
-closeButton.textContent = " x"
-closeButton.style["cursor"] = "pointer"
-closeButton.style["display"] = "inline-block"
-closeButton.style["margin-left"] = "5px"
-container.appendChild(closeButton)
-
-document.body.appendChild(container)

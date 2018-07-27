@@ -2,10 +2,3 @@
 @import "write.scss";
 
 @include common;
-
-.outtitle {
-  display: flex;
-  .title {
-    flex-grow: 1;
-  }
-}

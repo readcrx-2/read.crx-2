@@ -29,17 +29,15 @@ namespace UI {
     constructor (private $element: Element) {
       var tab = this;
 
-      var $ele = this.$element;
-      $ele.addClass("tab");
-      var $ul = $__("ul");
-      $ul.addClass("tab_tabbar");
+      var $ele = this.$element.addClass("tab");
+      var $ul = $__("ul").addClass("tab_tabbar");
       $ul.on("notchedmousewheel", (e) => {
         if (app.config.isOn("mousewheel_change_tab")) {
           var tmp: string, next: HTMLElement;
 
           e.preventDefault();
 
-          if ((<any>e).wheelDelta < 0) {
+          if (e.wheelDelta < 0) {
             tmp = "prev";
           }
           else {
@@ -54,11 +52,11 @@ namespace UI {
         }
       });
       $ul.on("mousedown", (e) => {
-        if ((<HTMLElement>e.target).tagName === "IMG") {
+        if (e.target.tagName === "IMG") {
           e.preventDefault();
           return;
         }
-        var target = (<HTMLElement>(<HTMLElement>e.target).closest("li"))
+        var target = e.target.closest("li")
         if (target === null) return;
         if (e.which === 3) return;
 
@@ -71,14 +69,12 @@ namespace UI {
       });
       $ul.on("click", ({target}) => {
         if (target.tagName === "IMG") {
-          tab.remove(<string>target.parent().dataset.tabid);
+          tab.remove(target.parent().dataset.tabid);
         }
       });
       new UI.VirtualNotch($ul);
-      $ele.addLast($ul);
-      var $div = $__("div");
-      $div.addClass("tab_container");
-      $ele.addLast($div);
+      var $div = $__("div").addClass("tab_container");
+      $ele.addLast($ul, $div);
 
       window.on("message", ({origin, data, source}) => {
         var message, tabId: string, history;
@@ -97,11 +93,11 @@ namespace UI {
           return;
         }
 
-        if (!(<HTMLElement>this.$element).contains(<HTMLElement>source.frameElement)) {
+        if (!this.$element.contains(source.frameElement)) {
           return;
         }
 
-        tabId = (<HTMLElement>source.frameElement).dataset.tabid!;
+        tabId = source.frameElement.dataset.tabid!;
         history = this.historyStore[tabId];
 
         switch (message.type) {
@@ -172,7 +168,7 @@ namespace UI {
     getSelected (): Object|null {
       var li: HTMLLIElement;
 
-      if (li = <HTMLLIElement>this.$element.$("li.tab_selected")) {
+      if (li = this.$element.$("li.tab_selected")) {
         return {
           tabId: li.dataset.tabid,
           url: li.dataset.tabsrc,
@@ -221,16 +217,14 @@ namespace UI {
       var $li = $__("li");
       $li.dataset.tabid = tabId;
       $li.dataset.tabsrc = url;
-      $li.addLast($__("span"));
       var $img = $__("img");
       $img.src = "/img/close_16x16.webp";
       $img.title = "閉じる";
-      $li.addLast($img);
+      $li.addLast($__("span"), $img);
       this.$element.$(".tab_tabbar").addLast($li);
 
-      var $iframe = $__("iframe");
+      var $iframe = $__("iframe").addClass("tab_content");
       $iframe.src = lazy ? "/view/empty.html" : url;
-      $iframe.addClass("tab_content");
       $iframe.dataset.tabid = tabId;
       this.$element.$(".tab_container").addLast($iframe);
 
@@ -296,7 +290,7 @@ namespace UI {
         var selectedTab, iframe: HTMLIFrameElement;
 
         if (selectedTab = this.getSelected()) {
-          iframe = <HTMLIFrameElement>this.$element.$(`iframe[data-tabid=\"${selectedTab.tabId}\"]`);
+          iframe = this.$element.$(`iframe[data-tabid=\"${selectedTab.tabId}\"]`);
           if (iframe.getAttr("src") !== selectedTab.url) {
             iframe.src = selectedTab.url;
           }

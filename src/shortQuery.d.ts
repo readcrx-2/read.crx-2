@@ -48,10 +48,12 @@ interface DocumentFragment {
   I: Document.getElementById;
   $: NodeSelector.querySelector;
   $$: NodeSelector.querySelectorAll;
-  addLast: Node.appendChild;
-  addFirst<T extends Node>(newChild: T); T;
-  removeChildren<T extends Node>(); T;
+  addLast: ParentNode.append;
+  addFirst: ParentNode.prepend;
+  removeChildren<T extends Node>(): T;
   child(): HTMLCollection;
+  first(): Element|null;
+  last(): Element|null;
 }
 interface EventTarget {
   on: EventTarget.addEventListener
@@ -66,26 +68,28 @@ interface Element {
   T: Element.getElementsByTagName;
   $: Element.querySelector;
   $$: Element.querySelectorAll;
-  addLast: Node.appendChild;
-  addFirst<T extends Node>(newChild: T); T;
-  addBefore<T extends Node>(newChild: T); T;
-  addAfter<T extends Node>(newChild: T); T;
-  remove<T extends Node>(); T;
-  removeChildren<T extends Node>(); T;
+  addLast: ParentNode.append;
+  addFirst: ParentNode.prepend;
+  addBefore: ChildNode.before;
+  addAfter: ChildNode.after;
+  removeChildren<T extends Node>(): T;
   parent(): HTMLElement;
   child(): HTMLCollection;
   prev(): Element;
   next(): Element;
+  first(): Element;
+  last(): Element;
   getAttr: Element.getAttribute;
   setAttr: Element.setAttribute;
   removeAttr: Element.removeAttribute;
   rmvAttr: Element.removeAttribute;
+  hasAttr: boolean;
   attr(name: string, value?: string): string | null | void;
   getClass(): DOMTokenList;
-  setClass(value: (string | Array)): DOMTokenList | void;
-  class(value?: string): DOMTokenList | void;
-  addClass(value: string): DOMTokenList;
-  removeClass(value: string): DOMTokenList;
-  toggleClass(value: string): DOMTokenList;
+  setClass(value: (string | Array)): Element;
+  class(value?: string): DOMTokenList | Element;
+  addClass(value: string): Element;
+  removeClass(value: string): Element;
+  toggleClass(value: string): Element;
   hasClass(value: string): boolean;
 }

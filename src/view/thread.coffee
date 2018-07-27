@@ -63,7 +63,7 @@ app.boot("/view/thread.html", ->
     windowX = app.config.get("write_window_x")
     windowY = app.config.get("write_window_y")
     open(
-      "/write/write.html?#{app.URL.buildQuery(param)}"
+      "/write/submit_res.html?#{app.URL.buildQuery(param)}"
       undefined
       "width=600,height=300,left=#{windowX},top=#{windowY}"
     )
@@ -73,9 +73,7 @@ app.boot("/view/thread.html", ->
     $popup = fn()
     return if $popup.child().length is 0
     for dom in $popup.T("article")
-      dom.removeClass("last")
-      dom.removeClass("read")
-      dom.removeClass("received")
+      dom.removeClass("last", "read", "received")
     #ポップアップ内のサムネイルの遅延ロードを解除
     for dom in $popup.$$("img[data-src], video[data-src]")
       app.DOMData.get($view, "lazyload").immediateLoad(dom)
@@ -407,17 +405,15 @@ app.boot("/view/thread.html", ->
       resCount = 0
 
       if target.hasClass("disabled")
-        $div = $__("div")
+        $div = $__("div").addClass("popup_disabled")
         $div.textContent = target.dataset.disabledReason
-        $div.addClass("popup_disabled")
         $popup.addLast($div)
       else
         anchorData = app.util.Anchor.parseAnchor(anchor)
 
         if anchorData.targetCount >= 25
-          $div = $__("div")
+          $div = $__("div").addClass("popup_disabled")
           $div.textContent = "指定されたレスの量が極端に多いため、ポップアップを表示しません"
-          $div.addClass("popup_disabled")
           $popup.addLast($div)
         else if 0 < anchorData.targetCount
           resCount = anchorData.targetCount
@@ -431,13 +427,11 @@ app.boot("/view/thread.html", ->
 
       popupCount = $popup.child().length
       if popupCount is 0
-        $div = $__("div")
+        $div = $__("div").addClass("popup_disabled")
         $div.textContent = "対象のレスが見つかりません"
-        $div.addClass("popup_disabled")
         $popup.addLast($div)
       else if popupCount < resCount
-        $div = $__("div")
-        $div.addClass("ng_count")
+        $div = $__("div").addClass("ng_count")
         $div.setAttr("ng-count", resCount - popupCount)
         $popup.addLast($div)
 
@@ -525,8 +519,7 @@ app.boot("/view/thread.html", ->
     try
       title = await app.BoardTitleSolver.ask(boardUrl)
       popupHelper(target, e, =>
-        $div = $__("div")
-        $div.addClass("popup_linkinfo")
+        $div = $__("div").addClass("popup_linkinfo")
         $div2 = $__("div")
         $div2.textContent = title + after
         $div.addLast($div2)
@@ -584,9 +577,8 @@ app.boot("/view/thread.html", ->
 
       resCount = 0
       if nowPopuping isnt ""
-        $div = $__("div")
+        $div = $__("div").addClass("popup_disabled")
         $div.textContent = "現在ポップアップしている#{nowPopuping}です"
-        $div.addClass("popup_disabled")
         $popup.addLast($div)
       else if threadContent.idIndex.has(id)
         resCount = threadContent.idIndex.get(id).size
@@ -609,13 +601,11 @@ app.boot("/view/thread.html", ->
 
       popupCount = $popup.child().length
       if popupCount is 0
-        $div = $__("div")
+        $div = $__("div").addClass("popup_disabled")
         $div.textContent = "対象のレスが見つかりません"
-        $div.addClass("popup_disabled")
         $popup.addLast($div)
       else if popupCount < resCount
-        $div = $__("div")
-        $div.addClass("ng_count")
+        $div = $__("div").addClass("ng_count")
         $div.setAttr("ng-count", resCount - popupCount)
         $popup.addLast($div)
       return $popup
@@ -642,13 +632,11 @@ app.boot("/view/thread.html", ->
       resCount = threadContent.repIndex.get(resNum).size
       popupCount = $popup.child().length
       if popupCount is 0
-        $div = $__("div")
+        $div = $__("div").addClass("popup_disabled")
         $div.textContent = "対象のレスが見つかりません"
-        $div.addClass("popup_disabled")
         $popup.addLast($div)
       else if popupCount < resCount and !app.config.isOn("reject_ng_rep")
-        $div = $__("div")
-        $div.addClass("ng_count")
+        $div = $__("div").addClass("ng_count")
         $div.setAttr("ng-count", resCount - popupCount)
         $popup.addLast($div)
       return $popup
@@ -909,7 +897,7 @@ app.boot("/view/thread.html", ->
     , root: $content, threshold: [0, 0.05, 0.5, 0.95, 1.0])
     setObserve = ->
       observer.disconnect()
-      ele = $content.lastElementChild
+      ele = $content.last()
       while ele.offsetHeight is 0
         rn = +ele.C("num")[0].textContent - 1
         break if rn < 0
@@ -919,7 +907,7 @@ app.boot("/view/thread.html", ->
 
     #未読ブックマーク数表示
     $nextUnread =
-      _elm: $view.C("next_unread")[0]
+      _ele: $view.C("next_unread")[0]
       show: ->
         next = null
 
@@ -951,27 +939,27 @@ app.boot("/view/thread.html", ->
             text = "未読ブックマーク: #{next.title}"
           if next.resCount?
             text += " (未読#{next.resCount - (next.readState?.read or 0)}件)"
-          @_elm.href = app.safeHref(next.url)
-          @_elm.textContent = text
-          @_elm.dataset.title = next.title
-          @_elm.removeClass("hidden")
+          @_ele.href = app.safeHref(next.url)
+          @_ele.textContent = text
+          @_ele.dataset.title = next.title
+          @_ele.removeClass("hidden")
         else
           @hide()
         return
       hide: ->
-        @_elm.addClass("hidden")
+        @_ele.addClass("hidden")
         return
 
     $searchNextThread =
-      _elm: $view.C("search_next_thread")[0]
+      _ele: $view.C("search_next_thread")[0]
       show: ->
         if $content.child().length >= 1000 or $view.C("message_bar")[0].hasClass("error")
-          @_elm.removeClass("hidden")
+          @_ele.removeClass("hidden")
         else
           @hide()
         return
       hide: ->
-        @_elm.addClass("hidden")
+        @_ele.addClass("hidden")
         return
 
     updateThreadFooter = ->

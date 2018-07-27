@@ -193,7 +193,7 @@ class app.Cache
         .objectStore("Cache")
         .put(
           url: @key
-          data: if @data? then @data.replace(/\u0000/g, "\u0020") else null
+          data: @data?.replace(/\u0000/g, "\u0020") or null
           parsed: @parsed or null
           last_updated: @lastUpdated
           last_modified: @lastModified or null

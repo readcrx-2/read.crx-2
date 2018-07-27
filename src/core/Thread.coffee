@@ -590,7 +590,7 @@ class app.Thread
     thread = res: []
     gotTitle = false
     first = true
-    resCount = if resLength? then resLength else 0
+    resCount = resLength ? 0
 
     for line in text.split(separator)
       title = if gotTitle then false else titleReg.exec(line)

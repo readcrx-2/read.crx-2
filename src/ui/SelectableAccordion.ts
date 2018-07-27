@@ -23,7 +23,7 @@ namespace UI {
     }
 
     getSelected (): HTMLElement|null {
-      return (<HTMLElement>this.$element.$("h3.selected, a.selected")) || null;
+      return this.$element.$("h3.selected, a.selected") || null;
     }
 
     select (target: HTMLElement): void {
@@ -67,7 +67,7 @@ namespace UI {
           prevCurrent = current;
 
           if (current.tagName === "A" && current.parent().next()) {
-            current = <HTMLElement>current.parent().next().firstElementChild;
+            current = <HTMLElement>current.parent().next().first();
           }
           else {
             if (current.tagName === "A") {
@@ -98,8 +98,8 @@ namespace UI {
         }
       }
       else {
-        current = <HTMLElement>this.$element.$(".accordion_open + ul a");
-        current = current || <HTMLElement>this.$element.$("h3");
+        current = this.$element.$(".accordion_open + ul a");
+        current = current || this.$element.$("h3");
       }
 
       if (current && current !== this.getSelected()) {
@@ -119,7 +119,7 @@ namespace UI {
           prevCurrent = current;
 
           if (current.tagName === "A" && current.parent().prev()) {
-            current = <HTMLElement>current.parent().prev().firstElementChild;
+            current = <HTMLElement>current.parent().prev().first();
           }
           else {
             if (current.tagName === "A") {
@@ -150,8 +150,8 @@ namespace UI {
         }
       }
       else {
-        current = <HTMLElement>this.$element.$(".accordion_open + ul a");
-        current = current || <HTMLElement>this.$element.$("h3");
+        current = this.$element.$(".accordion_open + ul a");
+        current = current || this.$element.$("h3");
       }
 
       if (current && current !== this.getSelected()) {

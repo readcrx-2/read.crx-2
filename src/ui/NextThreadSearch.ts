@@ -33,8 +33,7 @@ namespace UI {
         var res = await app.util.searchNextThread(url, title, resString);
 
         for(var thread of res) {
-          var $li = $__("li");
-          $li.addClass("open_in_rcrx");
+          var $li = $__("li").addClass("open_in_rcrx");
           $li.textContent = thread.title;
           $li.dataset.href = thread.url;
           $ol.addLast($li);

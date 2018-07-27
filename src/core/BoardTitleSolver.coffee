@@ -11,17 +11,20 @@ class app.BoardTitleSolver
   @type Map | null
   ###
   @_bbsmenu: null
+  ###*
+  @property _bbsmenu
+  @private
+  @type Promise | null
+  ###
+  @_bbsmenuPromise: null
 
   ###*
-  @method getBBSMenu
+  @method _generateBBSMenu
   @return {Promise}
+  @private
   ###
-  @getBBSMenu: ->
-    return @_bbsmenu if @_bbsmenu?
-
-    try
-      {menu} = await app.BBSMenu.get()
-    catch {menu, message}
+  @_generateBBSMenu: ({status, menu, message}) ->
+    if status is "error"
       do ->
         await app.defer()
         app.message.send("notify",
@@ -32,10 +35,39 @@ class app.BoardTitleSolver
     unless menu?
       throw new Error("板一覧が取得できませんでした")
 
-    @_bbsmenu = new Map()
+    bbsmenu = new Map()
     for {board} in menu
       for {url, title} in board
-        @_bbsmenu.set(app.URL.fix(url), title)
+        bbsmenu.set(app.URL.fix(url), title)
+    @_bbsmenu = bbsmenu
+    return
+
+  ###*
+  @method _setBBSMenu
+  @return {Promise}
+  @private
+  ###
+  @_setBBSMenu: ->
+    obj = await app.BBSMenu.get()
+    @_generateBBSMenu(obj)
+    app.BBSMenu.target.on("change", ({detail: obj}) =>
+      @_generateBBSMenu(obj)
+      return
+    )
+    return
+
+  ###*
+  @method getBBSMenu
+  @return {Promise}
+  ###
+  @getBBSMenu: ->
+    return @_bbsmenu if @_bbsmenu?
+    if @_bbsmenuPromise?
+      await @_bbsmenuPromise
+    else
+      @_bbsmenuPromise = @_setBBSMenu()
+      await @_bbsmenuPromise
+      @_bbsmenuPromise = null
     return @_bbsmenu
 
   ###*
@@ -145,7 +177,6 @@ class app.BoardTitleSolver
     return
 
 app.module("board_title_solver", [], (callback) ->
-  app.BoardTitleSolver.getBBSMenu()
   callback(app.BoardTitleSolver)
   return
 )

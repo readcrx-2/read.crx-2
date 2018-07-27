@@ -298,7 +298,7 @@ app.boot("/view/index.html", ["bbsmenu"], (BBSMenu) ->
   )
 
   [currentTab, windows] = await Promise.all([getCurrent, getAll])
-  appPath = chrome.extension.getURL("/view/index.html")
+  appPath = chrome.runtime.getURL("/view/index.html")
   for win in windows
     for tab in win.tabs when tab.id isnt currentTab.id and tab.url is appPath
       chrome.windows.update(win.id, focused: true)
@@ -477,8 +477,7 @@ app.main = ->
       $div2.innerHTML = html
     else
       $div2.textContent = text
-    $div.addLast($div2)
-    $div.addLast($__("div"))
+    $div.addLast($div2, $__("div"))
     $div.on("click", func = ({target, currentTarget: cTarget}) ->
       return unless target.matches("a, div:last-child")
       $div.off("click", func)
@@ -603,9 +602,7 @@ app.main = ->
   app.message.on("config_updated", ({key, val}) ->
     return unless key is "layout"
     $body = $$.I("body")
-    $body.removeClass("pane-3")
-    $body.removeClass("pane-3h")
-    $body.removeClass("pane-2")
+    $body.removeClass("pane-3", "pane-3h", "pane-2")
     $body.addClass(val)
     $tabA = $$.I("tab_a")
     $tabB = $$.I("tab_b")
@@ -694,11 +691,10 @@ app.main = ->
 
     if iframeInfo.modal
       unless $view.$("iframe[src=\"#{iframeInfo.src}\"]")?
-        $iframeEle = $__("iframe")
+        $iframeEle = $__("iframe").addClass("fade")
         $iframeEle.src = iframeInfo.src
         $iframeEle.dataset.url = iframeInfo.url
         $iframeEle.dataset.title = title or iframeInfo.url
-        $iframeEle.addClass("fade")
         $$.I("modal").addLast($iframeEle)
         UI.Animate.fadeIn($iframeEle)
     else

@@ -76,7 +76,7 @@ do ->
 
     #bbsmenuから検索
     unless newBoardUrl?
-      newBoardUrl = do ->
+      newBoardUrl = await do ->
         {menu: data} = await app.BBSMenu.get()
         unless data?
           throw new Error("BBSMenuの取得に失敗しました")

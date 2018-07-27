@@ -601,6 +601,7 @@ class UI.ThreadContent
         $name.addClass("name_anchor")
       $name.innerHTML = (
         res.name
+          .replace(/<\/?a[^>]*>/g, "")
           .replace(/<(?!(?:\/?b|\/?font(?: color="?[#a-zA-Z0-9]+"?)?)>)/g, "&lt;")
           .replace(/<\/b>\(([^<>]+? [^<>]+?)\)<b>$/, ($0, $1) =>
             res.slip = $1

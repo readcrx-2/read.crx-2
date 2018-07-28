@@ -559,14 +559,24 @@ app.boot("/view/config.html", ["cache", "bbsmenu"], (Cache, BBSMenu) ->
     {quota, usage} = await navigator.storage.estimate()
     $view.C("indexeddb_max")[0].textContent = formatBytes(quota)
     $view.C("indexeddb_using")[0].textContent = formatBytes(usage)
+    $meter = $view.C("indexeddb_meter")[0]
+    $meter.max = quota
+    $meter.high = quota*0.9
+    $meter.low = quota*0.8
+    $meter.value = usage
     return
 
   # localstorageの使用状況
   do ->
     quota = chrome.storage.local.QUOTA_BYTES
     $view.C("localstorage_max")[0].textContent = formatBytes(quota)
+    $meter = $view.C("localstorage_meter")[0]
+    $meter.max = quota
+    $meter.high = quota*0.9
+    $meter.low = quota*0.8
     chrome.storage.local.getBytesInUse( (usage) ->
       $view.C("localstorage_using")[0].textContent = formatBytes(usage)
+      $meter.value = usage
       return
     )
     return

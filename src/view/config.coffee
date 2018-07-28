@@ -563,6 +563,8 @@ app.boot("/view/config.html", ["cache", "bbsmenu"], (Cache, BBSMenu) ->
 
   # localstorageの使用状況
   do ->
+    quota = chrome.storage.local.QUOTA_BYTES
+    $view.C("localstorage_max")[0].textContent = formatBytes(quota)
     chrome.storage.local.getBytesInUse( (usage) ->
       $view.C("localstorage_using")[0].textContent = formatBytes(usage)
       return

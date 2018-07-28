@@ -89,19 +89,6 @@ do ->
         $view.C("notice")[0].textContent = "#{@value.length}文字 #{line}行"
         return
       )
-
-      $view.C("hide_iframe")[0].on("click", ->
-        writeTimer.kill()
-        $iframeContainer = $view.C("iframe_container")[0]
-        UI.Animate.fadeOut($iframeContainer).on("finish", ->
-          $iframeContainer.T("iframe")[0].remove()
-          return
-        )
-        for dom from $view.$$("input, textarea")
-          dom.disabled = false unless dom.hasClass("mail") and app.config.isOn("sage_flag")
-        $notice.textContent = ""
-        return
-      )
       return
 
     setSageDOM: ->
@@ -181,6 +168,19 @@ do ->
       return
 
     setupForm: (timer, isThread, getFormData) ->
+      $view.C("hide_iframe")[0].on("click", ->
+        timer.kill()
+        $iframeContainer = $view.C("iframe_container")[0]
+        UI.Animate.fadeOut($iframeContainer).on("finish", ->
+          $iframeContainer.T("iframe")[0].remove()
+          return
+        )
+        for dom from $view.$$("input, textarea")
+          dom.disabled = false unless dom.hasClass("mail") and app.config.isOn("sage_flag")
+        $view.C("notice")[0].textContent = ""
+        return
+      )
+
       $view.T("form")[0].on("submit", (e) ->
         e.preventDefault()
 

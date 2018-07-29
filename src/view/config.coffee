@@ -210,8 +210,7 @@ app.boot("/view/config.html", ["cache", "bbsmenu"], (Cache, BBSMenu) ->
   #閉じるボタン
   $view.C("button_close")[0].on("click", ->
     if frameElement
-      tmp = type: "request_killme"
-      parent.postMessage(JSON.stringify(tmp), location.origin)
+      parent.postMessage(type: "request_killme", location.origin)
     whenClose()
     return
   )

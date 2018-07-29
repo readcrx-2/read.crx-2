@@ -11,7 +11,7 @@ do ->
 
   sendMessagePing = ->
     exec("""
-      parent.postMessage(JSON.stringify({type : "ping"}), "#{origin}");
+      parent.postMessage({type: "ping"}, "#{origin}");
     """)
     return
 
@@ -33,34 +33,34 @@ do ->
         } else {
           jumpurl = ""
         }
-        parent.postMessage(JSON.stringify({
+        parent.postMessage({
           type : "success",
           key: jumpurl
-        }), "#{origin}");
+        }, "#{origin}");
       """)
     else
       exec("""
-        parent.postMessage(JSON.stringify({type : "success"}), "#{origin}");
+        parent.postMessage({type: "success"}, "#{origin}");
       """)
     return
 
   sendMessageConfirm = ->
     exec("""
-      parent.postMessage(JSON.stringify({type : "confirm"}), "#{origin}");
+      parent.postMessage({type: "confirm"}, "#{origin}");
     """)
     return
 
   sendMessageError = (message) ->
     if typeof message is "string"
       exec("""
-        parent.postMessage(JSON.stringify({
+        parent.postMessage({
           type: "error",
           message: "#{message.replace(/\"/g, "&quot;")}"
-        }), "#{origin}");
+        }, "#{origin}");
       """)
     else
       exec("""
-        parent.postMessage(JSON.stringify({type : "error"}), "#{origin}");
+        parent.postMessage({type: "error"}, "#{origin}");
       """)
     return
 

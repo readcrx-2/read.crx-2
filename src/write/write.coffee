@@ -138,8 +138,7 @@ do ->
       return
 
     setupMessage: ({timer, isThread, onSuccess, onError}) ->
-      window.on("message", ({data, source}) ->
-        {type, key, message} = JSON.parse(data)
+      window.on("message", ({ data: {type, key, message}, source }) ->
         switch type
           when "ping"
             pong = "write_iframe_pong"

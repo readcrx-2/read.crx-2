@@ -1065,8 +1065,10 @@ app.viewThread._draw = ($view, {forceUpdate = false, jumpResNum = -1} = {}) ->
   $view.style.cursor = "auto"
   unless ok
     throw new Error("スレの表示に失敗しました")
-  await app.defer5()
-  $reloadButton.removeClass("disabled")
+  do ->
+    await app.defer5()
+    $reloadButton.removeClass("disabled")
+    return
   return thread
 
 app.viewThread._readStateManager = ($view) ->

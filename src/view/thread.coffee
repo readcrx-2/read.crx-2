@@ -648,7 +648,7 @@ app.boot("/view/thread.html", ->
 
       frag = $_F()
       sib = target
-      while true
+      loop
         sib = sib.next()
         if(
           sib?.hasClass("expandedURL") and
@@ -804,17 +804,15 @@ app.boot("/view/thread.html", ->
   do ->
     searchStoredScrollTop = null
     $searchbox = $view.C("searchbox")[0]
-    searchRegExpEnter = false
 
     $searchbox.on("compositionend", ->
       @dispatchEvent(new Event("input"))
       return
     )
-    $searchbox.on("input", ({isComposing}) ->
+    $searchbox.on("input", ({ isComposing, detail: {isEnter = false} = {} }) ->
       return if isComposing
       searchRegExpMode = $content.hasClass("search_regexp")
-      return if searchRegExpMode and !searchRegExpEnter
-      searchRegExpEnter = false
+      return if searchRegExpMode and !isEnter
       searchRegExp = null
       if searchRegExpMode and @value isnt ""
         try
@@ -870,8 +868,7 @@ app.boot("/view/thread.html", ->
       if $content.hasClass("search_regexp")
         if which is 13 or which is 27 # Enter|Esc
           @value = "" if which is 27
-          searchRegExpEnter = true
-          @dispatchEvent(new Event("input"))
+          @dispatchEvent(new CustomEvent("input", detail: {isEnter: true}))
         return
       if which is 27 #Esc
         if @value isnt ""
@@ -891,12 +888,12 @@ app.boot("/view/thread.html", ->
     , root: $content, threshold: [0, 0.05, 0.5, 0.95, 1.0])
     setObserve = ->
       observer.disconnect()
-      ele = $content.last()
-      while ele.offsetHeight is 0
-        rn = +ele.C("num")[0].textContent - 1
-        break if rn < 0
-        ele = $content.child()[rn - 1]
-      observer.observe(ele) if ele?
+      $ele = $content.last()
+      while threadContent.isHidden($ele)
+        $pEle = $ele.prev()
+        break unless $pEle?
+        $ele = $pEle
+      observer.observe($ele) if $ele?
       return
 
     #未読ブックマーク数表示

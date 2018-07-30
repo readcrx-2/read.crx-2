@@ -189,10 +189,9 @@ class UI.ThreadContent
     return
 
   ###*
-  @method _isHidden
-  @private
+  @method isHidden
   ###
-  _isHidden: (ele) ->
+  isHidden: (ele) ->
     unless @_hiddenSelectors?
       @_hiddenSelectors = []
       css = $$.I("user_css").sheet.cssRules
@@ -237,7 +236,7 @@ class UI.ThreadContent
     while (
       tmpTarget and
       (
-        (isHidden = @_isHidden(tmpTarget)) or
+        (isHidden = @isHidden(tmpTarget)) or
         tmpTarget.offsetTop + tmpTarget.offsetHeight > viewTop
       )
     )
@@ -248,7 +247,7 @@ class UI.ThreadContent
     while (
       tmpTarget and
       (
-        (isHidden = @_isHidden(tmpTarget)) or
+        (isHidden = @isHidden(tmpTarget)) or
         tmpTarget.offsetTop < viewBottom
       )
     )
@@ -297,16 +296,16 @@ class UI.ThreadContent
       target = null
 
     # もしターゲットがNGだった場合、その直前/直後の非NGレスをターゲットに変更する
-    if target and @_isHidden(target)
+    if target and @isHidden(target)
       replaced = target
       while (replaced = replaced.prev())
-        unless @_isHidden(replaced)
+        unless @isHidden(replaced)
           target = replaced
           break
         if !replaced?
           replaced = target
           while (replaced = replaced.next())
-            unless @_isHidden(replaced)
+            unless @isHidden(replaced)
               target = replaced
               break
 
@@ -479,7 +478,7 @@ class UI.ThreadContent
         if targetBottom <= containerHeight and target.next()
           target = target.next()
 
-          while target and @_isHidden(target)
+          while target and @isHidden(target)
             target = target.next()
 
         if not target
@@ -531,7 +530,7 @@ class UI.ThreadContent
         if 0 <= targetTop and target.prev()
           target = target.prev()
 
-          while target and @_isHidden(target)
+          while target and @isHidden(target)
             target = target.prev()
 
         if not target
@@ -765,7 +764,7 @@ class UI.ThreadContent
       $message.innerHTML = tmp
       $article.addLast($message)
 
-      $article.setClass(res.class...)
+      $article.setClass(res.class...) if res.class.length > 0
       $article.dataset.id = res.id if res.id?
       $article.dataset.slip = res.slip if res.slip?
       $article.dataset.trip = res.trip if res.trip?
@@ -1250,7 +1249,7 @@ class UI.ThreadContent
       thumbnail.style.height = "#{h}px"
 
     sib = sourceA
-    while true
+    loop
       pre = sib
       sib = pre.next()
       if !sib? or sib.tagName is "BR"
@@ -1286,7 +1285,7 @@ class UI.ThreadContent
       expandedURLLink = null
 
     sib = sourceA
-    while true
+    loop
       pre = sib
       sib = pre.next()
       if !sib? or sib.tagName is "BR"

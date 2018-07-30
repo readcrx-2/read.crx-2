@@ -79,11 +79,11 @@ class UI.ThreadList
     selector = {}
     column = {}
     i = 0
-    for key, j in Object.keys(keyToLabel) when key in option.th
+    for key, val of keyToLabel when key in option.th
       i++
       $th = $__("th")
       $th.setClass(key.replace(/([A-Z])/g, ($0, $1) -> "_" + $1.toLowerCase()))
-      $th.textContent = keyToLabel[key]
+      $th.textContent = val
       $tr.addLast($th)
       @_flg[key] = true
       selector[key] = "td:nth-child(#{i})"

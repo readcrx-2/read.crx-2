@@ -31,35 +31,33 @@ do ->
   )
 
   container = document.createElement("div")
-  style =
-    position: "fixed"
-    right: "10px"
-    top: "60px"
-    "background-color": "rgba(255,255,255,0.8)"
-    color: "#000"
-    border: "1px solid black"
-    "border-radius": "4px"
-    padding: "5px"
-    "font-size": "14px"
-    "font-weight": "normal"
-    "z-index": "255"
-
-  for key, val of style
-    container.style[key] = val
+  container.style.cssText = """
+    position: "fixed";
+    right: "10px";
+    top: "60px";
+    "background-color": "rgba(255,255,255,0.8)";
+    color: "#000";
+    border: "1px solid black";
+    "border-radius": "4px";
+    padding: "5px";
+    "font-size": "14px";
+    "font-weight": "normal";
+    "z-index": "255";
+    """
 
   openButton = document.createElement("span")
   openButton.id = openButtonId
   openButton.textContent = "read.crx 2 で開く"
-  openButton.style["cursor"] = "pointer"
-  openButton.style["text-decoration"] = "underline"
+  openButton.style.cursor = "pointer"
+  openButton.style.textDecoration = "underline"
   container.appendChild(openButton)
 
   closeButton = document.createElement("span")
   closeButton.id = closeButtonId
   closeButton.textContent = " x"
-  closeButton.style["cursor"] = "pointer"
-  closeButton.style["display"] = "inline-block"
-  closeButton.style["margin-left"] = "5px"
+  closeButton.style.cursor = "pointer"
+  closeButton.style.display = "inline-block"
+  closeButton.style.marginLeft = "5px"
   container.appendChild(closeButton)
 
   document.body.appendChild(container)

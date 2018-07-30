@@ -31,9 +31,9 @@ class UI.AANoOverflow
 
     # リセット
     $message.removeClass(_MINI_AA_CLASS_NAME, _SCROLL_AA_CLASS_NAME)
-    $message.style.transform = ""
-    $message.style.width = ""
-    $message.style["margin-bottom"] = ""
+    $message.style.transform = null
+    $message.style.width = null
+    $message.style.marginBottom = null
 
     return if width > textMaxWidth
 
@@ -49,7 +49,7 @@ class UI.AANoOverflow
     heightOld = $message.clientHeight
 
     $message.style.transform = "scale(#{ratio})"
-    $message.style["margin-bottom"] = "#{-(1-ratio) * heightOld}px"
+    $message.style.marginBottom = "#{-(1-ratio) * heightOld}px"
     return
 
   _setFontSizes: ->

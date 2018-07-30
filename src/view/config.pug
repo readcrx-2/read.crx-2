@@ -634,15 +634,20 @@ block body
             span#config_status
 
         section
-          h2 情報
-          div.info
-            |IndexedDB(履歴、キャッシュ)の使用状況:
-            span.indexeddb_using
-            |/
-            span.indexeddb_max
-            br
-            |拡張機能LocalStorage(設定)の使用状況:
-            span.localstorage_using
+          h2 使用状況
+          div.info.grid.grid_column_3
+            span IndexedDB(履歴、キャッシュ)
+            div: meter.indexeddb_meter
+            div
+              span.indexeddb_using
+              |/
+              span.indexeddb_max
+            span 拡張機能LocalStorage(設定)
+            div: meter.localstorage_meter
+            div
+              span.localstorage_using
+              |/
+              span.localstorage_max
 
       .tabcontent(name="info")
         section

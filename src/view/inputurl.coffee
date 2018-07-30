@@ -19,7 +19,7 @@ app.boot("/view/inputurl.html", ->
         new_tab: true
         param_res_num: paramResNum
       })
-      parent.postMessage(JSON.stringify({type: "request_killme"}), location.origin)
+      parent.postMessage(type: "request_killme", location.origin)
     else
       ele = $view.C("notice")[0]
       ele.textContent = "未対応形式のURLです"

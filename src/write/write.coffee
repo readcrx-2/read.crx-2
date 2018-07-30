@@ -1,27 +1,29 @@
 do ->
   $view = $$.C("view_write")[0]
   param = app.URL.parseQuery(location.search)
-  args =
-    url: app.URL.fix(param.get("url"))
-    title: param.get("title") ? param.get("url")
-    name: param.get("name") ? app.config.get("default_name")
-    mail: param.get("mail") ? app.config.get("default_mail")
-    message: param.get("message") ? ""
+  _args = null
 
   app.Write =
     getArgs: ->
-      return args
+      return _args if _args?
+      _args =
+        url: app.URL.fix(param.get("url"))
+        title: param.get("title") ? param.get("url")
+        name: param.get("name") ? app.config.get("default_name")
+        mail: param.get("mail") ? app.config.get("default_mail")
+        message: param.get("message") ? ""
+      return _args
 
-    beforeSendFunc: ({method, url, requestHeaders}) ->
+    beforeSendFunc: ({method, requestHeaders}) ->
       origin = chrome.runtime.getURL("")[...-1]
       isSameOrigin = requestHeaders.some( ({name, value}) ->
         return name is "Origin" and (value is origin or value is "null")
       )
       return unless method is "POST" and isSameOrigin
-      {url: refUrl} = args
-      if app.URL.tsld(refUrl) is "2ch.sc"
-        refUrl = app.URL.setScheme(refUrl, "http")
-      requestHeaders.push(name: "Referer", value: refUrl)
+      {url} = app.Write.getArgs()
+      if app.URL.tsld(url) is "2ch.sc"
+        url = app.URL.setScheme(url, "http")
+      requestHeaders.push(name: "Referer", value: url)
 
       # UA変更処理
       ua = app.config.get("useragent").trim()
@@ -89,19 +91,6 @@ do ->
         $view.C("notice")[0].textContent = "#{@value.length}文字 #{line}行"
         return
       )
-
-      $view.C("hide_iframe")[0].on("click", ->
-        writeTimer.kill()
-        $iframeContainer = $view.C("iframe_container")[0]
-        UI.Animate.fadeOut($iframeContainer).on("finish", ->
-          $iframeContainer.T("iframe")[0].remove()
-          return
-        )
-        for dom from $view.$$("input, textarea")
-          dom.disabled = false unless dom.hasClass("mail") and app.config.isOn("sage_flag")
-        $notice.textContent = ""
-        return
-      )
       return
 
     setSageDOM: ->
@@ -123,19 +112,19 @@ do ->
       return
 
     setDefaultInput: ->
-      {name, mail, message} = args
+      {name, mail, message} = app.Write.getArgs()
       $view.C("name")[0].value = name
       $view.C("mail")[0].value = mail
       $view.C("message")[0].value = message
       return
 
     setTitle: ({isThread}) ->
-      {title} = args
+      {title, url} = app.Write.getArgs()
       title += "板" if isThread
       $h1 = $view.T("h1")[0]
       document.title = title
       $h1.textContent = title
-      $h1.addClass("https") if app.URL.getScheme(args.url) is "https"
+      $h1.addClass("https") if app.URL.getScheme(url) is "https"
       return
 
     onErrorFunc: (message) ->
@@ -151,8 +140,7 @@ do ->
       return
 
     setupMessage: ({timer, isThread, onSuccess, onError}) ->
-      window.on("message", ({data, source}) ->
-        {type, key, message} = JSON.parse(data)
+      window.on("message", ({ data: {type, key, message}, source }) ->
         switch type
           when "ping"
             pong = "write_iframe_pong"
@@ -181,14 +169,28 @@ do ->
       return
 
     setupForm: (timer, isThread, getFormData) ->
+      $view.C("hide_iframe")[0].on("click", ->
+        timer.kill()
+        $iframeContainer = $view.C("iframe_container")[0]
+        UI.Animate.fadeOut($iframeContainer).on("finish", ->
+          $iframeContainer.T("iframe")[0].remove()
+          return
+        )
+        for dom from $view.$$("input, textarea")
+          dom.disabled = false unless dom.hasClass("mail") and app.config.isOn("sage_flag")
+        $view.C("notice")[0].textContent = ""
+        return
+      )
+
       $view.T("form")[0].on("submit", (e) ->
         e.preventDefault()
 
         for dom from $view.$$("input, textarea")
           dom.disabled = true unless dom.hasClass("mail") and app.config.isOn("sage_flag")
 
-        {bbsType} = app.URL.guessType(args.url)
-        scheme = app.URL.getScheme(args.url)
+        {url} = app.Write.getArgs()
+        {bbsType} = app.URL.guessType(url)
+        scheme = app.URL.getScheme(url)
 
         iframeArgs =
           rcrxName: $view.C("name")[0].value
@@ -201,7 +203,7 @@ do ->
         $iframe = $__("iframe")
         $iframe.src = "/view/empty.html"
         $iframe.on("load", ->
-          formData = getFormData(args.url.split("/"), iframeArgs, bbsType, scheme)
+          formData = getFormData(url.split("/"), iframeArgs, bbsType, scheme)
           #フォーム生成
           form = @contentDocument.createElement("form")
           form.setAttribute("accept-charset", formData.charset)

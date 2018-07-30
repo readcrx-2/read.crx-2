@@ -836,8 +836,9 @@ class UI.ThreadContent
     for [id, index] from map
       count = index.size
       i = 0
-      for resNum from index when startRes <= resNum and (!endRes? or resNum <= endRes)
+      for resNum from index
         i++
+        continue unless startRes <= resNum and (!endRes? or resNum <= endRes)
         ele = dom.child()[resNum - startRes].C(className)[0]
         ele.textContent = "#{prefix}#{id}(#{i}/#{count})"
         if count >= 5

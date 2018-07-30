@@ -702,13 +702,12 @@ app.main = ->
       if $li?
         app.DOMData.get($li.closest(".tab"), "tab").update($li.dataset.tabid, selected: true)
         if url isnt "bookmark" #ブックマーク更新は時間がかかるので例外扱い
-          tmp = JSON.stringify({
+          $iframe = $view.$("iframe[data-tabid=\"#{$li.dataset.tabid}\"]")
+          $iframe.contentWindow.postMessage({
             type: "request_reload"
             written_res_num
             param_res_num
-          })
-          $iframe = $view.$("iframe[data-tabid=\"#{$li.dataset.tabid}\"]")
-          $iframe.contentWindow.postMessage(tmp, location.origin)
+          }, location.origin)
       else
         target = tabA
         if(
@@ -763,7 +762,7 @@ app.main = ->
     return unless type in ["written", "written?"]
     iframe = document.$("iframe[data-url=\"#{url}\"]")
     if iframe
-      tmp = JSON.stringify({
+      iframe.contentWindow.postMessage({
         type: "request_reload"
         force_update: true
         kind
@@ -772,8 +771,7 @@ app.main = ->
         mail
         title
         thread_url
-      })
-      iframe.contentWindow.postMessage(tmp, location.origin)
+      }, location.origin)
     return
   )
 
@@ -806,13 +804,13 @@ app.main = ->
   )
 
   #viewからのメッセージを監視
-  window.on("message", ({origin, source, data}) ->
-    return if origin isnt location.origin or typeof data isnt "string"
+  window.on("message", ({origin, source, data: message}) ->
+    return if origin isnt location.origin
 
     $iframe = source?.frameElement
     return unless $iframe?
 
-    {type, title} = message = JSON.parse(data)
+    {type, title} = message
 
     switch type
       #タブ内コンテンツがtitle_updatedを送出した場合、タブのタイトルを更新
@@ -863,8 +861,7 @@ app.main = ->
   $view.on("tab_selected", ({target}) ->
     target = target.closest("iframe.tab_content")
     return unless target?
-    tmp = JSON.stringify({type: "tab_selected"})
-    target.contentWindow.postMessage(tmp, location.origin)
+    target.contentWindow.postMessage(type: "tab_selected", location.origin)
     return
   )
 
@@ -917,7 +914,7 @@ app.main = ->
           when target.hasClass("reload")
             $view.$("iframe[data-tabid=\"#{sourceTabId}\"]")
               .contentWindow.postMessage(
-                JSON.stringify(type: "request_reload")
+                type: "request_reload"
                 location.origin
               )
           #タブを固定
@@ -965,7 +962,7 @@ app.main = ->
       sourceTabId = $source.dataset.tabid
 
       $view.$("iframe[data-tabid=\"#{sourceTabId}\"]").contentWindow.postMessage(
-        JSON.stringify({type: "request_reload"})
+        type: "request_reload"
         location.origin
       )
       return

@@ -115,12 +115,19 @@ module app.Bookmark {
         if (this.get(entry.url)) {
           // node側の方が新しいと判定された場合のみupdateを行う。
           if (app.Bookmark.newerEntry(entry, this.get(entry.url)) === entry) {
+            //重複ブックマークの削除(元のnodeが古いと判定されたため)
+            chrome.bookmarks.remove(this.nodeIdStore.get(entry.url), () => {});
+
             this.nodeIdStore.set(entry.url, node.id);
             this.update(entry, false);
           }
           // addによりcreateChromeBookmarkが呼ばれた場合
           else if (!this.nodeIdStore.has(entry.url)) {
             this.nodeIdStore.set(entry.url, node.id);
+          }
+          // 重複ブックマークの削除(node側の方が古いと判定された場合)
+          else {
+            chrome.bookmarks.remove(node.id, () => {});
           }
         }
         else {

@@ -794,12 +794,6 @@ app.boot("/view/thread.html", ->
     )
     return
 
-  # 検索モードの切り替え
-  $view.on("change_search_regexp", ->
-    $content.toggleClass("search_regexp")
-    return
-  )
-
   #検索ボックス
   do ->
     searchStoredScrollTop = null
@@ -875,6 +869,13 @@ app.boot("/view/thread.html", ->
         if @value isnt ""
           @value = ""
           @dispatchEvent(new Event("input"))
+      return
+    )
+
+    # 検索モードの切り替え
+    $view.on("change_search_regexp", ->
+      $content.toggleClass("search_regexp")
+      $searchbox.dispatchEvent(new CustomEvent("input", detail: {isEnter: true}))
       return
     )
     return

@@ -159,6 +159,9 @@ class UI.PopupView
 
     # 新規ノードの設定
     setupNewNode = (sourceNode, popupNode) =>
+      # CSSContainmentの恩恵を受けるために表示位置決定前にクラスを付加する
+      popupNode.addClass("popup")
+
       # 表示位置の決定
       setDispPosition(popupNode)
 
@@ -167,7 +170,6 @@ class UI.PopupView
       sourceNode.setAttr("stack-index", @_popupStack.length)
       sourceNode.on("mouseenter", @_onMouseEnter)
       sourceNode.on("mouseleave", @_onMouseLeave)
-      popupNode.addClass("popup")
       if app.config.get("aa_font") is "aa"
         popupNode.addClass("config_use_aa_font")
       popupNode.setAttr("stack-index", @_popupStack.length)

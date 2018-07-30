@@ -234,6 +234,7 @@ $z-indexes:(
     flex-flow: column;
   }
   .message_bar {
+    contain: layout;
     font-size: 13px;
     &.loading {
       padding: 3px;
@@ -244,6 +245,7 @@ $z-indexes:(
     }
   }
   .nav_bar {
+    contain: layout;
     height: 27px;
     border-bottom: 2px solid hsla(0, 0%, 0%, 0.2);
     z-index: var(--z-index-tabbed-view-nav-bar);

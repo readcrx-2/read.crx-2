@@ -26,6 +26,7 @@ header, body {
 }
 
 .content {
+  contain: layout size;
   padding-bottom: 50px;
   &[data-res-search-hit-count="0"]::after {
     display: block;
@@ -39,6 +40,7 @@ header, body {
 }
 
 article {
+  contain: layout;
   padding: 0 5px 20px 5px;
   &.ng {
     display: none;
@@ -111,6 +113,7 @@ article {
 }
 
 header {
+  contain: content;
   display: inline-block;
   font-size: 14px;
   cursor: pointer;
@@ -256,6 +259,7 @@ header {
 }
 
 .popup {
+  contain: content;
   position: fixed;
   z-index: var(--z-index-popup);
   overflow: auto;
@@ -263,6 +267,7 @@ header {
   border: 3px solid #666;
   border-radius: 3px;
   > article {
+    contain: content;
     padding: 10px;
   }
   &.popup_linkinfo {
@@ -296,6 +301,7 @@ header {
 }
 
 .jump_panel {
+  contain: content;
   @include drop-shadow;
   $radius: 2px;
   position: absolute;
@@ -338,7 +344,12 @@ header {
   }
 }
 
+.popup_area {
+  contain: layout size;
+}
+
 .thread_footer {
+  contain: content;
   position: absolute;
   bottom: 0;
   left: 0;
@@ -369,6 +380,7 @@ header {
 }
 
 .next_thread_list {
+  contain: content;
   @include drop-shadow;
 
   background-color: hsla(0, 0%, 0%, 0.85);

@@ -5,23 +5,17 @@ do ->
     unless font?
       throw new Error("localstorageからのフォントの取得に失敗しました")
   catch
-    font = await new Promise( (resolve, reject) ->
-      xhr = new XMLHttpRequest()
-      xhr.open("GET", "https://readcrx-2.github.io/read.crx-2/textar-min.woff2")
-      xhr.responseType = "arraybuffer"
-      xhr.onload = ->
-        if @status is 200
-          buffer = new Uint8Array(@response)
-          s = ""
-          for a in buffer
-            s += String.fromCharCode(a)
-          font = "data:font/woff2;base64,#{btoa(s)}"
-          localStorage.setItem("textar_font", font)
-          resolve(font)
+    response = await fetch("https://readcrx-2.github.io/read.crx-2/textar-min.woff2")
+    blob = await response.blob()
+    font = await new Promise( (resolve) ->
+      fr = new FileReader()
+      fr.onload = ->
+        resolve(fr.result)
         return
-      xhr.send()
+      fr.readAsDataURL(blob)
       return
     )
+    localStorage.setItem("textar_font", font)
   fontface = new FontFace("Textar", "url(#{font})")
   document.fonts.add(fontface)
   return

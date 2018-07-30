@@ -76,14 +76,10 @@ namespace UI {
       var $div = $__("div").addClass("tab_container");
       $ele.addLast($ul, $div);
 
-      window.on("message", ({origin, data, source}) => {
+      window.on("message", ({ origin, data: message, source }) => {
         var message, tabId: string, history;
 
-        if (origin !== location.origin || typeof data !== "string") {
-          return
-        }
-
-        message = JSON.parse(data);
+        if (origin !== location.origin) return;
 
         if (![
             "requestTabHistory",
@@ -102,11 +98,10 @@ namespace UI {
 
         switch (message.type) {
           case "requestTabHistory":
-            message = JSON.stringify({
+            source.postMessage({
               type: "responseTabHistory",
               history
-            });
-            source.postMessage(message, origin);
+            }, origin);
             break;
           case "requestTabBack":
             if (history.current > 0) {

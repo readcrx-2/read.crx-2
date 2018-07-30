@@ -139,10 +139,7 @@ class app.view.IframeView extends app.view.View
   @method close
   ###
   close: ->
-    parent.postMessage(
-      JSON.stringify({type: "request_killme"})
-      location.origin
-    )
+    parent.postMessage(type: "request_killme", location.origin)
     return
 
   _write: (param = {}) ->
@@ -395,9 +392,8 @@ class app.view.PaneContentView extends app.view.IframeView
   @private
   ###
   _setupEventConverter: ->
-    window.on("message", ({origin, data}) =>
-      return unless origin is location.origin and typeof data is "string"
-      message = JSON.parse(data)
+    window.on("message", ({origin, data: message}) =>
+      return unless origin is location.origin
 
       # request_reload(postMessage) -> request_reload(event) 翻訳処理
       if message.type is "request_reload"
@@ -423,23 +419,16 @@ class app.view.PaneContentView extends app.view.IframeView
 
     # request_focus送出処理
     @$element.on("mousedown", ({target}) ->
-      message =
+      parent.postMessage({
         type: "request_focus"
-        focus: true
-
-      if target.tagName in ["INPUT", "TEXTAREA"]
-        message.focus = false
-
-      parent.postMessage(JSON.stringify(message), location.origin)
+        focus: !(target.tagName in ["INPUT", "TEXTAREA"])
+      }, location.origin)
       return
     )
 
     # view_loaded翻訳処理
     @$element.on("view_loaded", ->
-      parent.postMessage(
-        JSON.stringify({type: "view_loaded"}),
-        location.origin
-      )
+      parent.postMessage(type: "view_loaded", location.origin)
       return
     )
     return
@@ -472,11 +461,10 @@ class app.view.TabContentView extends app.view.PaneContentView
   ###
   _setupTitleReporter: ->
     sendTitleUpdated = =>
-      parent.postMessage(
-        JSON.stringify({
+      parent.postMessage({
           type: "title_updated"
           title: @$element.T("title")[0].textContent
-        }),
+        }
         location.origin
       )
       return
@@ -509,15 +497,10 @@ class app.view.TabContentView extends app.view.PaneContentView
   ###
   _setupNavButton: ->
     # 戻る/進むボタン管理
-    parent.postMessage(
-      JSON.stringify({type: "requestTabHistory"}),
-      location.origin
-    )
+    parent.postMessage(type: "requestTabHistory", location.origin)
 
-    window.on("message", ({origin, data}) =>
-      return unless origin is location.origin and typeof data is "string"
-      {type, history: {current, stack} = {}} = JSON.parse(data)
-      return unless type is "responseTabHistory"
+    window.on("message", ({ origin, data: {type, history: {current, stack} = {}} }) =>
+      return unless origin is location.origin and type is "responseTabHistory"
       if current > 0
         @$element.C("button_back")[0].removeClass("disabled")
 
@@ -539,7 +522,7 @@ class app.view.TabContentView extends app.view.PaneContentView
           return if @hasClass("disabled")
           tmp = if @hasClass("button_back") then "Back" else "Forward"
           parent.postMessage(
-            JSON.stringify({type: "requestTab#{tmp}", newTab, background}),
+            {type: "requestTab#{tmp}", newTab, background}
             location.origin
           )
         return

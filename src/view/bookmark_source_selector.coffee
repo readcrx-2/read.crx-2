@@ -20,7 +20,7 @@ app.boot("/view/bookmark_source_selector.html", ->
     )
     app.config.set("bookmark_id", bookmarkId)
     app.bookmarkEntryList.setRootNodeId(bookmarkId)
-    parent.postMessage(JSON.stringify(type: "request_killme"), location.origin)
+    parent.postMessage(type: "request_killme", location.origin)
     return
   )
 

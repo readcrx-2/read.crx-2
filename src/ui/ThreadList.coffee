@@ -136,6 +136,7 @@ class UI.ThreadList
             createdAt: /\/(\d+)\/$/.exec(bookmark.url)[1] * 1000
             boardUrl
             boardTitle
+            expired: bookmark.expired
             isHttps: (app.URL.getScheme(bookmark.url) is "https")
           })
         else if type is "removed"

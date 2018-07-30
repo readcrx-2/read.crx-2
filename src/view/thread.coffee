@@ -853,7 +853,8 @@ app.boot("/view/thread.html", ->
       else
         $content.removeClass("searching")
         $content.removeAttr("data-res-search-hit-count")
-        $view.C("search_hit")[0].removeClass("search_hit")
+        for dom in $view.C("search_hit") by -1
+          dom.removeClass("search_hit")
         $view.C("hit_count")[0].textContent = ""
 
         if typeof searchStoredScrollTop is "number"

@@ -1151,7 +1151,11 @@ app.viewThread._readStateManager = ($view) ->
     #onbeforeunload内で呼び出された時に、この値が0になる場合が有る
     return if received is 0
 
-    last = threadContent.getRead()
+    # 既読情報が存在しない場合readState.lastは0
+    if readState.last is 0
+      last = threadContent.getRead(1)
+    else
+      last = threadContent.getRead(readState.last)
 
     scanCountByReloaded++ if requestReloadFlag and !byScroll
 
@@ -1159,7 +1163,7 @@ app.viewThread._readStateManager = ($view) ->
       readState.received = received
       readStateUpdated = true
 
-    lastDisplay = threadContent.getDisplay()
+    lastDisplay = threadContent.getDisplay(last)
     if (
       (!requestReloadFlag or scanCountByReloaded is 1) and
       (!lastDisplay.bottom or lastDisplay.resNum is last)

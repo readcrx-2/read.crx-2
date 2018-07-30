@@ -381,26 +381,53 @@ class UI.ThreadContent
 
   ###*
   @method getRead
+  @param {Number} beforeRead 直近に読んでいたレスの番号
   @return {Number} 現在読んでいると推測されるレスの番号
   ###
-  getRead: ->
+  getRead: (beforeRead) ->
     containerBottom = @container.scrollTop + @container.clientHeight
-    read = @container.child().length
-    for res, key in @container.child() when res.offsetTop + res.offsetHeight > containerBottom
-      read = key
-      break
+    $read = @container.children[beforeRead - 1]
+    readTop = $read.offsetTop
+    if readTop < containerBottom < readTop + $read.offsetHeight
+      return beforeRead
+
+    # 最後のレスはcontainerの余白の関係で取得できないので別で判定
+    $last = @container.last()
+    if $last.offsetTop < containerBottom
+      return @container.children.length
+
+    # 直近に読んでいたレスの上下を順番に調べる
+    $next = $read.next()
+    $prev = $read.prev()
+    loop
+      if $next?
+        nextTop = $next.offsetTop
+        if nextTop < containerBottom < nextTop + $next.offsetHeight
+          read = $next.C("num")[0].textContent
+          break
+        $next = $next.next()
+      if $prev?
+        prevTop = $prev.offsetTop
+        if prevTop < containerBottom < prevTop + $prev.offsetHeight
+          read = $prev.C("num")[0].textContent
+          break
+        $prev = $prev.prev()
+      # どのレスも判定されなかった場合
+      if not $next? and not $prev?
+        break
 
     # >>1の底辺が表示領域外にはみ出していた場合対策
-    if read is 0
-      read = 1
+    unless read?
+      return 1
 
-    return read
+    return parseInt(read)
 
   ###*
   @method getDisplay
+  @param {Number} beforeRead 直近に読んでいたレスの番号
   @return {Object} 現在表示していると推測されるレスの番号とオフセット
   ###
-  getDisplay: ->
+  getDisplay: (beforeRead) ->
     containerTop = @container.scrollTop
     containerBottom = containerTop + @container.clientHeight
     resRead = {resNum: 1, offset: 0, bottom: false}
@@ -410,11 +437,31 @@ class UI.ThreadContent
     if containerBottom >= @container.scrollHeight - 60
       resRead.bottom = true
 
-    # スクロール位置のレスを抽出
-    for res, key in @container.child() when res.offsetTop + res.offsetHeight > containerTop
-      resRead.resNum = key + 1
-      resRead.offset = (containerTop - res.offsetTop) / res.offsetHeight
-      break
+    $read = @container.children[beforeRead - 1]
+    readTop = $read.offsetTop
+    unless readTop < containerTop < readTop + $read.offsetHeight
+      # 直近に読んでいたレスの上下を順番に調べる
+      $next = $read.next()
+      $prev = $read.prev()
+      loop
+        if $next?
+          nextTop = $next.offsetTop
+          if nextTop < containerTop < nextTop + $next.offsetHeight
+            $read = $next
+            break
+          $next = $next.next()
+        if $prev?
+          prevTop = $prev.offsetTop
+          if prevTop < containerTop < prevTop + $prev.offsetHeight
+            $read = $prev
+            break
+          $prev = $prev.prev()
+        # どのレスも判定されなかった場合
+        if not $next? and not $prev?
+          break
+
+    resRead.resNum = parseInt($read.C("num")[0].textContent)
+    resRead.offset = (containerTop - $read.offsetTop) / $read.offsetHeight
 
     return resRead
 

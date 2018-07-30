@@ -21,6 +21,11 @@
   100% {transform: rotate(315deg);}
 }
 
+@keyframes fadeIn {
+  0% {opacity: 0;}
+  100% {opacity: 1;}
+}
+
 header, body {
   font-size: 15px;
 }
@@ -276,7 +281,7 @@ header {
     padding: 5px;
     background-color: rgba(black, 0.8);
     color: #eeeeee;
-    animation: fade_in 150ms ease-out;
+    animation: fadeIn 150ms ease-out;
   }
   .ng_count {
     display: block;

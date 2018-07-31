@@ -44,9 +44,11 @@ app.boot("/write/submit_res.html", ->
     mails = []
     for {input_name, input_mail} in data
       if names.length <= 5
-        names.push(input_name) unless names.includes(input_name)
+        unless input_name is "" or names.includes(input_name)
+          names.push(input_name)
       if mails.length <= 5
-        mails.push(input_mail) unless mails.includes(input_mail)
+        unless input_mail is "" or mails.includes(input_mail)
+          mails.push(input_mail)
       if names.length+mails.length >= 10
         break
     $names = $__("datalist")

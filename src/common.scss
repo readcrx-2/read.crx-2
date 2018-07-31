@@ -490,16 +490,16 @@ $z-indexes:(
       width: 10em;
     }
     &.res, &.unread, &.written_res {
-      width: 4em;
+      width: 7ch;
     }
     &.heat {
-      width: 7em;
+      width: 9ch;
     }
     &.name, &.mail {
       width: 8em;
     }
     &.created_date, &.viewed_date, &.written_date {
-      width: 16em;
+      width: 18ch;
     }
   }
   tbody > tr {

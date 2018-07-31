@@ -64,6 +64,7 @@ td {
 
 .loading_overlay {
   position: fixed;
+  contain: content;
   top: initial;
   bottom: 0;
   height: initial;

@@ -61,3 +61,17 @@ class UI.AANoOverflow
     for $article from $aaArticles
       @_setFontSize($article, width)
     return
+
+  setMiniAA: ($article) ->
+    $article.addClass(_AA_CLASS_NAME)
+    @_setFontSize($article, $article.C("message")[0].clientWidth)
+    return
+
+  unsetMiniAA: ($article) ->
+    $article.removeClass(_AA_CLASS_NAME)
+    $message = $article.C("message")[0]
+    $message.removeClass(_MINI_AA_CLASS_NAME, _SCROLL_AA_CLASS_NAME)
+    $message.style.transform = null
+    $message.style.width = null
+    $message.style.marginBottom = null
+    return

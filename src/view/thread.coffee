@@ -49,7 +49,7 @@ app.boot("/view/thread.html", ->
 
   if app.config.get("aa_font") is "aa"
     $content.addClass("config_use_aa_font")
-    new UI.AANoOverflow($view, {minRatio: app.config.get("aa_min_ratio")})
+    AANoOverflow = new UI.AANoOverflow($view, {minRatio: app.config.get("aa_min_ratio")})
 
   write = (param = {}) ->
     param.url = viewUrl
@@ -369,7 +369,10 @@ app.boot("/view/thread.html", ->
       threadContent.removeClassWithOrg($res, "written")
 
     else if target.hasClass("toggle_aa_mode")
-      $res.toggleClass("aa")
+      if $res.hasClass("aa")
+        AANoOverflow.unsetMiniAA($res)
+      else
+        AANoOverflow.setMiniAA($res)
 
     else if target.hasClass("res_permalink")
       open(app.safeHref(viewUrl + $res.C("num")[0].textContent))

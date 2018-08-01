@@ -2,3 +2,9 @@
 @import "write.scss";
 
 @include common;
+
+.view_write.theme_dark {
+  input:not([type="submit"])::-webkit-calendar-picker-indicator:hover {
+      background-color: rgba(255, 255, 255, .2);
+  }
+}

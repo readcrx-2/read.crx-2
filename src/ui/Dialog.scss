@@ -1,5 +1,6 @@
 .dialog_overlay {
   position: fixed;
+  contain: strict;
   left: 0;
   top: 0;
   width: 100%;

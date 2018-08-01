@@ -189,10 +189,9 @@ class UI.ThreadContent
     return
 
   ###*
-  @method _isHidden
-  @private
+  @method isHidden
   ###
-  _isHidden: (ele) ->
+  isHidden: (ele) ->
     unless @_hiddenSelectors?
       @_hiddenSelectors = []
       css = $$.I("user_css").sheet.cssRules
@@ -237,7 +236,7 @@ class UI.ThreadContent
     while (
       tmpTarget and
       (
-        (isHidden = @_isHidden(tmpTarget)) or
+        (isHidden = @isHidden(tmpTarget)) or
         tmpTarget.offsetTop + tmpTarget.offsetHeight > viewTop
       )
     )
@@ -248,7 +247,7 @@ class UI.ThreadContent
     while (
       tmpTarget and
       (
-        (isHidden = @_isHidden(tmpTarget)) or
+        (isHidden = @isHidden(tmpTarget)) or
         tmpTarget.offsetTop < viewBottom
       )
     )
@@ -297,16 +296,16 @@ class UI.ThreadContent
       target = null
 
     # もしターゲットがNGだった場合、その直前/直後の非NGレスをターゲットに変更する
-    if target and @_isHidden(target)
+    if target and @isHidden(target)
       replaced = target
       while (replaced = replaced.prev())
-        unless @_isHidden(replaced)
+        unless @isHidden(replaced)
           target = replaced
           break
         if !replaced?
           replaced = target
           while (replaced = replaced.next())
-            unless @_isHidden(replaced)
+            unless @isHidden(replaced)
               target = replaced
               break
 
@@ -382,26 +381,53 @@ class UI.ThreadContent
 
   ###*
   @method getRead
+  @param {Number} beforeRead 直近に読んでいたレスの番号
   @return {Number} 現在読んでいると推測されるレスの番号
   ###
-  getRead: ->
+  getRead: (beforeRead) ->
     containerBottom = @container.scrollTop + @container.clientHeight
-    read = @container.child().length
-    for res, key in @container.child() when res.offsetTop + res.offsetHeight > containerBottom
-      read = key
-      break
+    $read = @container.children[beforeRead - 1]
+    readTop = $read.offsetTop
+    if readTop < containerBottom < readTop + $read.offsetHeight
+      return beforeRead
+
+    # 最後のレスはcontainerの余白の関係で取得できないので別で判定
+    $last = @container.last()
+    if $last.offsetTop < containerBottom
+      return @container.children.length
+
+    # 直近に読んでいたレスの上下を順番に調べる
+    $next = $read.next()
+    $prev = $read.prev()
+    loop
+      if $next?
+        nextTop = $next.offsetTop
+        if nextTop < containerBottom < nextTop + $next.offsetHeight
+          read = $next.C("num")[0].textContent
+          break
+        $next = $next.next()
+      if $prev?
+        prevTop = $prev.offsetTop
+        if prevTop < containerBottom < prevTop + $prev.offsetHeight
+          read = $prev.C("num")[0].textContent
+          break
+        $prev = $prev.prev()
+      # どのレスも判定されなかった場合
+      if not $next? and not $prev?
+        break
 
     # >>1の底辺が表示領域外にはみ出していた場合対策
-    if read is 0
-      read = 1
+    unless read?
+      return 1
 
-    return read
+    return parseInt(read)
 
   ###*
   @method getDisplay
+  @param {Number} beforeRead 直近に読んでいたレスの番号
   @return {Object} 現在表示していると推測されるレスの番号とオフセット
   ###
-  getDisplay: ->
+  getDisplay: (beforeRead) ->
     containerTop = @container.scrollTop
     containerBottom = containerTop + @container.clientHeight
     resRead = {resNum: 1, offset: 0, bottom: false}
@@ -411,11 +437,31 @@ class UI.ThreadContent
     if containerBottom >= @container.scrollHeight - 60
       resRead.bottom = true
 
-    # スクロール位置のレスを抽出
-    for res, key in @container.child() when res.offsetTop + res.offsetHeight > containerTop
-      resRead.resNum = key + 1
-      resRead.offset = (containerTop - res.offsetTop) / res.offsetHeight
-      break
+    $read = @container.children[beforeRead - 1]
+    readTop = $read.offsetTop
+    unless readTop < containerTop < readTop + $read.offsetHeight
+      # 直近に読んでいたレスの上下を順番に調べる
+      $next = $read.next()
+      $prev = $read.prev()
+      loop
+        if $next?
+          nextTop = $next.offsetTop
+          if nextTop < containerTop < nextTop + $next.offsetHeight
+            $read = $next
+            break
+          $next = $next.next()
+        if $prev?
+          prevTop = $prev.offsetTop
+          if prevTop < containerTop < prevTop + $prev.offsetHeight
+            $read = $prev
+            break
+          $prev = $prev.prev()
+        # どのレスも判定されなかった場合
+        if not $next? and not $prev?
+          break
+
+    resRead.resNum = parseInt($read.C("num")[0].textContent)
+    resRead.offset = (containerTop - $read.offsetTop) / $read.offsetHeight
 
     return resRead
 
@@ -479,7 +525,7 @@ class UI.ThreadContent
         if targetBottom <= containerHeight and target.next()
           target = target.next()
 
-          while target and @_isHidden(target)
+          while target and @isHidden(target)
             target = target.next()
 
         if not target
@@ -531,7 +577,7 @@ class UI.ThreadContent
         if 0 <= targetTop and target.prev()
           target = target.prev()
 
-          while target and @_isHidden(target)
+          while target and @isHidden(target)
             target = target.prev()
 
         if not target
@@ -765,7 +811,7 @@ class UI.ThreadContent
       $message.innerHTML = tmp
       $article.addLast($message)
 
-      $article.setClass(res.class...)
+      $article.setClass(res.class...) if res.class.length > 0
       $article.dataset.id = res.id if res.id?
       $article.dataset.slip = res.slip if res.slip?
       $article.dataset.trip = res.trip if res.trip?
@@ -1250,7 +1296,7 @@ class UI.ThreadContent
       thumbnail.style.height = "#{h}px"
 
     sib = sourceA
-    while true
+    loop
       pre = sib
       sib = pre.next()
       if !sib? or sib.tagName is "BR"
@@ -1286,7 +1332,7 @@ class UI.ThreadContent
       expandedURLLink = null
 
     sib = sourceA
-    while true
+    loop
       pre = sib
       sib = pre.next()
       if !sib? or sib.tagName is "BR"

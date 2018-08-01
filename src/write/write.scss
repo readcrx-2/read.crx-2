@@ -165,5 +165,8 @@ iframe {
     &[disabled] {
       background-color: #ddd;
     }
+    &:focus {
+      border-color: #36f;
+    }
   }
 }

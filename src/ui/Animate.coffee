@@ -3,8 +3,9 @@ do ->
   getOriginHeight = (ele) ->
     e = ele.cloneNode(true)
     e.style.cssText = """
+      contain: content;
       height: auto;
-      width: #{ele.clientWidth};
+      width: #{ele.clientWidth}px;
       position: absolute;
       visibility: hidden;
       display: block;

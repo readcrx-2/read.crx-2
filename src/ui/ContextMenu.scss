@@ -1,5 +1,6 @@
 .contextmenu_menu {
   @include drop-shadow;
+  contain: content;
   display: flex;
   flex-flow: column nowrap;
   margin: 0;

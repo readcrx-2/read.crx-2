@@ -5,6 +5,7 @@
 
 .tab_tabbar {
   display: flex;
+  contain: layout;
   flex-flow: wrap;
   margin: 0;
   padding: 0;
@@ -77,6 +78,7 @@
 }
 
 .tab_container {
+  contain: strict;
   flex-grow: 1;
   overflow: hidden;
   position: relative;

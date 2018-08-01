@@ -44,7 +44,7 @@ do ->
       altParent.addClass("has_contextmenu")
 
     if window.innerWidth < $menu.offsetLeft + menuWidth
-      $menu.style.left = ""
+      $menu.style.left = null
       $menu.style.right = "1px"
     if window.innerHeight < $menu.offsetTop + $menu.offsetHeight
       $menu.style.top = "#{Math.max($menu.offsetTop - $menu.offsetHeight, 0)}px"

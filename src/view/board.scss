@@ -32,12 +32,17 @@ td {
   }
 }
 
+.content {
+  contain: strict;
+}
+
 tr.ng_thread {
   display: none;
 }
 
 .board_footer {
   position: absolute;
+  contain: content;
   bottom: 0;
   left: 0;
   right: 75px;

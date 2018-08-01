@@ -471,7 +471,7 @@ app.main = ->
 
   app.message.on("notify", ({message: text, html, background_color = "#777"}) ->
     $div = $__("div")
-    $div.style["background-color"] = background_color
+    $div.style.backgroundColor = background_color
     $div2 = $__("div")
     if html?
       $div2.innerHTML = html

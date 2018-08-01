@@ -22,6 +22,7 @@ iframe {
 }
 
 #body {
+  contain: strict;
   position: relative;
 }
 
@@ -111,6 +112,7 @@ iframe {
 }
 
 #modal {
+  contain: layout size;
   > iframe {
     z-index: var(--z-index-modal);
     position: fixed;
@@ -123,12 +125,14 @@ iframe {
 
 #app_notice_container {
   position: fixed;
+  contain: content;
   left: 50px;
   top: 10px;
   right: 50px;
   z-index: var(--z-index-notification);
   > div {
     @include drop-shadow;
+    contain: content;
     background-image: linear-gradient(transparent, rgba(black, 0.25));
     border-radius: 5px;
     color: #eeeeee;
@@ -162,6 +166,7 @@ iframe {
 }
 
 .keyboard_help {
+  contain: strict;
   z-index: var(--z-index-modalhelp);
   background: hsla(0, 0%, 0%, 0.9);
   color: hsl(0, 0%, 80%);

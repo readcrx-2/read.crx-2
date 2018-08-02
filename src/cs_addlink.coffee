@@ -32,17 +32,17 @@ do ->
 
   container = document.createElement("div")
   container.style.cssText = """
-    position: "fixed";
-    right: "10px";
-    top: "60px";
-    "background-color": "rgba(255,255,255,0.8)";
-    color: "#000";
-    border: "1px solid black";
-    "border-radius": "4px";
-    padding: "5px";
-    "font-size": "14px";
-    "font-weight": "normal";
-    "z-index": "255";
+    position: fixed;
+    right: 10px;
+    top: 60px;
+    background-color: rgba(255,255,255,0.8);
+    color: #000;
+    border: 1px solid black;
+    border-radius: 4px;
+    padding: 5px;
+    font-size: 14px;
+    font-weight: normal;
+    z-index: 255;
     """
 
   openButton = document.createElement("span")

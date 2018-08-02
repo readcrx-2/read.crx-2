@@ -112,8 +112,8 @@ iframe {
 }
 
 #modal {
-  contain: layout size;
   > iframe {
+    contain: strict;
     z-index: var(--z-index-modal);
     position: fixed;
     left: 0;

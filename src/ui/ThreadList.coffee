@@ -262,7 +262,7 @@ class UI.ThreadList
 
             threadURL = $tr.dataset.href
             threadTitle = $tr.$(selector.title)?.textContent
-            threadRes = $tr.$(selector.res)?.textContent
+            threadRes = parseInt($tr.$(selector.res)?.textContent ? 0)
             threadWrittenRes = parseInt($tr.$(selector.writtenRes)?.textContent ? 0)
             dateValue = $tr.$(selector.viewedDate)?.getAttr("date-value")
 

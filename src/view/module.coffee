@@ -804,6 +804,7 @@ class app.view.TabContentView extends app.view.PaneContentView
     @$element.C("button_open_updated")[0]?.on("click", =>
       for dom in @$element.C("updated")
         {href: url, title} = dom.dataset
+        title = app.util.decodeCharReference(title)
         lazy = app.config.isOn("open_all_unread_lazy")
 
         app.message.send("open", {url, title, new_tab: true, lazy})

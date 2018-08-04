@@ -45,62 +45,53 @@ namespace app {
 
     export class EntryList {
       private cache = new Map<string, Entry>();
-      private boardURLIndex = new Map<string, string[]>();
+      private boardURLIndex = new Map<string, Set<string>>();
 
       add (entry:Entry):boolean {
         var boardURL:string;
 
-        if (!this.get(entry.url)) {
-          entry = app.deepCopy(entry);
+        if (this.get(entry.url)) return false;
 
-          this.cache.set(entry.url, entry);
+        entry = app.deepCopy(entry);
 
-          if (entry.type === "thread") {
-            boardURL = app.URL.threadToBoard(entry.url);
-            if (!this.boardURLIndex.has(boardURL)) {
-              this.boardURLIndex.set(boardURL, []);
-            }
-            this.boardURLIndex.get(boardURL)!.push(entry.url);
+        this.cache.set(entry.url, entry);
+
+        if (entry.type === "thread") {
+          boardURL = app.URL.threadToBoard(entry.url);
+          if (!this.boardURLIndex.has(boardURL)) {
+            this.boardURLIndex.set(boardURL, new Set());
           }
-          return true;
+          this.boardURLIndex.get(boardURL)!.add(entry.url);
         }
-        else {
-          return false;
-        }
+        return true;
       }
 
       update (entry:Entry):boolean {
-        if (this.get(entry.url)) {
-          this.cache.set(entry.url, app.deepCopy(entry));
-          return true;
-        }
-        else {
-          return false;
-        }
+        if (this.get(entry.url)) return false;
+
+        this.cache.set(entry.url, app.deepCopy(entry));
+        return true;
       }
 
       remove (url:string):boolean {
-        var tmp:number, boardURL:string;
+        var boardURL:string;
 
         url = app.URL.fix(url);
 
-        if (this.cache.has(url)) {
-          if (this.cache.get(url)!.type === "thread") {
-            boardURL = app.URL.threadToBoard(url);
-            if (this.boardURLIndex.has(boardURL)) {
-              tmp = this.boardURLIndex.get(boardURL)!.indexOf(url);
-              if (tmp !== -1) {
-                this.boardURLIndex.get(boardURL)!.splice(tmp, 1);
-              }
+        if (this.cache.has(url)) return false;
+
+        if (this.cache.get(url)!.type === "thread") {
+          boardURL = app.URL.threadToBoard(url);
+          if (this.boardURLIndex.has(boardURL)) {
+            let threadList = this.boardURLIndex.get(boardURL)!;
+            if (threadList.has(url)) {
+              threadList.delete(url);
             }
           }
+        }
 
-          this.cache.delete(url);
-          return true;
-        }
-        else {
-          return false;
-        }
+        this.cache.delete(url);
+        return true;
       }
 
       import (target:EntryList):void {
@@ -152,35 +143,23 @@ namespace app {
       }
 
       getAll ():Entry[] {
-        var res:Entry[] = [];
-
-        for (var val of this.cache.values()) {
-          res.push(val);
-        }
+        var res:Entry[] = Array.from(this.cache.values());
 
         return app.deepCopy(res);
       }
 
       getAllThreads ():Entry[] {
-        var res:Entry[] = [];
+        var res:Entry[] = Array.from(this.cache.values());
 
-        for (var val of this.cache.values()) {
-          if (val.type === "thread") {
-            res.push(val);
-          }
-        }
+        res = res.filter( ({type}) => type === "thread");
 
         return app.deepCopy(res);
       }
 
       getAllBoards ():Entry[] {
-        var res:Entry[] = [];
+        var res:Entry[] = Array.from(this.cache.values());
 
-        for (var val of this.cache.values()) {
-          if (val.type === "board") {
-            res.push(val);
-          }
-        }
+        res = res.filter( ({type}) => type === "board");
 
         return app.deepCopy(res);
       }
@@ -313,16 +292,10 @@ namespace app {
       private followDeletion (b:EntryList):void {
         var aList:string[], bList:string[], rmList:string[];
 
-        aList = this.getAll().map( (entry:Entry) => {
-          return entry.url;
-        });
-        bList = b.getAll().map( (entry:Entry) => {
-          return entry.url;
-        });
+        aList = this.getAll().map( ({url}) => url);
+        bList = b.getAll().map( ({url}) => url);
 
-        rmList = aList.filter( (url:string) => {
-          return !bList.includes(url);
-        });
+        rmList = aList.filter( url => !bList.includes(url));
 
         for(var url of rmList) {
           this.remove(url);

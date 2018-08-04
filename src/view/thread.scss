@@ -31,7 +31,7 @@ header, body {
 }
 
 .content {
-  contain: layout size;
+  contain: size;
   padding-bottom: 50px;
   &[data-res-search-hit-count="0"]::after {
     display: block;
@@ -45,7 +45,6 @@ header, body {
 }
 
 article {
-  contain: layout;
   padding: 0 5px 20px 5px;
   &.ng {
     display: none;

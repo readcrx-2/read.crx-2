@@ -67,7 +67,7 @@ namespace app {
       }
 
       update (entry:Entry):boolean {
-        if (this.get(entry.url)) return false;
+        if (!this.get(entry.url)) return false;
 
         this.cache.set(entry.url, app.deepCopy(entry));
         return true;
@@ -78,7 +78,7 @@ namespace app {
 
         url = app.URL.fix(url);
 
-        if (this.cache.has(url)) return false;
+        if (!this.cache.has(url)) return false;
 
         if (this.cache.get(url)!.type === "thread") {
           boardURL = app.URL.threadToBoard(url);

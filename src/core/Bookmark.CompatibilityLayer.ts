@@ -50,12 +50,7 @@ namespace app.Bookmark {
     get (url:string):Entry|null {
       var entry = this.cbel.get(url);
 
-      if (entry) {
-        return entry;
-      }
-      else {
-        return null;
-      }
+      return entry ? entry : null;
     }
 
     getByBoard (boardURL:string):Entry[] {

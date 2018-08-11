@@ -172,10 +172,13 @@ do ->
       $view.C("hide_iframe")[0].on("click", ->
         timer.kill()
         $iframeContainer = $view.C("iframe_container")[0]
-        UI.Animate.fadeOut($iframeContainer).on("finish", ->
-          $iframeContainer.T("iframe")[0].remove()
+        do ->
+          ani = await UI.Animate.fadeOut($iframeContainer)
+          ani.on("finish", ->
+            $iframeContainer.T("iframe")[0].remove()
+            return
+          )
           return
-        )
         for dom from $view.$$("input, textarea")
           dom.disabled = false unless dom.hasClass("mail") and app.config.isOn("sage_flag")
         $view.C("notice")[0].textContent = ""

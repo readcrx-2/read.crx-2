@@ -265,7 +265,8 @@ class app.view.Index extends app.view.View
       @hideKeyboardHelp()
       return
     , once: true)
-    UI.Animate.fadeIn($help).on("finish", ->
+    ani = await UI.Animate.fadeIn($help)
+    ani.on("finish", ->
       $help.focus()
     )
     return
@@ -481,7 +482,8 @@ app.main = ->
     $div.on("click", func = ({target, currentTarget: cTarget}) ->
       return unless target.matches("a, div:last-child")
       $div.off("click", func)
-      UI.Animate.fadeOut(cTarget).on("finish", =>
+      ani = await UI.Animate.fadeOut(cTarget)
+      ani.on("finish", =>
         cTarget.remove()
         return
       )
@@ -825,7 +827,8 @@ app.main = ->
           app.DOMData.get($iframe.closest(".tab"), "tab").remove($iframe.dataset.tabid)
         #モーダルのviewが送ってきた場合
         else if $iframe.matches("#modal > iframe")
-          UI.Animate.fadeOut($iframe).on("finish", ->
+          ani = await UI.Animate.fadeOut($iframe)
+          ani.on("finish", ->
             $iframe.remove()
             return
           )

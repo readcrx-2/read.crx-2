@@ -140,16 +140,25 @@ class app.ReplaceStrTxt
           flag = !flag
         continue unless flag
       if d.type is "ex2"
-        before = d.before
+        {place, before, after} = d
+        if place is "all"
+          res =
+            name: app.replaceAll(res.name, before, after)
+            mail: app.replaceAll(res.mail, before, after)
+            other: app.replaceAll(res.other, before, after)
+            message: app.replaceAll(res.message, before, after)
+        else
+          place = _PLACE_TABLE.get(place)
+          res[place] = app.replaceAll(res[place], before, after)
       else
-        before = d.beforeReg
-      if d.place is "all"
-        res =
-          name: res.name.replace(before, d.after)
-          mail: res.mail.replace(before, d.after)
-          other: res.other.replace(before, d.after)
-          message: res.message.replace(before, d.after)
-      else
-        place = _PLACE_TABLE.get(d.place)
-        res[place] = res[place].replace(before, d.after)
+        {place, beforeReg: before, after} = d
+        if place is "all"
+          res =
+            name: res.name.replace(before, after)
+            mail: res.mail.replace(before, after)
+            other: res.other.replace(before, after)
+            message: res.message.replace(before, after)
+        else
+          place = _PLACE_TABLE.get(place)
+          res[place] = res[place].replace(before, after)
     return res

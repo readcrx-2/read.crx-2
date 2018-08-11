@@ -25,7 +25,7 @@ class app.ReplaceStrTxt
 
   #jsonには正規表現のオブジェクトが含めれないので
   #それを展開
-  _setupReg = () ->
+  _setupReg = ->
     for d from _replaceTable
       try
         d.beforeReg = switch d.type

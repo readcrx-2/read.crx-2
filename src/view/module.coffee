@@ -241,7 +241,7 @@ class app.view.IframeView extends app.view.View
       switch which
         # Enter
         when 13
-          @execCommand(target.value.replace(/[\s]/g, ""))
+          @execCommand(target.value.replace(/\s/g, ""))
           @_closeCommandBox()
         # Esc
         when 27

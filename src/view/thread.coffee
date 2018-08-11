@@ -1209,13 +1209,19 @@ app.viewThread._readStateManager = ($view) ->
   window.on("beforeunload", onBeforezombie)
 
   #スクロールされたら定期的にスキャンを実行する
-  scrollFlg = false
+  doneScroll = false
+  isScaning = false
   scrollWatcher = setInterval( ->
-    if scrollFlg
-      scrollFlg = false
+    return if not doneScroll or isScaning
+    isScaning = true
+    requestAnimationFrame( ->
       scan(true)
       if readStateUpdated
         app.message.send("read_state_updated", {board_url: boardUrl, read_state: readState})
+      isScaning = false
+      return
+    )
+    doneScroll = false
     return
   , 250)
 
@@ -1234,7 +1240,7 @@ app.viewThread._readStateManager = ($view) ->
   )
 
   $content.on("scroll", ->
-    scrollFlg = true
+    doneScroll = true
     return
   , passive: true)
   $view.on("request_reload", ->

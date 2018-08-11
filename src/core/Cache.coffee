@@ -186,14 +186,16 @@ class app.Cache
       app.log("error", "Cache::put: データが不正です", @)
       throw new Error("キャッシュしようとしたデータが不正です")
 
+    data = if @data? then app.replaceAll(@data, "\u0000", "\u0020") else null
+
     try
       db = await Cache._dbOpen
       req = db
         .transaction("Cache", "readwrite")
         .objectStore("Cache")
-        .put(
+        .put({
           url: @key
-          data: @data?.replace(/\u0000/g, "\u0020") or null
+          data
           parsed: @parsed or null
           last_updated: @lastUpdated
           last_modified: @lastModified or null
@@ -201,7 +203,7 @@ class app.Cache
           res_length: @resLength or null
           dat_size: @datSize or null
           readcgi_ver: @readcgiVer or null
-        )
+        })
       await app.util.indexedDBRequestToPromise(req)
     catch e
       app.log("error", "Cache::put: トランザクション中断")

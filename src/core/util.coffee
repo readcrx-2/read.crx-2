@@ -8,7 +8,6 @@ app.util = {}
 class app.util.Anchor
   @reg =
     ANCHOR: /(?:&gt;|＞){1,2}[\d\uff10-\uff19]+(?:[\-\u30fc][\d\uff10-\uff19]+)?(?:\s*[,、]\s*[\d\uff10-\uff19]+(?:[\-\u30fc][\d\uff10-\uff19]+)?)*/g
-    _FW_DASH: /\u30fc/g
     _FW_NUMBER: /[\uff10-\uff19]/g
 
   @parseAnchor: (str) ->
@@ -16,7 +15,7 @@ class app.util.Anchor
       targetCount: 0
       segments: []
 
-    str = str.replace(Anchor.reg._FW_DASH, "-")
+    str = app.replaceAll(str, "\u30fc", "-")
     str = str.replace(Anchor.reg._FW_NUMBER, ($0) ->
       return String.fromCharCode($0.charCodeAt(0) - 65248)
     )
@@ -166,10 +165,9 @@ do ->
   kataHiraReg = ///[
     \u30a1-\u30f3 #ァ-ン
   ]///g
-  spaceReg = /[\u0020\u3000]/g
   # 検索用に全角/半角や大文字/小文字を揃える
   app.util.normalize = (str) ->
-    return str
+    str = str
       # 全角記号/英数を半角記号/英数に、半角カタカナを全角カタカナに変換
       .replace(
         wideSlimNormalizeReg
@@ -180,22 +178,25 @@ do ->
         kataHiraReg
         ($0) -> String.fromCharCode($0.charCodeAt(0) - 96)
       )
-      # 全角スペース/半角スペースを削除
-      .replace(spaceReg, "")
-      # 大文字を小文字に変換
-      .toLowerCase()
+    # 全角スペース/半角スペースを削除
+    str = app.replaceAll(
+      app.replaceAll(str, "\u0020", "")
+    , "\u3000", "")
+    # 大文字を小文字に変換
+    return str.toLowerCase()
 
   # striptags
   app.util.stripTags = (str) ->
     return str.replace(/(<([^>]+)>)/ig, "")
 
   titleReg = / ?(?:\[(?:無断)?転載禁止\]|(?:\(c\)|©|�|&copy;|&#169;)(?:2ch\.net|@?bbspink\.com)) ?/g
-  markReg = /<\/?mark>/g
   # タイトルから無断転載禁止などを取り除く
   app.util.removeNeedlessFromTitle = (title) ->
     title2 = title.replace(titleReg,"")
     title = if title2 is "" then title else title2
-    return title.replace(markReg, "")
+    return app.replaceAll(
+      app.replaceAll(title, "<mark>", "")
+    , "</mark>", "")
 
   app.util.promiseWithState = (promise) ->
     state = "pending"

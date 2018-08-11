@@ -14,7 +14,6 @@ do ->
     e.style.cssText = """
       contain: content;
       height: auto;
-      width: #{ele.clientWidth}px;
       position: absolute;
       visibility: hidden;
       display: block;

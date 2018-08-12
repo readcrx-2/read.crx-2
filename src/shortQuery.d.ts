@@ -56,8 +56,9 @@ interface DocumentFragment {
   last(): Element|null;
 }
 interface EventTarget {
-  on: EventTarget.addEventListener
-  off: EventTarget.removeEventListener
+  on: EventTarget.addEventListener;
+  off: EventTarget.removeEventListener;
+  emit: EventTarget.dispatchEvent;
 }
 interface Element {
   childClass: Element.getElementsByClassName;

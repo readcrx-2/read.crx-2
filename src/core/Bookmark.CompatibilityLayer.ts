@@ -72,10 +72,12 @@ namespace app.Bookmark {
           entry.readState = readState;
         }
 
-        if (typeof resCount === "number") {
+        if (
+          typeof resCount === "number" &&
+          (!entry.resCount || entry.resCount < resCount)
+        ) {
           entry.resCount = resCount;
-        }
-        else if (entry.readState) {
+        } else if (entry.readState) {
           entry.resCount = entry.readState.received;
         }
 
@@ -113,7 +115,7 @@ namespace app.Bookmark {
       return new Promise( (resolve, reject) => {
         var entry = this.cbel.get(url);
 
-        if (entry) {
+        if (entry && (!entry.resCount || entry.resCount < resCount)) {
           entry.resCount = resCount;
           this.cbel.update(entry, undefined, (res) => {
             res ? resolve() : reject();

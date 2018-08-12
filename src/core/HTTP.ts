@@ -79,11 +79,11 @@ namespace app.HTTP {
         });
 
         xhr.on("timeout", () => {
-          reject();
+          reject("timeout");
         });
 
         xhr.on("abort", () => {
-          reject();
+          reject("abort");
         });
 
         xhr.send();

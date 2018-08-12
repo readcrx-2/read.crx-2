@@ -35,7 +35,7 @@ class UI.TableSorter
   ###
   update: ({sortIndex, sortAttribute, sortOrder} = {}) ->
     event = new Event("table_sort_before_update")
-    @table.dispatchEvent(event)
+    @table.emit(event)
     return if event.defaultPrevented
 
     if sortIndex? and sortOrder?
@@ -91,7 +91,7 @@ class UI.TableSorter
     else
       exparam.sort_attribute = sortAttribute
 
-    @table.dispatchEvent(new CustomEvent("table_sort_updated", { detail: exparam }))
+    @table.emit(new CustomEvent("table_sort_updated", { detail: exparam }))
     return
 
   ###*

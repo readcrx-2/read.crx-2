@@ -23,8 +23,7 @@ do ->
     if target.id is openButtonId
       a = document.createElement("a")
       a.href = url
-      event = new MouseEvent("click", {button, ctrlKey, shiftKey})
-      a.dispatchEvent(event)
+      a.emit(new MouseEvent("click", {button, ctrlKey, shiftKey}))
     else if target.id is closeButtonId
       @removeChild(target.parentElement)
     return

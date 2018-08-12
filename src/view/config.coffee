@@ -108,7 +108,7 @@ class HistoryIO extends SettingIO
       try
         await @clearFunc()
         @$status.textContent = ":削除完了"
-        parent.$$.$("iframe[src=\"/view/#{@name}.html\"]")?.contentWindow.C("view")[0].dispatchEvent(new Event("request_reload"))
+        parent.$$.$("iframe[src=\"/view/#{@name}.html\"]")?.contentWindow.C("view")[0].emit(new Event("request_reload"))
       catch
         @$status.textContent = ":削除失敗"
 
@@ -130,7 +130,7 @@ class HistoryIO extends SettingIO
       try
         await @clearRangeFunc(parseInt($$.C("#{@name}_date_range")[0].value))
         @$status.textContent = ":範囲指定削除完了"
-        parent.$$.$("iframe[src=\"/view/#{@name}.html\"]")?.contentWindow.C("view")[0].dispatchEvent(new Event("request_reload"))
+        parent.$$.$("iframe[src=\"/view/#{@name}.html\"]")?.contentWindow.C("view")[0].emit(new Event("request_reload"))
       catch
         @$status.textContent = ":範囲指定削除失敗"
 
@@ -477,7 +477,7 @@ app.boot("/view/config.html", ["cache", "bbsmenu"], (Cache, BBSMenu) ->
       $$.I(@name).dataset.value = @value if @checked
       return
     )
-    $dom.dispatchEvent(new Event("change"))
+    $dom.emit(new Event("change"))
 
   # 設定をインポート/エクスポート
   new SettingIO(
@@ -492,24 +492,24 @@ app.boot("/view/config.html", ["cache", "bbsmenu"], (Cache, BBSMenu) ->
             switch $key.getAttr("type")
               when "text", "range", "number"
                 $key.value = value
-                $key.dispatchEvent(new Event("input"))
+                $key.emit(new Event("input"))
               when "checkbox"
                 $key.checked = (value is "on")
-                $key.dispatchEvent(new Event("change"))
+                $key.emit(new Event("change"))
               when "radio"
                 for dom in $view.$$("input.direct[name=\"#{key}\"]")
                   if dom.value is value
                     dom.checked = true
-                $key.dispatchEvent(new Event("change"))
+                $key.emit(new Event("change"))
           else
             $keyTextArea = $view.$("textarea[name=\"#{key}\"]")
             if $keyTextArea?
               $keyTextArea.value = value
-              $keyTextArea.dispatchEvent(new Event("input"))
+              $keyTextArea.emit(new Event("input"))
             $keySelect = $view.$("select[name=\"#{key}\"]")
             if $keySelect?
               $keySelect.value = value
-              $keySelect.dispatchEvent(new Event("change"))
+              $keySelect.emit(new Event("change"))
          #config_theme_idは「テーマなし」の場合があるので特例化
          else
            if value is "none"
@@ -517,7 +517,7 @@ app.boot("/view/config.html", ["cache", "bbsmenu"], (Cache, BBSMenu) ->
              $themeNone.click() unless $themeNone.checked
            else
              $view.$("input[name=\"theme_id\"]").value = value
-             $view.$("input[name=\"theme_id\"]").dispatchEvent(new Event("change"))
+             $view.$("input[name=\"theme_id\"]").emit(new Event("change"))
       return
     exportFunc: ->
       content = app.config.getAll()
@@ -532,7 +532,7 @@ app.boot("/view/config.html", ["cache", "bbsmenu"], (Cache, BBSMenu) ->
     importFunc: (file) ->
       datDom = $view.$("textarea[name=\"image_replace_dat\"]")
       datDom.value = file
-      datDom.dispatchEvent(new Event("input"))
+      datDom.emit(new Event("input"))
       return
   )
 
@@ -542,7 +542,7 @@ app.boot("/view/config.html", ["cache", "bbsmenu"], (Cache, BBSMenu) ->
     importFunc: (file) ->
       replacestrDom = $view.$("textarea[name=\"replace_str_txt\"]")
       replacestrDom.value = file
-      replacestrDom.dispatchEvent(new Event("input"))
+      replacestrDom.emit(new Event("input"))
       return
   )
 

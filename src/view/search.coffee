@@ -71,7 +71,7 @@ app.boot("/view/search.html", ["thread_search"], (ThreadSearch) ->
 
     $view.C("more")[0].addClass("hidden")
     do ->
-      await app.defer5()
+      await app.wait5s()
       $buttonReload.removeClass("disabled")
       return
     return

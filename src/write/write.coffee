@@ -149,15 +149,13 @@ do ->
             timer.wake()
           when "success"
             $view.C("notice")[0].textContent = "書き込み成功"
-            setTimeout( ->
-              onSuccess(key)
-              chrome.tabs.getCurrent( ({id}) ->
-                chrome.tabs.remove(id)
-                return
-              )
-              return
-            , 3000)
             timer.kill()
+            await app.wait(3000)
+            onSuccess(key)
+            chrome.tabs.getCurrent( ({id}) ->
+              chrome.tabs.remove(id)
+              return
+            )
           when "confirm"
             UI.Animate.fadeIn($view.C("iframe_container")[0])
             timer.kill()

@@ -25,100 +25,75 @@ do ->
 
   _animatingMap = new WeakMap()
   _resetAnimatingMap = (ele) ->
-    _animatingMap.get(ele)?.dispatchEvent(_INVALIDED_EVENT)
+    _animatingMap.get(ele)?.emit(_INVALIDED_EVENT)
     return
 
   UI.Animate =
     fadeIn: (ele) ->
-      return new Promise( (resolve) ->
-        requestAnimationFrame( ->
-          _resetAnimatingMap(ele)
-          ele.removeClass("hidden")
+      await app.waitAF()
+      _resetAnimatingMap(ele)
+      ele.removeClass("hidden")
 
-          ani = ele.animate(_FADE_IN_FRAMES, _TIMING)
-          _animatingMap.set(ele, ani)
+      ani = ele.animate(_FADE_IN_FRAMES, _TIMING)
+      _animatingMap.set(ele, ani)
 
-          ani.on("finish", ->
-            _animatingMap.delete(ele)
-            return
-          , once: true)
-
-          resolve(ani)
-          return
-        )
+      ani.on("finish", ->
+        _animatingMap.delete(ele)
         return
-      )
+      , once: true)
+      return ani
     fadeOut: (ele) ->
-      return new Promise( (resolve) ->
-        _resetAnimatingMap(ele)
-        ani = ele.animate(_FADE_OUT_FRAMES, _TIMING)
-        _animatingMap.set(ele, ani)
+      _resetAnimatingMap(ele)
+      ani = ele.animate(_FADE_OUT_FRAMES, _TIMING)
+      _animatingMap.set(ele, ani)
 
-        invalided = false
-        ani.on("invalided", ->
-          invalided = true
-          return
-        , once: true)
-        ani.on("finish", ->
-          unless invalided
-            requestAnimationFrame( ->
-              ele.addClass("hidden")
-              _animatingMap.delete(ele)
-              return
-            )
-          return
-        , once: true)
-
-        resolve(ani)
+      invalided = false
+      ani.on("invalided", ->
+        invalided = true
         return
-      )
+      , once: true)
+      ani.on("finish", ->
+        unless invalided
+          await app.waitAF()
+          ele.addClass("hidden")
+          _animatingMap.delete(ele)
+        return
+      , once: true)
+      return Promise.resolve(ani)
     slideDown: (ele) ->
-      return new Promise(
-        requestAnimationFrame( ->
-          h = _getOriginHeight(ele)
+      await app.waitAF()
+      h = _getOriginHeight(ele)
 
-          _resetAnimatingMap(ele)
-          ele.removeClass("hidden")
+      _resetAnimatingMap(ele)
+      ele.removeClass("hidden")
 
-          ani = ele.animate({ height: ["0px", "#{h}px"] }, _TIMING)
-          _animatingMap.set(ele, ani)
+      ani = ele.animate({ height: ["0px", "#{h}px"] }, _TIMING)
+      _animatingMap.set(ele, ani)
 
-          ani.on("finish", ->
-            _animatingMap.delete(ele)
-            return
-          , once: true)
-
-          resolve(ani)
-          return
-        )
-      )
-    slideUp: (ele) ->
-      return new Promise( (resolve), ->
-        requestAnimationFrame( ->
-          h = ele.clientHeight
-
-          _resetAnimatingMap(ele)
-          ani = ele.animate({ height: ["#{h}px", "0px"] }, _TIMING)
-          _animatingMap.set(ele, ani)
-
-          invalided = false
-          ani.on("invalided", ->
-            invalided = true
-            return
-          , once: true)
-          ani.on("finish", ->
-            unless invalided
-              requestAnimationFrame( ->
-                ele.addClass("hidden")
-                _animatingMap.delete(ele)
-                return
-              )
-            return
-          , once: true)
-
-          resolve(ani)
-          return
-        )
+      ani.on("finish", ->
+        _animatingMap.delete(ele)
         return
-      )
+      , once: true)
+      return ani
+    slideUp: (ele) ->
+      await app.waitAF()
+      h = ele.clientHeight
+
+      _resetAnimatingMap(ele)
+      ani = ele.animate({ height: ["#{h}px", "0px"] }, _TIMING)
+      _animatingMap.set(ele, ani)
+
+      invalided = false
+      ani.on("invalided", ->
+        invalided = true
+        return
+      , once: true)
+      ani.on("finish", ->
+        unless invalided
+          await app.waitAF()
+          ele.addClass("hidden")
+          _animatingMap.delete(ele)
+        return
+      , once: true)
+      return ani
   return

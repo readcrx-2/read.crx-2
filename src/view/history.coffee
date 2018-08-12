@@ -46,9 +46,9 @@ app.boot("/view/history.html", ->
     threadList.addItem(data)
     $view.removeClass("loading")
     return if add and data.length is 0
-    $view.dispatchEvent(new Event("view_loaded"))
+    $view.emit(new Event("view_loaded"))
     $view.C("button_reload")[0].addClass("disabled")
-    await app.defer5()
+    await app.wait5s()
     $view.C("button_reload")[0].removeClass("disabled")
     return
 

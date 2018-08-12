@@ -31,7 +31,6 @@ pugCompiler = require "pug"
 args =
   outputPath: "./debug"
   manifestPath: "./src/manifest.json"
-  cssPath: "./src/**/*.scss"
   appTsPath: "./src/app.ts"
   backgroundCoffeePath: "./src/background.coffee"
   csaddlinkCoffeePath: "./src/cs_addlink.coffee"
@@ -40,8 +39,10 @@ args =
   uiCoffeePath: "./src/ui/*.coffee"
   uiTsPath: "./src/ui/*.ts"
   uiCssPath: "./src/ui/ui.scss"
+  uiCssWatchPath: ["./src/ui/*.scss", "./src/common.scss"]
   viewCoffeePath: "./src/view/*.coffee"
   viewCssPath: "./src/view/*.scss"
+  viewCssWatchPath: ["./src/view/*.scss", "./src/common.scss"]
   viewHtmlPath: "./src/view/*.pug"
   zombieCoffeePath: "./src/zombie.coffee"
   zombieHtmlPath: "./src/zombie.pug"
@@ -65,6 +66,7 @@ args =
         "./src/write/submit_thread.coffee"
       ]
   writeCssPath: ["./src/write/*.scss", "!./src/write/write.scss"]
+  writeCssWatchPath: ["./src/write/*.scss", "./src/common.scss"]
   writeHtmlPath: "./src/write/*.pug"
   webpSrcPath: "./src/image/svg"
   webpBinPath: "./debug/img"
@@ -439,7 +441,9 @@ gulp.task "watch", gulp.series("default", ->
   gulp.watch(args.writePath.cs.coffee, gulp.task("cs_write.js"))
   gulp.watch([args.writePath.submit_res.ts, args.writePath.submit_res.coffee], gulp.task("submit_res.js"))
   gulp.watch([args.writePath.submit_thread.ts, args.writePath.submit_thread.coffee], gulp.task("submit_thread.js"))
-  gulp.watch(args.cssPath, gulp.task("css"))
+  gulp.watch(args.uiCssWatchPath, gulp.task("ui.css"))
+  gulp.watch(args.viewCssWatchPath, gulp.task("viewcss"))
+  gulp.watch(args.writeCssWatchPath, gulp.task("writecss"))
   gulp.watch(args.viewHtmlPath, gulp.task("viewhtml"))
   gulp.watch(args.zombieHtmlPath, gulp.task("zombie.html"))
   gulp.watch(args.writeHtmlPath, gulp.task("writehtml"))

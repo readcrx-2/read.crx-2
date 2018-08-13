@@ -53,6 +53,7 @@ class UI.AANoOverflow
     return
 
   _setFontSizes: ->
+    await app.waitAF()
     $aaArticles = @$view.C("content")[0].C(_AA_CLASS_NAME)
     return unless $aaArticles.length > 0
 

@@ -215,7 +215,7 @@ app.boot("/view/config.html", ["cache", "bbsmenu"], (Cache, BBSMenu) ->
     return
   )
 
-  window.on("unload", ->
+  window.on("view_unload", ->
     whenClose()
     return
   )

@@ -23,6 +23,12 @@ do ->
 
     for module in modules
       app[module] = parent.app[module]
+
+    window.on("unload", ->
+      document.body.removeChildren()
+      app = null
+      return
+    )
   return
 
 app.view ?= {}

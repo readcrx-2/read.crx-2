@@ -209,23 +209,23 @@ class app.view.IframeView extends app.view.View
       when "focusUpFrame", "focusDownFrame", "focusLeftFrame", "focusRightFrame"
         app.message.send("requestFocusMove", {command, repeatCount})
       when "r"
-        @$element.dispatchEvent(new Event("request_reload"))
+        @$element.emit(new Event("request_reload"))
       when "q"
         @close()
       when "openCommandBox"
         @_openCommandBox()
       when "enter"
-        @$element.C("selected")[0]?.dispatchEvent(
+        @$element.C("selected")[0]?.emit(
           new Event("mousedown", bubbles: true)
         )
-        @$element.C("selected")[0]?.dispatchEvent(
+        @$element.C("selected")[0]?.emit(
           new Event("mouseup", bubbles: true)
         )
       when "shift+enter"
-        @$element.C("selected")[0]?.dispatchEvent(
+        @$element.C("selected")[0]?.emit(
           new MouseEvent("mousedown", shiftKey: true, bubbles: true)
         )
-        @$element.C("selected")[0]?.dispatchEvent(
+        @$element.C("selected")[0]?.emit(
           new MouseEvent("mouseup", shiftKey: true, bubbles: true)
         )
       when "help"
@@ -241,7 +241,7 @@ class app.view.IframeView extends app.view.View
       switch which
         # Enter
         when 13
-          @execCommand(target.value.replace(/[\s]/g, ""))
+          @execCommand(target.value.replace(/\s/g, ""))
           @_closeCommandBox()
         # Esc
         when 27
@@ -397,7 +397,7 @@ class app.view.PaneContentView extends app.view.IframeView
 
       # request_reload(postMessage) -> request_reload(event) 翻訳処理
       if message.type is "request_reload"
-        @$element.dispatchEvent(new CustomEvent(
+        @$element.emit(new CustomEvent(
           "request_reload"
           detail:
             force_update: message.force_update is true
@@ -413,7 +413,7 @@ class app.view.PaneContentView extends app.view.IframeView
 
       # tab_selected(postMessage) -> tab_selected(event) 翻訳処理
       else if message.type is "tab_selected"
-        @$element.dispatchEvent(new Event("tab_selected", bubbles: true))
+        @$element.emit(new Event("tab_selected", bubbles: true))
       return
     )
 
@@ -486,7 +486,7 @@ class app.view.TabContentView extends app.view.PaneContentView
     # View内リロードボタン
     @$element.C("button_reload")[0]?.on("click", ({currentTarget}) =>
       if not currentTarget.hasClass("disabled")
-        @$element.dispatchEvent(new Event("request_reload"))
+        @$element.emit(new Event("request_reload"))
       return
     )
     return
@@ -678,7 +678,7 @@ class app.view.TabContentView extends app.view.PaneContentView
         $button.removeClass("hidden")
         if @$element.hasClass("view_bookmark")
           return setInterval( =>
-            @$element.dispatchEvent(new CustomEvent("request_reload", detail: true))
+            @$element.emit(new CustomEvent("request_reload", detail: true))
             return
           , second)
         else
@@ -688,7 +688,7 @@ class app.view.TabContentView extends app.view.PaneContentView
               app.config.isOn("auto_load_all") or
               parent.$$.$(".tab_container > iframe[data-url=\"#{url}\"]").hasClass("tab_selected")
             )
-              @$element.dispatchEvent(new Event("request_reload"))
+              @$element.emit(new Event("request_reload"))
             return
           , second)
       else
@@ -740,7 +740,7 @@ class app.view.TabContentView extends app.view.PaneContentView
 
     $button.on("click", =>
       $button.toggleClass("regexp")
-      @$element.dispatchEvent(new Event("change_search_regexp"))
+      @$element.emit(new Event("change_search_regexp"))
       return
     )
     return

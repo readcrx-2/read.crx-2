@@ -83,10 +83,7 @@ app.boot("/view/board.html", ["board"], (Board) ->
 
     getReadStatePromise = do ->
       # request_update_read_stateを待つ
-      await new Promise( (resolve) ->
-        setTimeout(resolve, 150)
-        return
-      )
+      await app.wait(150)
       return await app.ReadState.getByBoard(url)
     getBoardPromise = do ->
       {status, message, data} = await Board.get(url)
@@ -153,13 +150,13 @@ app.boot("/view/board.html", ["board"], (Board) ->
     $view.removeClass("loading")
 
     if $table.hasClass("table_search")
-      $view.C("searchbox")[0].dispatchEvent(new Event("input"))
+      $view.C("searchbox")[0].emit(new Event("input"))
 
-    $view.dispatchEvent(new Event("view_loaded"))
+    $view.emit(new Event("view_loaded"))
 
     $button = $view.C("button_reload")[0]
     $button.addClass("disabled")
-    await app.defer5()
+    await app.wait5s()
     $button.removeClass("disabled")
     return
 

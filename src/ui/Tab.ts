@@ -251,9 +251,9 @@ namespace UI {
 
         this.$element.$(`li[data-tabid=\"${tabId}\"]`).dataset.tabsrc = param.url;
         $tmptab = this.$element.$(`iframe[data-tabid=\"${tabId}\"]`);
-        $tmptab.dispatchEvent(new Event("tab_beforeurlupdate", {"bubbles": true}));
+        $tmptab.emit(new Event("tab_beforeurlupdate", {"bubbles": true}));
         $tmptab.src = param.url;
-        $tmptab.dispatchEvent(new Event("tab_urlupdated", {"bubbles": true}));
+        $tmptab.emit(new Event("tab_urlupdated", {"bubbles": true}));
       }
 
       if (typeof param.title === "string") {
@@ -277,7 +277,7 @@ namespace UI {
           }
         }
 
-        $iframe.dispatchEvent(new Event("tab_selected", {"bubbles": true}));
+        $iframe.emit(new Event("tab_selected", {"bubbles": true}));
 
         // 遅延ロード指定のタブをロードする
         // 連続でlazy指定のタブがaddされた時のために非同期処理
@@ -340,7 +340,7 @@ namespace UI {
       $tmptab.remove();
 
       $tmptabcon = this.$element.$(`iframe[data-tabid=\"${tabId}\"]`);
-      $tmptabcon.dispatchEvent(new Event("tab_removed", {"bubbles": true}));
+      $tmptabcon.emit(new Event("tab_removed", {"bubbles": true}));
       $tmptabcon.remove();
 
       Tab.saveTabs()

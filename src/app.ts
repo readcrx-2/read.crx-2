@@ -45,9 +45,21 @@ namespace app {
     });
   }
 
-  export function defer5 ():Promise<void> {
+  export function wait (ms: number): Promise<void> {
+    return new Promise( (resolve) => {
+      setTimeout(resolve, ms);
+    });
+  }
+
+  export function wait5s (): Promise<void> {
     return new Promise( (resolve) => {
       setTimeout(resolve, 5 * 1000);
+    });
+  }
+
+  export function waitAF (): Promise<void> {
+    return new Promise( (resolve) => {
+      requestAnimationFrame(<any>resolve);
     });
   }
 
@@ -380,18 +392,29 @@ namespace app {
     config = new Config();
   }
 
-  export const AMP_REG = /\&/g;
-  export const LT_REG = /</g;
-  export const GT_REG = />/g;
-  export const QUOT_REG = /"/g;
-  export const APOS_REG = /'/g;
+  export function replaceAll (str:string, before:string, after:string): string {
+    var i = str.indexOf(before);
+    if (i === -1) return str;
+    var result = str.slice(0, i) + after;
+    var j = str.indexOf(before, i+before.length);
+    while (j !== -1) {
+      result += str.slice(i+before.length, j) + after;
+      i = j;
+      j = str.indexOf(before, i+before.length);
+    }
+    return result + str.slice(i+before.length);
+  }
+
   export function escapeHtml (str:string):string {
-    return str
-      .replace(AMP_REG, "&amp;")
-      .replace(LT_REG, "&lt;")
-      .replace(GT_REG, "&gt;")
-      .replace(QUOT_REG, "&quot;")
-      .replace(APOS_REG, "&apos;");
+    return replaceAll(
+      replaceAll(
+        replaceAll(
+          replaceAll(
+            replaceAll(str, "&", "&amp;")
+          , "<", "&lt;")
+        , ">", "&gt;")
+      , '"', "&quot;")
+    , "'", "&apos;");
   }
 
   export function safeHref (url:string):string {

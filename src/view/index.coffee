@@ -75,11 +75,9 @@ class app.view.Index extends app.view.View
       # shortQueryがまだ読み込まれていないことがあるので標準APIで
       for t in $target
         t.contentDocument.getElementsByClassName("view")[0].classList.add("focus_effect")
-      setTimeout( ->
-        for t in $target
-          t.contentDocument.getElementsByClassName("view")[0].classList.remove("focus_effect")
-        return
-      , 200)
+      await app.wait(200)
+      for t in $target
+        t.contentDocument.getElementsByClassName("view")[0].classList.remove("focus_effect")
       return
     )
 
@@ -265,7 +263,8 @@ class app.view.Index extends app.view.View
       @hideKeyboardHelp()
       return
     , once: true)
-    UI.Animate.fadeIn($help).on("finish", ->
+    ani = await UI.Animate.fadeIn($help)
+    ani.on("finish", ->
       $help.focus()
     )
     return
@@ -481,7 +480,8 @@ app.main = ->
     $div.on("click", func = ({target, currentTarget: cTarget}) ->
       return unless target.matches("a, div:last-child")
       $div.off("click", func)
-      UI.Animate.fadeOut(cTarget).on("finish", =>
+      ani = await UI.Animate.fadeOut(cTarget)
+      ani.on("finish", =>
         cTarget.remove()
         return
       )
@@ -825,24 +825,25 @@ app.main = ->
           app.DOMData.get($iframe.closest(".tab"), "tab").remove($iframe.dataset.tabid)
         #モーダルのviewが送ってきた場合
         else if $iframe.matches("#modal > iframe")
-          UI.Animate.fadeOut($iframe).on("finish", ->
+          ani = await UI.Animate.fadeOut($iframe)
+          ani.on("finish", ->
             $iframe.remove()
             return
           )
 
       #view_loadedの翻訳
       when "view_loaded"
-        $iframe.dispatchEvent(new Event("view_loaded"))
+        $iframe.emit(new Event("view_loaded"))
 
       #request_focusの翻訳
       when "request_focus"
-        $iframe.dispatchEvent(new CustomEvent("request_focus", detail: message, bubbles: true))
+        $iframe.emit(new CustomEvent("request_focus", detail: message, bubbles: true))
     return
   )
 
   #データ保存等の後片付けを行なってくれるzombie.html起動
   window.on("beforeunload", ->
-    window.dispatchEvent(new Event("beforezombie"))
+    window.emit(new Event("beforezombie"))
     if localStorage.zombie_read_state?
       open("/zombie.html", undefined, "left=1,top=1,width=250,height=50")
     return
@@ -852,7 +853,7 @@ app.main = ->
     target = target.closest("iframe")
     return unless target?
     target.contentWindow.___e = new Event("view_unload", bubbles: true)
-    target.contentWindow.dispatchEvent(target.contentWindow.___e)
+    target.contentWindow.emit(target.contentWindow.___e)
     return
   $view.on("tab_removed", onRemove)
   $view.on("tab_beforeurlupdate", onRemove)

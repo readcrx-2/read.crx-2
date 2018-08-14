@@ -1,133 +1,202 @@
 ///<reference path="../global.d.ts" />
 
 namespace UI {
+  interface Position {
+    x: number;
+    y: number;
+  }
+
   export class Sortable {
     container: HTMLElement;
+    option: {exclude?: string};
+    overlay: HTMLElement;
+
+    isSorting: boolean = false;
+    //ドラッグ開始時の場所
+    start: Position|null = null;
+    //ドラッグ中の場所
+    last: Position|null = null;
+
+    //ドラッグしているDOM
+    target: HTMLElement|null = null;
+    //ドラッグしているDOMの戻るときの中央座標
+    targetCenter: Position|null = null;
+
+    rAFId: number = 0;
+
+    clicks: number = 1;
+    clickTimer: number = 0;
 
     constructor (container: HTMLElement, option: {exclude?: string} = {}) {
-      var sorting = false,
-        start: {x: number|null; y: number|null} = {x: null, y: null},
-        target: HTMLElement|null = null,
-        overlay: HTMLDivElement,
-        onDrop: Function;
-
       this.container = container;
+      this.option = option;
 
       this.container.addClass("sortable");
+      this.overlay = $__("div").addClass("sortable_overlay");
 
-      overlay = $__("div").addClass("sortable_overlay");
+      this.overlay.on("contextmenu", this.onContextMenu);
 
-      overlay.on("contextmenu", (e) => {
-        e.preventDefault();
-      });
+      this.container.on("mousedown", this.onMousedown.bind(this));
+      this.overlay.on("mousemove", this.onMove.bind(this));
+      this.overlay.on("mouseup", this.onFinish.bind(this));
+      this.overlay.on("mouseout", this.onFinish.bind(this));
+    }
 
-      overlay.on("mousemove", ({pageX, pageY}) => {
-        var targetCenter: {x: number; y: number},
-          tmp: HTMLElement,
-          cacheX: number,
-          cacheY: number;
+    setTarget(target: HTMLElement): void {
+      this.target = target;
+      this.target.addClass("sortable_dragging");
+      this.target.style["will-change"] = "transform";
+      this.targetCenter = {
+        x: target.offsetLeft + target.offsetWidth/2,
+        y: target.offsetTop + target.offsetHeight/2
+      };
+    }
 
-        if (!sorting) {
-          start.x = pageX;
-          start.y = pageY;
-          sorting = true;
-        }
+    removeTarget(): void {
+      if (!this.target) return;
+      this.target.removeClass("sortable_dragging");
+      this.target.style.transform = null;
+      this.target.style["will-change"] = null;
+      this.target = null;
+      this.targetCenter = null;
+    }
 
-        if (target) {
-          targetCenter = {
-            x: target.offsetLeft + target.offsetWidth / 2,
-            y: target.offsetTop + target.offsetHeight / 2
-          };
+    changeStart(func: Function): void {
+      const beforeLeft = this.target!.offsetLeft;
+      const beforeTop = this.target!.offsetTop;
+      func();
+      const diffX = this.target!.offsetLeft - beforeLeft;
+      const diffY = this.target!.offsetTop - beforeTop;
+      this.start = {
+        x: this.start!.x + diffX,
+        y: this.start!.y + diffY
+      };
+      this.targetCenter = {
+        x: this.targetCenter!.x + diffX,
+        y: this.targetCenter!.y + diffY
+      };
+    }
 
-          tmp = <HTMLElement>this.container.first();
+    onMousedown ({target, which}): void {
+      if (target === this.container) return;
+      if (which !== 1) return;
+      if (
+        this.option.exclude &&
+        target!.matches(this.option.exclude)
+      ) return;
 
-          while (tmp) {
-            if (tmp !== target && !(
-              targetCenter.x < tmp.offsetLeft ||
-              targetCenter.y < tmp.offsetTop ||
-              targetCenter.x > tmp.offsetLeft + tmp.offsetWidth ||
-              targetCenter.y > tmp.offsetTop + tmp.offsetHeight
-            )) {
-              if (
-                target.compareDocumentPosition(tmp) === 4 &&
-                (
-                  targetCenter.x > tmp.offsetLeft + tmp.offsetWidth / 2 ||
-                  targetCenter.y > tmp.offsetTop + tmp.offsetHeight / 2
-                )
-              ) {
-                cacheX = target.offsetLeft;
-                cacheY = target.offsetTop;
-                tmp.insertAdjacentElement("afterend", target);
-                start.x = start.x! + target.offsetLeft - cacheX;
-                start.y = start.y! + target.offsetTop - cacheY;
-              }
-              else if (
-                targetCenter.x < tmp.offsetLeft + tmp.offsetWidth / 2 ||
-                targetCenter.y < tmp.offsetTop + tmp.offsetHeight / 2
-              ) {
-                cacheX = target.offsetLeft;
-                cacheY = target.offsetTop;
-                tmp.insertAdjacentElement("beforebegin", target);
-                start.x = start.x! + target.offsetLeft - cacheX;
-                start.y = start.y! + target.offsetTop - cacheY;
-              }
-              break;
-            }
-            tmp = <HTMLElement>tmp.nextElementSibling;
-          }
+      if (this.clickTimer !== 0) {
+        clearTimeout(this.clickTimer);
+      }
 
-          target.style.left = (pageX - start.x!) + "px";
-          target.style.top = (pageY - start.y!) + "px";
-        }
-      });
+      // 0.5秒待ってダブルクリックかシングルクリックか判定する
+      this.clickTimer = setTimeout( () => {
+        this.clicks = 1;
+      }, 500);
 
-      onDrop = function (this:HTMLElement) {
-        // removeするとmouseoutも発火するので二重に呼ばれる
-        sorting = false;
+      if (this.clicks === 1) {
+        this.onStart(target);
 
-        if (target) {
-          target.removeClass("sortable_dragging");
-          target.style.left = "initial";
-          target.style.top = "initial";
-          target = null;
-          this.remove();
-        }
+        this.clicks = 1;
+      } else if (this.clicks === 2) {
+        this.clicks = 1;
+      }
+      this.clicks++;
+    }
+
+    onStart (target): void {
+      if (!target) return;
+      while (target.parent() !== this.container) {
+        target = target.parent();
+      }
+      this.setTarget(target);
+      document.body.addLast(this.overlay);
+    }
+
+    onMove({ pageX, pageY }): void {
+      if (!this.isSorting) {
+        this.start = {
+          x: pageX,
+          y: pageY
+        };
+        this.isSorting = true;
+      }
+
+      if (!this.target) return;
+
+      this.last = {
+        x: pageX,
+        y: pageY
       };
 
-      overlay.on("mouseup", onDrop);
-      overlay.on("mouseout", onDrop);
+      if (this.rAFId === 0) {
+        this.animate();
+      }
+    }
 
-      var clicks = 1;
-      var timer: number|null = null;
-      this.container.on("mousedown", (e) => {
-        if (e.target === container) return;
-        if (e.which !== 1) return;
-        if (option.exclude && e.target!.matches(option.exclude)) return;
+    _animate (): void {
+      let tmp = <HTMLElement>this.container.first();
+      let diffX = this.last!.x - this.start!.x;
+      let diffY = this.last!.y - this.start!.y;
 
-        clearTimeout(timer!);
+      // もっているものの中央座標
+      const x = this.targetCenter!.x + diffX;
+      const y = this.targetCenter!.y + diffY;
 
-        // 0.5秒待ってダブルクリックかシングルクリックか判定する
-        timer = setTimeout( () => {
-          clicks = 1;
-        },500);
+      while (tmp) {
+        const {
+          offsetLeft: tLeft,
+          offsetTop: tTop,
+          offsetWidth: tWidth,
+          offsetHeight: tHeight
+        } = tmp;
 
-        if(clicks === 1) {
-          target = e.target;
-          if(target) {
-            while (target.parent() !== container) {
-              target = target.parent();
-            }
-
-            target.addClass("sortable_dragging");
-            document.body.addLast(overlay);
+        if (
+          tmp !== this.target &&
+          !( x < tLeft || y < tTop || x > tLeft+tWidth || y > tTop+tHeight )
+        ) {
+          if (
+            this.target!.compareDocumentPosition(tmp) === 4 &&
+            ( x > tLeft + tWidth/2 || y > tTop + tHeight/2 )
+          ) {
+            this.changeStart( () => {
+              tmp.addAfter(this.target);
+            });
+          } else if ( x < tLeft + tWidth/ 2 || y < tTop + tHeight/ 2 ) {
+            this.changeStart( () => {
+              tmp.addBefore(this.target);
+            });
           }
-
-          clicks = 1;
-        }else if(clicks === 2) {
-          clicks = 1;
+          diffX = this.last!.x - this.start!.x;
+          diffY = this.last!.y - this.start!.y;
+          break;
         }
-        clicks++;
-      });
+        tmp = <HTMLElement>tmp.next();
+      }
+
+      this.target!.style.transform = `translate(${diffX}px, ${diffY}px)`;
+
+      this.rAFId = requestAnimationFrame(<any>this.animate);
+    }
+    animate: Function = this._animate.bind(this);
+
+    onFinish (): void {
+      // removeするとmouseoutも発火するので二重に呼ばれる
+      this.isSorting = false;
+
+      if (this.rAFId !== 0) {
+        cancelAnimationFrame(this.rAFId);
+        this.rAFId = 0;
+      }
+
+      if (this.target) {
+        this.removeTarget();
+        this.overlay.remove();
+      }
+    }
+
+    onContextMenu (e): void {
+      e.preventDefault();
     }
   }
 }

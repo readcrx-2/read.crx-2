@@ -25,7 +25,7 @@ namespace UI {
         event = new MouseEvent("notchedmousewheel");
         event.wheelDelta = this.threshold * (this.wheelDelta > 0 ? 1 : -1);
         this.wheelDelta -= event.wheelDelta;
-        this.element.dispatchEvent(event);
+        this.element.emit(event);
       }
     }
   }

@@ -204,7 +204,7 @@ class UI.ThreadList
       $searchbox = option.searchbox
 
       $searchbox.on("compositionend", ->
-        @dispatchEvent(new Event("input"))
+        @emit(new Event("input"))
         return
       )
       $searchbox.on("input", ({isComposing}) ->
@@ -224,7 +224,7 @@ class UI.ThreadList
       $searchbox.on("keyup", ({which}) ->
         if which is 27 #Esc
           @value = ""
-          @dispatchEvent(new Event("input"))
+          @emit(new Event("input"))
         return
       )
 
@@ -279,7 +279,7 @@ class UI.ThreadList
                 $tr.remove()
               when target.hasClass("ignore_res_number")
                 $tr.setAttr("ignore-res-number", "on")
-                $tr.dispatchEvent(new Event("mousedown", {bubbles: true}))
+                $tr.emit(new Event("mousedown", {bubbles: true}))
               when target.hasClass("del_read_state")
                 app.ReadState.remove(threadURL)
 

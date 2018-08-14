@@ -827,6 +827,9 @@ app.main = ->
         else if $iframe.matches("#modal > iframe")
           ani = await UI.Animate.fadeOut($iframe)
           ani.on("finish", ->
+            $iframe.contentWindow.___e = new Event("view_unload", bubbles: true)
+            $iframe.contentWindow.emit($iframe.contentWindow.___e)
+
             $iframe.remove()
             return
           )

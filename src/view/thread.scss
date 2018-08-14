@@ -33,6 +33,7 @@ header, body {
 .content {
   contain: size;
   padding-bottom: 50px;
+  backface-visibility: hidden;
   &[data-res-search-hit-count="0"]::after {
     display: block;
     position: absolute;

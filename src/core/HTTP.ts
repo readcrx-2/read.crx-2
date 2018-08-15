@@ -35,24 +35,13 @@ namespace app.HTTP {
     }
 
     send ():Promise<Response> {
-      var res, xhr:XMLHttpRequest, url:string, key:string,
-        val:string, date:number;
+      var xhr:XMLHttpRequest, url:string, key:string, val:string;
 
       url = this.url;
 
       if (this.preventCache) {
-        date = Date.now();
-        if (res = /\?(.*)$/.exec(url)) {
-          if (res[1].length > 0) {
-            url += `&_=${date}`;
-          }
-          else {
-            url += `_=${date}`;
-          }
-        }
-        else {
-          url += `?=${date}`;
-        }
+        this.headers["Pragma"] = "no-cache";
+        this.headers["Cache-Control"] = "no-cache";
       }
 
       return new Promise( (resolve, reject) => {

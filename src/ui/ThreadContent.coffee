@@ -384,7 +384,7 @@ class UI.ThreadContent
   @param {Number} beforeRead 直近に読んでいたレスの番号
   @return {Number} 現在読んでいると推測されるレスの番号
   ###
-  getRead: (beforeRead) ->
+  getRead: (beforeRead = 1) ->
     containerBottom = @container.scrollTop + @container.clientHeight
     $read = @container.children[beforeRead - 1]
     readTop = $read.offsetTop

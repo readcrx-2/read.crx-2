@@ -15,7 +15,7 @@ do ->
     """)
     return
 
-  sendMessageSuccess = ->
+  sendMessageSuccess = (moveMs) ->
     if submitThreadFlag
       exec("""
         var url = location.href;
@@ -35,12 +35,13 @@ do ->
         }
         parent.postMessage({
           type : "success",
-          key: jumpurl
+          key: jumpurl,
+          message: #{moveMs}
         }, "#{origin}");
       """)
     else
       exec("""
-        parent.postMessage({type: "success"}, "#{origin}");
+        parent.postMessage({type: "success", message: #{moveMs}}, "#{origin}");
       """)
     return
 
@@ -64,11 +65,25 @@ do ->
       """)
     return
 
+  getRefreshMeta = ->
+    $heads = document.head.children
+    for $head from $heads when $head.getAttribute("http-equiv") is "refresh"
+      return $head
+    return null
+
+  getMoveSec = ->
+    sec = 3
+    $refreshMeta = getRefreshMeta()
+    content = $refreshMeta?.getAttribute("content")
+    return sec if not content? or content is ""
+    m = content.match(/^(\d+);/)
+    return m?[1] ? sec
+
   main = ->
     #したらば投稿確認
     if ///^https?://jbbs\.shitaraba\.net/bbs/write.cgi/\w+/\d+/(?:\d+|new)/$///.test(location.href)
       if document.title.includes("書きこみました")
-        sendMessageSuccess()
+        sendMessageSuccess(3 * 1000)
       else if document.title.includes("ERROR") or document.title.includes("スレッド作成規制中")
         sendMessageError()
 
@@ -78,7 +93,7 @@ do ->
       text = document.title
       if font.length > 0 then text += font[0].innerText
       if text.includes("書きこみました")
-        sendMessageSuccess()
+        sendMessageSuccess(getMoveSec() * 1000)
       else if text.includes("確認")
         setTimeout(sendMessageConfirm , 1000 * 6)
       else if text.includes("ＥＲＲＯＲ")
@@ -87,7 +102,7 @@ do ->
     #2ch型投稿確認
     else if ///^https?://\w+\.\w+\.\w+/test/bbs\.cgi///.test(location.href)
       if document.title.includes("書きこみました")
-        sendMessageSuccess()
+        sendMessageSuccess(getMoveSec() * 1000)
       else if document.title.includes("確認")
         setTimeout(sendMessageConfirm , 1000 * 6)
       else if document.title.includes("ＥＲＲＯＲ")

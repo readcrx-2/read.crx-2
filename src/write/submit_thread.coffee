@@ -46,7 +46,7 @@ app.boot("/write/submit_thread.html", ->
           $notice.textContent = "書き込み失敗 - 不明な転送場所"
         else
           server = url.match(/^(https?:\/\/\w+\.(?:5ch\.net|2ch\.sc|bbspink\.com|open2ch\.net)).*/)[1]
-          thread_url = "#{server}/test/read.cgi/#{keys[1]}/#{keys[2]}"
+          thread_url = "#{server}/test/read.cgi/#{keys[1]}/#{keys[2]}/"
           chrome.runtime.sendMessage({type: "written", kind: "own", url, thread_url, mes, name, mail, title})
       else if app.URL.tsld(url) is "shitaraba.net"
         chrome.runtime.sendMessage({type: "written", kind: "board", url, mes, name, mail, title})

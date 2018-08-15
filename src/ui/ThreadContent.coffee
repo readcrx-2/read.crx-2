@@ -685,6 +685,7 @@ class UI.ThreadContent
           #タグ除去
           .replace(/<(?!(?:a class="beid"[^>]*|\/a)>).*?(?:>|$)/g, "")
           #.id
+          .replace(" ID:???", "ID:???")
           .replace(/(?:^| |(\d))(ID:(?!\?\?\?)[^ <>"']+|発信元:\d+.\d+.\d+.\d+)/, ($0, $1, $2) =>
             fixedId = $2
             #末尾●除去

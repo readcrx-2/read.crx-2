@@ -227,7 +227,7 @@ class UI.ThreadContent
     loadImageByElement = (targetElement) =>
       for media in targetElement.$$("img[data-src], video[data-src]")
         loadFlag = true
-        media.dispatchEvent(new Event("immediateload", {"bubbles": true}))
+        media.emit(new Event("immediateload", {"bubbles": true}))
       return
 
     # 表示範囲内の要素をスキャンする
@@ -327,7 +327,7 @@ class UI.ThreadContent
           cancelAnimationFrame(@_scrollRequestID)
           rerunAndCancel = true if rerun
         do =>
-          @container.dispatchEvent(new Event("scrollstart"))
+          @container.emit(new Event("scrollstart"))
 
           to = target.offsetTop + offset
           movingHeight = to - @container.scrollTop
@@ -360,17 +360,17 @@ class UI.ThreadContent
               (change < 0 and @container.scrollTop < min)
             )
               @container.scrollTop = to
-              @container.dispatchEvent(new Event("scrollfinish"))
+              @container.emit(new Event("scrollfinish"))
               return
             # 正常時の処理
             if min <= @container.scrollTop <= max
               @container.scrollTop = to
-              @container.dispatchEvent(new Event("scrollfinish"))
+              @container.emit(new Event("scrollfinish"))
               return
             else
               @container.scrollTop += change
             if @container.scrollTop is before
-              @container.dispatchEvent(new Event("scrollfinish"))
+              @container.emit(new Event("scrollfinish"))
               return
             @_scrollRequestID = requestAnimationFrame(_scrollInterval)
             return
@@ -384,7 +384,7 @@ class UI.ThreadContent
   @param {Number} beforeRead 直近に読んでいたレスの番号
   @return {Number} 現在読んでいると推測されるレスの番号
   ###
-  getRead: (beforeRead) ->
+  getRead: (beforeRead = 1) ->
     containerBottom = @container.scrollTop + @container.clientHeight
     $read = @container.children[beforeRead - 1]
     readTop = $read.offsetTop
@@ -1212,7 +1212,7 @@ class UI.ThreadContent
     # 返信数の更新
     @updateRepCount()
     # 表示更新通知
-    @container.dispatchEvent(new Event("view_refreshed", {"bubbles": true}))
+    @container.emit(new Event("view_refreshed", {"bubbles": true}))
     return
 
   ###*

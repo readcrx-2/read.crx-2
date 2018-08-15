@@ -57,8 +57,8 @@ namespace UI {
     }
 
     close ($header: HTMLElement): void {
-      $header.removeClass("accordion_open")
-      UI.Animate.slideUp($header.next())
+      $header.removeClass("accordion_open");
+      UI.Animate.slideUp($header.next());
     }
   }
 }

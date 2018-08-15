@@ -151,7 +151,7 @@ app.boot("/view/thread.html", ->
 
       #スクロールされなかった場合も余所の処理を走らすためにscrollを発火
       unless onScroll
-        $content.dispatchEvent(new Event("scroll"))
+        $content.emit(new Event("scroll"))
 
       #二度目以降のread_state_attached時
       $view.on("read_state_attached", ({ detail: {jumpResNum, requestReloadFlag, loadCount} = {} }) ->
@@ -491,7 +491,7 @@ app.boot("/view/thread.html", ->
         paramResNum = app.URL.getResNumber(target.dataset.href)
         target.dataset.paramResNum = paramResNum if paramResNum
       await app.defer()
-      target.dispatchEvent(e)
+      target.emit(e)
     return
 
   $view.on("click", onLink)
@@ -692,7 +692,7 @@ app.boot("/view/thread.html", ->
       onclick: (info, tab) =>
         target.setAttr("toggle-param-res-num", "on")
         await app.defer()
-        target.dispatchEvent(new Event("mousedown", {"bubbles": true}))
+        target.emit(new Event("mousedown", {"bubbles": true}))
         return
     })
     return
@@ -732,7 +732,7 @@ app.boot("/view/thread.html", ->
     return unless app.config.isOn("dblclick_reload")
     return unless target.hasClass("message")
     return if target.tagName is "A" or target.hasClass("thumbnail")
-    $view.dispatchEvent(new Event("request_reload"))
+    $view.emit(new Event("request_reload"))
     return
   )
 
@@ -803,7 +803,7 @@ app.boot("/view/thread.html", ->
     $searchbox = $view.C("searchbox")[0]
 
     $searchbox.on("compositionend", ->
-      @dispatchEvent(new Event("input"))
+      @emit(new Event("input"))
       return
     )
     $searchbox.on("input", ({ isComposing, detail: {isEnter = false} = {} }) ->
@@ -821,7 +821,7 @@ app.boot("/view/thread.html", ->
           )
           return
 
-      $content.dispatchEvent(new Event("searchstart"))
+      $content.emit(new Event("searchstart"))
       if @value isnt ""
         if typeof searchStoredScrollTop isnt "number"
           searchStoredScrollTop = $content.scrollTop
@@ -846,7 +846,7 @@ app.boot("/view/thread.html", ->
         $view.C("hit_count")[0].textContent = "#{hitCount}hit"
 
         if scrollTop is $content.scrollTop
-          $content.dispatchEvent(new Event("scroll"))
+          $content.emit(new Event("scroll"))
       else
         $content.removeClass("searching")
         $content.removeAttr("data-res-search-hit-count")
@@ -858,7 +858,7 @@ app.boot("/view/thread.html", ->
           $content.scrollTop = searchStoredScrollTop
           searchStoredScrollTop = null
 
-      $content.dispatchEvent(new Event("searchfinish"))
+      $content.emit(new Event("searchfinish"))
       return
     )
 
@@ -866,19 +866,19 @@ app.boot("/view/thread.html", ->
       if $content.hasClass("search_regexp")
         if which is 13 or which is 27 # Enter|Esc
           @value = "" if which is 27
-          @dispatchEvent(new CustomEvent("input", detail: {isEnter: true}))
+          @emit(new CustomEvent("input", detail: {isEnter: true}))
         return
       if which is 27 #Esc
         if @value isnt ""
           @value = ""
-          @dispatchEvent(new Event("input"))
+          @emit(new Event("input"))
       return
     )
 
     # 検索モードの切り替え
     $view.on("change_search_regexp", ->
       $content.toggleClass("search_regexp")
-      $searchbox.dispatchEvent(new CustomEvent("input", detail: {isEnter: true}))
+      $searchbox.emit(new CustomEvent("input", detail: {isEnter: true}))
       return
     )
     return
@@ -1041,9 +1041,9 @@ app.viewThread._draw = ($view, {forceUpdate = false, jumpResNum = -1} = {}) ->
     app.DOMData.get($view, "lazyload").scan()
 
     if $view.C("content")[0].hasClass("searching")
-      $view.C("searchbox")[0].dispatchEvent(new Event("input"))
+      $view.C("searchbox")[0].emit(new Event("input"))
 
-    $view.dispatchEvent(new CustomEvent("view_loaded", detail: {jumpResNum, loadCount}))
+    $view.emit(new CustomEvent("view_loaded", detail: {jumpResNum, loadCount}))
     return thread
 
   thread = new app.Thread($view.dataset.url)
@@ -1068,7 +1068,7 @@ app.viewThread._draw = ($view, {forceUpdate = false, jumpResNum = -1} = {}) ->
   unless ok
     throw new Error("スレの表示に失敗しました")
   do ->
-    await app.defer5()
+    await app.wait5s()
     $reloadButton.removeClass("disabled")
     return
   return thread
@@ -1122,7 +1122,7 @@ app.viewThread._readStateManager = ($view) ->
       else
         attachedReadState.received = readState.received
 
-      $view.dispatchEvent(new CustomEvent("read_state_attached", detail: {jumpResNum, requestReloadFlag, loadCount}))
+      $view.emit(new CustomEvent("read_state_attached", detail: {jumpResNum, requestReloadFlag, loadCount}))
       if attachedReadState.read > 0 and attachedReadState.received > 0
         app.message.send("read_state_updated", {board_url: boardUrl, read_state: readState})
       return
@@ -1141,7 +1141,7 @@ app.viewThread._readStateManager = ($view) ->
       $content.C("received")[0]?.removeClass("received")
       $content.child()[attachedReadState.received - 1]?.addClass("received")
       tmpReadState.received = attachedReadState.received
-    $view.dispatchEvent(new CustomEvent("read_state_attached", detail: {jumpResNum, requestReloadFlag, loadCount}))
+    $view.emit(new CustomEvent("read_state_attached", detail: {jumpResNum, requestReloadFlag, loadCount}))
     if tmpReadState.read and tmpReadState.received
       app.message.send("read_state_updated", {board_url: boardUrl, read_state: tmpReadState})
     requestReloadFlag = false
@@ -1209,13 +1209,19 @@ app.viewThread._readStateManager = ($view) ->
   window.on("beforeunload", onBeforezombie)
 
   #スクロールされたら定期的にスキャンを実行する
-  scrollFlg = false
+  doneScroll = false
+  isScaning = false
   scrollWatcher = setInterval( ->
-    if scrollFlg
-      scrollFlg = false
+    return if not doneScroll or isScaning
+    isScaning = true
+    do ->
+      await app.waitAF()
       scan(true)
       if readStateUpdated
         app.message.send("read_state_updated", {board_url: boardUrl, read_state: readState})
+      isScaning = false
+      return
+    doneScroll = false
     return
   , 250)
 
@@ -1234,7 +1240,7 @@ app.viewThread._readStateManager = ($view) ->
   )
 
   $content.on("scroll", ->
-    scrollFlg = true
+    doneScroll = true
     return
   , passive: true)
   $view.on("request_reload", ->

@@ -89,7 +89,8 @@ app.boot("/view/bookmark.html", ["board"], (Board) ->
       if count.all is count.success + count.error
         #更新完了
         #ソート後にブックマークが更新されてしまう場合に備えて、少し待つ
-        setTimeout( ->
+        do ->
+          await app.wait(500)
           $view.C("table_sort_desc")[0]?.removeClass("table_sort_desc")
           $view.C("table_sort_asc")[0]?.removeClass("table_sort_asc")
           for tr in $view.$$("tr:not(.updated)")
@@ -99,11 +100,9 @@ app.boot("/view/bookmark.html", ["board"], (Board) ->
           if app.config.isOn("auto_bookmark_notify") and auto
             notify()
           $view.C("searchbox")[0].disabled = false
-          setTimeout(->
-            $reloadButton.removeClass("disabled")
-          , 1000 * 10)
+          await app.wait(10 * 1000)
+          $reloadButton.removeClass("disabled")
           return
-        , 500)
       # 同一サーバーへの最大接続数: 1
       for board from boardList
         server = app.URL.getDomain(board)
@@ -155,7 +154,7 @@ app.boot("/view/bookmark.html", ["board"], (Board) ->
     app.message.send("request_update_read_state")
     tableSorter.update()
 
-    $view.dispatchEvent(new Event("view_loaded"))
+    $view.emit(new Event("view_loaded"))
     return
 
   titleIndex = tableHeaders.indexOf("title")

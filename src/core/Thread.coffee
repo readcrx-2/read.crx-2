@@ -266,7 +266,7 @@ class app.Thread
           reject()
 
       #ブックマーク更新部
-        app.bookmark.updateResCount(@url, thread.res.length) if thread?
+      app.bookmark.updateResCount(@url, thread.res.length) if thread?
 
       #dat落ち検出
       if response?.status is 203

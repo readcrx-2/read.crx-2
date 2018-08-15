@@ -82,11 +82,11 @@ class app.BBSMenu
       obj = await BBSMenu._updatingPromise
       obj.status = "success"
       if forceReload
-        BBSMenu.target.dispatchEvent(new CustomEvent("change", detail: obj))
+        BBSMenu.target.emit(new CustomEvent("change", detail: obj))
     catch obj
       obj.status = "error"
       if forceReload
-        BBSMenu.target.dispatchEvent(new CustomEvent("change", detail: obj))
+        BBSMenu.target.emit(new CustomEvent("change", detail: obj))
     return obj
 
   ###*

@@ -187,7 +187,7 @@ do ->
 
   # striptags
   app.util.stripTags = (str) ->
-    return str.replace(/(<([^>]+)>)/ig, "")
+    return str.replace(/<[^>]+>/ig, "")
 
   titleReg = / ?(?:\[(?:無断)?転載禁止\]|(?:\(c\)|©|�|&copy;|&#169;)(?:2ch\.net|@?bbspink\.com)) ?/g
   # タイトルから無断転載禁止などを取り除く

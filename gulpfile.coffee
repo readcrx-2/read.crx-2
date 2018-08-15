@@ -11,6 +11,10 @@ sort = require "gulp-sort"
 concat = require "gulp-concat"
 rename = require "gulp-rename"
 
+rollup = require "rollup-stream"
+source = require "vinyl-source-stream"
+rollupTs = require "rollup-plugin-typescript2"
+
 coffee = require "gulp-coffee"
 ts = require "gulp-typescript"
 sass = require "gulp-sass"
@@ -102,6 +106,10 @@ args =
     locals: manifest
   sharpWebpOptions:
     lossless: true
+args.rollupTsOptions =
+  typescript: tsCompiler
+  tsconfigDefaults:
+    compilerOptions: args.tsOptions
 imgs = [
   "read.crx_48x48.png"
   "read.crx_38x38.png"
@@ -177,11 +185,23 @@ putsPromise = (mes) ->
   compile
 ###
 ##js
+appjsCache = null
 gulp.task "app.js", ->
-  return gulp.src args.appTsPath
-    .pipe(plumber(errorHandler: notify.onError("Error: <%= error.toString() %>")))
-    .pipe(ts(args.tsOptions, ts.reporter.nullReporter()))
-    .pipe(gulp.dest(args.outputPath))
+  return rollup(
+    input: args.appTsPath
+    name: "app"
+    format: "iife"
+    plugins: [
+      rollupTs(args.rollupTsOptions)
+    ]
+    cache: appjsCache
+  )
+  .on("bundle", (bundle) ->
+    appjsCache = bundle;
+  )
+  .pipe(plumber(errorHandler: notify.onError("Error: <%= error.toString() %>")))
+  .pipe(source("app.js"))
+  .pipe(gulp.dest(args.outputPath))
 
 gulp.task "background.js", ->
   return gulp.src args.backgroundCoffeePath
@@ -407,6 +427,7 @@ gulp.task "default", gulp.parallel("js", "html", "css", "img", "manifest", "lib"
 
 gulp.task "clean", ->
   return Promise.all([
+    fs.remove("./.rpt2_cache")
     fs.remove("./debug")
     fs.remove("./read.crx_2.zip")
   ])

@@ -1,7 +1,7 @@
-window.UI ?= {}
+import ContextMenu from "./ContextMenu.coffee"
+import TableSearch from "./TableSearch.coffee"
 
 ###*
-@namespace UI
 @class ThreadList
 @constructor
 @param {Element} table
@@ -17,7 +17,7 @@ window.UI ?= {}
   @param {Boolean} [option.bookmarkAddRm=false]
   @param {Element} [option.searchbox]
 ###
-class UI.ThreadList
+export default class ThreadList
   constructor: (@table, option) ->
     ###*
     @property _flg
@@ -210,13 +210,13 @@ class UI.ThreadList
       $searchbox.on("input", ({isComposing}) ->
         return if isComposing
         if @value isnt ""
-          UI.TableSearch($table, "search",
+          TableSearch($table, "search",
             query: @value, target_col: titleIndex)
           hitCount = $table.dataset.tableSearchHitCount
           for dom in @parent().child() when dom.hasClass("hit_count")
             dom.textContent = hitCount + "hit"
         else
-          UI.TableSearch($table, "clear")
+          TableSearch($table, "clear")
           for dom in @parent().child() when dom.hasClass("hit_count")
             dom.textContent = ""
         return
@@ -286,7 +286,7 @@ class UI.ThreadList
             @remove()
             return
           )
-          UI.ContextMenu($menu, e.clientX, e.clientY)
+          ContextMenu($menu, e.clientX, e.clientY)
           return
         )
       return

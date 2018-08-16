@@ -40,8 +40,7 @@ args =
   backgroundCoffeePath: "./src/background.coffee"
   csaddlinkCoffeePath: "./src/cs_addlink.coffee"
   appCorePath: "./src/core/core.coffee"
-  uiCoffeePath: "./src/ui/*.coffee"
-  uiTsPath: "./src/ui/*.ts"
+  uiPath: "./src/ui/ui.coffee"
   uiCssPath: "./src/ui/ui.scss"
   uiCssWatchPath: ["./src/ui/*.scss", "./src/common.scss"]
   viewCoffeePath: "./src/view/*.coffee"
@@ -237,16 +236,24 @@ gulp.task "app_core.js", ->
   .pipe(source("app_core.js"))
   .pipe(gulp.dest(args.outputPath))
 
+uijsCache = null
 gulp.task "ui.js", ->
-  return merge(
-    gulp.src args.uiTsPath
-      .pipe(plumber(errorHandler: notify.onError("Error: <%= error.toString() %>")))
-      .pipe(ts(args.tsOptions, ts.reporter.nullReporter())),
-    gulp.src args.uiCoffeePath
-      .pipe(plumber(errorHandler: notify.onError("Error: <%= error.toString() %>")))
-      .pipe(coffee(args.coffeeOptions))
-  ).pipe(sort(sortForExtend))
-  .pipe(concat("ui.js"))
+  return rollup(
+    input: args.uiPath
+    name: "UI"
+    format: "iife"
+    plugins: [
+      rollupCoffee(args.coffeeOptions)
+      rollupTs(args.rollupTsOptions)
+    ]
+    cache: uijsCache
+    context: "window"
+  )
+  .on("bundle", (bundle) ->
+    uijsCache = bundle;
+  )
+  .pipe(plumber(errorHandler: notify.onError("Error: <%= error.toString() %>")))
+  .pipe(source("ui.js"))
   .pipe(gulp.dest(args.outputPath))
 
 gulp.task "viewjs", ->

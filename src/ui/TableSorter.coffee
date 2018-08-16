@@ -1,12 +1,9 @@
-window.UI ?= {}
-
 ###*
-@namespace UI
 @class TableSorter
 @constructor
 @param {Element} table
 ###
-class UI.TableSorter
+export default class TableSorter
   @collator: new Intl.Collator("ja", { numeric: true })
 
   constructor: (@table) ->
@@ -73,7 +70,7 @@ class UI.TableSorter
     dataKeys = Object.keys(data)
 
     dataKeys.sort( (a, b) ->
-      diff = UI.TableSorter.collator.compare(a, b)
+      diff = TableSorter.collator.compare(a, b)
       diff *= -1  if sortOrder is "desc"
       return diff
     )

@@ -1,14 +1,12 @@
-window.UI ?= {}
+import MediaContainer from "./MediaContainer.coffee"
 
 ###*
-@namespace UI
 @class ThreadContent
 @constructor
 @param {String} URL
 @param {Element} container
-@requires MediaContainer
 ###
-class UI.ThreadContent
+export default class ThreadContent
   _OVER1000_DATA = "Over 1000"
 
   constructor: (@url, @container) ->
@@ -872,7 +870,7 @@ class UI.ThreadContent
           continue unless ele
           ele.addClass("has_blur_word")
           if ele.hasClass("has_image") and app.config.isOn("image_blur")
-            UI.MediaContainer.setImageBlur(ele, true)
+            MediaContainer.setImageBlur(ele, true)
         return
     return
 

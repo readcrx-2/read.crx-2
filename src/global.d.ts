@@ -24,3 +24,7 @@ declare namespace app {
 
   var HTTP: any;
 }
+
+interface HTMLElement {
+  scrollIntoViewIfNeeded: Function;
+}

@@ -1,12 +1,9 @@
-window.UI ?= {}
-
 ###*
-@namespace UI
 @class MediaContainer
 @constructor
 @param {Element} container
 ###
-class UI.MediaContainer
+export default class MediaContainer
 
   constructor: (@container) ->
     ###*

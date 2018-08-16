@@ -1,32 +1,31 @@
 ///<reference path="../global.d.ts" />
-namespace UI {
-  export class VirtualNotch {
-    private wheelDelta = 0;
-    private lastMouseWheel = Date.now();
 
-    constructor (private element: Element, private threshold: number = 100) {
-      this.element.on("wheel", this.onMouseWheel.bind(this), { passive: true });
-      setInterval(this.onInterval.bind(this), 500);
+export default class VirtualNotch {
+  private wheelDelta = 0;
+  private lastMouseWheel = Date.now();
+
+  constructor (private element: Element, private threshold: number = 100) {
+    this.element.on("wheel", this.onMouseWheel.bind(this), { passive: true });
+    setInterval(this.onInterval.bind(this), 500);
+  }
+
+  private onInterval (): void {
+    if (this.lastMouseWheel < Date.now() - 500) {
+      this.wheelDelta = 0;
     }
+  }
 
-    private onInterval (): void {
-      if (this.lastMouseWheel < Date.now() - 500) {
-        this.wheelDelta = 0;
-      }
-    }
+  private onMouseWheel (e: any): void {
+    var event: any;
 
-    private onMouseWheel (e: any): void {
-      var event: any;
+    this.wheelDelta += e.deltaY;
+    this.lastMouseWheel = Date.now();
 
-      this.wheelDelta += e.deltaY;
-      this.lastMouseWheel = Date.now();
-
-      while (Math.abs(this.wheelDelta) >= this.threshold) {
-        event = new MouseEvent("notchedmousewheel");
-        event.wheelDelta = this.threshold * (this.wheelDelta > 0 ? 1 : -1);
-        this.wheelDelta -= event.wheelDelta;
-        this.element.emit(event);
-      }
+    while (Math.abs(this.wheelDelta) >= this.threshold) {
+      event = new MouseEvent("notchedmousewheel");
+      event.wheelDelta = this.threshold * (this.wheelDelta > 0 ? 1 : -1);
+      this.wheelDelta -= event.wheelDelta;
+      this.element.emit(event);
     }
   }
 }

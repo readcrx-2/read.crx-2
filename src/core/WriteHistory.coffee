@@ -1,8 +1,10 @@
+import * as util from "./util.coffee"
+
 ###*
-@class app.WriteHistory
+@class WriteHistory
 @static
 ###
-class app.WriteHistory
+export default class WriteHistory
   @DB_VERSION = 2
 
   @_openDB: ->
@@ -75,7 +77,7 @@ class app.WriteHistory
           message
           date
         })
-      await app.util.indexedDBRequestToPromise(req)
+      await util.indexedDBRequestToPromise(req)
     catch e
       app.log("error", "WriteHistory.add: データの格納に失敗しました")
       throw new Error(e)
@@ -102,12 +104,12 @@ class app.WriteHistory
       req = store
         .index("url")
         .getAll(IDBKeyRange.only(url))
-      { target: { result: data } } = await app.util.indexedDBRequestToPromise(req)
+      { target: { result: data } } = await util.indexedDBRequestToPromise(req)
 
       await Promise.all(data.map( (datum) ->
         if datum.res is res
           req = store.delete(datum.id)
-          await app.util.indexedDBRequestToPromise(req)
+          await util.indexedDBRequestToPromise(req)
         return
       ))
     catch e
@@ -175,7 +177,7 @@ class app.WriteHistory
         .objectStore("WriteHistory")
         .index("url")
         .getAll(IDBKeyRange.only(url))
-      res = await app.util.indexedDBRequestToPromise(req)
+      res = await util.indexedDBRequestToPromise(req)
     catch e
       app.log("error", "WriteHistory.remove: トランザクション中断")
       throw new Error(e)
@@ -192,7 +194,7 @@ class app.WriteHistory
         .transaction("WriteHistory")
         .objectStore("WriteHistory")
         .getAll()
-      res = await app.util.indexedDBRequestToPromise(req)
+      res = await util.indexedDBRequestToPromise(req)
     catch e
       app.log("error", "WriteHistory.getAll: トランザクション中断")
       throw new Error(e)
@@ -209,7 +211,7 @@ class app.WriteHistory
         .transaction("WriteHistory")
         .objectStore("WriteHistory")
         .count()
-      res = await app.util.indexedDBRequestToPromise(req)
+      res = await util.indexedDBRequestToPromise(req)
     catch e
       app.log("error", "WriteHistory.count: トランザクション中断")
       throw new Error(e)
@@ -269,11 +271,11 @@ class app.WriteHistory
       req = store
         .index("date")
         .getAllKeys(IDBKeyRange.upperBound(dayUnix, true))
-      { target: { result: keys } } = await app.util.indexedDBRequestToPromise(req)
+      { target: { result: keys } } = await util.indexedDBRequestToPromise(req)
 
       await Promise.all(keys.map( (key) ->
         req = store.delete(key)
-        await app.util.indexedDBRequestToPromise(req)
+        await util.indexedDBRequestToPromise(req)
         return
       ))
     catch

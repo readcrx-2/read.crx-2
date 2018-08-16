@@ -1,9 +1,8 @@
 ###*
-@namespace app
-@class NG
+@class ImageReplaceDat
 @static
 ###
-class app.ImageReplaceDat
+export default class ImageReplaceDat
   _dat = null
   _CONFIG_NAME = "image_replace_dat_obj"
   _CONFIG_STRING_NAME = "image_replace_dat"

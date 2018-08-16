@@ -1,8 +1,10 @@
+import * as util from "./util.coffee"
+
 ###*
-@class app.History
+@class History
 @static
 ###
-class app.History
+export default class History
   @DB_VERSION = 2
 
   @_openDB: ->
@@ -53,7 +55,7 @@ class app.History
         .transaction("History", "readwrite")
         .objectStore("History")
         .put({url, title, date, boardTitle})
-      await app.util.indexedDBRequestToPromise(req)
+      await util.indexedDBRequestToPromise(req)
     catch e
       app.log("error", "History.add: データの格納に失敗しました")
       throw new Error(e)
@@ -85,19 +87,19 @@ class app.History
         req = store
           .index("url")
           .getAllKeys(IDBKeyRange.only(url))
-      { target: { result: data } } = await app.util.indexedDBRequestToPromise(req)
+      { target: { result: data } } = await util.indexedDBRequestToPromise(req)
 
       if date?
         await Promise.all(data.map( (datum) ->
           return if datum.date isnt date
           req = store.delete(datum.id)
-          await app.util.indexedDBRequestToPromise(req)
+          await util.indexedDBRequestToPromise(req)
           return
         ))
       else
         await Promise.all(data.map( (datum) ->
           req = store.delete(datum)
-          await app.util.indexedDBRequestToPromise(req)
+          await util.indexedDBRequestToPromise(req)
           return
         ))
     catch e
@@ -207,7 +209,7 @@ class app.History
         .transaction("History")
         .objectStore("History")
         .getAll()
-      res = await app.util.indexedDBRequestToPromise(req)
+      res = await util.indexedDBRequestToPromise(req)
     catch e
       app.log("error", "History.getAll: トランザクション中断")
       throw new Error(e)
@@ -224,7 +226,7 @@ class app.History
         .transaction("History")
         .objectStore("History")
         .count()
-      res = await app.util.indexedDBRequestToPromise(req)
+      res = await util.indexedDBRequestToPromise(req)
     catch e
       app.log("error", "History.count: トランザクション中断")
       throw new Error(e)
@@ -284,11 +286,11 @@ class app.History
       req = store
         .index("date")
         .getAllKeys(IDBKeyRange.upperBound(dayUnix, true))
-      { target: { result: keys } } = await app.util.indexedDBRequestToPromise(req)
+      { target: { result: keys } } = await util.indexedDBRequestToPromise(req)
 
       await Promise.all(keys.map( (key) ->
         req = store.delete(key)
-        await app.util.indexedDBRequestToPromise(req)
+        await util.indexedDBRequestToPromise(req)
         return
       ))
     catch e

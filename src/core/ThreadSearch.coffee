@@ -1,4 +1,7 @@
-class ThreadSearch
+import BoardTitleSolver from "./BoardTitleSolver.coffee"
+import * as util from "./util.coffee"
+
+export default class
   loaded: "None"
   loaded20: null
 
@@ -10,13 +13,13 @@ class ThreadSearch
       urlScheme = app.URL.getScheme(url)
       boardUrl = "#{urlScheme}://#{server}/#{ita}/"
       try
-        boardTitle = await app.BoardTitleSolver.ask(boardUrl)
+        boardTitle = await BoardTitleSolver.ask(boardUrl)
       catch
         boardTitle = ""
       return {
         url: app.URL.setScheme(url, scheme)
-        createdAt: app.util.stampToDate(key)
-        title: app.util.decodeCharReference(subject)
+        createdAt: util.stampToDate(key)
+        title: util.decodeCharReference(subject)
         resCount: +resno
         boardUrl
         boardTitle
@@ -53,8 +56,3 @@ class ThreadSearch
       @loaded = "Big"
       return _getDiff(await @loaded20, await @_read(500))
     return []
-
-app.module("thread_search", [], (callback) ->
-  callback(ThreadSearch)
-  return
-)

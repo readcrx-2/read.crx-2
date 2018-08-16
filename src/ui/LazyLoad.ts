@@ -1,6 +1,5 @@
 ///<reference path="../global.d.ts" />
 ///<reference path="../app.ts" />
-///<reference path="../core/HTTP.ts" />
 
 namespace UI {
   type HTMLMediaElement = HTMLImageElement | HTMLAudioElement | HTMLVideoElement;

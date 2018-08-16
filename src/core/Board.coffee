@@ -1,12 +1,13 @@
+import Cache from "./Cache.coffee"
+import NG from "./NG.coffee"
+import * as util from "./util.coffee"
+
 ###*
-@namespace app
 @class Board
 @constructor
 @param {String} url
-@requires app.Cache
-@requires app.NG
 ###
-class app.Board
+export default class Board
   constructor: (@url) ->
     ###*
     @property thread
@@ -36,7 +37,7 @@ class app.Board
       hasCache = false
 
       #キャッシュ取得
-      cache = new app.Cache(xhrPath)
+      cache = new Cache(xhrPath)
       try
         await cache.get()
         hasCache = true
@@ -111,7 +112,7 @@ class app.Board
 
         if newBoardUrl? and app.URL.tsld(@url) is "5ch.net"
           try
-            newBoardUrl = await app.util.chServerMoveDetect(@url)
+            newBoardUrl = await util.chServerMoveDetect(@url)
             @message += """
               サーバーが移転しています
               (<a href="#{app.escapeHtml(app.safeHref(newBoardUrl))}"
@@ -121,7 +122,7 @@ class app.Board
         #2chでrejectされている場合は移転を疑う
         else if app.URL.tsld(@url) is "5ch.net" and response?
           try
-            newBoardUrl = await app.util.chServerMoveDetect(@url)
+            newBoardUrl = await util.chServerMoveDetect(@url)
             #移転検出時
             @message += """
             サーバーが移転している可能性が有ります
@@ -164,7 +165,7 @@ class app.Board
   @return {Promise}
   ###
   @get: (url) ->
-    board = new app.Board(url)
+    board = new Board(url)
     try
       await board.get()
       return {status: "success", data: board.thread}
@@ -223,15 +224,15 @@ class app.Board
 
     board = []
     while (regRes = reg.exec(text))
-      title = app.util.decodeCharReference(regRes[2])
-      title = app.util.removeNeedlessFromTitle(title)
+      title = util.decodeCharReference(regRes[2])
+      title = util.removeNeedlessFromTitle(title)
 
       board.push(
         url: baseUrl + regRes[1] + "/"
         title: title
         resCount: +regRes[3]
         createdAt: +regRes[1] * 1000
-        ng: app.NG.isNGBoard(title, url)
+        ng: NG.isNGBoard(title, url)
         isNet: if scFlg then !title.startsWith("★") else null
       )
 
@@ -255,7 +256,7 @@ class app.Board
     unless xhrPath?
       throw new Error("その板の取得方法の情報が存在しません")
 
-    cache = new app.Cache(xhrPath)
+    cache = new Cache(xhrPath)
     try
       await cache.get()
       {lastModified, data} = cache
@@ -266,8 +267,3 @@ class app.Board
         }
     throw new Error("板のスレ一覧にそのスレが存在しません")
     return
-
-app.module("board", [], (callback) ->
-  callback(app.Board)
-  return
-)

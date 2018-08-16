@@ -14,6 +14,7 @@ rename = require "gulp-rename"
 rollup = require "rollup-stream"
 source = require "vinyl-source-stream"
 rollupTs = require "rollup-plugin-typescript2"
+rollupCoffee = require "rollup-plugin-coffee-script"
 
 coffee = require "gulp-coffee"
 ts = require "gulp-typescript"
@@ -38,8 +39,7 @@ args =
   appTsPath: "./src/app.ts"
   backgroundCoffeePath: "./src/background.coffee"
   csaddlinkCoffeePath: "./src/cs_addlink.coffee"
-  appCoreCoffeePath: "./src/core/*.coffee"
-  appCoreTsPath: "./src/core/*.ts"
+  appCorePath: "./src/core/core.coffee"
   uiCoffeePath: "./src/ui/*.coffee"
   uiTsPath: "./src/ui/*.ts"
   uiCssPath: "./src/ui/ui.scss"
@@ -217,16 +217,24 @@ gulp.task "cs_addlink.js", ->
     .pipe(coffee(args.coffeeOptions))
     .pipe(gulp.dest(args.outputPath))
 
+appCorejsCache = null
 gulp.task "app_core.js", ->
-  return merge(
-    gulp.src args.appCoreTsPath
-      .pipe(plumber(errorHandler: notify.onError("Error: <%= error.toString() %>")))
-      .pipe(ts(args.tsOptions, ts.reporter.nullReporter())),
-    gulp.src args.appCoreCoffeePath
-      .pipe(plumber(errorHandler: notify.onError("Error: <%= error.toString() %>")))
-      .pipe(coffee(args.coffeeOptions))
-  ).pipe(sort(sortForExtend))
-  .pipe(concat("app_core.js"))
+  return rollup(
+    input: args.appCorePath
+    name: "core"
+    format: "iife"
+    plugins: [
+      rollupCoffee(args.coffeeOptions)
+      rollupTs(args.rollupTsOptions)
+    ]
+    cache: appCorejsCache
+    context: "window"
+  )
+  .on("bundle", (bundle) ->
+    appCorejsCache = bundle;
+  )
+  .pipe(plumber(errorHandler: notify.onError("Error: <%= error.toString() %>")))
+  .pipe(source("app_core.js"))
   .pipe(gulp.dest(args.outputPath))
 
 gulp.task "ui.js", ->

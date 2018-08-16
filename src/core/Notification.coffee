@@ -1,4 +1,4 @@
-class app.Notification
+export default class Notification
   constructor: (@title, @message, @url, @tag) ->
     @notify = new window.Notification(
       @title,

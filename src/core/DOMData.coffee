@@ -1,9 +1,8 @@
 ###*
-@namespace app
 @class DOMData
 @static
 ###
-class app.DOMData
+export default class DOMData
   _list = new WeakMap()
 
   @set: (dom, prop, val) ->

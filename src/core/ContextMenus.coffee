@@ -1,9 +1,8 @@
 ###*
-@namespace app
 @class contextMenus
 @static
 ###
-class app.contextMenus
+export default class contextMenus
 # chrome.contextMenusの呼び出しレベルを統一するための代理クラス
 # (Chrome 53 対策)
 

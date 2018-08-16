@@ -1,10 +1,10 @@
+import Cache from "./Cache.coffee"
+
 ###*
-@namespace app
 @class BBSMenu
 @static
-@requires app.Cache
 ###
-class app.BBSMenu
+export default class BBSMenu
   @data: null
   @target: $__("div")
 
@@ -17,7 +17,7 @@ class app.BBSMenu
     if BBSMenu.data? and not force
       return BBSMenu.data.content
     #キャッシュ取得
-    cache = new app.Cache(url)
+    cache = new Cache(url)
 
     try
       await cache.get()
@@ -129,8 +129,3 @@ class app.BBSMenu
     finally
       BBSMenu._updatingPromise = null
     return {menu}
-
-app.module("bbsmenu", [], (callback) ->
-  callback(app.BBSMenu)
-  return
-)

@@ -1,9 +1,10 @@
+import * as util from "./util.coffee"
+
 ###*
-@namespace app
 @class NG
 @static
 ###
-class app.NG
+export default class NG
   @TYPE =
     INVALID: "invalid"
     REG_EXP: "RegExp"
@@ -139,13 +140,13 @@ class app.NG
           ngElement.word = ngWord.substr(10)
         when ngWord.startsWith("Title:")
           ngElement.type = NG.TYPE.TITLE
-          ngElement.word = app.util.normalize(ngWord.substr(6))
+          ngElement.word = util.normalize(ngWord.substr(6))
         when ngWord.startsWith("Name:")
           ngElement.type = NG.TYPE.NAME
-          ngElement.word = app.util.normalize(ngWord.substr(5))
+          ngElement.word = util.normalize(ngWord.substr(5))
         when ngWord.startsWith("Mail:")
           ngElement.type = NG.TYPE.MAIL
-          ngElement.word = app.util.normalize(ngWord.substr(5))
+          ngElement.word = util.normalize(ngWord.substr(5))
         when ngWord.startsWith("ID:")
           ngElement.type = NG.TYPE.ID
           ngElement.word = ngWord
@@ -154,7 +155,7 @@ class app.NG
           ngElement.word = ngWord.substr(5)
         when ngWord.startsWith("Body:")
           ngElement.type = NG.TYPE.BODY
-          ngElement.word = app.util.normalize(ngWord.substr(5))
+          ngElement.word = util.normalize(ngWord.substr(5))
         when ngWord.startsWith("Url:")
           ngElement.type = NG.TYPE.URL
           ngElement.word = ngWord.substr(4)
@@ -182,7 +183,7 @@ class app.NG
               ngElement.subElements.push(ele.subElements...)
         else
           ngElement.type = NG.TYPE.WORD
-          ngElement.word = app.util.normalize(ngWord)
+          ngElement.word = util.normalize(ngWord)
       return ngElement
 
     ngStrSplit = string.split("\n")
@@ -206,7 +207,7 @@ class app.NG
         ngWord = m[2]
       # 有効期限の指定
       else if (m = ngWord.match(_expireDate))?
-        expire = app.util.stringToDate("#{m[1]} 23:59:59")
+        expire = util.stringToDate("#{m[1]} 23:59:59")
         ngElement =
           expire: expire.valueOf() + 1000
         ngWord = m[2]
@@ -281,17 +282,17 @@ class app.NG
   @return {Object|null}
   ###
   @checkNGThread: (res, threadTitle, url, exceptionFlg = false, subType = null, isBoard = false) ->
-    tmpTitle = app.util.normalize(threadTitle)
+    tmpTitle = util.normalize(threadTitle)
     if isBoard
       tmpTxt1 = tmpTitle
       tmpTxt2 = tmpTitle
     else
-      decodedName = app.util.decodeCharReference(res.name)
-      decodedMail = app.util.decodeCharReference(res.mail)
-      decodedOther = app.util.decodeCharReference(res.other)
-      decodedMes = app.util.decodeCharReference(res.message)
+      decodedName = util.decodeCharReference(res.name)
+      decodedMail = util.decodeCharReference(res.mail)
+      decodedOther = util.decodeCharReference(res.other)
+      decodedMes = util.decodeCharReference(res.message)
       tmpTxt1 = decodedName + " " + decodedMail + " " + decodedOther + " " + decodedMes
-      tmpTxt2 = app.util.normalize(tmpTxt1)
+      tmpTxt2 = util.normalize(tmpTxt1)
 
     _checkWord = (n) ->
       if (
@@ -304,11 +305,11 @@ class app.NG
         (n.type is NG.TYPE.REG_EXP_TITLE and n.reg.test(threadTitle)) or
         (n.type is NG.TYPE.REG_EXP_URL and n.reg.test(url)) or
         (n.type is NG.TYPE.TITLE and tmpTitle.includes(n.word)) or
-        (n.type is NG.TYPE.NAME and app.util.normalize(decodedName).includes(n.word)) or
-        (n.type is NG.TYPE.MAIL and app.util.normalize(decodedMail).includes(n.word)) or
+        (n.type is NG.TYPE.NAME and util.normalize(decodedName).includes(n.word)) or
+        (n.type is NG.TYPE.MAIL and util.normalize(decodedMail).includes(n.word)) or
         (n.type is NG.TYPE.ID and res.id?.includes(n.word)) or
         (n.type is NG.TYPE.SLIP and res.slip?.includes(n.word)) or
-        (n.type is NG.TYPE.BODY and app.util.normalize(decodedMes).includes(n.word)) or
+        (n.type is NG.TYPE.BODY and util.normalize(decodedMes).includes(n.word)) or
         (n.type is NG.TYPE.WORD and tmpTxt2.includes(n.word)) or
         (n.type is NG.TYPE.URL and url.includes(n.word))
       )
@@ -390,7 +391,7 @@ class app.NG
       # 有効期限の確認
       if _expireDate.test(ngWord)
         m = ngWord.match(_expireDate)
-        expire = app.util.stringToDate(m[1] + " 23:59:59")
+        expire = util.stringToDate(m[1] + " 23:59:59")
         if expire.valueOf() + 1000 < now
           updateFlag = true
           continue

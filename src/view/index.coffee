@@ -447,7 +447,7 @@ app.main = ->
   do ->
     # bookmark_idが未設定の場合、わざと無効な値を渡してneedReconfigureRootNodeId
     # をcallさせる。
-    cbel = new app.Bookmark.ChromeBookmarkEntryList(
+    cbel = new app.ChromeBookmarkEntryList(
       app.config.get("bookmark_id") or "dummy"
     )
     cbel.needReconfigureRootNodeId.add( ->
@@ -456,7 +456,7 @@ app.main = ->
     )
 
     app.bookmarkEntryList = cbel
-    app.bookmark = new app.Bookmark.CompatibilityLayer(cbel)
+    app.bookmark = new app.BookmarkCompatibilityLayer(cbel)
     return
 
   app.bookmarkEntryList.ready.add( ->

@@ -1,10 +1,10 @@
+import BBSMenu from "./BBSMenu.coffee"
+
 ###*
-@namespace app
 @class BoardTitleSolver
 @static
-@require app.BBSMenu
 ###
-class app.BoardTitleSolver
+export default class
   ###*
   @property _bbsmenu
   @private
@@ -48,9 +48,9 @@ class app.BoardTitleSolver
   @private
   ###
   @_setBBSMenu: ->
-    obj = await app.BBSMenu.get()
+    obj = await BBSMenu.get()
     @_generateBBSMenu(obj)
-    app.BBSMenu.target.on("change", ({detail: obj}) =>
+    BBSMenu.target.on("change", ({detail: obj}) =>
       @_generateBBSMenu(obj)
       return
     )
@@ -175,8 +175,3 @@ class app.BoardTitleSolver
         return await @searchFromJbbsAPI(url)
     throw new Error("板名の取得に失敗しました")
     return
-
-app.module("board_title_solver", [], (callback) ->
-  callback(app.BoardTitleSolver)
-  return
-)

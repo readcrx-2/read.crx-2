@@ -1,9 +1,8 @@
 ###*
-@namespace app
 @class ReplaceStrTxt
 @static
 ###
-class app.ReplaceStrTxt
+export default class ReplaceStrTxt
   _replaceTable = null
   _CONFIG_NAME = "replace_str_txt_obj"
   _CONFIG_STRING_NAME = "replace_str_txt"

@@ -1,8 +1,10 @@
+import * as util from "./util.coffee"
+
 ###*
-@class app.ReadState
+@class ReadState
 @static
 ###
-class app.ReadState
+export default class ReadState
   @_openDB: new Promise( (resolve, reject) ->
     req = indexedDB.open("ReadState", 1)
     req.onerror = (e) ->
@@ -65,7 +67,7 @@ class app.ReadState
         .transaction("ReadState", "readwrite")
         .objectStore("ReadState")
         .put(readState)
-      await app.util.indexedDBRequestToPromise(req)
+      await util.indexedDBRequestToPromise(req)
       delete readState.board_url
       readState.url = readState.url.replace(url.replaced, url.original)
       app.message.send("read_state_updated", {board_url: boardUrl, read_state: readState})
@@ -86,7 +88,7 @@ class app.ReadState
         .transaction("ReadState")
         .objectStore("ReadState")
         .get(url.replaced)
-      { target: {result} } = await app.util.indexedDBRequestToPromise(req)
+      { target: {result} } = await util.indexedDBRequestToPromise(req)
       data = app.deepCopy(result)
       data.url = url.original if data?
     catch e
@@ -101,7 +103,7 @@ class app.ReadState
         .transaction("ReadState")
         .objectStore("ReadState")
         .getAll()
-      res = await app.util.indexedDBRequestToPromise(req)
+      res = await util.indexedDBRequestToPromise(req)
     catch e
       app.log("error", "app.ReadState.getAll: トランザクション中断")
       throw new Error(e)
@@ -120,7 +122,7 @@ class app.ReadState
         .objectStore("ReadState")
         .index("board_url")
         .getAll(IDBKeyRange.only(url.replaced))
-      { target: {result: data} } = await app.util.indexedDBRequestToPromise(req)
+      { target: {result: data} } = await util.indexedDBRequestToPromise(req)
       for key, val of data
         data[key].url = val.url.replace(url.replacedOrigin, url.originalOrigin)
     catch e
@@ -140,7 +142,7 @@ class app.ReadState
         .transaction("ReadState", "readwrite")
         .objectStore("ReadState")
         .delete(url.replaced)
-      await app.util.indexedDBRequestToPromise(req)
+      await util.indexedDBRequestToPromise(req)
       app.message.send("read_state_removed", url: url.original)
     catch e
       app.log("error", "app.ReadState.remove: トランザクション中断")
@@ -154,7 +156,7 @@ class app.ReadState
         .transaction("ReadState", "readwrite")
         .objectStore("ReadState")
         .clear()
-      await app.util.indexedDBRequestToPromise(req)
+      await util.indexedDBRequestToPromise(req)
     catch e
       app.log("error", "app.ReadState.clear: トランザクション中断")
       throw new Error(e)

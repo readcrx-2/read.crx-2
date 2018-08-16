@@ -648,13 +648,14 @@ class UI.ThreadContent
       $name.innerHTML = (
         res.name
           .replace(/<\/?a[^>]*>/g, "")
-          .replace(/<(?!(?:\/?b|\/?font(?: color="?[#a-zA-Z0-9]+"?)?)>)/g, "&lt;")
+          .replace(/<(?!\/?(?:b|small|font(?: color="?[#a-zA-Z0-9]+"?)?)>)/g, "&lt;")
           .replace(/<\/b>\(([^<>]+? [^<>]+?)\)<b>$/, ($0, $1) =>
             res.slip = $1
+            if resNum is 1
+              @_existSlipAtFirstRes = true
 
             @slipIndex.set($1, new Set()) unless @slipIndex.has($1)
             @slipIndex.get($1).add(resNum)
-
             return ""
            )
           .replace(/<\/b> ?(◆[^<>]+?) ?<b>/, ($0, $1) =>
@@ -666,8 +667,7 @@ class UI.ThreadContent
             return """<span class="trip">#{$1}</span>"""
           )
           .replace(/<\/b>(.*?)<b>/g, """<span class="ob">$1</span>""")
-          .replace(/&lt;span.*?>(.*?)&lt;\/span>/g, "<span class=\"ob\">$1</span>")
-          .replace(/&lt;small.*?>(.*?)&lt;\/small>/g, "<small>$1</small>")
+          .replace(/&lt;span[^>]*?>(.*?)&lt;\/span>/g, "<span class=\"ob\">$1</span>")
       )
       $header.addLast($name)
 
@@ -681,12 +681,16 @@ class UI.ThreadContent
       tmp = (
         res.other
           #be
-          .replace(/<\/div><div class="be .*?"><a href="(https?:\/\/be\.[25]ch\.net\/user\/\d+?)".*?>(.*?)<\/a>/, "<a class=\"beid\" href=\"$1\" target=\"_blank\">$2</a>")
+          .replace(/<\/div><div class="be[^>]*?"><a href="(https?:\/\/be\.[25]ch\.net\/user\/\d+?)"[^>]*>(.*?)<\/a>/, "<a class=\"beid\" href=\"$1\" target=\"_blank\">$2</a>")
           #タグ除去
-          .replace(/<(?!(?:a class="beid".*?|\/a)>).*?(?:>|$)/g, "")
+          .replace(/<(?!(?:a class="beid"[^>]*|\/a)>).*?(?:>|$)/g, "")
           #.id
+          .replace(" ID:???", "ID:???")
           .replace(/(?:^| |(\d))(ID:(?!\?\?\?)[^ <>"']+|発信元:\d+.\d+.\d+.\d+)/, ($0, $1, $2) =>
-            fixedId = $2.replace(/\u25cf$/, "") #末尾●除去
+            fixedId = $2
+            #末尾●除去
+            if fixedId.endsWith("\u25cf")
+              fixedId = fixedId.slice(0, -1)
 
             res.id = fixedId
             if resNum is 1
@@ -702,7 +706,12 @@ class UI.ThreadContent
             @idIndex.set(fixedId, new Set()) unless @idIndex.has(fixedId)
             @idIndex.get(fixedId).add(resNum)
 
-            return """#{$1 ? ""}<span class="id">#{$2}</span>"""
+            str = """#{$1 ? ""}<span class="id">#{$2}</span>"""
+
+            # slip追加(IDが存在しているとき)
+            if res.slip?
+              str += """<span class="slip">SLIP:#{res.slip}</span>"""
+            return str
           )
           #.beid
           .replace(/(?:^| )(BE:(\d+)\-[A-Z\d]+\(\d+\))/,
@@ -710,14 +719,9 @@ class UI.ThreadContent
           #.date
           .replace(/\d{4}\/\d{1,2}\/\d{1,2}\(.\)\s\d{1,2}:\d\d(?::\d\d(?:\.\d+)?)?/, "<time class=\"date\">$&</time>")
       )
-      # slip追加
-      if res.slip?
-        if (index = tmp.indexOf("<span class=\"id\">")) isnt -1
-          tmp = tmp.slice(0, index) + """<span class="slip">SLIP:#{res.slip}</span>""" + tmp.slice(index, tmp.length)
-        else
-          tmp += """<span class="slip">SLIP:#{res.slip}</span>"""
-        if resNum is 1
-          @_existSlipAtFirstRes = true
+      # slip追加(IDが存在していないとき)
+      if res.slip? and not res.id?
+        tmp += """<span class="slip">SLIP:#{res.slip}</span>"""
       $other.innerHTML = tmp
       $header.addLast($other)
       $article.addLast($header)
@@ -731,7 +735,7 @@ class UI.ThreadContent
         @_over1000ResNum = resNum
 
       #文字色
-      color = res.message.match(/<font color="(.*?)">/i)
+      color = res.message.match(/<font color="(.*?)">/i)?[1]
 
       # id, slip, tripが取り終わったタイミングでNG判定を行う
       # NG判定されるものは、ReplaceStrTxtで置き換え後のテキストなので注意すること
@@ -746,10 +750,10 @@ class UI.ThreadContent
       tmp = (
         res.message
           #imgタグ変換
-          .replace(/<img src="([\w]+):\/\/(.*?)".*?>/ig, "$1://$2")
-          .replace(/<img src="\/\/(.*?)".*?>/ig, "#{scheme}://$1")
+          .replace(/<img src="([\w]+):\/\/(.*?)"[^>]*>/ig, "$1://$2")
+          .replace(/<img src="\/\/(.*?)"[^>]*>/ig, "#{scheme}://$1")
           #Rock54
-          .replace(/(?:<small.*?>&#128064;|<i>&#128064;<\/i>)<br>Rock54: (Caution|Warning)\((.+?)\) ?.*?(?:<\/small>)?/ig, "<div class=\"rock54\">&#128064; Rock54: $1($2)</div>")
+          .replace(/(?:<small[^>]*>&#128064;|<i>&#128064;<\/i>)<br>Rock54: (Caution|Warning)\((.+?)\) ?.*?(?:<\/small>)?/ig, "<div class=\"rock54\">&#128064; Rock54: $1($2)</div>")
           #SLIPが変わったという表示
           .replace(/<hr>VIPQ2_EXTDAT: (.+): EXT was configured /i, "<div class=\"slipchange\">VIPQ2_EXTDAT: $1: EXT configure</div>")
           #タグ除去
@@ -807,7 +811,7 @@ class UI.ThreadContent
 
       $message = $__("div").addClass("message")
       if color?
-        $message.style.color = "##{color[1]}"
+        $message.style.color = "##{color}"
       $message.innerHTML = tmp
       $article.addLast($message)
 
@@ -1129,13 +1133,13 @@ class UI.ThreadContent
       resMessage = (
         objRes.message
           # アンカーの削除
-          .replace(/<a [^>]*>(?:&gt;){1,2}[\d]+(?:(?:-|,)[\d]+)*<\/a>/g, "")
+          .replace(/<a [^>]*>(?:&gt;){1,2}\d+(?:[-,]\d+)*<\/a>/g, "")
           # <a>タグの削除
-          .replace(/<a [^>]*>(.*)<\/a>/g, "$1")
+          .replace(/<\/?a[^>]*>/g, "")
           # 行末ブランクの削除
-          .replace(/(?:[\s]+)<br>/g, "<br>")
+          .replace(/\s+<br>/g, "<br>")
           # 空行の削除
-          .replace(/^<br>(.*)/, "$1")
+          .replace(/^<br>/, "")
           .replace(/(?:<br>){2,}/g, "<br>")
           # 前後ブランクの削除
           .trim()
@@ -1159,7 +1163,7 @@ class UI.ThreadContent
       resMessage = (
         objRes.message
           # <a>タグの削除
-          .replace(/<a [^>]*>(.*)<\/a>/g, "$1")
+          .replace(/<\/?a[^>]*>/g, "")
       )
       m = resMessage.match(app.util.Anchor.reg.ANCHOR)
       if m

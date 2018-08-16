@@ -120,7 +120,7 @@ app.boot("/view/board.html", ["board"], (Board) ->
         writeFlag = (not app.config.isOn("no_writehistory"))
         if ex.kind is "own"
           if writeFlag
-            app.WriteHistory.add(
+            await app.WriteHistory.add(
               url: ex.thread_url
               res: 1
               title: ex.title
@@ -133,7 +133,7 @@ app.boot("/view/board.html", ["board"], (Board) ->
         else
           for thread in board when thread.title.includes(ex.title)
             if writeFlag
-              app.WriteHistory.add(
+              await app.WriteHistory.add(
                 url: thread.url
                 res: 1
                 title: ex.title

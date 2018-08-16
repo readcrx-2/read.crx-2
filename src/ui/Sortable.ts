@@ -90,7 +90,7 @@ namespace UI {
       }
 
       // 0.5秒待ってダブルクリックかシングルクリックか判定する
-      this.clickTimer = setTimeout( () => {
+      this.clickTimer = window.setTimeout( () => {
         this.clicks = 1;
       }, 500);
 

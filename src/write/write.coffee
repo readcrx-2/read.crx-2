@@ -150,7 +150,7 @@ do ->
           when "success"
             $view.C("notice")[0].textContent = "書き込み成功"
             timer.kill()
-            await app.wait(3000)
+            await app.wait(message)
             onSuccess(key)
             chrome.tabs.getCurrent( ({id}) ->
               chrome.tabs.remove(id)

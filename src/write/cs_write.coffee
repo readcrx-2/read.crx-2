@@ -15,32 +15,19 @@ do ->
     """)
     return
 
-  sendMessageSuccess = ->
+  sendMessageSuccess = (moveMs) ->
     if submitThreadFlag
+      jumpUrl = getJumpUrl()
       exec("""
-        var url = location.href;
-        if(url.includes("5ch.net") || url.includes("bbspink.com") || url.includes("open2ch.net")) {
-          metas = document.getElementsByTagName("meta");
-          for(var i = 0; i < metas.length; i++) {
-            if(metas[i].getAttribute("http-equiv") === "refresh") {
-              jumpurl = metas[i].getAttribute("content");
-              break;
-            }
-          }
-        } else if (url.includes("2ch.sc")) {
-          as = document.getElementsByTagName("a");
-          jumpurl = as[0].href;
-        } else {
-          jumpurl = ""
-        }
         parent.postMessage({
           type : "success",
-          key: jumpurl
+          key: "#{jumpUrl}",
+          message: #{moveMs}
         }, "#{origin}");
       """)
     else
       exec("""
-        parent.postMessage({type: "success"}, "#{origin}");
+        parent.postMessage({type: "success", message: #{moveMs}}, "#{origin}");
       """)
     return
 
@@ -64,33 +51,60 @@ do ->
       """)
     return
 
+  getRefreshMeta = ->
+    $heads = document.head.children
+    for $head from $heads when $head.getAttribute("http-equiv") is "refresh"
+      return $head
+    return null
+
+  getMoveSec = ->
+    sec = 3
+    $refreshMeta = getRefreshMeta()
+    content = $refreshMeta?.getAttribute("content")
+    return sec if not content? or content is ""
+    m = content.match(/^(\d+);/)
+    return m?[1] ? sec
+
+  getJumpUrl = ->
+    url = location.href
+    if url.includes("5ch.net") or url.includes("bbspink.com") or url.includes("open2ch.net")
+      $meta = getRefreshMeta()
+      return $meta?.getAttribute("content") ? ""
+    if url.includes("2ch.sc")
+      as = document.getElementsByTagName("a")
+      return as?[0]?.href ? ""
+    return ""
+
   main = ->
+    {title} = document
+    url = location.href
+
     #したらば投稿確認
-    if ///^https?://jbbs\.shitaraba\.net/bbs/write.cgi/\w+/\d+/(?:\d+|new)/$///.test(location.href)
-      if document.title.includes("書きこみました")
-        sendMessageSuccess()
-      else if document.title.includes("ERROR") or document.title.includes("スレッド作成規制中")
+    if ///^https?://jbbs\.shitaraba\.net/bbs/write.cgi/\w+/\d+/(?:\d+|new)/$///.test(url)
+      if title.includes("書きこみました")
+        sendMessageSuccess(3 * 1000)
+      else if title.includes("ERROR") or title.includes("スレッド作成規制中")
         sendMessageError()
 
     #open2ch投稿確認
-    else if ///^https?://\w+\.open2ch\.net/test/bbs\.cgi///.test(location.href)
+    else if ///^https?://\w+\.open2ch\.net/test/bbs\.cgi///.test(url)
       font = document.getElementsByTagName("font")
-      text = document.title
+      text = title
       if font.length > 0 then text += font[0].innerText
       if text.includes("書きこみました")
-        sendMessageSuccess()
+        sendMessageSuccess(getMoveSec() * 1000)
       else if text.includes("確認")
         setTimeout(sendMessageConfirm , 1000 * 6)
       else if text.includes("ＥＲＲＯＲ")
         sendMessageError()
 
     #2ch型投稿確認
-    else if ///^https?://\w+\.\w+\.\w+/test/bbs\.cgi///.test(location.href)
-      if document.title.includes("書きこみました")
-        sendMessageSuccess()
-      else if document.title.includes("確認")
+    else if ///^https?://\w+\.\w+\.\w+/test/bbs\.cgi///.test(url)
+      if title.includes("書きこみました")
+        sendMessageSuccess(getMoveSec() * 1000)
+      else if title.includes("確認")
         setTimeout(sendMessageConfirm , 1000 * 6)
-      else if document.title.includes("ＥＲＲＯＲ")
+      else if title.includes("ＥＲＲＯＲ")
         sendMessageError()
     return
 

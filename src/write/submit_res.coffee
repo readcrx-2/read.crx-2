@@ -1,13 +1,17 @@
+import Write from "./write.coffee"
+import WriteHistory from "../core/WriteHistory.coffee"
+import {tsld as getTsld} from "../core/URL.ts"
+
 app.boot("/write/submit_res.html", ->
   isThread = false
-  args = app.Write.getArgs()
-  app.Write.setupTheme()
-  app.Write.setDOM()
-  app.Write.setTitle({isThread})
+  args = Write.getArgs()
+  Write.setupTheme()
+  Write.setDOM()
+  Write.setTitle({isThread})
 
   chrome.tabs.getCurrent( ({id}) ->
     chrome.webRequest.onBeforeSendHeaders.addListener(
-      app.Write.beforeSendFunc
+      Write.beforeSendFunc
       {
         tabId: id
         types: ["sub_frame"]
@@ -39,7 +43,7 @@ app.boot("/write/submit_res.html", ->
   $view = $$.C("view_write")[0]
 
   do ->
-    data = await app.WriteHistory.getByUrl(args.url)
+    data = await WriteHistory.getByUrl(args.url)
     names = []
     mails = []
     for {input_name, input_mail} in data
@@ -67,17 +71,17 @@ app.boot("/write/submit_res.html", ->
     return
 
   onError = (message) ->
-    app.Write.onErrorFunc(message)
+    Write.onErrorFunc(message)
 
     {url, message: mes, name, mail} = args
     chrome.runtime.sendMessage({type: "written?", url, mes, name, mail})
     return
 
-  timer = new app.Write.Timer({
+  timer = new Write.Timer({
     onError
   })
 
-  app.Write.setupMessage({
+  Write.setupMessage({
     timer
     isThread
     onSuccess: ->
@@ -89,11 +93,11 @@ app.boot("/write/submit_res.html", ->
     onError
   })
 
-  app.Write.setupForm(timer, isThread, (splittedUrl, iframeArgs, bbsType, scheme) ->
+  Write.setupForm(timer, isThread, (splittedUrl, iframeArgs, bbsType, scheme) ->
     #2ch
     if bbsType is "2ch"
       #open2ch
-      if app.URL.tsld(args.url) is "open2ch.net"
+      if getTsld(args.url) is "open2ch.net"
         return {
           action: "#{scheme}://#{splittedUrl[2]}/test/bbs.cgi"
           charset: "UTF-8"

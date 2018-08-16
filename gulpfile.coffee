@@ -50,24 +50,9 @@ args =
   zombieCoffeePath: "./src/zombie.coffee"
   zombieHtmlPath: "./src/zombie.pug"
   writePath:
-    cs:
-      coffee: "./src/write/cs_write.coffee"
-    submit_res:
-      ts: "./src/core/URL.ts"
-      coffee: [
-        "./src/core/util.coffee"
-        "./src/core/WriteHistory.coffee"
-        "./src/ui/Animate.coffee"
-        "./src/write/write.coffee"
-        "./src/write/submit_res.coffee"
-      ]
-    submit_thread:
-      ts: "./src/core/URL.ts"
-      coffee:[
-        "./src/ui/Animate.coffee"
-        "./src/write/write.coffee"
-        "./src/write/submit_thread.coffee"
-      ]
+    cs: "./src/write/cs_write.coffee"
+    submit_res: "./src/write/submit_res.coffee"
+    submit_thread: "./src/write/submit_thread.coffee"
   writeCssPath: ["./src/write/*.scss", "!./src/write/write.scss"]
   writeCssWatchPath: ["./src/write/*.scss", "./src/common.scss"]
   writeHtmlPath: "./src/write/*.pug"
@@ -150,9 +135,6 @@ imgs = [
 ]
 # -------
 sass.compiler = sassCompiler
-sortForExtend =
-  comparator: (file1, file2) ->
-    return file1.path.split(".").length - file2.path.split(".").length
 exec = (command, args) ->
   return new Promise( (resolve, reject) ->
     cp = spawn(command, args, {stdio: "inherit"})
@@ -271,34 +253,48 @@ gulp.task "zombie.js", ->
     .pipe(gulp.dest(args.outputPath))
 
 gulp.task "cs_write.js", ->
-  return gulp.src args.writePath.cs.coffee
+  return gulp.src args.writePath.cs
     .pipe(plumber(errorHandler: notify.onError("Error: <%= error.toString() %>")))
     .pipe(changed("#{args.outputPath}/write", extension: ".js"))
     .pipe(coffee(args.coffeeOptions))
     .pipe(gulp.dest("#{args.outputPath}/write"))
 
+submitResjsCache = null
 gulp.task "submit_res.js", ->
-  return merge(
-    gulp.src args.writePath.submit_res.ts
-      .pipe(plumber(errorHandler: notify.onError("Error: <%= error.toString() %>")))
-      .pipe(ts(args.tsOptions, ts.reporter.nullReporter())),
-    gulp.src args.writePath.submit_res.coffee
-      .pipe(plumber(errorHandler: notify.onError("Error: <%= error.toString() %>")))
-      .pipe(coffee(args.coffeeOptions))
-  ).pipe(sort(sortForExtend))
-  .pipe(concat("submit_res.js"))
+  return rollup(
+    input: args.writePath.submit_res
+    format: "iife"
+    plugins: [
+      rollupCoffee(args.coffeeOptions)
+      rollupTs(args.rollupTsOptions)
+    ]
+    cache: submitResjsCache
+    context: "window"
+  )
+  .on("bundle", (bundle) ->
+    submitResjsCache = bundle;
+  )
+  .pipe(plumber(errorHandler: notify.onError("Error: <%= error.toString() %>")))
+  .pipe(source("submit_res.js"))
   .pipe(gulp.dest("#{args.outputPath}/write"))
 
+submitThreadjsCache = null
 gulp.task "submit_thread.js", ->
-  return merge(
-    gulp.src args.writePath.submit_thread.ts
-      .pipe(plumber(errorHandler: notify.onError("Error: <%= error.toString() %>")))
-      .pipe(ts(args.tsOptions, ts.reporter.nullReporter())),
-    gulp.src args.writePath.submit_thread.coffee
-      .pipe(plumber(errorHandler: notify.onError("Error: <%= error.toString() %>")))
-      .pipe(coffee(args.coffeeOptions))
-  ).pipe(sort(sortForExtend))
-  .pipe(concat("submit_thread.js"))
+  return rollup(
+    input: args.writePath.submit_thread
+    format: "iife"
+    plugins: [
+      rollupCoffee(args.coffeeOptions)
+      rollupTs(args.rollupTsOptions)
+    ]
+    cache: submitThreadjsCache
+    context: "window"
+  )
+  .on("bundle", (bundle) ->
+    submitThreadjsCache = bundle;
+  )
+  .pipe(plumber(errorHandler: notify.onError("Error: <%= error.toString() %>")))
+  .pipe(source("submit_thread.js"))
   .pipe(gulp.dest("#{args.outputPath}/write"))
 
 gulp.task "writejs", gulp.parallel("cs_write.js", "submit_res.js", "submit_thread.js")

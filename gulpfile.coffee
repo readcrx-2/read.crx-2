@@ -136,6 +136,10 @@ uijsCache = null
 submitResjsCache = null
 submitThreadjsCache = null
 
+rollupOnWarn = (warning, warn) ->
+  return if warning.code is "CIRCULAR_DEPENDENCY"
+  warn(warning)
+  return
 rollupArgs =
   appjs:
     in:
@@ -145,6 +149,7 @@ rollupArgs =
       ]
       cache: appjsCache
       context: "window"
+      onwarn: rollupOnWarn
     out:
       file: "#{args.outputPath}/app.js"
       format: "iife"
@@ -158,6 +163,7 @@ rollupArgs =
       ]
       cache: appCorejsCache
       context: "window"
+      onwarn: rollupOnWarn
     out:
       file: "#{args.outputPath}/app_core.js"
       format: "iife"
@@ -172,6 +178,7 @@ rollupArgs =
       ]
       cache: uijsCache
       context: "window"
+      onwarn: rollupOnWarn
     out:
       file: "#{args.outputPath}/ui.js"
       name: "UI"
@@ -185,6 +192,7 @@ rollupArgs =
       ]
       cache: submitResjsCache
       context: "window"
+      onwarn: rollupOnWarn
     out:
       file: "#{args.outputPath}/write/submit_res.js"
       format: "iife"
@@ -197,6 +205,7 @@ rollupArgs =
       ]
       cache: submitThreadjsCache
       context: "window"
+      onwarn: rollupOnWarn
     out:
       file: "#{args.outputPath}/write/submit_thread.js"
       format: "iife"

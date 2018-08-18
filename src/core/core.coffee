@@ -42,31 +42,29 @@ do ->
     callback(ThreadSearch)
     return
   )
-
-  core = {
-    BBSMenu
-    Board
-    BoardTitleSolver
-    Bookmark
-    BookmarkCompatibilityLayer
-    ChromeBookmarkEntryList
-    Cache
-    contextMenus
-    DOMData
-    History
-    HTTP
-    ImageReplaceDat
-    NG
-    Notification
-    ReadState
-    ReplaceStrTxt
-    Thread
-    ThreadSearch
-    URL
-    util
-    Util
-    WriteHistory
-  }
-  for key, val of core
-    app[key] = val
   return
+
+export {
+  BBSMenu
+  Board
+  BoardTitleSolver
+  Bookmark
+  BookmarkCompatibilityLayer
+  ChromeBookmarkEntryList
+  Cache
+  contextMenus
+  DOMData
+  History
+  HTTP
+  ImageReplaceDat
+  NG
+  Notification
+  ReadState
+  ReplaceStrTxt
+  Thread
+  ThreadSearch
+  URL
+  util
+  Util
+  WriteHistory
+}

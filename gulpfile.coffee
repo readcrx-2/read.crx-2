@@ -11,13 +11,11 @@ sort = require "gulp-sort"
 concat = require "gulp-concat"
 rename = require "gulp-rename"
 
-rollup = require "rollup-stream"
-source = require "vinyl-source-stream"
+rollup = require "rollup"
 rollupTs = require "rollup-plugin-typescript2"
 rollupCoffee = require "rollup-plugin-coffee-script"
 
 coffee = require "gulp-coffee"
-ts = require "gulp-typescript"
 sass = require "gulp-sass"
 pug = require "gulp-pug"
 sharp = require "sharp"
@@ -65,23 +63,25 @@ args =
   loadingSrcPath: "./src/image/svg/loading.svg"
   loadingBinPath: "./debug/img/loading.webp"
   shortQueryPath: "./node_modules/ShortQuery.js/bin/shortQuery.chrome.min.js"
+  rollupTsOptions:
+    tsconfigDefaults:
+      compilerOptions:
+        typescript: tsCompiler
+        target: "es2017"
+        lib: [
+          "dom"
+          "es2015"
+          "es2016"
+          "es2017"
+        ]
+        skipLibCheck: true
+        noUnusedLocals: true
+        alwaysStrict: true
+        strictNullChecks: true
+        noImplicitThis: true
   coffeeOptions:
     coffee: coffeeCompiler
     bare: true
-  tsOptions:
-    typescript: tsCompiler
-    target: "es2017"
-    lib: [
-      "dom"
-      "es2015"
-      "es2016"
-      "es2017"
-    ]
-    skipLibCheck: true
-    noUnusedLocals: true
-    alwaysStrict: true
-    strictNullChecks: true
-    noImplicitThis: true
   sassOptions:
     outputStyle: "compressed"
     errLogToConsole: false
@@ -90,10 +90,6 @@ args =
     locals: manifest
   sharpWebpOptions:
     lossless: true
-args.rollupTsOptions =
-  typescript: tsCompiler
-  tsconfigDefaults:
-    compilerOptions: args.tsOptions
 imgs = [
   "read.crx_48x48.png"
   "read.crx_38x38.png"
@@ -134,6 +130,78 @@ imgs = [
   "regexp_19x19_f93.webp"
 ]
 # -------
+appjsCache = null
+appCorejsCache = null
+uijsCache = null
+submitResjsCache = null
+submitThreadjsCache = null
+
+rollupArgs =
+  appjs:
+    in:
+      input: args.appTsPath
+      plugins: [
+        rollupTs(args.rollupTsOptions)
+      ]
+      cache: appjsCache
+      context: "window"
+    out:
+      file: "#{args.outputPath}/app.js"
+      format: "iife"
+      name: "app"
+  appCorejs:
+    in:
+      input: args.appCorePath
+      plugins: [
+        rollupCoffee(args.coffeeOptions)
+        rollupTs(args.rollupTsOptions)
+      ]
+      cache: appCorejsCache
+      context: "window"
+    out:
+      file: "#{args.outputPath}/app_core.js"
+      format: "iife"
+      name: "app"
+      extend: true
+  uijs:
+    in:
+      input: args.uiPath
+      plugins: [
+        rollupCoffee(args.coffeeOptions)
+        rollupTs(args.rollupTsOptions)
+      ]
+      cache: uijsCache
+      context: "window"
+    out:
+      file: "#{args.outputPath}/ui.js"
+      name: "UI"
+      format: "iife"
+  submitResjs:
+    in:
+      input: args.writePath.submit_res
+      plugins: [
+        rollupCoffee(args.coffeeOptions)
+        rollupTs(args.rollupTsOptions)
+      ]
+      cache: submitResjsCache
+      context: "window"
+    out:
+      file: "#{args.outputPath}/write/submit_res.js"
+      format: "iife"
+  submitThreadjs:
+    in:
+      input: args.writePath.submit_thread
+      plugins: [
+        rollupCoffee(args.coffeeOptions)
+        rollupTs(args.rollupTsOptions)
+      ]
+      cache: submitThreadjsCache
+      context: "window"
+    out:
+      file: "#{args.outputPath}/write/submit_thread.js"
+      format: "iife"
+
+# -------
 sass.compiler = sassCompiler
 exec = (command, args) ->
   return new Promise( (resolve, reject) ->
@@ -160,29 +228,42 @@ putsPromise = (mes) ->
     reader.prompt()
     return
   )
+toTwoDigit = (str) ->
+  return if (""+str).length is 1 then "0"+str else str
+getTimeString = ->
+  date = new Date()
+  return "#{toTwoDigit(date.getHours())}:#{toTwoDigit(date.getMinutes())}:#{toTwoDigit(date.getSeconds())}"
+outputError = (filename, type = "Error") ->
+  return (e) ->
+    prefix = "[#{GRAY}#{getTimeString()}#{RESET}][#{GRAY}Rollup.js#{RESET}] "
+    mes = prefix + "#{RED}#{type}(#{e.code})#{RESET} '#{CYAN}#{filename}#{RESET}': #{e.message}"
+    mes += "\n" + _space + "#{e.loc.file}l#{e.loc.line}:#{e.loc.column}" if e.loc?
+    mes += "\n" + _space + e.frame.replace(/\n/g, "\n"+_space) if e.frame?
+    console.error(mes)
+    return
+rollupOnWatch = (filename) ->
+  return (e) ->
+    date = new Date()
+    time = "#{toTwoDigit(date.getHours())}:#{toTwoDigit(date.getMinutes())}:#{toTwoDigit(date.getSeconds())}"
+    switch e.code
+      when "BUNDLE_START" then console.log "[\u001b[90m#{time}\u001b[0m][\u001b[90mRollup.js\u001b[0m] Starting '\u001b[36m#{filename}\u001b[0m'"
+      when "BUNDLE_END" then console.log "[\u001b[90m#{time}\u001b[0m][\u001b[90mRollup.js\u001b[0m] Finished '\u001b[36m#{filename}\u001b[0m' in #{e.duration}ms"
+      when "ERROR" then console.error "[\u001b[90m#{time}\u001b[0m][\u001b[90mRollup.js\u001b[0m] Error '\u001b[36m#{filename}\u001b[0m': ", e.error
+      when "FATAL" then console.error "[\u001b[90m#{time}\u001b[0m][\u001b[90mRollup.js\u001b[0m] FatalError '\u001b[36m#{filename}\u001b[0m': ", e.error
+    return
 #--------
 
 ###
   compile
 ###
 ##js
-appjsCache = null
 gulp.task "app.js", ->
-  return rollup(
-    input: args.appTsPath
-    name: "app"
-    format: "iife"
-    plugins: [
-      rollupTs(args.rollupTsOptions)
-    ]
-    cache: appjsCache
-  )
-  .on("bundle", (bundle) ->
-    appjsCache = bundle;
-  )
-  .pipe(plumber(errorHandler: notify.onError("Error: <%= error.toString() %>")))
-  .pipe(source("app.js"))
-  .pipe(gulp.dest(args.outputPath))
+  try
+    bundle = await rollup.rollup(rollupArgs.appjs.in)
+    await bundle.write(rollupArgs.appjs.out)
+  catch e
+    console.error e
+  return
 
 gulp.task "background.js", ->
   return gulp.src args.backgroundCoffeePath
@@ -198,45 +279,21 @@ gulp.task "cs_addlink.js", ->
     .pipe(coffee(args.coffeeOptions))
     .pipe(gulp.dest(args.outputPath))
 
-appCorejsCache = null
 gulp.task "app_core.js", ->
-  return rollup(
-    input: args.appCorePath
-    name: "core"
-    format: "iife"
-    plugins: [
-      rollupCoffee(args.coffeeOptions)
-      rollupTs(args.rollupTsOptions)
-    ]
-    cache: appCorejsCache
-    context: "window"
-  )
-  .on("bundle", (bundle) ->
-    appCorejsCache = bundle;
-  )
-  .pipe(plumber(errorHandler: notify.onError("Error: <%= error.toString() %>")))
-  .pipe(source("app_core.js"))
-  .pipe(gulp.dest(args.outputPath))
+  try
+    bundle = await rollup.rollup(rollupArgs.appCorejs.in)
+    await bundle.write(rollupArgs.appCorejs.out)
+  catch e
+    console.error e
+  return
 
-uijsCache = null
 gulp.task "ui.js", ->
-  return rollup(
-    input: args.uiPath
-    name: "UI"
-    format: "iife"
-    plugins: [
-      rollupCoffee(args.coffeeOptions)
-      rollupTs(args.rollupTsOptions)
-    ]
-    cache: uijsCache
-    context: "window"
-  )
-  .on("bundle", (bundle) ->
-    uijsCache = bundle;
-  )
-  .pipe(plumber(errorHandler: notify.onError("Error: <%= error.toString() %>")))
-  .pipe(source("ui.js"))
-  .pipe(gulp.dest(args.outputPath))
+  try
+    bundle = await rollup.rollup(rollupArgs.uijs.in)
+    await bundle.write(rollupArgs.uijs.out)
+  catch e
+    console.error e
+  return
 
 gulp.task "viewjs", ->
   return gulp.src args.viewCoffeePath
@@ -259,43 +316,21 @@ gulp.task "cs_write.js", ->
     .pipe(coffee(args.coffeeOptions))
     .pipe(gulp.dest("#{args.outputPath}/write"))
 
-submitResjsCache = null
 gulp.task "submit_res.js", ->
-  return rollup(
-    input: args.writePath.submit_res
-    format: "iife"
-    plugins: [
-      rollupCoffee(args.coffeeOptions)
-      rollupTs(args.rollupTsOptions)
-    ]
-    cache: submitResjsCache
-    context: "window"
-  )
-  .on("bundle", (bundle) ->
-    submitResjsCache = bundle;
-  )
-  .pipe(plumber(errorHandler: notify.onError("Error: <%= error.toString() %>")))
-  .pipe(source("submit_res.js"))
-  .pipe(gulp.dest("#{args.outputPath}/write"))
+  try
+    bundle = await rollup.rollup(rollupArgs.submitResjs.in)
+    await bundle.write(rollupArgs.submitResjs.out)
+  catch e
+    console.error e
+  return
 
-submitThreadjsCache = null
 gulp.task "submit_thread.js", ->
-  return rollup(
-    input: args.writePath.submit_thread
-    format: "iife"
-    plugins: [
-      rollupCoffee(args.coffeeOptions)
-      rollupTs(args.rollupTsOptions)
-    ]
-    cache: submitThreadjsCache
-    context: "window"
-  )
-  .on("bundle", (bundle) ->
-    submitThreadjsCache = bundle;
-  )
-  .pipe(plumber(errorHandler: notify.onError("Error: <%= error.toString() %>")))
-  .pipe(source("submit_thread.js"))
-  .pipe(gulp.dest("#{args.outputPath}/write"))
+  try
+    bundle = await rollup.rollup(rollupArgs.submitThreadjs.in)
+    await bundle.write(rollupArgs.submitThreadjs.out)
+  catch e
+    console.error e
+  return
 
 gulp.task "writejs", gulp.parallel("cs_write.js", "submit_res.js", "submit_thread.js")
 gulp.task "js", gulp.parallel("app.js", "background.js", "cs_addlink.js", "app_core.js", "ui.js", "viewjs", "zombie.js", "writejs")
@@ -463,16 +498,31 @@ gulp.task "crx", ->
 gulp.task "pack", gulp.series("clean", "default", "scan", "crx")
 
 gulp.task "watch", gulp.series("default", ->
-  gulp.watch([args.appTsPath, "./src/global.d.ts"], gulp.task("app.js"))
+  rollup.watch({
+    rollupArgs.appjs.in...
+    output: rollupArgs.appjs.out
+  }).on("event", rollupOnWatch("app.js"))
   gulp.watch(args.backgroundCoffeePath, gulp.task("background.js"))
   gulp.watch(args.csaddlinkCoffeePath, gulp.task("cs_addlink.js"))
-  gulp.watch([args.appCoreTsPath, args.appCoreCoffeePath], gulp.task("app_core.js"))
-  gulp.watch([args.uiTsPath, args.uiCoffeePath], gulp.task("ui.js"))
+  rollup.watch({
+    rollupArgs.appCorejs.in...
+    output: rollupArgs.appCorejs.out
+  }).on("event", rollupOnWatch("app_core.js"))
+  rollup.watch({
+    rollupArgs.uijs.in...
+    output: rollupArgs.uijs.out
+  }).on("event", rollupOnWatch("ui.js"))
   gulp.watch(args.viewCoffeePath, gulp.task("viewjs"))
   gulp.watch(args.zobieCoffeePath, gulp.task("zombie.js"))
-  gulp.watch(args.writePath.cs.coffee, gulp.task("cs_write.js"))
-  gulp.watch([args.writePath.submit_res.ts, args.writePath.submit_res.coffee], gulp.task("submit_res.js"))
-  gulp.watch([args.writePath.submit_thread.ts, args.writePath.submit_thread.coffee], gulp.task("submit_thread.js"))
+  gulp.watch(args.writePath.cs, gulp.task("cs_write.js"))
+  rollup.watch({
+    rollupArgs.submitResjs.in...
+    output: rollupArgs.submitResjs.out
+  }).on("event", rollupOnWatch("submit_res.js"))
+  rollup.watch({
+    rollupArgs.submitThreadjs.in...
+    output: rollupArgs.submitThreadjs.out
+  }).on("event", rollupOnWatch("submit_thread.js"))
   gulp.watch(args.uiCssWatchPath, gulp.task("ui.css"))
   gulp.watch(args.viewCssWatchPath, gulp.task("viewcss"))
   gulp.watch(args.writeCssWatchPath, gulp.task("writecss"))

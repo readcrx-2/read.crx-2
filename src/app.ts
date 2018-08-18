@@ -441,66 +441,6 @@ export function clipboardWrite (str:string):void {
   $textarea.remove();
 }
 
-export var module;
-{
-  let pendingModules = new Set<any>();
-  let readyModules = new Map<string, any>();
-  let fireDefinition, addReadyModule;
-
-  fireDefinition = async (moduleId, dependencies, definition) => {
-    var depModules:any[] = [], depModuleId, callback;
-
-    for (depModuleId of dependencies) {
-      depModules.push(readyModules.get(depModuleId).module);
-    }
-
-    if (moduleId !== null) {
-      callback = addReadyModule.bind({
-        moduleId,
-        dependencies
-      });
-      await defer();
-      definition(...depModules.concat(callback));
-    } else {
-      await defer();
-      definition(...depModules);
-    }
-  };
-
-  addReadyModule = function (this:{moduleId: string, dependencies: string[]}, module) {
-    readyModules.set(this.moduleId,{
-      dependencies: this.dependencies,
-      module: module
-    });
-
-    // このモジュールが初期化された事で依存関係が満たされたモジュールを初期化
-    for (var val of pendingModules) {
-      if (val.dependencies.includes(this.moduleId)) {
-        if (!val.dependencies.some((a) => { return !readyModules.get(a); } )) {
-          fireDefinition(val.moduleId, val.dependencies, val.definition);
-          pendingModules.delete(module);
-        }
-      }
-    }
-  };
-
-  module = function (moduleId, dependencies, definition) {
-    if (!dependencies) dependencies = [];
-
-    // 依存関係が満たされていないモジュールは、しまっておく
-    if (dependencies.some((a) => { return !readyModules.get(a); } )) {
-      pendingModules.add({
-        moduleId,
-        dependencies,
-        definition
-      });
-    } else {
-      // 依存関係が満たされている場合、即座にモジュール初期化を開始する
-      fireDefinition(moduleId, dependencies, definition);
-    }
-  };
-}
-
 export async function boot (path:string, requirements, fn):Promise<undefined> {
   var htmlVersion:string;
 
@@ -526,7 +466,11 @@ export async function boot (path:string, requirements, fn):Promise<undefined> {
       let onload = () => {
         config.ready( () => {
           if (requirements) {
-            module(null, requirements, fn);
+            let modules: any[] = [];
+            for (let module of <string[]>requirements) {
+              modules.push(parent.app[module]);
+            }
+            fn(...modules);
           } else {
             fn();
           }

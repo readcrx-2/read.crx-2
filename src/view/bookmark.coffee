@@ -1,4 +1,4 @@
-app.boot("/view/bookmark.html", ["board"], (Board) ->
+app.boot("/view/bookmark.html", ["Board"], (Board) ->
   $view = document.documentElement
 
   $table = $__("table")

@@ -2,14 +2,12 @@
 
 interface Window {
   chrome: any;
+  app: any;
 }
 
 declare var BroadcastChannel: any;
 declare var chrome: any;
 
-declare namespace UI {
-  var Animate: any;
-}
 declare namespace app {
   var config: any;
   var Callbacks: any;

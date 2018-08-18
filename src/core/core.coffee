@@ -21,29 +21,6 @@ import * as util from "./util.coffee"
 import * as Util from "./Util.ts"
 import * as WriteHistory from "./WriteHistory.coffee"
 
-do ->
-  app.module("bbsmenu", [], (callback) ->
-    callback(BBSMenu)
-    return
-  )
-  app.module("board", [], (callback) ->
-    callback(Board)
-    return
-  )
-  app.module("board_title_solver", [], (callback) ->
-    callback(BoardTitleSolver)
-    return
-  )
-  app.module("cache", [], (callback) ->
-    callback(Cache)
-    return
-  )
-  app.module("thread_search", [], (callback) ->
-    callback(ThreadSearch)
-    return
-  )
-  return
-
 export {
   BBSMenu
   Board

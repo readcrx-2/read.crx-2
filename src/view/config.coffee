@@ -176,7 +176,7 @@ class HistoryIO extends SettingIO
     )
     return
 
-app.boot("/view/config.html", ["cache", "bbsmenu"], (Cache, BBSMenu) ->
+app.boot("/view/config.html", ["Cache", "BBSMenu"], (Cache, BBSMenu) ->
   $view = document.documentElement
 
   new app.view.IframeView($view)

@@ -278,7 +278,7 @@ class app.view.Index extends app.view.View
     iframe?.contentDocument.C("content")[0].focus()
     return
 
-app.boot("/view/index.html", ["bbsmenu"], (BBSMenu) ->
+app.boot("/view/index.html", ["BBSMenu"], (BBSMenu) ->
   query = app.URL.parseQuery(location.search).get("q")
 
   getCurrent = new Promise( (resolve, reject) ->

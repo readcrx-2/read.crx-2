@@ -1,4 +1,4 @@
-app.boot("/view/search.html", ["thread_search"], (ThreadSearch) ->
+app.boot("/view/search.html", ["ThreadSearch"], (ThreadSearch) ->
   try
     queries = app.URL.parseQuery(location.search)
     query = queries.get("query")

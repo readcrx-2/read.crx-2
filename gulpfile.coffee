@@ -228,6 +228,12 @@ putsPromise = (mes) ->
     reader.prompt()
     return
   )
+
+_space = " ".repeat("[hh:mm:ss][Rollup.js] ".length)
+GRAY = "\u001b[90m"
+CYAN = "\u001b[36m"
+RED = "\u001b[31m"
+RESET = "\u001b[0m"
 toTwoDigit = (str) ->
   return if (""+str).length is 1 then "0"+str else str
 getTimeString = ->
@@ -237,19 +243,19 @@ outputError = (filename, type = "Error") ->
   return (e) ->
     prefix = "[#{GRAY}#{getTimeString()}#{RESET}][#{GRAY}Rollup.js#{RESET}] "
     mes = prefix + "#{RED}#{type}(#{e.code})#{RESET} '#{CYAN}#{filename}#{RESET}': #{e.message}"
-    mes += "\n" + _space + "#{e.loc.file}l#{e.loc.line}:#{e.loc.column}" if e.loc?
+    mes += "\n" + _space + "#{e.loc.file} L#{e.loc.line}:#{e.loc.column}" if e.loc?
     mes += "\n" + _space + e.frame.replace(/\n/g, "\n"+_space) if e.frame?
     console.error(mes)
     return
 rollupOnWatch = (filename) ->
   return (e) ->
-    date = new Date()
-    time = "#{toTwoDigit(date.getHours())}:#{toTwoDigit(date.getMinutes())}:#{toTwoDigit(date.getSeconds())}"
+    prefix = "[#{GRAY}#{getTimeString()}#{RESET}][#{GRAY}Rollup.js#{RESET}] "
     switch e.code
-      when "BUNDLE_START" then console.log "[\u001b[90m#{time}\u001b[0m][\u001b[90mRollup.js\u001b[0m] Starting '\u001b[36m#{filename}\u001b[0m'"
-      when "BUNDLE_END" then console.log "[\u001b[90m#{time}\u001b[0m][\u001b[90mRollup.js\u001b[0m] Finished '\u001b[36m#{filename}\u001b[0m' in #{e.duration}ms"
-      when "ERROR" then console.error "[\u001b[90m#{time}\u001b[0m][\u001b[90mRollup.js\u001b[0m] Error '\u001b[36m#{filename}\u001b[0m': ", e.error
-      when "FATAL" then console.error "[\u001b[90m#{time}\u001b[0m][\u001b[90mRollup.js\u001b[0m] FatalError '\u001b[36m#{filename}\u001b[0m': ", e.error
+      when "START", "END" then return
+      when "BUNDLE_START" then console.log(prefix + "Starting '#{CYAN}#{filename}#{RESET}'")
+      when "BUNDLE_END" then console.log(prefix + "Finished '#{CYAN}#{filename}#{RESET}' in #{e.duration}ms")
+      when "FATAL" then outputError(filename, "FatalError")(e.error)
+      when "ERROR" then outputError(filename)(e.error)
     return
 #--------
 
@@ -262,7 +268,7 @@ gulp.task "app.js", ->
     bundle = await rollup.rollup(rollupArgs.appjs.in)
     await bundle.write(rollupArgs.appjs.out)
   catch e
-    console.error e
+    outputError("app.js")(e)
   return
 
 gulp.task "background.js", ->
@@ -284,7 +290,7 @@ gulp.task "app_core.js", ->
     bundle = await rollup.rollup(rollupArgs.appCorejs.in)
     await bundle.write(rollupArgs.appCorejs.out)
   catch e
-    console.error e
+    outputError("app_core.js")(e)
   return
 
 gulp.task "ui.js", ->
@@ -292,7 +298,7 @@ gulp.task "ui.js", ->
     bundle = await rollup.rollup(rollupArgs.uijs.in)
     await bundle.write(rollupArgs.uijs.out)
   catch e
-    console.error e
+    outputError("ui.js")(e)
   return
 
 gulp.task "viewjs", ->
@@ -321,7 +327,7 @@ gulp.task "submit_res.js", ->
     bundle = await rollup.rollup(rollupArgs.submitResjs.in)
     await bundle.write(rollupArgs.submitResjs.out)
   catch e
-    console.error e
+    outputError("submit_res.js")(e)
   return
 
 gulp.task "submit_thread.js", ->
@@ -329,7 +335,7 @@ gulp.task "submit_thread.js", ->
     bundle = await rollup.rollup(rollupArgs.submitThreadjs.in)
     await bundle.write(rollupArgs.submitThreadjs.out)
   catch e
-    console.error e
+    outputError("submit_thread.js")(e)
   return
 
 gulp.task "writejs", gulp.parallel("cs_write.js", "submit_res.js", "submit_thread.js")

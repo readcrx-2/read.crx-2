@@ -1,4 +1,4 @@
-import * as util from "./util.coffee"
+import {indexedDBRequestToPromise} from "./util.coffee"
 
 ###*
 @class Cache
@@ -89,7 +89,7 @@ export default class Cache
         .transaction("Cache")
         .objectStore("Cache")
         .count()
-      res = await util.indexedDBRequestToPromise(req)
+      res = await indexedDBRequestToPromise(req)
     catch e
       app.log("error", "Cache.count: トランザクション中断")
       throw new Error(e)
@@ -107,7 +107,7 @@ export default class Cache
         .transaction("Cache", "readwrite")
         .objectStore("Cache")
         .clear()
-      await util.indexedDBRequestToPromise(req)
+      await indexedDBRequestToPromise(req)
     catch e
       app.log("error", "Cache.delete: トランザクション中断")
       throw new Error(e)
@@ -129,11 +129,11 @@ export default class Cache
       req = store
         .index("last_updated")
         .getAllKeys(IDBKeyRange.upperBound(dayUnix, true))
-      { target: { result: keys } } = await util.indexedDBRequestToPromise(req)
+      { target: { result: keys } } = await indexedDBRequestToPromise(req)
 
       await Promise.all(keys.map( (key) ->
         req = store.delete(key)
-        await util.indexedDBRequestToPromise(req)
+        await indexedDBRequestToPromise(req)
         return
       ))
     catch e
@@ -152,7 +152,7 @@ export default class Cache
         .transaction("Cache")
         .objectStore("Cache")
         .get(@key)
-      { target: {result} } = await util.indexedDBRequestToPromise(req)
+      { target: {result} } = await indexedDBRequestToPromise(req)
       unless result?
         throw new Error("キャッシュが存在しません")
       data = app.deepCopy(result)
@@ -205,7 +205,7 @@ export default class Cache
           dat_size: @datSize or null
           readcgi_ver: @readcgiVer or null
         })
-      await util.indexedDBRequestToPromise(req)
+      await indexedDBRequestToPromise(req)
     catch e
       app.log("error", "Cache::put: トランザクション中断")
       throw new Error(e)
@@ -222,7 +222,7 @@ export default class Cache
         .transaction("Cache", "readwrite")
         .objectStore("Cache")
         .delete(url)
-      await util.indexedDBRequestToPromise(req)
+      await indexedDBRequestToPromise(req)
     catch e
       app.log("error", "Cache::delete: トランザクション中断")
       throw new Error(e)

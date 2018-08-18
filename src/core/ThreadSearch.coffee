@@ -1,5 +1,7 @@
-import BoardTitleSolver from "./BoardTitleSolver.coffee"
-import * as util from "./util.coffee"
+import {ask as askBoardTitleSolver} from "./BoardTitleSolver.coffee"
+import {Request} from "./HTTP.ts"
+import {stampToDate, decodeCharReference} from "./util.coffee"
+import {getScheme, setScheme} from "./URL.ts"
 
 export default class
   loaded: "None"
@@ -10,16 +12,16 @@ export default class
 
   _parse = (scheme) ->
     return ({url, key, subject, resno, server, ita}) ->
-      urlScheme = app.URL.getScheme(url)
+      urlScheme = getScheme(url)
       boardUrl = "#{urlScheme}://#{server}/#{ita}/"
       try
-        boardTitle = await BoardTitleSolver.ask(boardUrl)
+        boardTitle = await askBoardTitleSolver(boardUrl)
       catch
         boardTitle = ""
       return {
-        url: app.URL.setScheme(url, scheme)
-        createdAt: util.stampToDate(key)
-        title: util.decodeCharReference(subject)
+        url: setScheme(url, scheme)
+        createdAt: stampToDate(key)
+        title: decodeCharReference(subject)
         resCount: +resno
         boardUrl
         boardTitle
@@ -27,7 +29,7 @@ export default class
       }
 
   _read: (count) ->
-    {status, body} = await new app.HTTP.Request("GET", "https://dig.5ch.net/?keywords=#{encodeURIComponent(@query)}&maxResult=#{count}&json=1",
+    {status, body} = await new Request("GET", "https://dig.5ch.net/?keywords=#{encodeURIComponent(@query)}&maxResult=#{count}&json=1",
       cache: false
     ).send()
     unless status is 200

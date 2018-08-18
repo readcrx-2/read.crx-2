@@ -622,7 +622,7 @@ export default class ThreadContent
       res.class = []
       scheme = app.URL.getScheme(@url)
 
-      res = app.ReplaceStrTxt.do(@url, document.title, res)
+      res = app.ReplaceStrTxt.replace(@url, document.title, res)
 
       if /(?:\u3000{5}|\u3000\u0020|[^>]\u0020\u3000)(?!<br>|$)/i.test(res.message)
         res.class.push("aa")
@@ -845,7 +845,7 @@ export default class ThreadContent
           ".message > a:not(.anchor):not(.thumbnail):not(.has_thumbnail):not(.expandedURL):not(.has_expandedURL)"
         )).map( (a) =>
           {a, link} = await @checkUrlExpand(a)
-          {res, err} = app.ImageReplaceDat.do(link)
+          {res, err} = app.ImageReplaceDat.replace(link)
           unless err?
             href = res.text
           else

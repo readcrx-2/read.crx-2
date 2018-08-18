@@ -1,6 +1,8 @@
 import Cache from "./Cache.coffee"
-import NG from "./NG.coffee"
-import * as util from "./util.coffee"
+import {isNGBoard} from "./NG.coffee"
+import {Request} from "./HTTP.ts"
+import {tsld as getTsld, threadToBoard} from "./URL.ts"
+import {chServerMoveDetect, decodeCharReference, removeNeedlessFromTitle} from "./util.coffee"
 
 ###*
 @class Board
@@ -45,7 +47,7 @@ export default class Board
           throw new Error("キャッシュの期限が切れているため通信します")
       catch
         #通信
-        request = new app.HTTP.Request("GET", xhrPath,
+        request = new Request("GET", xhrPath,
           mimeType: "text/plain; charset=#{xhrCharset}"
           preventCache: true
         )
@@ -62,7 +64,7 @@ export default class Board
       try
         # 2chで自動移動しているときはサーバー移転
         if (
-          app.URL.tsld(@url) is "5ch.net" and
+          getTsld(@url) is "5ch.net" and
           @url.split("/")[2] isnt response.responseURL.split("/")[2]
         )
           newBoardUrl = response.responseURL.slice(0, -"subject.txt".length)
@@ -110,9 +112,9 @@ export default class Board
         #コールバック
         @message = "板の読み込みに失敗しました。"
 
-        if newBoardUrl? and app.URL.tsld(@url) is "5ch.net"
+        if newBoardUrl? and getTsld(@url) is "5ch.net"
           try
-            newBoardUrl = await util.chServerMoveDetect(@url)
+            newBoardUrl = await chServerMoveDetect(@url)
             @message += """
               サーバーが移転しています
               (<a href="#{app.escapeHtml(app.safeHref(newBoardUrl))}"
@@ -120,9 +122,9 @@ export default class Board
               </a>)
               """
         #2chでrejectされている場合は移転を疑う
-        else if app.URL.tsld(@url) is "5ch.net" and response?
+        else if getTsld(@url) is "5ch.net" and response?
           try
-            newBoardUrl = await util.chServerMoveDetect(@url)
+            newBoardUrl = await chServerMoveDetect(@url)
             #移転検出時
             @message += """
             サーバーが移転している可能性が有ります
@@ -224,15 +226,15 @@ export default class Board
 
     board = []
     while (regRes = reg.exec(text))
-      title = util.decodeCharReference(regRes[2])
-      title = util.removeNeedlessFromTitle(title)
+      title = decodeCharReference(regRes[2])
+      title = removeNeedlessFromTitle(title)
 
       board.push(
         url: baseUrl + regRes[1] + "/"
         title: title
         resCount: +regRes[3]
         createdAt: +regRes[1] * 1000
-        ng: NG.isNGBoard(title, url)
+        ng: isNGBoard(title, url)
         isNet: if scFlg then !title.startsWith("★") else null
       )
 
@@ -250,7 +252,7 @@ export default class Board
   @return {Promise}
   ###
   @getCachedResCount: (threadUrl) ->
-    boardUrl = app.URL.threadToBoard(threadUrl)
+    boardUrl = threadToBoard(threadUrl)
     xhrPath = Board._getXhrInfo(boardUrl)?.path
 
     unless xhrPath?

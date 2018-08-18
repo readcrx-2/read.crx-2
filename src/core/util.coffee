@@ -1,5 +1,8 @@
-import BBSMenu from "./BBSMenu.coffee"
+import {get as getBBSMenu} from "./BBSMenu.coffee"
 import Board from "./Board.coffee"
+import {Request} from "./HTTP.ts"
+import {fix as fixUrl, setScheme, changeScheme, threadToBoard} from "./URL.ts"
+import {levenshteinDistance} from "./Util.ts"
 
 ###*
 @class Anchor
@@ -50,10 +53,10 @@ boardUrlReg = /^https?:\/\/\w+\.5ch\.net\/(\w+)\/$/
 #検出出来なかった場合はrejectする
 #htmlを渡す事で通信をスキップする事が出来る
 export chServerMoveDetect = (oldBoardUrl, html) ->
-  oldBoardUrl = app.URL.changeScheme(oldBoardUrl, "http")
+  oldBoardUrl = changeScheme(oldBoardUrl, "http")
   unless typeof html is "string"
     #htmlが渡されなかった場合は通信する
-    {status, body: html} = await (new app.HTTP.Request("GET", oldBoardUrl,
+    {status, body: html} = await (new Request("GET", oldBoardUrl,
       mimeType: "text/html; charset=Shift_JIS"
       cache: false
     )).send()
@@ -66,16 +69,16 @@ export chServerMoveDetect = (oldBoardUrl, html) ->
     if res[2]?
       newBoardUrlTmp = res[1]
     else
-      {responseURL} = await (new app.HTTP.Request("GET", res[1])).send()
+      {responseURL} = await (new Request("GET", res[1])).send()
       newBoardUrlTmp = responseURL
-    newBoardUrlTmp = app.URL.setScheme(newBoardUrlTmp, "http")
+    newBoardUrlTmp = setScheme(newBoardUrlTmp, "http")
     if newBoardUrlTmp isnt oldBoardUrl
       newBoardUrl = newBoardUrlTmp
 
   #bbsmenuから検索
   unless newBoardUrl?
     newBoardUrl = await do ->
-      {menu: data} = await BBSMenu.get()
+      {menu: data} = await getBBSMenu()
       unless data?
         throw new Error("BBSMenuの取得に失敗しました")
       match = oldBoardUrl.match(boardUrlReg)
@@ -85,8 +88,8 @@ export chServerMoveDetect = (oldBoardUrl, html) ->
         for board in category.board
           m = board.url.match(boardUrlReg)
           if m?
-            oldUrl = app.URL.setScheme(match[0], "http")
-            newUrl = app.URL.setScheme(m[0], "http")
+            oldUrl = setScheme(match[0], "http")
+            newUrl = setScheme(m[0], "http")
             if match[1] is m[1] and oldUrl isnt newUrl
               return oldUrl
       throw new Error("BBSMenuにその板のサーバー情報が存在しません")
@@ -135,8 +138,8 @@ export getHowToOpen = ({type, which, shiftKey, ctrlKey, metaKey}) ->
   return def
 
 export searchNextThread = (threadUrl, threadTitle, resString) ->
-  threadUrl = app.URL.fix(threadUrl)
-  boardUrl = app.URL.threadToBoard(threadUrl)
+  threadUrl = fixUrl(threadUrl)
+  boardUrl = threadToBoard(threadUrl)
   threadTitle = normalize(threadTitle)
 
   {data: threads} = await Board.get(boardUrl)
@@ -145,7 +148,7 @@ export searchNextThread = (threadUrl, threadTitle, resString) ->
   threads = threads.filter( ({url, resCount}) ->
     return (url isnt threadUrl and resCount < 1001)
   ).map( ({title, url}) ->
-    score = app.Util.levenshteinDistance(threadTitle, normalize(title), false)
+    score = levenshteinDistance(threadTitle, normalize(title), false)
     m = url.match(/(?:https:\/\/)?(?:\w+(\.[25]ch\.net\/.+)|(.+))$/)
     if resString.includes(m[1] ? m[2] ? url)
       score -= 5

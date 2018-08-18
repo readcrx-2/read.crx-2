@@ -1,5 +1,5 @@
 ///<reference path="../global.d.ts" />
-import * as URL from "./URL"
+import {threadToBoard, fix as fixUrl} from "./URL"
 
 export interface ReadState {
   url: string;
@@ -55,7 +55,7 @@ export class EntryList {
     this.cache.set(entry.url, entry);
 
     if (entry.type === "thread") {
-      boardURL = URL.threadToBoard(entry.url);
+      boardURL = threadToBoard(entry.url);
       if (!this.boardURLIndex.has(boardURL)) {
         this.boardURLIndex.set(boardURL, new Set());
       }
@@ -74,12 +74,12 @@ export class EntryList {
   remove (url:string):boolean {
     var boardURL:string;
 
-    url = URL.fix(url);
+    url = fixUrl(url);
 
     if (!this.cache.has(url)) return false;
 
     if (this.cache.get(url)!.type === "thread") {
-      boardURL = URL.threadToBoard(url);
+      boardURL = threadToBoard(url);
       if (this.boardURLIndex.has(boardURL)) {
         let threadList = this.boardURLIndex.get(boardURL)!;
         if (threadList.has(url)) {
@@ -135,7 +135,7 @@ export class EntryList {
   }
 
   get (url:string):Entry {
-    url = URL.fix(url);
+    url = fixUrl(url);
 
     return this.cache.has(url) ? app.deepCopy(this.cache.get(url)) : null;
   }
@@ -165,7 +165,7 @@ export class EntryList {
   getThreadsByBoardURL (url:string):Entry[] {
     var res:Entry[] = [], threadURL:string;
 
-    url = URL.fix(url);
+    url = fixUrl(url);
 
     if (this.boardURLIndex.has(url)) {
       for (threadURL of this.boardURLIndex.get(url)!) {

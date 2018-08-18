@@ -1,9 +1,8 @@
 ///<reference path="../global.d.ts" />
-import * as Bookmark from "./Bookmark"
+import {Entry} from "./Bookmark"
 import ChromeBookmarkEntryList from "./ChromeBookmarkEntryList"
-import * as URL from "./URL"
-
-type Entry = Bookmark.Entry;
+import {threadToBoard} from "./URL"
+import * as ReadState from "./ReadState"
 
 export default class BookmarkCompatibilityLayer {
   private cbel: ChromeBookmarkEntryList;
@@ -30,7 +29,7 @@ export default class BookmarkCompatibilityLayer {
           }
           if (typeName === "READ_STATE") {
             app.message.send("read_state_updated", {
-              "board_url": URL.threadToBoard(bookmark.url),
+              "board_url": threadToBoard(bookmark.url),
               "read_state": bookmark.readState
             });
           }
@@ -64,7 +63,7 @@ export default class BookmarkCompatibilityLayer {
 
       entry.title = title;
 
-      var readState = await app.ReadState.get(entry.url)
+      var readState = await ReadState.get(entry.url)
       if (readState) {
         entry.readState = readState;
       }

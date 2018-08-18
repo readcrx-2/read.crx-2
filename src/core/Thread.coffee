@@ -1,6 +1,8 @@
 import Board from "./Board.coffee"
 import Cache from "./Cache.coffee"
-import * as util from "./util.coffee"
+import {Request} from "./HTTP.ts"
+import {chServerMoveDetect, decodeCharReference, removeNeedlessFromTitle} from "./util.coffee"
+import {fix as fixUrl, tsld as getTsld, guessType, threadToBoard} from "./URL.ts"
 
 ###*
 @class Thread
@@ -9,11 +11,11 @@ import * as util from "./util.coffee"
 ###
 export default class Thread
   constructor: (url) ->
-    @url = app.URL.fix(url)
+    @url = fixUrl(url)
     @title = null
     @res = null
     @message = null
-    @tsld = app.URL.tsld(@url)
+    @tsld = getTsld(@url)
     return
 
   get: (forceUpdate, progress) ->
@@ -72,7 +74,7 @@ export default class Thread
             else
               xhrPath += (+cache.resLength) + "-n"
 
-        request = new app.HTTP.Request("GET", xhrPath,
+        request = new Request("GET", xhrPath,
           mimeType: "text/plain; charset=#{xhrCharset}"
           preventCache: true
         )
@@ -87,7 +89,7 @@ export default class Thread
         response = await request.send()
 
       #パース
-      {bbsType} = app.URL.guessType(@url)
+      {bbsType} = guessType(@url)
 
       if (
         response?.status is 200 or
@@ -227,7 +229,7 @@ export default class Thread
         #2chでrejectされてる場合は移転を疑う
         if @tsld is "5ch.net" and response
           try
-            newBoardURL = await util.chServerMoveDetect(app.URL.threadToBoard(@url))
+            newBoardURL = await chServerMoveDetect(threadToBoard(@url))
             #移転検出時
             tmp = ///^https?://(\w+)\.5ch\.net/ ///.exec(newBoardURL)[1]
             newURL = @url.replace(
@@ -321,7 +323,7 @@ export default class Thread
   @return {null|Object}
   ###
   @parse: (url, text, resLength) ->
-    return switch app.URL.tsld(url)
+    return switch getTsld(url)
       when ""
         null
       when "machi.to"
@@ -377,8 +379,8 @@ export default class Thread
       regRes = reg.exec(line)
 
       if title
-        thread.title = util.decodeCharReference(title[1])
-        thread.title = util.removeNeedlessFromTitle(thread.title)
+        thread.title = decodeCharReference(title[1])
+        thread.title = removeNeedlessFromTitle(thread.title)
         gotTitle = true
       else if regRes
         thread.res.push(
@@ -410,7 +412,7 @@ export default class Thread
       sp = line.split("<>")
       if sp.length >= 4
         if key is 0
-          thread.title = util.decodeCharReference(sp[4])
+          thread.title = decodeCharReference(sp[4])
 
         thread.res.push(
           name: sp[0]
@@ -458,7 +460,7 @@ export default class Thread
           )
 
         if resCount is 1
-          thread.title = util.decodeCharReference(sp[5])
+          thread.title = decodeCharReference(sp[5])
 
         thread.res.push(
           name: sp[1]
@@ -506,7 +508,7 @@ export default class Thread
           )
 
         if resCount is 1
-          thread.title = util.decodeCharReference(sp[5])
+          thread.title = decodeCharReference(sp[5])
 
         thread.res.push(
           name: sp[1]
@@ -552,7 +554,7 @@ export default class Thread
       regRes = reg.exec(line)
 
       if title
-        thread.title = util.decodeCharReference(title[1])
+        thread.title = decodeCharReference(title[1])
       else if regRes
         thread.res.push(
           name: regRes[2]
@@ -599,8 +601,8 @@ export default class Thread
       regRes = reg.exec(line)
 
       if title
-        thread.title = util.decodeCharReference(title[1])
-        thread.title = util.removeNeedlessFromTitle(thread.title)
+        thread.title = decodeCharReference(title[1])
+        thread.title = removeNeedlessFromTitle(thread.title)
         gotTitle = true
       else if regRes
         while ++resCount < +regRes[1]

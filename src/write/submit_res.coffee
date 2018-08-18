@@ -1,5 +1,5 @@
 import Write from "./write.coffee"
-import WriteHistory from "../core/WriteHistory.coffee"
+import {getByUrl as getWriteHistoryByUrl} from "../core/WriteHistory.coffee"
 import {tsld as getTsld} from "../core/URL.ts"
 
 app.boot("/write/submit_res.html", ->
@@ -43,7 +43,7 @@ app.boot("/write/submit_res.html", ->
   $view = $$.C("view_write")[0]
 
   do ->
-    data = await WriteHistory.getByUrl(args.url)
+    data = await getWriteHistoryByUrl(args.url)
     names = []
     mails = []
     for {input_name, input_mail} in data

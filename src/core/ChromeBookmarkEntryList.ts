@@ -1,8 +1,6 @@
 ///<reference path="../global.d.ts" />
-import * as Bookmark from "./Bookmark"
-import * as URL from "./URL"
-
-type Entry = Bookmark.Entry;
+import {Entry, SyncableEntryList, newerEntry} from "./Bookmark"
+import {fix as fixUrl, buildQuery, GuessResult, guessType, parseHashQuery} from "./URL"
 
 interface BookmarkTreeNode {
   id: string;
@@ -15,7 +13,7 @@ interface BookmarkTreeNode {
   children: BookmarkTreeNode[];
 }
 
-export default class ChromeBookmarkEntryList extends Bookmark.SyncableEntryList {
+export default class ChromeBookmarkEntryList extends SyncableEntryList {
   rootNodeId: string;
   nodeIdStore = new Map<string, string>();
   ready = new app.Callbacks();
@@ -24,7 +22,7 @@ export default class ChromeBookmarkEntryList extends Bookmark.SyncableEntryList 
   static entryToURL (entry:Entry):string {
     var url:string, param:any, hash:string;
 
-    url = URL.fix(entry.url);
+    url = fixUrl(entry.url);
 
     param = {};
 
@@ -45,7 +43,7 @@ export default class ChromeBookmarkEntryList extends Bookmark.SyncableEntryList 
       param.expired = true;
     }
 
-    hash = URL.buildQuery(param);
+    hash = buildQuery(param);
 
     return url + (hash ? "#" + hash : "");
   }
@@ -53,9 +51,9 @@ export default class ChromeBookmarkEntryList extends Bookmark.SyncableEntryList 
   static URLToEntry (url:string):Entry|null {
     var fixedURL:string, arg, entry:Entry, reg;
 
-    fixedURL = URL.fix(url);
-    var {type, bbsType}:URL.GuessResult = URL.guessType(fixedURL);
-    arg = URL.parseHashQuery(url);
+    fixedURL = fixUrl(url);
+    var {type, bbsType}:GuessResult = guessType(fixedURL);
+    arg = parseHashQuery(url);
 
     if (type === "unknown") {
       return null;
@@ -115,7 +113,7 @@ export default class ChromeBookmarkEntryList extends Bookmark.SyncableEntryList 
       // 既に同一URLのEntryが存在する場合、
       if (this.get(entry.url)) {
         // node側の方が新しいと判定された場合のみupdateを行う。
-        if (Bookmark.newerEntry(entry, this.get(entry.url)) === entry) {
+        if (newerEntry(entry, this.get(entry.url)) === entry) {
           //重複ブックマークの削除(元のnodeが古いと判定されたため)
           chrome.bookmarks.remove(this.nodeIdStore.get(entry.url), () => {});
 

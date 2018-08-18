@@ -1,5 +1,5 @@
 ///<reference path="../global.d.ts" />
-import * as HTTP from "./HTTP"
+import {Request} from "./HTTP"
 
 export const CH_BOARD_REG = /^(https?:\/\/[\w\.]+\/(?:\w+\/)?test\/(?:read\.cgi|-)\/\w+\/\d+).*$/;
 export const CH_BOARD_REG2 = /^(https?:\/\/[\w\.]+\/\w+)\/?(?!test)$/;
@@ -205,7 +205,7 @@ export async function expandShortURL (shortUrl: string): Promise<string> {
       await cache.get();
       return {data: cache.data, url: null};
     } catch {
-      var req = new HTTP.Request("HEAD", shortUrl);
+      var req = new Request("HEAD", shortUrl);
       req.timeout = parseInt(app.config.get("expand_short_url_timeout")!);
 
       var {status, responseURL: resUrl} = await req.send();
@@ -481,7 +481,7 @@ export async function convertNetSc (url: string): Promise<string> {
   tmpUrl = `http://${tmp[2]}.2ch.sc/test/read.cgi/${tmp[3]}`;
   scheme = tmp[1];
 
-  var req = new HTTP.Request("HEAD", tmpUrl);
+  var req = new Request("HEAD", tmpUrl);
   var {status, responseURL: resUrl} = await req.send();
   if (status >= 400) {
     throw new Error("移動先情報の取得の通信に失敗しました");

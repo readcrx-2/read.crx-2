@@ -1,4 +1,6 @@
 ///<reference path="../global.d.ts" />
+// @ts-ignore
+import {slideDown, slideUp} from "./Animate.coffee"
 
 export default class Accordion {
   $element: HTMLElement;
@@ -46,7 +48,7 @@ export default class Accordion {
     accordion = this;
 
     $header.addClass("accordion_open");
-    UI.Animate.slideDown($header.next());
+    slideDown($header.next());
 
     for (var dom of $header.parent().child()) {
       if (dom !== $header && dom.hasClass("accordion_open")) {
@@ -57,6 +59,6 @@ export default class Accordion {
 
   close ($header: HTMLElement): void {
     $header.removeClass("accordion_open");
-    UI.Animate.slideUp($header.next());
+    slideUp($header.next());
   }
 }

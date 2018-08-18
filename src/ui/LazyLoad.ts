@@ -1,4 +1,6 @@
 ///<reference path="../global.d.ts" />
+// @ts-ignore
+import {fadeIn} from "./Animate.coffee"
 
 type HTMLMediaElement = HTMLImageElement | HTMLAudioElement | HTMLVideoElement;
 
@@ -97,7 +99,7 @@ export default class LazyLoad {
       $media.parent().replaceChild(this, $media);
 
       if (e.type === "load") {
-        UI.Animate.fadeIn(this);
+        fadeIn(this);
       }
     };
     $newImg.on("load", load);

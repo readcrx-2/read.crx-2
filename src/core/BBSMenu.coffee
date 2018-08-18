@@ -10,7 +10,7 @@ export target = $__("div")
 @param {String} url
 @param {Boolean} [force=false]
 ###
-fetch = (url, force) ->
+export fetch = (url, force) ->
   if data? and not force
     return data.content
   #キャッシュ取得

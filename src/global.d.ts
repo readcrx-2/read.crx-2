@@ -18,10 +18,6 @@ declare namespace app {
   var message: any;
   var defer: any;
 
-  var Cache: any;
-  var BBSMenu: any;
-  var ReadState: any;
-
   var HTTP: any;
 }
 

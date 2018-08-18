@@ -2,7 +2,8 @@
 import {Entry} from "./Bookmark"
 import ChromeBookmarkEntryList from "./ChromeBookmarkEntryList"
 import {threadToBoard} from "./URL"
-import * as ReadState from "./ReadState"
+// @ts-ignore
+import {get as getReadState} from "./ReadState.coffee"
 
 export default class BookmarkCompatibilityLayer {
   private cbel: ChromeBookmarkEntryList;
@@ -63,7 +64,7 @@ export default class BookmarkCompatibilityLayer {
 
       entry.title = title;
 
-      var readState = await ReadState.get(entry.url)
+      var readState = await getReadState(entry.url)
       if (readState) {
         entry.readState = readState;
       }

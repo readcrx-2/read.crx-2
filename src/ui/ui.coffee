@@ -1,5 +1,5 @@
 import AANoOverflow from "./AANoOverflow.coffee"
-import Animate from "./Animate.coffee"
+import * as Animate from "./Animate.coffee"
 import ContextMenu from "./ContextMenu.coffee"
 import Dialog from "./Dialog.coffee"
 import LazyLoad from "./LazyLoad.ts"

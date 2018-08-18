@@ -1,6 +1,6 @@
 ///<reference path="../global.d.ts" />
-
-declare var app: any;
+// @ts-ignore
+import {fadeIn, fadeOut} from "./Animate.coffee"
 
 export default class SearchNextThread {
   private $element:HTMLElement;
@@ -14,11 +14,11 @@ export default class SearchNextThread {
   }
 
   show ():void {
-    UI.Animate.fadeIn(this.$element);
+    fadeIn(this.$element);
   }
 
   hide ():void {
-    UI.Animate.fadeOut(this.$element);
+    fadeOut(this.$element);
   }
 
   async search (url:string, title:string, resString: string): Promise<void> {

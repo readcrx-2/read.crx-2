@@ -1,5 +1,9 @@
 ///<reference path="../global.d.ts" />
 import {Request} from "./HTTP"
+// @ts-ignore
+import {fetch as fetchBBSMenu} from "./BBSMenu.coffee"
+// @ts-ignore
+import Cache from "./Cache.coffee"
 
 export const CH_BOARD_REG = /^(https?:\/\/[\w\.]+\/(?:\w+\/)?test\/(?:read\.cgi|-)\/\w+\/\d+).*$/;
 export const CH_BOARD_REG2 = /^(https?:\/\/[\w\.]+\/\w+)\/?(?!test)$/;
@@ -198,7 +202,7 @@ export const SHORT_URL_LIST = new Set([
 
 export async function expandShortURL (shortUrl: string): Promise<string> {
   var res, finalUrl = "";
-  var cache = new app.Cache(shortUrl);
+  var cache = new Cache(shortUrl);
 
   res = await ( async () => {
     try {
@@ -430,7 +434,7 @@ export async function pushServerInfo (url: string, menu: any[][]): Promise<void>
   if (!res.bbspink) param += "p0.";
   param += "99";
   var url = `http://kita.jikkyo.org/cbm/cbm.cgi/${param}/-all/bbsmenu.html`;
-  var menu = <any[][]>(await app.BBSMenu.fetch(url, false)).menu
+  var menu = <any[][]>(await fetchBBSMenu(url, false)).menu
   var res = bbsmenuParam(url);
   applyServerInfo(res, menu);
 }

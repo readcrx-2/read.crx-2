@@ -1,5 +1,5 @@
 import {fix as fixUrl, parseQuery, setScheme, getScheme, tsld as getTsld, guessType} from "../core/URL.ts"
-import Animate from "../ui/Animate.coffee"
+import {fadeIn, fadeOut} from "../ui/Animate.coffee"
 
 $view = $$.C("view_write")[0]
 param = parseQuery(location.search)
@@ -138,7 +138,7 @@ export default Write =
       $notice.textContent = "書き込み失敗 - #{message}"
     else
       $notice.textContent = ""
-      Animate.fadeIn($view.C("iframe_container")[0])
+      fadeIn($view.C("iframe_container")[0])
     return
 
   setupMessage: ({timer, isThread, onSuccess, onError}) ->
@@ -159,7 +159,7 @@ export default Write =
             return
           )
         when "confirm"
-          Animate.fadeIn($view.C("iframe_container")[0])
+          fadeIn($view.C("iframe_container")[0])
           timer.kill()
         when "error"
           onError(message)
@@ -173,7 +173,7 @@ export default Write =
       timer.kill()
       $iframeContainer = $view.C("iframe_container")[0]
       do ->
-        ani = await Animate.fadeOut($iframeContainer)
+        ani = await fadeOut($iframeContainer)
         ani.on("finish", ->
           $iframeContainer.T("iframe")[0].remove()
           return

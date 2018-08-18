@@ -26,71 +26,73 @@ _resetAnimatingMap = (ele) ->
   _animatingMap.get(ele)?.emit(_INVALIDED_EVENT)
   return
 
-export default Animate =
-  fadeIn: (ele) ->
-    await app.waitAF()
-    _resetAnimatingMap(ele)
-    ele.removeClass("hidden")
+export fadeIn = (ele) ->
+  await app.waitAF()
+  _resetAnimatingMap(ele)
+  ele.removeClass("hidden")
 
-    ani = ele.animate(_FADE_IN_FRAMES, _TIMING)
-    _animatingMap.set(ele, ani)
+  ani = ele.animate(_FADE_IN_FRAMES, _TIMING)
+  _animatingMap.set(ele, ani)
 
-    ani.on("finish", ->
+  ani.on("finish", ->
+    _animatingMap.delete(ele)
+    return
+  , once: true)
+  return ani
+
+export fadeOut = (ele) ->
+  _resetAnimatingMap(ele)
+  ani = ele.animate(_FADE_OUT_FRAMES, _TIMING)
+  _animatingMap.set(ele, ani)
+
+  invalided = false
+  ani.on("invalided", ->
+    invalided = true
+    return
+  , once: true)
+  ani.on("finish", ->
+    unless invalided
+      await app.waitAF()
+      ele.addClass("hidden")
       _animatingMap.delete(ele)
-      return
-    , once: true)
-    return ani
-  fadeOut: (ele) ->
-    _resetAnimatingMap(ele)
-    ani = ele.animate(_FADE_OUT_FRAMES, _TIMING)
-    _animatingMap.set(ele, ani)
+    return
+  , once: true)
+  return Promise.resolve(ani)
 
-    invalided = false
-    ani.on("invalided", ->
-      invalided = true
-      return
-    , once: true)
-    ani.on("finish", ->
-      unless invalided
-        await app.waitAF()
-        ele.addClass("hidden")
-        _animatingMap.delete(ele)
-      return
-    , once: true)
-    return Promise.resolve(ani)
-  slideDown: (ele) ->
-    await app.waitAF()
-    h = _getOriginHeight(ele)
+export slideDown = (ele) ->
+  await app.waitAF()
+  h = _getOriginHeight(ele)
 
-    _resetAnimatingMap(ele)
-    ele.removeClass("hidden")
+  _resetAnimatingMap(ele)
+  ele.removeClass("hidden")
 
-    ani = ele.animate({ height: ["0px", "#{h}px"] }, _TIMING)
-    _animatingMap.set(ele, ani)
+  ani = ele.animate({ height: ["0px", "#{h}px"] }, _TIMING)
+  _animatingMap.set(ele, ani)
 
-    ani.on("finish", ->
+  ani.on("finish", ->
+    _animatingMap.delete(ele)
+    return
+  , once: true)
+  return ani
+
+export slideUp = (ele) ->
+  await app.waitAF()
+  h = ele.clientHeight
+
+  _resetAnimatingMap(ele)
+  ani = ele.animate({ height: ["#{h}px", "0px"] }, _TIMING)
+  _animatingMap.set(ele, ani)
+
+  invalided = false
+  ani.on("invalided", ->
+    invalided = true
+    return
+  , once: true)
+  ani.on("finish", ->
+    unless invalided
+      await app.waitAF()
+      ele.addClass("hidden")
       _animatingMap.delete(ele)
-      return
-    , once: true)
-    return ani
-  slideUp: (ele) ->
-    await app.waitAF()
-    h = ele.clientHeight
-
-    _resetAnimatingMap(ele)
-    ani = ele.animate({ height: ["#{h}px", "0px"] }, _TIMING)
-    _animatingMap.set(ele, ani)
-
-    invalided = false
-    ani.on("invalided", ->
-      invalided = true
-      return
-    , once: true)
-    ani.on("finish", ->
-      unless invalided
-        await app.waitAF()
-        ele.addClass("hidden")
-        _animatingMap.delete(ele)
-      return
-    , once: true)
-    return ani
+    return
+  , once: true)
+  return ani

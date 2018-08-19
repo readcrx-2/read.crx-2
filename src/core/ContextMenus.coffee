@@ -10,33 +10,36 @@
 ###
 export createAll = ->
   id = browser.runtime.id
-  viewThread = "chrome-extension://#{id}/view/thread.html*"
+  viewThread = [
+    "chrome-extension://#{id}/view/thread.html*"
+    "moz-extension://#{id}/view/thread.html*"
+  ]
 
   create(
     id: "add_selection_to_ngwords",
     title: "選択範囲をNG指定",
     contexts: ["selection"],
-    documentUrlPatterns: [viewThread]
+    documentUrlPatterns: viewThread
   )
   create(
     id: "add_link_to_ngwords",
     title: "リンクアドレスをNG指定",
     contexts: ["link"],
     enabled: false,
-    documentUrlPatterns: [viewThread]
+    documentUrlPatterns: viewThread
   )
   create(
     id: "add_media_to_ngwords",
     title: "メディアのアドレスをNG指定",
     contexts: ["image", "video", "audio"],
-    documentUrlPatterns: [viewThread]
+    documentUrlPatterns: viewThread
   )
   create(
     id: "open_link_with_res_number",
     title: "レス番号を指定してリンクを開く",
     contexts: ["link"],
     enabled: false,
-    documentUrlPatterns: [viewThread]
+    documentUrlPatterns: viewThread
   )
   return
 

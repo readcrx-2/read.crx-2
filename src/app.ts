@@ -403,7 +403,7 @@ export function safeHref (url:string):string {
 }
 
 export var manifest = (async () => {
-  if (location.origin.startsWith("chrome-extension://")) {
+  if (/^(?:chrome|moz)-extension:\/\//.test(location.origin)) {
     try {
       let response = await fetch("/manifest.json");
       return await response.json();

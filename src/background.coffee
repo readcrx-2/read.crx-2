@@ -5,12 +5,15 @@ isCurrentTab = ->
     [tab] = await browser.tabs.query(active: true, lastFocusedWindow: true)
   catch
     tab = {url: ""}
-  return tab.url.startsWith("chrome-extension://#{id}")
+  return /^(?:chrome|moz)-extension:\/\/#{id}/.test(tab.url)
 
 # 実行中のread.crxを探す
 searchRcrx = ->
   id = browser.runtime.id
-  tabs = await browser.tabs.query(url: "chrome-extension://#{id}/*")
+  tabs = await browser.tabs.query(url: [
+    "chrome-extension://#{id}/*"
+    "moz-extension://#{id}/*"
+  ])
   throw new Error("Not found") if tabs.length is 0
   return tabs[0]
 

@@ -200,14 +200,17 @@ export default class ChromeBookmarkEntryList extends SyncableEntryList {
   private setUpChromeBookmarkWatcher ():void {
     var watching = true;
 
-    browser.bookmarks.onImportBegan.addListener( () => {
-      watching = false;
-    });
+    // Firefoxではbookmarks.onImportBegan/Endedは実装されていない
+    if (browser.bookmarks.onImportBegan !== void 0) {
+      browser.bookmarks.onImportBegan.addListener( () => {
+        watching = false;
+      });
 
-    browser.bookmarks.onImportEnded.addListener( () => {
-      watching = true;
-      this.loadFromChromeBookmark();
-    });
+      browser.bookmarks.onImportEnded.addListener( () => {
+        watching = true;
+        this.loadFromChromeBookmark();
+      });
+    }
 
     browser.bookmarks.onCreated.addListener( (nodeId:string, node:BookmarkTreeNode) => {
       if (!watching) return;
@@ -250,8 +253,9 @@ export default class ChromeBookmarkEntryList extends SyncableEntryList {
   }
 
   private async validateRootNodeSettings (): Promise<void> {
-    var res = await browser.bookmarks.getChildren(this.rootNodeId)
-    if (!res) {
+    try {
+      await browser.bookmarks.getChildren(this.rootNodeId)
+    } catch (e) {
       this.needReconfigureRootNodeId.call();
     }
   }
@@ -263,8 +267,9 @@ export default class ChromeBookmarkEntryList extends SyncableEntryList {
     }
 
     // ロード
-    var res:BookmarkTreeNode[] = await browser.bookmarks.getChildren(this.rootNodeId);
-    if (res) {
+    try {
+      var res:BookmarkTreeNode[] = await browser.bookmarks.getChildren(this.rootNodeId);
+
       for(var node of res) {
         this.applyNodeAddToEntryList(node);
       }
@@ -276,8 +281,7 @@ export default class ChromeBookmarkEntryList extends SyncableEntryList {
       if (callback) {
         callback(true);
       }
-    }
-    else {
+    } catch (e) {
       app.log("warn", "Chromeのブックマークからの読み込みに失敗しました。");
       this.validateRootNodeSettings();
 

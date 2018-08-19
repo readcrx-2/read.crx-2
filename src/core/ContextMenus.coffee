@@ -2,14 +2,14 @@
 @class contextMenus
 @static
 ###
-# chrome.contextMenusの呼び出しレベルを統一するための代理クラス
+# browser.contextMenusの呼び出しレベルを統一するための代理クラス
 # (Chrome 53 対策)
 
 ###*
 @method createAll
 ###
 export createAll = ->
-  id = chrome.runtime.id
+  id = browser.runtime.id
   viewThread = "chrome-extension://#{id}/view/thread.html*"
 
   create(
@@ -46,7 +46,7 @@ export createAll = ->
 @return {Number|String} id
 ###
 export create = (obj)->
-  return chrome.contextMenus.create(obj)
+  return browser.contextMenus.create(obj)
 
 ###*
 @method update
@@ -54,7 +54,7 @@ export create = (obj)->
 @parm {Object} obj
 ###
 export update = (id, obj)->
-  chrome.contextMenus.update(id, obj)
+  browser.contextMenus.update(id, obj)
   return
 
 ###*
@@ -62,7 +62,7 @@ export update = (id, obj)->
 @parm {Number|String} id
 ###
 export remove = (id)->
-  chrome.contextMenus.remove(id)
+  browser.contextMenus.remove(id)
   return
 
 ###*

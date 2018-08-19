@@ -1,12 +1,12 @@
 ///<reference path="./shortQuery.d.ts" />
 
 interface Window {
-  chrome: any;
+  browser: any;
   app: any;
 }
 
 declare var BroadcastChannel: any;
-declare var chrome: any;
+declare var browser: any;
 
 declare namespace app {
   var config: any;
@@ -16,7 +16,9 @@ declare namespace app {
   var message: any;
   var defer: any;
 
+  var bookmark: any;
   var HTTP: any;
+  var util: any;
 }
 
 interface HTMLElement {

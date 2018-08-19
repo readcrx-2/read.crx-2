@@ -1,5 +1,5 @@
 do ->
-  origin = chrome.runtime.getURL("")[...-1]
+  origin = (browser ? chrome).runtime.getURL("")[...-1]
 
   submitThreadFlag = false
 

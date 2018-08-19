@@ -39,8 +39,7 @@ app.boot("/view/bookmark_source_selector.html", ->
       fn(children, cul)
     return
 
-  parent.chrome.bookmarks.getTree( (arrayOfTree) ->
-    fn(arrayOfTree[0].children, $view.$(".node_list > ul"))
-  )
+  arrayOfTree = await parent.browser.bookmarks.getTree()
+  fn(arrayOfTree[0].children, $view.$(".node_list > ul"))
   return
 )

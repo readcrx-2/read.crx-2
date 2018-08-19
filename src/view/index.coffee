@@ -281,30 +281,18 @@ class app.view.Index extends app.view.View
 app.boot("/view/index.html", ["BBSMenu"], (BBSMenu) ->
   query = app.URL.parseQuery(location.search).get("q")
 
-  getCurrent = new Promise( (resolve, reject) ->
-    chrome.tabs.getCurrent( (currentTab) ->
-      resolve(currentTab)
-      return
-    )
-    return
-  )
-  getAll = new Promise( (resolve, reject) ->
-    chrome.windows.getAll( {populate: true}, (windows) ->
-      resolve(windows)
-      return
-    )
-    return
-  )
-
-  [currentTab, windows] = await Promise.all([getCurrent, getAll])
-  appPath = chrome.runtime.getURL("/view/index.html")
+  [currentTab, windows] = await Promise.all([
+    browser.tabs.getCurrent()
+    browser.windows.getAll(populate: true)
+  ])
+  appPath = browser.runtime.getURL("/view/index.html")
   for win in windows
     for tab in win.tabs when tab.id isnt currentTab.id and tab.url is appPath
-      chrome.windows.update(win.id, focused: true)
-      chrome.tabs.update(tab.id, highlighted: true)
+      browser.windows.update(win.id, focused: true)
+      browser.tabs.update(tab.id, highlighted: true)
       if query
-        chrome.runtime.sendMessage({type: "open", query})
-      chrome.tabs.remove(currentTab.id)
+        browser.runtime.sendMessage({type: "open", query})
+      browser.tabs.remove(currentTab.id)
       return
   history.replaceState(null, null, "/view/index.html")
   app.main()
@@ -512,7 +500,7 @@ app.main = ->
     return
 
   #更新通知
-  chrome.runtime.onUpdateAvailable.addListener( ({version: newVer}) ->
+  browser.runtime.onUpdateAvailable.addListener( ({version: newVer}) ->
     {name, version: oldVer} = await app.manifest
     return if newVer is oldVer
     app.message.send("notify",
@@ -528,18 +516,14 @@ app.main = ->
   adjustWindowSize = new app.Callbacks()
   do ->
     resizeTo = (width, height, callback) ->
-      chrome.windows.getCurrent( (win) ->
-        chrome.windows.update(win.id, {width, height}, callback)
-        return
-      )
+      win = await browser.windows.getCurrent()
+      browser.windows.update(win.id, {width, height}, callback)
       return
 
     saveWindowSize = ->
-      chrome.windows.getCurrent( (win) ->
-        app.config.set("window_width", win.width.toString(10))
-        app.config.set("window_height", win.height.toString(10))
-        return
-      )
+      win = await browser.windows.getCurrent()
+      app.config.set("window_width", win.width.toString(10))
+      app.config.set("window_height", win.height.toString(10))
       return
 
     startAutoSave = ->
@@ -561,22 +545,20 @@ app.main = ->
       return
 
     # 起動時にウィンドウサイズが極端に小さかった場合、前回終了時のサイズに復元
-    chrome.windows.getCurrent(
-      {populate: true}
-      (win) ->
-        if win.tabs.length is 1 and win.width < 300 or win.height < 300
-          resizeTo(
-            +app.config.get("window_width")
-            +app.config.get("window_height")
-            ->
-              await app.defer()
-              adjustWindowSize.call()
-              return
-          )
-        else
-          adjustWindowSize.call()
-        return
-    )
+    do ->
+      win = await browser.windows.getCurrent(populate: true)
+      if win.tabs.length is 1 and win.width < 300 or win.height < 300
+        resizeTo(
+          +app.config.get("window_width")
+          +app.config.get("window_height")
+          ->
+            await app.defer()
+            adjustWindowSize.call()
+            return
+        )
+      else
+        adjustWindowSize.call()
+      return
 
     adjustWindowSize.add(startAutoSave)
     return
@@ -670,7 +652,7 @@ app.main = ->
     #コンテキストメニューの削除
     app.contextMenus.removeAll()
     # 終了通知の送信
-    chrome.runtime.sendMessage(type: "exit_rcrx")
+    browser.runtime.sendMessage(type: "exit_rcrx")
     return
   )
 
@@ -740,7 +722,7 @@ app.main = ->
   )
 
   #openリクエストの監視
-  chrome.runtime.onMessage.addListener( ({type, query}) ->
+  browser.runtime.onMessage.addListener( ({type, query}) ->
     return unless type is "open"
     paramResNumFlag = app.config.isOn("enable_link_with_res_number")
     paramResNum = if paramResNumFlag then app.URL.getResNumber(query) else null
@@ -749,7 +731,7 @@ app.main = ->
   )
 
   #書き込み完了メッセージの監視
-  chrome.runtime.onMessage.addListener( ({
+  browser.runtime.onMessage.addListener( ({
     type
     kind
     url
@@ -776,14 +758,14 @@ app.main = ->
   )
 
   #書き込みウィンドウサイズ保存メッセージの監視
-  chrome.runtime.onMessage.addListener( ({type, x, y}) ->
+  browser.runtime.onMessage.addListener( ({type, x, y}) ->
     return unless type is "writesize"
     app.config.set("write_window_x", ""+x)
     app.config.set("write_window_y", ""+y)
   )
 
   # リクエスト・ヘッダーの監視
-  chrome.webRequest.onBeforeSendHeaders.addListener( ({method, url, requestHeaders}) ->
+  browser.webRequest.onBeforeSendHeaders.addListener( ({method, url, requestHeaders}) ->
     replaceHeader = (name, value) ->
       for header in requestHeaders
         if header.name.toLowerCase() is name

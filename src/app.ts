@@ -3,15 +3,14 @@
 type logLevel = "log" | "debug" | "info" | "warn" | "error";
 var logLevels = <Set<logLevel>>new Set(["log", "debug", "info", "warn", "error"]);
 
-export function criticalError (message:string):void {
+export async function criticalError (message:string):Promise<void> {
   new Notification(
     "深刻なエラーが発生したのでread.crxを終了します",
     { body: `詳細 : ${message}` }
-  )
+  );
 
-  parent.chrome.tabs.getCurrent( ({id}): void => {
-    parent.chrome.tabs.remove(id);
-  });
+  var {id} = await parent.browser.tabs.getCurrent();
+  parent.browser.tabs.remove(id);
 }
 
 export function log (level:logLevel, ...data:any[]) {
@@ -268,8 +267,9 @@ class Config {
     var ready = new Callbacks();
     this.ready = ready.add.bind(ready);
 
-    chrome.storage.local.get(null, (res) => {
+    ( async () => {
       var key:string, val:any;
+      var res = await browser.storage.local.get(null);
       if (this._cache !== null) {
         for ([key, val] of Object.entries(res)) {
           if (
@@ -281,7 +281,7 @@ class Config {
         }
         ready.call();
       }
-    });
+    })();
 
     this._onChanged = (change, area) => {
       var key:string, val:any;
@@ -307,7 +307,7 @@ class Config {
       }
     };
 
-    chrome.storage.onChanged.addListener(this._onChanged);
+    browser.storage.onChanged.addListener(this._onChanged);
   }
 
   get (key:string):string|null {
@@ -335,54 +335,36 @@ class Config {
     return this.get(key) === "on";
   }
 
-  set (key:string, val:string) {
-    return new Promise( (resolve, reject) => {
-      var tmp = {};
+  async set (key:string, val:string): Promise<void> {
+    var tmp = {};
 
-      if (
-        typeof key !== "string" ||
-        !(typeof val === "string" || typeof val === "number")
-      ) {
-        log("error", "app.Config::setに不適切な値が渡されました",
-          arguments);
-        reject();
-        return;
-      }
+    if (
+      typeof key !== "string" ||
+      !(typeof val === "string" || typeof val === "number")
+    ) {
+      log("error", "app.Config::setに不適切な値が渡されました",
+        arguments);
+      throw new Error("app.Config::setに不適切な値が渡されました");
+    }
 
-      tmp[`config_${key}`] = val;
+    tmp[`config_${key}`] = val;
 
-      chrome.storage.local.set(tmp, () => {
-        if (chrome.runtime.lasterror) {
-          reject(chrome.runtime.lasterror.message);
-        } else {
-          resolve();
-        }
-      });
-    });
+    await browser.storage.local.set(tmp)
   }
 
-  del (key:string) {
-    return new Promise( (resolve, reject) => {
-      if (typeof key !== "string") {
-        log("error", "app.Config::delにstring以外の値が渡されました",
-          arguments);
-        reject();
-        return;
-      }
+  async del (key:string): Promise<void> {
+    if (typeof key !== "string") {
+      log("error", "app.Config::delにstring以外の値が渡されました",
+        arguments);
+      throw new Error("app.Config::delにstring以外の値が渡されました");
+    }
 
-      chrome.storage.local.remove(`config_${key}`, () => {
-        if (chrome.runtime.lasterror) {
-          reject(chrome.runtime.lasterror.message);
-        } else {
-          resolve();
-        }
-      });
-    });
+    await browser.storage.local.remove(`config_${key}`)
   }
 
   destroy ():void {
     this._cache.clear();
-    chrome.storage.onChanged.removeListener(this._onChanged);
+    browser.storage.onChanged.removeListener(this._onChanged);
   }
 }
 
@@ -441,7 +423,7 @@ export function clipboardWrite (str:string):void {
   $textarea.remove();
 }
 
-export async function boot (path:string, requirements, fn):Promise<undefined> {
+export async function boot (path:string, requirements, fn): Promise<void> {
   var htmlVersion:string;
 
   if (!fn) {

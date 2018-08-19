@@ -10,6 +10,7 @@ html(class=htmlClasses data-app-version=version)&attributes(html)
     if needCss
       link(rel="stylesheet" href=`${name}.css?v=${version}`)
     script(src=`/lib/shortQuery.min.js?v=${version}` defer)
+    script(src=`/lib/browser-polyfill.min.js?v=${version}` defer)
     script(src=`/app.js?v=${version}` defer)
     if name === "index"
       script(src=`/app_core.js?v=${version}` defer)

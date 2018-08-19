@@ -157,7 +157,7 @@ export default class LazyLoad {
   }
 
   private getWithReferrer (link: string, referrer: string, userAgent: string, cookie: string = ""): string {
-    //TODO: use chrome.webRequest, chrome.cookies
+    //TODO: use browser.webRequest, browser.cookies
     //if(referrer !== ""){ req.setRequestHeader("Referer", referrer); }
     //if(userAgent !== ""){ req.setRequestHeader("User-Agent", userAgent); }
     //if(cookie !== ""){ req.setRequestHeader("Set-Cookie", cookie); }
@@ -166,7 +166,7 @@ export default class LazyLoad {
 
   private async getWithCookie (link: string, cookieLink: string, referrer: string, userAgent: string): Promise<string> {
     var req = new app.HTTP.Request("GET", cookieLink)
-    //TODO: use chrome.webRequest
+    //TODO: use browser.webRequest
     //if(referrer !== ""){ req.headers["Referer"] = referrer); }
     //if(userAgent !== ""){ req.headers["User-Agent"] = userAgent; }
     try {
@@ -181,7 +181,7 @@ export default class LazyLoad {
 
   private async getWithExtract (link: string, extractLink: string, pattern: string, referrer: string, userAgent: string): Promise<string> {
     var req = new app.HTTP.Request("GET", extractLink)
-    //TODO: use chrome.webRequest
+    //TODO: use browser.webRequest
     //if(referrer !== ""){ req.headers["Referer"] = referrer); }
     //if(userAgent !== ""){ req.headers["User-Agent"] = userAgent; }
     try {

@@ -794,7 +794,7 @@ class app.view.TabContentView extends app.view.PaneContentView
       @$element.$(".button_link > a")?.on("click", (e) ->
         e.preventDefault()
 
-        parent.chrome.tabs.create(url: url)
+        parent.browser.tabs.create(url: url)
         return
       )
       return

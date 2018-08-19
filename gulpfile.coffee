@@ -63,6 +63,7 @@ args =
   loadingSrcPath: "./src/image/svg/loading.svg"
   loadingBinPath: "./debug/img/loading.webp"
   shortQueryPath: "./node_modules/ShortQuery.js/bin/shortQuery.chrome.min.js"
+  webextensionPolyfillPath: "./node_modules/webextension-polyfill/dist/browser-polyfill.min.js"
   rollupTsOptions:
     tsconfigDefaults:
       compilerOptions:
@@ -281,11 +282,15 @@ gulp.task "app.js", ->
   return
 
 gulp.task "background.js", ->
-  return gulp.src args.backgroundCoffeePath
-    .pipe(plumber(errorHandler: notify.onError("Error: <%= error.toString() %>")))
-    .pipe(changed(args.outputPath, extension: ".js"))
-    .pipe(coffee(args.coffeeOptions))
-    .pipe(gulp.dest(args.outputPath))
+  return merge(
+    gulp.src args.webextensionPolyfillPath
+  ,
+    gulp.src args.backgroundCoffeePath
+      .pipe(plumber(errorHandler: notify.onError("Error: <%= error.toString() %>")))
+      .pipe(changed(args.outputPath, extension: ".js"))
+      .pipe(coffee(args.coffeeOptions))
+  ).pipe(concat("background.js"))
+  .pipe(gulp.dest(args.outputPath))
 
 gulp.task "cs_addlink.js", ->
   return gulp.src args.csaddlinkCoffeePath
@@ -478,7 +483,12 @@ gulp.task "shortQuery", ->
     .pipe(changed("#{args.outputPath}/lib", transformPath: (p) -> return path.join(path.dirname(p), "shortQuery.min.js")))
     .pipe(gulp.dest("#{args.outputPath}/lib"))
 
-gulp.task "lib", gulp.parallel("shortQuery")
+gulp.task "webextension-polyfill", ->
+  return gulp.src args.webextensionPolyfillPath
+    .pipe(changed("#{args.outputPath}/lib"))
+    .pipe(gulp.dest("#{args.outputPath}/lib"))
+
+gulp.task "lib", gulp.parallel("shortQuery", "webextension-polyfill")
 
 
 ###
@@ -517,7 +527,7 @@ gulp.task "watch", gulp.series("default", ->
     rollupArgs.appjs.in...
     output: rollupArgs.appjs.out
   }).on("event", rollupOnWatch("app.js"))
-  gulp.watch(args.backgroundCoffeePath, gulp.task("background.js"))
+  gulp.watch([args.webextensionPolyfillPath, args.backgroundCoffeePath], gulp.task("background.js"))
   gulp.watch(args.csaddlinkCoffeePath, gulp.task("cs_addlink.js"))
   rollup.watch({
     rollupArgs.appCorejs.in...

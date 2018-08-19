@@ -17,7 +17,7 @@ export default Write =
     return _args
 
   beforeSendFunc: ({method, requestHeaders}) ->
-    origin = chrome.runtime.getURL("")[...-1]
+    origin = browser.runtime.getURL("")[...-1]
     isSameOrigin = requestHeaders.some( ({name, value}) ->
       return name is "Origin" and (value is origin or value is "null")
     )
@@ -154,10 +154,8 @@ export default Write =
           timer.kill()
           await app.wait(message)
           onSuccess(key)
-          chrome.tabs.getCurrent( ({id}) ->
-            chrome.tabs.remove(id)
-            return
-          )
+          {id} = await browser.tabs.getCurrent()
+          browser.tabs.remove(id)
         when "confirm"
           fadeIn($view.C("iframe_container")[0])
           timer.kill()
@@ -235,7 +233,7 @@ export default Write =
     return
   setBeforeUnload: ->
     window.on("beforeunload", ->
-      chrome.runtime.sendMessage(type: "writesize", x: screenX, y: screenY)
+      browser.runtime.sendMessage(type: "writesize", x: screenX, y: screenY)
       return
     )
     return

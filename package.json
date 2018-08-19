@@ -28,7 +28,8 @@
     "rollup-plugin-typescript2": "^0.16.1",
     "sharp": "^0.20.5",
     "to-ico": "^1.1.5",
-    "typescript": "^2.9.2"
+    "typescript": "^2.9.2",
+    "webextension-polyfill": "^0.3.0"
   },
   "repository": {
     "type": "git",

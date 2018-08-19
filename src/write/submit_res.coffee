@@ -9,8 +9,9 @@ app.boot("/write/submit_res.html", ->
   Write.setDOM()
   Write.setTitle({isThread})
 
-  chrome.tabs.getCurrent( ({id}) ->
-    chrome.webRequest.onBeforeSendHeaders.addListener(
+  do ->
+    {id} = await browser.tabs.getCurrent()
+    browser.webRequest.onBeforeSendHeaders.addListener(
       Write.beforeSendFunc
       {
         tabId: id
@@ -22,7 +23,7 @@ app.boot("/write/submit_res.html", ->
       }
       ["requestHeaders", "blocking"]
     )
-    chrome.webRequest.onHeadersReceived.addListener( ({responseHeaders}) ->
+    browser.webRequest.onHeadersReceived.addListener( ({responseHeaders}) ->
       # X-Frame-Options回避
       for {name}, i in responseHeaders when name is "X-Frame-Options"
         responseHeaders.splice(i, 1)
@@ -38,7 +39,6 @@ app.boot("/write/submit_res.html", ->
     }
     ["blocking", "responseHeaders"])
     return
-  )
 
   $view = $$.C("view_write")[0]
 
@@ -74,7 +74,7 @@ app.boot("/write/submit_res.html", ->
     Write.onErrorFunc(message)
 
     {url, message: mes, name, mail} = args
-    chrome.runtime.sendMessage({type: "written?", url, mes, name, mail})
+    browser.runtime.sendMessage({type: "written?", url, mes, name, mail})
     return
 
   timer = new Write.Timer({
@@ -88,7 +88,7 @@ app.boot("/write/submit_res.html", ->
       mes = $view.C("message")[0].value
       name = $view.C("name")[0].value
       mail = $view.C("mail")[0].value
-      chrome.runtime.sendMessage({type: "written", url: args.url, mes, name, mail})
+      browser.runtime.sendMessage({type: "written", url: args.url, mes, name, mail})
       return
     onError
   })

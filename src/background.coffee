@@ -1,34 +1,21 @@
 # 現在のタブが自分自身であるか確認する
 isCurrentTab = ->
-  return new Promise( (resolve) ->
-    id = chrome.runtime.id
-    chrome.tabs.query(
-      {active: true, lastFocusedWindow: true},
-      ([tab]) ->
-        resolve(tab.url.startsWith("chrome-extension://#{id}"))
-        return
-    )
-    return
-  )
+  id = browser.runtime.id
+  try
+    [tab] = await browser.tabs.query(active: true, lastFocusedWindow: true)
+  catch
+    tab = {url: ""}
+  return tab.url.startsWith("chrome-extension://#{id}")
 
 # 実行中のread.crxを探す
 searchRcrx = ->
-  return new Promise( (resolve, reject) ->
-    id = chrome.runtime.id
-    chrome.tabs.query(
-      {url: "chrome-extension://#{id}/*"},
-      (tabs) ->
-        if tabs.length is 0
-          reject()
-        else
-          resolve(tabs[0])
-        return
-    )
-    return
-  )
+  id = browser.runtime.id
+  tabs = await browser.tabs.query(url: "chrome-extension://#{id}/*")
+  throw new Error("Not found") if tabs.length is 0
+  return tabs[0]
 
 # アイコンクリック時の動作
-chrome.browserAction.onClicked.addListener( ->
+browser.browserAction.onClicked.addListener( ->
   # 現在のタブが自分自身なら何もしない
   return if await isCurrentTab()
 
@@ -36,16 +23,16 @@ chrome.browserAction.onClicked.addListener( ->
     {windowId, id} = await searchRcrx()
   catch
     # 存在しなければタブを作成する
-    chrome.tabs.create(url: "/view/index.html")
+    browser.tabs.create(url: "/view/index.html")
     return
   # 実行中のread.crxが存在すればそれを開く
-  chrome.windows.update(windowId, {focused: true})
-  chrome.tabs.update(id, {highlighted: true})
+  browser.windows.update(windowId, {focused: true})
+  browser.tabs.update(id, {highlighted: true})
   return
 )
 
 # 終了通知の受信
-chrome.runtime.onMessage.addListener( ({type}) ->
+browser.runtime.onMessage.addListener( ({type}) ->
   return unless type is "exit_rcrx"
   # zombie.htmlが動いているかもしれないので10秒待機
   setTimeout( ->
@@ -53,7 +40,7 @@ chrome.runtime.onMessage.addListener( ({type}) ->
       await searchRcrx()
     catch
       # 実行していなければメモリ解放のためにリロード
-      chrome.runtime.reload()
+      browser.runtime.reload()
     return
   , 1000 * 10)
   return
@@ -70,7 +57,7 @@ supportedURL = ///https?:\/\/(?:
   )///
 
 # コンテキストメニューの作成
-chrome.contextMenus.create(
+browser.contextMenus.create(
   id: "open_link_in_rcrx"
   title: "リンクをread.crx-2で開く"
   contexts: ["link"]
@@ -92,7 +79,7 @@ chrome.contextMenus.create(
 )
 
 # コンテキストメニューのクリック時の動作
-chrome.contextMenus.onClicked.addListener( ({menuItemId, linkUrl: url}, tab) ->
+browser.contextMenus.onClicked.addListener( ({menuItemId, linkUrl: url}, tab) ->
   return unless menuItemId is "open_link_in_rcrx"
 
   # 対応URLであるか確認
@@ -102,11 +89,11 @@ chrome.contextMenus.onClicked.addListener( ({menuItemId, linkUrl: url}, tab) ->
   try
     {windowId, id} = await searchRcrx()
     # 実行中のread.crxが存在すればそれを開く
-    chrome.windows.update(windowId, {focused: true})
-    chrome.tabs.update(id, {highlighted: true})
-    chrome.runtime.sendMessage(type: "open", query: url)
+    browser.windows.update(windowId, {focused: true})
+    browser.tabs.update(id, {highlighted: true})
+    browser.runtime.sendMessage(type: "open", query: url)
   catch
     # 存在しなければタブを作成する
-    chrome.tabs.create(url: "/view/index.html?q=#{url}")
+    browser.tabs.create(url: "/view/index.html?q=#{url}")
   return
 )

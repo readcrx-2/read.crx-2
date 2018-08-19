@@ -8,8 +8,9 @@ app.boot("/write/submit_thread.html", ->
   Write.setDOM()
   Write.setTitle({isThread})
 
-  chrome.tabs.getCurrent( ({id}) ->
-    chrome.webRequest.onBeforeSendHeaders.addListener(
+  do ->
+    {id} = await browser.tabs.getCurrent()
+    browser.webRequest.onBeforeSendHeaders.addListener(
       Write.beforeSendFunc
       {
         tabId: id
@@ -25,7 +26,6 @@ app.boot("/write/submit_thread.html", ->
       ["requestHeaders", "blocking"]
     )
     return
-  )
 
   $view = $$.C("view_write")[0]
 
@@ -50,9 +50,9 @@ app.boot("/write/submit_thread.html", ->
         else
           server = url.match(/^(https?:\/\/\w+\.(?:5ch\.net|2ch\.sc|bbspink\.com|open2ch\.net)).*/)[1]
           thread_url = "#{server}/test/read.cgi/#{keys[1]}/#{keys[2]}/"
-          chrome.runtime.sendMessage({type: "written", kind: "own", url, thread_url, mes, name, mail, title})
+          browser.runtime.sendMessage({type: "written", kind: "own", url, thread_url, mes, name, mail, title})
       else if getTsld(url) is "shitaraba.net"
-        chrome.runtime.sendMessage({type: "written", kind: "board", url, mes, name, mail, title})
+        browser.runtime.sendMessage({type: "written", kind: "board", url, mes, name, mail, title})
       return
     onError: Write.onErrorFunc
   })

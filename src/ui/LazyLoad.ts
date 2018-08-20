@@ -117,7 +117,7 @@ export default class LazyLoad {
 
     var mdata = $media.dataset;
     if (imgFlg && !faviconFlg) {
-      $media.src = "/img/loading.webp";
+      $media.src = `/img/loading.${app.imgExt}`;
       switch (mdata.type) {
         case "default":
           $newImg.src = mdata.src!;

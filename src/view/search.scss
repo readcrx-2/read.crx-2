@@ -30,7 +30,7 @@ td {
 }
 
 tr.https td:nth-child(2)::before {
-    content: url(/img/lock_12x12_3a5.webp);
+    content: img(lock_12x12_3a5);
     vertical-align: middle;
 }
 

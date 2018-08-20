@@ -18,7 +18,7 @@
     }
   }
   tr.https td:first-child::before {
-    content: url(/img/lock_12x12_3a5.webp);
+    content: img(lock_12x12_3a5);
     vertical-align: middle;
   }
 }

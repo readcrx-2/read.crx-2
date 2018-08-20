@@ -423,6 +423,13 @@ export function clipboardWrite (str:string):void {
   $textarea.remove();
 }
 
+export var imgExt: string = ( () => {
+  if (location.origin.startsWith("chrome-extension://")) {
+    return "webp";
+  }
+  return "png";
+})();
+
 export async function boot (path:string, requirements, fn): Promise<void> {
   var htmlVersion:string;
 

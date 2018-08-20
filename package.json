@@ -29,7 +29,9 @@
     "sharp": "^0.20.5",
     "to-ico": "^1.1.5",
     "typescript": "^2.9.2",
-    "webextension-polyfill": "^0.3.0"
+    "web-ext": "^2.8.0",
+    "webextension-polyfill": "^0.3.0",
+    "wemf": "^1.2.1"
   },
   "repository": {
     "type": "git",
@@ -41,6 +43,5 @@
     "clean": "gulp clean",
     "watch": "gulp watch",
     "pack": "gulp pack"
-  },
-  "dependencies": {}
+  }
 }

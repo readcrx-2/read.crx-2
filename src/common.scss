@@ -147,7 +147,7 @@ $z-indexes:(
       border-color: $nav-bar-item-border-color;
     }
     > label {
-      background: url(/img/search2_19x19_#{$search-icon-color}.webp) no-repeat;
+      background: img(search2_19x19_#{$search-icon-color}) no-repeat;
       &:focus-within {
         border-color: $search-focus-color;
       }
@@ -157,43 +157,43 @@ $z-indexes:(
     }
     > .button {
       &.button_bookmark {
-        background-image: url(/img/star_19x19_#{$icon-color}.webp);
+        background-image: img(star_19x19_#{$icon-color});
         &.bookmarked {
-          background-image: url(/img/star_19x19_#{$active-icon-color}.webp);
+          background-image: img(star_19x19_#{$active-icon-color});
         }
       }
       &.button_back {
-        background-image: url(/img/arrow_19x19_#{$icon-color}_r-90.webp);
+        background-image: img(arrow_19x19_#{$icon-color}_r-90);
       }
       &.button_forward {
-        background-image: url(/img/arrow_19x19_#{$icon-color}_r90.webp);
+        background-image: img(arrow_19x19_#{$icon-color}_r90);
       }
       &.button_reload {
-        background-image: url(/img/reload_19x19_#{$icon-color}.webp);
+        background-image: img(reload_19x19_#{$icon-color});
       }
       &.button_write {
-        background-image: url(/img/pencil_19x19_#{$icon-color}.webp);
+        background-image: img(pencil_19x19_#{$icon-color});
       }
       &.button_scheme {
-        background-image: url(/img/unlock_19x19_#{$icon-color}.webp);
+        background-image: img(unlock_19x19_#{$icon-color});
         &.https {
-          background-image: url(/img/lock_19x19_#{$https-icon-color}.webp);
+          background-image: img(lock_19x19_#{$https-icon-color});
         }
       }
       &.button_pause {
-        background-image: url(/img/pause_19x19_#{$icon-color}.webp);
+        background-image: img(pause_19x19_#{$icon-color});
         &.pause {
-          background-image: url(/img/pause_19x19_#{$pause-icon-color}.webp);
+          background-image: img(pause_19x19_#{$pause-icon-color});
         }
       }
       &.button_regexp {
-        background-image: url(/img/regexp_19x19_#{$icon-color}.webp);
+        background-image: img(regexp_19x19_#{$icon-color});
         &.regexp {
-          background-image: url(/img/regexp_19x19_#{$regexp-icon-color}.webp);
+          background-image: img(regexp_19x19_#{$regexp-icon-color});
         }
       }
       &.button_tool {
-        background-image: url(/img/menu_19x19_#{$icon-color}.webp);
+        background-image: img(menu_19x19_#{$icon-color});
         > ul {
           background-color: $nav-bar-background-color;
           border-color: $nav-bar-item-border-color;

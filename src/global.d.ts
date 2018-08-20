@@ -15,6 +15,7 @@ declare namespace app {
   var deepCopy: any;
   var message: any;
   var defer: any;
+  var imgExt: string;
 
   var bookmark: any;
   var HTTP: any;

@@ -21,7 +21,7 @@ header {
     font-size: 18px;
     margin: 0;
     &.https::before {
-      content: url(/img/lock_19x19_3a5.webp);
+      content: img(lock_19x19_3a5);
       vertical-align: middle;
       margin-right: 5px;
     }
@@ -94,7 +94,7 @@ textarea {
   box-sizing: content-box;
   width: 16px;
   height: 16px;
-  background-image: url(/img/close_16x16.webp);
+  background-image: img(close_16x16);
 }
 
 iframe {

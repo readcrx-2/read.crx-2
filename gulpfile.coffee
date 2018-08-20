@@ -21,6 +21,7 @@ pug = require "gulp-pug"
 sharp = require "sharp"
 toIco = require "to-ico"
 crx = require "crx"
+webExt = require("web-ext").default
 spawn = require("child_process").spawn
 
 manifest = require "./src/manifest.json"
@@ -32,7 +33,7 @@ pugCompiler = require "pug"
 
 # -------
 args =
-  outputPath: "./debug"
+  outputPath: "./debug-chrome"
   manifestPath: "./src/manifest.json"
   appTsPath: "./src/app.ts"
   backgroundCoffeePath: "./src/background.coffee"
@@ -55,13 +56,9 @@ args =
   writeCssWatchPath: ["./src/write/*.scss", "./src/common.scss"]
   writeHtmlPath: "./src/write/*.pug"
   webpSrcPath: "./src/image/svg"
-  webpBinPath: "./debug/img"
   icoSrcPath: "./src/image/svg/read.crx.svg"
-  icoBinPath: "./debug/img/favicon.ico"
   logo128SrcPath: "./src/image/svg/read.crx.svg"
-  logo128BinPath: "./debug/img/read.crx_128x128.png"
   loadingSrcPath: "./src/image/svg/loading.svg"
-  loadingBinPath: "./debug/img/loading.webp"
   shortQueryPath: "./node_modules/ShortQuery.js/bin/shortQuery.chrome.min.js"
   webextensionPolyfillPath: "./node_modules/webextension-polyfill/dist/browser-polyfill.min.js"
   rollupTsOptions:
@@ -86,11 +83,21 @@ args =
   sassOptions:
     outputStyle: "compressed"
     errLogToConsole: false
+    functions:
+      "img($name)": (name) ->
+        nameVal = name.getValue()
+        ext = if isChrome then "webp" else "png"
+        transformedStr = "url(/img/#{nameVal}.#{ext})"
+        return sassCompiler.types.String(transformedStr)
   pugOptions:
     pug: pugCompiler
     locals: manifest
   sharpWebpOptions:
     lossless: true
+getPugOptions = (isChrome) ->
+  op = args.pugOptions
+  op.locals.image_ext = if isChrome then "webp" else "png"
+  return op
 imgs = [
   "read.crx_48x48.png"
   "read.crx_38x38.png"
@@ -141,81 +148,83 @@ rollupOnWarn = (warning, warn) ->
   return if warning.code is "CIRCULAR_DEPENDENCY"
   warn(warning)
   return
-rollupArgs =
-  appjs:
-    in:
-      input: args.appTsPath
-      plugins: [
-        rollupTs(args.rollupTsOptions)
-      ]
-      cache: appjsCache
-      context: "window"
-      onwarn: rollupOnWarn
-    out:
-      file: "#{args.outputPath}/app.js"
-      format: "iife"
-      name: "app"
-  appCorejs:
-    in:
-      input: args.appCorePath
-      plugins: [
-        rollupCoffee(args.coffeeOptions)
-        rollupTs(args.rollupTsOptions)
-      ]
-      cache: appCorejsCache
-      context: "window"
-      onwarn: rollupOnWarn
-    out:
-      file: "#{args.outputPath}/app_core.js"
-      format: "iife"
-      name: "app"
-      extend: true
-  uijs:
-    in:
-      input: args.uiPath
-      plugins: [
-        rollupCoffee(args.coffeeOptions)
-        rollupTs(args.rollupTsOptions)
-      ]
-      cache: uijsCache
-      context: "window"
-      onwarn: rollupOnWarn
-    out:
-      file: "#{args.outputPath}/ui.js"
-      name: "UI"
-      format: "iife"
-  submitResjs:
-    in:
-      input: args.writePath.submit_res
-      plugins: [
-        rollupCoffee(args.coffeeOptions)
-        rollupTs(args.rollupTsOptions)
-      ]
-      cache: submitResjsCache
-      context: "window"
-      onwarn: rollupOnWarn
-    out:
-      file: "#{args.outputPath}/write/submit_res.js"
-      format: "iife"
-  submitThreadjs:
-    in:
-      input: args.writePath.submit_thread
-      plugins: [
-        rollupCoffee(args.coffeeOptions)
-        rollupTs(args.rollupTsOptions)
-      ]
-      cache: submitThreadjsCache
-      context: "window"
-      onwarn: rollupOnWarn
-    out:
-      file: "#{args.outputPath}/write/submit_thread.js"
-      format: "iife"
+getRollupArgs = (args) ->
+  res =
+    appjs:
+      in:
+        input: args.appTsPath
+        plugins: [
+          rollupTs(args.rollupTsOptions)
+        ]
+        cache: appjsCache
+        context: "window"
+        onwarn: rollupOnWarn
+      out:
+        file: "#{args.outputPath}/app.js"
+        format: "iife"
+        name: "app"
+    appCorejs:
+      in:
+        input: args.appCorePath
+        plugins: [
+          rollupCoffee(args.coffeeOptions)
+          rollupTs(args.rollupTsOptions)
+        ]
+        cache: appCorejsCache
+        context: "window"
+        onwarn: rollupOnWarn
+      out:
+        file: "#{args.outputPath}/app_core.js"
+        format: "iife"
+        name: "app"
+        extend: true
+    uijs:
+      in:
+        input: args.uiPath
+        plugins: [
+          rollupCoffee(args.coffeeOptions)
+          rollupTs(args.rollupTsOptions)
+        ]
+        cache: uijsCache
+        context: "window"
+        onwarn: rollupOnWarn
+      out:
+        file: "#{args.outputPath}/ui.js"
+        name: "UI"
+        format: "iife"
+    submitResjs:
+      in:
+        input: args.writePath.submit_res
+        plugins: [
+          rollupCoffee(args.coffeeOptions)
+          rollupTs(args.rollupTsOptions)
+        ]
+        cache: submitResjsCache
+        context: "window"
+        onwarn: rollupOnWarn
+      out:
+        file: "#{args.outputPath}/write/submit_res.js"
+        format: "iife"
+    submitThreadjs:
+      in:
+        input: args.writePath.submit_thread
+        plugins: [
+          rollupCoffee(args.coffeeOptions)
+          rollupTs(args.rollupTsOptions)
+        ]
+        cache: submitThreadjsCache
+        context: "window"
+        onwarn: rollupOnWarn
+      out:
+        file: "#{args.outputPath}/write/submit_thread.js"
+        format: "iife"
+  return res
 
 # -------
 sass.compiler = sassCompiler
-exec = (command, args) ->
+exec = (command, args, shell = false) ->
   return new Promise( (resolve, reject) ->
-    cp = spawn(command, args, {stdio: "inherit"})
+    cp = spawn(command, args, {stdio: "inherit", shell})
     cp.on("close", ->
       resolve()
       return
@@ -268,6 +277,20 @@ rollupOnWatch = (filename) ->
       when "ERROR" then outputError(filename)(e.error)
     return
 #--------
+###
+  flags
+###
+isChrome = true
+
+gulp.task "setChrome", ->
+  isChrome = true
+  args.outputPath = "./debug-chrome"
+  return Promise.resolve()
+
+gulp.task "setFirefox", ->
+  isChrome = false
+  args.outputPath = "./debug-firefox"
+  return Promise.resolve()
 
 ###
   compile
@@ -275,6 +298,7 @@ rollupOnWatch = (filename) ->
 ##js
 gulp.task "app.js", ->
   try
+    rollupArgs = getRollupArgs(args)
     bundle = await rollup.rollup(rollupArgs.appjs.in)
     await bundle.write(rollupArgs.appjs.out)
   catch e
@@ -301,6 +325,7 @@ gulp.task "cs_addlink.js", ->
 
 gulp.task "app_core.js", ->
   try
+    rollupArgs = getRollupArgs(args)
     bundle = await rollup.rollup(rollupArgs.appCorejs.in)
     await bundle.write(rollupArgs.appCorejs.out)
   catch e
@@ -309,6 +334,7 @@ gulp.task "app_core.js", ->
 
 gulp.task "ui.js", ->
   try
+    rollupArgs = getRollupArgs(args)
     bundle = await rollup.rollup(rollupArgs.uijs.in)
     await bundle.write(rollupArgs.uijs.out)
   catch e
@@ -338,6 +364,7 @@ gulp.task "cs_write.js", ->
 
 gulp.task "submit_res.js", ->
   try
+    rollupArgs = getRollupArgs(args)
     bundle = await rollup.rollup(rollupArgs.submitResjs.in)
     await bundle.write(rollupArgs.submitResjs.out)
   catch e
@@ -346,6 +373,7 @@ gulp.task "submit_res.js", ->
 
 gulp.task "submit_thread.js", ->
   try
+    rollupArgs = getRollupArgs(args)
     bundle = await rollup.rollup(rollupArgs.submitThreadjs.in)
     await bundle.write(rollupArgs.submitThreadjs.out)
   catch e
@@ -354,6 +382,8 @@ gulp.task "submit_thread.js", ->
 
 gulp.task "writejs", gulp.parallel("cs_write.js", "submit_res.js", "submit_thread.js")
 gulp.task "js", gulp.parallel("app.js", "background.js", "cs_addlink.js", "app_core.js", "ui.js", "viewjs", "zombie.js", "writejs")
+gulp.task "js:chrome", gulp.series("setChrome", "js")
+gulp.task "js:firefox", gulp.series("setFirefox", "js")
 
 
 ##css
@@ -376,6 +406,8 @@ gulp.task "writecss", ->
     .pipe(gulp.dest("#{args.outputPath}/write"))
 
 gulp.task "css", gulp.parallel("ui.css", "viewcss", "writecss")
+gulp.task "css:chrome", gulp.series("setChrome", "css")
+gulp.task "css:firefox", gulp.series("setFirefox", "css")
 
 
 ##html
@@ -383,33 +415,36 @@ gulp.task "viewhtml", ->
   return gulp.src args.viewHtmlPath
     .pipe(plumber(errorHandler: notify.onError("Error: <%= error.toString() %>")))
     .pipe(changed("#{args.outputPath}/view", extension: ".html"))
-    .pipe(pug(args.pugOptions))
+    .pipe(pug(getPugOptions(isChrome)))
     .pipe(gulp.dest("#{args.outputPath}/view"))
 
 gulp.task "zombie.html", ->
   return gulp.src args.zombieHtmlPath
     .pipe(plumber(errorHandler: notify.onError("Error: <%= error.toString() %>")))
     .pipe(changed(args.outputPath, extension: ".html"))
-    .pipe(pug(args.pugOptions))
+    .pipe(pug(getPugOptions(isChrome)))
     .pipe(gulp.dest(args.outputPath))
 
 gulp.task "writehtml", ->
   return gulp.src args.writeHtmlPath
     .pipe(plumber(errorHandler: notify.onError("Error: <%= error.toString() %>")))
     .pipe(changed("#{args.outputPath}/write", extension: ".html"))
-    .pipe(pug(args.pugOptions))
+    .pipe(pug(getPugOptions(isChrome)))
     .pipe(gulp.dest("#{args.outputPath}/write"))
 
 gulp.task "html", gulp.parallel("viewhtml", "zombie.html", "writehtml")
+gulp.task "html:chrome", gulp.series("setChrome", "html")
+gulp.task "html:firefox", gulp.series("setFirefox", "html")
 
 
 ##img
 gulp.task "webp&png", ->
-  await fs.ensureDir(args.webpBinPath)
+  await fs.ensureDir("#{args.outputPath}/img")
   await Promise.all(imgs.map( (img) ->
+    img = img.replace(".webp", ".png") unless isChrome
     m = img.match(/^(.+)_(\d+)x(\d+)(?:_([a-fA-F0-9]*))?(?:_r(\-?\d+))?\.(webp|png)$/)
     src = "#{args.webpSrcPath}/#{m[1]}.svg"
-    bin = "#{args.webpBinPath}/#{img}"
+    bin = "#{args.outputPath}/img/#{img}"
 
     data = await fs.readFile(src, "utf-8")
     # 塗りつぶし
@@ -429,7 +464,7 @@ gulp.task "webp&png", ->
   return
 
 gulp.task "ico", ->
-  await fs.ensureDir(args.webpBinPath)
+  await fs.ensureDir("#{args.outputPath}/img")
   filebuf = await Promise.all([
     sharp(args.icoSrcPath)
       .resize(16, 16)
@@ -441,11 +476,11 @@ gulp.task "ico", ->
       .toBuffer()
   ])
   buf = await toIco(filebuf)
-  await fs.writeFile(args.icoBinPath, buf)
+  await fs.writeFile("#{args.outputPath}/img/favicon.ico", buf)
   return
 
 gulp.task "logo128", ->
-  await fs.ensureDir(args.webpBinPath)
+  await fs.ensureDir("#{args.outputPath}/img")
   await sharp(null,
     create:
       width: 128
@@ -455,26 +490,34 @@ gulp.task "logo128", ->
   ).overlayWith(args.logo128SrcPath,
     top: 16
     left: 16
-  ).toFile(args.logo128BinPath)
+  ).toFile("#{args.outputPath}/img/read.crx_128x128.png")
   return
 
 gulp.task "loading.webp", ->
-  await fs.ensureDir(args.webpBinPath)
-  await sharp(args.loadingSrcPath)
-    .resize(100, 100)
-    .webp(args.sharpWebpOptions)
-    .toFile(args.loadingBinPath)
+  await fs.ensureDir("#{args.outputPath}/img")
+  if isChrome
+    await sharp(args.loadingSrcPath)
+      .resize(100, 100)
+      .webp(args.sharpWebpOptions)
+      .toFile("#{args.outputPath}/img/loading.webp")
+  else
+    await sharp(args.loadingSrcPath)
+      .resize(100, 100)
+      .toFile("#{args.outputPath}/img/loading.png")
   return
 
 gulp.task "img", gulp.parallel("webp&png", "ico", "logo128", "loading.webp")
-
+gulp.task "img:chrome", gulp.series("setChrome", "img")
+gulp.task "img:firefox", gulp.series("setFirefox", "img")
 
 ##manifest
 gulp.task "manifest", ->
-  return gulp.src args.manifestPath
-    .pipe(changed(args.outputPath))
-    .pipe(gulp.dest(args.outputPath))
-
+  await fs.ensureDir(args.outputPath)
+  browser = if isChrome then "chrome" else "firefox"
+  await exec('"./node_modules/.bin/wemf"', [args.manifestPath, "-O", "#{args.outputPath}/manifest.json", "--browser", browser], true)
+  return
+gulp.task "manifest:chrome", gulp.series("setChrome", "manifest")
+gulp.task "manifest:firefox", gulp.series("setFirefox", "manifest")
 
 ##lib
 gulp.task "shortQuery", ->
@@ -499,17 +542,18 @@ gulp.task "default", gulp.parallel("js", "html", "css", "img", "manifest", "lib"
 gulp.task "clean", ->
   return Promise.all([
     fs.remove("./.rpt2_cache")
-    fs.remove("./debug")
+    fs.remove("./debug-chrome")
+    fs.remove("./debug-firefox")
     fs.remove("./read.crx_2.zip")
   ])
 
 gulp.task "scan", ->
   await exec("freshclam", [])
-  await exec("clamscan", ["-ir", "debug"])
+  await exec("clamscan", ["-ir", args.outputPath.slice(2)])
   return
 
 gulp.task "crx", ->
-  tmpDir = path.join(os.tmpdir(), "debug")
+  tmpDir = path.join(os.tmpdir(), "debug-chrome")
   await fs.copy(args.outputPath, tmpDir)
   pemPath = process.env["read.crx-2-pem-path"] ? await putsPromise("秘密鍵のパスを入力して下さい: ")
   pem = await fs.readFile(pemPath)
@@ -520,9 +564,26 @@ gulp.task "crx", ->
   await fs.remove(tmpDir)
   return
 
-gulp.task "pack", gulp.series("clean", "default", "scan", "crx")
+gulp.task "xpi", ->
+  tmpDir = path.join(os.tmpdir(), "debug-firefox")
+  await fs.copy(args.outputPath, tmpDir)
+  apicrePath = process.env["read.crx-2-apicre-path"] ? await putsPromise("秘密鍵のパスを入力して下さい: ")
+  apicre = await fs.readJson(apicrePath)
+  await webExt.cmd.sign(
+    sourceDir: tmpDir
+    artifactsDir: process.cwd()
+    apiKey: apicre.issuer
+    apiSecret: apicre.secret
+  )
+  await fs.remove(tmpDir)
+  return
+
+gulp.task "pack:chrome", gulp.series("clean", "setChrome", "default", "scan", "crx")
+gulp.task "pack:firefox", gulp.series("clean", "setFirefox", "default", "scan", "xpi")
+gulp.task "pack", gulp.series("pack:chrome")
 
 gulp.task "watch", gulp.series("default", ->
+  rollupArgs = getRollupArgs(args)
   rollup.watch({
     rollupArgs.appjs.in...
     output: rollupArgs.appjs.out
@@ -559,3 +620,6 @@ gulp.task "watch", gulp.series("default", ->
   gulp.watch(args.shortQueryPath, gulp.task("shortQuery"))
   return
 )
+gulp.task "watch:firefox", gulp.series("setFirefox", "watch")
+gulp.task "watch:chrome", gulp.series("watch")
+

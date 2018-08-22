@@ -1,4 +1,5 @@
 fs = require "fs-extra"
+path = require "path"
 spawn = require("child_process").spawn
 readline = require "readline"
 {gulp: $} = require "./plugins"
@@ -49,18 +50,9 @@ exports.isSrcNewer = (src, bin) ->
     return true if e.code is "ENOENT"
   return (srcTime > binTime)
 
-exports.rollupOnWarn = (warning, warn) ->
-  return if warning.code is "CIRCULAR_DEPENDENCY"
-  warn(warning)
-  return
-
-exports.plumberHandler = $.notify.onError("Error: <%= error.toString() %>")
-
-
 ###
-  rollup handlers
+  console
 ###
-_space = " ".repeat("[hh:mm:ss][Rollup.js] ".length)
 GRAY = "\u001b[90m"
 CYAN = "\u001b[36m"
 RED = "\u001b[31m"
@@ -70,21 +62,73 @@ toTwoDigit = (str) ->
 getTimeString = ->
   date = new Date()
   return "#{toTwoDigit(date.getHours())}:#{toTwoDigit(date.getMinutes())}:#{toTwoDigit(date.getSeconds())}"
-exports.outputError = (filename, type = "Error") ->
+
+exports.rollupOnWarn = (warning, warn) ->
+  return if warning.code is "CIRCULAR_DEPENDENCY"
+  warn(warning)
+  return
+
+_spaceR = " ".repeat("[hh:mm:ss][Rollup.js] ".length)
+onRollupError = (filename, type = "Error") ->
   return (e) ->
     prefix = "[#{GRAY}#{getTimeString()}#{RESET}][#{GRAY}Rollup.js#{RESET}] "
     mes = prefix + "#{RED}#{type}(#{e.code})#{RESET} '#{CYAN}#{filename}#{RESET}': #{e.message}"
-    mes += "\n" + _space + "#{e.loc.file} L#{e.loc.line}:#{e.loc.column}" if e.loc?
-    mes += "\n" + _space + e.frame.replace(/\n/g, "\n"+_space) if e.frame?
+    mes += "\n" + _spaceR + "#{e.loc.file} L#{e.loc.line}:#{e.loc.column}" if e.loc?
+    if e.location?
+      file = path.relative(process.cwd(), e.id)
+      mes += "\n" + _spaceR + "#{file} L#{e.location.first_line+1}:#{e.location.first_column+1}-#{e.location.last_column+1}" if e.location?
+    mes += "\n" + _spaceR + e.frame.replace(/\n/g, "\n"+_spaceR) if e.frame?
     console.error(mes)
     return
-exports.rollupOnWatch = (filename) ->
+exports.onRollupError = onRollupError
+exports.onRollupWatch = (filename) ->
   return (e) ->
     prefix = "[#{GRAY}#{getTimeString()}#{RESET}][#{GRAY}Rollup.js#{RESET}] "
     switch e.code
       when "START", "END" then return
       when "BUNDLE_START" then console.log(prefix + "Starting '#{CYAN}#{filename}#{RESET}'")
       when "BUNDLE_END" then console.log(prefix + "Finished '#{CYAN}#{filename}#{RESET}' in #{e.duration}ms")
-      when "FATAL" then outputError(filename, "FatalError")(e.error)
-      when "ERROR" then outputError(filename)(e.error)
+      when "FATAL" then onRollupError(filename, "FatalError")(e.error)
+      when "ERROR" then onRollupError(filename)(e.error)
     return
+
+_spaceP = " ".repeat("[hh:mm:ss][pug] ".length)
+exports.onPugError = $.notify.onError( (e) ->
+  prefix = "[#{GRAY}#{getTimeString()}#{RESET}][#{GRAY}pug#{RESET}] "
+  if e.code?
+    mes = prefix + "#{RED}Error(#{e.code})#{RESET} '#{CYAN}#{e.plugin}#{RESET}':"
+    mes += "\n" + _spaceP + e.message.replace(/\n/g, "\n"+_spaceP)
+  else
+    mes = prefix + "#{RED}Error(#{e.name})#{RESET} '#{CYAN}#{e.plugin}#{RESET}': #{e.message}"
+    mes += "\n" + _spaceP + e.stack.replace(/\n/g, "\n"+_spaceP) if e.stack?
+  console.error(mes)
+  return {
+    title: "Error pug #{e.code ? e.name}"
+    message: e.message ? e.stack
+  }
+)
+
+_spaceS = " ".repeat("[hh:mm:ss][sass] ".length)
+exports.onScssError = $.notify.onError( (e) ->
+  prefix = "[#{GRAY}#{getTimeString()}#{RESET}][#{GRAY}sass#{RESET}] "
+  mes = prefix + "#{RED}Error#{RESET} '#{CYAN}#{e.plugin}#{RESET}': #{e.relativePath} L#{e.line}:#{e.column}"
+  mes += "\n" + _spaceS + e.messageFormatted.replace(/\n/g, "\n"+_spaceS)
+  console.error(mes)
+  return {
+    title: "Error sass #{e.relativePath} L#{e.line}:#{e.column}"
+    message: e.message
+  }
+)
+
+_spaceC = " ".repeat("[hh:mm:ss][CoffeeScript] ".length)
+exports.onCoffeeError = $.notify.onError( (e) ->
+  file = path.relative(process.cwd(), e.filename)
+  prefix = "[#{GRAY}#{getTimeString()}#{RESET}][#{GRAY}CoffeeScript#{RESET}] "
+  mes = prefix + "#{RED}Error(#{e.name})#{RESET} '#{CYAN}#{file}#{RESET}' L#{e.location.first_line+1}-#{e.location.last_line+1}:#{e.location.first_column+1}-#{e.location.last_column+1}: #{e.message}"
+  mes += "\n" + _spaceC + e.stack.replace(/\n/g, "\n"+_spaceC)
+  console.error(mes)
+  return {
+    title: "Error Coffee #{file} L#{e.location.first_line+1}:#{e.location.first_column+1}"
+    message: e.message
+  }
+)

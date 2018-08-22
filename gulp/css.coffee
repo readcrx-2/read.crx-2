@@ -22,8 +22,7 @@ ui = (browser) ->
   })
   return ->
     return gulp.src paths.css.ui
-      .pipe($.plumber(defaultOptions.plumber))
-      .pipe($.sass(sassOptions))
+      .pipe($.sass(sassOptions).on("error", util.onScssError))
       .pipe(gulp.dest(output))
 
 view = (browser) ->
@@ -33,8 +32,7 @@ view = (browser) ->
   })
   return ->
     return gulp.src paths.css.view
-      .pipe($.plumber(defaultOptions.plumber))
-      .pipe($.sass(sassOptions))
+      .pipe($.sass(sassOptions).on("error", util.onScssError))
       .pipe(gulp.dest(output))
 
 write = (browser) ->
@@ -44,8 +42,7 @@ write = (browser) ->
   })
   return ->
     return gulp.src paths.css.write
-      .pipe($.plumber(defaultOptions.plumber))
-      .pipe($.sass(sassOptions))
+      .pipe($.sass(sassOptions).on("error", util.onScssError))
       .pipe(gulp.dest(output))
 
 ###

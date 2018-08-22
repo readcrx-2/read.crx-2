@@ -14,7 +14,7 @@ makeRollupConfig = (browser, config) ->
 
 rollupWatch = (config) ->
   filename = path.basename(config.output.file)
-  _.rollup.watch(config).on("event", util.rollupOnWatch(filename))
+  _.rollup.watch(config).on("event", util.onRollupWatch(filename))
   return
 
 ###

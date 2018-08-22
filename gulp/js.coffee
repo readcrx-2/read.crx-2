@@ -30,7 +30,7 @@ makeFunc = (browser, args) ->
       cache[args.pathname] = bundle
       await bundle.write(o)
     catch e
-      util.outputError(filename)(e)
+      util.onRollupError(filename)(e)
     return
   func.displayName = "js:#{filename}:#{browser}"
   return func
@@ -87,7 +87,7 @@ background = (browser) ->
       gulp.src paths.lib.webExtPolyfill
     ,
       gulp.src paths.js.background
-        .pipe($.plumber(defaultOptions.plumber))
+        .pipe($.plumber(util.onCoffeeError))
         .pipe($.changed(output, extension: ".js"))
         .pipe($.coffee(defaultOptions.coffee))
     ).pipe($.concat("background.js"))
@@ -97,7 +97,7 @@ csAddlink = (browser) ->
   output = paths.output[browser]
   return ->
     return gulp.src paths.js.csAddlink
-      .pipe($.plumber(defaultOptions.plumber))
+      .pipe($.plumber(util.onCoffeeError))
       .pipe($.changed(output, extension: ".js"))
       .pipe($.coffee(defaultOptions.coffee))
       .pipe(gulp.dest(output))
@@ -106,7 +106,7 @@ view = (browser) ->
   output = paths.output[browser]+"/view"
   return ->
     return gulp.src paths.js.view
-      .pipe($.plumber(defaultOptions.plumber))
+      .pipe($.plumber(util.onCoffeeError))
       .pipe($.changed(output, extension: ".js"))
       .pipe($.coffee(defaultOptions.coffee))
       .pipe(gulp.dest(output))
@@ -115,7 +115,7 @@ zombie = (browser) ->
   output = paths.output[browser]
   return ->
     return gulp.src paths.js.zombie
-      .pipe($.plumber(defaultOptions.plumber))
+      .pipe($.plumber(util.onCoffeeError))
       .pipe($.changed(output, extension: ".js"))
       .pipe($.coffee(defaultOptions.coffee))
       .pipe(gulp.dest(output))
@@ -124,7 +124,7 @@ csWrite = (browser) ->
   output = paths.output[browser]+"/write"
   return ->
     return gulp.src paths.js.csWrite
-      .pipe($.plumber(defaultOptions.plumber))
+      .pipe($.plumber(util.onCoffeeError))
       .pipe($.changed(output, extension: ".js"))
       .pipe($.coffee(defaultOptions.coffee))
       .pipe(gulp.dest(output))

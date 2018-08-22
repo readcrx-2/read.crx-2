@@ -114,7 +114,6 @@ defaultOptions =
     bare: true
   sass:
     outputStyle: "compressed"
-    errLogToConsole: false
   pug:
     pug: c.pug
     locals: manifestJson

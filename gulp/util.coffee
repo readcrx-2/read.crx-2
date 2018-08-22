@@ -1,3 +1,4 @@
+fs = require "fs-extra"
 spawn = require("child_process").spawn
 readline = require "readline"
 {gulp: $} = require "./plugins"
@@ -38,6 +39,15 @@ exports.getExt = (browser) ->
   if browser is "chrome"
     return "webp"
   return"png"
+
+exports.isSrcNewer = (src, bin) ->
+  srcTime = fs.statSync(src).mtimeMs
+  try
+    binTime = fs.statSync(bin).mtimeMs
+  catch e
+    # 出力先にファイルが存在しないとき
+    return true if e.code is "ENOENT"
+  return (srcTime > binTime)
 
 exports.rollupOnWarn = (warning, warn) ->
   return if warning.code is "CIRCULAR_DEPENDENCY"

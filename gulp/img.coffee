@@ -2,6 +2,7 @@ gulp = require "gulp"
 fs = require "fs-extra"
 {other: o} = require "./plugins"
 {browsers, paths, defaultOptions} = require "./config"
+util = require "./util"
 
 ###
   tasks
@@ -16,6 +17,7 @@ imgs = (browser) ->
       m = img.match(/^(.+)_(\d+)x(\d+)(?:_([a-fA-F0-9]*))?(?:_r(\-?\d+))?\.(webp|png)$/)
       src = "#{paths.img.imgsSrc}/#{m[1]}.svg"
       bin = "#{output}/#{img}"
+      return unless util.isSrcNewer(src, bin)
 
       data = await fs.readFile(src, "utf-8")
       # 塗りつぶし
@@ -38,26 +40,32 @@ imgs = (browser) ->
 
 ico = (browser) ->
   output = paths.output[browser]+"/img"
+  src = paths.img.icon
+  bin = "#{output}/favicon.ico"
   func = ->
+    return unless util.isSrcNewer(src, bin)
     filebuf = await Promise.all([
-      o.sharp(paths.img.icon)
+      o.sharp(src)
         .resize(16, 16)
         .png()
         .toBuffer()
-      o.sharp(paths.img.icon)
+      o.sharp(src)
         .resize(32, 32)
         .png()
         .toBuffer()
     ])
     buf = await o.toIco(filebuf)
-    await fs.outputFile("#{output}/favicon.ico", buf)
+    await fs.outputFile(bin, buf)
     return
   func.displayName = "img:ico:#{browser}"
   return func
 
 logo128 = (browser) ->
   output = paths.output[browser]+"/img"
+  src = paths.img.logo128
+  bin = "#{output}/read.crx_128x128.png"
   func = ->
+    return unless util.isSrcNewer(src, bin)
     await fs.ensureDir(output)
     await o.sharp(null,
       create:
@@ -65,30 +73,35 @@ logo128 = (browser) ->
         height: 128
         channels: 4
         background: { r: 0, g: 0, b: 0, alpha: 0}
-    ).overlayWith(paths.img.logo128,
+    ).overlayWith(src,
       top: 16
       left: 16
-    ).toFile("#{output}/read.crx_128x128.png")
+    ).toFile(bin)
     return
   func.displayName = "img:logo128:#{browser}"
   return func
 
 loading = (browser) ->
   output = paths.output[browser]+"/img"
+  src = paths.img.loading
   if browser is "chrome"
+    bin = "#{output}/loading.webp"
     func = ->
+      return unless util.isSrcNewer(src, bin)
       await fs.ensureDir(output)
-      await o.sharp(paths.img.loading)
+      await o.sharp(src)
         .resize(100, 100)
         .webp(defaultOptions.sharp.webp)
-        .toFile("#{output}/loading.webp")
+        .toFile(bin)
       return
   else
+    bin = "#{output}/loading.png"
     func = ->
+      return unless util.isSrcNewer(src, bin)
       await fs.ensureDir(output)
-      await o.sharp(paths.img.loading)
+      await o.sharp(src)
         .resize(100, 100)
-        .toFile("#{output}/loading.png")
+        .toFile(bin)
       return
   func.displayName = "img:loading:#{browser}"
   return func

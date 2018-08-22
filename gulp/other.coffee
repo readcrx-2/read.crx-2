@@ -10,9 +10,12 @@ util = require "./util"
 ###
 manifest = (browser) ->
   output = paths.output[browser]
+  src = paths.manifest
+  bin = "#{output}/manifest.json"
   return ->
+    return unless util.isSrcNewer(src, bin)
     await fs.ensureDir(output)
-    await util.exec('"./node_modules/.bin/wemf"', [paths.manifest, "-O", "#{output}/manifest.json", "--browser", browser], true)
+    await util.exec('"./node_modules/.bin/wemf"', [src, "-O", bin, "--browser", browser], true)
     return
 
 shortQuery = (browser) ->

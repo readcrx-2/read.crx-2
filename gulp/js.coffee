@@ -7,12 +7,13 @@ util = require "./util"
 ###
   rollup
 ###
-makeInOut = (browser, {output, pathname, plugins, outObj = {} }) ->
-  cache = null
+cache = {}
 
+makeInOut = (browser, {output, pathname, plugins, outObj = {} }) ->
   i = Object.assign({}, defaultOptions.rollup.in)
   i.input = paths.js[pathname]
-  i.cache = cache
+  cache[pathname] = null
+  i.cache = cache[pathname]
   i.plugins = [plugins...] if plugins?
 
   o = Object.assign({}, defaultOptions.rollup.out, outObj)
@@ -26,6 +27,7 @@ makeFunc = (browser, args) ->
   func = ->
     try
       bundle = await _.rollup.rollup(i)
+      cache[args.pathname] = bundle
       await bundle.write(o)
     catch e
       util.outputError(filename)(e)

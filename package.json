@@ -40,9 +40,17 @@
   },
   "license": "MIT",
   "scripts": {
-    "build": "gulp",
+    "build": "gulp build",
+    "build:chrome": "gulp build:chrome",
+    "build:firefox": "gulp build:firefox",
+    "build:all": "gulp build:all",
     "clean": "gulp clean",
     "watch": "gulp watch",
-    "pack": "gulp pack"
+    "watch:chrome": "gulp watch:chrome",
+    "watch:firefox": "gulp watch:firefox",
+    "pack": "gulp pack",
+    "pack:chrome": "gulp pack:chrome",
+    "pack:firefox": "gulp pack:firefox",
+    "pack:all": "gulp pack:all"
   }
 }

@@ -28,3 +28,6 @@ gulp.task "pack", gulp.task("pack:chrome")
 gulp.task "watch", gulp.task("watch:chrome")
 
 gulp.task "default", gulp.task("build")
+
+gulp.task "build:all", gulp.parallel("build:chrome", "build:firefox")
+gulp.task "pack:all", gulp.parallel("pack:chrome", "pack:firefox")

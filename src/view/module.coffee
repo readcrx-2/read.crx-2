@@ -8,7 +8,7 @@ do ->
       "bookmark"
       "bookmarkEntryList"
       "config"
-      "contextMenus"
+      "ContextMenus"
       "DOMData"
       "HTTP"
       "ImageReplaceDat"

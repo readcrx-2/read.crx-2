@@ -5,7 +5,7 @@ import BookmarkCompatibilityLayer from "./BookmarkCompatibilityLayer.ts"
 import ChromeBookmarkEntryList from "./ChromeBookmarkEntryList.ts"
 import * as Bookmark from "./Bookmark.ts"
 import Cache from "./Cache.coffee"
-import * as contextMenus from "./ContextMenus.coffee"
+import * as ContextMenus from "./ContextMenus.coffee"
 import * as DOMData from "./DOMData.coffee"
 import * as History from "./History.coffee"
 import * as HTTP from "./HTTP.ts"
@@ -29,7 +29,7 @@ export {
   BookmarkCompatibilityLayer
   ChromeBookmarkEntryList
   Cache
-  contextMenus
+  ContextMenus
   DOMData
   History
   HTTP

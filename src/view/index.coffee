@@ -644,13 +644,13 @@ app.main = ->
   )
 
   # コンテキストメニューの作成
-  app.contextMenus.createAll()
+  app.ContextMenus.createAll()
   # NGデータの有効期限設定
   app.NG.execExpire()
 
   window.on("unload", ->
     #コンテキストメニューの削除
-    app.contextMenus.removeAll()
+    app.ContextMenus.removeAll()
     # 終了通知の送信
     browser.runtime.sendMessage(type: "exit_rcrx")
     return

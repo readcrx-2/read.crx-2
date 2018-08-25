@@ -1,15 +1,15 @@
 ///<reference path="../global.d.ts" />
 import {Entry} from "./Bookmark"
-import ChromeBookmarkEntryList from "./ChromeBookmarkEntryList"
+import BrowserBookmarkEntryList from "./BrowserBookmarkEntryList"
 import {threadToBoard} from "./URL"
 // @ts-ignore
 import {get as getReadState} from "./ReadState.coffee"
 
 export default class BookmarkCompatibilityLayer {
-  private cbel: ChromeBookmarkEntryList;
+  private cbel: BrowserBookmarkEntryList;
   promiseFirstScan;
 
-  constructor (cbel: ChromeBookmarkEntryList) {
+  constructor (cbel: BrowserBookmarkEntryList) {
     this.cbel = cbel;
     this.promiseFirstScan = new Promise( (resolve, reject) => {
       this.cbel.ready.add(() => {
@@ -60,7 +60,7 @@ export default class BookmarkCompatibilityLayer {
 
   add (url:string, title:string, resCount?:number) {
     return new Promise( async (resolve, reject) => {
-      var entry = ChromeBookmarkEntryList.URLToEntry(url)!;
+      var entry = BrowserBookmarkEntryList.URLToEntry(url)!;
 
       entry.title = title;
 

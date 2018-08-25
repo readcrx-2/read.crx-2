@@ -13,7 +13,7 @@ interface BookmarkTreeNode {
   children: BookmarkTreeNode[];
 }
 
-export default class ChromeBookmarkEntryList extends SyncableEntryList {
+export default class BrowserBookmarkEntryList extends SyncableEntryList {
   rootNodeId: string;
   nodeIdStore = new Map<string, string>();
   ready = new app.Callbacks();
@@ -106,7 +106,7 @@ export default class ChromeBookmarkEntryList extends SyncableEntryList {
     var entry:Entry|null;
 
     if (node.url && node.title) {
-      entry = ChromeBookmarkEntryList.URLToEntry(node.url);
+      entry = BrowserBookmarkEntryList.URLToEntry(node.url);
       if (entry === null) return;
       entry.title = node.title;
 
@@ -143,7 +143,7 @@ export default class ChromeBookmarkEntryList extends SyncableEntryList {
       entry = this.get(url);
 
       if (typeof changes.url === "string") {
-        newEntry = ChromeBookmarkEntryList.URLToEntry(changes.url)!;
+        newEntry = BrowserBookmarkEntryList.URLToEntry(changes.url)!;
         newEntry.title = (
           typeof changes.title === "string" ? changes.title : entry.title
         );
@@ -151,8 +151,8 @@ export default class ChromeBookmarkEntryList extends SyncableEntryList {
         if (entry.url === newEntry.url) {
           if (
             (
-              ChromeBookmarkEntryList.entryToURL(entry) !==
-              ChromeBookmarkEntryList.entryToURL(newEntry)
+              BrowserBookmarkEntryList.entryToURL(entry) !==
+              BrowserBookmarkEntryList.entryToURL(newEntry)
             ) ||
             (entry.title !== newEntry.title)
           ) {
@@ -294,7 +294,7 @@ export default class ChromeBookmarkEntryList extends SyncableEntryList {
   private async createChromeBookmark (entry:Entry, callback?:Function): Promise<void> {
     var res:BookmarkTreeNode = await browser.bookmarks.create({
       parentId: this.rootNodeId,
-      url: ChromeBookmarkEntryList.entryToURL(entry),
+      url: BrowserBookmarkEntryList.entryToURL(entry),
       title: entry.title
     });
     if (!res) {
@@ -316,8 +316,8 @@ export default class ChromeBookmarkEntryList extends SyncableEntryList {
 
       var changes:any = {},
         node = res[0],
-        newURL = ChromeBookmarkEntryList.entryToURL(newEntry);
-        //currentEntry = ChromeBookmarkEntryList.URLToEntry(node.url); //used in future
+        newURL = BrowserBookmarkEntryList.entryToURL(newEntry);
+        //currentEntry = BrowserBookmarkEntryList.URLToEntry(node.url); //used in future
 
       if (node.title !== newEntry.title) {
         changes.title = newEntry.title;
@@ -369,7 +369,7 @@ export default class ChromeBookmarkEntryList extends SyncableEntryList {
         var entry:Entry;
 
         if (node.url && node.title) {
-          entry = ChromeBookmarkEntryList.URLToEntry(node.url)!;
+          entry = BrowserBookmarkEntryList.URLToEntry(node.url)!;
 
           if (entry && entry.url === url) {
             removeIdList.push(node.id);

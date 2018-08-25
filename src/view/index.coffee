@@ -435,7 +435,7 @@ app.main = ->
   do ->
     # bookmark_idが未設定の場合、わざと無効な値を渡してneedReconfigureRootNodeId
     # をcallさせる。
-    cbel = new app.ChromeBookmarkEntryList(
+    cbel = new app.BrowserBookmarkEntryList(
       app.config.get("bookmark_id") or "dummy"
     )
     cbel.needReconfigureRootNodeId.add( ->

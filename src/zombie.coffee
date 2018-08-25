@@ -3,7 +3,7 @@ app.boot("/zombie.html", ->
     arrayOfReadState = JSON.parse(localStorage.zombie_read_state)
 
     app.bookmark = new app.BookmarkCompatibilityLayer(
-      new app.ChromeBookmarkEntryList(app.config.get("bookmark_id"))
+      new app.BrowserBookmarkEntryList(app.config.get("bookmark_id"))
     )
 
     try

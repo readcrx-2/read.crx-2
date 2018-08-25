@@ -11,14 +11,14 @@ createCrx = (tmpDir, pemPath) ->
   rcrx = new o.crx(privateKey: pem)
   loadedCrx = await rcrx.load(tmpDir)
   rcrxBuffer = await loadedCrx.pack()
-  await fs.writeFile("./read.crx_2.#{manifest.version}.crx", rcrxBuffer)
+  await fs.outputFile("./build/read.crx_2.#{manifest.version}.crx", rcrxBuffer)
   return
 
 createXpi = (tmpDir, apicrePath) ->
   apicre = await fs.readJson(apicrePath)
   await o.webExt.cmd.sign(
     sourceDir: tmpDir
-    artifactsDir: process.cwd()
+    artifactsDir: process.cwd()+"/build"
     apiKey: apicre.issuer
     apiSecret: apicre.secret
   )
@@ -28,7 +28,7 @@ createXpi = (tmpDir, apicrePath) ->
   tasks
 ###
 scan = (browser) ->
-  output = paths.output[browser].replace("./", "")
+  output = path.normalize(paths.output[browser])
   return ->
     await util.exec("freshclam", [])
     await util.exec("clamscan", ["-ir", output])

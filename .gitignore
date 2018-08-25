@@ -105,8 +105,5 @@ Session.vim
 
 ### My Project
 /debug/
-/debug-chrome/
-/debug-firefox/
-*.crx
-*.xpi
+/build/
 /.rpt2_cache/

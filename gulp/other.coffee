@@ -53,7 +53,7 @@ gulp.task "lib", gulp.task("lib:chrome")
 gulp.task "clean", ->
   return Promise.all([
     fs.remove("./.rpt2_cache")
-    fs.remove("./debug-chrome")
-    fs.remove("./debug-firefox")
+    fs.remove("./debug/chrome")
+    fs.remove("./debug/firefox")
     fs.remove("./read.crx_2.zip")
   ])

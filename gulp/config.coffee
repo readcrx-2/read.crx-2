@@ -86,7 +86,7 @@ do ->
   return
 
 for browser in browsers
-  paths.output[browser] = "./debug-#{browser}"
+  paths.output[browser] = "./debug/#{browser}"
 
 manifestJson = fs.readJsonSync(paths.manifest)
 

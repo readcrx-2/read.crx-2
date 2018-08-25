@@ -780,7 +780,7 @@ class app.view.TabContentView extends app.view.PaneContentView
       return
     )
 
-    # Chromeで直接開く
+    # ブラウザで直接開く
     do =>
       {url} = @$element.dataset
 

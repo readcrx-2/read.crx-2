@@ -99,7 +99,7 @@ export default class BrowserBookmarkEntryList extends SyncableEntryList {
     super();
 
     this.setRootNodeId(rootNodeId);
-    this.setUpChromeBookmarkWatcher();
+    this.setUpBrowserBookmarkWatcher();
   }
 
   private applyNodeAddToEntryList (node:BookmarkTreeNode):void {
@@ -120,7 +120,7 @@ export default class BrowserBookmarkEntryList extends SyncableEntryList {
           this.nodeIdStore.set(entry.url, node.id);
           this.update(entry, false);
         }
-        // addによりcreateChromeBookmarkが呼ばれた場合
+        // addによりcreateBrowserBookmarkが呼ばれた場合
         else if (!this.nodeIdStore.has(entry.url)) {
           this.nodeIdStore.set(entry.url, node.id);
         }
@@ -197,7 +197,7 @@ export default class BrowserBookmarkEntryList extends SyncableEntryList {
     return null;
   }
 
-  private setUpChromeBookmarkWatcher ():void {
+  private setUpBrowserBookmarkWatcher ():void {
     var watching = true;
 
     // Firefoxではbookmarks.onImportBegan/Endedは実装されていない
@@ -208,7 +208,7 @@ export default class BrowserBookmarkEntryList extends SyncableEntryList {
 
       browser.bookmarks.onImportEnded.addListener( () => {
         watching = true;
-        this.loadFromChromeBookmark();
+        this.loadFromBrowserBookmark();
       });
     }
 
@@ -249,7 +249,7 @@ export default class BrowserBookmarkEntryList extends SyncableEntryList {
 
   setRootNodeId (rootNodeId:string, callback?:Function):void {
     this.rootNodeId = rootNodeId;
-    this.loadFromChromeBookmark(callback);
+    this.loadFromBrowserBookmark(callback);
   }
 
   private async validateRootNodeSettings (): Promise<void> {
@@ -260,7 +260,7 @@ export default class BrowserBookmarkEntryList extends SyncableEntryList {
     }
   }
 
-  private async loadFromChromeBookmark (callback?:Function): Promise<void> {
+  private async loadFromBrowserBookmark (callback?:Function): Promise<void> {
     // EntryListクリア
     for(var entry of this.getAll()) {
       this.remove(entry.url, false);
@@ -282,7 +282,7 @@ export default class BrowserBookmarkEntryList extends SyncableEntryList {
         callback(true);
       }
     } catch (e) {
-      app.log("warn", "Chromeのブックマークからの読み込みに失敗しました。");
+      app.log("warn", "ブラウザのブックマークからの読み込みに失敗しました。");
       this.validateRootNodeSettings();
 
       if (callback) {
@@ -291,14 +291,14 @@ export default class BrowserBookmarkEntryList extends SyncableEntryList {
     }
   }
 
-  private async createChromeBookmark (entry:Entry, callback?:Function): Promise<void> {
+  private async createBrowserBookmark (entry:Entry, callback?:Function): Promise<void> {
     var res:BookmarkTreeNode = await browser.bookmarks.create({
       parentId: this.rootNodeId,
       url: BrowserBookmarkEntryList.entryToURL(entry),
       title: entry.title
     });
     if (!res) {
-      app.log("error", "Chromeのブックマークへの追加に失敗しました");
+      app.log("error", "ブラウザのブックマークへの追加に失敗しました");
       this.validateRootNodeSettings();
     }
 
@@ -307,7 +307,7 @@ export default class BrowserBookmarkEntryList extends SyncableEntryList {
     }
   }
 
-  private async updateChromeBookmark (newEntry:Entry, callback?:Function): Promise<void> {
+  private async updateBrowserBookmark (newEntry:Entry, callback?:Function): Promise<void> {
     var id:string;
 
     if (this.nodeIdStore.has(newEntry.url)) {
@@ -340,7 +340,7 @@ export default class BrowserBookmarkEntryList extends SyncableEntryList {
           }
         }
         else {
-          app.log("error", "Chromeのブックマーク更新に失敗しました");
+          app.log("error", "ブラウザのブックマーク更新に失敗しました");
           this.validateRootNodeSettings();
 
           if (callback) {
@@ -356,7 +356,7 @@ export default class BrowserBookmarkEntryList extends SyncableEntryList {
     }
   }
 
-  private async removeChromeBookmark (url: string, callback?: Function): Promise<void> {
+  private async removeBrowserBookmark (url: string, callback?: Function): Promise<void> {
     if (this.nodeIdStore.has(url)) {
       this.nodeIdStore.delete(url);
     }
@@ -390,16 +390,16 @@ export default class BrowserBookmarkEntryList extends SyncableEntryList {
     }
   }
 
-  add (entry:Entry, createChromeBookmark = true, callback?:Function):boolean {
+  add (entry:Entry, createBrowserBookmark = true, callback?:Function):boolean {
     entry = app.deepCopy(entry);
 
     if (super.add(entry)) {
-      if (createChromeBookmark) {
+      if (createBrowserBookmark) {
         if (callback) {
-          this.createChromeBookmark(entry, callback);
+          this.createBrowserBookmark(entry, callback);
         }
         else {
-          this.createChromeBookmark(entry);
+          this.createBrowserBookmark(entry);
         }
       }
       else if (callback) {
@@ -415,16 +415,16 @@ export default class BrowserBookmarkEntryList extends SyncableEntryList {
     }
   }
 
-  update (entry:Entry, updateChromeBookmark = true, callback?:Function):boolean {
+  update (entry:Entry, updateBrowserBookmark = true, callback?:Function):boolean {
     entry = app.deepCopy(entry);
 
     if (super.update(entry)) {
-      if (updateChromeBookmark) {
+      if (updateBrowserBookmark) {
         if (callback) {
-          this.updateChromeBookmark(entry, callback);
+          this.updateBrowserBookmark(entry, callback);
         }
         else {
-          this.updateChromeBookmark(entry);
+          this.updateBrowserBookmark(entry);
         }
       }
       else if (callback) {
@@ -440,14 +440,14 @@ export default class BrowserBookmarkEntryList extends SyncableEntryList {
     }
   }
 
-  remove (url:string, removeChromeBookmark = true, callback?:Function):boolean {
+  remove (url:string, removeBrowserBookmark = true, callback?:Function):boolean {
     if (super.remove(url)) {
-      if (removeChromeBookmark) {
+      if (removeBrowserBookmark) {
         if (callback) {
-          this.removeChromeBookmark(url, callback);
+          this.removeBrowserBookmark(url, callback);
         }
         else {
-          this.removeChromeBookmark(url);
+          this.removeBrowserBookmark(url);
         }
       }
       else if (callback) {

@@ -32,7 +32,6 @@ header, body {
 
 .content {
   contain: size;
-  padding-bottom: 50px;
   backface-visibility: hidden;
   &[data-res-search-hit-count="0"]::after {
     display: block;
@@ -42,6 +41,11 @@ header, body {
     text-align: center;
     font-size: 18px;
     content: "検索にヒットするレスが有りませんでした";
+  }
+  &::after {
+    content: "";
+    display: block;
+    padding-bottom: 50px;
   }
 }
 

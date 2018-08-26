@@ -6,7 +6,7 @@
 
 @media (max-width: 650px) and (min-width: 501px) {
   th:not(.table_sort_asc):not(.table_sort_desc) {
-    &:nth-child(6) {
+    &.created_date {
       width: 0;
     }
   }
@@ -14,7 +14,7 @@
 
 @media (max-width: 500px) {
   th:not(.table_sort_asc):not(.table_sort_desc) {
-    &:nth-child(n+3) {
+    &:not(.bookmark):not(.title) {
       width: 0;
     }
   }

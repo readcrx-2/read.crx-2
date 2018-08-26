@@ -312,7 +312,7 @@ export default class BrowserBookmarkEntryList extends SyncableEntryList {
 
     if (this.nodeIdStore.has(newEntry.url)) {
       id = this.nodeIdStore.get(newEntry.url)!;
-      var res:BookmarkTreeNode[] = browser.bookmarks.get(id);
+      var res:BookmarkTreeNode[] = await browser.bookmarks.get(id);
 
       var changes:any = {},
         node = res[0],

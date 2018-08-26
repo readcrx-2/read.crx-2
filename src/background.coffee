@@ -29,8 +29,8 @@ browser.browserAction.onClicked.addListener( ->
     browser.tabs.create(url: "/view/index.html")
     return
   # 実行中のread.crxが存在すればそれを開く
-  browser.windows.update(windowId, {focused: true})
-  browser.tabs.update(id, {highlighted: true})
+  browser.windows.update(windowId, focused: true)
+  browser.tabs.update(id, active: true)
   return
 )
 
@@ -92,8 +92,8 @@ browser.contextMenus.onClicked.addListener( ({menuItemId, linkUrl: url}, tab) ->
   try
     {windowId, id} = await searchRcrx()
     # 実行中のread.crxが存在すればそれを開く
-    browser.windows.update(windowId, {focused: true})
-    browser.tabs.update(id, {highlighted: true})
+    browser.windows.update(windowId, focused: true)
+    browser.tabs.update(id, active: true)
     browser.runtime.sendMessage(type: "open", query: url)
   catch
     # 存在しなければタブを作成する

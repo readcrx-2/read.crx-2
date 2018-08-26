@@ -11,11 +11,10 @@
 export createAll = ->
   id = browser.runtime.id
 
-  switch
-    when location.origin.startsWith("chrome-extension://")
-      viewThread = ["chrome-extension://#{id}/view/thread.html*"]
-    when location.origin.startsWith("moz-extension://")
-      viewThread = ["moz-extension://#{id}/view/thread.html*"]
+  if "&[BROWSER]" is "chrome"
+    viewThread = ["chrome-extension://#{id}/view/thread.html*"]
+  else if "&[BROWSER]" is "firefox"
+    viewThread = ["moz-extension://#{id}/view/thread.html*"]
 
   create(
     id: "add_selection_to_ngwords",

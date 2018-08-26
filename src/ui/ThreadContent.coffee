@@ -762,13 +762,13 @@ export default class ThreadContent
           #Beアイコン埋め込み表示
           .replace(///^(?:\s*sssp|https?)://(img\.[25]ch\.net/(?:ico|premium)/[\w\-_]+\.gif)\s*<br>///, ($0, $1) =>
             if app.URL.tsld(@url) in ["5ch.net", "bbspink.com", "2ch.sc"]
-              return """<img class="beicon" src="/img/dummy_1x1.#{app.imgExt}" data-src="#{scheme}://#{$1}"><br>"""
+              return """<img class="beicon" src="/img/dummy_1x1.&[IMG_EXT]" data-src="#{scheme}://#{$1}"><br>"""
             return $0
           )
           #エモーティコン埋め込み表示
           .replace(///(?:\s*sssp|https?)://(img\.[25]ch\.net/emoji/[\w\-_]+\.gif)\s*///g, ($0, $1) =>
             if app.URL.tsld(@url) in ["5ch.net", "bbspink.com", "2ch.sc"]
-              return """<img class="beicon emoticon" src="/img/dummy_1x1.#{app.imgExt}" data-src="#{scheme}://#{$1}">"""
+              return """<img class="beicon emoticon" src="/img/dummy_1x1.&[IMG_EXT]" data-src="#{scheme}://#{$1}">"""
             return $0
           )
           #アンカーリンク
@@ -1248,7 +1248,7 @@ export default class ThreadContent
         thumbnailLink.target = "_blank"
 
         thumbnailImg = $__("img").addClass("image")
-        thumbnailImg.src = "/img/dummy_1x1.#{app.imgExt}"
+        thumbnailImg.src = "/img/dummy_1x1.&[IMG_EXT]"
         thumbnailImg.style.WebkitFilter = webkitFilter
         thumbnailImg.style.maxWidth = "#{app.config.get("image_width")}px"
         thumbnailImg.style.maxHeight = "#{app.config.get("image_height")}px"
@@ -1264,7 +1264,7 @@ export default class ThreadContent
         thumbnailLink.addLast(thumbnailImg)
 
         thumbnailFavicon = $__("img").addClass("favicon")
-        thumbnailFavicon.src = "/img/dummy_1x1.#{app.imgExt}"
+        thumbnailFavicon.src = "/img/dummy_1x1.&[IMG_EXT]"
         thumbnailFavicon.dataset.src = "https://www.google.com/s2/favicons?domain=#{sourceA.hostname}"
         thumbnailLink.addLast(thumbnailFavicon)
 

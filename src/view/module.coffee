@@ -785,7 +785,7 @@ class app.view.TabContentView extends app.view.PaneContentView
       {url} = @$element.dataset
 
       if url is "bookmark"
-        if location.origin.startsWith("chrome-extension://")
+        if "&[BROWSER]" is "chrome"
           url = "chrome://bookmarks/?id=#{app.config.get("bookmark_id")}"
         else
           @$element.$(".button_link > a")?.remove()

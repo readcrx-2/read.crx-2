@@ -2,10 +2,11 @@ gulp = require "gulp"
 path = require "path"
 {gulp: $, rollup: _} = require "./plugins"
 {browsers, paths, defaultOptions} = require "./config"
-{makeInOut, rollupIOConfigs} = require "./js"
+{makeInOut, getRollupIOConfigs} = require "./js"
 util = require "./util"
 
-makeRollupConfig = (browser, config) ->
+makeRollupConfig = (browser, configName) ->
+  config = getRollupIOConfigs(configName, browser)
   c = makeInOut(browser, config)
   return {
     c.input...
@@ -21,11 +22,11 @@ rollupWatch = (config) ->
   tasks
 ###
 watch = (browser) ->
-  appjsConfig = makeRollupConfig(browser, rollupIOConfigs.app)
-  corejsConfig = makeRollupConfig(browser, rollupIOConfigs.core)
-  uijsConfig = makeRollupConfig(browser, rollupIOConfigs.ui)
-  submitResjsConfig = makeRollupConfig(browser, rollupIOConfigs.submitRes)
-  submitThreadjsConfig = makeRollupConfig(browser, rollupIOConfigs.submitThread)
+  appjsConfig = makeRollupConfig(browser, "app")
+  corejsConfig = makeRollupConfig(browser, "core")
+  uijsConfig = makeRollupConfig(browser, "ui")
+  submitResjsConfig = makeRollupConfig(browser, "submitRes")
+  submitThreadjsConfig = makeRollupConfig(browser, "submitThread")
   return ->
     rollupWatch(appjsConfig)
     rollupWatch(corejsConfig)

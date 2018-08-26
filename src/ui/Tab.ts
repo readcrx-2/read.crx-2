@@ -212,7 +212,7 @@ export default class Tab {
     $li.dataset.tabid = tabId;
     $li.dataset.tabsrc = url;
     var $img = $__("img");
-    $img.src = `/img/close_16x16.${app.imgExt}`;
+    $img.src = "/img/close_16x16.&[IMG_EXT]";
     $img.title = "閉じる";
     $li.addLast($__("span"), $img);
     this.$element.$(".tab_tabbar").addLast($li);

@@ -4,6 +4,12 @@ gulp = require "gulp"
 {browsers, paths, defaultOptions} = require "./config"
 util = require "./util"
 
+getReplaceMap = (browser) ->
+  return {
+    "BROWSER": browser
+    "IMG_EXT": if browser is "chrome" then "webp" else "png"
+  }
+
 ###
   rollup
 ###
@@ -14,14 +20,62 @@ makeInOut = (browser, {output, pathname, plugins, outObj = {} }) ->
   i.input = paths.js[pathname]
   cache[pathname] = null
   i.cache = cache[pathname]
-  i.plugins = [plugins...] if plugins?
+  i.plugins = plugins.concat(i.plugins) if plugins?
 
   o = Object.assign({}, defaultOptions.rollup.out, outObj)
   o.file = "#{paths.output[browser]}/#{output}"
   return {input: i, output: o}
 exports.makeInOut = makeInOut
 
-makeFunc = (browser, args) ->
+getRollupIOConfigs = (name, browser) ->
+  replace = _.replace(
+    delimiters: ["&[", "]"]
+    values: getReplaceMap(browser)
+  )
+  switch name
+    when "app"
+      return {
+        pathname: "app"
+        output: "app.js"
+        plugins: [replace]
+        outObj:
+          name: "app"
+      }
+    when "core"
+      return {
+        pathname: "core"
+        output: "app_core.js"
+        plugins: [replace]
+        outObj:
+          name: "app"
+          extend: true
+      }
+    when "ui"
+      return {
+        pathname: "ui"
+        output: "ui.js"
+        plugins: [replace]
+        outObj:
+          name: "UI"
+      }
+    when "submitRes"
+      return {
+        pathname: "submitRes"
+        output: "write/submit_res.js"
+        plugins: [replace]
+      }
+    when "submitThread"
+      return {
+        pathname: "submitThread"
+        output: "write/submit_thread.js"
+        plugins: [replace]
+      }
+  throw new Error("Error: rollupIOConfig Not Found '#{name}'")
+  return
+exports.getRollupIOConfigs = getRollupIOConfigs
+
+makeFunc = (browser, configName) ->
+  args = getRollupIOConfigs(configName, browser)
   filename = path.basename(args.output)
   {input: i, output: o} = makeInOut(browser, args)
   func = ->
@@ -35,53 +89,29 @@ makeFunc = (browser, args) ->
   func.displayName = "js:#{filename}:#{browser}"
   return func
 
-rollupIOConfigs =
-  app: {
-    pathname: "app"
-    output: "app.js"
-    plugins: [ _.ts(defaultOptions.rollupTs) ]
-    outObj:
-      name: "app"
-  }
-  core: {
-    pathname: "core"
-    output: "app_core.js"
-    outObj:
-      name: "app"
-      extend: true
-  }
-  ui: {
-    pathname: "ui"
-    output: "ui.js"
-    outObj:
-      name: "UI"
-  }
-  submitRes: {
-    pathname: "submitRes"
-    output: "write/submit_res.js"
-  }
-  submitThread: {
-    pathname: "submitThread"
-    output: "write/submit_thread.js"
-  }
-exports.rollupIOConfigs = rollupIOConfigs
-
 app = (browser) ->
-  return makeFunc(browser, rollupIOConfigs.app)
+  return makeFunc(browser, "app")
 core = (browser) ->
-  return makeFunc(browser, rollupIOConfigs.core)
+  return makeFunc(browser, "core")
 ui = (browser) ->
-  return makeFunc(browser, rollupIOConfigs.ui)
+  return makeFunc(browser, "ui")
 submitRes = (browser) ->
-  return makeFunc(browser, rollupIOConfigs.submitRes)
+  return makeFunc(browser, "submitRes")
 submitThread = (browser) ->
-  return makeFunc(browser, rollupIOConfigs.submitThread)
+  return makeFunc(browser, "submitThread")
 
 ###
   tasks
 ###
+rr = /&\[(\w+)\]/g
+makeReplaceOptions = (browser) ->
+  rm = getReplaceMap(browser)
+  return (m, p1) ->
+    return rm[p1]
+
 background = (browser) ->
   output = paths.output[browser]
+  ro = makeReplaceOptions(browser)
   return ->
     return $.merge(
       gulp.src paths.lib.webExtPolyfill
@@ -89,43 +119,52 @@ background = (browser) ->
       gulp.src paths.js.background
         .pipe($.plumber(util.onCoffeeError))
         .pipe($.changed(output, extension: ".js"))
+        .pipe($.replace(rr, ro))
         .pipe($.coffee(defaultOptions.coffee))
     ).pipe($.concat("background.js"))
     .pipe(gulp.dest(output))
 
 csAddlink = (browser) ->
   output = paths.output[browser]
+  ro = makeReplaceOptions(browser)
   return ->
     return gulp.src paths.js.csAddlink
       .pipe($.plumber(util.onCoffeeError))
       .pipe($.changed(output, extension: ".js"))
+      .pipe($.replace(rr, ro))
       .pipe($.coffee(defaultOptions.coffee))
       .pipe(gulp.dest(output))
 
 view = (browser) ->
   output = paths.output[browser]+"/view"
+  ro = makeReplaceOptions(browser)
   return ->
     return gulp.src paths.js.view
       .pipe($.plumber(util.onCoffeeError))
       .pipe($.changed(output, extension: ".js"))
+      .pipe($.replace(rr, ro))
       .pipe($.coffee(defaultOptions.coffee))
       .pipe(gulp.dest(output))
 
 zombie = (browser) ->
   output = paths.output[browser]
+  ro = makeReplaceOptions(browser)
   return ->
     return gulp.src paths.js.zombie
       .pipe($.plumber(util.onCoffeeError))
       .pipe($.changed(output, extension: ".js"))
+      .pipe($.replace(rr, ro))
       .pipe($.coffee(defaultOptions.coffee))
       .pipe(gulp.dest(output))
 
 csWrite = (browser) ->
   output = paths.output[browser]+"/write"
+  ro = makeReplaceOptions(browser)
   return ->
     return gulp.src paths.js.csWrite
       .pipe($.plumber(util.onCoffeeError))
       .pipe($.changed(output, extension: ".js"))
+      .pipe($.replace(rr, ro))
       .pipe($.coffee(defaultOptions.coffee))
       .pipe(gulp.dest(output))
 

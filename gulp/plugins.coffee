@@ -17,12 +17,14 @@ module.exports =
     merge: require "merge2"
     rename: require "gulp-rename"
     coffee: require "gulp-coffee"
+    replace: require "gulp-replace"
     sass: sass
     pug: require "gulp-pug"
   rollup:
     rollup: require "rollup"
     ts: require "rollup-plugin-typescript2"
     coffee: require "rollup-plugin-coffee-script"
+    replace: require "rollup-plugin-replace"
   other:
     sharp: require "sharp"
     toIco: require "to-ico"

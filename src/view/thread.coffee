@@ -757,7 +757,7 @@ app.boot("/view/thread.html", ->
   #クイックジャンプパネル
   do ->
     jumpArticleSelector =
-      ".jump_one": "article:nth-child(1)"
+      ".jump_one": "article:first-child"
       ".jump_newest": "article:last-child"
       ".jump_not_read": "article.read + article"
       ".jump_new": "article.received + article"

@@ -18,8 +18,11 @@ export default Write =
 
   beforeSendFunc: ({method, requestHeaders}) ->
     origin = browser.runtime.getURL("")[...-1]
-    isSameOrigin = requestHeaders.some( ({name, value}) ->
-      return name is "Origin" and (value is origin or value is "null")
+    isSameOrigin = (
+      requestHeaders.some( ({name, value}) ->
+        return name is "Origin" and (value is origin or value is "null")
+      ) or
+      !requestHeaders.includes("Origin")
     )
     return unless method is "POST" and isSameOrigin
     {url} = Write.getArgs()

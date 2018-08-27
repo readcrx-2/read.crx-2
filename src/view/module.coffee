@@ -590,21 +590,22 @@ class app.view.TabContentView extends app.view.PaneContentView
     $table?.on("table_sort_updated", ({detail}) ->
       for dom in $selector.T("option")
         dom.selected = false
-        if String(detail.sort_attribute or detail.sort_index) is dom.textContent
+        if String(detail.sort_attribute or detail.sort_index) is dom.dataset.sortIndex
           dom.selected = true
       return
     )
 
     $selector?.on("change", ->
-      selected = @child()[@selectedIndex]
+      $selected = @child()[@selectedIndex]
       config = {}
 
-      config.sortOrder = selected.dataset.sortOrder or "desc"
+      config.sortOrder = $selected.dataset.sortOrder or "desc"
 
-      if /^\d+$/.test(@value)
-        config.sortIndex = +@value
+      val = $selected.dataset.sortIndex
+      if /^\d+$/.test(val)
+        config.sortIndex = +val
       else
-        config.sortAttribute = @value
+        config.sortAttribute = val
 
       app.DOMData.get($table, "tableSorter").update(config)
       return

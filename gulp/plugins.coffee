@@ -19,12 +19,15 @@ module.exports =
     coffee: require "gulp-coffee"
     replace: require "gulp-replace"
     sass: sass
+    postcss: require "gulp-postcss"
     pug: require "gulp-pug"
   rollup:
     rollup: require "rollup"
     ts: require "rollup-plugin-typescript2"
     coffee: require "rollup-plugin-coffee-script"
     replace: require "rollup-plugin-replace"
+  postcss:
+    autoprefixer: require "autoprefixer"
   other:
     sharp: require "sharp"
     toIco: require "to-ico"

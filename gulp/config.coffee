@@ -1,5 +1,5 @@
 fs = require "fs-extra"
-{compiler: c, rollup: _} = require "./plugins"
+{compiler: c, rollup: _, postcss: p} = require "./plugins"
 util = require "./util"
 
 browsers = [
@@ -114,6 +114,9 @@ defaultOptions =
     bare: true
   sass:
     outputStyle: "compressed"
+  postcss: [
+    p.autoprefixer()
+  ]
   pug:
     pug: c.pug
     locals: manifestJson

@@ -23,6 +23,7 @@ ui = (browser) ->
   return ->
     return gulp.src paths.css.ui
       .pipe($.sass(sassOptions).on("error", util.onScssError))
+      .pipe($.postcss(defaultOptions.postcss))
       .pipe(gulp.dest(output))
 
 view = (browser) ->
@@ -33,6 +34,7 @@ view = (browser) ->
   return ->
     return gulp.src paths.css.view
       .pipe($.sass(sassOptions).on("error", util.onScssError))
+      .pipe($.postcss(defaultOptions.postcss))
       .pipe(gulp.dest(output))
 
 write = (browser) ->
@@ -43,6 +45,7 @@ write = (browser) ->
   return ->
     return gulp.src paths.css.write
       .pipe($.sass(sassOptions).on("error", util.onScssError))
+      .pipe($.postcss(defaultOptions.postcss))
       .pipe(gulp.dest(output))
 
 ###

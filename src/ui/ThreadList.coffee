@@ -76,18 +76,24 @@ export default class ThreadList
       return
     , true)
 
+    $cols = $_F()
     selector = {}
     column = {}
     i = 0
     for key, val of keyToLabel when key in option.th
       i++
-      $th = $__("th")
-      $th.setClass(key.replace(/([A-Z])/g, ($0, $1) -> "_" + $1.toLowerCase()))
+      className = key.replace(/([A-Z])/g, ($0, $1) -> "_" + $1.toLowerCase())
+      $th = $__("th").addClass(className)
       $th.textContent = val
+      $th.dataset.key = className
       $tr.addLast($th)
       @_flg[key] = true
       selector[key] = "td:nth-child(#{i})"
       column[key] = i
+      $col = $__("col").addClass(className)
+      $col.span = 1
+      $cols.addLast($col)
+    $table.addFirst($cols)
 
     #ブックマーク更新時処理
     app.message.on("bookmark_updated", ({type, bookmark}) =>

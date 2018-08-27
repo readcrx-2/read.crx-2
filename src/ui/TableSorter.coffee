@@ -13,10 +13,10 @@ export default class TableSorter
 
       order = if target.hasClass("table_sort_desc") then "asc" else "desc"
 
-      @table.C("table_sort_asc")[0]?.removeClass("table_sort_asc")
-      @table.C("table_sort_desc")[0]?.removeClass("table_sort_desc")
+      @clearSortClass()
 
       target.addClass("table_sort_#{order}")
+      @table.$("col.#{target.dataset.key}").addClass("table_sort_#{order}")
 
       @update()
       return
@@ -36,12 +36,12 @@ export default class TableSorter
     return if event.defaultPrevented
 
     if sortIndex? and sortOrder?
-      @table.C("table_sort_asc")[0]?.removeClass("table_sort_asc")
-      @table.C("table_sort_desc")[0]?.removeClass("table_sort_desc")
+      @clearSortClass()
       $th = @table.$("th:nth-child(#{sortIndex + 1})")
       $th.addClass("table_sort_#{sortOrder}")
+      @table.$("col.#{$th.dataset.key}").addClass("table_sort_#{sortOrder}")
     else if not sortAttribute?
-      $th = @table.$(".table_sort_asc, .table_sort_desc")
+      $th = @table.$("th.table_sort_asc, th.table_sort_desc")
 
       return unless $th
 
@@ -58,8 +58,7 @@ export default class TableSorter
         data[$td.textContent] or= []
         data[$td.textContent].push($td.parent())
     else if sortAttribute?
-      @table.C("table_sort_asc")[0]?.removeClass("table_sort_asc")
-      @table.C("table_sort_desc")[0]?.removeClass("table_sort_desc")
+      @clearSortClass()
 
       data = {}
       for $tr in @table.$("tbody").T("tr")
@@ -104,4 +103,14 @@ export default class TableSorter
       sortAttribute: sort_attribute
       sortOrder: sort_order
     )
+    return
+
+  ###*
+  @method updateSnake
+  ###
+  clearSortClass: ->
+    for $dom in @table.C("table_sort_asc") by -1
+      $dom.removeClass("table_sort_asc")
+    for $dom in @table.C("table_sort_desc") by -1
+      $dom.removeClass("table_sort_desc")
     return

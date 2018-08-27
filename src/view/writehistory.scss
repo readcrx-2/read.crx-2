@@ -5,8 +5,10 @@
 @include content-table;
 
 @media (max-width: 500px) {
-  th.written_date {
-    width: 0;
+  col, th {
+    .written_date {
+      width: 0;
+    }
   }
 }
 

@@ -534,11 +534,11 @@ $z-indexes:(
     }
   }
 
-  .table_sort_asc::after {
+  th.table_sort_asc::after {
     content: "↑";
   }
 
-  .table_sort_desc::after {
+  th.table_sort_desc::after {
     content: "↓";
   }
 

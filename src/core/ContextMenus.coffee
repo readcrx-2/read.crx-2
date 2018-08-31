@@ -1,79 +1,81 @@
 ###*
-@namespace app
-@class contextMenus
+@class ContextMenus
 @static
 ###
-class app.contextMenus
-# chrome.contextMenusの呼び出しレベルを統一するための代理クラス
+# browser.contextMenusの呼び出しレベルを統一するための代理クラス
 # (Chrome 53 対策)
 
-  ###*
-  @method createAll
-  ###
-  @createAll: ->
-    id = chrome.runtime.id
-    viewThread = "chrome-extension://#{id}/view/thread.html*"
+###*
+@method createAll
+###
+export createAll = ->
+  id = browser.runtime.id
 
-    @create(
-      id: "add_selection_to_ngwords",
-      title: "選択範囲をNG指定",
-      contexts: ["selection"],
-      documentUrlPatterns: [viewThread]
-    )
-    @create(
-      id: "add_link_to_ngwords",
-      title: "リンクアドレスをNG指定",
-      contexts: ["link"],
-      enabled: false,
-      documentUrlPatterns: [viewThread]
-    )
-    @create(
-      id: "add_media_to_ngwords",
-      title: "メディアのアドレスをNG指定",
-      contexts: ["image", "video", "audio"],
-      documentUrlPatterns: [viewThread]
-    )
-    @create(
-      id: "open_link_with_res_number",
-      title: "レス番号を指定してリンクを開く",
-      contexts: ["link"],
-      enabled: false,
-      documentUrlPatterns: [viewThread]
-    )
-    return
+  if "&[BROWSER]" is "chrome"
+    viewThread = ["chrome-extension://#{id}/view/thread.html*"]
+  else if "&[BROWSER]" is "firefox"
+    viewThread = ["moz-extension://#{id}/view/thread.html*"]
 
-  ###*
-  @method create
-  @parm {Object} obj
-  @return {Number|String} id
-  ###
-  @create: (obj)->
-    return chrome.contextMenus.create(obj)
+  create(
+    id: "add_selection_to_ngwords",
+    title: "選択範囲をNG指定",
+    contexts: ["selection"],
+    documentUrlPatterns: viewThread
+  )
+  create(
+    id: "add_link_to_ngwords",
+    title: "リンクアドレスをNG指定",
+    contexts: ["link"],
+    enabled: false,
+    documentUrlPatterns: viewThread
+  )
+  create(
+    id: "add_media_to_ngwords",
+    title: "メディアのアドレスをNG指定",
+    contexts: ["image", "video", "audio"],
+    documentUrlPatterns: viewThread
+  )
+  create(
+    id: "open_link_with_res_number",
+    title: "レス番号を指定してリンクを開く",
+    contexts: ["link"],
+    enabled: false,
+    documentUrlPatterns: viewThread
+  )
+  return
 
-  ###*
-  @method update
-  @parm {Number|String} id
-  @parm {Object} obj
-  ###
-  @update: (id, obj)->
-    chrome.contextMenus.update(id, obj)
-    return
+###*
+@method create
+@parm {Object} obj
+@return {Number|String} id
+###
+export create = (obj)->
+  return browser.contextMenus.create(obj)
 
-  ###*
-  @method remove
-  @parm {Number|String} id
-  ###
-  @remove: (id)->
-    chrome.contextMenus.remove(id)
-    return
+###*
+@method update
+@parm {Number|String} id
+@parm {Object} obj
+###
+export update = (id, obj)->
+  browser.contextMenus.update(id, obj)
+  return
 
-  ###*
-  @method removeAll
-  ###
-  @removeAll: ->
-    # removeAll()を使うとbackgroundのコンテキストメニューも削除されてしまうので個別に削除する
-    @remove("add_selection_to_ngwords")
-    @remove("add_link_to_ngwords")
-    @remove("add_media_to_ngwords")
-    @remove("open_link_with_res_number")
-    return
+###*
+@method remove
+@parm {Number|String} id
+###
+export remove = (id)->
+  browser.contextMenus.remove(id)
+  return
+
+###*
+@method removeAll
+###
+export removeAll = ->
+  # removeAll()を使うとbackgroundのコンテキストメニューも削除されてしまうので個別に削除する
+  remove("add_selection_to_ngwords")
+  remove("add_link_to_ngwords")
+  remove("add_media_to_ngwords")
+  remove("open_link_with_res_number")
+  return

@@ -294,7 +294,7 @@ app.boot("/view/thread.html", ->
   $view.on("contextmenu", ({target}) ->
     return unless target.matches("article > .message")
     # 選択範囲をNG登録
-    app.contextMenus.update("add_selection_to_ngwords", {
+    app.ContextMenus.update("add_selection_to_ngwords", {
       onclick: (info, tab) ->
         selectedText = getSelection().toString()
         if selectedText.length > 0
@@ -673,7 +673,7 @@ app.boot("/view/thread.html", ->
     return unless target.matches(".message > a")
     # リンクアドレスをNG登録
     enableFlg = !(target.hasClass("anchor") or target.hasClass("anchor_id"))
-    app.contextMenus.update("add_link_to_ngwords", {
+    app.ContextMenus.update("add_link_to_ngwords", {
       enabled: enableFlg
       onclick: (info, tab) =>
         app.NG.add(target.href)
@@ -686,7 +686,7 @@ app.boot("/view/thread.html", ->
     else
       menuTitle = "レス番号を指定してリンクを開く"
     enableFlg = (target.hasClass("open_in_rcrx") and target.dataset.paramResNum isnt undefined)
-    app.contextMenus.update("open_link_with_res_number", {
+    app.ContextMenus.update("open_link_with_res_number", {
       title: menuTitle
       enabled: enableFlg
       onclick: (info, tab) =>
@@ -705,7 +705,7 @@ app.boot("/view/thread.html", ->
       when "IMG"
         menuTitle = "画像のアドレスをNG指定"
         # リンクアドレスをNG登録
-        app.contextMenus.update("add_link_to_ngwords", {
+        app.ContextMenus.update("add_link_to_ngwords", {
           enabled: true,
           onclick: (info, tab) =>
             app.NG.add(target.parent().href)
@@ -717,7 +717,7 @@ app.boot("/view/thread.html", ->
       when "AUDIO"
         menuTitle = "音声のアドレスをNG指定"
     # メディアのアドレスをNG登録
-    app.contextMenus.update("add_media_to_ngwords", {
+    app.ContextMenus.update("add_media_to_ngwords", {
       title: menuTitle,
       onclick: (info, tab) =>
         app.NG.add(target.src)
@@ -757,7 +757,7 @@ app.boot("/view/thread.html", ->
   #クイックジャンプパネル
   do ->
     jumpArticleSelector =
-      ".jump_one": "article:nth-child(1)"
+      ".jump_one": "article:first-child"
       ".jump_newest": "article:last-child"
       ".jump_not_read": "article.read + article"
       ".jump_new": "article.received + article"

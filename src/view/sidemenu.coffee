@@ -1,4 +1,4 @@
-app.boot("/view/sidemenu.html", ["bbsmenu"], (BBSMenu) ->
+app.boot("/view/sidemenu.html", ["BBSMenu"], (BBSMenu) ->
   $view = document.documentElement
 
   new app.view.PaneContentView($view)

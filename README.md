@@ -1,5 +1,5 @@
 # read.crx 2 [![GitHub version](https://badge.fury.io/gh/readcrx-2%2Fread.crx-2.svg)][repolink] ![David Badge](https://david-dm.org/readcrx-2/read.crx-2/dev-status.svg "David Badge")
-read.crx 2は[Google Chrome][chrome] extensionとして作られた2chブラウザです。
+read.crx 2は[Google Chrome][chrome]/[Firefox][firefox] extensionとして作られた2chブラウザです。
 [2ch.net(5ch.net)][5ch.net]、[2ch.sc][2ch.sc]、[open2ch.net][open2ch.net]及びその互換BBS、[まちBBS][machi]、[したらば][jbbs]の閲覧に対応しています。
 
 一般の利用者向けの配布は[こちら](https://readcrx-2.github.io/read.crx-2/)
@@ -36,6 +36,7 @@ read.crx 2のソースコードはMITライセンスですが、read.crx 2がア
 [2ch.sc]: http://2ch.sc/
 [open2ch.net]: http://open2ch.net/
 [chrome]: https://www.google.com/chrome
+[firefox]: https://www.mozilla.org/firefox/
 [clamav]: http://www.clamav.net/
 [jbbs]: http://rentalbbs.livedoor.com/
 [machi]: http://www.machi.to/

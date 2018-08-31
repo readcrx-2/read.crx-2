@@ -1,4 +1,4 @@
-app.boot("/view/bookmark.html", ["board"], (Board) ->
+app.boot("/view/bookmark.html", ["Board"], (Board) ->
   $view = document.documentElement
 
   $table = $__("table")
@@ -91,8 +91,7 @@ app.boot("/view/bookmark.html", ["board"], (Board) ->
         #ソート後にブックマークが更新されてしまう場合に備えて、少し待つ
         do ->
           await app.wait(500)
-          $view.C("table_sort_desc")[0]?.removeClass("table_sort_desc")
-          $view.C("table_sort_asc")[0]?.removeClass("table_sort_asc")
+          tableSorter.clearSortClass()
           for tr in $view.$$("tr:not(.updated)")
             tr.parent().addLast(tr)
           trUpdatedObserver.disconnect()

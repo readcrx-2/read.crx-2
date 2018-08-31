@@ -1,20 +1,20 @@
-@import "../common.scss";
+@import "../_common.scss";
 
 @include common;
 @include tab-content;
 @include content-table;
 
 @media (max-width: 650px) and (min-width: 501px) {
-  th:not(.table_sort_asc):not(.table_sort_desc) {
-    &:nth-child(6) {
+  col, th {
+    &:not(.table_sort_asc):not(.table_sort_desc).created_date {
       width: 0;
     }
   }
 }
 
 @media (max-width: 500px) {
-  th:not(.table_sort_asc):not(.table_sort_desc) {
-    &:nth-child(2), &:nth-child(3), &:nth-child(n+5) {
+  col, th {
+    &:not(.table_sort_asc):not(.table_sort_desc):not(.title):not(.unread) {
       width: 0;
     }
   }
@@ -28,7 +28,7 @@ tbody:empty {
 }
 
 tr.https td:first-child::before {
-  content: url(/img/lock_12x12_3a5.webp);
+  content: img(lock_12x12_3a5);
   vertical-align: middle;
 }
 

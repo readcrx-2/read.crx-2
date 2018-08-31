@@ -1,4 +1,4 @@
-﻿@import "../common.scss";
+﻿@import "../_common.scss";
 
 @include common;
 
@@ -46,7 +46,7 @@ a {
 }
 
 a.https::before {
-  content: url(/img/lock_12x12_3a5.webp);
+  content: img(lock_12x12_3a5);
   vertical-align: middle;
 }
 
@@ -195,7 +195,7 @@ li:not(.bookmark) + li.bookmark::before {
     $searchbox-submit-background-color: hsl(0, 0%, 100%),
     $searchbox-submit-background-image: (
       linear-gradient(hsla(0, 0%, 0%, 0.05), hsla(0, 0%, 0%, 0.1)),
-      url(/img/search2_19x19_777.webp)
+      img(search2_19x19_777)
     )
   );
 }
@@ -220,7 +220,7 @@ li:not(.bookmark) + li.bookmark::before {
     $searchbox-submit-background-color: transparent,
     $searchbox-submit-background-image: (
       linear-gradient(hsla(0, 0%, 0%, 0.05), hsla(0, 0%, 0%, 0.1)),
-      url(/img/search2_19x19_aaa.webp)
+      img(search2_19x19_aaa)
     )
   );
 }

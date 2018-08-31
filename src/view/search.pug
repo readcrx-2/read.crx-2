@@ -22,13 +22,13 @@ block body
     .button.button_scheme(title="http/httpsの切り替え")
     .button.button_tool(title="メニュー")
       ul.hidden
-        li.button_link: a(target="_blank") Chromeで直接開く
+        li.button_link: a(target="_blank") ブラウザで直接開く
     select.sort_item_selector
-      option(label="ブックマーク") 0
-      option(label="タイトル") 1
-      option(label="レス数") 2
-      option(label="勢い") 3
-      option(label="作成日時") 4
+      option(data-sort-index="0") ブックマーク
+      option(data-sort-index="1") タイトル
+      option(data-sort-index="2") レス数
+      option(data-sort-index="3") 勢い
+      option(data-sort-index="4") 作成日時
   .content(tabindex="0")
     .more
 

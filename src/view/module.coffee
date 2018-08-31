@@ -8,7 +8,7 @@ do ->
       "bookmark"
       "bookmarkEntryList"
       "config"
-      "contextMenus"
+      "ContextMenus"
       "DOMData"
       "HTTP"
       "ImageReplaceDat"
@@ -590,21 +590,22 @@ class app.view.TabContentView extends app.view.PaneContentView
     $table?.on("table_sort_updated", ({detail}) ->
       for dom in $selector.T("option")
         dom.selected = false
-        if String(detail.sort_attribute or detail.sort_index) is dom.textContent
+        if String(detail.sort_attribute or detail.sort_index) is dom.dataset.sortIndex
           dom.selected = true
       return
     )
 
     $selector?.on("change", ->
-      selected = @child()[@selectedIndex]
+      $selected = @child()[@selectedIndex]
       config = {}
 
-      config.sortOrder = selected.dataset.sortOrder or "desc"
+      config.sortOrder = $selected.dataset.sortOrder or "desc"
 
-      if /^\d+$/.test(@value)
-        config.sortIndex = +@value
+      val = $selected.dataset.sortIndex
+      if /^\d+$/.test(val)
+        config.sortIndex = +val
       else
-        config.sortAttribute = @value
+        config.sortAttribute = val
 
       app.DOMData.get($table, "tableSorter").update(config)
       return
@@ -780,12 +781,15 @@ class app.view.TabContentView extends app.view.PaneContentView
       return
     )
 
-    # Chromeで直接開く
+    # ブラウザで直接開く
     do =>
       {url} = @$element.dataset
 
       if url is "bookmark"
-        url = "chrome://bookmarks/?id=#{app.config.get("bookmark_id")}"
+        if "&[BROWSER]" is "chrome"
+          url = "chrome://bookmarks/?id=#{app.config.get("bookmark_id")}"
+        else
+          @$element.$(".button_link > a")?.remove()
       else if url?.startsWith("search:")
         return
       else
@@ -794,7 +798,7 @@ class app.view.TabContentView extends app.view.PaneContentView
       @$element.$(".button_link > a")?.on("click", (e) ->
         e.preventDefault()
 
-        parent.chrome.tabs.create(url: url)
+        parent.browser.tabs.create(url: url)
         return
       )
       return

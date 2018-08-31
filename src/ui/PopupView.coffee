@@ -1,12 +1,11 @@
-window.UI ?= {}
+import ContextMenu from "./ContextMenu.coffee"
 
 ###*
-@namespace UI
 @class PopupView
 @constructor
 @param {Element} defaultParent
 ###
-class UI.PopupView
+export default class PopupView
 
   constructor: (@defaultParent)->
     ###*
@@ -102,7 +101,7 @@ class UI.PopupView
       @_delayTimeoutID = 0
 
     # コンテキストメニューの破棄
-    UI.ContextMenu.remove()
+    ContextMenu.remove()
 
     # 表示位置の決定
     setDispPosition = (popupNode) =>
@@ -239,7 +238,7 @@ class UI.PopupView
       @_popupStack.pop()
       # コンテキストメニューの破棄
       if @_popupArea.hasClass("has_contextmenu")
-        UI.ContextMenu.remove()
+        ContextMenu.remove()
 
     # マウス座標とコンテキストメニューの監視終了
     if @_popupStack.length is 0

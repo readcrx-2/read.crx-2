@@ -105,4 +105,5 @@ Session.vim
 
 ### My Project
 /debug/
-*.crx
+/build/
+/.rpt2_cache/

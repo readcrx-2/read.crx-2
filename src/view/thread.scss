@@ -1,4 +1,4 @@
-@import "../common.scss";
+@import "../_common.scss";
 
 @include common;
 @include tab-content;
@@ -32,7 +32,6 @@ header, body {
 
 .content {
   contain: size;
-  padding-bottom: 50px;
   backface-visibility: hidden;
   &[data-res-search-hit-count="0"]::after {
     display: block;
@@ -42,6 +41,11 @@ header, body {
     text-align: center;
     font-size: 18px;
     content: "検索にヒットするレスが有りませんでした";
+  }
+  &::after {
+    content: "";
+    display: block;
+    padding-bottom: 50px;
   }
 }
 
@@ -183,7 +187,7 @@ header {
   }
 }
 
-.beicon[src="/img/loading.webp"] {
+.beicon[src="/img/loading.webp"], .beicon[src="/img/loading.png"] {
   width: 32px;
   height: 32px;
   will-change: transform;
@@ -207,7 +211,7 @@ header {
     background-color: white;
     > img.image {
       display: block;
-      &[src="/img/loading.webp"] {
+      &[src="/img/loading.webp"], &[src="/img/loading.png"] {
         width: 50px;
         height: 50px;
         will-change: transform;

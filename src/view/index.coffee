@@ -838,7 +838,8 @@ app.main = ->
     target = target.closest("iframe")
     return unless target?
     target.contentWindow.___e = new Event("view_unload", bubbles: true)
-    target.contentWindow.emit(target.contentWindow.___e)
+    # shortQuery.jsが読み込まれていないこともあるためdispatchEventで
+    target.contentWindow.dispatchEvent(target.contentWindow.___e)
     return
   $view.on("tab_removed", onRemove)
   $view.on("tab_beforeurlupdate", onRemove)

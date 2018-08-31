@@ -5,7 +5,7 @@ app.boot("/view/search.html", ["ThreadSearch"], (ThreadSearch) ->
   catch
     alert("不正な引数です")
     return
-  scheme = if queries.has("https") then "https" else "http"
+  scheme = queries.get("scheme")
   openedAt = Date.now()
 
   $view = document.documentElement

@@ -375,7 +375,7 @@ app.view_setup_resizer = ->
   return
 
 app.main = ->
-  urlToIframeInfo = (url) ->
+  urlToIframeInfo = (url, obj = {}) ->
     url = app.URL.fix(url)
     url = app.URL.convertUrlFromPhone(url)
     guessResult = app.URL.guessType(url)
@@ -407,8 +407,11 @@ app.main = ->
           url: "bookmark_source_selector"
           modal: true
     if res = /^search:(.+)$/.exec(url)
+      param =
+        query: res[1]
+        scheme: obj.scheme ? app.config.get("thread_search_last_mode")
       return
-        src: "/view/search.html?#{res[1]}"
+        src: "/view/search.html?#{app.URL.buildQuery(param)}"
         url: url
     if guessResult.type is "board"
       return
@@ -667,11 +670,12 @@ app.main = ->
     lazy
     locked
     restore
+    scheme
     new_tab
     written_res_num = null
     param_res_num = null
   }) ->
-    iframeInfo = urlToIframeInfo(url)
+    iframeInfo = urlToIframeInfo(url, {scheme})
     return unless iframeInfo
 
     if iframeInfo.modal

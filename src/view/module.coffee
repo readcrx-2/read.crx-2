@@ -621,31 +621,29 @@ class app.view.TabContentView extends app.view.PaneContentView
 
     return unless $button
     {url} = @$element.dataset
-    viewSearch = false
-    if url.startsWith("search:")
-      viewSearch = true
-      searchParam = url.substr(7)
-      searchScheme = @$element.getAttr("scheme") ? "http"
 
-    if ///^https?://\w///.test(url) or viewSearch
-      if (
-        app.URL.getScheme(url) is "https" or
-        (viewSearch and searchScheme is "https")
-      )
+    if url.startsWith("search:")
+      isViewSearch = true
+      scheme = @$element.getAttr("scheme") ? "http"
+    else
+      isViewSearch = false
+      scheme = app.URL.getScheme(url)
+
+    if ///^https?://\w///.test(url) or isViewSearch
+      if scheme is "https"
         $button.addClass("https")
       else
         $button.removeClass("https")
 
       $button.on("click", ->
-        if viewSearch
-          url = "search:" + app.URL.buildQuery(query: searchParam)
-          url += "&https" if searchScheme isnt "https"
-        else
-          url = app.URL.changeScheme(url)
-        app.message.send("open",
-          url: url,
+        obj =
           new_tab: app.config.isOn("button_change_scheme_newtab")
-        )
+        if isViewSearch
+          obj.url = url
+          obj.scheme = if scheme is "http" then "https" else "http"
+        else
+          obj.url = app.URL.changeScheme(url)
+        app.message.send("open", obj)
         return
       )
     else

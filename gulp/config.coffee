@@ -24,13 +24,9 @@ do ->
       zombie: "#{i}/zombie.coffee"
       csWrite: "#{i}/write/cs_write.coffee"
     css:
-      ui: "#{i}/ui/ui.scss"
-      view: "#{i}/view/*.scss"
-      write: ["#{i}/write/*.scss", "!#{i}/write/write.scss"]
-    watchCss:
-      ui: ["#{i}/ui/*.scss", "#{i}/common.scss"]
-      view: ["#{i}/view/*.scss", "#{i}/common.scss"]
-      write: ["#{i}/write/*.scss", "#{i}/common.scss"]
+      ui: ["#{i}/ui/*.scss", "#{i}/_common.scss"]
+      view: ["#{i}/view/*.scss", "#{i}/_common.scss"]
+      write: ["#{i}/write/*.scss", "#{i}/_common.scss"]
     html:
       view: "#{i}/view/*.pug"
       zombie: "#{i}/zombie.pug"

@@ -1,26 +1,19 @@
-# 現在のタブが自分自身であるか確認する
-isCurrentTab = ->
-  id = browser.runtime.id
-  try
-    [tab] = await browser.tabs.query(active: true, lastFocusedWindow: true)
-  catch
-    tab = {url: ""}
-  return /^(?:chrome|moz)-extension:\/\/#{id}/.test(tab.url)
+isTabReadcrx = (tab) ->
+  return tab.url.startsWith(browser.runtime.getURL(""))
 
 # 実行中のread.crxを探す
 searchRcrx = ->
-  id = browser.runtime.id
-  tabs = await browser.tabs.query(url: [
-    "chrome-extension://#{id}/*"
-    "moz-extension://#{id}/*"
-  ])
+  baseUrl = browser.runtime.getURL("")
+  tabs = await browser.tabs.query(
+    url: "#{baseUrl}*"
+  )
   throw new Error("Not found") if tabs.length is 0
   return tabs[0]
 
 # アイコンクリック時の動作
-browser.browserAction.onClicked.addListener( ->
+browser.browserAction.onClicked.addListener( (currentTab) ->
   # 現在のタブが自分自身なら何もしない
-  return if await isCurrentTab()
+  return if isTabReadcrx(currentTab)
 
   try
     {windowId, id} = await searchRcrx()

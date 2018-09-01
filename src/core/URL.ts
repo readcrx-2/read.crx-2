@@ -429,9 +429,9 @@ export async function pushServerInfo (url: string, menu: any[][]): Promise<void>
   }
 
   var param = "";
-  if (!res.net) param += "20.";
+  if (!res.net) param += "5r.";
   if (!res.sc) param += "sc.";
-  if (!res.bbspink) param += "p0.";
+  if (!res.bbspink) param += "p5.";
   param += "99";
   var url = `http://kita.jikkyo.org/cbm/cbm.cgi/${param}/-all/bbsmenu.html`;
   var menu = <any[][]>(await fetchBBSMenu(url, false)).menu

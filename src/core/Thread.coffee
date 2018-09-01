@@ -32,7 +32,10 @@ export default class Thread
 
     return new Promise( (resolve, reject) =>
       xhrInfo = Thread._getXhrInfo(@url)
-      unless xhrInfo then return reject()
+      unless xhrInfo
+        @message = "対応していないURLです"
+        reject()
+        return
       {path: xhrPath, charset: xhrCharset} = xhrInfo
 
       cache = new Cache(xhrPath)

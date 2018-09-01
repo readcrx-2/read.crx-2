@@ -404,7 +404,7 @@ function applyServerInfo (res: {net: boolean, sc: boolean, bbspink: boolean}, me
 
   for (let category of menu) {
     for (let board of category.board) {
-      if (res.net && (tmp = /https?:\/\/(\w+)\.5ch\.net\/(\w+)\/.*?/.exec(board.url)) !== null) {
+      if (res.net && (tmp = /https?:\/\/(\w+)\.[25]ch\.net\/(\w+)\/.*?/.exec(board.url)) !== null) {
         boardNet.set(tmp[2], tmp[1]);
       }else if (res.sc && (tmp = /https?:\/\/(\w+)\.2ch\.sc\/(\w+)\/.*?/.exec(board.url)) !== null) {
         boardSc.set(tmp[2], tmp[1]);

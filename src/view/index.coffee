@@ -296,15 +296,16 @@ app.boot("/view/index.html", ["BBSMenu"], (BBSMenu) ->
       return
   history.replaceState(null, null, "/view/index.html")
   app.main()
-  return unless query
-  paramResNumFlag = app.config.isOn("enable_link_with_res_number")
-  paramResNum = if paramResNumFlag then app.URL.getResNumber(query) else null
 
   {menu} = await BBSMenu.get()
   await app.URL.pushServerInfo(app.config.get("bbsmenu"), menu)
   BBSMenu.target.on("change", ({detail: {menu}}) ->
     app.URL.pushServerInfo(app.config.get("bbsmenu"), menu)
   )
+
+  return unless query
+  paramResNumFlag = app.config.isOn("enable_link_with_res_number")
+  paramResNum = if paramResNumFlag then app.URL.getResNumber(query) else null
   app.message.send("open", url: query, new_tab: true, param_res_num: paramResNum)
   return
 )

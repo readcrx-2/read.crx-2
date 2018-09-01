@@ -255,27 +255,30 @@ class app.view.Index extends app.view.View
   ###
   showKeyboardHelp: ->
     $help = @$element.C("keyboard_help")[0]
-    $help.on("click", =>
-      @hideKeyboardHelp()
-      return
-    , once: true)
-    $help.on("keydown", =>
-      @hideKeyboardHelp()
-      return
-    , once: true)
     ani = await UI.Animate.fadeIn($help)
-    ani.on("finish", ->
+    ani.on("finish", =>
       $help.focus()
-    )
+      $help.on("click", =>
+        @hideKeyboardHelp()
+        return
+      , once: true)
+      $help.on("keydown", =>
+        @hideKeyboardHelp()
+        return
+      , once: true)
+    , once: true)
     return
 
   ###*
   @method hideKeyboardHelp
   ###
   hideKeyboardHelp: ->
-    UI.Animate.fadeOut(@$element.C("keyboard_help")[0])
-    iframe = $$.C("iframe_focused")[0]
-    iframe?.contentDocument.C("content")[0].focus()
+    ani = await UI.Animate.fadeOut(@$element.C("keyboard_help")[0])
+    ani.on("finish", ->
+      iframe = $$.C("iframe_focused")[0]
+      iframe?.contentDocument.C("content")[0].focus()
+      return
+    )
     return
 
 app.boot("/view/index.html", ["BBSMenu"], (BBSMenu) ->

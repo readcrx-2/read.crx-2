@@ -22,6 +22,8 @@ ui = (browser) ->
   })
   return ->
     return gulp.src paths.css.ui
+      .pipe($.progenyMtime())
+      .pipe($.changed(output, extension: ".css"))
       .pipe($.sass(sassOptions).on("error", util.onScssError))
       .pipe($.postcss(defaultOptions.postcss))
       .pipe(gulp.dest(output))
@@ -33,6 +35,8 @@ view = (browser) ->
   })
   return ->
     return gulp.src paths.css.view
+      .pipe($.progenyMtime())
+      .pipe($.changed(output, extension: ".css"))
       .pipe($.sass(sassOptions).on("error", util.onScssError))
       .pipe($.postcss(defaultOptions.postcss))
       .pipe(gulp.dest(output))
@@ -44,6 +48,8 @@ write = (browser) ->
   })
   return ->
     return gulp.src paths.css.write
+      .pipe($.progenyMtime())
+      .pipe($.changed(output, extension: ".css"))
       .pipe($.sass(sassOptions).on("error", util.onScssError))
       .pipe($.postcss(defaultOptions.postcss))
       .pipe(gulp.dest(output))

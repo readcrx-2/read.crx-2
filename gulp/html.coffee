@@ -18,7 +18,6 @@ view = (browser) ->
   return ->
     return gulp.src paths.html.view
       .pipe($.plumber(util.onPugError))
-      .pipe($.changed(output, extension: ".html"))
       .pipe($.pug(pugOptions[browser]))
       .pipe(gulp.dest(output))
 
@@ -27,7 +26,6 @@ zombie = (browser) ->
   return ->
     return gulp.src paths.html.zombie
       .pipe($.plumber(util.onPugError))
-      .pipe($.changed(output, extension: ".html"))
       .pipe($.pug(pugOptions[browser]))
       .pipe(gulp.dest(output))
 
@@ -36,7 +34,6 @@ write = (browser) ->
   return ->
     return gulp.src paths.html.write
       .pipe($.plumber(util.onPugError))
-      .pipe($.changed(output, extension: ".html"))
       .pipe($.pug(pugOptions[browser]))
       .pipe(gulp.dest(output))
 

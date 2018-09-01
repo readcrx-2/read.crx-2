@@ -5,11 +5,10 @@ util = require "./util"
 
 pugOptions = {}
 for browser in browsers
-  pO = Object.assign({}, defaultOptions.pug)
-  pO.locals = Object.assign({}, defaultOptions.pug.locals, {
-    image_ext: util.getExt(browser)
+  pugOptions[browser] = Object.assign({}, defaultOptions.pug, {
+    data:
+      image_ext: util.getExt(browser)
   })
-  pugOptions[browser] = pO
 
 ###
   tasks

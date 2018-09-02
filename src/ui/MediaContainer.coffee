@@ -23,17 +23,24 @@ export default class MediaContainer
   setHoverEvents: ->
     isImageOn = app.config.isOn("hover_zoom_image")
     isVideoOn = app.config.isOn("hover_zoom_video")
-    imageRatio = app.config.get("zoom_ratio_image") + "%"
-    videoRatio = app.config.get("zoom_ratio_video") + "%"
+    imageRatio = app.config.get("zoom_ratio_image") / 100
+    videoRatio = app.config.get("zoom_ratio_video") / 100
 
     @container.on("mouseenter", ({target}) ->
       return unless target.matches(".thumbnail > a > img.image, .thumbnail > video")
       if isImageOn and target.tagName is "IMG"
-        target.closest(".thumbnail").addClass("zoom")
-        target.style.zoom = imageRatio
+        zoomWidth = parseInt(target.offsetWidth * imageRatio)
       else if isVideoOn and target.tagName is "VIDEO"
-        target.closest(".thumbnail").addClass("zoom")
-        target.style.zoom = videoRatio
+        # Chromeでmouseenterイベントが複数回発生するのを回避するため
+        if "&[BROWSER]" is "chrome"
+          return unless target.style.width is ""
+        zoomWidth = parseInt(target.offsetWidth * videoRatio)
+      else
+        return
+      target.closest(".thumbnail").addClass("zoom")
+      target.style.width = "#{zoomWidth}px"
+      target.style.maxWidth = null
+      target.style.maxHeight = null
       return
     , true)
 
@@ -46,7 +53,13 @@ export default class MediaContainer
         )
       )
       target.closest(".thumbnail").removeClass("zoom")
-      target.style.zoom = "normal"
+      target.style.width = null
+      if target.tagName is "IMG"
+        target.style.maxWidth = "#{app.config.get("image_width")}px"
+        target.style.maxHeight = "#{app.config.get("image_height")}px"
+      else if target.tagName is "VIDEO"
+        target.style.maxWidth = "#{app.config.get("video_width")}px"
+        target.style.maxHeight = "#{app.config.get("video_height")}px"
       return
     , true)
     return

@@ -255,27 +255,30 @@ class app.view.Index extends app.view.View
   ###
   showKeyboardHelp: ->
     $help = @$element.C("keyboard_help")[0]
-    $help.on("click", =>
-      @hideKeyboardHelp()
-      return
-    , once: true)
-    $help.on("keydown", =>
-      @hideKeyboardHelp()
-      return
-    , once: true)
     ani = await UI.Animate.fadeIn($help)
-    ani.on("finish", ->
+    ani.on("finish", =>
       $help.focus()
-    )
+      $help.on("click", =>
+        @hideKeyboardHelp()
+        return
+      , once: true)
+      $help.on("keydown", =>
+        @hideKeyboardHelp()
+        return
+      , once: true)
+    , once: true)
     return
 
   ###*
   @method hideKeyboardHelp
   ###
   hideKeyboardHelp: ->
-    UI.Animate.fadeOut(@$element.C("keyboard_help")[0])
-    iframe = $$.C("iframe_focused")[0]
-    iframe?.contentDocument.C("content")[0].focus()
+    ani = await UI.Animate.fadeOut(@$element.C("keyboard_help")[0])
+    ani.on("finish", ->
+      iframe = $$.C("iframe_focused")[0]
+      iframe?.contentDocument.C("content")[0].focus()
+      return
+    )
     return
 
 app.boot("/view/index.html", ["BBSMenu"], (BBSMenu) ->
@@ -296,15 +299,16 @@ app.boot("/view/index.html", ["BBSMenu"], (BBSMenu) ->
       return
   history.replaceState(null, null, "/view/index.html")
   app.main()
-  return unless query
-  paramResNumFlag = app.config.isOn("enable_link_with_res_number")
-  paramResNum = if paramResNumFlag then app.URL.getResNumber(query) else null
 
   {menu} = await BBSMenu.get()
   await app.URL.pushServerInfo(app.config.get("bbsmenu"), menu)
   BBSMenu.target.on("change", ({detail: {menu}}) ->
     app.URL.pushServerInfo(app.config.get("bbsmenu"), menu)
   )
+
+  return unless query
+  paramResNumFlag = app.config.isOn("enable_link_with_res_number")
+  paramResNum = if paramResNumFlag then app.URL.getResNumber(query) else null
   app.message.send("open", url: query, new_tab: true, param_res_num: paramResNum)
   return
 )
@@ -375,7 +379,7 @@ app.view_setup_resizer = ->
   return
 
 app.main = ->
-  urlToIframeInfo = (url) ->
+  urlToIframeInfo = (url, obj = {}) ->
     url = app.URL.fix(url)
     url = app.URL.convertUrlFromPhone(url)
     guessResult = app.URL.guessType(url)
@@ -407,8 +411,11 @@ app.main = ->
           url: "bookmark_source_selector"
           modal: true
     if res = /^search:(.+)$/.exec(url)
+      param =
+        query: res[1]
+        scheme: obj.scheme ? app.config.get("thread_search_last_mode")
       return
-        src: "/view/search.html?#{res[1]}"
+        src: "/view/search.html?#{app.URL.buildQuery(param)}"
         url: url
     if guessResult.type is "board"
       return
@@ -667,11 +674,12 @@ app.main = ->
     lazy
     locked
     restore
+    scheme
     new_tab
     written_res_num = null
     param_res_num = null
   }) ->
-    iframeInfo = urlToIframeInfo(url)
+    iframeInfo = urlToIframeInfo(url, {scheme})
     return unless iframeInfo
 
     if iframeInfo.modal

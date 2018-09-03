@@ -31,9 +31,7 @@ app.boot("/view/sidemenu.html", ["BBSMenu"], (BBSMenu) ->
   )
   $view.C("search")[0].on("submit", (e) ->
     e.preventDefault()
-    param = app.URL.buildQuery(query: @q.value)
-    param += "&https" if app.config.get("thread_search_last_mode") is "https"
-    app.message.send("open", {url: "search:#{param}", new_tab: true})
+    app.message.send("open", {url: "search:#{@q.value}", new_tab: true})
     @q.value = ""
     return
   )

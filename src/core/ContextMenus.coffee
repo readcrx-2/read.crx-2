@@ -9,12 +9,8 @@
 @method createAll
 ###
 export createAll = ->
-  id = browser.runtime.id
-
-  if "&[BROWSER]" is "chrome"
-    viewThread = ["chrome-extension://#{id}/view/thread.html*"]
-  else if "&[BROWSER]" is "firefox"
-    viewThread = ["moz-extension://#{id}/view/thread.html*"]
+  baseUrl = browser.runtime.getURL("")
+  viewThread = ["#{baseUrl}view/thread.html*"]
 
   create(
     id: "add_selection_to_ngwords",

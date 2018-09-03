@@ -404,7 +404,7 @@ function applyServerInfo (res: {net: boolean, sc: boolean, bbspink: boolean}, me
 
   for (let category of menu) {
     for (let board of category.board) {
-      if (res.net && (tmp = /https?:\/\/(\w+)\.5ch\.net\/(\w+)\/.*?/.exec(board.url)) !== null) {
+      if (res.net && (tmp = /https?:\/\/(\w+)\.[25]ch\.net\/(\w+)\/.*?/.exec(board.url)) !== null) {
         boardNet.set(tmp[2], tmp[1]);
       }else if (res.sc && (tmp = /https?:\/\/(\w+)\.2ch\.sc\/(\w+)\/.*?/.exec(board.url)) !== null) {
         boardSc.set(tmp[2], tmp[1]);
@@ -429,9 +429,9 @@ export async function pushServerInfo (url: string, menu: any[][]): Promise<void>
   }
 
   var param = "";
-  if (!res.net) param += "20.";
+  if (!res.net) param += "5r.";
   if (!res.sc) param += "sc.";
-  if (!res.bbspink) param += "p0.";
+  if (!res.bbspink) param += "p5.";
   param += "99";
   var url = `http://kita.jikkyo.org/cbm/cbm.cgi/${param}/-all/bbsmenu.html`;
   var menu = <any[][]>(await fetchBBSMenu(url, false)).menu

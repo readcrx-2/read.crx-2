@@ -19,7 +19,7 @@ browser.browserAction.onClicked.addListener( (currentTab) ->
     {windowId, id} = await searchRcrx()
   catch
     # 存在しなければタブを作成する
-    browser.tabs.create(url: "/view/index.html")
+    browser.tabs.create(url: "view/index.html")
     return
   # 実行中のread.crxが存在すればそれを開く
   browser.windows.update(windowId, focused: true)
@@ -44,12 +44,12 @@ browser.runtime.onMessage.addListener( ({type}) ->
 
 # 対応URLのチェック
 supportedURL = ///https?:\/\/(?:
-  (?:[\w\.]+\/test\/read\.cgi\/\w+\/\d+\/.*?/)|
-  (?:\w+\.machi\.to\/bbs\/read\.cgi\/\w+\/\d+\/.*?/)|
-  (?:jbbs\.(?:livedoor\.jp|shitaraba\.net)\/bbs\/read(?:_archive)?\.cgi\/\w+\/\d+\/\d+\/.*?/)|
-  (?:jbbs\.(?:livedoor\.jp|shitaraba\.net)\/\w+\/\d+\/storage\/\d+\.html$/)|
-  (?:[\w\.]+\/\w+\/(?:#.*)?/)|
-  (?:jbbs\.(?:livedoor\.jp|shitaraba\.net)\/\w+\/\d+\/(?:#.*)?/)
+  (?:[\w\.]+\/test\/read\.cgi\/\w+\/\d+\/.*?)|
+  (?:\w+\.machi\.to\/bbs\/read\.cgi\/\w+\/\d+\/.*?)|
+  (?:jbbs\.(?:livedoor\.jp|shitaraba\.net)\/bbs\/read(?:_archive)?\.cgi\/\w+\/\d+\/\d+\/.*?)|
+  (?:jbbs\.(?:livedoor\.jp|shitaraba\.net)\/\w+\/\d+\/storage\/\d+\.html$)|
+  (?:[\w\.]+\/\w+\/(?:\#.*)?)|
+  (?:jbbs\.(?:livedoor\.jp|shitaraba\.net)\/\w+\/\d+\/(?:\#.*)?)
   )///
 
 # コンテキストメニューの作成
@@ -90,6 +90,6 @@ browser.contextMenus.onClicked.addListener( ({menuItemId, linkUrl: url}, tab) ->
     browser.runtime.sendMessage(type: "open", query: url)
   catch
     # 存在しなければタブを作成する
-    browser.tabs.create(url: "/view/index.html?q=#{url}")
+    browser.tabs.create(url: "view/index.html?q=#{url}")
   return
 )

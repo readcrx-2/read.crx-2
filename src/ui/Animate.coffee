@@ -80,6 +80,10 @@ export slideUp = (ele) ->
   h = ele.clientHeight
 
   _resetAnimatingMap(ele)
+  # Firefoxでアニメーションが終了してから
+  # .hiddenが付加されるまで時間がかかってチラつくため
+  # heightであらかじめ消す(animateで上書きされる)
+  ele.style.height = "0px"
   ani = ele.animate({ height: ["#{h}px", "0px"] }, _TIMING)
   _animatingMap.set(ele, ani)
 
@@ -92,6 +96,7 @@ export slideUp = (ele) ->
     unless invalided
       await app.waitAF()
       ele.addClass("hidden")
+      ele.style.height = null
       _animatingMap.delete(ele)
     return
   , once: true)

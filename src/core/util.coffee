@@ -119,21 +119,21 @@ export decodeCharReference = (str) ->
 
 #マウスクリックのイベントオブジェクトから、リンク先をどう開くべきかの情報を導く
 openMap = new Map([
-  #which(number), shift(bool), ctrl(bool)の文字列
-  ["1falsefalse", { newTab: false, newWindow: false, background: false }]
-  ["1truefalse",  { newTab: false, newWindow: true,  background: false }]
+  #button(number), shift(bool), ctrl(bool)の文字列
+  ["0falsefalse", { newTab: false, newWindow: false, background: false }]
+  ["0truefalse",  { newTab: false, newWindow: true,  background: false }]
+  ["0falsetrue",  { newTab: true,  newWindow: false, background: true  }]
+  ["0truetrue",   { newTab: true,  newWindow: false, background: false }]
+  ["1falsefalse", { newTab: true,  newWindow: false, background: true  }]
+  ["1truefalse",  { newTab: true,  newWindow: false, background: false }]
   ["1falsetrue",  { newTab: true,  newWindow: false, background: true  }]
   ["1truetrue",   { newTab: true,  newWindow: false, background: false }]
-  ["2falsefalse", { newTab: true,  newWindow: false, background: true  }]
-  ["2truefalse",  { newTab: true,  newWindow: false, background: false }]
-  ["2falsetrue",  { newTab: true,  newWindow: false, background: true  }]
-  ["2truetrue",   { newTab: true,  newWindow: false, background: false }]
 ])
-export getHowToOpen = ({type, which, shiftKey, ctrlKey, metaKey}) ->
+export getHowToOpen = ({type, button, shiftKey, ctrlKey, metaKey}) ->
   ctrlKey or= metaKey
   def = {newTab: false, newWindow: false, background: false}
   if type is "mousedown"
-    key = "" + which + shiftKey + ctrlKey
+    key = "" + button + shiftKey + ctrlKey
     return openMap.get(key) if openMap.has(key)
   return def
 

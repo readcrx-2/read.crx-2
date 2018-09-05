@@ -93,7 +93,7 @@ class app.view.View
       target = e.target.closest(".open_in_rcrx")
       return unless target?
       e.preventDefault()
-      return if e.which is 3
+      return if e.button is 2
       url = target.dataset.href or target.href
       title = target.dataset.title or target.textContent
       writtenResNum = if target.getAttr("ignore-res-number") is "on" then null else target.dataset.writtenResNum
@@ -489,7 +489,7 @@ class app.view.TabContentView extends app.view.PaneContentView
 
     for dom in @$element.$$(".button_back, .button_forward")
       dom.on("mousedown", (e) ->
-        if e.which isnt 3
+        if e.button isnt 2
           {newTab, newWindow, background} = app.util.getHowToOpen(e)
           newTab or= newWindow
 

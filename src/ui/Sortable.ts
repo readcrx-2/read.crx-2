@@ -76,9 +76,9 @@ export default class Sortable {
     };
   }
 
-  onMousedown ({target, which}): void {
+  onMousedown ({target, button}): void {
     if (target === this.container) return;
-    if (which !== 1) return;
+    if (button !== 0) return;
     if (
       this.option.exclude &&
       target!.matches(this.option.exclude)

@@ -57,9 +57,9 @@ export default class Tab {
       }
       var target = e.target.closest("li")
       if (target === null) return;
-      if (e.which === 3) return;
+      if (e.button === 2) return;
 
-      if (e.which === 2 && !target.hasClass("tab_locked")) {
+      if (e.button === 1 && !target.hasClass("tab_locked")) {
         tab.remove(target.dataset.tabid!);
       }
       else {

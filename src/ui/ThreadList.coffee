@@ -478,7 +478,7 @@ export default class ThreadList
     return unless target
 
     target.addClass("selected")
-    target.scrollIntoViewIfNeeded()
+    target.scrollIntoView(behavior: "instant", block: "center", inline: "center")
     return
 
   ###*

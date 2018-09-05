@@ -227,8 +227,8 @@ export default class ThreadList
             dom.textContent = ""
         return
       )
-      $searchbox.on("keyup", ({which}) ->
-        if which is 27 #Esc
+      $searchbox.on("keyup", ({key}) ->
+        if key is "Escape"
           @value = ""
           @emit(new Event("input"))
         return

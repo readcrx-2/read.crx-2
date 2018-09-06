@@ -93,7 +93,7 @@ class app.view.View
       target = e.target.closest(".open_in_rcrx")
       return unless target?
       e.preventDefault()
-      return if e.which is 3
+      return if e.button is 2
       url = target.dataset.href or target.href
       title = target.dataset.title or target.textContent
       writtenResNum = if target.getAttr("ignore-res-number") is "on" then null else target.dataset.writtenResNum
@@ -243,14 +243,12 @@ class app.view.IframeView extends app.view.View
   ###
   _setupCommandBox: ->
     $input = $__("input").addClass("command", "hidden")
-    $input.on("keydown", ({which, target}) =>
-      switch which
-        # Enter
-        when 13
+    $input.on("keydown", ({key, target}) =>
+      switch key
+        when "Enter"
           @execCommand(target.value.replace(/\s/g, ""))
           @_closeCommandBox()
-        # Esc
-        when 27
+        when "Escape"
           @_closeCommandBox()
       return
     )
@@ -277,27 +275,42 @@ class app.view.IframeView extends app.view.View
     app.DOMData.get($command, "lastActiveElement")?.focus()
     return
 
+  _keyboardCommandMap: new Map([
+    ["Escape", "clearSelect"]
+    ["h", "left"]
+    ["H", "focusLeftFrame"]
+    ["l", "right"]
+    ["L", "focusRightFrame"]
+    ["k", "up"]
+    ["K", "focusUpFrame"]
+    ["j", "down"]
+    ["J", "focusDownFrame"]
+    ["R", "r"]
+    ["W", "q"]
+    ["?", "help"]
+  ])
+
   ###*
   @method _setupKeyboard
   @private
   ###
   _setupKeyboard: ->
     @$element.on("keydown", (e) =>
-      {target, which, shiftKey, ctrlKey, metaKey} = e
+      {target, key, shiftKey, ctrlKey, metaKey} = e
       # F5 or Ctrl+r or ⌘+r
-      if which is 116 or (ctrlKey and which is 82) or (metaKey and which is 82)
+      if key is "F5" or ( (ctrlKey or metaKey) and key is "r")
         e.preventDefault()
         command = "r"
       else if ctrlKey or metaKey
         return
 
       # Windows版ChromeでのBackSpace誤爆対策
-      if which is 8 and not (target.tagName in ["INPUT", "TEXTAREA"])
+      if key is "Backspace" and not (target.tagName in ["INPUT", "TEXTAREA"])
         e.preventDefault()
 
       # Esc (空白の入力欄に入力された場合)
       else if (
-        which is 27 and
+        key is "Escape" and
         target.tagName in ["INPUT", "TEXTAREA"] and
         target.value is "" and
         not target.hasClass("command")
@@ -306,73 +319,28 @@ class app.view.IframeView extends app.view.View
 
       # 入力欄内では発動しない系
       else if not (target.tagName in ["INPUT", "TEXTAREA"])
-        switch which
-          # Enter
-          when 13
-            if shiftKey
-              command = "shift+enter"
-            else
-              command = "enter"
-          # esc
-          when 27
-            command = "clearSelect"
-          # h
-          when 72
-            if shiftKey
-              command = "focusLeftFrame"
-            else
-              command = "left"
-          # l
-          when 76
-            if shiftKey
-              command = "focusRightFrame"
-            else
-              command = "right"
-          # k
-          when 75
-            if shiftKey
-              command = "focusUpFrame"
-            else
-              command = "up"
-          # j
-          when 74
-            if shiftKey
-              command = "focusDownFrame"
-            else
-              command = "down"
-          # r
-          when 82
-            # Shift+r
-            if shiftKey
-              command = "r"
-          # w
-          when 87
-            # Shift+w
-            if shiftKey
-              command = "q"
-          # :
-          when 186
-            e.preventDefault() # コマンド入力欄に:が入力されるのを防ぐため
-            command = "openCommandBox"
-          # /
-          when 191
-            # ?
-            if shiftKey
-              command = "help"
-            # /
-            else
-              e.preventDefault()
-              @$element.$(".searchbox, form.search > input[type=\"search\"]").focus()
+        if @_keyboardCommandMap.has(key)
+          command = @_keyboardCommandMap.get(key)
+        else if key is "Enter"
+          if shiftKey
+            command = "shift+enter"
           else
-            # 数値
-            if 48 <= which <= 57
-              @_numericInput += which - 48
+            command = "enter"
+        else if key is ":"
+          e.preventDefault() # コマンド入力欄に:が入力されるのを防ぐため
+          command = "openCommandBox"
+        else if key is "/"
+          e.preventDefault()
+          @$element.$(".searchbox, form.search > input[type=\"search\"]").focus()
+        else if /^\d$/.test(key)
+          # 数値
+          @_numericInput += key
 
       if command?
         @execCommand(command, Math.max(1, +@_numericInput))
 
       # 0-9かShift以外が押された場合は数値入力を終了
-      unless 48 <= which <= 57 or which is 16
+      unless /^\d$/.test(key) or key is "Shift"
         @_numericInput = ""
       return
     )
@@ -521,7 +489,7 @@ class app.view.TabContentView extends app.view.PaneContentView
 
     for dom in @$element.$$(".button_back, .button_forward")
       dom.on("mousedown", (e) ->
-        if e.which isnt 3
+        if e.button isnt 2
           {newTab, newWindow, background} = app.util.getHowToOpen(e)
           newTab or= newWindow
 

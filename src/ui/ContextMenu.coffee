@@ -16,8 +16,8 @@ eventFn = (e) ->
   return
 
 doc = document.documentElement
-doc.on("keydown", (e) ->
-  if e.which is 27
+doc.on("keydown", ({key}) ->
+  if key is "Escape"
     cleanup()
   return
 )

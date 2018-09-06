@@ -24,8 +24,8 @@ app.boot("/view/sidemenu.html", ["BBSMenu"], (BBSMenu) ->
     return $li
 
   #スレタイ検索ボックス
-  $view.C("search")[0].on("keydown", ({which}) ->
-    if which is 27 #Esc
+  $view.C("search")[0].on("keydown", ({key}) ->
+    if key is "Escape"
       @q.value = ""
     return
   )

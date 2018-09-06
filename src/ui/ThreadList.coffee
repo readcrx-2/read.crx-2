@@ -227,8 +227,8 @@ export default class ThreadList
             dom.textContent = ""
         return
       )
-      $searchbox.on("keyup", ({which}) ->
-        if which is 27 #Esc
+      $searchbox.on("keyup", ({key}) ->
+        if key is "Escape"
           @value = ""
           @emit(new Event("input"))
         return
@@ -478,7 +478,7 @@ export default class ThreadList
     return unless target
 
     target.addClass("selected")
-    target.scrollIntoViewIfNeeded()
+    target.scrollIntoView(behavior: "instant", block: "center", inline: "center")
     return
 
   ###*

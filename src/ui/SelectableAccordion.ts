@@ -38,7 +38,7 @@ export default class SelectableAccordion extends Accordion {
     }
 
     target.addClass("selected");
-    target.scrollIntoViewIfNeeded();
+    target.scrollIntoView({behavior: "instant", block: "center", inline: "center"});
   }
 
   clearSelect (): void {

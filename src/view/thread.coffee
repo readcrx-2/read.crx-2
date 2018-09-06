@@ -862,13 +862,13 @@ app.boot("/view/thread.html", ->
       return
     )
 
-    $searchbox.on("keydown", ({which}) ->
+    $searchbox.on("keydown", ({key}) ->
       if $content.hasClass("search_regexp")
-        if which is 13 or which is 27 # Enter|Esc
-          @value = "" if which is 27
+        if key in ["Enter", "Escape"]
+          @value = "" if key is "Escape"
           @emit(new CustomEvent("input", detail: {isEnter: true}))
         return
-      if which is 27 #Esc
+      if key is "Escape"
         if @value isnt ""
           @value = ""
           @emit(new Event("input"))

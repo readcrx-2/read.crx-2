@@ -1,4 +1,4 @@
-app.boot("/view/sidemenu.html", ["bbsmenu"], (BBSMenu) ->
+app.boot("/view/sidemenu.html", ["BBSMenu"], (BBSMenu) ->
   $view = document.documentElement
 
   new app.view.PaneContentView($view)
@@ -24,16 +24,14 @@ app.boot("/view/sidemenu.html", ["bbsmenu"], (BBSMenu) ->
     return $li
 
   #スレタイ検索ボックス
-  $view.C("search")[0].on("keydown", ({which}) ->
-    if which is 27 #Esc
+  $view.C("search")[0].on("keydown", ({key}) ->
+    if key is "Escape"
       @q.value = ""
     return
   )
   $view.C("search")[0].on("submit", (e) ->
     e.preventDefault()
-    param = app.URL.buildQuery(query: @q.value)
-    param += "&https" if app.config.get("thread_search_last_mode") is "https"
-    app.message.send("open", {url: "search:#{param}", new_tab: true})
+    app.message.send("open", {url: "search:#{@q.value}", new_tab: true})
     @q.value = ""
     return
   )

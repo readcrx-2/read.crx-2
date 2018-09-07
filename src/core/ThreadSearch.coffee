@@ -1,4 +1,9 @@
-class ThreadSearch
+import {ask as askBoardTitleSolver} from "./BoardTitleSolver.coffee"
+import {Request} from "./HTTP.ts"
+import {stampToDate, decodeCharReference} from "./util.coffee"
+import {getScheme, setScheme} from "./URL.ts"
+
+export default class
   loaded: "None"
   loaded20: null
 
@@ -7,16 +12,16 @@ class ThreadSearch
 
   _parse = (scheme) ->
     return ({url, key, subject, resno, server, ita}) ->
-      urlScheme = app.URL.getScheme(url)
+      urlScheme = getScheme(url)
       boardUrl = "#{urlScheme}://#{server}/#{ita}/"
       try
-        boardTitle = await app.BoardTitleSolver.ask(boardUrl)
+        boardTitle = await askBoardTitleSolver(boardUrl)
       catch
         boardTitle = ""
       return {
-        url: app.URL.setScheme(url, scheme)
-        createdAt: app.util.stampToDate(key)
-        title: app.util.decodeCharReference(subject)
+        url: setScheme(url, scheme)
+        createdAt: stampToDate(key)
+        title: decodeCharReference(subject)
         resCount: +resno
         boardUrl
         boardTitle
@@ -24,7 +29,7 @@ class ThreadSearch
       }
 
   _read: (count) ->
-    {status, body} = await new app.HTTP.Request("GET", "https://dig.5ch.net/?keywords=#{encodeURIComponent(@query)}&maxResult=#{count}&json=1",
+    {status, body} = await new Request("GET", "https://dig.5ch.net/?keywords=#{encodeURIComponent(@query)}&maxResult=#{count}&json=1",
       cache: false
     ).send()
     unless status is 200
@@ -53,8 +58,3 @@ class ThreadSearch
       @loaded = "Big"
       return _getDiff(await @loaded20, await @_read(500))
     return []
-
-app.module("thread_search", [], (callback) ->
-  callback(ThreadSearch)
-  return
-)

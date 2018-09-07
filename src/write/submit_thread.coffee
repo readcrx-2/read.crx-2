@@ -1,13 +1,17 @@
+import Write from "./write.coffee"
+import {tsld as getTsld} from "../core/URL.ts"
+
 app.boot("/write/submit_thread.html", ->
   isThread = true
-  args = app.Write.getArgs()
-  app.Write.setupTheme()
-  app.Write.setDOM()
-  app.Write.setTitle({isThread})
+  args = Write.getArgs()
+  Write.setupTheme()
+  Write.setDOM()
+  Write.setTitle({isThread})
 
-  chrome.tabs.getCurrent( ({id}) ->
-    chrome.webRequest.onBeforeSendHeaders.addListener(
-      app.Write.beforeSendFunc
+  do ->
+    {id} = await browser.tabs.getCurrent()
+    browser.webRequest.onBeforeSendHeaders.addListener(
+      Write.beforeSendFunc
       {
         tabId: id
         types: ["sub_frame"]
@@ -22,15 +26,14 @@ app.boot("/write/submit_thread.html", ->
       ["requestHeaders", "blocking"]
     )
     return
-  )
 
   $view = $$.C("view_write")[0]
 
-  timer = new app.Write.Timer({
-    onError: app.Write.onErrorFunc
+  timer = new Write.Timer({
+    onError: Write.onErrorFunc
   })
 
-  app.Write.setupMessage({
+  Write.setupMessage({
     timer
     isThread
     onSuccess: (key) ->
@@ -40,25 +43,25 @@ app.boot("/write/submit_thread.html", ->
       title = $view.C("title")[0].value
       {url} = args
 
-      if app.URL.tsld(url) in ["5ch.net", "2ch.sc", "bbspink.com", "open2ch.net"]
+      if getTsld(url) in ["5ch.net", "2ch.sc", "bbspink.com", "open2ch.net"]
         keys = key.match(/.*\/test\/read\.cgi\/(\w+?)\/(\d+)\/l\d+/)
         unless keys?
           $notice.textContent = "書き込み失敗 - 不明な転送場所"
         else
           server = url.match(/^(https?:\/\/\w+\.(?:5ch\.net|2ch\.sc|bbspink\.com|open2ch\.net)).*/)[1]
           thread_url = "#{server}/test/read.cgi/#{keys[1]}/#{keys[2]}/"
-          chrome.runtime.sendMessage({type: "written", kind: "own", url, thread_url, mes, name, mail, title})
-      else if app.URL.tsld(url) is "shitaraba.net"
-        chrome.runtime.sendMessage({type: "written", kind: "board", url, mes, name, mail, title})
+          browser.runtime.sendMessage({type: "written", kind: "own", url, thread_url, mes, name, mail, title})
+      else if getTsld(url) is "shitaraba.net"
+        browser.runtime.sendMessage({type: "written", kind: "board", url, mes, name, mail, title})
       return
-    onError: app.Write.onErrorFunc
+    onError: Write.onErrorFunc
   })
 
-  app.Write.setupForm(timer, isThread, (splittedUrl, iframeArgs, bbsType, scheme) ->
+  Write.setupForm(timer, isThread, (splittedUrl, iframeArgs, bbsType, scheme) ->
     #2ch
     if bbsType is "2ch"
       #open2ch
-      if app.URL.tsld(args.url) is "open2ch.net"
+      if getTsld(args.url) is "open2ch.net"
         return {
           action: "#{scheme}://#{splittedUrl[2]}/test/bbs.cgi"
           charset: "UTF-8"

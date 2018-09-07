@@ -1,6 +1,4 @@
-window.UI ?= {}
-
-class UI.AANoOverflow
+export default class AANoOverflow
   _AA_CLASS_NAME = "aa"
   _MINI_AA_CLASS_NAME = "mini_aa"
   _SCROLL_AA_CLASS_NAME = "scroll_aa"

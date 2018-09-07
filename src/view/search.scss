@@ -1,18 +1,22 @@
-@import "../common.scss";
+@import "../_common.scss";
 
 @include common;
 @include tab-content;
 @include content-table;
 
 @media (max-width: 750px) and (min-width: 501px) {
-  th:nth-child(6) {
-    width: 0 !important;
+  col, th {
+    &.created_date {
+      width: 0;
+    }
   }
 }
 
 @media (max-width: 600px) {
-  th:nth-child(n+3) {
-    width: 0 !important;
+  col, th {
+    :not(.bookmark):not(.title) {
+      width: 0;
+    }
   }
 }
 
@@ -30,7 +34,7 @@ td {
 }
 
 tr.https td:nth-child(2)::before {
-    content: url(/img/lock_12x12_3a5.webp);
+    content: img(lock_12x12_3a5);
     vertical-align: middle;
 }
 

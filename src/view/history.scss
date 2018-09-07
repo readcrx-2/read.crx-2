@@ -1,12 +1,14 @@
-@import "../common.scss";
+@import "../_common.scss";
 
 @include common;
 @include tab-content;
 @include content-table;
 
 @media (max-width: 500px) {
-  th.viewed_date {
-    width: 0;
+  col, th {
+    &.viewed_date {
+      width: 0;
+    }
   }
 }
 
@@ -18,7 +20,7 @@
     }
   }
   tr.https td:first-child::before {
-    content: url(/img/lock_12x12_3a5.webp);
+    content: img(lock_12x12_3a5);
     vertical-align: middle;
   }
 }

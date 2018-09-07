@@ -1,4 +1,4 @@
-@import "../common.scss";
+@import "../_common.scss";
 
 @include common;
 
@@ -155,7 +155,7 @@ iframe {
       cursor: pointer;
       width: 16px;
       height: 16px;
-      background: transparent url(/img/close_16x16.webp) no-repeat center;
+      background: transparent img(close_16x16) no-repeat center;
       &:hover {
         background-color: rgba(#000, 0.2);
       }

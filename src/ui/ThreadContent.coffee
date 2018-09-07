@@ -1,14 +1,12 @@
-window.UI ?= {}
+import MediaContainer from "./MediaContainer.coffee"
 
 ###*
-@namespace UI
 @class ThreadContent
 @constructor
 @param {String} URL
 @param {Element} container
-@requires MediaContainer
 ###
-class UI.ThreadContent
+export default class ThreadContent
   _OVER1000_DATA = "Over 1000"
 
   constructor: (@url, @container) ->
@@ -624,7 +622,7 @@ class UI.ThreadContent
       res.class = []
       scheme = app.URL.getScheme(@url)
 
-      res = app.ReplaceStrTxt.do(@url, document.title, res)
+      res = app.ReplaceStrTxt.replace(@url, document.title, res)
 
       if /(?:\u3000{5}|\u3000\u0020|[^>]\u0020\u3000)(?!<br>|$)/i.test(res.message)
         res.class.push("aa")
@@ -764,13 +762,13 @@ class UI.ThreadContent
           #Beアイコン埋め込み表示
           .replace(///^(?:\s*sssp|https?)://(img\.[25]ch\.net/(?:ico|premium)/[\w\-_]+\.gif)\s*<br>///, ($0, $1) =>
             if app.URL.tsld(@url) in ["5ch.net", "bbspink.com", "2ch.sc"]
-              return """<img class="beicon" src="/img/dummy_1x1.webp" data-src="#{scheme}://#{$1}"><br>"""
+              return """<img class="beicon" src="/img/dummy_1x1.&[IMG_EXT]" data-src="#{scheme}://#{$1}"><br>"""
             return $0
           )
           #エモーティコン埋め込み表示
           .replace(///(?:\s*sssp|https?)://(img\.[25]ch\.net/emoji/[\w\-_]+\.gif)\s*///g, ($0, $1) =>
             if app.URL.tsld(@url) in ["5ch.net", "bbspink.com", "2ch.sc"]
-              return """<img class="beicon emoticon" src="/img/dummy_1x1.webp" data-src="#{scheme}://#{$1}">"""
+              return """<img class="beicon emoticon" src="/img/dummy_1x1.&[IMG_EXT]" data-src="#{scheme}://#{$1}">"""
             return $0
           )
           #アンカーリンク
@@ -847,7 +845,7 @@ class UI.ThreadContent
           ".message > a:not(.anchor):not(.thumbnail):not(.has_thumbnail):not(.expandedURL):not(.has_expandedURL)"
         )).map( (a) =>
           {a, link} = await @checkUrlExpand(a)
-          {res, err} = app.ImageReplaceDat.do(link)
+          {res, err} = app.ImageReplaceDat.replace(link)
           unless err?
             href = res.text
           else
@@ -872,7 +870,7 @@ class UI.ThreadContent
           continue unless ele
           ele.addClass("has_blur_word")
           if ele.hasClass("has_image") and app.config.isOn("image_blur")
-            UI.MediaContainer.setImageBlur(ele, true)
+            MediaContainer.setImageBlur(ele, true)
         return
     return
 
@@ -1250,7 +1248,7 @@ class UI.ThreadContent
         thumbnailLink.target = "_blank"
 
         thumbnailImg = $__("img").addClass("image")
-        thumbnailImg.src = "/img/dummy_1x1.webp"
+        thumbnailImg.src = "/img/dummy_1x1.&[IMG_EXT]"
         thumbnailImg.style.WebkitFilter = webkitFilter
         thumbnailImg.style.maxWidth = "#{app.config.get("image_width")}px"
         thumbnailImg.style.maxHeight = "#{app.config.get("image_height")}px"
@@ -1266,7 +1264,7 @@ class UI.ThreadContent
         thumbnailLink.addLast(thumbnailImg)
 
         thumbnailFavicon = $__("img").addClass("favicon")
-        thumbnailFavicon.src = "/img/dummy_1x1.webp"
+        thumbnailFavicon.src = "/img/dummy_1x1.&[IMG_EXT]"
         thumbnailFavicon.dataset.src = "https://www.google.com/s2/favicons?domain=#{sourceA.hostname}"
         thumbnailLink.addLast(thumbnailFavicon)
 

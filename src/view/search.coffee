@@ -1,12 +1,11 @@
-app.boot("/view/search.html", ["thread_search"], (ThreadSearch) ->
+app.boot("/view/search.html", ["ThreadSearch"], (ThreadSearch) ->
   try
     queries = app.URL.parseQuery(location.search)
     query = queries.get("query")
   catch
     alert("不正な引数です")
     return
-  scheme = if queries.has("https") then "https" else "http"
-
+  scheme = queries.get("scheme")
   openedAt = Date.now()
 
   $view = document.documentElement
@@ -16,14 +15,6 @@ app.boot("/view/search.html", ["thread_search"], (ThreadSearch) ->
   $content = $$.C("content")[0]
   $messageBar = $view.C("message_bar")[0]
   $buttonReload = $view.C("button_reload")[0]
-
-  new app.view.TabContentView($view)
-
-  document.title = "検索:#{query}"
-  unless app.config.isOn("no_history")
-    app.History.add($view.dataset.url, document.title, openedAt, "")
-
-  $view.$(".button_link > a").href = "#{scheme}://dig.5ch.net/search?maxResult=500&keywords=#{encodeURIComponent(query)}"
 
   $table = $__("table")
   threadList = new UI.ThreadList($table,
@@ -35,6 +26,14 @@ app.boot("/view/search.html", ["thread_search"], (ThreadSearch) ->
   tableSorter = new UI.TableSorter($table)
   app.DOMData.set($table, "tableSorter", tableSorter)
   $content.addFirst($table)
+
+  new app.view.TabContentView($view)
+
+  document.title = "検索:#{query}"
+  unless app.config.isOn("no_history")
+    app.History.add($view.dataset.url, document.title, openedAt, "")
+
+  $view.$(".button_link > a").href = "#{scheme}://dig.5ch.net/search?maxResult=500&keywords=#{encodeURIComponent(query)}"
 
   threadSearch = new ThreadSearch(query, scheme)
   $tbody = $view.T("tbody")[0]

@@ -26,12 +26,12 @@ block body
         li.button_toggle_dat dat落ちのスレッドを表示する/しない
         li.button_open_updated 未読があるスレッドを全て開く
     select.sort_item_selector
-      option(label="タイトル") 0
-      option(label="板名") 1
-      option(label="レス数") 2
-      option(label="未読数" selected) 3
-      option(label="勢い") 4
-      option(label="作成日時") 5
+      option(data-sort-index="0") タイトル
+      option(data-sort-index="1") 板名
+      option(data-sort-index="2") レス数
+      option(data-sort-index="3" selected) 未読数
+      option(data-sort-index="4") 勢い
+      option(data-sort-index="5") 作成日時
   .content(tabindex="0")
   .loading_overlay
     span.success

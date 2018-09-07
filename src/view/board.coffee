@@ -1,4 +1,4 @@
-app.boot("/view/board.html", ["board"], (Board) ->
+app.boot("/view/board.html", ["Board"], (Board) ->
   try
     url = app.URL.parseQuery(location.search).get("q")
   catch

@@ -1,12 +1,15 @@
+import Cache from "./Cache.coffee"
+import {isNGBoard} from "./NG.coffee"
+import {Request} from "./HTTP.ts"
+import {tsld as getTsld, threadToBoard} from "./URL.ts"
+import {chServerMoveDetect, decodeCharReference, removeNeedlessFromTitle} from "./util.coffee"
+
 ###*
-@namespace app
 @class Board
 @constructor
 @param {String} url
-@requires app.Cache
-@requires app.NG
 ###
-class app.Board
+export default class Board
   constructor: (@url) ->
     ###*
     @property thread
@@ -36,7 +39,7 @@ class app.Board
       hasCache = false
 
       #キャッシュ取得
-      cache = new app.Cache(xhrPath)
+      cache = new Cache(xhrPath)
       try
         await cache.get()
         hasCache = true
@@ -44,7 +47,7 @@ class app.Board
           throw new Error("キャッシュの期限が切れているため通信します")
       catch
         #通信
-        request = new app.HTTP.Request("GET", xhrPath,
+        request = new Request("GET", xhrPath,
           mimeType: "text/plain; charset=#{xhrCharset}"
           preventCache: true
         )
@@ -61,7 +64,7 @@ class app.Board
       try
         # 2chで自動移動しているときはサーバー移転
         if (
-          app.URL.tsld(@url) is "5ch.net" and
+          getTsld(@url) is "5ch.net" and
           @url.split("/")[2] isnt response.responseURL.split("/")[2]
         )
           newBoardUrl = response.responseURL.slice(0, -"subject.txt".length)
@@ -109,9 +112,9 @@ class app.Board
         #コールバック
         @message = "板の読み込みに失敗しました。"
 
-        if newBoardUrl? and app.URL.tsld(@url) is "5ch.net"
+        if newBoardUrl? and getTsld(@url) is "5ch.net"
           try
-            newBoardUrl = await app.util.chServerMoveDetect(@url)
+            newBoardUrl = await chServerMoveDetect(@url)
             @message += """
               サーバーが移転しています
               (<a href="#{app.escapeHtml(app.safeHref(newBoardUrl))}"
@@ -119,9 +122,9 @@ class app.Board
               </a>)
               """
         #2chでrejectされている場合は移転を疑う
-        else if app.URL.tsld(@url) is "5ch.net" and response?
+        else if getTsld(@url) is "5ch.net" and response?
           try
-            newBoardUrl = await app.util.chServerMoveDetect(@url)
+            newBoardUrl = await chServerMoveDetect(@url)
             #移転検出時
             @message += """
             サーバーが移転している可能性が有ります
@@ -164,7 +167,7 @@ class app.Board
   @return {Promise}
   ###
   @get: (url) ->
-    board = new app.Board(url)
+    board = new Board(url)
     try
       await board.get()
       return {status: "success", data: board.thread}
@@ -223,15 +226,15 @@ class app.Board
 
     board = []
     while (regRes = reg.exec(text))
-      title = app.util.decodeCharReference(regRes[2])
-      title = app.util.removeNeedlessFromTitle(title)
+      title = decodeCharReference(regRes[2])
+      title = removeNeedlessFromTitle(title)
 
       board.push(
         url: baseUrl + regRes[1] + "/"
         title: title
         resCount: +regRes[3]
         createdAt: +regRes[1] * 1000
-        ng: app.NG.isNGBoard(title, url)
+        ng: isNGBoard(title, url)
         isNet: if scFlg then !title.startsWith("★") else null
       )
 
@@ -249,13 +252,13 @@ class app.Board
   @return {Promise}
   ###
   @getCachedResCount: (threadUrl) ->
-    boardUrl = app.URL.threadToBoard(threadUrl)
+    boardUrl = threadToBoard(threadUrl)
     xhrPath = Board._getXhrInfo(boardUrl)?.path
 
     unless xhrPath?
       throw new Error("その板の取得方法の情報が存在しません")
 
-    cache = new app.Cache(xhrPath)
+    cache = new Cache(xhrPath)
     try
       await cache.get()
       {lastModified, data} = cache
@@ -266,8 +269,3 @@ class app.Board
         }
     throw new Error("板のスレ一覧にそのスレが存在しません")
     return
-
-app.module("board", [], (callback) ->
-  callback(app.Board)
-  return
-)

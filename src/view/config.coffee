@@ -176,7 +176,7 @@ class HistoryIO extends SettingIO
     )
     return
 
-app.boot("/view/config.html", ["cache", "bbsmenu"], (Cache, BBSMenu) ->
+app.boot("/view/config.html", ["Cache", "BBSMenu"], (Cache, BBSMenu) ->
   $view = document.documentElement
 
   new app.view.IframeView($view)
@@ -424,10 +424,9 @@ app.boot("/view/config.html", ["cache", "bbsmenu"], (Cache, BBSMenu) ->
 
     #ブックマークフォルダ表示
     do updateName = ->
-      chrome.bookmarks.get(app.config.get("bookmark_id"), ([folder]) ->
-        $$.I("bookmark_source_name").textContent = folder.title
-        return
-      )
+      [folder] = await browser.bookmarks.get(app.config.get("bookmark_id"))
+      $$.I("bookmark_source_name").textContent = folder.title
+      return
     app.message.on("config_updated", ({key}) ->
       updateName() if key is "bookmark_id"
       return
@@ -567,16 +566,20 @@ app.boot("/view/config.html", ["cache", "bbsmenu"], (Cache, BBSMenu) ->
 
   # localstorageの使用状況
   do ->
-    quota = chrome.storage.local.QUOTA_BYTES
-    $view.C("localstorage_max")[0].textContent = formatBytes(quota)
-    $meter = $view.C("localstorage_meter")[0]
-    $meter.max = quota
-    $meter.high = quota*0.9
-    $meter.low = quota*0.8
-    chrome.storage.local.getBytesInUse( (usage) ->
+    if browser.storage.local.getBytesInUse?
+      # 無制限なのでindexeddbの最大と一致する
+      {quota} = await navigator.storage.estimate()
+      $view.C("localstorage_max")[0].textContent = formatBytes(quota)
+      $meter = $view.C("localstorage_meter")[0]
+      $meter.max = quota
+      $meter.high = quota*0.9
+      $meter.low = quota*0.8
+      usage = await browser.storage.local.getBytesInUse()
       $view.C("localstorage_using")[0].textContent = formatBytes(usage)
       $meter.value = usage
-      return
-    )
+    else
+      $meter = $view.C("localstorage_meter")[0].remove()
+      $view.C("localstorage_max")[0].textContent = ""
+      $view.C("localstorage_using")[0].textContent = "このブラウザでは取得できません"
     return
 )

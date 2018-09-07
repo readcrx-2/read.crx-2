@@ -1,4 +1,4 @@
-class app.Notification
+export default class Notification
   constructor: (@title, @message, @url, @tag) ->
     @notify = new window.Notification(
       @title,
@@ -10,12 +10,10 @@ class app.Notification
     )
     if @url isnt ""
       @notify.on("click", =>
-        chrome.tabs.getCurrent( (tab) =>
-          chrome.tabs.update(tab.id, highlighted: true)
-          app.message.send("open", url: @url)
-          @notify.close()
-          return
-        )
+        tab = await browser.tabs.getCurrent()
+        browser.tabs.update(tab.id, active: true)
+        app.message.send("open", url: @url)
+        @notify.close()
         return
       )
     return

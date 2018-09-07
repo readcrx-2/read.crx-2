@@ -1,7 +1,7 @@
-window.UI ?= {}
+import ContextMenu from "./ContextMenu.coffee"
+import TableSearch from "./TableSearch.coffee"
 
 ###*
-@namespace UI
 @class ThreadList
 @constructor
 @param {Element} table
@@ -17,7 +17,7 @@ window.UI ?= {}
   @param {Boolean} [option.bookmarkAddRm=false]
   @param {Element} [option.searchbox]
 ###
-class UI.ThreadList
+export default class ThreadList
   constructor: (@table, option) ->
     ###*
     @property _flg
@@ -76,18 +76,24 @@ class UI.ThreadList
       return
     , true)
 
+    $cols = $_F()
     selector = {}
     column = {}
     i = 0
     for key, val of keyToLabel when key in option.th
       i++
-      $th = $__("th")
-      $th.setClass(key.replace(/([A-Z])/g, ($0, $1) -> "_" + $1.toLowerCase()))
+      className = key.replace(/([A-Z])/g, ($0, $1) -> "_" + $1.toLowerCase())
+      $th = $__("th").addClass(className)
       $th.textContent = val
+      $th.dataset.key = className
       $tr.addLast($th)
       @_flg[key] = true
       selector[key] = "td:nth-child(#{i})"
       column[key] = i
+      $col = $__("col").addClass(className)
+      $col.span = 1
+      $cols.addLast($col)
+    $table.addFirst($cols)
 
     #ブックマーク更新時処理
     app.message.on("bookmark_updated", ({type, bookmark}) =>
@@ -210,19 +216,19 @@ class UI.ThreadList
       $searchbox.on("input", ({isComposing}) ->
         return if isComposing
         if @value isnt ""
-          UI.TableSearch($table, "search",
+          TableSearch($table, "search",
             query: @value, target_col: titleIndex)
           hitCount = $table.dataset.tableSearchHitCount
           for dom in @parent().child() when dom.hasClass("hit_count")
             dom.textContent = hitCount + "hit"
         else
-          UI.TableSearch($table, "clear")
+          TableSearch($table, "clear")
           for dom in @parent().child() when dom.hasClass("hit_count")
             dom.textContent = ""
         return
       )
-      $searchbox.on("keyup", ({which}) ->
-        if which is 27 #Esc
+      $searchbox.on("keyup", ({key}) ->
+        if key is "Escape"
           @value = ""
           @emit(new Event("input"))
         return
@@ -286,7 +292,7 @@ class UI.ThreadList
             @remove()
             return
           )
-          UI.ContextMenu($menu, e.clientX, e.clientY)
+          ContextMenu($menu, e.clientX, e.clientY)
           return
         )
       return
@@ -472,7 +478,7 @@ class UI.ThreadList
     return unless target
 
     target.addClass("selected")
-    target.scrollIntoViewIfNeeded()
+    target.scrollIntoView(behavior: "instant", block: "center", inline: "center")
     return
 
   ###*

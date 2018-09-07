@@ -255,68 +255,60 @@ class app.view.Index extends app.view.View
   ###
   showKeyboardHelp: ->
     $help = @$element.C("keyboard_help")[0]
-    $help.on("click", =>
-      @hideKeyboardHelp()
-      return
-    , once: true)
-    $help.on("keydown", =>
-      @hideKeyboardHelp()
-      return
-    , once: true)
     ani = await UI.Animate.fadeIn($help)
-    ani.on("finish", ->
+    ani.on("finish", =>
       $help.focus()
-    )
+      $help.on("click", =>
+        @hideKeyboardHelp()
+        return
+      , once: true)
+      $help.on("keydown", =>
+        @hideKeyboardHelp()
+        return
+      , once: true)
+    , once: true)
     return
 
   ###*
   @method hideKeyboardHelp
   ###
   hideKeyboardHelp: ->
-    UI.Animate.fadeOut(@$element.C("keyboard_help")[0])
-    iframe = $$.C("iframe_focused")[0]
-    iframe?.contentDocument.C("content")[0].focus()
+    ani = await UI.Animate.fadeOut(@$element.C("keyboard_help")[0])
+    ani.on("finish", ->
+      iframe = $$.C("iframe_focused")[0]
+      iframe?.contentDocument.C("content")[0].focus()
+      return
+    )
     return
 
-app.boot("/view/index.html", ["bbsmenu"], (BBSMenu) ->
+app.boot("/view/index.html", ["BBSMenu"], (BBSMenu) ->
   query = app.URL.parseQuery(location.search).get("q")
 
-  getCurrent = new Promise( (resolve, reject) ->
-    chrome.tabs.getCurrent( (currentTab) ->
-      resolve(currentTab)
-      return
-    )
-    return
-  )
-  getAll = new Promise( (resolve, reject) ->
-    chrome.windows.getAll( {populate: true}, (windows) ->
-      resolve(windows)
-      return
-    )
-    return
-  )
-
-  [currentTab, windows] = await Promise.all([getCurrent, getAll])
-  appPath = chrome.runtime.getURL("/view/index.html")
+  [currentTab, windows] = await Promise.all([
+    browser.tabs.getCurrent()
+    browser.windows.getAll(populate: true)
+  ])
+  appPath = browser.runtime.getURL("/view/index.html")
   for win in windows
     for tab in win.tabs when tab.id isnt currentTab.id and tab.url is appPath
-      chrome.windows.update(win.id, focused: true)
-      chrome.tabs.update(tab.id, highlighted: true)
+      browser.windows.update(win.id, focused: true)
+      browser.tabs.update(tab.id, active: true)
       if query
-        chrome.runtime.sendMessage({type: "open", query})
-      chrome.tabs.remove(currentTab.id)
+        browser.runtime.sendMessage({type: "open", query})
+      browser.tabs.remove(currentTab.id)
       return
   history.replaceState(null, null, "/view/index.html")
   app.main()
-  return unless query
-  paramResNumFlag = app.config.isOn("enable_link_with_res_number")
-  paramResNum = if paramResNumFlag then app.URL.getResNumber(query) else null
 
   {menu} = await BBSMenu.get()
   await app.URL.pushServerInfo(app.config.get("bbsmenu"), menu)
   BBSMenu.target.on("change", ({detail: {menu}}) ->
     app.URL.pushServerInfo(app.config.get("bbsmenu"), menu)
   )
+
+  return unless query
+  paramResNumFlag = app.config.isOn("enable_link_with_res_number")
+  paramResNum = if paramResNumFlag then app.URL.getResNumber(query) else null
   app.message.send("open", url: query, new_tab: true, param_res_num: paramResNum)
   return
 )
@@ -387,7 +379,7 @@ app.view_setup_resizer = ->
   return
 
 app.main = ->
-  urlToIframeInfo = (url) ->
+  urlToIframeInfo = (url, obj = {}) ->
     url = app.URL.fix(url)
     url = app.URL.convertUrlFromPhone(url)
     guessResult = app.URL.guessType(url)
@@ -419,8 +411,11 @@ app.main = ->
           url: "bookmark_source_selector"
           modal: true
     if res = /^search:(.+)$/.exec(url)
+      param =
+        query: res[1]
+        scheme: obj.scheme ? app.config.get("thread_search_last_mode")
       return
-        src: "/view/search.html?#{res[1]}"
+        src: "/view/search.html?#{app.URL.buildQuery(param)}"
         url: url
     if guessResult.type is "board"
       return
@@ -447,7 +442,7 @@ app.main = ->
   do ->
     # bookmark_idが未設定の場合、わざと無効な値を渡してneedReconfigureRootNodeId
     # をcallさせる。
-    cbel = new app.Bookmark.ChromeBookmarkEntryList(
+    cbel = new app.BrowserBookmarkEntryList(
       app.config.get("bookmark_id") or "dummy"
     )
     cbel.needReconfigureRootNodeId.add( ->
@@ -456,7 +451,7 @@ app.main = ->
     )
 
     app.bookmarkEntryList = cbel
-    app.bookmark = new app.Bookmark.CompatibilityLayer(cbel)
+    app.bookmark = new app.BookmarkCompatibilityLayer(cbel)
     return
 
   app.bookmarkEntryList.ready.add( ->
@@ -512,7 +507,7 @@ app.main = ->
     return
 
   #更新通知
-  chrome.runtime.onUpdateAvailable.addListener( ({version: newVer}) ->
+  browser.runtime.onUpdateAvailable.addListener( ({version: newVer}) ->
     {name, version: oldVer} = await app.manifest
     return if newVer is oldVer
     app.message.send("notify",
@@ -528,18 +523,14 @@ app.main = ->
   adjustWindowSize = new app.Callbacks()
   do ->
     resizeTo = (width, height, callback) ->
-      chrome.windows.getCurrent( (win) ->
-        chrome.windows.update(win.id, {width, height}, callback)
-        return
-      )
+      win = await browser.windows.getCurrent()
+      browser.windows.update(win.id, {width, height}, callback)
       return
 
     saveWindowSize = ->
-      chrome.windows.getCurrent( (win) ->
-        app.config.set("window_width", win.width.toString(10))
-        app.config.set("window_height", win.height.toString(10))
-        return
-      )
+      win = await browser.windows.getCurrent()
+      app.config.set("window_width", win.width.toString(10))
+      app.config.set("window_height", win.height.toString(10))
       return
 
     startAutoSave = ->
@@ -561,22 +552,20 @@ app.main = ->
       return
 
     # 起動時にウィンドウサイズが極端に小さかった場合、前回終了時のサイズに復元
-    chrome.windows.getCurrent(
-      {populate: true}
-      (win) ->
-        if win.tabs.length is 1 and win.width < 300 or win.height < 300
-          resizeTo(
-            +app.config.get("window_width")
-            +app.config.get("window_height")
-            ->
-              await app.defer()
-              adjustWindowSize.call()
-              return
-          )
-        else
-          adjustWindowSize.call()
-        return
-    )
+    do ->
+      win = await browser.windows.getCurrent(populate: true)
+      if win.tabs.length is 1 and win.width < 300 or win.height < 300
+        resizeTo(
+          +app.config.get("window_width")
+          +app.config.get("window_height")
+          ->
+            await app.defer()
+            adjustWindowSize.call()
+            return
+        )
+      else
+        adjustWindowSize.call()
+      return
 
     adjustWindowSize.add(startAutoSave)
     return
@@ -662,15 +651,18 @@ app.main = ->
   )
 
   # コンテキストメニューの作成
-  app.contextMenus.createAll()
+  app.ContextMenus.createAll()
+  window.on("beforeunload", ->
+    #コンテキストメニューの削除
+    app.ContextMenus.removeAll()
+  )
+
   # NGデータの有効期限設定
   app.NG.execExpire()
 
   window.on("unload", ->
-    #コンテキストメニューの削除
-    app.contextMenus.removeAll()
     # 終了通知の送信
-    chrome.runtime.sendMessage(type: "exit_rcrx")
+    browser.runtime.sendMessage(type: "exit_rcrx")
     return
   )
 
@@ -682,11 +674,12 @@ app.main = ->
     lazy
     locked
     restore
+    scheme
     new_tab
     written_res_num = null
     param_res_num = null
   }) ->
-    iframeInfo = urlToIframeInfo(url)
+    iframeInfo = urlToIframeInfo(url, {scheme})
     return unless iframeInfo
 
     if iframeInfo.modal
@@ -740,7 +733,7 @@ app.main = ->
   )
 
   #openリクエストの監視
-  chrome.runtime.onMessage.addListener( ({type, query}) ->
+  browser.runtime.onMessage.addListener( ({type, query}) ->
     return unless type is "open"
     paramResNumFlag = app.config.isOn("enable_link_with_res_number")
     paramResNum = if paramResNumFlag then app.URL.getResNumber(query) else null
@@ -749,7 +742,7 @@ app.main = ->
   )
 
   #書き込み完了メッセージの監視
-  chrome.runtime.onMessage.addListener( ({
+  browser.runtime.onMessage.addListener( ({
     type
     kind
     url
@@ -776,14 +769,14 @@ app.main = ->
   )
 
   #書き込みウィンドウサイズ保存メッセージの監視
-  chrome.runtime.onMessage.addListener( ({type, x, y}) ->
+  browser.runtime.onMessage.addListener( ({type, x, y}) ->
     return unless type is "writesize"
     app.config.set("write_window_x", ""+x)
     app.config.set("write_window_y", ""+y)
   )
 
   # リクエスト・ヘッダーの監視
-  chrome.webRequest.onBeforeSendHeaders.addListener( ({method, url, requestHeaders}) ->
+  browser.webRequest.onBeforeSendHeaders.addListener( ({method, url, requestHeaders}) ->
     replaceHeader = (name, value) ->
       for header in requestHeaders
         if header.name.toLowerCase() is name
@@ -856,7 +849,8 @@ app.main = ->
     target = target.closest("iframe")
     return unless target?
     target.contentWindow.___e = new Event("view_unload", bubbles: true)
-    target.contentWindow.emit(target.contentWindow.___e)
+    # shortQuery.jsが読み込まれていないこともあるためdispatchEventで
+    target.contentWindow.dispatchEvent(target.contentWindow.___e)
     return
   $view.on("tab_removed", onRemove)
   $view.on("tab_beforeurlupdate", onRemove)

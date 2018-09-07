@@ -80,7 +80,7 @@
     "gecko": {
       "id": "readcrx2@read.crx",
       "strict_min_version": "58.0",
-      "update_url": "https://readcrx-2.github.io/read.crx-2/updates_firefox.xml"
+      "update_url": "https://readcrx-2.github.io/read.crx-2/updates_firefox.json"
     }
   }
 }

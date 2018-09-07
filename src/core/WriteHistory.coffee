@@ -66,7 +66,7 @@ export add = ({url, res, title, name, mail, inputName = null, inputMail = null, 
     req = db
       .transaction("WriteHistory", "readwrite")
       .objectStore("WriteHistory")
-      .put({
+      .add({
         url
         res
         title

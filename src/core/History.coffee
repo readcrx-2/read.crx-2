@@ -54,7 +54,7 @@ export add = (url, title, date, boardTitle) ->
     req = db
       .transaction("History", "readwrite")
       .objectStore("History")
-      .put({url, title, date, boardTitle})
+      .add({url, title, date, boardTitle})
     await indexedDBRequestToPromise(req)
   catch e
     app.log("error", "History.add: データの格納に失敗しました")

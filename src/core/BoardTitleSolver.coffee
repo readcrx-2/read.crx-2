@@ -60,10 +60,11 @@ _setBBSMenu = ->
   return
 
 ###*
-@method getBBSMenu
+@method _getBBSMenu
 @return {Promise}
+@private
 ###
-getBBSMenu: ->
+_getBBSMenu = ->
   return _bbsmenu if _bbsmenu?
   if _bbsmenuPromise?
     await _bbsmenuPromise
@@ -79,7 +80,7 @@ getBBSMenu: ->
 @return {Promise}
 ###
 searchFromBBSMenu = (url) ->
-  bbsmenu = await getBBSMenu()
+  bbsmenu = await _getBBSMenu()
   # スキーム違いについても確認をする
   url2 = changeScheme(url)
   boardName = bbsmenu.get(url) ? bbsmenu.get(url2)

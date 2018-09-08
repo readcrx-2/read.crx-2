@@ -708,7 +708,7 @@ export default class ThreadContent
 
             # slip追加(IDが存在しているとき)
             if res.slip?
-              str += """<span class="slip">SLIP:#{res.slip}</span>"""
+              str = """<span class="slip">SLIP:#{res.slip}</span>"""+str
             return str
           )
           #.beid

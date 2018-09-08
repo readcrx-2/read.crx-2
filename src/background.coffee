@@ -3,11 +3,10 @@ isTabReadcrx = (tab) ->
 
 # 実行中のread.crxを探す
 searchRcrx = ->
-  baseUrl = browser.runtime.getURL("")
   tabs = await browser.tabs.query(
-    url: "#{baseUrl}*"
+    url: browser.runtime.getURL("*")
   )
-  throw new Error("Not found") if tabs.length is 0
+  return null if tabs.length is 0
   return tabs[0]
 
 # アイコンクリック時の動作
@@ -15,15 +14,14 @@ browser.browserAction.onClicked.addListener( (currentTab) ->
   # 現在のタブが自分自身なら何もしない
   return if isTabReadcrx(currentTab)
 
-  try
-    {windowId, id} = await searchRcrx()
-  catch
+  rcrx = await searchRcrx()
+  if rcrx?
+    # 実行中のread.crxが存在すればそれを開く
+    browser.windows.update(rcrx.windowId , focused: true)
+    browser.tabs.update(rcrx.id, active: true)
+  else
     # 存在しなければタブを作成する
     browser.tabs.create(url: "view/index.html")
-    return
-  # 実行中のread.crxが存在すればそれを開く
-  browser.windows.update(windowId, focused: true)
-  browser.tabs.update(id, active: true)
   return
 )
 
@@ -32,11 +30,10 @@ browser.runtime.onMessage.addListener( ({type}) ->
   return unless type is "exit_rcrx"
   # zombie.htmlが動いているかもしれないので10秒待機
   setTimeout( ->
-    try
-      await searchRcrx()
-    catch
-      # 実行していなければメモリ解放のためにリロード
-      browser.runtime.reload()
+    rcrx = await searchRcrx()
+    return if rcrx?
+    # 実行していなければメモリ解放のためにリロード
+    browser.runtime.reload()
     return
   , 1000 * 10)
   return
@@ -82,13 +79,14 @@ browser.contextMenus.onClicked.addListener( ({menuItemId, linkUrl: url}, tab) ->
   unless supportedURL.test(url)
     new Notification("未対応のURLです")
     return
-  try
-    {windowId, id} = await searchRcrx()
+
+  rcrx = await searchRcrx()
+  if rcrx?
     # 実行中のread.crxが存在すればそれを開く
-    browser.windows.update(windowId, focused: true)
-    browser.tabs.update(id, active: true)
+    browser.windows.update(rcrx.windowId, focused: true)
+    browser.tabs.update(rcrx.id, active: true)
     browser.runtime.sendMessage(type: "open", query: url)
-  catch
+  else
     # 存在しなければタブを作成する
     browser.tabs.create(url: "view/index.html?q=#{url}")
   return

@@ -386,6 +386,7 @@ $z-indexes:(
     overflow-y: scroll;
     position: relative;
     outline: none;
+    scroll-snap-type: y mandatory;
   }
   .loading_overlay {
     z-index: var(--z-index-tabbed-view-overlay);
@@ -476,6 +477,7 @@ $z-indexes:(
   }
   tr {
     border-bottom: 1px solid;
+    scroll-snap-align: start;
   }
   th {
     padding: 3px;

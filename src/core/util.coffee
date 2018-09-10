@@ -151,7 +151,7 @@ export searchNextThread = (threadUrl, threadTitle, resString) ->
     score = levenshteinDistance(threadTitle, normalize(title), false)
     m = url.match(/(?:https:\/\/)?(?:\w+(\.[25]ch\.net\/.+)|(.+))$/)
     if resString.includes(m[1] ? m[2] ? url)
-      score -= 5
+      score -= 3
     return {score, title, url}
   ).sort( (a, b) ->
     return a.score - b.score

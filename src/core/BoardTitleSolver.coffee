@@ -60,10 +60,11 @@ _setBBSMenu = ->
   return
 
 ###*
-@method getBBSMenu
+@method _getBBSMenu
 @return {Promise}
+@private
 ###
-getBBSMenu: ->
+_getBBSMenu = ->
   return _bbsmenu if _bbsmenu?
   if _bbsmenuPromise?
     await _bbsmenuPromise
@@ -79,13 +80,11 @@ getBBSMenu: ->
 @return {Promise}
 ###
 searchFromBBSMenu = (url) ->
-  bbsmenu = await getBBSMenu()
+  bbsmenu = await _getBBSMenu()
   # スキーム違いについても確認をする
   url2 = changeScheme(url)
-  boardName = bbsmenu.get(url) ? bbsmenu.get(url2)
-  return boardName if boardName?
-  throw new Error("板一覧にその板は存在しません")
-  return
+  boardName = bbsmenu.get(url) ? bbsmenu.get(url2) ? null
+  return boardName
 
 ###*
 @method _formatBoardTitle
@@ -112,8 +111,7 @@ searchFromBookmark = (url) ->
   bookmark = app.bookmark.get(url) ? app.bookmark.get(url2)
   if bookmark
     return _formatBoardTitle(bookmark.title, bookmark.url)
-  throw new Error("ブックマークにその板は存在しません")
-  return
+  return null
 
 ###*
 @method searchFromSettingTXT
@@ -163,18 +161,21 @@ searchFromJbbsAPI = (url) ->
 export ask = (url) ->
   url = fixUrl(url)
 
+  # bbsmenu内を検索
+  name = await searchFromBBSMenu(url)
+  return name if name?
+
+  # ブックマーク内を検索
+  name = await searchFromBookmark(url)
+  return name if name?
+
   try
-    #bbsmenu内を検索
-    return await searchFromBBSMenu(url)
-  try
-    #ブックマーク内を検索
-    return await searchFromBookmark(url)
-  try
-    #SETTING.TXTからの取得を試みる
+    # SETTING.TXTからの取得を試みる
     if guessType(url).bbsType is "2ch"
       return await searchFromSettingTXT(url)
-    #したらばのAPIから取得を試みる
+    # したらばのAPIから取得を試みる
     if guessType(url).bbsType is "jbbs"
       return await searchFromJbbsAPI(url)
-  throw new Error("板名の取得に失敗しました")
+  catch e
+    throw new Error("板名の取得に失敗しました: #{e}")
   return

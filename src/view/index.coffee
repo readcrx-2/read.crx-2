@@ -768,9 +768,9 @@ app.main = ->
     return
   )
 
-  #書き込みウィンドウサイズ保存メッセージの監視
+  #書き込みウィンドウ場所保存メッセージの監視
   browser.runtime.onMessage.addListener( ({type, x, y}) ->
-    return unless type is "writesize"
+    return unless type is "write_position"
     app.config.set("write_window_x", ""+x)
     app.config.set("write_window_y", ""+y)
   )

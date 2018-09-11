@@ -236,7 +236,7 @@ export default Write =
     return
   setBeforeUnload: ->
     window.on("beforeunload", ->
-      browser.runtime.sendMessage(type: "writesize", x: screenX, y: screenY)
+      browser.runtime.sendMessage(type: "write_position", x: screenX, y: screenY)
       return
     )
     return

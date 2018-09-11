@@ -8,7 +8,10 @@
   "minimum_chrome_version" : "61",
   "content_security_policy": "default-src 'self'; img-src 'self' http://* https://* data:; style-src 'self' 'unsafe-inline'; connect-src 'self' http://*; frame-src 'self' http://*; font-src data:; media-src 'self' http://* https://*",
   "incognito" : "split",
-  "options_page" : "view/index.html?q=config",
+  "options_ui" : {
+    "page": "view/index.html?q=config",
+    "open_in_tab": true
+  },
   "permissions" : [
     "bookmarks",
     "cookies",

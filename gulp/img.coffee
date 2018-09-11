@@ -44,18 +44,16 @@ ico = (browser) ->
   bin = "#{output}/favicon.ico"
   func = ->
     return unless util.isSrcNewer(src, bin)
+    i = o.sharp(src).png()
     filebuf = await Promise.all([
-      o.sharp(src)
+      i.clone()
         .resize(16, 16)
-        .png()
         .toBuffer()
-      o.sharp(src)
+      i.clone()
         .resize(32, 32)
-        .png()
         .toBuffer()
-      o.sharp(src)
+      i.clone()
         .resize(64, 64)
-        .png()
         .toBuffer()
     ])
     buf = await o.toIco(filebuf)

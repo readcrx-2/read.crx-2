@@ -64,6 +64,26 @@ textarea, input:not([type="submit"]) {
   @include input-text;
 }
 
+#main {
+  display: flex;
+  flex-flow: row wrap;
+  align-items: center;
+  justify-content: flex-end;
+  .outname, .outmail {
+    display: inline-flex;
+    flex: 1 0;
+    align-items: center;
+    white-space: nowrap;
+    > input {
+      flex: 1 0;
+      min-width: 10em;
+    }
+  }
+  .outsage {
+    display: inline-flex;
+  }
+}
+
 textarea {
   display: block;
   flex-grow: 1;

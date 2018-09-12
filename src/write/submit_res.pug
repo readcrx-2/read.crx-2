@@ -18,13 +18,13 @@ block body
       button.preview_button(tabindex="1") AA表示確認
     #main
       input(type="submit" value="書き込む" tabindex="5")
-      label
+      label.outname
         |名前:
-        input.name(size="19" tabindex="2" list="names")
-      label
+        input.name(size="1" tabindex="2" list="names")
+      label.outmail
         |E-mail:
-        input.mail(size="19" tabindex="3" list="mails")
-      label
+        input.mail(size="1" tabindex="3" list="mails")
+      label.outsage
         input.sage(type="checkbox")
         |sage
     textarea.message(wrap="off" tabindex="4" autofocus required)

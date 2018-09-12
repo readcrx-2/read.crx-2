@@ -4,8 +4,18 @@
 @include common;
 
 .outtitle {
-  display: flex;
+  display: inline-flex;
+  flex: 2 0;
+  align-items: center;
+  white-space: nowrap;
   .title {
-    flex-grow: 1;
+    flex: 1 0;
+    min-width: 15em;
   }
+}
+.outsage {
+  margin-right: 10px;
+}
+.outname, .outmail {
+  flex: 1 0 40%;
 }

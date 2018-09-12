@@ -413,7 +413,7 @@ app.main = ->
     if res = /^search:(.+)$/.exec(url)
       param =
         query: res[1]
-        scheme: obj.scheme ? app.config.get("thread_search_last_mode")
+        scheme: obj.scheme ? app.config.get("thread_search_last_mode") ? "http"
       return
         src: "/view/search.html?#{app.URL.buildQuery(param)}"
         url: url

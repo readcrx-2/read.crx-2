@@ -6,9 +6,12 @@
   "description" : "2chブラウザ",
   "manifest_version": 2,
   "minimum_chrome_version" : "61",
-  "content_security_policy": "default-src 'self'; img-src 'self' http://* https://* data:; style-src 'self' 'unsafe-inline'; connect-src 'self' http://*; frame-src 'self' http://*; font-src data:; media-src 'self' http://* https://*",
+  "content_security_policy": "default-src 'self'; img-src 'self' http: https: data:; style-src 'self' 'unsafe-inline'; connect-src 'self' http: https:; frame-src 'self' http: https:; font-src data:; media-src 'self' http: https:",
   "incognito" : "split",
-  "options_page" : "view/index.html?q=config",
+  "options_ui" : {
+    "page": "view/index.html?q=config",
+    "open_in_tab": true
+  },
   "permissions" : [
     "bookmarks",
     "cookies",
@@ -29,15 +32,18 @@
   },
   "browser_action" : {
     "default_icon" : {
-      "19" : "img/read.crx_19x19.png",
-      "38" : "img/read.crx_38x38.png"
+      "16" : "img/read.crx_16x16.png",
+      "32" : "img/read.crx_32x32.png",
+      "64" : "img/read.crx_64x64.png"
     },
     "default_title" : "read.crx-2を開く"
   },
   "icons" : {
-    "128" : "img/read.crx_128x128.png",
+    "16" : "img/read.crx_16x16.png",
+    "32" : "img/read.crx_32x32.png",
     "48" : "img/read.crx_48x48.png",
-    "16" : "img/read.crx_16x16.png"
+    "96" : "img/read.crx_96x96.png",
+    "128" : "img/read.crx_128x128.png"
   },
   "content_scripts" : [
     {

@@ -118,7 +118,6 @@ background = (browser) ->
     ,
       gulp.src paths.js.background
         .pipe($.plumber(util.onCoffeeError))
-        .pipe($.changed(output, extension: ".js"))
         .pipe($.replace(rr, ro))
         .pipe($.coffee(defaultOptions.coffee))
     ).pipe($.concat("background.js"))

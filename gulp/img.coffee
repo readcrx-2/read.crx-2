@@ -44,14 +44,16 @@ ico = (browser) ->
   bin = "#{output}/favicon.ico"
   func = ->
     return unless util.isSrcNewer(src, bin)
+    i = o.sharp(src).png()
     filebuf = await Promise.all([
-      o.sharp(src)
+      i.clone()
         .resize(16, 16)
-        .png()
         .toBuffer()
-      o.sharp(src)
+      i.clone()
         .resize(32, 32)
-        .png()
+        .toBuffer()
+      i.clone()
+        .resize(64, 64)
         .toBuffer()
     ])
     buf = await o.toIco(filebuf)
@@ -60,25 +62,22 @@ ico = (browser) ->
   func.displayName = "img:ico:#{browser}"
   return func
 
-logo128 = (browser) ->
+logoBig = (browser, size) ->
   output = paths.output[browser]+"/img"
-  src = paths.img.logo128
-  bin = "#{output}/read.crx_128x128.png"
+  src = paths.img.logoBig
+  bin = "#{output}/read.crx_#{size}x#{size}.png"
+  margin = size/8
+  firstSize = size - margin*2
   func = ->
     return unless util.isSrcNewer(src, bin)
     await fs.ensureDir(output)
-    await o.sharp(null,
-      create:
-        width: 128
-        height: 128
-        channels: 4
-        background: { r: 0, g: 0, b: 0, alpha: 0}
-    ).overlayWith(src,
-      top: 16
-      left: 16
-    ).toFile(bin)
+    await o.sharp(src)
+      .resize(firstSize, firstSize)
+      .background(r: 0, g: 0, b: 0, alpha: 0)
+      .extend(top: margin, bottom: margin, left: margin, right: margin)
+      .toFile(bin)
     return
-  func.displayName = "img:logo128:#{browser}"
+  func.displayName = "img:logo#{size}:#{browser}"
   return func
 
 loading = (browser) ->
@@ -113,7 +112,8 @@ for browser in browsers
   gulp.task "img:#{browser}", gulp.parallel(
     imgs(browser)
     ico(browser)
-    logo128(browser)
+    logoBig(browser, 96)
+    logoBig(browser, 128)
     loading(browser)
   )
 

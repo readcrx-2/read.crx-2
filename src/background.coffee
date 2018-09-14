@@ -25,17 +25,16 @@ browser.browserAction.onClicked.addListener( (currentTab) ->
   return
 )
 
-# 終了通知の受信
 browser.runtime.onMessage.addListener( ({type}) ->
-  return unless type is "exit_rcrx"
-  # zombie.htmlが動いているかもしれないので10秒待機
-  setTimeout( ->
-    rcrx = await searchRcrx()
-    return if rcrx?
-    # 実行していなければメモリ解放のためにリロード
-    browser.runtime.reload()
-    return
-  , 1000 * 10)
+  switch type
+    # zombieの起動がrcrx_exitに間に合わなかった場合のためにもう一度送る
+    when "zombie_ping"
+      browser.runtime.sendMessage(type: "rcrx_exit")
+    when "zombie_done"
+      rcrx = await searchRcrx()
+      return if rcrx?
+      # 実行していなければメモリ解放のためにリロード
+      browser.runtime.reload()
   return
 )
 

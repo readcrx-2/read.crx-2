@@ -1191,10 +1191,7 @@ app.viewThread._readStateManager = ($view) ->
 
   #アンロード時は非同期系の処理をzombie.htmlに渡す
   #そのためにlocalStorageに更新するread_stateの情報を渡す
-  doneBeforezombie = false
   onBeforezombie = ->
-    return if doneBeforezombie
-    doneBeforezombie = true
     scan()
     if readStateUpdated
       if localStorage.zombie_read_state?
@@ -1206,7 +1203,6 @@ app.viewThread._readStateManager = ($view) ->
     return
 
   parent.window.on("beforezombie", onBeforezombie)
-  window.on("beforeunload", onBeforezombie)
 
   #スクロールされたら定期的にスキャンを実行する
   doneScroll = false
@@ -1257,7 +1253,6 @@ app.viewThread._readStateManager = ($view) ->
   window.on("view_unload", ->
     clearInterval(scrollWatcher)
     parent.window.off("beforezombie", onBeforezombie)
-    window.off("beforeunload", onBeforezombie)
     #ロード中に閉じられた場合、スキャンは行わない
     return if $view.hasClass("loading")
     scanAndSave()

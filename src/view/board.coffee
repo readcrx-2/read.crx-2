@@ -26,11 +26,22 @@ app.boot("/view/board.html", ["Board"], (Board) ->
     param.url = url
     windowX = app.config.get("write_window_x")
     windowY = app.config.get("write_window_y")
-    open(
-      "/write/submit_thread.html?#{app.URL.buildQuery(param)}"
-      undefined
-      "width=600,height=300,left=#{windowX},top=#{windowY}"
-    )
+    openUrl = "/write/submit_thread.html?#{app.URL.buildQuery(param)}"
+    if "&[BROWSER]" is "chrome"
+      parent.browser.windows.create(
+        type: "popup"
+        url: openUrl
+        width: 600
+        height: 300
+        left: parseInt(windowX)
+        top: parseInt(windowY)
+      )
+    else if "&[BROWSER]" is "firefox"
+      open(
+        openUrl
+        undefined
+        "width=600,height=300,left=#{windowX},top=#{windowY}"
+      )
     return
 
   $writeButton = $view.C("button_write")[0]

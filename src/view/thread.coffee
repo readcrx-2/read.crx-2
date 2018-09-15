@@ -1173,26 +1173,27 @@ app.viewThread._readStateManager = ($view) ->
 
     scanCountByReloaded++ if requestReloadFlag and !byScroll
 
-    if readState.received isnt received
+    if readState.received < received
       readState.received = received
       readStateUpdated = true
 
     lastDisplay = threadContent.getDisplay(last)
-    if (
-      (!requestReloadFlag or scanCountByReloaded is 1) and
-      (!lastDisplay.bottom or lastDisplay.resNum is last)
-    )
+    if lastDisplay
       if (
-        readState.last isnt lastDisplay.resNum or
-        readState.offset isnt lastDisplay.offset
+        (!requestReloadFlag or scanCountByReloaded is 1) and
+        (!lastDisplay.bottom or lastDisplay.resNum is last)
       )
-        readState.last = lastDisplay.resNum
-        readState.offset = lastDisplay.offset
+        if (
+          readState.last isnt lastDisplay.resNum or
+          readState.offset isnt lastDisplay.offset
+        )
+          readState.last = lastDisplay.resNum
+          readState.offset = lastDisplay.offset
+          readStateUpdated = true
+      else if readState.last isnt last
+        readState.last = last
+        readState.offset = null
         readStateUpdated = true
-    else if readState.last isnt last
-      readState.last = last
-      readState.offset = null
-      readStateUpdated = true
 
     if readState.read < last
       readState.read = last

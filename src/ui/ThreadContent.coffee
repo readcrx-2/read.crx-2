@@ -385,8 +385,8 @@ export default class ThreadContent
   getRead: (beforeRead = 1) ->
     containerBottom = @container.scrollTop + @container.clientHeight
     $read = @container.children[beforeRead - 1]
-    readTop = $read.offsetTop
-    if readTop < containerBottom < readTop + $read.offsetHeight
+    readTop = $read?.offsetTop
+    if !$read or (readTop < containerBottom < readTop + $read.offsetHeight)
       return beforeRead
 
     # 最後のレスはcontainerの余白の関係で取得できないので別で判定
@@ -423,7 +423,7 @@ export default class ThreadContent
   ###*
   @method getDisplay
   @param {Number} beforeRead 直近に読んでいたレスの番号
-  @return {Object} 現在表示していると推測されるレスの番号とオフセット
+  @return {Object|null} 現在表示していると推測されるレスの番号とオフセット
   ###
   getDisplay: (beforeRead) ->
     containerTop = @container.scrollTop
@@ -436,6 +436,7 @@ export default class ThreadContent
       resRead.bottom = true
 
     $read = @container.children[beforeRead - 1]
+    return null unless $read
     readTop = $read.offsetTop
     unless readTop < containerTop < readTop + $read.offsetHeight
       # 直近に読んでいたレスの上下を順番に調べる

@@ -797,6 +797,7 @@ app.main = ->
     return unless type is "write_position"
     app.config.set("write_window_x", ""+x)
     app.config.set("write_window_y", ""+y)
+    return
   )
 
   # リクエスト・ヘッダーの監視

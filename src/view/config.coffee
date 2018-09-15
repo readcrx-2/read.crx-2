@@ -424,7 +424,7 @@ app.boot("/view/config.html", ["Cache", "BBSMenu"], (Cache, BBSMenu) ->
 
     #ブックマークフォルダ表示
     do updateName = ->
-      [folder] = await browser.bookmarks.get(app.config.get("bookmark_id"))
+      [folder] = await parent.browser.bookmarks.get(app.config.get("bookmark_id"))
       $$.I("bookmark_source_name").textContent = folder.title
       return
     app.message.on("config_updated", ({key}) ->
@@ -566,7 +566,7 @@ app.boot("/view/config.html", ["Cache", "BBSMenu"], (Cache, BBSMenu) ->
 
   # localstorageの使用状況
   do ->
-    if browser.storage.local.getBytesInUse?
+    if parent.browser.storage.local.getBytesInUse?
       # 無制限なのでindexeddbの最大と一致する
       {quota} = await navigator.storage.estimate()
       $view.C("localstorage_max")[0].textContent = formatBytes(quota)
@@ -574,7 +574,7 @@ app.boot("/view/config.html", ["Cache", "BBSMenu"], (Cache, BBSMenu) ->
       $meter.max = quota
       $meter.high = quota*0.9
       $meter.low = quota*0.8
-      usage = await browser.storage.local.getBytesInUse()
+      usage = await parent.browser.storage.local.getBytesInUse()
       $view.C("localstorage_using")[0].textContent = formatBytes(usage)
       $meter.value = usage
     else

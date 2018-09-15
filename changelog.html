@@ -6,6 +6,9 @@
     <title>read.crx 2 | changelog</title>
     <link rel="stylesheet" href="stylesheets/styles.css">
     <link rel="stylesheet" href="stylesheets/pygment_trac.css">
+    <style>
+    li.no {list-style: none;}
+    </style>
     <script src="javascripts/scale.fix.js" defer async></script>
     <meta name="viewport" content="width=device-width, initial-scale=1, user-scalable=no">
     <!--[if lt IE 9]>
@@ -36,7 +39,7 @@
         <h2 id="v2.0.1">v2.0.1 (2018-09-16)</h2>
         <ul>
           <li>既定の板一覧URLを更新</li>
-          <li>※既定のままで変更していない場合は自動で変更されます。既定のままであったのに変更されていない場合は「リセット」ボタンを押してください。</li>
+          <li class="no">※既定のままで変更していない場合は自動で変更されます。既定のままであったのに変更されていない場合は「リセット」ボタンを押してください。</li>
           <li>スレ検索で検索結果を開けないことがあるのを修正（Thank you, <a href="https://github.com/awazi">awazi</a>）</li>
           <li>板名の取得に失敗するのを修正</li>
           <li>既読情報が終了時に保存されていなかったのを修正</li>
@@ -248,15 +251,15 @@
         <h2 id="v1.25.0">v1.25.0 (2018-03-05)</h2>
         <ul>
           <li>コンテキストメニューからのID/SLIPのNG指定時に有効期限の指定機能を追加（Thank you, <a href="https://github.com/awazi">awazi</a>）</li>
-          <li>※NG機能 → コンテキストメニューの設定</li>
+          <li class="no">※NG機能 → コンテキストメニューの設定</li>
           <li>あぼーん表示時に指定されたテキストを含めて表示する機能を追加（Thank you, <a href="https://github.com/awazi">awazi</a>）</li>
           <li>NG機能にexpireDateプレフィックスを追加（Thank you, <a href="https://github.com/awazi">awazi</a>）</li>
           <li>NG機能にUrl,RegExpUrlキーワードを追加（Thank you, <a href="https://github.com/awazi">awazi</a>）</li>
           <li>NG機能のAND条件追加（Thank you, <a href="https://github.com/awazi">awazi</a>）</li>
-          <li>※AND条件の追加により、「$[]$」を含むキーワードを指定しているNGが存在する場合に挙動が変わります。（該当する人はいないと思うので大丈夫だと思いますが…）</li>
-          <li>※上記のNG機能使用方法は<a href="https://github.com/readcrx-2/read.crx-2/wiki/NG%E3%83%AF%E3%83%BC%E3%83%89%E3%81%AE%E4%BB%95%E6%A7%98">WikiのNGワード</a>、<a href="https://github.com/readcrx-2/read.crx-2/pull/421#issue-171512613">PRのコメント</a>を参照してください。</li>
+          <li class="no">※AND条件の追加により、「$[]$」を含むキーワードを指定しているNGが存在する場合に挙動が変わります。（該当する人はいないと思うので大丈夫だと思いますが…）</li>
+          <li class="no">※上記のNG機能使用方法は<a href="https://github.com/readcrx-2/read.crx-2/wiki/NG%E3%83%AF%E3%83%BC%E3%83%89%E3%81%AE%E4%BB%95%E6%A7%98">WikiのNGワード</a>、<a href="https://github.com/readcrx-2/read.crx-2/pull/421#issue-171512613">PRのコメント</a>を参照してください。</li>
           <li>スレッド検索のhttps対応（Thank you, <a href="https://github.com/awazi">awazi</a>）</li>
-          <li>※検索のレスポンスに含まれるスレッドのURLがhttpのため、それをhttpsに置き換える実装です。</li>
+          <li class="no">※検索のレスポンスに含まれるスレッドのURLがhttpのため、それをhttpsに置き換える実装です。</li>
           <li>最終レスがNGの時にフッターが表示されないのを修正（Thank you, <a href="https://github.com/awazi">awazi</a>）</li>
           <li>設定のインポート時にラジオボタンの表示が変わらないのを修正（Thank you, <a href="https://github.com/awazi">awazi</a>）</li>
           <li>メディアアドレスをNGが機能していなかったのを修正（Thank you, <a href="https://github.com/awazi">awazi</a>）</li>
@@ -264,19 +267,19 @@
         <h2 id="v1.24.2">v1.24.2 (2018-02-26)</h2>
         <ul>
           <li>未来へのアンカーで内部で使用している文字列を変更(v1.24.1の修正漏れ)</li>
-          <li>※未来へのアンカーを有効にしていた場合は、初期値（無効）になっているため再度有効化してください。</li>
+          <li class="no">※未来へのアンカーを有効にしていた場合は、初期値（無効）になっているため再度有効化してください。</li>
         </ul>
         <h2 id="v1.24.1">v1.24.1 (2018-02-26)</h2>
         <ul>
           <li>未来へのアンカーで内部で使用している文字列を変更</li>
-          <li>※未来へのアンカーを有効にしていた場合は、初期値（無効）になっているため再度有効化してください。</li>
+          <li class="no">※未来へのアンカーを有効にしていた場合は、初期値（無効）になっているため再度有効化してください。</li>
         </ul>
         <h2 id="v1.24.0">v1.24.0 (2018-02-26)</h2>
         <ul>
           <li>NGの無効化機能を追加（Thank you, <a href="https://github.com/awazi">awazi</a>）</li>
           <li>未来へのアンカーを含むレスのNG機能を追加（Thank you, <a href="https://github.com/awazi">awazi</a>）</li>
           <li>連投レス(コピペ)のNG機能を追加（Thank you, <a href="https://github.com/awazi">awazi</a>）</li>
-          <li>※上記のNG機能使用方法は<a href="https://github.com/readcrx-2/read.crx-2/wiki/NG%E3%83%AF%E3%83%BC%E3%83%89%E3%81%AE%E4%BB%95%E6%A7%98">WikiのNGワード</a>を参照してください。</li>
+          <li class="no">※上記のNG機能使用方法は<a href="https://github.com/readcrx-2/read.crx-2/wiki/NG%E3%83%AF%E3%83%BC%E3%83%89%E3%81%AE%E4%BB%95%E6%A7%98">WikiのNGワード</a>を参照してください。</li>
         </ul>
         <h2 id="v1.23.0">v1.23.0 (2018-02-22)</h2>
         <ul>
@@ -286,7 +289,7 @@
           <li>閲覧履歴の一覧に板名を追加（Thank you, <a href="https://github.com/awazi">awazi</a>）</li>
           <li>既読位置の読み取り方法をロールバック（Thank you, <a href="https://github.com/awazi">awazi</a>）</li>
           <li>書込履歴が1ヶ月ずれているのを修正（Thank you, <a href="https://github.com/awazi">awazi</a>）</li>
-          <li>※更新時にずれていると思われる書き込み履歴の修正を行います。一部意図しない修正が行われることがあります。</li>
+          <li class="no">※更新時にずれていると思われる書き込み履歴の修正を行います。一部意図しない修正が行われることがあります。</li>
           <li>閲覧履歴の削除が出来ない場合があるのを修正（Thank you, <a href="https://github.com/awazi">awazi</a>）</li>
           <li>Developers information: TypeScriptを2.7.2にアップデート</li>
         </ul>

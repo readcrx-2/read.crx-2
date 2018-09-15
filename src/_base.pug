@@ -5,6 +5,8 @@ html(class=htmlClasses data-app-version=version)&attributes(html)
     meta(charset="utf-8")
     meta(name="referrer" content="no-referrer")
     title= title
+    if needFavicon
+      link(rel="icon" href="/img/favicon.ico")
     if needUI
       link(rel="stylesheet" href=`/ui.css?v=${version}`)
     if needCss

@@ -5,10 +5,11 @@ block vars
   - var title = "read.crx 2";
   - var html = {};
   - var htmlClasses = [""];
-  - var body = {};
+  - var body = {"style": "overflow: hidden"};
+  - var needFavicon = true;
   - var needUI = false;
   - var needModule = false;
   - var needCss = false;
 
 block body
-  |read.crx 2 を終了しています
+  span(style={"font-size": "16px"}) read.crx 2 を終了しています

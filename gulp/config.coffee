@@ -38,10 +38,10 @@ do ->
     img:
       imgsSrc: "#{i}/image/svg"
       imgs: [
-        "read.crx_48x48.png"
-        "read.crx_38x38.png"
-        "read.crx_19x19.png"
         "read.crx_16x16.png"
+        "read.crx_32x32.png"
+        "read.crx_48x48.png"
+        "read.crx_64x64.png"
         "close_16x16.webp"
         "dummy_1x1.webp"
         "lock_12x12_3a5.webp"
@@ -77,7 +77,7 @@ do ->
         "regexp_19x19_f93.webp"
       ]
       icon: "#{i}/image/svg/read.crx.svg"
-      logo128: "#{i}/image/svg/read.crx.svg"
+      logoBig: "#{i}/image/svg/read.crx.svg"
       loading: "#{i}/image/svg/loading.svg"
     lib:
       shortQuery: "./node_modules/ShortQuery.js/bin/shortQuery.chrome.min.js"

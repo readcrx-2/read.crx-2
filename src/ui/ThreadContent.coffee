@@ -704,11 +704,11 @@ export default class ThreadContent
             @idIndex.set(fixedId, new Set()) unless @idIndex.has(fixedId)
             @idIndex.get(fixedId).add(resNum)
 
-            str = """#{$1 ? ""}<span class="id">#{$2}</span>"""
-
+            str = $1 ? ""
             # slip追加(IDが存在しているとき)
             if res.slip?
               str += """<span class="slip">SLIP:#{res.slip}</span>"""
+            str += """<span class="id">#{$2}</span>"""
             return str
           )
           #.beid

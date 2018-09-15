@@ -56,11 +56,22 @@ app.boot("/view/thread.html", ->
     param.title = document.title
     windowX = app.config.get("write_window_x")
     windowY = app.config.get("write_window_y")
-    open(
-      "/write/submit_res.html?#{app.URL.buildQuery(param)}"
-      undefined
-      "width=600,height=300,left=#{windowX},top=#{windowY}"
-    )
+    openUrl = "/write/submit_res.html?#{app.URL.buildQuery(param)}"
+    if "&[BROWSER]" is "chrome"
+      parent.browser.windows.create(
+        type: "popup"
+        url: openUrl
+        width: 600
+        height: 300
+        left: parseInt(windowX)
+        top: parseInt(windowY)
+      )
+    else if "&[BROWSER]" is "firefox"
+      open(
+        openUrl
+        undefined
+        "width=600,height=300,left=#{windowX},top=#{windowY}"
+      )
     return
 
   popupHelper = (that, e, fn) ->
@@ -1191,10 +1202,7 @@ app.viewThread._readStateManager = ($view) ->
 
   #アンロード時は非同期系の処理をzombie.htmlに渡す
   #そのためにlocalStorageに更新するread_stateの情報を渡す
-  doneBeforezombie = false
   onBeforezombie = ->
-    return if doneBeforezombie
-    doneBeforezombie = true
     scan()
     if readStateUpdated
       if localStorage.zombie_read_state?
@@ -1206,7 +1214,6 @@ app.viewThread._readStateManager = ($view) ->
     return
 
   parent.window.on("beforezombie", onBeforezombie)
-  window.on("beforeunload", onBeforezombie)
 
   #スクロールされたら定期的にスキャンを実行する
   doneScroll = false
@@ -1257,7 +1264,6 @@ app.viewThread._readStateManager = ($view) ->
   window.on("view_unload", ->
     clearInterval(scrollWatcher)
     parent.window.off("beforezombie", onBeforezombie)
-    window.off("beforeunload", onBeforezombie)
     #ロード中に閉じられた場合、スキャンは行わない
     return if $view.hasClass("loading")
     scanAndSave()

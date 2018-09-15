@@ -413,7 +413,7 @@ app.main = ->
     if res = /^search:(.+)$/.exec(url)
       param =
         query: res[1]
-        scheme: obj.scheme ? app.config.get("thread_search_last_mode")
+        scheme: obj.scheme ? app.config.get("thread_search_last_mode") ? "http"
       return
         src: "/view/search.html?#{app.URL.buildQuery(param)}"
         url: url
@@ -653,18 +653,42 @@ app.main = ->
   # コンテキストメニューの作成
   app.ContextMenus.createAll()
   window.on("beforeunload", ->
-    #コンテキストメニューの削除
+    # コンテキストメニューの削除
     app.ContextMenus.removeAll()
+
+    # 既読情報の処理
+    window.emit(new Event("beforezombie"))
+
+    # zombieの起動
+    if "&[BROWSER]" is "chrome"
+      {id} = await browser.windows.create(
+        top: 0
+        left: 0
+        height: 100
+        width: 250
+        url: "/zombie.html"
+        type: "popup"
+        focused: false
+      )
+      await browser.windows.update(id,
+        state: "minimized"
+      )
+    else if "&[BROWSER]" is "firefox"
+      await browser.windows.create(
+        url: "/zombie.html"
+        type: "popup"
+        state: "minimized"
+      )
+    return
+  )
+  window.on("unload", ->
+    # 終了通知の送信
+    browser.runtime.sendMessage(type: "rcrx_exit")
+    return
   )
 
   # NGデータの有効期限設定
   app.NG.execExpire()
-
-  window.on("unload", ->
-    # 終了通知の送信
-    browser.runtime.sendMessage(type: "exit_rcrx")
-    return
-  )
 
   #openメッセージ受信部
   app.message.on("open", ({
@@ -768,11 +792,12 @@ app.main = ->
     return
   )
 
-  #書き込みウィンドウサイズ保存メッセージの監視
+  #書き込みウィンドウ場所保存メッセージの監視
   browser.runtime.onMessage.addListener( ({type, x, y}) ->
-    return unless type is "writesize"
+    return unless type is "write_position"
     app.config.set("write_window_x", ""+x)
     app.config.set("write_window_y", ""+y)
+    return
   )
 
   # リクエスト・ヘッダーの監視
@@ -834,14 +859,6 @@ app.main = ->
       #request_focusの翻訳
       when "request_focus"
         $iframe.emit(new CustomEvent("request_focus", detail: message, bubbles: true))
-    return
-  )
-
-  #データ保存等の後片付けを行なってくれるzombie.html起動
-  window.on("beforeunload", ->
-    window.emit(new Event("beforezombie"))
-    if localStorage.zombie_read_state?
-      open("/zombie.html", undefined, "left=1,top=1,width=250,height=50")
     return
   )
 

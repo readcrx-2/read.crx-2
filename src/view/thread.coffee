@@ -1051,7 +1051,11 @@ app.viewThread._draw = ($view, {forceUpdate = false, jumpResNum = -1} = {}) ->
     await threadContent.addItem(thread.res.slice($view.C("content")[0].child().length), thread.title)
     loadCount++
     app.DOMData.get($view, "lazyload").scan()
-    
+
+    if not $view.hasClass("expired") and thread.expired
+      $view.addClass("expired")
+      parent.postMessage({type: "became_expired"}, location.origin)
+
     if not $view.hasClass("over1000") and threadContent.over1000ResNum?
       $view.addClass("over1000")
       parent.postMessage({type: "became_over1000"}, location.origin)

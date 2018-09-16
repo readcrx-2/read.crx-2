@@ -841,6 +841,11 @@ app.main = ->
         if $iframe.hasClass("tab_content")
           $view.$("li[data-tabid=\"#{$iframe.dataset.tabid}\"]").addClass("over1000")
 
+      # スレがdat落ちになったとき
+      when "became_expired"
+        if $iframe.hasClass("tab_content")
+          $view.$("li[data-tabid=\"#{$iframe.dataset.tabid}\"]").addClass("expired")
+
       #request_killmeの処理
       when "request_killme"
         #タブ内のviewが送ってきた場合

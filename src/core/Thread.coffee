@@ -295,7 +295,7 @@ export default class Thread
   @return {null|Object}
   ###
   @_getXhrInfo = (url) ->
-    tmp = ///^(https?)://((?:\w+\.)?(\w+\.\w+))/(?:test|bbs)/read(?:_archive)?\.cgi/
+    tmp = ///^(https?)://((?:\w+\.)*(\w+\.\w+))/(?:test|bbs)/read(?:_archive)?\.cgi/
       (\w+)/(\d+)/(?:(\d+)/)?$///.exec(url)
     unless tmp then return null
     return switch tmp[3]

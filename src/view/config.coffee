@@ -116,7 +116,7 @@ class HistoryIO extends SettingIO
       @afterChangedFunc()
       @$clearButton.removeClass("hidden")
       return
-    )
+    , once: true)
     return
   setupClearRangeButton: ->
     @$clearRangeButton.on("click", =>
@@ -138,7 +138,7 @@ class HistoryIO extends SettingIO
       @afterChangedFunc()
       @$clearRangeButton.removeClass("hidden")
       return
-    )
+    , once: true)
     return
   setupImportButton: ->
     @$importButton.on("click", =>

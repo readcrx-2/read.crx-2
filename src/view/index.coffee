@@ -836,6 +836,11 @@ app.main = ->
         if $iframe.hasClass("tab_content")
           app.DOMData.get($iframe.closest(".tab"), "tab").update($iframe.dataset.tabid, {title})
 
+      # スレがover1000になったとき
+      when "became_over1000"
+        if $iframe.hasClass("tab_content")
+          $view.$("li[data-tabid=\"#{$iframe.dataset.tabid}\"]").addClass("over1000")
+
       #request_killmeの処理
       when "request_killme"
         #タブ内のviewが送ってきた場合

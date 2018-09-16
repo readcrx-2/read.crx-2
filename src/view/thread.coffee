@@ -1027,6 +1027,7 @@ app.boot("/view/thread.html", ->
 )
 
 app.viewThread._draw = ($view, {forceUpdate = false, jumpResNum = -1} = {}) ->
+  threadContent = app.DOMData.get($view, "threadContent")
   $view.addClass("loading")
   $view.style.cursor = "wait"
   $reloadButton = $view.C("button_reload")[0]
@@ -1047,9 +1048,13 @@ app.viewThread._draw = ($view, {forceUpdate = false, jumpResNum = -1} = {}) ->
 
     document.title = thread.title
 
-    await app.DOMData.get($view, "threadContent").addItem(thread.res.slice($view.C("content")[0].child().length), thread.title)
+    await threadContent.addItem(thread.res.slice($view.C("content")[0].child().length), thread.title)
     loadCount++
     app.DOMData.get($view, "lazyload").scan()
+    
+    if not $view.hasClass("over1000") and threadContent.over1000ResNum?
+      $view.addClass("over1000")
+      parent.postMessage({type: "became_over1000"}, location.origin)
 
     if $view.C("content")[0].hasClass("searching")
       $view.C("searchbox")[0].emit(new Event("input"))

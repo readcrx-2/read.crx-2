@@ -59,6 +59,12 @@ export default class ThreadContent
     @oneId = null
 
     ###*
+    @property over1000ResNum
+    @type Number
+    ###
+    @over1000ResNum = null
+
+    ###*
     @property _lastScrollInfo
     @type Object
     @private
@@ -111,13 +117,6 @@ export default class ThreadContent
     @private
     ###
     @_scrollRequestID = 0
-
-    ###*
-    @property _over1000ResNum
-    @type Number
-    @private
-    ###
-    @_over1000ResNum = null
 
     ###*
     @property _rawResData
@@ -728,9 +727,9 @@ export default class ThreadContent
       if (
         bbsType is "2ch" and
         tmp.startsWith(_OVER1000_DATA) and
-        !@_over1000ResNum
+        !@over1000ResNum
       )
-        @_over1000ResNum = resNum
+        @over1000ResNum = resNum
 
       #文字色
       color = res.message.match(/<font color="(.*?)">/i)?[1]
@@ -1074,7 +1073,7 @@ export default class ThreadContent
   @private
   ###
   _getNgType: (objRes, bbsType) =>
-    return null if @_over1000ResNum? and objRes.num >= @_over1000ResNum
+    return null if @over1000ResNum? and objRes.num >= @over1000ResNum
     resCount = @container.child().length
 
     # 登録ワードのNG

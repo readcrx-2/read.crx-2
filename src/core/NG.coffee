@@ -265,73 +265,69 @@ export add = (string) ->
   return
 
 ###*
-@method isNGBoard
-@param {String} title
-@param {String} url
-@param {Boolean} exceptionFlg
-@param {String} subType
-@return {Object|null}
+@method _checkWord
+@param {Object} ngObj
+@param {Object} threadObj/resObj
+@private
 ###
-export isNGBoard = (title, url, resCount, exceptionFlg = false, subType = null) ->
-  return checkNGThread({}, title, url, resCount, exceptionFlg, subType, true)
+_checkWord = ({type, reg, word}, {all, name, mail, id, slip, mes, title, url, resCount}) ->
+  if (
+    ( type is TYPE.REG_EXP and reg.test(all) ) or
+    ( type is TYPE.REG_EXP_NAME and reg.test(name) ) or
+    ( type is TYPE.REG_EXP_MAIL and reg.test(mail) ) or
+    ( type is TYPE.REG_EXP_ID and id? and reg.test(id) ) or
+    ( type is TYPE.REG_EXP_SLIP and slip? and reg.test(slip) ) or
+    ( type is TYPE.REG_EXP_BODY and reg.test(mes) ) or
+    ( type is TYPE.REG_EXP_TITLE and reg.test(title) ) or
+    ( type is TYPE.REG_EXP_URL and reg.test(url) ) or
+    ( type is TYPE.TITLE and normalize(title).includes(word) ) or
+    ( type is TYPE.NAME and normalize(name).includes(word) ) or
+    ( type is TYPE.MAIL and normalize(mail).includes(word) ) or
+    ( type is TYPE.ID and id?.includes(word) ) or
+    ( type is TYPE.SLIP and slip?.includes(word) ) or
+    ( type is TYPE.BODY and normalize(mes).includes(word) ) or
+    ( type is TYPE.WORD and normalize(all).includes(word) ) or
+    ( type is TYPE.URL and url.includes(word) ) or
+    ( type is TYPE.RES_COUNT and word < resCount )
+  )
+    return type
+  return null
 
 ###*
-@method checkNGThread
-@param {Object} res
+@method _checkResNum
+@param {Object} ngObj
+@param {Number} resNum
+@private
+###
+_checkResNum = ({start, finish}, resNum) ->
+  return (
+    start? and (
+      ( finish? and start <= resNum <= finish ) or
+      ( parseInt(start) is resNum )
+    )
+  )
+
+###*
+@method isNGBoard
 @param {String} threadTitle
 @param {String} url
+@param {Number} resCount
 @param {Boolean} exceptionFlg
 @param {String} subType
-@param {Boolean} isBoard
 @return {Object|null}
 ###
-export checkNGThread = (res, threadTitle, url, resCount = null, exceptionFlg = false, subType = null, isBoard = false) ->
-  tmpTitle = normalize(threadTitle)
-  if isBoard
-    tmpTxt1 = tmpTitle
-    tmpTxt2 = tmpTitle
-  else
-    decodedName = decodeCharReference(res.name)
-    decodedMail = decodeCharReference(res.mail)
-    decodedOther = decodeCharReference(res.other)
-    decodedMes = decodeCharReference(res.message)
-    tmpTxt1 = decodedName + " " + decodedMail + " " + decodedOther + " " + decodedMes
-    tmpTxt2 = normalize(tmpTxt1)
-
-  _checkWord = (n) ->
-    if (
-      (n.type is TYPE.REG_EXP and n.reg.test(tmpTxt1)) or
-      (n.type is TYPE.REG_EXP_NAME and n.reg.test(decodedName)) or
-      (n.type is TYPE.REG_EXP_MAIL and n.reg.test(decodedMail)) or
-      (n.type is TYPE.REG_EXP_ID and res.id? and n.reg.test(res.id)) or
-      (n.type is TYPE.REG_EXP_SLIP and res.slip? and n.reg.test(res.slip)) or
-      (n.type is TYPE.REG_EXP_BODY and n.reg.test(decodedMes)) or
-      (n.type is TYPE.REG_EXP_TITLE and n.reg.test(threadTitle)) or
-      (n.type is TYPE.REG_EXP_URL and n.reg.test(url)) or
-      (n.type is TYPE.TITLE and tmpTitle.includes(n.word)) or
-      (n.type is TYPE.NAME and normalize(decodedName).includes(n.word)) or
-      (n.type is TYPE.MAIL and normalize(decodedMail).includes(n.word)) or
-      (n.type is TYPE.ID and res.id?.includes(n.word)) or
-      (n.type is TYPE.SLIP and res.slip?.includes(n.word)) or
-      (n.type is TYPE.BODY and normalize(decodedMes).includes(n.word)) or
-      (n.type is TYPE.WORD and tmpTxt2.includes(n.word)) or
-      (n.type is TYPE.URL and url.includes(n.word)) or
-      (n.type is TYPE.RES_COUNT and n.word < resCount)
-    )
-      return n.type
-    return null
+export isNGBoard = (threadTitle, url, resCount, exceptionFlg = false, subType = null) ->
+  threadObj = {
+    all: normalize(threadTitle)
+    title: threadTitle
+    url
+    resCount
+  }
 
   now = Date.now()
   for n from get()
-    continue if n.type is TYPE.INVALID
-    if isBoard
-      # isNGBoard用の項目チェック
-      unless n.type in [TYPE.REG_EXP, TYPE.REG_EXP_TITLE, TYPE.TITLE, TYPE.WORD, TYPE.REG_EXP_URL, TYPE.URL, TYPE.RES_COUNT]
-        continue
-    else
-      # ignoreResNumber用レス番号のチェック
-      if n.start? and ((n.finish? and n.start <= res.num <= n.finish) or (parseInt(n.start) is res.num))
-        continue
+    continue if n.type is TYPE.INVALID or n.type is "" or n.word is ""
+    continue unless n.type in [TYPE.REG_EXP, TYPE.REG_EXP_TITLE, TYPE.TITLE, TYPE.WORD, TYPE.REG_EXP_URL, TYPE.URL, TYPE.RES_COUNT]
     # 有効期限のチェック
     continue if n.expire? and now > n.expire
     # ignoreNgType用例外フラグのチェック
@@ -341,17 +337,61 @@ export checkNGThread = (res, threadTitle, url, resCount = null, exceptionFlg = f
 
     # サブ条件のチェック
     if n.subElements?
-      noneNg = false
-      for subElement in n.subElements
-        ngType = _checkWord(subElement)
-        unless ngType
-          noneNg = true
-          break
-      continue if noneNg
+      continue unless n.subElements.every( (subElement) ->
+        return _checkWord(subElement, threadObj)
+      )
     # メイン条件のチェック
-    if n.type isnt "" and n.word isnt ""
-      ngType = _checkWord(n)
-      return {type: ngType, name: n.name} if ngType
+    ngType = _checkWord(n, threadObj)
+    return {type: ngType, name: n.name} if ngType
+  return null
+
+###*
+@method isNGThread
+@param {Object} res
+@param {String} title
+@param {String} url
+@param {Number} resCount
+@param {Boolean} exceptionFlg
+@param {String} subType
+@return {Object|null}
+###
+export isNGThread = (res, title, url, exceptionFlg = false, subType = null) ->
+  name = decodeCharReference(res.name)
+  mail = decodeCharReference(res.mail)
+  other = decodeCharReference(res.other)
+  mes = decodeCharReference(res.message)
+  all = name + " " + mail + " " + other + " " + mes
+  resObj = {
+    all
+    name
+    mail
+    id: res.id ? null
+    slip: res.slip ? null
+    mes
+    title
+    url
+  }
+
+  now = Date.now()
+  for n from get()
+    continue if n.type is TYPE.INVALID or n.type is "" or n.word is ""
+    # ignoreResNumber用レス番号のチェック
+    continue if _checkResNum(n, res.num)
+    # 有効期限のチェック
+    continue if n.expire? and now > n.expire
+    # ignoreNgType用例外フラグのチェック
+    continue if n.exception isnt exceptionFlg
+    # ng-typeのチエック
+    continue if n.subType? and subType and not n.subType.includes(subType)
+
+    # サブ条件のチェック
+    if n.subElements?
+      continue unless n.subElements.every( (subElement) ->
+        return _checkWord(subElement, resObj)
+      )
+    # メイン条件のチェック
+    ngType = _checkWord(n, resObj)
+    return {type: ngType, name: n.name} if ngType
   return null
 
 ###*
@@ -364,23 +404,19 @@ export isIgnoreResNumForAuto = (resNum, subType = "") ->
   for n from get()
     continue if n.type isnt TYPE.AUTO
     continue if n.subType? and not n.subType.includes(subType)
-    if n.start? and ((n.finish? and n.start <= resNum <= n.finish) or (parseInt(n.start) is resNum))
-      return true
+    return true if _checkResNum(n, resNum)
   return false
 
 ###*
-@method isIgnoreNgType
+@method isThreadIgnoreNgType
 @param {Object} res
 @param {String} threadTitle
 @param {String} url
 @param {String} ngType
 @return {Boolean}
 ###
-export isIgnoreNgType = (res, threadTitle, url, resCount, ngType) ->
-  return (
-    isNGBoard(threadTitle, url, resCount, true, ngType) or
-    checkNGThread(res, threadTitle, url, resCount, true, ngType)
-  )
+export isThreadIgnoreNgType = (res, threadTitle, url, ngType) ->
+  return isNGThread(res, threadTitle, url, true, ngType)
 
 ###*
 @method execExpire

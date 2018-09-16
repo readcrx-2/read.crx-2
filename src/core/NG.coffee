@@ -23,6 +23,7 @@ export TYPE =
   BODY: "Body"
   WORD: "Word"
   URL: "Url"
+  RES_COUNT: "ResCount"
   AUTO: "Auto"
   AUTO_CHAIN: "Chain"
   AUTO_CHAIN_ID: "ChainID"
@@ -159,6 +160,9 @@ parse = (string) ->
       when ngWord.startsWith("Url:")
         ngElement.type = TYPE.URL
         ngElement.word = ngWord.substr(4)
+      when ngWord.startsWith("ResCount:")
+        ngElement.type = TYPE.RES_COUNT
+        ngElement.word = parseInt(ngWord.substr(9))
       when ngWord.startsWith("Auto:")
         ngElement.type = TYPE.AUTO
         ngElement.word = ngWord.substr(5)
@@ -268,8 +272,8 @@ export add = (string) ->
 @param {String} subType
 @return {Object|null}
 ###
-export isNGBoard = (title, url, exceptionFlg = false, subType = null) ->
-  return checkNGThread({}, title, url, exceptionFlg, subType, true)
+export isNGBoard = (title, url, resCount, exceptionFlg = false, subType = null) ->
+  return checkNGThread({}, title, url, resCount, exceptionFlg, subType, true)
 
 ###*
 @method checkNGThread
@@ -281,7 +285,7 @@ export isNGBoard = (title, url, exceptionFlg = false, subType = null) ->
 @param {Boolean} isBoard
 @return {Object|null}
 ###
-export checkNGThread = (res, threadTitle, url, exceptionFlg = false, subType = null, isBoard = false) ->
+export checkNGThread = (res, threadTitle, url, resCount = null, exceptionFlg = false, subType = null, isBoard = false) ->
   tmpTitle = normalize(threadTitle)
   if isBoard
     tmpTxt1 = tmpTitle
@@ -311,7 +315,8 @@ export checkNGThread = (res, threadTitle, url, exceptionFlg = false, subType = n
       (n.type is TYPE.SLIP and res.slip?.includes(n.word)) or
       (n.type is TYPE.BODY and normalize(decodedMes).includes(n.word)) or
       (n.type is TYPE.WORD and tmpTxt2.includes(n.word)) or
-      (n.type is TYPE.URL and url.includes(n.word))
+      (n.type is TYPE.URL and url.includes(n.word)) or
+      (n.type is TYPE.RES_COUNT and n.word < resCount)
     )
       return n.type
     return null
@@ -321,7 +326,7 @@ export checkNGThread = (res, threadTitle, url, exceptionFlg = false, subType = n
     continue if n.type is TYPE.INVALID
     if isBoard
       # isNGBoard用の項目チェック
-      unless n.type in [TYPE.REG_EXP, TYPE.REG_EXP_TITLE, TYPE.TITLE, TYPE.WORD, TYPE.REG_EXP_URL, TYPE.URL]
+      unless n.type in [TYPE.REG_EXP, TYPE.REG_EXP_TITLE, TYPE.TITLE, TYPE.WORD, TYPE.REG_EXP_URL, TYPE.URL, TYPE.RES_COUNT]
         continue
     else
       # ignoreResNumber用レス番号のチェック
@@ -371,10 +376,10 @@ export isIgnoreResNumForAuto = (resNum, subType = "") ->
 @param {String} ngType
 @return {Boolean}
 ###
-export isIgnoreNgType = (res, threadTitle, url, ngType) ->
+export isIgnoreNgType = (res, threadTitle, url, resCount, ngType) ->
   return (
-    isNGBoard(threadTitle, url, true, ngType) or
-    checkNGThread(res, threadTitle, url, true, ngType)
+    isNGBoard(threadTitle, url, resCount, true, ngType) or
+    checkNGThread(res, threadTitle, url, resCount, true, ngType)
   )
 
 ###*

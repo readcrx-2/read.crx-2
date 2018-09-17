@@ -1055,10 +1055,12 @@ app.viewThread._draw = ($view, {forceUpdate = false, jumpResNum = -1} = {}) ->
     if not $view.hasClass("expired") and thread.expired
       $view.addClass("expired")
       parent.postMessage({type: "became_expired"}, location.origin)
+      $view.C("button_write")[0]?.remove()
 
     if not $view.hasClass("over1000") and threadContent.over1000ResNum?
       $view.addClass("over1000")
       parent.postMessage({type: "became_over1000"}, location.origin)
+      $view.C("button_write")[0]?.remove()
 
     if $view.C("content")[0].hasClass("searching")
       $view.C("searchbox")[0].emit(new Event("input"))

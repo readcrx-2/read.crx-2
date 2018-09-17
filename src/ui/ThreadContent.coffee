@@ -786,6 +786,7 @@ export default class ThreadContent
 
             #グロ/死ねの返信レス
             isThatHarmImg = @findHarmfulFlag and @harmfulReg.test(res.message)
+            res.class.push("has_harm_word") if isThatHarmImg
 
             #rep_index更新
             if not disabled
@@ -863,15 +864,8 @@ export default class ThreadContent
           return
         )
       )
-      #harmImg更新
-      do =>
-        for res from @harmImgIndex
-          ele = @container.child()[res - 1]
-          continue unless ele
-          ele.addClass("has_blur_word")
-          if ele.hasClass("has_image") and app.config.isOn("image_blur")
-            MediaContainer.setImageBlur(ele, true)
-        return
+      # harmImg更新
+      @updateHarmImages()
     return
 
   ###*
@@ -1213,8 +1207,37 @@ export default class ThreadContent
         @_chainNgBySlip(slip)
     # 返信数の更新
     @updateRepCount()
+    # harmImg更新
+    @updateHarmImages()
     # 表示更新通知
     @container.emit(new Event("view_refreshed", {"bubbles": true}))
+    return
+
+  ###*
+  @method updateHarmImages
+  ###
+  updateHarmImages: ->
+    imageBlur = app.config.isOn("image_blur")
+    for res from @harmImgIndex
+      ele = @container.child()[res - 1]
+      continue unless ele
+      isBlur = false
+      for rep from @repIndex.get(res)
+        repEle = @container.child()[rep - 1]
+        continue unless repEle
+        continue unless repEle.hasClass("has_harm_word")
+        continue if repEle.hasClass("ng")
+        isBlur = true
+        break
+
+      if isBlur and !ele.hasClass("has_blur_word")
+        ele.addClass("has_blur_word")
+        if ele.hasClass("has_image") and imageBlur
+          MediaContainer.setImageBlur(ele, true)
+      else if !isBlur and ele.hasClass("has_blur_word")
+        ele.removeClass("has_blur_word")
+        if ele.hasClass("has_image") and imageBlur
+          MediaContainer.setImageBlur(ele, false)
     return
 
   ###*

@@ -269,6 +269,21 @@ header {
   display: none;
 }
 
+.rock54, .slipchange {
+  border: 1px solid;
+  border-radius: 3px;
+  margin-top: 15px;
+}
+
+.expired article:last-child::after {
+  display: block;
+  content: "dat落ちしたスレッドです";
+  margin: 10px;
+  padding: 10px;
+  border: 1px solid;
+  border-radius: 5px;
+}
+
 .popup {
   contain: content;
   position: fixed;
@@ -601,11 +616,9 @@ header {
     }
   }
 
-  .rock54, .slipchange {
-    border: 1px solid $thread-caution-border-color;
-    border-radius: 3px;
+  .rock54, .slipchange, &.expired .content > article:last-child::after {
+    border-color: $thread-caution-border-color;
     background: $thread-caution-background-color;
-    margin-top: 15px;
   }
 
   .content[data-res-search-hit-count="0"]::after {

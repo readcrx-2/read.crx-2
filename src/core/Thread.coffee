@@ -16,6 +16,7 @@ export default class Thread
     @res = null
     @message = null
     @tsld = getTsld(@url)
+    @expired = false
     return
 
   get: (forceUpdate, progress) ->
@@ -172,6 +173,7 @@ export default class Thread
         if thread
           @title = thread.title
           @res = thread.res
+          @expired = thread.expired?
         @message = ""
         resolve()
 
@@ -189,6 +191,10 @@ export default class Thread
               readcgiVer = parseInt(response.body.substr(readcgiPlace+38, 2))
             else
               readcgiVer = 5
+
+            # 2ch(html)のみ
+            if thread.expired
+              app.bookmark.updateExpired(@url, true)
 
           if deltaFlg
             if isHtml and !noChangeFlg
@@ -250,6 +256,7 @@ export default class Thread
             #移転検出出来なかった場合
             if response?.status is 203
               @message += "dat落ちしたスレッドです。"
+              thread.expired = true
             else
               @message += "スレッドの読み込みに失敗しました。"
           if hasCache and !thread
@@ -288,7 +295,7 @@ export default class Thread
   @return {null|Object}
   ###
   @_getXhrInfo = (url) ->
-    tmp = ///^(https?)://((?:\w+\.)?(\w+\.\w+))/(?:test|bbs)/read(?:_archive)?\.cgi/
+    tmp = ///^(https?)://((?:\w+\.)*(\w+\.\w+))/(?:test|bbs)/read(?:_archive)?\.cgi/
       (\w+)/(\d+)/(?:(\d+)/)?$///.exec(url)
     unless tmp then return null
     return switch tmp[3]
@@ -392,6 +399,9 @@ export default class Thread
           message: regRes[4]
           other: regRes[3]
         )
+
+    if text.includes("<div class=\"stoplight stopred stopdone\">")
+      thread.expired = true
 
     if thread.res.length > 0 and thread.res.length > numberOfBroken
       return thread

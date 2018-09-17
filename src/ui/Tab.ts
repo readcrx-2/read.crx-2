@@ -248,8 +248,8 @@ export default class Tab {
         history.current++;
       }
 
-      this.$element.$(`li[data-tabid=\"${tabId}\"]`).dataset.tabsrc = param.url;
-      $tmptab = this.$element.$(`iframe[data-tabid=\"${tabId}\"]`);
+      this.$element.$(`li[data-tabid="${tabId}"]`).dataset.tabsrc = param.url;
+      $tmptab = this.$element.$(`iframe[data-tabid="${tabId}"]`);
       $tmptab.emit(new Event("tab_beforeurlupdate", {"bubbles": true}));
       $tmptab.src = param.url;
       $tmptab.emit(new Event("tab_urlupdated", {"bubbles": true}));
@@ -259,7 +259,7 @@ export default class Tab {
       tmp = this.historyStore[tabId];
       tmp.stack[tmp.current].title = param.title;
 
-      $tmptab = this.$element.$(`li[data-tabid=\"${tabId}\"]`);
+      $tmptab = this.$element.$(`li[data-tabid="${tabId}"]`);
       $tmptab.setAttr("title", param.title);
       $tmptab.T("span")[0].textContent = param.title;
     }
@@ -269,7 +269,7 @@ export default class Tab {
       for (var i = $selected.length-1; i >= 0; i--) {
         $selected[i].removeClass("tab_selected");
       }
-      for (var dom of this.$element.$$(`[data-tabid=\"${tabId}\"]`)) {
+      for (var dom of this.$element.$$(`[data-tabid="${tabId}"]`)) {
         dom.addClass("tab_selected");
         if (dom.hasClass("tab_content")) {
           $iframe = dom;
@@ -284,17 +284,17 @@ export default class Tab {
       var selectedTab, iframe: HTMLIFrameElement;
 
       if (selectedTab = this.getSelected()) {
-        iframe = this.$element.$(`iframe[data-tabid=\"${selectedTab.tabId}\"]`);
+        iframe = this.$element.$(`iframe[data-tabid="${selectedTab.tabId}"]`);
         if (iframe.getAttr("src") !== selectedTab.url) {
           iframe.src = selectedTab.url;
         }
       }
     }
     if (param.locked) {
-      $tmptab = this.$element.$(`li[data-tabid=\"${tabId}\"]`);
+      $tmptab = this.$element.$(`li[data-tabid="${tabId}"]`);
       $tmptab.addClass("tab_locked");
     } else if (!(param.locked === void 0 || param.locked === null)) {
-      $tmptab = this.$element.$(`li[data-tabid=\"${tabId}\"].tab_locked`);
+      $tmptab = this.$element.$(`li[data-tabid="${tabId}"].tab_locked`);
       if ($tmptab !== null) {
         $tmptab.removeClass("tab_locked");
       }
@@ -310,7 +310,7 @@ export default class Tab {
 
     tab = this;
 
-    $tmptab = this.$element.$(`li[data-tabid=\"${tabId}\"]`);
+    $tmptab = this.$element.$(`li[data-tabid="${tabId}"]`);
     tabsrc = $tmptab.dataset.tabsrc;
 
     for (tmp of tab.recentClosed) {
@@ -338,7 +338,7 @@ export default class Tab {
     }
     $tmptab.remove();
 
-    $tmptabcon = this.$element.$(`iframe[data-tabid=\"${tabId}\"]`);
+    $tmptabcon = this.$element.$(`iframe[data-tabid="${tabId}"]`);
     $tmptabcon.emit(new Event("tab_removed", {"bubbles": true}));
     $tmptabcon.remove();
 
@@ -363,7 +363,7 @@ export default class Tab {
   }
 
   isLocked (tabId: string): boolean {
-    var tab = this.$element.$(`li[data-tabid=\"${tabId}\"]`);
+    var tab = this.$element.$(`li[data-tabid="${tabId}"]`);
     return (tab !== null && tab.hasClass("tab_locked"));
   }
 }

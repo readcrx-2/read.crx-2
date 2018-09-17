@@ -59,7 +59,7 @@ export function guessType (url:string):GuessResult {
   else if (/^https?:\/\/\w+\.(?:[25]ch|open2ch|bbspink)\.\w+\/(?:subback\/|test\/-\/)?\w+\/?$/.test(url)) {
     return {type: "board", bbsType: "2ch"};
   }
-  else if (/^https?:\/\/(\w+\.?)\w+\.\w+\/(?:subback\/|test\/-\/)?\w+\/?$/.test(url)) {
+  else if (/^https?:\/\/(?:\w+\.){2,}\w+\/(?:subback\/|test\/-\/)?\w+\/?$/.test(url)) {
     return {type: "board", bbsType: "2ch"};
   }
   else {

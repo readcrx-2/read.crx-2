@@ -186,7 +186,7 @@ export default class Board
   @return {Object | null} xhrInfo
   ###
   @_getXhrInfo: (boardUrl) ->
-    tmp = ///^(https?)://((?:\w+\.)?(\w+\.\w+))/(\w+)(?:/(\d+)/|/?)$///.exec(boardUrl)
+    tmp = ///^(https?)://((?:\w+\.)*(\w+\.\w+))/(\w+)(?:/(\d+)/|/?)$///.exec(boardUrl)
     return null unless tmp
     return switch tmp[3]
       when "machi.to"
@@ -207,7 +207,7 @@ export default class Board
   @return {Array | null} board
   ###
   @parse: (url, text) ->
-    tmp = /^(https?):\/\/((?:\w+\.)?(\w+\.\w+))\/(\w+)(?:\/(\w+)|\/?)/.exec(url)
+    tmp = /^(https?):\/\/((?:\w+\.)*(\w+\.\w+))\/(\w+)(?:\/(\w+)|\/?)/.exec(url)
     scFlg = false
     switch tmp[3]
       when "machi.to"
@@ -229,14 +229,16 @@ export default class Board
       title = decodeCharReference(regRes[2])
       title = removeNeedlessFromTitle(title)
 
-      board.push(
+      resCount = +regRes[3]
+
+      board.push({
         url: baseUrl + regRes[1] + "/"
-        title: title
-        resCount: +regRes[3]
+        title
+        resCount
         createdAt: +regRes[1] * 1000
-        ng: isNGBoard(title, url)
+        ng: isNGBoard(title, url, resCount)
         isNet: if scFlg then !title.startsWith("★") else null
-      )
+      })
 
     if bbsType is "jbbs"
       board.pop()

@@ -275,7 +275,7 @@ header {
   margin-top: 15px;
 }
 
-.expired article:last-child::after {
+.expired .content > article:last-child::after {
   display: block;
   content: "dat落ちしたスレッドです";
   margin: 10px;

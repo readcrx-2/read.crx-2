@@ -444,13 +444,13 @@ export default class ThreadContent
       loop
         if $next?
           nextTop = $next.offsetTop
-          if nextTop < containerTop < nextTop + $next.offsetHeight
+          if nextTop <= containerTop < nextTop + $next.offsetHeight
             $read = $next
             break
           $next = $next.next()
         if $prev?
           prevTop = $prev.offsetTop
-          if prevTop < containerTop < prevTop + $prev.offsetHeight
+          if prevTop <= containerTop < prevTop + $prev.offsetHeight
             $read = $prev
             break
           $prev = $prev.prev()

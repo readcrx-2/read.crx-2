@@ -3,14 +3,6 @@
     "read.crx2@read.crx": {
       "updates": [
         {
-          "version": "2.0.0",
-          "update_link": "https://readcrx-2.github.io/read.crx-2/readcrx_2-2.0.0-an+fx.xpi"
-        },
-        {
-          "version": "2.0.1",
-          "update_link": "https://readcrx-2.github.io/read.crx-2/readcrx_2-2.0.1-an+fx.xpi"
-        },
-        {
           "version": "2.1.0",
           "update_link": "https://readcrx-2.github.io/read.crx-2/readcrx_2-2.1.0-an+fx.xpi"
         }

@@ -2,7 +2,7 @@
   "name": "read.crx-2",
   "version": "0.0.0",
   "engines": {
-    "node": ">=4.5"
+    "node": ">=7.6"
   },
   "browserslist": [
     "Chrome >= 61",

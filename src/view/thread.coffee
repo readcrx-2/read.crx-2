@@ -1116,6 +1116,7 @@ app.viewThread._readStateManager = ($view) ->
 
   #スレの描画時に、read_state関連のクラスを付与する
   $view.on("view_loaded", ({ detail: {jumpResNum, loadCount} }) ->
+    contentChild = $content.child()
     if loadCount is 1
       # 初回の処理
       {readState, readStateUpdated} = await getReadState
@@ -1123,10 +1124,26 @@ app.viewThread._readStateManager = ($view) ->
       $content.C("read")[0]?.removeClass("read")
       $content.C("received")[0]?.removeClass("received")
 
-      attachedReadState.last = readState.last
-      attachedReadState.offset = readState.offset
-      attachedReadState.read = readState.read
-      attachedReadState.received = readState.received
+      # キャッシュの内容が古い場合にreadStateの内容の方が大きくなることがあるので
+      # その場合は次回の処理に委ねる
+      contentLength = $content.child().length
+      if readState.last <= contentLength
+        contentChild[readState.last - 1]?.addClass("last")
+        contentChild[readState.last - 1]?.attr("last-offset", readState.offset)
+        attachedReadState.last = -1
+      else
+        attachedReadState.last = readState.last
+        attachedReadState.offset = readState.offset
+      if readState.read <= contentLength
+        contentChild[readState.read - 1]?.addClass("read")
+        attachedReadState.read = -1
+      else
+        attachedReadState.read = readState.read
+      if readState.received <= contentLength
+        contentChild[readState.received - 1]?.addClass("received")
+        attachedReadState.received = -1
+      else
+        attachedReadState.received = readState.received
 
       $view.emit(new CustomEvent("read_state_attached", detail: {jumpResNum, requestReloadFlag, loadCount}))
       if attachedReadState.read > 0 and attachedReadState.received > 0
@@ -1135,15 +1152,18 @@ app.viewThread._readStateManager = ($view) ->
     # 2回目の処理
     # 画像のロードにより位置がずれることがあるので初回処理時の内容を使用する
     tmpReadState = {read: null, received: null, url: viewUrl}
-    $content.C("last")[0]?.removeClass("last")
-    $content.child()[attachedReadState.last - 1]?.addClass("last")
-    $content.child()[attachedReadState.last - 1]?.attr("last-offset", attachedReadState.offset)
-    $content.C("read")[0]?.removeClass("read")
-    $content.child()[attachedReadState.read - 1]?.addClass("read")
-    tmpReadState.read = attachedReadState.read
-    $content.C("received")[0]?.removeClass("received")
-    $content.child()[attachedReadState.received - 1]?.addClass("received")
-    tmpReadState.received = attachedReadState.received
+    if attachedReadState.last > 0
+      $content.C("last")[0]?.removeClass("last")
+      contentChild[attachedReadState.last - 1]?.addClass("last")
+      contentChild[attachedReadState.last - 1]?.attr("last-offset", attachedReadState.offset)
+    if attachedReadState.read > 0
+      $content.C("read")[0]?.removeClass("read")
+      contentChild[attachedReadState.read - 1]?.addClass("read")
+      tmpReadState.read = attachedReadState.read
+    if attachedReadState.received > 0
+      $content.C("received")[0]?.removeClass("received")
+      contentChild[attachedReadState.received - 1]?.addClass("received")
+      tmpReadState.received = attachedReadState.received
 
     $view.emit(new CustomEvent("read_state_attached", detail: {jumpResNum, requestReloadFlag, loadCount}))
     if tmpReadState.read and tmpReadState.received

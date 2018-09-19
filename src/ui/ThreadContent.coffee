@@ -59,6 +59,12 @@ export default class ThreadContent
     @oneId = null
 
     ###*
+    @property over1000ResNum
+    @type Number
+    ###
+    @over1000ResNum = null
+
+    ###*
     @property _lastScrollInfo
     @type Object
     @private
@@ -111,13 +117,6 @@ export default class ThreadContent
     @private
     ###
     @_scrollRequestID = 0
-
-    ###*
-    @property _over1000ResNum
-    @type Number
-    @private
-    ###
-    @_over1000ResNum = null
 
     ###*
     @property _rawResData
@@ -385,8 +384,8 @@ export default class ThreadContent
   getRead: (beforeRead = 1) ->
     containerBottom = @container.scrollTop + @container.clientHeight
     $read = @container.children[beforeRead - 1]
-    readTop = $read.offsetTop
-    if readTop < containerBottom < readTop + $read.offsetHeight
+    readTop = $read?.offsetTop
+    if !$read or (readTop < containerBottom < readTop + $read.offsetHeight)
       return beforeRead
 
     # 最後のレスはcontainerの余白の関係で取得できないので別で判定
@@ -423,7 +422,7 @@ export default class ThreadContent
   ###*
   @method getDisplay
   @param {Number} beforeRead 直近に読んでいたレスの番号
-  @return {Object} 現在表示していると推測されるレスの番号とオフセット
+  @return {Object|null} 現在表示していると推測されるレスの番号とオフセット
   ###
   getDisplay: (beforeRead) ->
     containerTop = @container.scrollTop
@@ -436,6 +435,7 @@ export default class ThreadContent
       resRead.bottom = true
 
     $read = @container.children[beforeRead - 1]
+    return null unless $read
     readTop = $read.offsetTop
     unless readTop < containerTop < readTop + $read.offsetHeight
       # 直近に読んでいたレスの上下を順番に調べる
@@ -444,13 +444,13 @@ export default class ThreadContent
       loop
         if $next?
           nextTop = $next.offsetTop
-          if nextTop < containerTop < nextTop + $next.offsetHeight
+          if nextTop <= containerTop < nextTop + $next.offsetHeight
             $read = $next
             break
           $next = $next.next()
         if $prev?
           prevTop = $prev.offsetTop
-          if prevTop < containerTop < prevTop + $prev.offsetHeight
+          if prevTop <= containerTop < prevTop + $prev.offsetHeight
             $read = $prev
             break
           $prev = $prev.prev()
@@ -728,9 +728,9 @@ export default class ThreadContent
       if (
         bbsType is "2ch" and
         tmp.startsWith(_OVER1000_DATA) and
-        !@_over1000ResNum
+        !@over1000ResNum
       )
-        @_over1000ResNum = resNum
+        @over1000ResNum = resNum
 
       #文字色
       color = res.message.match(/<font color="(.*?)">/i)?[1]
@@ -786,6 +786,7 @@ export default class ThreadContent
 
             #グロ/死ねの返信レス
             isThatHarmImg = @findHarmfulFlag and @harmfulReg.test(res.message)
+            res.class.push("has_harm_word") if isThatHarmImg
 
             #rep_index更新
             if not disabled
@@ -863,15 +864,8 @@ export default class ThreadContent
           return
         )
       )
-      #harmImg更新
-      do =>
-        for res from @harmImgIndex
-          ele = @container.child()[res - 1]
-          continue unless ele
-          ele.addClass("has_blur_word")
-          if ele.hasClass("has_image") and app.config.isOn("image_blur")
-            MediaContainer.setImageBlur(ele, true)
-        return
+      # harmImg更新
+      @updateHarmImages()
     return
 
   ###*
@@ -989,7 +983,7 @@ export default class ThreadContent
       continue if getRes.hasClass("ng")
       rn = +getRes.C("num")[0].textContent
       continue if app.NG.isIgnoreResNumForAuto(rn, app.NG.TYPE.AUTO_CHAIN)
-      continue if app.NG.isIgnoreNgType(@_rawResData[rn], @_threadTitle, @url, app.NG.TYPE.AUTO_CHAIN)
+      continue if app.NG.isThreadIgnoreNgType(@_rawResData[rn], @_threadTitle, @url, app.NG.TYPE.AUTO_CHAIN)
       @setNG(getRes, app.NG.TYPE.AUTO_CHAIN)
       # NG連鎖IDの登録
       if app.config.isOn("chain_ng_id") and app.config.isOn("chain_ng_id_by_chain")
@@ -1015,7 +1009,7 @@ export default class ThreadContent
       continue if r.hasClass("ng")
       rn = +r.C("num")[0].textContent
       continue if app.NG.isIgnoreResNumForAuto(rn, app.NG.TYPE.AUTO_CHAIN_ID)
-      continue if app.NG.isIgnoreNgType(@_rawResData[rn], @_threadTitle, @url, app.NG.TYPE.AUTO_CHAIN_ID)
+      continue if app.NG.isThreadIgnoreNgType(@_rawResData[rn], @_threadTitle, @url, app.NG.TYPE.AUTO_CHAIN_ID)
       @setNG(r, app.NG.TYPE.AUTO_CHAIN_ID)
       # 連鎖NG
       @_chainNG(r) if app.config.isOn("chain_ng")
@@ -1032,7 +1026,7 @@ export default class ThreadContent
       continue if r.hasClass("ng")
       rn = +r.C("num")[0].textContent
       continue if app.NG.isIgnoreResNumForAuto(rn, app.NG.TYPE.AUTO_CHAIN_SLIP)
-      continue if app.NG.isIgnoreNgType(@_rawResData[rn], @_threadTitle, @url, app.NG.TYPE.AUTO_CHAIN_SLIP)
+      continue if app.NG.isThreadIgnoreNgType(@_rawResData[rn], @_threadTitle, @url, app.NG.TYPE.AUTO_CHAIN_SLIP)
       @setNG(r, app.NG.TYPE.AUTO_CHAIN_SLIP)
       # 連鎖NG
       @_chainNG(r) if app.config.isOn("chain_ng")
@@ -1071,12 +1065,12 @@ export default class ThreadContent
   @private
   ###
   _getNgType: (objRes, bbsType) =>
-    return null if @_over1000ResNum? and objRes.num >= @_over1000ResNum
+    return null if @over1000ResNum? and objRes.num >= @over1000ResNum
 
     # 登録ワードのNG
     if (
-      (ngObj = app.NG.checkNGThread(objRes, @_threadTitle, @url)) and
-      !app.NG.isIgnoreNgType(objRes, @_threadTitle, @url, ngObj.type)
+      (ngObj = app.NG.isNGThread(objRes, @_threadTitle, @url)) and
+      !app.NG.isThreadIgnoreNgType(objRes, @_threadTitle, @url, ngObj.type)
     )
       return ngObj
 
@@ -1091,7 +1085,7 @@ export default class ThreadContent
           (judgementIdType is "exists_once" and @idIndex.size isnt 0)
         ) and
         !app.NG.isIgnoreResNumForAuto(objRes.num, app.NG.TYPE.AUTO_NOTHING_ID) and
-        !app.NG.isIgnoreNgType(objRes, @_threadTitle, @url, app.NG.TYPE.AUTO_NOTHING_ID)
+        !app.NG.isThreadIgnoreNgType(objRes, @_threadTitle, @url, app.NG.TYPE.AUTO_NOTHING_ID)
       )
         return {type: app.NG.TYPE.AUTO_NOTHING_ID}
       # slipなしをNG
@@ -1103,7 +1097,7 @@ export default class ThreadContent
           (judgementIdType is "exists_once" and @slipIndex.size isnt 0)
         ) and
         !app.NG.isIgnoreResNumForAuto(objRes.num, app.NG.TYPE.AUTO_NOTHING_SLIP) and
-        !app.NG.isIgnoreNgType(objRes, @_threadTitle, @url, app.NG.TYPE.AUTO_NOTHING_SLIP)
+        !app.NG.isThreadIgnoreNgType(objRes, @_threadTitle, @url, app.NG.TYPE.AUTO_NOTHING_SLIP)
       )
         return {type: app.NG.TYPE.AUTO_NOTHING_SLIP}
 
@@ -1113,7 +1107,7 @@ export default class ThreadContent
       objRes.id? and
       @_ngIdForChain.has(objRes.id) and
       !app.NG.isIgnoreResNumForAuto(objRes.num, app.NG.TYPE.AUTO_CHAIN_ID) and
-      !app.NG.isIgnoreNgType(objRes, @_threadTitle, @url, app.NG.TYPE.AUTO_CHAIN_ID)
+      !app.NG.isThreadIgnoreNgType(objRes, @_threadTitle, @url, app.NG.TYPE.AUTO_CHAIN_ID)
     )
       return {type: app.NG.TYPE.AUTO_CHAIN_ID}
     # 連鎖SLIPのNG
@@ -1122,7 +1116,7 @@ export default class ThreadContent
       objRes.slip? and
       @_ngSlipForChain.has(objRes.slip) and
       !app.NG.isIgnoreResNumForAuto(objRes.num, app.NG.TYPE.AUTO_CHAIN_SLIP) and
-      !app.NG.isIgnoreNgType(objRes, @_threadTitle, @url, app.NG.TYPE.AUTO_CHAIN_SLIP)
+      !app.NG.isThreadIgnoreNgType(objRes, @_threadTitle, @url, app.NG.TYPE.AUTO_CHAIN_SLIP)
     )
       return {type: app.NG.TYPE.AUTO_CHAIN_SLIP}
 
@@ -1147,7 +1141,7 @@ export default class ThreadContent
       if (
         @_resMessageMap.get(resMessage).size >= +app.config.get("repeat_message_ng_count") and
         !app.NG.isIgnoreResNumForAuto(objRes.num, app.NG.TYPE.AUTO_REPEAT_MESSAGE) and
-        !app.NG.isIgnoreNgType(objRes, @_threadTitle, @url, app.NG.TYPE.AUTO_REPEAT_MESSAGE)
+        !app.NG.isThreadIgnoreNgType(objRes, @_threadTitle, @url, app.NG.TYPE.AUTO_REPEAT_MESSAGE)
       )
         return {type: app.NG.TYPE.AUTO_REPEAT_MESSAGE}
 
@@ -1155,7 +1149,7 @@ export default class ThreadContent
     if (
       app.config.isOn("forward_link_ng") and
       !app.NG.isIgnoreResNumForAuto(objRes.num, app.NG.TYPE.AUTO_FORWARD_LINK) and
-      !app.NG.isIgnoreNgType(objRes, @_threadTitle, @url, app.NG.TYPE.AUTO_FORWARD_LINK)
+      !app.NG.isThreadIgnoreNgType(objRes, @_threadTitle, @url, app.NG.TYPE.AUTO_FORWARD_LINK)
     )
       ngFlag = false
       resMessage = (
@@ -1213,8 +1207,37 @@ export default class ThreadContent
         @_chainNgBySlip(slip)
     # 返信数の更新
     @updateRepCount()
+    # harmImg更新
+    @updateHarmImages()
     # 表示更新通知
     @container.emit(new Event("view_refreshed", {"bubbles": true}))
+    return
+
+  ###*
+  @method updateHarmImages
+  ###
+  updateHarmImages: ->
+    imageBlur = app.config.isOn("image_blur")
+    for res from @harmImgIndex
+      ele = @container.child()[res - 1]
+      continue unless ele
+      isBlur = false
+      for rep from @repIndex.get(res)
+        repEle = @container.child()[rep - 1]
+        continue unless repEle
+        continue unless repEle.hasClass("has_harm_word")
+        continue if repEle.hasClass("ng")
+        isBlur = true
+        break
+
+      if isBlur and !ele.hasClass("has_blur_word")
+        ele.addClass("has_blur_word")
+        if ele.hasClass("has_image") and imageBlur
+          MediaContainer.setImageBlur(ele, true)
+      else if !isBlur and ele.hasClass("has_blur_word")
+        ele.removeClass("has_blur_word")
+        if ele.hasClass("has_image") and imageBlur
+          MediaContainer.setImageBlur(ele, false)
     return
 
   ###*

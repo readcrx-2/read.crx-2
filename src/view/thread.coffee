@@ -57,7 +57,13 @@ app.boot("/view/thread.html", ->
     windowX = app.config.get("write_window_x")
     windowY = app.config.get("write_window_y")
     openUrl = "/write/submit_res.html?#{app.URL.buildQuery(param)}"
-    if "&[BROWSER]" is "chrome"
+    if "&[BROWSER]" is "firefox" or navigator.userAgent.includes("Vivaldi")
+      open(
+        openUrl
+        undefined
+        "width=600,height=300,left=#{windowX},top=#{windowY}"
+      )
+    else if "&[BROWSER]" is "chrome"
       parent.browser.windows.create(
         type: "popup"
         url: openUrl
@@ -65,12 +71,6 @@ app.boot("/view/thread.html", ->
         height: 300
         left: parseInt(windowX)
         top: parseInt(windowY)
-      )
-    else if "&[BROWSER]" is "firefox"
-      open(
-        openUrl
-        undefined
-        "width=600,height=300,left=#{windowX},top=#{windowY}"
       )
     return
 
@@ -1027,6 +1027,7 @@ app.boot("/view/thread.html", ->
 )
 
 app.viewThread._draw = ($view, {forceUpdate = false, jumpResNum = -1} = {}) ->
+  threadContent = app.DOMData.get($view, "threadContent")
   $view.addClass("loading")
   $view.style.cursor = "wait"
   $reloadButton = $view.C("button_reload")[0]
@@ -1047,9 +1048,19 @@ app.viewThread._draw = ($view, {forceUpdate = false, jumpResNum = -1} = {}) ->
 
     document.title = thread.title
 
-    await app.DOMData.get($view, "threadContent").addItem(thread.res.slice($view.C("content")[0].child().length), thread.title)
+    await threadContent.addItem(thread.res.slice($view.C("content")[0].child().length), thread.title)
     loadCount++
     app.DOMData.get($view, "lazyload").scan()
+
+    if not $view.hasClass("expired") and thread.expired
+      $view.addClass("expired")
+      parent.postMessage({type: "became_expired"}, location.origin)
+      $view.C("button_write")[0]?.remove()
+
+    if not $view.hasClass("over1000") and threadContent.over1000ResNum?
+      $view.addClass("over1000")
+      parent.postMessage({type: "became_over1000"}, location.origin)
+      $view.C("button_write")[0]?.remove()
 
     if $view.C("content")[0].hasClass("searching")
       $view.C("searchbox")[0].emit(new Event("input"))
@@ -1105,6 +1116,7 @@ app.viewThread._readStateManager = ($view) ->
 
   #スレの描画時に、read_state関連のクラスを付与する
   $view.on("view_loaded", ({ detail: {jumpResNum, loadCount} }) ->
+    contentChild = $content.child()
     if loadCount is 1
       # 初回の処理
       {readState, readStateUpdated} = await getReadState
@@ -1116,20 +1128,20 @@ app.viewThread._readStateManager = ($view) ->
       # その場合は次回の処理に委ねる
       contentLength = $content.child().length
       if readState.last <= contentLength
-        $content.child()[readState.last - 1]?.addClass("last")
-        $content.child()[readState.last - 1]?.attr("last-offset", readState.offset)
-        attachedReadState.last = -999
+        contentChild[readState.last - 1]?.addClass("last")
+        contentChild[readState.last - 1]?.attr("last-offset", readState.offset)
+        attachedReadState.last = -1
       else
         attachedReadState.last = readState.last
         attachedReadState.offset = readState.offset
       if readState.read <= contentLength
-        $content.child()[readState.read - 1]?.addClass("read")
-        attachedReadState.read = -999
+        contentChild[readState.read - 1]?.addClass("read")
+        attachedReadState.read = -1
       else
         attachedReadState.read = readState.read
       if readState.received <= contentLength
-        $content.child()[readState.received - 1]?.addClass("received")
-        attachedReadState.received = -999
+        contentChild[readState.received - 1]?.addClass("received")
+        attachedReadState.received = -1
       else
         attachedReadState.received = readState.received
 
@@ -1142,16 +1154,17 @@ app.viewThread._readStateManager = ($view) ->
     tmpReadState = {read: null, received: null, url: viewUrl}
     if attachedReadState.last > 0
       $content.C("last")[0]?.removeClass("last")
-      $content.child()[attachedReadState.last - 1]?.addClass("last")
-      $content.child()[attachedReadState.last - 1]?.attr("last-offset", attachedReadState.offset)
+      contentChild[attachedReadState.last - 1]?.addClass("last")
+      contentChild[attachedReadState.last - 1]?.attr("last-offset", attachedReadState.offset)
     if attachedReadState.read > 0
       $content.C("read")[0]?.removeClass("read")
-      $content.child()[attachedReadState.read - 1]?.addClass("read")
+      contentChild[attachedReadState.read - 1]?.addClass("read")
       tmpReadState.read = attachedReadState.read
     if attachedReadState.received > 0
       $content.C("received")[0]?.removeClass("received")
-      $content.child()[attachedReadState.received - 1]?.addClass("received")
+      contentChild[attachedReadState.received - 1]?.addClass("received")
       tmpReadState.received = attachedReadState.received
+
     $view.emit(new CustomEvent("read_state_attached", detail: {jumpResNum, requestReloadFlag, loadCount}))
     if tmpReadState.read and tmpReadState.received
       app.message.send("read_state_updated", {board_url: boardUrl, read_state: tmpReadState})
@@ -1173,26 +1186,27 @@ app.viewThread._readStateManager = ($view) ->
 
     scanCountByReloaded++ if requestReloadFlag and !byScroll
 
-    if readState.received isnt received
+    if readState.received < received
       readState.received = received
       readStateUpdated = true
 
     lastDisplay = threadContent.getDisplay(last)
-    if (
-      (!requestReloadFlag or scanCountByReloaded is 1) and
-      (!lastDisplay.bottom or lastDisplay.resNum is last)
-    )
+    if lastDisplay
       if (
-        readState.last isnt lastDisplay.resNum or
-        readState.offset isnt lastDisplay.offset
+        (!requestReloadFlag or scanCountByReloaded is 1) and
+        (!lastDisplay.bottom or lastDisplay.resNum is last)
       )
-        readState.last = lastDisplay.resNum
-        readState.offset = lastDisplay.offset
+        if (
+          readState.last isnt lastDisplay.resNum or
+          readState.offset isnt lastDisplay.offset
+        )
+          readState.last = lastDisplay.resNum
+          readState.offset = lastDisplay.offset
+          readStateUpdated = true
+      else if readState.last isnt last
+        readState.last = last
+        readState.offset = null
         readStateUpdated = true
-    else if readState.last isnt last
-      readState.last = last
-      readState.offset = null
-      readStateUpdated = true
 
     if readState.read < last
       readState.read = last

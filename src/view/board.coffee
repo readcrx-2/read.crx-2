@@ -27,7 +27,13 @@ app.boot("/view/board.html", ["Board"], (Board) ->
     windowX = app.config.get("write_window_x")
     windowY = app.config.get("write_window_y")
     openUrl = "/write/submit_thread.html?#{app.URL.buildQuery(param)}"
-    if "&[BROWSER]" is "chrome"
+    if "&[BROWSER]" is "firefox" or navigator.userAgent.includes("Vivaldi")
+      open(
+        openUrl
+        undefined
+        "width=600,height=300,left=#{windowX},top=#{windowY}"
+      )
+    else if "&[BROWSER]" is "chrome"
       parent.browser.windows.create(
         type: "popup"
         url: openUrl
@@ -35,12 +41,6 @@ app.boot("/view/board.html", ["Board"], (Board) ->
         height: 300
         left: parseInt(windowX)
         top: parseInt(windowY)
-      )
-    else if "&[BROWSER]" is "firefox"
-      open(
-        openUrl
-        undefined
-        "width=600,height=300,left=#{windowX},top=#{windowY}"
       )
     return
 

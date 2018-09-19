@@ -82,6 +82,9 @@
   flex-grow: 1;
   overflow: hidden;
   position: relative;
+  &:-webkit-full-screen-ancestor {
+    contain: none;
+  }
 }
 
 .tab_content {

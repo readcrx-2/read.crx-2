@@ -94,9 +94,9 @@ defaultOptions =
   plumber:
     errorHandler: util.plumberHandler
   rollupTs:
+    typescript: c.ts
     tsconfigDefaults:
       compilerOptions:
-        typescript: c.ts
         target: "es2017"
         lib: [
           "dom"

@@ -1,8 +1,8 @@
 app.boot("/zombie.html", ->
   close = ->
-    {id} = await browser.windows.getCurrent()
+    {id} = await browser.tabs.getCurrent()
     await browser.runtime.sendMessage(type: "zombie_done")
-    await browser.windows.remove(id)
+    await browser.tabs.remove(id)
     return
 
   save = ->

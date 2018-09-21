@@ -6,7 +6,7 @@
 
 @media (max-width: 500px) {
   col, th {
-    .written_date {
+    &.written_date {
       width: 0;
     }
   }

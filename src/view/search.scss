@@ -14,7 +14,7 @@
 
 @media (max-width: 600px) {
   col, th {
-    :not(.bookmark):not(.title) {
+    &:not(.bookmark):not(.title) {
       width: 0;
     }
   }

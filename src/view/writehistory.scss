@@ -4,10 +4,18 @@
 @include tab-content;
 @include content-table;
 
-@media (max-width: 500px) {
+@media (max-width: 750px) {
   col, th {
-    .written_date {
+    &.written_date {
       width: 0;
+    }
+  }
+}
+
+@media (max-width: 600px) {
+  col, th {
+    &.mail {
+      width: 4em;
     }
   }
 }

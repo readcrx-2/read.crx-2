@@ -54,12 +54,13 @@ class SettingIO
     return
   setupExportButton: ->
     @$exportButton.on("click", =>
-      blob = new Blob([@exportFunc()],{type:"text/plain"})
-      $a = $__("a")
+      blob = new Blob([@exportFunc()], type: "text/plain")
+      $a = $__("a").addClass("hidden")
       $a.href = URL.createObjectURL(blob)
-      $a.setAttr("target", "_blank")
       $a.setAttr("download", "read.crx-2_#{@name}.json")
+      @$exportButton.addAfter($a)
       $a.click()
+      $a.remove()
       return
     )
     return
@@ -167,11 +168,12 @@ class HistoryIO extends SettingIO
       data = await @exportFunc()
       exportText = JSON.stringify(data)
       blob = new Blob([exportText], type: "text/plain")
-      $a = $__("a")
+      $a = $__("a").addClass("hidden")
       $a.href = URL.createObjectURL(blob)
-      $a.setAttr("target", "_blank")
       $a.setAttr("download", "read.crx-2_#{@name}.json")
+      @$exportButton.addAfter($a)
       $a.click()
+      $a.remove()
       return
     )
     return

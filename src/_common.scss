@@ -72,6 +72,15 @@ $z-indexes:(
     }
   }
 
+  html {
+    scrollbar-face-color: #dddddd;
+    scrollbar-track-color: #999999;
+  }
+
+  html, .container, .content {
+    scrollbar-width: thin;
+  }
+
   .hidden {
     display: none;
   }

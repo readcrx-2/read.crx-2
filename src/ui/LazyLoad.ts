@@ -6,6 +6,7 @@ type HTMLMediaElement = HTMLImageElement | HTMLAudioElement | HTMLVideoElement;
 
 export default class LazyLoad {
   container: HTMLElement;
+  isManualLoad: boolean = false;
   private observer: IntersectionObserver;
   private medias: HTMLMediaElement[] = [];
   private pause: boolean = false;
@@ -23,6 +24,9 @@ export default class LazyLoad {
 
   constructor (container: HTMLElement) {
     this.container = container;
+    this.isManualLoad = app.config.isOn("manual_image_load");
+
+    if (this.isManualLoad) return;
 
     this.observer = new IntersectionObserver(this.onChange.bind(this), {root: this.container, rootMargin: "10px"})
     this.container.on("scrollstart", this.onScrollStart.bind(this));
@@ -145,7 +149,9 @@ export default class LazyLoad {
       $media.src = $media.dataset.src!;
     }
     $media.removeAttr("data-src");
-    this.observer.unobserve($media);
+    if (!this.isManualLoad) {
+      this.observer.unobserve($media);
+    }
   }
 
   scan (): void {

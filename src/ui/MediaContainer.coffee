@@ -70,7 +70,7 @@ export default class MediaContainer
   setVideoEvents: ->
     # VIDEOの再生/一時停止
     @container.on("click", ({target}) ->
-      return unless target.matches(".thumbnail > video")
+      return unless target.matches(".thumbnail > video:not([data-src])")
       target.preload = "auto" if target.preload is "metadata"
       if target.paused
         target.play()
@@ -81,7 +81,7 @@ export default class MediaContainer
 
     # VIDEO再生中はマウスポインタを消す
     @container.on("mouseenter", ({target}) =>
-      return unless target.matches(".thumbnail > video")
+      return unless target.matches(".thumbnail > video:not([data-src])")
 
       func = ({type}) =>
         @_controlVideoCursor(target, type)
@@ -96,7 +96,7 @@ export default class MediaContainer
 
     # マウスポインタのリセット
     @container.on("mousemove", ({target, type}) =>
-      return unless target.matches(".thumbnail > video")
+      return unless target.matches(".thumbnail > video:not([data-src])")
       @_controlVideoCursor(target, type)
       return
     )

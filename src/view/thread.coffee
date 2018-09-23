@@ -36,9 +36,10 @@ app.boot("/view/thread.html", ->
   $content = $view.C("content")[0]
   threadContent = new UI.ThreadContent(viewUrl, $content)
   mediaContainer = new UI.MediaContainer($view)
+  lazyLoad = new UI.LazyLoad($content)
   app.DOMData.set($view, "threadContent", threadContent)
   app.DOMData.set($view, "selectableItemList", threadContent)
-  app.DOMData.set($view, "lazyload", new UI.LazyLoad($content))
+  app.DOMData.set($view, "lazyload", lazyLoad)
 
   new app.view.TabContentView($view)
 
@@ -89,8 +90,9 @@ app.boot("/view/thread.html", ->
     for dom in $popup.T("article")
       dom.removeClass("last", "read", "received")
     #ポップアップ内のサムネイルの遅延ロードを解除
-    for dom in $popup.$$("img[data-src], video[data-src]")
-      app.DOMData.get($view, "lazyload").immediateLoad(dom)
+    unless lazyLoad.isManualLoad
+      for dom in $popup.$$("img[data-src], video[data-src]")
+        lazyLoad.immediateLoad(dom)
     await app.defer()
     # popupの表示
     popupView.show($popup, e.clientX, e.clientY, that)
@@ -478,6 +480,22 @@ app.boot("/view/thread.html", ->
       threadContent.scrollTo(targetResNum, true)
     return
   )
+
+  # サムネイルクリック読み込み
+  if lazyLoad.isManualLoad
+    $view.on("click", (e) ->
+      {target: $target} = e
+      unless $target.hasClass("thumbnail")
+        $target = $target.parent(".thumbnail")
+        return unless $target?
+      $medias = $target.$$("img[data-src], video[data-src]")
+      return unless $medias.length > 0
+
+      e.preventDefault()
+      for $media in $medias
+        lazyLoad.immediateLoad($media)
+      return
+    )
 
   #通常リンク
   onLink = (e) ->
@@ -1080,7 +1098,8 @@ app.viewThread._draw = ($view, {forceUpdate = false, jumpResNum = -1} = {}) ->
 
     await threadContent.addItem(thread.res.slice($view.C("content")[0].child().length), thread.title)
     loadCount++
-    app.DOMData.get($view, "lazyload").scan()
+    lazyLoad = app.DOMData.get($view, "lazyload")
+    lazyLoad.scan() unless lazyLoad.isManualLoad
 
     if not $view.hasClass("expired") and thread.expired
       $view.emit(new Event("became_expired"))

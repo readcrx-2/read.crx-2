@@ -181,6 +181,7 @@ class Config {
   private static _default = new Map<string, string>([
     ["layout", "pane-3"],
     ["theme_id", "default"],
+    ["default_scrollbar", "off"],
     ["write_window_x", "0"],
     ["write_window_y", "0"],
     ["always_new_tab", "on"],

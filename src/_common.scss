@@ -58,27 +58,30 @@ $z-indexes:(
     border: 1px solid hsl(0, 0%, 50%);
   }
 
-  ::-webkit-scrollbar {
-    width: 8px;
-    height: 8px;
-    border: 1px solid #cccccc;
-    background-color: #dddddd;
-  }
+  html:not(.default_scrollbar) {
+    ::-webkit-scrollbar {
+      width: 8px;
+      height: 8px;
+      border: 1px solid #cccccc;
+      background-color: #dddddd;
+    }
 
-  ::-webkit-scrollbar-thumb {
-    background-color: #999999;
-    &:hover {
-      background-color: #888888;
+    ::-webkit-scrollbar-thumb {
+      background-color: #999999;
+      &:hover {
+        background-color: #888888;
+      }
     }
   }
 
-  html {
+  html:not(.default_scrollbar) {
     scrollbar-face-color: #999999;
     scrollbar-track-color: #bbbbbb;
-  }
 
-  html, .container, .content {
     scrollbar-width: thin;
+    .container, .content {
+      scrollbar-width: thin;
+    }
   }
 
   .hidden {

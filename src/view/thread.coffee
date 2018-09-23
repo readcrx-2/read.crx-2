@@ -51,6 +51,15 @@ app.boot("/view/thread.html", ->
     $content.addClass("config_use_aa_font")
     AANoOverflow = new UI.AANoOverflow($view, {minRatio: app.config.get("aa_min_ratio")})
 
+  $view.on("became_expired", ->
+    parent.postMessage({type: "became_expired"}, location.origin)
+    $view.addClass("expired")
+  , once: true)
+  $view.on("became_over1000", ->
+    parent.postMessage({type: "became_over1000"}, location.origin)
+    $view.addClass("over1000")
+  , once: true)
+
   write = (param = {}) ->
     param.url = viewUrl
     param.title = document.title
@@ -87,16 +96,24 @@ app.boot("/view/thread.html", ->
     popupView.show($popup, e.clientX, e.clientY, that)
     return
 
-  # したらばの過去ログ
-  canWriteFlg = !(app.URL.tsld(viewUrl) is "shitaraba.net" and viewUrl.includes("/read_archive.cgi/"))
+  canWrite = ->
+    return $view.C("button_write")[0]?
 
-  if canWriteFlg
+  removeWriteButton = ->
+    $view.C("button_write")[0]?.remove()
+    return
+
+  $view.on("became_expired", removeWriteButton, once: true)
+  $view.on("became_over1000", removeWriteButton, once: true)
+
+  # したらばの過去ログ
+  if app.URL.tsld(viewUrl) is "shitaraba.net" and viewUrl.includes("/read_archive.cgi/")
+    $view.emit(new Event("became_expired"))
+  else
     $view.C("button_write")[0].on("click", ->
       write()
       return
     )
-  else
-    $view.C("button_write")[0].remove()
 
   #リロード処理
   $view.on("request_reload", ({ detail: ex = {} }) ->
@@ -267,7 +284,7 @@ app.boot("/view/thread.html", ->
     unless $article.dataset.trip?
       $menu.C("copy_trip")[0].remove()
 
-    unless canWriteFlg
+    unless canWrite()
       $menu.C("res_to_this")[0].remove()
       $menu.C("res_to_this2")[0].remove()
 
@@ -960,7 +977,12 @@ app.boot("/view/thread.html", ->
     $searchNextThread =
       _ele: $view.C("search_next_thread")[0]
       show: ->
-        if $content.child().length >= 1000 or $view.C("message_bar")[0].hasClass("error")
+        if (
+          $content.child().length >= 1000 or
+          $view.C("message_bar")[0].hasClass("error") or
+          $view.hasClass("expired") or
+          $view.hasClass("over1000")
+        )
           @_ele.removeClass("hidden")
         else
           @hide()
@@ -995,6 +1017,14 @@ app.boot("/view/thread.html", ->
     app.message.on("bookmark_updated", ->
       if canBeShown
         $nextUnread.show()
+      return
+    )
+    $view.on("became_expired", ->
+      updateThreadFooter()
+      return
+    )
+    $view.on("became_over1000", ->
+      updateThreadFooter()
       return
     )
 
@@ -1053,14 +1083,10 @@ app.viewThread._draw = ($view, {forceUpdate = false, jumpResNum = -1} = {}) ->
     app.DOMData.get($view, "lazyload").scan()
 
     if not $view.hasClass("expired") and thread.expired
-      $view.addClass("expired")
-      parent.postMessage({type: "became_expired"}, location.origin)
-      $view.C("button_write")[0]?.remove()
+      $view.emit(new Event("became_expired"))
 
     if not $view.hasClass("over1000") and threadContent.over1000ResNum?
-      $view.addClass("over1000")
-      parent.postMessage({type: "became_over1000"}, location.origin)
-      $view.C("button_write")[0]?.remove()
+      $view.emit(new Event("became_over1000"))
 
     if $view.C("content")[0].hasClass("searching")
       $view.C("searchbox")[0].emit(new Event("input"))

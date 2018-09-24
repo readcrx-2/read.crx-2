@@ -181,6 +181,7 @@ class Config {
   private static _default = new Map<string, string>([
     ["layout", "pane-3"],
     ["theme_id", "default"],
+    ["default_scrollbar", "off"],
     ["write_window_x", "0"],
     ["write_window_y", "0"],
     ["always_new_tab", "on"],
@@ -196,6 +197,7 @@ class Config {
     ["auto_load_all", "off"],
     ["auto_load_move", "off"],
     ["auto_bookmark_notify", "on"],
+    ["manual_image_load", "off"],
     ["image_blur", "off"],
     ["image_blur_length", "4"],
     ["image_blur_word", ".{0,5}[^ァ-ヺ^ー]グロ(?:[^ァ-ヺ^ー].{0,5}|$)|.{0,5}死ね.{0,5}"],

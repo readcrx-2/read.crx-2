@@ -181,6 +181,12 @@ block body
 
       .tabcontent(name="thumbnail")
         section
+          h2 サムネイル読み込み
+          div
+            label
+              input.direct(type="checkbox" name="manual_image_load")
+              |クリックでサムネイル読み込む
+        section
           h2
             |サムネイル表示(
             a(href="https://github.com/readcrx-2/read.crx-2/wiki/ImageViewURLReplace.dat%E3%81%AE%E4%BB%95%E6%A7%98" target="_blank") 詳細
@@ -547,6 +553,9 @@ block body
             label
               input.theme_none(type="checkbox")
               |テーマなし
+            label
+              input.direct(type="checkbox" name="default_scrollbar")
+              |ブラウザ既定のスクロールバーを使用する
 
         section
           h2

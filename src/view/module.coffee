@@ -57,17 +57,31 @@ class app.view.View
     return
 
   ###*
+  @method _setScrollbarDesign
+  @private
+  @param {String} val
+  ###
+  _setScrollbarDesign: (val) ->
+    if val is "on"
+      @$element.addClass("default_scrollbar")
+    else
+      @$element.removeClass("default_scrollbar")
+    return
+
+  ###*
   @method _setupTheme
   @private
   ###
   _setupTheme: ->
     # テーマ適用
     @_changeTheme(app.config.get("theme_id"))
+    @_setScrollbarDesign(app.config.get("default_scrollbar"))
 
     # テーマ更新反映
     app.message.on("config_updated", ({key, val}) =>
-      if key is "theme_id"
-        @_changeTheme(val)
+      switch key
+        when "theme_id" then @_changeTheme(val)
+        when "default_scrollbar" then @_setScrollbarDesign(val)
       return
     )
     return

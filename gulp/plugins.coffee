@@ -12,6 +12,7 @@ module.exports =
     gulp: require "gulp"
     plumber: require "gulp-plumber"
     progenyMtime: require "gulp-progeny-mtime"
+    filter: require "gulp-filter"
     changed: require "gulp-changed"
     concat: require "gulp-concat"
     notify: require "gulp-notify"

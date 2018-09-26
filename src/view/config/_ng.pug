@@ -1,0 +1,143 @@
+.tabcontent(name="ng")
+  section
+    h2
+      |NG文字列(
+      a(href="https://github.com/readcrx-2/read.crx-2/wiki/NG%E3%83%AF%E3%83%BC%E3%83%89%E3%81%AE%E4%BB%95%E6%A7%98" target="_blank") 詳細
+      |)
+    div
+      |ここに入力された文字列を含むタイトルのスレ、及びレスが表示されなくなります。
+      br
+      |1行が1つのキーワードとして認識されます。
+      br
+      label
+        textarea.direct(name="ngwords" rows="6" cols="80")
+
+  section
+    h2 連鎖設定
+    div
+      label
+        input.direct(type="checkbox" name="chain_ng")
+        |NGを連鎖させる
+      br
+      label
+        input.direct(type="checkbox" name="chain_ng_id")
+        |NG対象のIDを連鎖させる
+      label
+        |(
+        input.direct(type="checkbox" name="chain_ng_id_by_chain")
+        |連鎖NGを含む)
+      br
+      label
+        input.direct(type="checkbox" name="chain_ng_slip")
+        |NG対象のSLIPを連鎖させる
+      label
+        |(
+        input.direct(type="checkbox" name="chain_ng_slip_by_chain")
+        |連鎖NGを含む)
+
+  section
+    h2 その他
+    div
+      label
+        input.direct(type="checkbox" name="forward_link_ng")
+        |未来へのアンカーをNG
+      br
+      label
+        input.direct(type="checkbox" name="display_ng")
+        |あぼーん表示する
+      br
+      label
+        input.direct(type="checkbox" name="bookmark_show_dat")
+        |ブックマークのdat落ちスレを常に表示する
+      br
+      label
+        input.direct(type="checkbox" name="reject_ng_rep")
+        |NG対象を返信に含めない
+
+  section
+    h2 ID/SLIPの有無
+    div
+      label
+        input.direct(type="checkbox" name="nothing_id_ng")
+        |IDありスレのIDなしレスをNG
+      br
+      label
+        input.direct(type="checkbox" name="nothing_slip_ng")
+        |SLIPありスレのSLIPなしレスをNG
+      br
+      |ID/SLIPがあるスレの判定方法:
+      label
+        input.direct(type="radio" name="how_to_judgment_id" value="first_res" checked)
+        |1レス目に存在する場合
+      label
+        input.direct(type="radio" name="how_to_judgment_id" value="exists_once")
+        |1つでも存在する場合
+
+  section
+    h2 連投レス
+    div
+      label
+        |連投レス(コピペ)をNGとする回数:
+        input.direct(type="number" name="repeat_message_ng_count" min="0" max="99")
+        |(2未満の場合はoffとなります)
+        br
+        |offからonへの変更時にはスレッドを開き直す必要があります。アンカーの違いは無視します。
+
+  section
+    h2 コンテキストメニューの設定
+    div
+      |(期間指定の「0日後」は当日のみ有効)
+      br
+      |IDをNG指定でセットする有効期限の指定方法:
+      label
+        input.direct(type="radio" name="ng_id_expire" value="none" checked)
+        |セットしない
+      label
+        input.direct(type="radio" name="ng_id_expire" value="date")
+        |期間指定
+      label
+        input.direct(type="radio" name="ng_id_expire" value="day")
+        |曜日指定
+      span#ng_id_expire.ng_expire_input_container
+        span.ng_expire_input_date
+          | (
+          input.direct.days(type="number" name="ng_id_expire_date" min="0" max="180")
+          |日後まで)
+        span.ng_expire_input_day
+          | (次の
+          select.direct(name="ng_id_expire_day")
+            option(value="0") 日
+            option(value="1") 月
+            option(value="2") 火
+            option(value="3") 水
+            option(value="4") 木
+            option(value="5") 金
+            option(value="6") 土
+          |曜日まで)
+      br
+      |SLIPをNG指定でセットする有効期限の指定方法:
+      label
+        input.direct(type="radio" name="ng_slip_expire" value="none" checked)
+        |セットしない
+      label
+        input.direct(type="radio" name="ng_slip_expire" value="date")
+        |期間指定
+      label
+        input.direct(type="radio" name="ng_slip_expire" value="day")
+        |曜日指定
+      span#ng_slip_expire.ng_expire_input_container
+        span.ng_expire_input_date
+          | (
+          input.direct.days(type="number" name="ng_slip_expire_date" min="0" max="180")
+          |日後まで)
+        span.ng_expire_input_day
+          | (次の
+          select.direct(name="ng_slip_expire_day")
+            option(value="0") 日
+            option(value="1") 月
+            option(value="2") 火
+            option(value="3") 水
+            option(value="4") 木
+            option(value="5") 金
+            option(value="6") 土
+          |曜日まで)

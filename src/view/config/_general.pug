@@ -1,0 +1,96 @@
+.tabcontent.selected(name="general")
+  section
+    h2 レイアウト
+    div
+      label
+        input.direct(name="layout" type="radio" value="pane-3" checked)
+        |3ペイン
+      label
+        input.direct(name="layout" type="radio" value="pane-3h")
+        |3ペイン（横一列）
+      label
+        input.direct(name="layout" type="radio" value="pane-2")
+        |2ペイン
+
+  section
+    h2 背景色
+    div
+      label
+        input.direct(name="theme_id" type="radio" value="default" checked)
+        | 白
+      label
+        input.direct(name="theme_id" type="radio" value="dark")
+        | 黒
+
+  section
+    h2 タブ
+    div
+      label
+        input.direct(type="checkbox" name="always_new_tab")
+        | 常に新しいタブで開く
+      br
+      label
+        input.direct(type="checkbox" name="button_change_netsc_newtab")
+        | 2ch netとscの切り替え時に新しいタブで開く
+      br
+      label
+        input.direct(type="checkbox" name="button_change_scheme_newtab")
+        | httpとhttpsの切り替え時に新しいタブで開く
+      br
+      label
+        input.direct(type="checkbox" name="open_all_unread_lazy")
+        | 未読スレッドを全て開く際遅延ロードする
+      br
+      label
+        input.direct(type="checkbox" name="mousewheel_change_tab")
+        | マウスホイールでタブを切り替える
+
+  section
+    h2 リンク
+    div
+      label
+        input.direct(type="checkbox" name="enable_link_with_res_number")
+        | URLで指定されたレス番号を有効にする(範囲指定は無視します)
+
+  section
+    h2 アスキーアート表示
+    div
+      label
+        input.direct(name="aa_font" type="radio" value="aa")
+        |AA用のフォント設定で表示（AAを含むレスのみに影響します）
+      br
+      label
+        input.direct(name="aa_font" type="radio" value="normal")
+        |通常の文章と同じフォントで表示
+
+  section
+    h2 アスキーアートの縮小表示の最小値
+    div
+      label
+        input.direct(name="aa_min_ratio" type="range" min="1" max="100")
+        span#aa_min_ratio_text
+        |% (100%のときは縮小表示しません)
+
+  section
+    h2 2ch.netのスレッド読み込み形式
+    div
+      label
+        input.direct(name="format_2chnet" type="radio" value="html" checked)
+        |html形式
+      br
+      label
+        input.direct(name="format_2chnet" type="radio" value="dat" checked)
+        |dat形式(要Proxy)
+
+  section
+    h2 ブックマークのソート順の保持
+    div
+      label
+        input.direct(name="bookmark_sort_save_type" type="radio" value="none" checked)
+        |しない
+      label
+        input.direct(name="bookmark_sort_save_type" type="radio" value="board")
+        |板と連動させる
+      label
+        input.direct(name="bookmark_sort_save_type" type="radio" value="bookmark")
+        |板とは別で保持する

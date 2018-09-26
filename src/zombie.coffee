@@ -3,6 +3,11 @@ app.boot("/zombie.html", ->
     {id} = await browser.tabs.getCurrent()
     await browser.runtime.sendMessage(type: "zombie_done")
     await browser.tabs.remove(id)
+    # Vivaldiで閉じないことがあるため遅延してもう一度閉じる
+    setTimeout( ->
+      await browser.tabs.remove(id)
+      return
+    , 1000)
     return
 
   save = ->

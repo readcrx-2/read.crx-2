@@ -20,6 +20,7 @@ view = (browser) ->
       .pipe($.plumber(util.onPugError))
       .pipe($.progenyMtime())
       .pipe($.changed(output, extension: ".html"))
+      .pipe($.filter(paths.html.notBasePugs))
       .pipe($.pug(pugOptions[browser]))
       .pipe(gulp.dest(output))
 
@@ -30,6 +31,7 @@ zombie = (browser) ->
       .pipe($.plumber(util.onPugError))
       .pipe($.progenyMtime())
       .pipe($.changed(output, extension: ".html"))
+      .pipe($.filter(paths.html.notBasePugs))
       .pipe($.pug(pugOptions[browser]))
       .pipe(gulp.dest(output))
 
@@ -40,6 +42,7 @@ write = (browser) ->
       .pipe($.plumber(util.onPugError))
       .pipe($.progenyMtime())
       .pipe($.changed(output, extension: ".html"))
+      .pipe($.filter(paths.html.notBasePugs))
       .pipe($.pug(pugOptions[browser]))
       .pipe(gulp.dest(output))
 

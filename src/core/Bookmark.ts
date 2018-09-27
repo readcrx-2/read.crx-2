@@ -102,8 +102,7 @@ export class EntryList {
             this.update(b);
           }
         }
-      }
-      else {
+      } else {
         this.add(b);
       }
     }
@@ -141,25 +140,17 @@ export class EntryList {
   }
 
   getAll ():Entry[] {
-    var res:Entry[] = Array.from(this.cache.values());
-
-    return app.deepCopy(res);
+    return Array.from(this.cache.values());
   }
 
   getAllThreads ():Entry[] {
     var res:Entry[] = Array.from(this.cache.values());
-
-    res = res.filter( ({type}) => type === "thread");
-
-    return app.deepCopy(res);
+    return res.filter( ({type}) => type === "thread");
   }
 
   getAllBoards ():Entry[] {
     var res:Entry[] = Array.from(this.cache.values());
-
-    res = res.filter( ({type}) => type === "board");
-
-    return app.deepCopy(res);
+    return res.filter( ({type}) => type === "board");
   }
 
   getThreadsByBoardURL (url:string):Entry[] {
@@ -173,7 +164,7 @@ export class EntryList {
       }
     }
 
-    return app.deepCopy(res);
+    return res;
   }
 }
 
@@ -201,8 +192,7 @@ export class SyncableEntryList extends EntryList{
         entry: app.deepCopy(entry)
       });
       return true;
-    }
-    else {
+    } else {
       return false;
     }
   }
@@ -249,8 +239,7 @@ export class SyncableEntryList extends EntryList{
         });
       }
       return true;
-    }
-    else {
+    } else {
       return false;
     }
   }
@@ -264,8 +253,7 @@ export class SyncableEntryList extends EntryList{
         entry: entry
       });
       return true;
-    }
-    else {
+    } else {
       return false;
     }
   }

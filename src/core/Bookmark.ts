@@ -45,7 +45,7 @@ export class EntryList {
   private cache = new Map<string, Entry>();
   private boardURLIndex = new Map<string, Set<string>>();
 
-  add (entry:Entry):boolean {
+  async add (entry:Entry):Promise<boolean> {
     var boardURL:string;
 
     if (this.get(entry.url)) return false;
@@ -64,14 +64,14 @@ export class EntryList {
     return true;
   }
 
-  update (entry:Entry):boolean {
+  async update (entry:Entry):Promise<boolean> {
     if (!this.get(entry.url)) return false;
 
     this.cache.set(entry.url, app.deepCopy(entry));
     return true;
   }
 
-  remove (url:string):boolean {
+  async remove (url:string):Promise<boolean> {
     var boardURL:string;
 
     url = fixUrl(url);
@@ -185,77 +185,71 @@ export class SyncableEntryList extends EntryList{
     };
   }
 
-  add (entry:Entry):boolean {
-    if (super.add(entry)) {
-      this.onChanged.call({
-        type: "ADD",
-        entry: app.deepCopy(entry)
-      });
-      return true;
-    } else {
-      return false;
-    }
+  async add (entry:Entry):Promise<boolean> {
+    if (!super.add(entry)) return false;
+
+    this.onChanged.call({
+      type: "ADD",
+      entry: app.deepCopy(entry)
+    });
+    return true;
   }
 
-  update (entry:Entry):boolean {
+  async update (entry:Entry):Promise<boolean> {
     var before = this.get(entry.url);
 
-    if (super.update(entry)) {
-      if (before.title !== entry.title) {
-        this.onChanged.call({
-          type: "TITLE",
-          entry: app.deepCopy(entry)
-        });
-      }
+    if (!super.update(entry)) return false;
 
-      if (before.resCount !== entry.resCount) {
-        this.onChanged.call({
-          type: "RES_COUNT",
-          entry: app.deepCopy(entry)
-        });
-      }
-
-      if (
-        (!before.readState && entry.readState) ||
-        (
-          (before.readState && entry.readState) && (
-            before.readState.received !== entry.readState.received ||
-            before.readState.read !== entry.readState.read ||
-            before.readState.last !== entry.readState.last ||
-            before.readState.offset !== entry.readState.offset
-          )
-        )
-      ) {
-        this.onChanged.call({
-          type: "READ_STATE",
-          entry: app.deepCopy(entry)
-        });
-      }
-
-      if (before.expired !== entry.expired) {
-        this.onChanged.call({
-          type: "EXPIRED",
-          entry: app.deepCopy(entry)
-        });
-      }
-      return true;
-    } else {
-      return false;
+    if (before.title !== entry.title) {
+      this.onChanged.call({
+        type: "TITLE",
+        entry: app.deepCopy(entry)
+      });
     }
+
+    if (before.resCount !== entry.resCount) {
+      this.onChanged.call({
+        type: "RES_COUNT",
+        entry: app.deepCopy(entry)
+      });
+    }
+
+    if (
+      (!before.readState && entry.readState) ||
+      (
+        (before.readState && entry.readState) && (
+          before.readState.received !== entry.readState.received ||
+          before.readState.read !== entry.readState.read ||
+          before.readState.last !== entry.readState.last ||
+          before.readState.offset !== entry.readState.offset
+        )
+      )
+    ) {
+      this.onChanged.call({
+        type: "READ_STATE",
+        entry: app.deepCopy(entry)
+      });
+    }
+
+    if (before.expired !== entry.expired) {
+      this.onChanged.call({
+        type: "EXPIRED",
+        entry: app.deepCopy(entry)
+      });
+    }
+    return true;
   }
 
-  remove (url:string):boolean {
+  async remove (url:string):Promise<boolean> {
     var entry:Entry = this.get(url);
 
-    if (super.remove(url)) {
-      this.onChanged.call({
-        type: "REMOVE",
-        entry: entry
-      });
-      return true;
-    } else {
-      return false;
-    }
+    if (!super.remove(url)) return false;
+
+    this.onChanged.call({
+      type: "REMOVE",
+      entry: entry
+    });
+    return true;
   }
 
   private manipulateByBookmarkUpdateEvent (e:BookmarkUpdateEvent) {

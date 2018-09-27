@@ -21,7 +21,7 @@ app.boot("/zombie.html", ->
       await app.bookmark.promiseFirstScan
 
       rsarray = (app.ReadState.set(rs).catch(->return) for rs in arrayOfReadState)
-      bkarray = (app.bookmark.updateReadState(rs).catch(->return) for rs in arrayOfReadState)
+      bkarray = (app.bookmark.updateReadState(rs) for rs in arrayOfReadState)
       await Promise.all(rsarray.concat(bkarray))
 
     close()

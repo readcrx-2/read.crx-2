@@ -58,79 +58,60 @@ export default class BookmarkCompatibilityLayer {
     return this.cbel.getAll();
   }
 
-  add (url:string, title:string, resCount?:number) {
-    return new Promise( async (resolve, reject) => {
-      var entry = BrowserBookmarkEntryList.URLToEntry(url)!;
+  async add (url:string, title:string, resCount?:number): Promise<boolean> {
+    var entry = BrowserBookmarkEntryList.URLToEntry(url)!;
 
-      entry.title = title;
+    entry.title = title;
 
-      var readState = await getReadState(entry.url)
-      if (readState) {
-        entry.readState = readState;
-      }
+    var readState = await getReadState(entry.url)
+    if (readState) {
+      entry.readState = readState;
+    }
 
-      if (
-        typeof resCount === "number" &&
-        (!entry.resCount || entry.resCount < resCount)
-      ) {
-        entry.resCount = resCount;
-      } else if (entry.readState) {
-        entry.resCount = entry.readState.received;
-      }
+    if (
+      typeof resCount === "number" &&
+      (!entry.resCount || entry.resCount < resCount)
+    ) {
+      entry.resCount = resCount;
+    } else if (entry.readState) {
+      entry.resCount = entry.readState.received;
+    }
 
-      this.cbel.add(entry, undefined, (res) => {
-        res ? resolve() : reject();
-      });
-    });
+    return this.cbel.add(entry);
   }
 
-  remove (url:string) {
-    return new Promise( (resolve, reject) => {
-      this.cbel.remove(url, undefined, (res) => {
-        res ? resolve() : reject();
-      });
-    });
+  async remove (url:string):Promise<boolean> {
+    return this.cbel.remove(url);
   }
 
-  updateReadState (readState) {
+  async updateReadState (readState):Promise<boolean> {
     // TODO
-    return new Promise( (resolve, reject) => {
-      var entry = this.cbel.get(readState.url);
+    var entry = this.cbel.get(readState.url);
 
-      if (entry) {
-        entry.readState = readState;
-        this.cbel.update(entry, undefined, (res) => {
-          res ? resolve() : reject();
-        });
-      } else {
-        resolve();
-      }
-    });
+    if (entry) {
+      entry.readState = readState;
+      return this.cbel.update(entry);
+    }
+    return true;
   }
 
-  updateResCount (url:string, resCount:number) {
-    return new Promise( (resolve, reject) => {
-      var entry = this.cbel.get(url);
+  async updateResCount (url:string, resCount:number):Promise<boolean> {
+    var entry = this.cbel.get(url);
 
-      if (entry && (!entry.resCount || entry.resCount < resCount)) {
-        entry.resCount = resCount;
-        this.cbel.update(entry, undefined, (res) => {
-          res ? resolve() : reject();
-        });
-      }
-    });
+    if (entry && (!entry.resCount || entry.resCount < resCount)) {
+      entry.resCount = resCount;
+      return this.cbel.update(entry);
+    }
+    return true;
   }
 
-  updateExpired (url:string, expired:boolean) {
-    return new Promise( (resolve, reject) => {
-      var entry = this.cbel.get(url);
+  async updateExpired (url:string, expired:boolean):Promise<boolean> {
+    var entry = this.cbel.get(url);
 
-      if (entry) {
-        entry.expired = expired;
-        this.cbel.update(entry, undefined, (res) => {
-          res ? resolve() : reject();
-        });
-      }
-    });
+    if (entry) {
+      entry.expired = expired;
+      return this.cbel.update(entry);
+    }
+    return true;
   }
 }

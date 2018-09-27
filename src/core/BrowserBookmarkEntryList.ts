@@ -105,74 +105,71 @@ export default class BrowserBookmarkEntryList extends SyncableEntryList {
   private applyNodeAddToEntryList (node:BookmarkTreeNode):void {
     var entry:Entry|null;
 
-    if (node.url && node.title) {
-      entry = BrowserBookmarkEntryList.URLToEntry(node.url);
-      if (entry === null) return;
-      entry.title = node.title;
+    if (!node.url || !node.title) return;
 
-      // 既に同一URLのEntryが存在する場合、
-      if (this.get(entry.url)) {
-        // node側の方が新しいと判定された場合のみupdateを行う。
-        if (newerEntry(entry, this.get(entry.url)) === entry) {
-          //重複ブックマークの削除(元のnodeが古いと判定されたため)
-          browser.bookmarks.remove(this.nodeIdStore.get(entry.url));
+    entry = BrowserBookmarkEntryList.URLToEntry(node.url);
+    if (entry === null) return;
+    entry.title = node.title;
 
-          this.nodeIdStore.set(entry.url, node.id);
-          this.update(entry, false);
-        }
-        // addによりcreateBrowserBookmarkが呼ばれた場合
-        else if (!this.nodeIdStore.has(entry.url)) {
-          this.nodeIdStore.set(entry.url, node.id);
-        }
-        // 重複ブックマークの削除(node側の方が古いと判定された場合)
-        else {
-          browser.bookmarks.remove(node.id);
-        }
-      }
-      else {
+    // 既に同一URLのEntryが存在する場合、
+    if (this.get(entry.url)) {
+      // node側の方が新しいと判定された場合のみupdateを行う。
+      if (newerEntry(entry, this.get(entry.url)) === entry) {
+        //重複ブックマークの削除(元のnodeが古いと判定されたため)
+        browser.bookmarks.remove(this.nodeIdStore.get(entry.url));
+
         this.nodeIdStore.set(entry.url, node.id);
-        this.add(entry, false);
+        this.update(entry, false);
+      } else if (!this.nodeIdStore.has(entry.url)) {
+        // addによりcreateBrowserBookmarkが呼ばれた場合
+        this.nodeIdStore.set(entry.url, node.id);
+      } else {
+        // 重複ブックマークの削除(node側の方が古いと判定された場合)
+        browser.bookmarks.remove(node.id);
       }
+    } else {
+      this.nodeIdStore.set(entry.url, node.id);
+      this.add(entry, false);
     }
   }
 
   private applyNodeUpdateToEntryList (nodeId:string, changes):void {
     var url:string|null, entry:Entry, newEntry:Entry;
 
-    if (url = this.getURLFromNodeId(nodeId)) {
-      entry = this.get(url);
+    url = this.getURLFromNodeId(nodeId);
 
-      if (typeof changes.url === "string") {
-        newEntry = BrowserBookmarkEntryList.URLToEntry(changes.url)!;
-        newEntry.title = (
-          typeof changes.title === "string" ? changes.title : entry.title
-        );
+    if (!url) return;
 
-        if (entry.url === newEntry.url) {
-          if (
-            (
-              BrowserBookmarkEntryList.entryToURL(entry) !==
-              BrowserBookmarkEntryList.entryToURL(newEntry)
-            ) ||
-            (entry.title !== newEntry.title)
-          ) {
-            this.update(newEntry, false);
-          }
+    entry = this.get(url);
+
+    if (typeof changes.url === "string") {
+      newEntry = BrowserBookmarkEntryList.URLToEntry(changes.url)!;
+      newEntry.title = (
+        typeof changes.title === "string" ? changes.title : entry.title
+      );
+
+      if (entry.url === newEntry.url) {
+        if (
+          (
+            BrowserBookmarkEntryList.entryToURL(entry) !==
+            BrowserBookmarkEntryList.entryToURL(newEntry)
+          ) ||
+          (entry.title !== newEntry.title)
+        ) {
+          this.update(newEntry, false);
         }
+      } else {
         // ノードのURLが他の板/スレを示す物に変更された時
-        else {
-          this.nodeIdStore.delete(url);
-          this.nodeIdStore.set(newEntry.url, nodeId);
+        this.nodeIdStore.delete(url);
+        this.nodeIdStore.set(newEntry.url, nodeId);
 
-          this.remove(entry.url, false);
-          this.add(newEntry, false);
-        }
+        this.remove(entry.url, false);
+        this.add(newEntry, false);
       }
-      else if (typeof changes.title === "string") {
-        if (entry.title !== changes.title) {
-          entry.title = changes.title;
-          this.update(entry, false);
-        }
+    } else if (typeof changes.title === "string") {
+      if (entry.title !== changes.title) {
+        entry.title = changes.title;
+        this.update(entry, false);
       }
     }
   }
@@ -240,8 +237,7 @@ export default class BrowserBookmarkEntryList extends SyncableEntryList {
         if (res.length === 1 && typeof res[0].url === "string") {
           this.applyNodeAddToEntryList(res[0]);
         }
-      }
-      else if (e.oldParentId === this.rootNodeId) {
+      } else if (e.oldParentId === this.rootNodeId) {
         this.applyNodeRemoveToEntryList(nodeId);
       }
     });
@@ -304,40 +300,32 @@ export default class BrowserBookmarkEntryList extends SyncableEntryList {
   private async updateBrowserBookmark (newEntry:Entry): Promise<boolean> {
     var id:string;
 
-    if (this.nodeIdStore.has(newEntry.url)) {
-      id = this.nodeIdStore.get(newEntry.url)!;
-      var res:BookmarkTreeNode[] = await browser.bookmarks.get(id);
+    if (this.nodeIdStore.has(newEntry.url)) return false;
 
-      var changes:any = {},
-        node = res[0],
-        newURL = BrowserBookmarkEntryList.entryToURL(newEntry);
-        //currentEntry = BrowserBookmarkEntryList.URLToEntry(node.url); //used in future
+    id = this.nodeIdStore.get(newEntry.url)!;
+    var res:BookmarkTreeNode[] = await browser.bookmarks.get(id);
 
-      if (node.title !== newEntry.title) {
-        changes.title = newEntry.title;
-      }
+    var changes:any = {},
+      node = res[0],
+      newURL = BrowserBookmarkEntryList.entryToURL(newEntry);
+      //currentEntry = BrowserBookmarkEntryList.URLToEntry(node.url); //used in future
 
-      if (node.url !== newURL) {
-        changes.url = newURL;
-      }
-
-      if (Object.keys(changes).length === 0) {
-        return true;
-      }
-      else {
-        var res:BookmarkTreeNode[] = await browser.bookmarks.update(id, changes);
-        if (res) {
-          return true;
-        } else {
-          app.log("error", "ブラウザのブックマーク更新に失敗しました");
-          this.validateRootNodeSettings();
-
-          return false;
-        }
-      }
-    } else {
-      return false;
+    if (node.title !== newEntry.title) {
+      changes.title = newEntry.title;
     }
+
+    if (node.url !== newURL) {
+      changes.url = newURL;
+    }
+
+    if (Object.keys(changes).length === 0) return true;
+
+    var res:BookmarkTreeNode[] = await browser.bookmarks.update(id, changes);
+    if (res) return true;
+
+    app.log("error", "ブラウザのブックマーク更新に失敗しました");
+    this.validateRootNodeSettings();
+    return false;
   }
 
   private async removeBrowserBookmark (url: string): Promise<boolean> {
@@ -362,9 +350,7 @@ export default class BrowserBookmarkEntryList extends SyncableEntryList {
       }
     }
 
-    if (removeIdList.length === 0) {
-      return false;
-    }
+    if (removeIdList.length === 0) return false;
 
     await Promise.all(removeIdList.map( (id) => {
       return browser.bookmarks.remove(id).catch(e => {return});
@@ -372,63 +358,34 @@ export default class BrowserBookmarkEntryList extends SyncableEntryList {
     return true;
   }
 
-  add (entry:Entry, createBrowserBookmark = true, callback?:Function):boolean {
+  async add (entry:Entry, createBrowserBookmark = true):Promise<boolean> {
     entry = app.deepCopy(entry);
 
-    if (super.add(entry)) {
-      if (createBrowserBookmark) {
-        let promise = this.createBrowserBookmark(entry);
-        if (callback) {
-          promise.then(<any>callback);
-        }
-      } else if (callback) {
-        callback(true);
-      }
-      return true;
-    } else {
-      if (callback) {
-        callback(false);
-      }
-      return false;
+    if (!super.add(entry)) return false;
+
+    if (createBrowserBookmark) {
+      return this.createBrowserBookmark(entry);
     }
+    return true;
   }
 
-  update (entry:Entry, updateBrowserBookmark = true, callback?:Function):boolean {
+  async update (entry:Entry, updateBrowserBookmark = true):Promise<boolean> {
     entry = app.deepCopy(entry);
 
-    if (super.update(entry)) {
-      if (updateBrowserBookmark) {
-        let promise = this.updateBrowserBookmark(entry);
-        if (callback) {
-          promise.then(<any>callback);
-        }
-      } else if (callback) {
-        callback(true);
-      }
-      return true;
-    } else {
-      if (callback) {
-        callback(false);
-      }
-      return false;
+    if (!super.update(entry)) return false;
+
+    if (updateBrowserBookmark) {
+      return this.updateBrowserBookmark(entry);
     }
+    return true;
   }
 
-  remove (url:string, removeBrowserBookmark = true, callback?:Function):boolean {
-    if (super.remove(url)) {
-      if (removeBrowserBookmark) {
-        let promise = this.removeBrowserBookmark(url);
-        if (callback) {
-          promise.then(<any>callback);
-        }
-      } else if (callback) {
-        callback(true);
-      }
-      return true;
-    } else if (callback) {
-      callback(false);
-      return false;
+  async remove (url:string, removeBrowserBookmark = true):Promise<boolean> {
+    if (!super.remove(url)) return false;
+
+    if (removeBrowserBookmark) {
+      return this.removeBrowserBookmark(url);
     }
-    return false;
+    return true;
   }
 }

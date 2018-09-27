@@ -18,6 +18,7 @@
     "gulp-changed": "^3.2.0",
     "gulp-coffee": "^3.0.2",
     "gulp-concat": "^2.6.1",
+    "gulp-filter": "^5.1.0",
     "gulp-notify": "^3.2.0",
     "gulp-plumber": "^1.2.0",
     "gulp-postcss": "^8.0.0",

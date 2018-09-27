@@ -1,0 +1,56 @@
+.tabcontent(name="reload")
+  section
+    h2 更新
+    div
+      label
+        input.direct(type="checkbox" name="dblclick_reload")
+        | スレで何もないところをダブルクリックして更新できるようにする
+
+  section
+    h2 自動更新間隔
+    div
+      |最小値以下をセットすると無効になります
+      br
+      .grid.grid_column_3
+        p スレ
+        div
+          input.direct.seconds(type="number" name="auto_load_second" min="0")
+          |ms
+        p (最小5000ms、勢いが遅いスレで30000ms未満にするとエラーがでます)
+        p 板
+        div
+          input.direct.seconds(type="number" name="auto_load_second_board" min="0")
+          |ms
+        p (最小20000ms)
+        p ブックマーク
+        div
+          input.direct.seconds(type="number" name="auto_load_second_bookmark" min="0")
+          |ms
+        p (最小20000ms)
+
+  section
+    h2 自動更新の処理
+    div
+      label
+        input.direct(type="checkbox" name="auto_load_all")
+        |開いていないタブも自動更新する(read.crx起動後、一度は開かないと更新されません、ブックマークは常に自動更新されます)
+      br
+      label
+        input.direct(type="checkbox" name="auto_bookmark_notify")
+        |ブックマークを自動更新しているときに新着レスがあった場合、通知を送る
+
+  section
+    h2 自動更新後の移動
+    div
+      label
+        input.direct(name="auto_load_move" type="radio" value="off" checked)
+        |しない
+      label
+        input.direct(name="auto_load_move" type="radio" value="new")
+        |未読がない場合新着レス
+      label
+        input.direct(name="auto_load_move" type="radio" value="surely_new")
+        |新着レス
+      label
+        input.direct(name="auto_load_move" type="radio" value="newest")
+        |最終レス

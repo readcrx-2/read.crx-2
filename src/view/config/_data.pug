@@ -1,0 +1,79 @@
+.tabcontent(name="data")
+  section
+    div: strong インポートは大量にすると時間がかかります
+  section
+    h2 閲覧履歴
+    div.history
+      span#history_count
+      span#history_status
+      br
+      button.history_clear(type="button") 削除
+      |/
+      input.date_range.history_date_range(type="number" min="1" value="7")
+      |日以上の前の履歴を
+      button.history_range_clear(type="button") 削除
+      br
+      input.hidden.history_file_hide(type="file" accept=".json")
+      button.history_export_button(type="button") エクスポート
+      button.history_file_show(type="button") ファイル読み込み
+      button.history_import_button(type="button") インポート
+      br
+      input.direct(type="checkbox" name="no_history")
+      |閲覧履歴を保存しない(チェック時のみ有効)
+
+  section
+    h2 書込履歴
+    div.writehistory
+      span#writehistory_count
+      span#writehistory_status
+      br
+      button.writehistory_clear(type="button") 削除
+      |/
+      input.date_range.writehistory_date_range(type="number" min="1" value="7")
+      |日以上の前の履歴を
+      button.writehistory_range_clear(type="button") 削除
+      br
+      input.hidden.writehistory_file_hide(type="file" accept=".json")
+      button.writehistory_export_button(type="button") エクスポート
+      button.writehistory_file_show(type="button") ファイル読み込み
+      button.writehistory_import_button(type="button") インポート
+      br
+      input.direct(type="checkbox" name="no_writehistory")
+      |書込履歴を保存しない(チェック時のみ有効)
+
+  section
+    h2 キャッシュ
+    div.cache
+      span#cache_count
+      span#cache_status
+      br
+      button.cache_clear(type="button") 削除
+      |/
+      input.date_range.cache_date_range(type="number" min="1" value="7")
+      |日以上の前のキャッシュを
+      button.cache_range_clear(type="button") 削除
+
+  section
+    h2 設定
+    div.config_import
+      input.config_file_hide.hidden(type="file" accept=".json")
+      button.config_export_button(type="button") エクスポート
+      button.config_file_show(type="button") ファイル読み込み
+      button.config_import_button(type="button") インポート
+      span#config_status
+
+  section
+    h2 使用状況
+    div.info.grid.grid_column_3
+      span IndexedDB(履歴、キャッシュ)
+      div: meter.indexeddb_meter
+      div
+        span.indexeddb_using
+        |/
+        span.indexeddb_max
+      span 拡張機能LocalStorage(設定)
+      div: meter.localstorage_meter
+      div
+        span.localstorage_using
+        |/
+        span.localstorage_max

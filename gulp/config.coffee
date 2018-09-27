@@ -28,13 +28,10 @@ do ->
       view: ["#{i}/view/*.scss", "#{i}/_common.scss"]
       write: ["#{i}/write/*.scss", "#{i}/_common.scss"]
     html:
-      view: "#{i}/view/*.pug"
-      zombie: "#{i}/zombie.pug"
-      write: "#{i}/write/*.pug"
-    watchHtml:
       view: ["#{i}/view/*.pug", "#{i}/_base.pug"]
       zombie: ["#{i}/zombie.pug", "#{i}/_base.pug"]
       write: ["#{i}/write/*.pug", "#{i}/_base.pug"]
+      notBasePugs: ["**/*.pug", "!**/_*.pug"]
     img:
       imgsSrc: "#{i}/image/svg"
       imgs: [

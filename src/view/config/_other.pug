@@ -1,0 +1,73 @@
+.tabcontent(name="other")
+  section
+    h2 書き込み
+    .grid.grid_column_2
+      p デフォルトの名前
+      div: input.direct(type="text" name="default_name")
+      p デフォルトのメールアドレス
+      div: input.direct(type="text" name="default_mail")
+
+  section
+    h2 板一覧
+    div
+      button.bbsmenu_reload(type="button") 更新
+      span#bbsmenu_reload_status
+      br
+      |更新間隔:
+      input.direct.days(type="number" name="bbsmenu_update_interval" min="1" value="7")
+      |日
+      br
+      |URL(
+      a(href="http://kita.jikkyo.org/cbm/" target="_blank") 詳細
+      |):
+      input.direct.bbsmenu(type="text" name="bbsmenu")
+      button.bbsmenu_reset(type="button") リセット
+
+  section
+    h2 その他
+    div
+      button.bookmark_source_change ブックマークのフォルダを変更する
+      span
+        |(現在のフォルダ:
+        span#bookmark_source_name
+        |)
+
+  section
+    h2: strong 上級者向け機能
+    div: strong 以下は上級者向け機能です。何が起きるのかを十分に理解して使用して下さい。
+
+  section
+    h2
+      |ユーザーCSS(
+      a(href="https://github.com/readcrx-2/read.crx-2/wiki/%E3%83%A6%E3%83%BC%E3%82%B6%E3%83%BCCSS" target="_blank") 詳細
+      |)
+    div
+      textarea.direct(name="user_css" rows="6" cols="80")
+      br
+      label
+        input.theme_none(type="checkbox")
+        |テーマなし
+      label
+        input.direct(type="checkbox" name="default_scrollbar")
+        |ブラウザ既定のスクロールバーを使用する
+
+  section
+    h2
+      |ReplaceStr.txt(
+      a(href="https://github.com/readcrx-2/read.crx-2/wiki/ReplaceStr.txt%E3%81%AE%E4%BB%95%E6%A7%98" target="_blank") 詳細
+      |)
+    div
+      |ここに ReplaceStr.txt を記述してください
+      br
+      label
+        textarea.direct(name="replace_str_txt" rows="6" cols="80")
+      br
+      input.hidden.replacestr_file_hide(type="file" accept=".txt")
+      button.replacestr_file_show(type="button") ファイル読み込み(UTF-8)
+      button.replacestr_import_button(type="button") インポート
+      span#replacestr_status
+
+  section
+    h2 UserAgent
+    div
+      input.direct.useragent(type="text" name="useragent")

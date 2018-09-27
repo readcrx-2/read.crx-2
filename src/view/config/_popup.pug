@@ -1,0 +1,37 @@
+.tabcontent(name="popup")
+  section
+    h2 ID/参照ポップアップの表示方法
+    div
+      label
+        input.direct(name="popup_trigger" type="radio" value="click" checked)
+        |クリック
+      label
+        input.direct(name="popup_trigger" type="radio" value="mouseenter")
+        |マウスを重ねる
+
+  section
+    h2 ポップアップの遅延時間
+    div
+      label
+        input.direct.seconds(type="number" name="popup_delay_time" min="0" max="5000")
+        |ms (最小100ms)
+      br
+      |ポップアップの表示タイミングを遅らせる場合に指定してください。100ms未満の値が指定された場合は即時に表示されます。(アンカー/ID/参照全て共通)
+
+  section
+    h2 短縮URLの展開
+    div
+      label
+        input.direct(name="expand_short_url" type="radio" value="none" checked)
+        |何もしない
+      label
+        input.direct(name="expand_short_url" type="radio" value="inline")
+        |本文内に表示する
+      label
+        input.direct(name="expand_short_url" type="radio" value="popup")
+        |マウスを重ねた時にポップアップする
+      br
+      label
+        |タイムアウト:
+        input.direct.seconds(type="number" name="expand_short_url_timeout" min="0")
+        |ms

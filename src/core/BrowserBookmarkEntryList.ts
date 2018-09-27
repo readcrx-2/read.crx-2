@@ -247,9 +247,9 @@ export default class BrowserBookmarkEntryList extends SyncableEntryList {
     });
   }
 
-  setRootNodeId (rootNodeId:string, callback?:Function):void {
+  setRootNodeId (rootNodeId:string):Promise<boolean> {
     this.rootNodeId = rootNodeId;
-    this.loadFromBrowserBookmark(callback);
+    return this.loadFromBrowserBookmark();
   }
 
   private async validateRootNodeSettings (): Promise<void> {
@@ -260,7 +260,7 @@ export default class BrowserBookmarkEntryList extends SyncableEntryList {
     }
   }
 
-  private async loadFromBrowserBookmark (callback?:Function): Promise<void> {
+  private async loadFromBrowserBookmark (): Promise<boolean> {
     // EntryListクリア
     for(var entry of this.getAll()) {
       this.remove(entry.url, false);
@@ -278,20 +278,16 @@ export default class BrowserBookmarkEntryList extends SyncableEntryList {
         this.ready.call();
       }
 
-      if (callback) {
-        callback(true);
-      }
+      return true;
     } catch (e) {
       app.log("warn", "ブラウザのブックマークからの読み込みに失敗しました。");
       this.validateRootNodeSettings();
 
-      if (callback) {
-        callback(false);
-      }
+      return false;
     }
   }
 
-  private async createBrowserBookmark (entry:Entry, callback?:Function): Promise<void> {
+  private async createBrowserBookmark (entry:Entry): Promise<boolean> {
     var res:BookmarkTreeNode = await browser.bookmarks.create({
       parentId: this.rootNodeId,
       url: BrowserBookmarkEntryList.entryToURL(entry),
@@ -302,12 +298,10 @@ export default class BrowserBookmarkEntryList extends SyncableEntryList {
       this.validateRootNodeSettings();
     }
 
-    if (callback) {
-      callback(!!res);
-    }
+    return !!res;
   }
 
-  private async updateBrowserBookmark (newEntry:Entry, callback?:Function): Promise<void> {
+  private async updateBrowserBookmark (newEntry:Entry): Promise<boolean> {
     var id:string;
 
     if (this.nodeIdStore.has(newEntry.url)) {
@@ -328,35 +322,25 @@ export default class BrowserBookmarkEntryList extends SyncableEntryList {
       }
 
       if (Object.keys(changes).length === 0) {
-        if (callback) {
-          callback(true);
-        }
+        return true;
       }
       else {
         var res:BookmarkTreeNode[] = await browser.bookmarks.update(id, changes);
         if (res) {
-          if (callback) {
-            callback(true);
-          }
-        }
-        else {
+          return true;
+        } else {
           app.log("error", "ブラウザのブックマーク更新に失敗しました");
           this.validateRootNodeSettings();
 
-          if (callback) {
-            callback(false);
-          }
+          return false;
         }
       }
-    }
-    else {
-      if (callback) {
-        callback(false);
-      }
+    } else {
+      return false;
     }
   }
 
-  private async removeBrowserBookmark (url: string, callback?: Function): Promise<void> {
+  private async removeBrowserBookmark (url: string): Promise<boolean> {
     if (this.nodeIdStore.has(url)) {
       this.nodeIdStore.delete(url);
     }
@@ -378,16 +362,14 @@ export default class BrowserBookmarkEntryList extends SyncableEntryList {
       }
     }
 
-    if (removeIdList.length === 0 && callback) {
-      callback(false);
+    if (removeIdList.length === 0) {
+      return false;
     }
 
     await Promise.all(removeIdList.map( (id) => {
       return browser.bookmarks.remove(id).catch(e => {return});
     }));
-    if (callback) {
-      callback(true);
-    }
+    return true;
   }
 
   add (entry:Entry, createBrowserBookmark = true, callback?:Function):boolean {
@@ -395,19 +377,15 @@ export default class BrowserBookmarkEntryList extends SyncableEntryList {
 
     if (super.add(entry)) {
       if (createBrowserBookmark) {
+        let promise = this.createBrowserBookmark(entry);
         if (callback) {
-          this.createBrowserBookmark(entry, callback);
+          promise.then(<any>callback);
         }
-        else {
-          this.createBrowserBookmark(entry);
-        }
-      }
-      else if (callback) {
+      } else if (callback) {
         callback(true);
       }
       return true;
-    }
-    else {
+    } else {
       if (callback) {
         callback(false);
       }
@@ -420,19 +398,15 @@ export default class BrowserBookmarkEntryList extends SyncableEntryList {
 
     if (super.update(entry)) {
       if (updateBrowserBookmark) {
+        let promise = this.updateBrowserBookmark(entry);
         if (callback) {
-          this.updateBrowserBookmark(entry, callback);
+          promise.then(<any>callback);
         }
-        else {
-          this.updateBrowserBookmark(entry);
-        }
-      }
-      else if (callback) {
+      } else if (callback) {
         callback(true);
       }
       return true;
-    }
-    else {
+    } else {
       if (callback) {
         callback(false);
       }
@@ -443,19 +417,15 @@ export default class BrowserBookmarkEntryList extends SyncableEntryList {
   remove (url:string, removeBrowserBookmark = true, callback?:Function):boolean {
     if (super.remove(url)) {
       if (removeBrowserBookmark) {
+        let promise = this.removeBrowserBookmark(url);
         if (callback) {
-          this.removeBrowserBookmark(url, callback);
+          promise.then(<any>callback);
         }
-        else {
-          this.removeBrowserBookmark(url);
-        }
-      }
-      else if (callback) {
+      } else if (callback) {
         callback(true);
       }
       return true;
-    }
-    else if (callback) {
+    } else if (callback) {
       callback(false);
       return false;
     }

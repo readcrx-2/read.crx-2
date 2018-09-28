@@ -6,16 +6,16 @@ import {threadToBoard} from "./URL"
 import {get as getReadState} from "./ReadState.coffee"
 
 export default class Bookmark {
-  private cbel: BrowserBookmarkEntryList;
+  bel: BrowserBookmarkEntryList;
   promiseFirstScan;
 
-  constructor (cbel: BrowserBookmarkEntryList) {
-    this.cbel = cbel;
+  constructor (rootIdNode: string) {
+    this.bel = new BrowserBookmarkEntryList(rootIdNode);
     this.promiseFirstScan = new Promise( (resolve, reject) => {
-      this.cbel.ready.add(() => {
+      this.bel.ready.add(() => {
         resolve();
 
-        this.cbel.onChanged.add(({type: typeName, entry: bookmark}) => {
+        this.bel.onChanged.add(({type: typeName, entry: bookmark}) => {
           var type = "";
           switch (typeName) {
             case "ADD": type = "added"; break;
@@ -40,30 +40,30 @@ export default class Bookmark {
 
     // 鯖移転検出時処理
     app.message.on("detected_ch_server_move", ({before, after}) => {
-      this.cbel.serverMove(before, after);
+      this.bel.serverMove(before, after);
     });
   }
 
   get (url:string):Entry|null {
-    var entry = this.cbel.get(url);
+    var entry = this.bel.get(url);
 
     return entry ? entry : null;
   }
 
   getByBoard (boardURL:string):Entry[] {
-    return this.cbel.getThreadsByBoardURL(boardURL);
+    return this.bel.getThreadsByBoardURL(boardURL);
   }
 
   getAll ():Entry[] {
-    return this.cbel.getAll();
+    return this.bel.getAll();
   }
 
   getAllThreads ():Entry[] {
-    return this.cbel.getAllThreads();
+    return this.bel.getAllThreads();
   }
 
   getAllBoards ():Entry[] {
-    return this.cbel.getAllBoards();
+    return this.bel.getAllBoards();
   }
 
   async add (url:string, title:string, resCount?:number): Promise<boolean> {
@@ -85,40 +85,40 @@ export default class Bookmark {
       entry.resCount = entry.readState.received;
     }
 
-    return this.cbel.add(entry);
+    return this.bel.add(entry);
   }
 
   async remove (url:string):Promise<boolean> {
-    return this.cbel.remove(url);
+    return this.bel.remove(url);
   }
 
   async updateReadState (readState):Promise<boolean> {
     // TODO
-    var entry = this.cbel.get(readState.url);
+    var entry = this.bel.get(readState.url);
 
     if (entry) {
       entry.readState = readState;
-      return this.cbel.update(entry);
+      return this.bel.update(entry);
     }
     return true;
   }
 
   async updateResCount (url:string, resCount:number):Promise<boolean> {
-    var entry = this.cbel.get(url);
+    var entry = this.bel.get(url);
 
     if (entry && (!entry.resCount || entry.resCount < resCount)) {
       entry.resCount = resCount;
-      return this.cbel.update(entry);
+      return this.bel.update(entry);
     }
     return true;
   }
 
   async updateExpired (url:string, expired:boolean):Promise<boolean> {
-    var entry = this.cbel.get(url);
+    var entry = this.bel.get(url);
 
     if (entry) {
       entry.expired = expired;
-      return this.cbel.update(entry);
+      return this.bel.update(entry);
     }
     return true;
   }

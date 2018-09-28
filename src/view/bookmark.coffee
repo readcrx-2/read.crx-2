@@ -59,7 +59,7 @@ app.boot("/view/bookmark.html", ["Board"], (Board) ->
 
     boardList = new Set()
     boardThreadTable = new Map()
-    for {url} in app.bookmarkEntryList.getAllThreads()
+    for {url} in app.bookmark.getAllThreads()
       boardUrl = app.URL.threadToBoard(url)
       boardList.add(boardUrl)
       if boardThreadTable.has(boardUrl)
@@ -122,7 +122,7 @@ app.boot("/view/bookmark.html", ["Board"], (Board) ->
     return
   )
 
-  getPromises = app.bookmarkEntryList.getAllThreads().map( ({
+  getPromises = app.bookmark.getAllThreads().map( ({
     title
     url
     resCount = 0

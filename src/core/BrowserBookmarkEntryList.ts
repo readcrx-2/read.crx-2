@@ -1,5 +1,5 @@
 ///<reference path="../global.d.ts" />
-import {Entry, SyncableEntryList, newerEntry} from "./Bookmark"
+import {Entry, SyncableEntryList, newerEntry} from "./BookmarkEntryList"
 import {fix as fixUrl, buildQuery, GuessResult, guessType, parseHashQuery} from "./URL"
 
 interface BookmarkTreeNode {

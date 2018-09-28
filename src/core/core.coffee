@@ -1,9 +1,9 @@
 import * as BBSMenu from "./BBSMenu.coffee"
 import Board from "./Board.coffee"
 import * as BoardTitleSolver from "./BoardTitleSolver.coffee"
-import BookmarkCompatibilityLayer from "./BookmarkCompatibilityLayer.ts"
+import Bookmark from "./Bookmark.ts"
 import BrowserBookmarkEntryList from "./BrowserBookmarkEntryList.ts"
-import * as Bookmark from "./Bookmark.ts"
+import * as BookmarkEntryList from "./BookmarkEntryList.ts"
 import Cache from "./Cache.coffee"
 import * as ContextMenus from "./ContextMenus.coffee"
 import * as DOMData from "./DOMData.coffee"
@@ -26,7 +26,7 @@ export {
   Board
   BoardTitleSolver
   Bookmark
-  BookmarkCompatibilityLayer
+  BookmarkEntryList
   BrowserBookmarkEntryList
   Cache
   ContextMenus

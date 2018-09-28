@@ -451,7 +451,7 @@ app.main = ->
     )
 
     app.bookmarkEntryList = cbel
-    app.bookmark = new app.BookmarkCompatibilityLayer(cbel)
+    app.bookmark = new app.Bookmark(cbel)
     return
 
   app.bookmarkEntryList.ready.add( ->

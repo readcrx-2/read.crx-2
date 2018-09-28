@@ -5,9 +5,8 @@
 _list = new WeakMap()
 
 export set = (dom, prop, val) ->
-  obj = if _list.has(dom) then _list.get(dom) else {}
-  obj[prop] = val
-  _list.set(dom, obj)
+  _list.set(dom, {}) unless _list.has(dom)
+  _list.get(dom)[prop] = val
   return
 export get = (dom, prop) ->
   if _list.has(dom)

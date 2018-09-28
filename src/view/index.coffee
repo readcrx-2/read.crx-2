@@ -522,9 +522,9 @@ app.main = ->
   # ウィンドウサイズ関連処理
   adjustWindowSize = new app.Callbacks()
   do ->
-    resizeTo = (width, height, callback) ->
+    resizeTo = (width, height) ->
       win = await browser.windows.getCurrent()
-      browser.windows.update(win.id, {width, height}, callback)
+      await browser.windows.update(win.id, {width, height})
       return
 
     saveWindowSize = ->
@@ -555,16 +555,12 @@ app.main = ->
     do ->
       win = await browser.windows.getCurrent(populate: true)
       if win.tabs.length is 1 and win.width < 300 or win.height < 300
-        resizeTo(
+        await resizeTo(
           +app.config.get("window_width")
           +app.config.get("window_height")
-          ->
-            await app.defer()
-            adjustWindowSize.call()
-            return
         )
-      else
-        adjustWindowSize.call()
+        await app.defer()
+      adjustWindowSize.call()
       return
 
     adjustWindowSize.add(startAutoSave)

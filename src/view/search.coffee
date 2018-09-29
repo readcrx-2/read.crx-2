@@ -43,6 +43,7 @@ app.boot("/view/search.html", ["ThreadSearch"], (ThreadSearch) ->
     $view.addClass("loading")
     $buttonReload.addClass("disabled")
     $view.C("more")[0].textContent = "検索中"
+    $view.C("more")[0].removeClass("hidden")
     try
       result = await threadSearch.read()
       $messageBar.removeClass("error")

@@ -88,7 +88,7 @@ app.boot("/view/search.html", ["ThreadSearch"], (ThreadSearch) ->
   $buttonReload.on("click", ->
     return if $buttonReload.hasClass("disabled")
     threadList.empty()
-    threadSearch = new ThreadSearch(query)
+    threadSearch = new ThreadSearch(query, scheme)
     await load()
     onScroll() # 20件分がスクロールなしで表示できる場合
     $content.on("scroll", onScroll, passive: true)

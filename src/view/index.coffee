@@ -442,16 +442,14 @@ app.main = ->
   do ->
     # bookmark_idが未設定の場合、わざと無効な値を渡してneedReconfigureRootNodeId
     # をcallさせる。
-    cbel = new app.BrowserBookmarkEntryList(
+    app.bookmark = new app.Bookmark(
       app.config.get("bookmark_id") or "dummy"
     )
-    cbel.needReconfigureRootNodeId.add( ->
+    app.bookmarkEntryList = app.bookmark.bel
+    app.bookmarkEntryList.needReconfigureRootNodeId.add( ->
       app.message.send("open", url: "bookmark_source_selector")
       return
     )
-
-    app.bookmarkEntryList = cbel
-    app.bookmark = new app.BookmarkCompatibilityLayer(cbel)
     return
 
   app.bookmarkEntryList.ready.add( ->

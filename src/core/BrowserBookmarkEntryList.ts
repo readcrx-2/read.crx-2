@@ -1,5 +1,5 @@
 ///<reference path="../global.d.ts" />
-import {Entry, SyncableEntryList, newerEntry} from "./Bookmark"
+import {Entry, SyncableEntryList, newerEntry} from "./BookmarkEntryList"
 import {fix as fixUrl, buildQuery, GuessResult, guessType, parseHashQuery} from "./URL"
 
 interface BookmarkTreeNode {
@@ -300,7 +300,7 @@ export default class BrowserBookmarkEntryList extends SyncableEntryList {
   private async updateBrowserBookmark (newEntry:Entry): Promise<boolean> {
     var id:string;
 
-    if (this.nodeIdStore.has(newEntry.url)) return false;
+    if (!this.nodeIdStore.has(newEntry.url)) return false;
 
     id = this.nodeIdStore.get(newEntry.url)!;
     var res:BookmarkTreeNode[] = await browser.bookmarks.get(id);

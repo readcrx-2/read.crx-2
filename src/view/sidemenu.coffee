@@ -42,7 +42,7 @@ app.boot("/view/sidemenu.html", ["BBSMenu"], (BBSMenu) ->
     app.bookmarkEntryList.ready.add( ->
       frag = $_F()
 
-      for entry in app.bookmarkEntryList.getAllBoards()
+      for entry in app.bookmark.getAllBoards()
         frag.addLast(entryToLi(entry))
 
       $view.$("ul:first-of-type").addLast(frag)

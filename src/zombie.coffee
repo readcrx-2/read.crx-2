@@ -13,15 +13,13 @@ app.boot("/zombie.html", ->
   save = ->
     arrayOfReadState = JSON.parse(localStorage.zombie_read_state)
 
-    app.bookmark = new app.BookmarkCompatibilityLayer(
-      new app.BrowserBookmarkEntryList(app.config.get("bookmark_id"))
-    )
+    app.bookmark = new app.Bookmark(app.config.get("bookmark_id"))
 
     try
       await app.bookmark.promiseFirstScan
 
       rsarray = (app.ReadState.set(rs).catch(->return) for rs in arrayOfReadState)
-      bkarray = (app.bookmark.updateReadState(rs).catch(->return) for rs in arrayOfReadState)
+      bkarray = (app.bookmark.updateReadState(rs) for rs in arrayOfReadState)
       await Promise.all(rsarray.concat(bkarray))
 
     close()

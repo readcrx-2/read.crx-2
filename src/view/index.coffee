@@ -442,16 +442,14 @@ app.main = ->
   do ->
     # bookmark_idが未設定の場合、わざと無効な値を渡してneedReconfigureRootNodeId
     # をcallさせる。
-    cbel = new app.BrowserBookmarkEntryList(
+    app.bookmark = new app.Bookmark(
       app.config.get("bookmark_id") or "dummy"
     )
-    cbel.needReconfigureRootNodeId.add( ->
+    app.bookmarkEntryList = app.bookmark.bel
+    app.bookmarkEntryList.needReconfigureRootNodeId.add( ->
       app.message.send("open", url: "bookmark_source_selector")
       return
     )
-
-    app.bookmarkEntryList = cbel
-    app.bookmark = new app.BookmarkCompatibilityLayer(cbel)
     return
 
   app.bookmarkEntryList.ready.add( ->
@@ -522,9 +520,9 @@ app.main = ->
   # ウィンドウサイズ関連処理
   adjustWindowSize = new app.Callbacks()
   do ->
-    resizeTo = (width, height, callback) ->
+    resizeTo = (width, height) ->
       win = await browser.windows.getCurrent()
-      browser.windows.update(win.id, {width, height}, callback)
+      await browser.windows.update(win.id, {width, height})
       return
 
     saveWindowSize = ->
@@ -555,16 +553,12 @@ app.main = ->
     do ->
       win = await browser.windows.getCurrent(populate: true)
       if win.tabs.length is 1 and win.width < 300 or win.height < 300
-        resizeTo(
+        await resizeTo(
           +app.config.get("window_width")
           +app.config.get("window_height")
-          ->
-            await app.defer()
-            adjustWindowSize.call()
-            return
         )
-      else
-        adjustWindowSize.call()
+        await app.defer()
+      adjustWindowSize.call()
       return
 
     adjustWindowSize.add(startAutoSave)

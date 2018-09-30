@@ -1,321 +1,125 @@
 ///<reference path="../global.d.ts" />
-import {threadToBoard, fix as fixUrl} from "./URL"
+import {Entry} from "./BookmarkEntryList"
+import BrowserBookmarkEntryList from "./BrowserBookmarkEntryList"
+import {threadToBoard} from "./URL"
+// @ts-ignore
+import {get as getReadState} from "./ReadState.coffee"
 
-export interface ReadState {
-  url: string;
-  received: number;
-  read: number;
-  last: number;
-  offset: number|null;
-}
+export default class Bookmark {
+  bel: BrowserBookmarkEntryList;
+  promiseFirstScan;
 
-export interface Entry {
-  url: string;
-  title: string;
-  type: string;
-  bbsType: string;
-  resCount: number|null;
-  readState: ReadState|null;
-  expired: boolean;
-}
+  constructor (rootIdNode: string) {
+    this.bel = new BrowserBookmarkEntryList(rootIdNode);
+    this.promiseFirstScan = new Promise( (resolve, reject) => {
+      this.bel.ready.add(() => {
+        resolve();
 
-export function newerEntry (a:Entry, b:Entry):Entry|null {
-  if (a.resCount !== null && b.resCount !== null && a.resCount !== b.resCount) {
-    return a.resCount > b.resCount ? a : b;
-  }
-
-  if (Boolean(a.readState) !== Boolean(b.readState)) {
-    return a.readState ? a : b;
-  }
-
-  if (a.readState && b.readState) {
-    if (a.readState.read !== b.readState.read) {
-      return a.readState.read > b.readState.read ? a : b;
-    }
-
-    if (a.readState.received !== b.readState.received) {
-      return a.readState.received > b.readState.received ? a : b;
-    }
-  }
-
-  return null;
-}
-
-export class EntryList {
-  private cache = new Map<string, Entry>();
-  private boardURLIndex = new Map<string, Set<string>>();
-
-  add (entry:Entry):boolean {
-    var boardURL:string;
-
-    if (this.get(entry.url)) return false;
-
-    entry = app.deepCopy(entry);
-
-    this.cache.set(entry.url, entry);
-
-    if (entry.type === "thread") {
-      boardURL = threadToBoard(entry.url);
-      if (!this.boardURLIndex.has(boardURL)) {
-        this.boardURLIndex.set(boardURL, new Set());
-      }
-      this.boardURLIndex.get(boardURL)!.add(entry.url);
-    }
-    return true;
-  }
-
-  update (entry:Entry):boolean {
-    if (!this.get(entry.url)) return false;
-
-    this.cache.set(entry.url, app.deepCopy(entry));
-    return true;
-  }
-
-  remove (url:string):boolean {
-    var boardURL:string;
-
-    url = fixUrl(url);
-
-    if (!this.cache.has(url)) return false;
-
-    if (this.cache.get(url)!.type === "thread") {
-      boardURL = threadToBoard(url);
-      if (this.boardURLIndex.has(boardURL)) {
-        let threadList = this.boardURLIndex.get(boardURL)!;
-        if (threadList.has(url)) {
-          threadList.delete(url);
-        }
-      }
-    }
-
-    this.cache.delete(url);
-    return true;
-  }
-
-  import (target:EntryList):void {
-    for(var b of target.getAll()) {
-      var a:Entry;
-
-      if (a = this.get(b.url)) {
-        if (a.type === "thread" && b.type === "thread") {
-          if (newerEntry(a, b) === b) {
-            this.update(b);
+        this.bel.onChanged.add(({type: typeName, entry: bookmark}) => {
+          var type = "";
+          switch (typeName) {
+            case "ADD": type = "added"; break;
+            case "TITLE": type = "title"; break;
+            case "RES_COUNT": type = "res_count"; break;
+            case "EXPIRED": type = "expired"; break;
+            case "REMOVE": type = "removed"; break;
           }
-        }
-      }
-      else {
-        this.add(b);
-      }
-    }
+          if (type !== "") {
+            app.message.send("bookmark_updated", {type, bookmark});
+            return
+          }
+          if (typeName === "READ_STATE") {
+            app.message.send("read_state_updated", {
+              "board_url": threadToBoard(bookmark.url),
+              "read_state": bookmark.readState
+            });
+          }
+        });
+      });
+    });
+
+    // 鯖移転検出時処理
+    app.message.on("detected_ch_server_move", ({before, after}) => {
+      this.bel.serverMove(before, after);
+    });
   }
 
-  serverMove (from:string, to:string):void {
-    var entry:Entry, tmp, reg;
+  get (url:string):Entry|null {
+    var entry = this.bel.get(url);
 
-    // 板ブックマーク移行
-    if (entry = this.get(from)) {
-      this.remove(entry.url);
-      entry.url = to;
-      this.add(entry);
-    }
-
-    reg = /^https?:\/\/[\w\.]+\//
-    tmp = reg.exec(to)[0];
-    // スレブックマーク移行
-    for(var entry of this.getThreadsByBoardURL(from)) {
-      this.remove(entry.url);
-
-      entry.url = entry.url.replace(reg, tmp);
-      if (entry.readState) {
-        entry.readState.url = entry.url;
-      }
-
-      this.add(entry);
-    }
+    return entry ? entry : null;
   }
 
-  get (url:string):Entry {
-    url = fixUrl(url);
-
-    return this.cache.has(url) ? app.deepCopy(this.cache.get(url)) : null;
+  getByBoard (boardURL:string):Entry[] {
+    return this.bel.getThreadsByBoardURL(boardURL);
   }
 
   getAll ():Entry[] {
-    var res:Entry[] = Array.from(this.cache.values());
-
-    return app.deepCopy(res);
+    return this.bel.getAll();
   }
 
   getAllThreads ():Entry[] {
-    var res:Entry[] = Array.from(this.cache.values());
-
-    res = res.filter( ({type}) => type === "thread");
-
-    return app.deepCopy(res);
+    return this.bel.getAllThreads();
   }
 
   getAllBoards ():Entry[] {
-    var res:Entry[] = Array.from(this.cache.values());
-
-    res = res.filter( ({type}) => type === "board");
-
-    return app.deepCopy(res);
+    return this.bel.getAllBoards();
   }
 
-  getThreadsByBoardURL (url:string):Entry[] {
-    var res:Entry[] = [], threadURL:string;
+  async add (url:string, title:string, resCount?:number): Promise<boolean> {
+    var entry = BrowserBookmarkEntryList.URLToEntry(url)!;
 
-    url = fixUrl(url);
+    entry.title = title;
 
-    if (this.boardURLIndex.has(url)) {
-      for (threadURL of this.boardURLIndex.get(url)!) {
-        res.push(this.get(threadURL));
-      }
+    var readState = await getReadState(entry.url)
+    if (readState) {
+      entry.readState = readState;
     }
 
-    return app.deepCopy(res);
-  }
-}
-
-export interface BookmarkUpdateEvent {
-  type: string; //ADD, TITLE, RES_COUNT, READ_STATE, EXPIRED, REMOVE
-  entry: Entry;
-}
-
-export class SyncableEntryList extends EntryList{
-  onChanged = new app.Callbacks({persistent: true});
-  private observerForSync:Function;
-
-  constructor () {
-    super();
-
-    this.observerForSync = (e:BookmarkUpdateEvent) => {
-      this.manipulateByBookmarkUpdateEvent(e);
-    };
-  }
-
-  add (entry:Entry):boolean {
-    if (super.add(entry)) {
-      this.onChanged.call({
-        type: "ADD",
-        entry: app.deepCopy(entry)
-      });
-      return true;
+    if (
+      typeof resCount === "number" &&
+      (!entry.resCount || entry.resCount < resCount)
+    ) {
+      entry.resCount = resCount;
+    } else if (entry.readState) {
+      entry.resCount = entry.readState.received;
     }
-    else {
-      return false;
-    }
+
+    return this.bel.add(entry);
   }
 
-  update (entry:Entry):boolean {
-    var before = this.get(entry.url);
-
-    if (super.update(entry)) {
-      if (before.title !== entry.title) {
-        this.onChanged.call({
-          type: "TITLE",
-          entry: app.deepCopy(entry)
-        });
-      }
-
-      if (before.resCount !== entry.resCount) {
-        this.onChanged.call({
-          type: "RES_COUNT",
-          entry: app.deepCopy(entry)
-        });
-      }
-
-      if (
-        (!before.readState && entry.readState) ||
-        (
-          (before.readState && entry.readState) && (
-            before.readState.received !== entry.readState.received ||
-            before.readState.read !== entry.readState.read ||
-            before.readState.last !== entry.readState.last ||
-            before.readState.offset !== entry.readState.offset
-          )
-        )
-      ) {
-        this.onChanged.call({
-          type: "READ_STATE",
-          entry: app.deepCopy(entry)
-        });
-      }
-
-      if (before.expired !== entry.expired) {
-        this.onChanged.call({
-          type: "EXPIRED",
-          entry: app.deepCopy(entry)
-        });
-      }
-      return true;
-    }
-    else {
-      return false;
-    }
+  async remove (url:string):Promise<boolean> {
+    return this.bel.remove(url);
   }
 
-  remove (url:string):boolean {
-    var entry:Entry = this.get(url);
+  async updateReadState (readState):Promise<boolean> {
+    // TODO
+    var entry = this.bel.get(readState.url);
 
-    if (super.remove(url)) {
-      this.onChanged.call({
-        type: "REMOVE",
-        entry: entry
-      });
-      return true;
+    if (entry) {
+      entry.readState = readState;
+      return this.bel.update(entry);
     }
-    else {
-      return false;
+    return true;
+  }
+
+  async updateResCount (url:string, resCount:number):Promise<boolean> {
+    var entry = this.bel.get(url);
+
+    if (entry && (!entry.resCount || entry.resCount < resCount)) {
+      entry.resCount = resCount;
+      return this.bel.update(entry);
     }
+    return true;
   }
 
-  private manipulateByBookmarkUpdateEvent (e:BookmarkUpdateEvent) {
-    switch (e.type) {
-      case "ADD":
-        this.add(e.entry);
-        break;
-      case "TITLE":
-      case "RES_COUNT":
-      case "READ_STATE":
-      case "EXPIRED":
-        this.update(e.entry);
-        break;
-      case "REMOVE":
-        this.remove(e.entry.url);
-        break;
+  async updateExpired (url:string, expired:boolean):Promise<boolean> {
+    var entry = this.bel.get(url);
+
+    if (entry) {
+      entry.expired = expired;
+      return this.bel.update(entry);
     }
-  }
-
-  private followDeletion (b:EntryList):void {
-    var aList:string[], bList:string[], rmList:string[];
-
-    aList = this.getAll().map( ({url}) => url);
-    bList = b.getAll().map( ({url}) => url);
-
-    rmList = aList.filter( url => !bList.includes(url));
-
-    for(var url of rmList) {
-      this.remove(url);
-    }
-  }
-
-  syncStart (b:SyncableEntryList):void {
-    b.import(this);
-
-    this.syncResume(b);
-  }
-
-  syncResume (b:SyncableEntryList):void {
-    this.import(b);
-    this.followDeletion(b);
-
-    this.onChanged.add(b.observerForSync);
-    b.onChanged.add(this.observerForSync);
-  }
-
-  syncStop (b:SyncableEntryList):void {
-    this.onChanged.remove(b.observerForSync);
-    b.onChanged.remove(this.observerForSync);
+    return true;
   }
 }

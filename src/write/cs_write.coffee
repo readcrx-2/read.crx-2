@@ -86,6 +86,13 @@ do ->
       else if title.includes("ERROR") or title.includes("スレッド作成規制中")
         sendMessageError()
 
+    # まちBBS投稿確認
+    else if ///^https?://(?:\w+\.)?machi\.to/bbs/write\.cgi///.test(url)
+      if title.includes("ＥＲＲＯＲ")
+        sendMessageError()
+    else if ///^https?://(?:\w+\.)?machi\.to///.test(url)
+        sendMessageSuccess(1 * 1000)
+
     #open2ch投稿確認
     else if ///^https?://\w+\.open2ch\.net/test/bbs\.cgi///.test(url)
       font = document.getElementsByTagName("font")

@@ -18,8 +18,9 @@
       button.history_file_show(type="button") ファイル読み込み
       button.history_import_button(type="button") インポート
       br
-      input.direct(type="checkbox" name="no_history")
-      |閲覧履歴を保存しない(チェック時のみ有効)
+      label
+        input.direct(type="checkbox" name="no_history")
+        |閲覧履歴を保存しない(チェック時のみ有効)
 
   section
     h2 書込履歴
@@ -38,8 +39,9 @@
       button.writehistory_file_show(type="button") ファイル読み込み
       button.writehistory_import_button(type="button") インポート
       br
-      input.direct(type="checkbox" name="no_writehistory")
-      |書込履歴を保存しない(チェック時のみ有効)
+      label
+        input.direct(type="checkbox" name="no_writehistory")
+        |書込履歴を保存しない(チェック時のみ有効)
 
   section
     h2 キャッシュ

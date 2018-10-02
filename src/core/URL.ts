@@ -5,29 +5,29 @@ import {fetch as fetchBBSMenu} from "./BBSMenu.coffee"
 // @ts-ignore
 import Cache from "./Cache.coffee"
 
-export const CH_BOARD_REG = /^(https?:\/\/[\w\.]+\/(?:\w+\/)?test\/(?:read\.cgi|-)\/\w+\/\d+).*$/;
-export const CH_BOARD_REG2 = /^(https?:\/\/[\w\.]+\/\w+)\/?(?!test)$/;
-export const CH_BOARD_ULA_REG = /^(https?):\/\/ula\.5ch\.net\/2ch\/(\w+)\/([\w\.]+)\/(\d+).*$/;
-export const MACHI_BOARD_REG = /^(https?:\/\/\w+\.machi\.to\/bbs\/read\.cgi\/\w+\/\d+).*$/;
-export const SHITARABA_BOARD_REG = /^(https?):\/\/jbbs\.(?:livedoor\.jp|shitaraba\.net)\/(bbs\/read(?:_archive)?\.cgi\/\w+\/\d+\/\d+).*$/;
+export const CH_THREAD_REG = /^(https?:\/\/[\w\.]+\/(?:\w+\/)?test\/(?:read\.cgi|-)\/\w+\/\d+).*$/;
+export const CH_THREAD_REG2 = /^(https?:\/\/[\w\.]+\/\w+)\/?(?!test)$/;
+export const CH_THREAD_ULA_REG = /^(https?):\/\/ula\.5ch\.net\/2ch\/(\w+)\/([\w\.]+)\/(\d+).*$/;
+export const MACHI_THREAD_REG = /^(https?:\/\/\w+\.machi\.to\/bbs\/read\.cgi\/\w+\/\d+).*$/;
+export const SHITARABA_THREAD_REG = /^(https?):\/\/jbbs\.(?:livedoor\.jp|shitaraba\.net)\/(bbs\/read(?:_archive)?\.cgi\/\w+\/\d+\/\d+).*$/;
 export const SHITARABA_ARCHIVE_REG = /^(https?):\/\/jbbs\.(?:livedoor\.jp|shitaraba\.net)\/(\w+\/\d+)\/storage\/(\d+)\.html$/;
-export const CH_THREAD_REG = /^(https?:\/\/[\w\.]+\/(?:subback\/|test\/-\/)?\w+\/)(?:#.*)?$/;
-export const SHITARABA_THREAD_REG = /^(https?):\/\/jbbs\.(?:livedoor\.jp|shitaraba\.net)\/(\w+\/\d+\/)(?:#.*)?$/;
+export const CH_BOARD_REG = /^(https?:\/\/[\w\.]+\/(?:subback\/|test\/-\/)?\w+\/)(?:#.*)?$/;
+export const SHITARABA_BOARD_REG = /^(https?):\/\/jbbs\.(?:livedoor\.jp|shitaraba\.net)\/(\w+\/\d+\/)(?:#.*)?$/;
 export function fix (url:string):string {
   return (
     url
       //2ch.net->5ch.net
       .replace(/^(https?):\/\/(\w+)\.2ch\.net\//, "$1://$2.5ch.net/")
       // スレ系 誤爆する事は考えられないので、パラメータ部分をバッサリ切ってしまう
-      .replace(CH_BOARD_REG, "$1/")
-      .replace(CH_BOARD_REG2, "$1/")
-      .replace(CH_BOARD_ULA_REG, "$1://$3/test/read.cgi/$2/$4/")
-      .replace(MACHI_BOARD_REG, "$1/")
-      .replace(SHITARABA_BOARD_REG, "$1://jbbs.shitaraba.net/$2/")
+      .replace(CH_THREAD_REG, "$1/")
+      .replace(CH_THREAD_REG2, "$1/")
+      .replace(CH_THREAD_ULA_REG, "$1://$3/test/read.cgi/$2/$4/")
+      .replace(MACHI_THREAD_REG, "$1/")
+      .replace(SHITARABA_THREAD_REG, "$1://jbbs.shitaraba.net/$2/")
       .replace(SHITARABA_ARCHIVE_REG, "$1://jbbs.shitaraba.net/bbs/read_archive.cgi/$2/$3/")
       // 板系 完全に誤爆を少しでも減らすために、パラメータ形式も限定する
-      .replace(CH_THREAD_REG, "$1")
-      .replace(SHITARABA_THREAD_REG, "$1://jbbs.shitaraba.net/$2")
+      .replace(CH_BOARD_REG, "$1")
+      .replace(SHITARABA_BOARD_REG, "$1://jbbs.shitaraba.net/$2")
   );
 }
 

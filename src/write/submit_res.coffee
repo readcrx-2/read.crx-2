@@ -139,6 +139,21 @@ app.boot("/write/submit_res.html", ->
         textarea:
           MESSAGE: iframeArgs.rcrxMessage
       }
+    # まちBBS
+    else if bbsType is "machi"
+      return {
+        action: "#{scheme}://#{splittedUrl[2]}/bbs/write.cgi"
+        charset: "Shift_JIS"
+        input:
+          submit: "書きこむ"
+          TIME: (Date.now() // 1000) - 60
+          BBS: splittedUrl[5]
+          KEY: splittedUrl[6]
+          NAME: iframeArgs.rcrxName
+          MAIL: iframeArgs.rcrxMail
+        textarea:
+          MESSAGE: iframeArgs.rcrxMessage
+      }
     return
   )
   return

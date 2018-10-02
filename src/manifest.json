@@ -61,7 +61,8 @@
     {
       "matches" : [
         "*://*/test/bbs.cgi*",
-        "*://jbbs.shitaraba.net/bbs/write.cgi/*"
+        "*://jbbs.shitaraba.net/bbs/write.cgi/*",
+        "*://*.machi.to/*"
       ],
       "js" : ["/write/cs_write.js"],
       "run_at" : "document_end",

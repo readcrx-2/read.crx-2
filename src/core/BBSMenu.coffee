@@ -94,7 +94,7 @@ export get = (forceReload = false) ->
 parse = (html) ->
   regCategory = ///<b>(.+?)</b>(?:.*[\r\n]+<a\s.*?>.+?</a>)+///gi
   regBoard = ///<a\shref=(https?://(?!info\.[25]ch\.net/|headline\.bbspink\.com)
-    \w+\.(?:[25]ch\.net|machi\.to|open2ch\.net|2ch\.sc|bbspink\.com)/\w+/)(?:\s.*?)?>(.+?)</a>///gi
+    (?:\w+\.(?:[25]ch\.net|open2ch\.net|2ch\.sc|bbspink\.com)|(?:\w+\.)?machi\.to)/\w+/)(?:\s.*?)?>(.+?)</a>///gi
   menu = []
 
   while regCategoryRes = regCategory.exec(html)

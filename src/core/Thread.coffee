@@ -64,7 +64,10 @@ export default class Thread
           throw new Error("キャッシュの期限が切れているため通信します")
       catch
         #通信
-        if @tsld in ["shitaraba.net", "machi.to"]
+        if (
+          (@tsld is "shitaraba.net" and not @url.includes("/read_archive.cgi/")) or
+          @tsld is "machi.to"
+        )
           if hasCache
             deltaFlg = true
             xhrPath += (+cache.resLength + 1) + "-"
@@ -263,13 +266,26 @@ export default class Thread
             @message += "キャッシュに残っていたデータを表示します。"
           reject()
         else if @tsld is "shitaraba.net" and @url.includes("/read.cgi/")
-          newURL = @url.replace("/read.cgi/", "/read_archive.cgi/")
-          @message += """
-          スレッドの読み込みに失敗しました。
-          過去ログの可能性が有ります
-          (<a href="#{app.escapeHtml(app.safeHref(newURL))}"
-            class="open_in_rcrx">#{app.escapeHtml(newURL)}</a>)
-          """
+          @message += "スレッドの読み込みに失敗しました。"
+          {error} = response.headers
+          if error?
+            switch error
+              when "BBS NOT FOUND"
+                @message += "\nURLの掲示板番号が間違っています。"
+              when "KEY NOT FOUND"
+                @message += "\nURLのスレッド番号が間違っています。"
+              when "THREAD NOT FOUND"
+                @message += """
+                該当するスレッドは存在しません。
+                URLが間違っているか過去ログに移動せずに削除されています。
+                """
+              when "STORAGE IN"
+                newURL = @url.replace("/read.cgi/", "/read_archive.cgi/")
+                @message += """
+                過去ログが存在します
+                (<a href="#{app.escapeHtml(app.safeHref(newURL))}"
+                  class="open_in_rcrx">#{app.escapeHtml(newURL)}</a>)
+                """
           reject()
         else
           @message += "スレッドの読み込みに失敗しました。"
@@ -417,7 +433,6 @@ export default class Thread
   @_parseCh = (text) ->
     numberOfBroken = 0
     thread = res: []
-    first = true
 
     for line, key in text.split("\n")
       continue if line is ""
@@ -553,21 +568,23 @@ export default class Thread
   ###
   @_parseJbbsArchive = (text) ->
     # name, mail, other, message, thread_title
-    text = text.replace(/<dl><dt>/, "<dl>\n<dt>")
-    reg = /^<dt><a.*>\d+<\/a> ：(?:<a href="mailto:([^<>]*)">|<font [^>]*>)?<b>(.*)<\/b>.*：(.*)<dd> ?(.*)<br><br>$/
-    separator = "\n"
+    text = app.replaceAll(text, "\n", "")
+    text = text.replace(/<\/h1>\s*<dl>/, "</h1></dd><br><br>")
+    reg = /<dt[^>]*>\s*\d+ ：\s*(?:<a href="mailto:([^<>]*)">)?\s*(?:<font [^>]*>)?\s*<b>(.*)<\/b>.*：(.*)\s*<\/dt>\s*<dd>\s*(.*)\s*<br>/
+    separator = /<\/dd>[\s\n]*<br><br>/
 
-    titleReg = /<font size=.*?>(.*)\n?<\/font><\/b>/;
+    titleReg = /<h1>(.*)<\/h1>/;
     numberOfBroken = 0
     thread = res: []
-    first = true
+    gotTitle = false
 
     for line in text.split(separator)
-      title = titleReg.exec(line)
+      title = if gotTitle then false else titleReg.exec(line)
       regRes = reg.exec(line)
 
       if title
         thread.title = decodeCharReference(title[1])
+        gotTitle = true
       else if regRes
         thread.res.push(
           name: regRes[2]
@@ -606,7 +623,6 @@ export default class Thread
     numberOfBroken = 0
     thread = res: []
     gotTitle = false
-    first = true
     resCount = resLength ? 0
 
     for line in text.split(separator)

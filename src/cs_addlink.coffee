@@ -7,8 +7,8 @@ reg = ///^https?://(?:
   (?:jbbs\.shitaraba\.net/\w+/\d+/(?:index\.html)?(?:#\d+)?$)|
   (?:jbbs\.shitaraba\.net/bbs/read(?:_archive)?\.cgi/\w+/\d+/\d+)|
   (?:jbbs\.shitaraba\.net/\w+/\d+/storage/\d+\.html)|
-  (?:\w+\.machi\.to/\w+/(?:index\.html)?(?:#\d+)?$)|
-  (?:\w+\.machi\.to/bbs/read\.cgi/\w+/\d+)
+  (?:(?:\w+\.)?machi\.to/\w+/(?:index\.html)?(?:#\d+)?$)|
+  (?:(?:\w+\.)?machi\.to/bbs/read\.cgi/\w+/\d+)
   )
   ///
 

@@ -248,7 +248,7 @@ export default Write =
       return
 
     wake: ->
-      @kill if @_timer?
+      @kill() if @_timer?
       @timer = setTimeout( =>
         @onError("一定時間経過しても応答が無いため、処理を中断しました")
         return

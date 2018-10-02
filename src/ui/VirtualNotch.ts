@@ -18,7 +18,14 @@ export default class VirtualNotch {
   private onMouseWheel (e: any): void {
     var event: any;
 
-    this.wheelDelta += e.deltaY;
+    // @ts-ignore: true === falseは常にfalse
+    if ("&[BROWSER]" === "chrome") {
+      this.wheelDelta += e.deltaY;
+    // @ts-ignore: true === falseは常にfalse
+    } else if ("&[BROWSER]" === "firefox") {
+      this.wheelDelta += e.deltaY * 40;
+    }
+
     this.lastMouseWheel = Date.now();
 
     while (Math.abs(this.wheelDelta) >= this.threshold) {

@@ -41,7 +41,7 @@ browser.runtime.onMessage.addListener( ({type}) ->
 # 対応URLのチェック
 supportedURL = ///https?:\/\/(?:
   (?:[\w\.]+\/test\/read\.cgi\/\w+\/\d+\/.*?)|
-  (?:\w+\.machi\.to\/bbs\/read\.cgi\/\w+\/\d+\/.*?)|
+  (?:(?:\w+\.)?machi\.to\/bbs\/read\.cgi\/\w+\/\d+\/.*?)|
   (?:jbbs\.(?:livedoor\.jp|shitaraba\.net)\/bbs\/read(?:_archive)?\.cgi\/\w+\/\d+\/\d+\/.*?)|
   (?:jbbs\.(?:livedoor\.jp|shitaraba\.net)\/\w+\/\d+\/storage\/\d+\.html$)|
   (?:[\w\.]+\/\w+\/(?:\#.*)?)|

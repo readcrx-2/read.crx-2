@@ -1,7 +1,7 @@
 import Cache from "./Cache.coffee"
 import {isNGBoard} from "./NG.coffee"
 import {Request} from "./HTTP.ts"
-import {tsld as getTsld, threadToBoard} from "./URL.ts"
+import {fix as fixUrl, tsld as getTsld, threadToBoard} from "./URL.ts"
 import {chServerMoveDetect, decodeCharReference, removeNeedlessFromTitle} from "./util.coffee"
 
 ###*
@@ -10,7 +10,13 @@ import {chServerMoveDetect, decodeCharReference, removeNeedlessFromTitle} from "
 @param {String} url
 ###
 export default class Board
-  constructor: (@url) ->
+  constructor: (url) ->
+    ###*
+    @property url
+    @type String
+    ###
+    @url = fixUrl(url)
+
     ###*
     @property thread
     @type Array | null

@@ -64,7 +64,10 @@ export default class Thread
           throw new Error("キャッシュの期限が切れているため通信します")
       catch
         #通信
-        if @tsld in ["shitaraba.net", "machi.to"]
+        if (
+          (@tsld is "shitaraba.net" and not @url.includes("/read_archive.cgi/")) or
+          @tsld is "machi.to"
+        )
           if hasCache
             deltaFlg = true
             xhrPath += (+cache.resLength + 1) + "-"

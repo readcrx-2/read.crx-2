@@ -430,7 +430,6 @@ export default class Thread
   @_parseCh = (text) ->
     numberOfBroken = 0
     thread = res: []
-    first = true
 
     for line, key in text.split("\n")
       continue if line is ""
@@ -574,7 +573,6 @@ export default class Thread
     titleReg = /<h1>(.*)<\/h1>/;
     numberOfBroken = 0
     thread = res: []
-    first = true
     gotTitle = false
 
     for line in text.split(separator)
@@ -622,7 +620,6 @@ export default class Thread
     numberOfBroken = 0
     thread = res: []
     gotTitle = false
-    first = true
     resCount = resLength ? 0
 
     for line in text.split(separator)

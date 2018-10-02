@@ -263,13 +263,26 @@ export default class Thread
             @message += "キャッシュに残っていたデータを表示します。"
           reject()
         else if @tsld is "shitaraba.net" and @url.includes("/read.cgi/")
-          newURL = @url.replace("/read.cgi/", "/read_archive.cgi/")
-          @message += """
-          スレッドの読み込みに失敗しました。
-          過去ログの可能性が有ります
-          (<a href="#{app.escapeHtml(app.safeHref(newURL))}"
-            class="open_in_rcrx">#{app.escapeHtml(newURL)}</a>)
-          """
+          @message += "スレッドの読み込みに失敗しました。"
+          {error} = response.headers
+          if error?
+            switch error
+              when "BBS NOT FOUND"
+                @message += "\nURLの掲示板番号が間違っています。"
+              when "KEY NOT FOUND"
+                @message += "\nURLのスレッド番号が間違っています。"
+              when "THREAD NOT FOUND"
+                @message += """
+                該当するスレッドは存在しません。
+                URLが間違っているか過去ログに移動せずに削除されています。
+                """
+              when "STORAGE IN"
+                newURL = @url.replace("/read.cgi/", "/read_archive.cgi/")
+                @message += """
+                過去ログが存在します
+                (<a href="#{app.escapeHtml(app.safeHref(newURL))}"
+                  class="open_in_rcrx">#{app.escapeHtml(newURL)}</a>)
+                """
           reject()
         else
           @message += "スレッドの読み込みに失敗しました。"

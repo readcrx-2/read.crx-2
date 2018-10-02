@@ -566,21 +566,24 @@ export default class Thread
   ###
   @_parseJbbsArchive = (text) ->
     # name, mail, other, message, thread_title
-    text = text.replace(/<dl><dt>/, "<dl>\n<dt>")
-    reg = /^<dt><a.*>\d+<\/a> ：(?:<a href="mailto:([^<>]*)">|<font [^>]*>)?<b>(.*)<\/b>.*：(.*)<dd> ?(.*)<br><br>$/
-    separator = "\n"
+    text = app.replaceAll(text, "\n", "")
+    text = text.replace(/<\/h1>\s*<dl>/, "</h1></dd><br><br>")
+    reg = /<dt[^>]*>\s*\d+ ：\s*(?:<a href="mailto:([^<>]*)">)?\s*(?:<font [^>]*>)?\s*<b>(.*)<\/b>.*：(.*)\s*<\/dt>\s*<dd>\s*(.*)\s*<br>/
+    separator = /<\/dd>[\s\n]*<br><br>/
 
-    titleReg = /<font size=.*?>(.*)\n?<\/font><\/b>/;
+    titleReg = /<h1>(.*)<\/h1>/;
     numberOfBroken = 0
     thread = res: []
     first = true
+    gotTitle = false
 
     for line in text.split(separator)
-      title = titleReg.exec(line)
+      title = if gotTitle then false else titleReg.exec(line)
       regRes = reg.exec(line)
 
       if title
         thread.title = decodeCharReference(title[1])
+        gotTitle = true
       else if regRes
         thread.res.push(
           name: regRes[2]

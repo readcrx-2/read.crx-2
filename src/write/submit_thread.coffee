@@ -1,17 +1,19 @@
 import Write from "./write.coffee"
 import {tsld as getTsld} from "../core/URL.ts"
 
-app.boot("/write/submit_thread.html", ->
-  isThread = true
-  args = Write.getArgs()
-  Write.setupTheme()
-  Write.setDOM()
-  Write.setTitle({isThread})
+Write.setFont()
 
-  do ->
+class SubmitThread extends Write
+  _PONG_MSG: "write_iframe_pong:thread"
+
+  constructor: ->
+    super()
+    return
+
+  _setHeaderModifier: ->
     {id} = await browser.tabs.getCurrent()
     browser.webRequest.onBeforeSendHeaders.addListener(
-      Write.beforeSendFunc
+      @_beforeSendFunc()
       {
         tabId: id
         types: ["sub_frame"]
@@ -27,52 +29,55 @@ app.boot("/write/submit_thread.html", ->
     )
     return
 
-  $view = $$.C("view_write")[0]
+  _setTitle: ({isThread}) ->
+    title = @title + "板"
+    $h1 = @$view.T("h1")[0]
+    document.title = title
+    $h1.textContent = title
+    $h1.addClass("https") if getScheme(@url) is "https"
+    return
 
-  timer = new Write.Timer({
-    onError: Write.onErrorFunc
-  })
+  _onSuccess: (key) ->
+    mes = @$view.C("message")[0].value
+    name = @$view.C("name")[0].value
+    mail = @$view.C("mail")[0].value
+    title = @$view.C("title")[0].value
+    url = @url
 
-  Write.setupMessage({
-    timer
-    isThread
-    onSuccess: (key) ->
-      mes = $view.C("message")[0].value
-      name = $view.C("name")[0].value
-      mail = $view.C("mail")[0].value
-      title = $view.C("title")[0].value
-      {url} = args
+    if getTsld(url) in ["5ch.net", "2ch.sc", "bbspink.com", "open2ch.net"]
+      keys = key.match(/.*\/test\/read\.cgi\/(\w+?)\/(\d+)\/l\d+/)
+      unless keys?
+        $notice.textContent = "書き込み失敗 - 不明な転送場所"
+      else
+        server = url.match(/^(https?:\/\/\w+\.(?:5ch\.net|2ch\.sc|bbspink\.com|open2ch\.net)).*/)[1]
+        thread_url = "#{server}/test/read.cgi/#{keys[1]}/#{keys[2]}/"
+        browser.runtime.sendMessage({type: "written", kind: "own", url, thread_url, mes, name, mail, title})
+    else if getTsld(url) is "shitaraba.net"
+      browser.runtime.sendMessage({type: "written", kind: "board", url, mes, name, mail, title})
+    return
 
-      if getTsld(url) in ["5ch.net", "2ch.sc", "bbspink.com", "open2ch.net"]
-        keys = key.match(/.*\/test\/read\.cgi\/(\w+?)\/(\d+)\/l\d+/)
-        unless keys?
-          $notice.textContent = "書き込み失敗 - 不明な転送場所"
-        else
-          server = url.match(/^(https?:\/\/\w+\.(?:5ch\.net|2ch\.sc|bbspink\.com|open2ch\.net)).*/)[1]
-          thread_url = "#{server}/test/read.cgi/#{keys[1]}/#{keys[2]}/"
-          browser.runtime.sendMessage({type: "written", kind: "own", url, thread_url, mes, name, mail, title})
-      else if getTsld(url) is "shitaraba.net"
-        browser.runtime.sendMessage({type: "written", kind: "board", url, mes, name, mail, title})
-      return
-    onError: Write.onErrorFunc
-  })
+  _getIframeArgs: ->
+    args = super()
+    args.rcrxTitle = @$view.C("title")[0].value
+    return args
 
-  Write.setupForm(timer, isThread, (splittedUrl, iframeArgs, bbsType, scheme) ->
+  _getFormData: ->
+    {scheme, bbsType, splittedUrl, args} = super()
     #2ch
     if bbsType is "2ch"
       #open2ch
-      if getTsld(args.url) is "open2ch.net"
+      if getTsld(@url) is "open2ch.net"
         return {
           action: "#{scheme}://#{splittedUrl[2]}/test/bbs.cgi"
           charset: "UTF-8"
           input:
             submit: "新規スレッド作成"
             bbs: splittedUrl[3]
-            subject: iframeArgs.rcrxTitle
-            FROM: iframeArgs.rcrxName
-            mail: iframeArgs.rcrxMail
+            subject: args.rcrxTitle
+            FROM: args.rcrxName
+            mail: args.rcrxMail
           textarea:
-            MESSAGE: iframeArgs.rcrxMessage
+            MESSAGE: args.rcrxMessage
         }
       else
         return {
@@ -82,11 +87,11 @@ app.boot("/write/submit_thread.html", ->
             submit: "新規スレッド作成"
             time: (Date.now() // 1000) - 60
             bbs: splittedUrl[3]
-            subject: iframeArgs.rcrxTitle
-            FROM: iframeArgs.rcrxName
-            mail: iframeArgs.rcrxMail
+            subject: args.rcrxTitle
+            FROM: args.rcrxName
+            mail: args.rcrxMail
           textarea:
-            MESSAGE: iframeArgs.rcrxMessage
+            MESSAGE: args.rcrxMessage
         }
     #したらば
     else if bbsType is "jbbs"
@@ -98,13 +103,15 @@ app.boot("/write/submit_thread.html", ->
           TIME: (Date.now() // 1000) - 60
           DIR: splittedUrl[3]
           BBS: splittedUrl[4]
-          SUBJECT: iframeArgs.rcrxTitle
-          NAME: iframeArgs.rcrxName
-          MAIL: iframeArgs.rcrxMail
+          SUBJECT: args.rcrxTitle
+          NAME: args.rcrxName
+          MAIL: args.rcrxMail
         textarea:
-          MESSAGE: iframeArgs.rcrxMessage
+          MESSAGE: args.rcrxMessage
       }
     return
-  )
+
+app.boot("/write/submit_thread.html", ->
+  new SubmitThread()
   return
 )

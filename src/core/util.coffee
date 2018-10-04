@@ -8,12 +8,12 @@ import {levenshteinDistance} from "./Util.ts"
 @class Anchor
 スレッドフロートBBSで用いられる「アンカー」形式の文字列を扱う。
 ###
-export class Anchor
-  @reg =
+export Anchor =
+  reg:
     ANCHOR: /(?:&gt;|＞){1,2}[\d\uff10-\uff19]+(?:[\-\u30fc][\d\uff10-\uff19]+)?(?:\s*[,、]\s*[\d\uff10-\uff19]+(?:[\-\u30fc][\d\uff10-\uff19]+)?)*/g
     _FW_NUMBER: /[\uff10-\uff19]/g
 
-  @parseAnchor: (str) ->
+  parseAnchor: (str) ->
     data =
       targetCount: 0
       segments: []

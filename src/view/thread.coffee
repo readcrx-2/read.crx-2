@@ -1148,6 +1148,8 @@ app.viewThread._readStateManager = ($view) ->
   requestReloadFlag = false
   scanCountByReloaded = 0
   attachedReadState = {last: 0, read: 0, received: 0, offset: null}
+  readStateUpdated = false
+  allRead = false
 
   #read_stateの取得
   getReadState = do ->
@@ -1193,6 +1195,11 @@ app.viewThread._readStateManager = ($view) ->
       $view.emit(new CustomEvent("read_state_attached", detail: {jumpResNum, requestReloadFlag, loadCount}))
       if attachedReadState.read > 0 and attachedReadState.received > 0
         app.message.send("read_state_updated", {board_url: boardUrl, read_state: readState})
+        if allRead
+          app.ReadState.set(readState)
+          app.bookmark.updateReadState(readState)
+          readStateUpdated = false
+          allRead = false
       return
     # 2回目の処理
     # 画像のロードにより位置がずれることがあるので初回処理時の内容を使用する
@@ -1213,6 +1220,11 @@ app.viewThread._readStateManager = ($view) ->
     $view.emit(new CustomEvent("read_state_attached", detail: {jumpResNum, requestReloadFlag, loadCount}))
     if tmpReadState.read and tmpReadState.received
       app.message.send("read_state_updated", {board_url: boardUrl, read_state: tmpReadState})
+      if allRead
+        app.ReadState.set(tmpReadState)
+        app.bookmark.updateReadState(tmpReadState)
+        readStateUpdated = false
+        allRead = false
     requestReloadFlag = false
     return
   )
@@ -1256,6 +1268,7 @@ app.viewThread._readStateManager = ($view) ->
     if readState.read < last
       readState.read = last
       readStateUpdated = true
+      allRead = true if readState.read is received
 
     return
 
@@ -1285,6 +1298,10 @@ app.viewThread._readStateManager = ($view) ->
       scan(true)
       if readStateUpdated
         app.message.send("read_state_updated", {board_url: boardUrl, read_state: readState})
+      if allRead
+        app.ReadState.set(readState)
+        app.bookmark.updateReadState(readState)
+        allRead = false
       isScaning = false
       return
     doneScroll = false

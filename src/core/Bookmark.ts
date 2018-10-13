@@ -93,6 +93,28 @@ export default class Bookmark {
     return this.bel.remove(url);
   }
 
+  async removeAll ():Promise<boolean> {
+    var bookmarkData:Promise<boolean>[] = [];
+
+    for (var {url} of this.bel.getAll()) {
+      bookmarkData.push(this.bel.remove(url));
+    }
+
+    return Boolean(await Promise.all(bookmarkData));
+  }
+
+  async removeAllExpired ():Promise<boolean> {
+    var bookmarkData:Promise<boolean>[] = [];
+
+    for (var {url, expired} of this.bel.getAll()) {
+      if (expired) {
+        bookmarkData.push(this.bel.remove(url));
+      }
+    }
+
+    return Boolean(await Promise.all(bookmarkData));
+  }
+
   async updateReadState (readState):Promise<boolean> {
     // TODO
     var entry = this.bel.get(readState.url);
@@ -120,6 +142,36 @@ export default class Bookmark {
     if (entry) {
       entry.expired = expired;
       return this.bel.update(entry);
+    }
+    return true;
+  }
+
+  async import (newEntry:Entry):Promise<boolean> {
+    var entry = this.bel.get(newEntry.url);
+    var updateEntry = false;
+
+    if (!entry) {
+      await this.add(newEntry.url, newEntry.title);
+      entry = this.bel.get(newEntry.url)
+    }
+
+    if (newEntry.readState && isNewerReadState(entry.readState, newEntry.readState)) {
+      entry.readState = newEntry.readState;
+      updateEntry = true;
+    }
+
+    if (newEntry.resCount && (!entry.resCount || entry.resCount < newEntry.resCount)) {
+      entry.resCount = newEntry.resCount;
+      updateEntry = true;
+    }
+
+    if (entry.expired !== newEntry.expired) {
+      entry.expired = newEntry.expired;
+      updateEntry = true;
+    }
+
+    if (updateEntry) {
+      await this.bel.update(entry);
     }
     return true;
   }

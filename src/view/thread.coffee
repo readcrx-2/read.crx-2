@@ -1251,7 +1251,7 @@ app.viewThread._readStateManager = ($view) ->
     if lastDisplay
       if (
         (!requestReloadFlag or scanCountByReloaded is 1) and
-        (!lastDisplay.bottom or lastDisplay.resNum is last)
+        !lastDisplay.bottom
       )
         if (
           readState.last isnt lastDisplay.resNum or

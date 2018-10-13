@@ -1221,8 +1221,8 @@ app.viewThread._readStateManager = ($view) ->
     if tmpReadState.read and tmpReadState.received
       app.message.send("read_state_updated", {board_url: boardUrl, read_state: tmpReadState})
       if allRead
-        app.ReadState.set(tmpReadState)
-        app.bookmark.updateReadState(tmpReadState)
+        app.ReadState.set(attachedReadState)
+        app.bookmark.updateReadState(attachedReadState)
         readStateUpdated = false
         allRead = false
     requestReloadFlag = false
@@ -1301,6 +1301,7 @@ app.viewThread._readStateManager = ($view) ->
       if allRead
         app.ReadState.set(readState)
         app.bookmark.updateReadState(readState)
+        readStateUpdated = false
         allRead = false
       isScaning = false
       return

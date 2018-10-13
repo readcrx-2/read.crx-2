@@ -53,3 +53,33 @@ export function clipboardWrite (str:string):void {
   document.execCommand("copy");
   $textarea.remove();
 }
+
+export function isNewerReadState (a:any, b:any):Boolean {
+  if (!b) {
+    return false;
+  }
+  if (!a) {
+    return true;
+  }
+
+  if (a.received > b.received) {
+    return false;
+  }
+  if (a.received < b.received) {
+    return true;
+  }
+  if (a.read > b.read) {
+    return false;
+  }
+  if (a.read < b.read) {
+    return true;
+  }
+  if (a.last !== b.last) {
+    return true;
+  }
+  if (a.offset !== b.offset) {
+    return true;
+  }
+
+  return false;
+}

@@ -329,7 +329,11 @@ app.boot("/view/config.html", ["Cache", "BBSMenu"], (Cache, BBSMenu) ->
             return app.History.add(url, title, date, "")
           )
         historyData.concat(readState.map( (rs) ->
-          return app.ReadState.set(rs)
+          _rs = await app.ReadState.get(rs.url)
+          if app.isNewerReadState(_rs, rs)
+            return app.ReadState.set(rs)
+          else
+            return true
         ))
       )
     exportFunc: ->

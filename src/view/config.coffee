@@ -109,7 +109,7 @@ class HistoryIO extends SettingIO
       try
         await @clearFunc()
         @$status.textContent = ":削除完了"
-        parent.$$.$("iframe[src=\"/view/#{@name}.html\"]")?.contentWindow.C("view")[0].emit(new Event("request_reload"))
+        parent.$$.$("iframe[src=\"/view/#{@name}.html\"]")?.contentDocument.C("view")[0].emit(new Event("request_reload"))
       catch
         @$status.textContent = ":削除失敗"
 
@@ -131,7 +131,7 @@ class HistoryIO extends SettingIO
       try
         await @clearRangeFunc(parseInt($$.C("#{@name}_date_range")[0].value))
         @$status.textContent = ":範囲指定削除完了"
-        parent.$$.$("iframe[src=\"/view/#{@name}.html\"]")?.contentWindow.C("view")[0].emit(new Event("request_reload"))
+        parent.$$.$("iframe[src=\"/view/#{@name}.html\"]")?.contentDocument.C("view")[0].emit(new Event("request_reload"))
       catch
         @$status.textContent = ":範囲指定削除失敗"
 

@@ -1153,7 +1153,7 @@ app.viewThread._readStateManager = ($view) ->
 
   #read_stateの取得
   getReadState = do ->
-    readState = {received: 0, read: 0, last: 0, url: viewUrl, offset: null}
+    readState = {received: 0, read: 0, last: 0, url: viewUrl, offset: null, date:null}
     readStateUpdated = false
     if (bookmark = app.bookmark.get(viewUrl))?.readState?
       {readState} = bookmark
@@ -1196,6 +1196,7 @@ app.viewThread._readStateManager = ($view) ->
       if attachedReadState.read > 0 and attachedReadState.received > 0
         app.message.send("read_state_updated", {board_url: boardUrl, read_state: readState})
         if allRead
+          readState.date = Date.now()
           app.ReadState.set(readState)
           app.bookmark.updateReadState(readState)
           readStateUpdated = false
@@ -1221,6 +1222,7 @@ app.viewThread._readStateManager = ($view) ->
     if tmpReadState.read and tmpReadState.received
       app.message.send("read_state_updated", {board_url: boardUrl, read_state: tmpReadState})
       if allRead
+        attachedReadState.date = Date.now()
         app.ReadState.set(attachedReadState)
         app.bookmark.updateReadState(attachedReadState)
         readStateUpdated = false
@@ -1281,6 +1283,7 @@ app.viewThread._readStateManager = ($view) ->
         data = JSON.parse(localStorage["zombie_read_state"])
       else
         data = []
+      readState.date = Date.now()
       data.push(readState)
       localStorage["zombie_read_state"] = JSON.stringify(data)
     return
@@ -1299,6 +1302,7 @@ app.viewThread._readStateManager = ($view) ->
       if readStateUpdated
         app.message.send("read_state_updated", {board_url: boardUrl, read_state: readState})
       if allRead
+        readState.date = Date.now()
         app.ReadState.set(readState)
         app.bookmark.updateReadState(readState)
         readStateUpdated = false
@@ -1312,6 +1316,7 @@ app.viewThread._readStateManager = ($view) ->
   scanAndSave = ->
     scan()
     if readStateUpdated
+      readState.date = Date.now()
       app.ReadState.set(readState)
       app.bookmark.updateReadState(readState)
       readStateUpdated = false

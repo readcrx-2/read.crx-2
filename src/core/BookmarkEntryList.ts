@@ -1,5 +1,6 @@
 ///<reference path="../global.d.ts" />
 import {threadToBoard, fix as fixUrl} from "./URL"
+import {isNewerReadState} from "../app"
 
 export interface ReadState {
   url: string;
@@ -7,6 +8,7 @@ export interface ReadState {
   read: number;
   last: number;
   offset: number|null;
+  date: number|null;
 }
 
 export interface Entry {
@@ -24,19 +26,7 @@ export function newerEntry (a:Entry, b:Entry):Entry|null {
     return a.resCount > b.resCount ? a : b;
   }
 
-  if (Boolean(a.readState) !== Boolean(b.readState)) {
-    return a.readState ? a : b;
-  }
-
-  if (a.readState && b.readState) {
-    if (a.readState.read !== b.readState.read) {
-      return a.readState.read > b.readState.read ? a : b;
-    }
-
-    if (a.readState.received !== b.readState.received) {
-      return a.readState.received > b.readState.received ? a : b;
-    }
-  }
+  return isNewerReadState(a.readState, b.readState) ? b : a;
 
   return null;
 }
@@ -221,7 +211,8 @@ export class SyncableEntryList extends EntryList{
           before.readState.received !== entry.readState.received ||
           before.readState.read !== entry.readState.read ||
           before.readState.last !== entry.readState.last ||
-          before.readState.offset !== entry.readState.offset
+          before.readState.offset !== entry.readState.offset ||
+          before.readState.date !== entry.readState.date
         )
       )
     ) {

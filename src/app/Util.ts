@@ -1,3 +1,5 @@
+import {ReadState} from "../core/BookmarkEntryList"
+
 export function deepCopy (src:any):any {
   var copy:any, key:string;
 
@@ -54,7 +56,7 @@ export function clipboardWrite (str:string):void {
   $textarea.remove();
 }
 
-export function isNewerReadState (a:any, b:any):Boolean {
+export function isNewerReadState (a:ReadState|null, b:ReadState|null):Boolean {
   if (!b) {
     return false;
   }
@@ -62,16 +64,17 @@ export function isNewerReadState (a:any, b:any):Boolean {
     return true;
   }
 
-  if (a.received > b.received) {
+  if (a.received !== b.received) {
+    return (a.received < b.received);
+  }
+  if (a.read !== b.read) {
+    return (a.read < b.read);
+  }
+  if (a.date && b.date) {
+    return (a.date < b.date);
+  } else if (a.date) {
     return false;
-  }
-  if (a.received < b.received) {
-    return true;
-  }
-  if (a.read > b.read) {
-    return false;
-  }
-  if (a.read < b.read) {
+  } else if (b.date) {
     return true;
   }
   if (a.last !== b.last) {

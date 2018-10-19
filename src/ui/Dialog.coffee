@@ -27,6 +27,7 @@ export default Dialog = (method, prop) ->
         resolve(false)
       )
       document.body.addLast($dialog)
+      $dialog.C("dialog_no")[0].focus()
     else
       reject()
     return

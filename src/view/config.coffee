@@ -91,6 +91,7 @@ class HistoryIO extends SettingIO
     @exportFunc = exportFunc
 
     @$count = $$.I("#{@name}_count")
+    @$progress = $$.I("#{@name}_progress")
 
     @$clearButton = $$.C("#{@name}_clear")[0]
     @$clearRangeButton = $$.C("#{@name}_range_clear")[0]
@@ -157,8 +158,8 @@ class HistoryIO extends SettingIO
       if @importFile isnt ""
         @$status.setClass("loading")
         @$status.textContent = ":更新中"
-        await @importFunc(JSON.parse(@importFile))
         try
+          await @importFunc(JSON.parse(@importFile), @$progress)
           count = await @countFunc()
           @$status.setClass("done")
           @$status.textContent = ":インポート完了"
@@ -170,6 +171,7 @@ class HistoryIO extends SettingIO
       else
         @$status.addClass("fail")
         @$status.textContent = ":ファイルを選択してください"
+      @$progress.textContent = ""
       _clearExcute()
       return
     )
@@ -211,6 +213,7 @@ class BookmarkIO extends SettingIO
     @exportFunc = exportFunc
 
     @$count = $$.I("#{@name}_count")
+    @$progress = $$.I("#{@name}_progress")
 
     @$clearButton = $$.C("#{@name}_clear")[0]
     @$clearExpiredButton = $$.C("#{@name}_expired_clear")[0]
@@ -276,8 +279,8 @@ class BookmarkIO extends SettingIO
       if @importFile isnt ""
         @$status.setClass("loading")
         @$status.textContent = ":更新中"
-        await @importFunc(JSON.parse(@importFile))
         try
+          await @importFunc(JSON.parse(@importFile), @$progress)
           count = await @countFunc()
           @$status.setClass("done")
           @$status.textContent = ":インポート完了"
@@ -289,6 +292,7 @@ class BookmarkIO extends SettingIO
       else
         @$status.addClass("fail")
         @$status.textContent = ":ファイルを選択してください"
+      @$progress.textContent = ""
       _clearExcute()
       return
     )
@@ -495,25 +499,20 @@ app.boot("/view/config.html", ["Cache", "BBSMenu"], (Cache, BBSMenu) ->
     name: "history"
     countFunc: ->
       return app.History.count()
-    importFunc: ({history, read_state: readState, historyVersion = 1, readstateVersion = 1}) ->
-      return Promise.all(
-        if historyVersion > 1
-          historyData = history.map( ({url, title, date, boardTitle}) ->
-            return app.History.add(url, title, date, boardTitle)
-          )
-        else
-          historyData = history.map( ({url, title, date}) ->
-            return app.History.add(url, title, date, "")
-          )
-        historyData.concat(readState.map( (rs) ->
-          rs.date = null if readstateVersion is 1
-          _rs = await app.ReadState.get(rs.url)
-          if app.isNewerReadState(_rs, rs)
-            return app.ReadState.set(rs)
-          else
-            return true
-        ))
-      )
+    importFunc: ({history, read_state: readState, historyVersion = 1, readstateVersion = 1}, $progress) ->
+      total = history.length + readState.length
+      count = 0
+      for hs in history
+        hs.boardTitle = "" if historyVersion is 1
+        await app.History.add(hs.url, hs.title, hs.date, hs.boardTitle)
+        $progress.textContent = ":#{Math.floor((count++ / total) * 100)}%"
+      for rs in readState
+        rs.date = null if readstateVersion is 1
+        _rs = await app.ReadState.get(rs.url)
+        if app.isNewerReadState(_rs, rs)
+          await app.ReadState.set(rs)
+        $progress.textContent = ":#{Math.floor((count++ / total) * 100)}%"
+      return
     exportFunc: ->
       [readState, history] = await Promise.all([
         app.ReadState.getAll()
@@ -533,11 +532,13 @@ app.boot("/view/config.html", ["Cache", "BBSMenu"], (Cache, BBSMenu) ->
     name: "writehistory"
     countFunc: ->
       return app.WriteHistory.count()
-    importFunc: ({writehistory = null, dbVersion = 1}) ->
+    importFunc: ({writehistory = null, dbVersion = 1}, $progress) ->
       return Promise.resolve() unless writehistory
+      total = writehistory.length
+      count = 0
 
       unixTime201710 = 1506783600 # 2017/10/01 0:00:00
-      return Promise.all(writehistory.map( (whis) ->
+      for whis in writehistory
         whis.inputName = whis.input_name
         whis.inputMail = whis.input_mail
         if dbVersion < 2
@@ -545,8 +546,9 @@ app.boot("/view/config.html", ["Cache", "BBSMenu"], (Cache, BBSMenu) ->
             date = new Date(+whis.date)
             date.setMonth(date.getMonth()-1)
             whis.date = date.valueOf()
-        return app.WriteHistory.add(whis)
-      ))
+        await app.WriteHistory.add(whis)
+        $progress.textContent = ":#{Math.floor((count++ / total) * 100)}%"
+      return
     exportFunc: ->
       return {"writehistory": await app.WriteHistory.getAll(), "dbVersion": app.WriteHistory.DB_VERSION}
     clearFunc: ->
@@ -563,20 +565,19 @@ app.boot("/view/config.html", ["Cache", "BBSMenu"], (Cache, BBSMenu) ->
     name: "bookmark"
     countFunc: ->
       return app.bookmark.getAll().length
-    importFunc: ({bookmark, readState, readstateVersion = 1}) ->
-      return Promise.all(
-        bookmarkData = bookmark.map( (entry) ->
-          return app.bookmark.import(entry)
-        )
-        bookmarkData.concat(readState.map( (rs) ->
-          rs.date = null if readstateVersion is 1
-          _rs = await app.ReadState.get(rs.url)
-          if app.isNewerReadState(_rs, rs)
-            return app.ReadState.set(rs)
-          else
-            return true
-        ))
-      )
+    importFunc: ({bookmark, readState, readstateVersion = 1}, $progress) ->
+      total = bookmark.length + readState.length
+      count = 0
+      for bm in bookmark
+        await app.bookmark.import(bm)
+        $progress.textContent = ":#{Math.floor((count++ / total) * 100)}%"
+      for rs in readState
+        rs.date = null if readstateVersion is 1
+        _rs = await app.ReadState.get(rs.url)
+        if app.isNewerReadState(_rs, rs)
+          await app.ReadState.set(rs)
+        $progress.textContent = ":#{Math.floor((count++ / total) * 100)}%"
+      return
     exportFunc: ->
       [bookmark, readState] = await Promise.all([
         app.bookmark.getAll()

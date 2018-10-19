@@ -18,8 +18,10 @@ class SettingIO
     return
   setupFileSelectButton: ->
     @$fileSelectButton.on("click", =>
+      return unless _checkExcute(@name, "file_select")
       @$status.setClass("")
       @$fileSelectButtonHidden.click()
+      _clearExcute()
       return
     )
     @$fileSelectButtonHidden.on("change", (e) =>
@@ -36,6 +38,7 @@ class SettingIO
     return
   setupImportButton: ->
     @$importButton.on("click", =>
+      return unless _checkExcute(@name, "import")
       if @importFile isnt ""
         @$status.setClass("loading")
         @$status.textContent = "更新中"
@@ -49,11 +52,13 @@ class SettingIO
       else
         @$status.addClass("fail")
         @$status.textContent = "ファイルを選択してください"
+      _clearExcute()
       return
     )
     return
   setupExportButton: ->
     @$exportButton.on("click", =>
+      return unless _checkExcute(@name, "export")
       blob = new Blob([@exportFunc()], type: "text/plain")
       $a = $__("a").addClass("hidden")
       $a.href = URL.createObjectURL(blob)
@@ -61,6 +66,7 @@ class SettingIO
       @$exportButton.addAfter($a)
       $a.click()
       $a.remove()
+      _clearExcute()
       return
     )
     return
@@ -99,11 +105,13 @@ class HistoryIO extends SettingIO
     return
   setupClearButton: ->
     @$clearButton.on("click", =>
+      return unless _checkExcute(@name, "clear")
       result = await UI.Dialog("confirm",
         message: "本当に削除しますか？"
       )
-      return unless result
-      @$clearButton.addClass("hidden")
+      unless result
+        _clearExcute()
+        return
       @$status.textContent = ":削除中"
 
       try
@@ -115,17 +123,19 @@ class HistoryIO extends SettingIO
 
       @showCount()
       @afterChangedFunc()
-      @$clearButton.removeClass("hidden")
+      _clearExcute()
       return
     )
     return
   setupClearRangeButton: ->
     @$clearRangeButton.on("click", =>
+      return unless _checkExcute(@name, "clear_range")
       result = await UI.Dialog("confirm",
         message: "本当に削除しますか？"
       )
-      return unless result
-      @$clearRangeButton.addClass("hidden")
+      unless result
+        _clearExcute()
+        return
       @$status.textContent = ":範囲指定削除中"
 
       try
@@ -137,12 +147,13 @@ class HistoryIO extends SettingIO
 
       @showCount()
       @afterChangedFunc()
-      @$clearRangeButton.removeClass("hidden")
+      _clearExcute()
       return
     )
     return
   setupImportButton: ->
     @$importButton.on("click", =>
+      return unless _checkExcute(@name, "import")
       if @importFile isnt ""
         @$status.setClass("loading")
         @$status.textContent = ":更新中"
@@ -151,7 +162,6 @@ class HistoryIO extends SettingIO
           count = await @countFunc()
           @$status.setClass("done")
           @$status.textContent = ":インポート完了"
-          @$clearButton.removeClass("hidden")
         catch
           @$status.setClass("fail")
           @$status.textContent = ":インポート失敗"
@@ -160,11 +170,13 @@ class HistoryIO extends SettingIO
       else
         @$status.addClass("fail")
         @$status.textContent = ":ファイルを選択してください"
+      _clearExcute()
       return
     )
     return
   setupExportButton: ->
     @$exportButton.on("click", =>
+      return unless _checkExcute(@name, "export")
       data = await @exportFunc()
       exportText = JSON.stringify(data)
       blob = new Blob([exportText], type: "text/plain")
@@ -174,6 +186,7 @@ class HistoryIO extends SettingIO
       @$exportButton.addAfter($a)
       $a.click()
       $a.remove()
+      _clearExcute()
       return
     )
     return
@@ -212,11 +225,13 @@ class BookmarkIO extends SettingIO
     return
   setupClearButton: ->
     @$clearButton.on("click", =>
+      return unless _checkExcute(@name, "clear")
       result = await UI.Dialog("confirm",
         message: "本当に削除しますか？"
       )
-      return unless result
-      @$clearButton.addClass("hidden")
+      unless result
+        _clearExcute()
+        return
       @$status.textContent = ":削除中"
 
       try
@@ -227,16 +242,19 @@ class BookmarkIO extends SettingIO
 
       @showCount()
       @afterChangedFunc()
-      @$clearButton.removeClass("hidden")
+      _clearExcute()
       return
     )
     return
   setupClearExpiredButton: ->
     @$clearExpiredButton.on("click", =>
+      return unless _checkExcute(@name, "clear_expired")
       result = await UI.Dialog("confirm",
         message: "本当に削除しますか？"
       )
-      return unless result
+      unless result
+        _clearExcute()
+        return
       @$clearExpiredButton.addClass("hidden")
       @$status.textContent = ":dat落ち削除中"
 
@@ -248,12 +266,13 @@ class BookmarkIO extends SettingIO
 
       @showCount()
       @afterChangedFunc()
-      @$clearExpiredButton.removeClass("hidden")
+      _clearExcute()
       return
     )
     return
   setupImportButton: ->
     @$importButton.on("click", =>
+      return unless _checkExcute(@name, "import")
       if @importFile isnt ""
         @$status.setClass("loading")
         @$status.textContent = ":更新中"
@@ -262,7 +281,6 @@ class BookmarkIO extends SettingIO
           count = await @countFunc()
           @$status.setClass("done")
           @$status.textContent = ":インポート完了"
-          @$clearButton.removeClass("hidden")
         catch
           @$status.setClass("fail")
           @$status.textContent = ":インポート失敗"
@@ -271,11 +289,13 @@ class BookmarkIO extends SettingIO
       else
         @$status.addClass("fail")
         @$status.textContent = ":ファイルを選択してください"
+      _clearExcute()
       return
     )
     return
   setupExportButton: ->
     @$exportButton.on("click", =>
+      return unless _checkExcute(@name, "export")
       data = await @exportFunc()
       exportText = JSON.stringify(data)
       blob = new Blob([exportText], type: "text/plain")
@@ -285,9 +305,55 @@ class BookmarkIO extends SettingIO
       @$exportButton.addAfter($a)
       $a.click()
       $a.remove()
+      _clearExcute()
       return
     )
     return
+
+# 処理の排他制御用
+_excuteProcess = null
+_excuteFunction = null
+
+_procName = {
+  "history":      "閲覧履歴"
+  "writehistory": "書込履歴"
+  "bookmark":     "ブックマーク"
+  "cache":        "キャッシュ"
+  "config":       "設定"
+}
+_funcName = {
+  "import":       "インポート"
+  "export":       "エクスポート"
+  "clear":        "削除"
+  "clear_range":  "範囲指定削除"
+  "clear_expired":"dat落ち削除"
+  "file_select":  "ファイル読み込み"
+}
+
+_checkExcute = (procId, funcId) ->
+  unless _excuteProcess
+    _excuteProcess = procId
+    _excuteFunction = funcId
+    return true
+
+  message = null
+  if _excuteProcess is procId
+    if _excuteFunction is funcId
+      message = "既に実行中です。"
+    else
+      message = "#{_funcName[_excuteFunction]}の実行中です。"
+  else
+    message = "#{_procName[_excuteProcess]}の処理中です。"
+
+  if message
+    new app.Notification("現在この機能は使用できません", message, "", "invalid")
+
+  return false
+
+_clearExcute = ->
+  _excuteProcess = null
+  _excuteFunction = null
+  return
 
 app.boot("/view/config.html", ["Cache", "BBSMenu"], (Cache, BBSMenu) ->
   $view = document.documentElement
@@ -538,6 +604,7 @@ app.boot("/view/config.html", ["Cache", "BBSMenu"], (Cache, BBSMenu) ->
       return
 
     $clearButton.on("click", ->
+      return unless _checkExcute("cache", "clear")
       $status.textContent = ":削除中"
 
       try
@@ -548,11 +615,13 @@ app.boot("/view/config.html", ["Cache", "BBSMenu"], (Cache, BBSMenu) ->
 
       setCount()
       updateIndexedDBUsage()
+      _clearExcute()
       return
     )
     #キャッシュ範囲削除ボタン
     $clearRangeButton = $view.C("cache_range_clear")[0]
     $clearRangeButton.on("click", ->
+      return unless _checkExcute("cache", "clear_range")
       $status.textContent = ":範囲指定削除中"
 
       try
@@ -563,6 +632,7 @@ app.boot("/view/config.html", ["Cache", "BBSMenu"], (Cache, BBSMenu) ->
 
       setCount()
       updateIndexedDBUsage()
+      _clearExcute()
       return
     )
     return

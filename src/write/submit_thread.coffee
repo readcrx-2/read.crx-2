@@ -1,5 +1,5 @@
 import Write from "./write.coffee"
-import {tsld as getTsld} from "../core/URL.ts"
+import {tsld as getTsld, getScheme} from "../core/URL.ts"
 
 Write.setFont()
 
@@ -29,7 +29,7 @@ class SubmitThread extends Write
     )
     return
 
-  _setTitle: ({isThread}) ->
+  _setTitle: ->
     title = @title + "板"
     $h1 = @$view.T("h1")[0]
     document.title = title

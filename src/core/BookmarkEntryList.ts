@@ -1,6 +1,5 @@
 ///<reference path="../global.d.ts" />
 import {threadToBoard, fix as fixUrl} from "./URL"
-import {isNewerReadState} from "../app"
 
 export interface ReadState {
   url: string;
@@ -26,7 +25,7 @@ export function newerEntry (a:Entry, b:Entry):Entry|null {
     return a.resCount > b.resCount ? a : b;
   }
 
-  return isNewerReadState(a.readState, b.readState) ? b : a;
+  return app.util.isNewerReadState(a.readState, b.readState) ? b : a;
 
   return null;
 }

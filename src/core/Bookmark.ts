@@ -4,7 +4,6 @@ import BrowserBookmarkEntryList from "./BrowserBookmarkEntryList"
 import {threadToBoard} from "./URL"
 // @ts-ignore
 import {get as getReadState} from "./ReadState.coffee"
-import {isNewerReadState} from "../app"
 
 export default class Bookmark {
   bel: BrowserBookmarkEntryList;
@@ -119,7 +118,7 @@ export default class Bookmark {
     // TODO
     var entry = this.bel.get(readState.url);
 
-    if (entry && isNewerReadState(entry.readState, readState)) {
+    if (entry && app.util.isNewerReadState(entry.readState, readState)) {
       entry.readState = readState;
       return this.bel.update(entry);
     }
@@ -155,7 +154,7 @@ export default class Bookmark {
       entry = this.bel.get(newEntry.url)
     }
 
-    if (newEntry.readState && isNewerReadState(entry.readState, newEntry.readState)) {
+    if (newEntry.readState && app.util.isNewerReadState(entry.readState, newEntry.readState)) {
       entry.readState = newEntry.readState;
       updateEntry = true;
     }

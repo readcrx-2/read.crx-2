@@ -509,7 +509,7 @@ app.boot("/view/config.html", ["Cache", "BBSMenu"], (Cache, BBSMenu) ->
       for rs in readState
         rs.date = null if readstateVersion is 1
         _rs = await app.ReadState.get(rs.url)
-        if app.isNewerReadState(_rs, rs)
+        if app.util.isNewerReadState(_rs, rs)
           await app.ReadState.set(rs)
         $progress.textContent = ":#{Math.floor((count++ / total) * 100)}%"
       return
@@ -574,7 +574,7 @@ app.boot("/view/config.html", ["Cache", "BBSMenu"], (Cache, BBSMenu) ->
       for rs in readState
         rs.date = null if readstateVersion is 1
         _rs = await app.ReadState.get(rs.url)
-        if app.isNewerReadState(_rs, rs)
+        if app.util.isNewerReadState(_rs, rs)
           await app.ReadState.set(rs)
         $progress.textContent = ":#{Math.floor((count++ / total) * 100)}%"
       return

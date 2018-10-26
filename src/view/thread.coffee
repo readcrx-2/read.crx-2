@@ -1158,7 +1158,7 @@ app.viewThread._readStateManager = ($view) ->
     if (bookmark = app.bookmark.get(viewUrl))?.readState?
       {readState} = bookmark
     _readState = await app.ReadState.get(viewUrl)
-    readState = _readState if app.isNewerReadState(readState, _readState)
+    readState = _readState if app.util.isNewerReadState(readState, _readState)
     return {readState, readStateUpdated}
 
   #スレの描画時に、read_state関連のクラスを付与する

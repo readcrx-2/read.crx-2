@@ -258,7 +258,6 @@ class BookmarkIO extends SettingIO
       unless result
         _clearExcute()
         return
-      @$clearExpiredButton.addClass("hidden")
       @$status.textContent = ":dat落ち削除中"
 
       try

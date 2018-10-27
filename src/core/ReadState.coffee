@@ -5,18 +5,26 @@ import {fix as fixUrl, threadToBoard} from "./URL.ts"
 @class ReadState
 @static
 ###
+DB_VERSION = 2
 
 _openDB = new Promise( (resolve, reject) ->
-  req = indexedDB.open("ReadState", 1)
+  req = indexedDB.open("ReadState", DB_VERSION)
   req.onerror = (e) ->
     app.criticalError("既読情報管理システムの起動に失敗しました")
     reject(e)
     return
-  req.onupgradeneeded = ({ target: {result: db, transaction: tx} }) ->
-    objStore = db.createObjectStore("ReadState", keyPath: "url")
-    objStore.createIndex("board_url", "board_url", unique: false)
-    tx.oncomplete = ->
-      resolve(db)
+  req.onupgradeneeded = ({ target: {result: db, transaction: tx}, oldVersion: oldVer }) ->
+    if oldVer < 1
+      objStore = db.createObjectStore("ReadState", keyPath: "url")
+      objStore.createIndex("board_url", "board_url", unique: false)
+      tx.oncomplete = ->
+        resolve(db)
+        return
+    if oldVer is 1
+      _recoveryOfDate(db, tx)
+      tx.oncomplete = ->
+        resolve(db)
+        return
     return
   req.onsuccess = ({ target: {result: db} }) ->
     resolve(db)
@@ -51,6 +59,7 @@ export set = (readState) ->
       [readState.read, "number"]
       [readState.received, "number"]
       [readState.offset, "number", true]
+      [readState.date, "number", true]
     ])
   )
     throw new Error("既読情報に登録しようとしたデータが不正です")
@@ -162,3 +171,23 @@ export clear = ->
     app.log("error", "app.ReadState.clear: トランザクション中断")
     throw new Error(e)
   return
+
+_recoveryOfDate = (db, tx) ->
+  return new Promise( (resolve, reject) ->
+    req = tx
+      .objectStore("ReadState")
+      .openCursor()
+    req.onsuccess = ({ target: {result: cursor} }) ->
+      if cursor
+        cursor.value.date = null
+        cursor.update(cursor.value)
+        cursor.continue()
+      else
+        resolve()
+      return
+    req.onerror = (e) ->
+      app.log("error", "app.ReadState._recoveryOfDate: トランザクション中断")
+      reject(e)
+      return
+    return
+  )

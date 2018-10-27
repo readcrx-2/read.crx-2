@@ -2,17 +2,18 @@ import Write from "./write.coffee"
 import {getByUrl as getWriteHistoryByUrl} from "../core/WriteHistory.coffee"
 import {tsld as getTsld} from "../core/URL.ts"
 
-app.boot("/write/submit_res.html", ->
-  isThread = false
-  args = Write.getArgs()
-  Write.setupTheme()
-  Write.setDOM()
-  Write.setTitle({isThread})
+Write.setFont()
 
-  do ->
+class SubmitRes extends Write
+  constructor: ->
+    super()
+    @_setupDatalist()
+    return
+
+  _setHeaderModifier: ->
     {id} = await browser.tabs.getCurrent()
     browser.webRequest.onBeforeSendHeaders.addListener(
-      Write.beforeSendFunc
+      @_beforeSendFunc()
       {
         tabId: id
         types: ["sub_frame"]
@@ -40,10 +41,21 @@ app.boot("/write/submit_res.html", ->
     ["blocking", "responseHeaders"])
     return
 
-  $view = $$.C("view_write")[0]
+  _onError: (message) ->
+    super(message)
+    {url, message: mes, name, mail} = @
+    browser.runtime.sendMessage({type: "written?", url, mes, name, mail})
+    return
 
-  do ->
-    data = await getWriteHistoryByUrl(args.url)
+  _onSuccess: (key) ->
+    mes = @$view.C("message")[0].value
+    name = @$view.C("name")[0].value
+    mail = @$view.C("mail")[0].value
+    browser.runtime.sendMessage({type: "written", url: @url, mes, name, mail})
+    return
+
+  _setupDatalist: ->
+    data = await getWriteHistoryByUrl(@url)
     names = []
     mails = []
     for {input_name, input_mail} in data
@@ -70,34 +82,12 @@ app.boot("/write/submit_res.html", ->
     $$.I("main").addLast($names, $mails)
     return
 
-  onError = (message) ->
-    Write.onErrorFunc(message)
-
-    {url, message: mes, name, mail} = args
-    browser.runtime.sendMessage({type: "written?", url, mes, name, mail})
-    return
-
-  timer = new Write.Timer({
-    onError
-  })
-
-  Write.setupMessage({
-    timer
-    isThread
-    onSuccess: ->
-      mes = $view.C("message")[0].value
-      name = $view.C("name")[0].value
-      mail = $view.C("mail")[0].value
-      browser.runtime.sendMessage({type: "written", url: args.url, mes, name, mail})
-      return
-    onError
-  })
-
-  Write.setupForm(timer, isThread, (splittedUrl, iframeArgs, bbsType, scheme) ->
+  _getFormData: ->
+    {scheme, bbsType, splittedUrl, args} = super()
     #2ch
     if bbsType is "2ch"
       #open2ch
-      if getTsld(args.url) is "open2ch.net"
+      if getTsld(@url) is "open2ch.net"
         return {
           action: "#{scheme}://#{splittedUrl[2]}/test/bbs.cgi"
           charset: "UTF-8"
@@ -105,10 +95,10 @@ app.boot("/write/submit_res.html", ->
             submit: "書"
             bbs: splittedUrl[5]
             key: splittedUrl[6]
-            FROM: iframeArgs.rcrxName
-            mail: iframeArgs.rcrxMail
+            FROM: args.rcrxName
+            mail: args.rcrxMail
           textarea:
-            MESSAGE: iframeArgs.rcrxMessage
+            MESSAGE: args.rcrxMessage
         }
       else
         return {
@@ -119,10 +109,10 @@ app.boot("/write/submit_res.html", ->
             time: (Date.now() // 1000) - 60
             bbs: splittedUrl[5]
             key: splittedUrl[6]
-            FROM: iframeArgs.rcrxName
-            mail: iframeArgs.rcrxMail
+            FROM: args.rcrxName
+            mail: args.rcrxMail
           textarea:
-            MESSAGE: iframeArgs.rcrxMessage
+            MESSAGE: args.rcrxMessage
         }
     #したらば
     else if bbsType is "jbbs"
@@ -134,10 +124,10 @@ app.boot("/write/submit_res.html", ->
           DIR: splittedUrl[5]
           BBS: splittedUrl[6]
           KEY: splittedUrl[7]
-          NAME: iframeArgs.rcrxName
-          MAIL: iframeArgs.rcrxMail
+          NAME: args.rcrxName
+          MAIL: args.rcrxMail
         textarea:
-          MESSAGE: iframeArgs.rcrxMessage
+          MESSAGE: args.rcrxMessage
       }
     # まちBBS
     else if bbsType is "machi"
@@ -149,12 +139,14 @@ app.boot("/write/submit_res.html", ->
           TIME: (Date.now() // 1000) - 60
           BBS: splittedUrl[5]
           KEY: splittedUrl[6]
-          NAME: iframeArgs.rcrxName
-          MAIL: iframeArgs.rcrxMail
+          NAME: args.rcrxName
+          MAIL: args.rcrxMail
         textarea:
-          MESSAGE: iframeArgs.rcrxMessage
+          MESSAGE: args.rcrxMessage
       }
     return
-  )
+
+app.boot("/write/submit_res.html", ->
+  new SubmitRes()
   return
 )

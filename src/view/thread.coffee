@@ -1148,15 +1148,17 @@ app.viewThread._readStateManager = ($view) ->
   requestReloadFlag = false
   scanCountByReloaded = 0
   attachedReadState = {last: 0, read: 0, received: 0, offset: null}
+  readStateUpdated = false
+  allRead = false
 
   #read_stateの取得
   getReadState = do ->
+    readState = {received: 0, read: 0, last: 0, url: viewUrl, offset: null, date:null}
     readStateUpdated = false
     if (bookmark = app.bookmark.get(viewUrl))?.readState?
       {readState} = bookmark
-      return {readState, readStateUpdated}
     _readState = await app.ReadState.get(viewUrl)
-    readState = _readState or {received: 0, read: 0, last: 0, url: viewUrl, offset: null}
+    readState = _readState if app.util.isNewerReadState(readState, _readState)
     return {readState, readStateUpdated}
 
   #スレの描画時に、read_state関連のクラスを付与する
@@ -1193,6 +1195,12 @@ app.viewThread._readStateManager = ($view) ->
       $view.emit(new CustomEvent("read_state_attached", detail: {jumpResNum, requestReloadFlag, loadCount}))
       if attachedReadState.read > 0 and attachedReadState.received > 0
         app.message.send("read_state_updated", {board_url: boardUrl, read_state: readState})
+        if allRead
+          readState.date = Date.now()
+          app.ReadState.set(readState)
+          app.bookmark.updateReadState(readState)
+          readStateUpdated = false
+          allRead = false
       return
     # 2回目の処理
     # 画像のロードにより位置がずれることがあるので初回処理時の内容を使用する
@@ -1213,6 +1221,12 @@ app.viewThread._readStateManager = ($view) ->
     $view.emit(new CustomEvent("read_state_attached", detail: {jumpResNum, requestReloadFlag, loadCount}))
     if tmpReadState.read and tmpReadState.received
       app.message.send("read_state_updated", {board_url: boardUrl, read_state: tmpReadState})
+      if allRead
+        attachedReadState.date = Date.now()
+        app.ReadState.set(attachedReadState)
+        app.bookmark.updateReadState(attachedReadState)
+        readStateUpdated = false
+        allRead = false
     requestReloadFlag = false
     return
   )
@@ -1239,7 +1253,7 @@ app.viewThread._readStateManager = ($view) ->
     if lastDisplay
       if (
         (!requestReloadFlag or scanCountByReloaded is 1) and
-        (!lastDisplay.bottom or lastDisplay.resNum is last)
+        !lastDisplay.bottom
       )
         if (
           readState.last isnt lastDisplay.resNum or
@@ -1256,6 +1270,7 @@ app.viewThread._readStateManager = ($view) ->
     if readState.read < last
       readState.read = last
       readStateUpdated = true
+      allRead = true if readState.read is received
 
     return
 
@@ -1268,6 +1283,7 @@ app.viewThread._readStateManager = ($view) ->
         data = JSON.parse(localStorage["zombie_read_state"])
       else
         data = []
+      readState.date = Date.now()
       data.push(readState)
       localStorage["zombie_read_state"] = JSON.stringify(data)
     return
@@ -1285,6 +1301,12 @@ app.viewThread._readStateManager = ($view) ->
       scan(true)
       if readStateUpdated
         app.message.send("read_state_updated", {board_url: boardUrl, read_state: readState})
+      if allRead
+        readState.date = Date.now()
+        app.ReadState.set(readState)
+        app.bookmark.updateReadState(readState)
+        readStateUpdated = false
+        allRead = false
       isScaning = false
       return
     doneScroll = false
@@ -1294,6 +1316,7 @@ app.viewThread._readStateManager = ($view) ->
   scanAndSave = ->
     scan()
     if readStateUpdated
+      readState.date = Date.now()
       app.ReadState.set(readState)
       app.bookmark.updateReadState(readState)
       readStateUpdated = false

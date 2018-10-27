@@ -58,8 +58,6 @@ export default class Callbacks {
   }
 
   destroy ():void {
-    while (this._callbackStore[0]) {
-      this.remove(this._callbackStore[0]);
-    }
+    this._callbackStore.clear();
   }
 }

@@ -18,8 +18,10 @@ class SettingIO
     return
   setupFileSelectButton: ->
     @$fileSelectButton.on("click", =>
+      return unless _checkExcute(@name, "file_select")
       @$status.setClass("")
       @$fileSelectButtonHidden.click()
+      _clearExcute()
       return
     )
     @$fileSelectButtonHidden.on("change", (e) =>
@@ -36,6 +38,7 @@ class SettingIO
     return
   setupImportButton: ->
     @$importButton.on("click", =>
+      return unless _checkExcute(@name, "import")
       if @importFile isnt ""
         @$status.setClass("loading")
         @$status.textContent = "更新中"
@@ -49,11 +52,13 @@ class SettingIO
       else
         @$status.addClass("fail")
         @$status.textContent = "ファイルを選択してください"
+      _clearExcute()
       return
     )
     return
   setupExportButton: ->
     @$exportButton.on("click", =>
+      return unless _checkExcute(@name, "export")
       blob = new Blob([@exportFunc()], type: "text/plain")
       $a = $__("a").addClass("hidden")
       $a.href = URL.createObjectURL(blob)
@@ -61,6 +66,7 @@ class SettingIO
       @$exportButton.addAfter($a)
       $a.click()
       $a.remove()
+      _clearExcute()
       return
     )
     return
@@ -85,6 +91,7 @@ class HistoryIO extends SettingIO
     @exportFunc = exportFunc
 
     @$count = $$.I("#{@name}_count")
+    @$progress = $$.I("#{@name}_progress")
 
     @$clearButton = $$.C("#{@name}_clear")[0]
     @$clearRangeButton = $$.C("#{@name}_range_clear")[0]
@@ -99,59 +106,63 @@ class HistoryIO extends SettingIO
     return
   setupClearButton: ->
     @$clearButton.on("click", =>
+      return unless _checkExcute(@name, "clear")
       result = await UI.Dialog("confirm",
         message: "本当に削除しますか？"
       )
-      return unless result
-      @$clearButton.addClass("hidden")
+      unless result
+        _clearExcute()
+        return
       @$status.textContent = ":削除中"
 
       try
         await @clearFunc()
         @$status.textContent = ":削除完了"
-        parent.$$.$("iframe[src=\"/view/#{@name}.html\"]")?.contentWindow.C("view")[0].emit(new Event("request_reload"))
+        parent.$$.$("iframe[src=\"/view/#{@name}.html\"]")?.contentDocument.C("view")[0].emit(new Event("request_reload"))
       catch
         @$status.textContent = ":削除失敗"
 
       @showCount()
       @afterChangedFunc()
-      @$clearButton.removeClass("hidden")
+      _clearExcute()
       return
-    , once: true)
+    )
     return
   setupClearRangeButton: ->
     @$clearRangeButton.on("click", =>
+      return unless _checkExcute(@name, "clear_range")
       result = await UI.Dialog("confirm",
         message: "本当に削除しますか？"
       )
-      return unless result
-      @$clearRangeButton.addClass("hidden")
+      unless result
+        _clearExcute()
+        return
       @$status.textContent = ":範囲指定削除中"
 
       try
         await @clearRangeFunc(parseInt($$.C("#{@name}_date_range")[0].value))
         @$status.textContent = ":範囲指定削除完了"
-        parent.$$.$("iframe[src=\"/view/#{@name}.html\"]")?.contentWindow.C("view")[0].emit(new Event("request_reload"))
+        parent.$$.$("iframe[src=\"/view/#{@name}.html\"]")?.contentDocument.C("view")[0].emit(new Event("request_reload"))
       catch
         @$status.textContent = ":範囲指定削除失敗"
 
       @showCount()
       @afterChangedFunc()
-      @$clearRangeButton.removeClass("hidden")
+      _clearExcute()
       return
-    , once: true)
+    )
     return
   setupImportButton: ->
     @$importButton.on("click", =>
+      return unless _checkExcute(@name, "import")
       if @importFile isnt ""
         @$status.setClass("loading")
         @$status.textContent = ":更新中"
-        await @importFunc(JSON.parse(@importFile))
         try
+          await @importFunc(JSON.parse(@importFile), @$progress)
           count = await @countFunc()
           @$status.setClass("done")
           @$status.textContent = ":インポート完了"
-          @$clearButton.removeClass("hidden")
         catch
           @$status.setClass("fail")
           @$status.textContent = ":インポート失敗"
@@ -160,11 +171,14 @@ class HistoryIO extends SettingIO
       else
         @$status.addClass("fail")
         @$status.textContent = ":ファイルを選択してください"
+      @$progress.textContent = ""
+      _clearExcute()
       return
     )
     return
   setupExportButton: ->
     @$exportButton.on("click", =>
+      return unless _checkExcute(@name, "export")
       data = await @exportFunc()
       exportText = JSON.stringify(data)
       blob = new Blob([exportText], type: "text/plain")
@@ -174,9 +188,176 @@ class HistoryIO extends SettingIO
       @$exportButton.addAfter($a)
       $a.click()
       $a.remove()
+      _clearExcute()
       return
     )
     return
+
+class BookmarkIO extends SettingIO
+  constructor: ({
+    name
+    countFunc: @countFunc
+    importFunc
+    exportFunc
+    clearFunc: @clearFunc
+    clearExpiredFunc: @clearExpiredFunc
+    afterChangedFunc: @afterChangedFunc
+  }) ->
+    super({
+      name
+      importFunc
+      exportFunc
+    })
+    @name = name
+    @importFunc = importFunc
+    @exportFunc = exportFunc
+
+    @$count = $$.I("#{@name}_count")
+    @$progress = $$.I("#{@name}_progress")
+
+    @$clearButton = $$.C("#{@name}_clear")[0]
+    @$clearExpiredButton = $$.C("#{@name}_expired_clear")[0]
+
+    @showCount()
+    @setupClearButton()
+    @setupClearExpiredButton()
+    return
+  showCount: ->
+    count = await @countFunc()
+    @$count.textContent = "#{count}件"
+    return
+  setupClearButton: ->
+    @$clearButton.on("click", =>
+      return unless _checkExcute(@name, "clear")
+      result = await UI.Dialog("confirm",
+        message: "本当に削除しますか？"
+      )
+      unless result
+        _clearExcute()
+        return
+      @$status.textContent = ":削除中"
+
+      try
+        await @clearFunc()
+        @$status.textContent = ":削除完了"
+      catch
+        @$status.textContent = ":削除失敗"
+
+      @showCount()
+      @afterChangedFunc()
+      _clearExcute()
+      return
+    )
+    return
+  setupClearExpiredButton: ->
+    @$clearExpiredButton.on("click", =>
+      return unless _checkExcute(@name, "clear_expired")
+      result = await UI.Dialog("confirm",
+        message: "本当に削除しますか？"
+      )
+      unless result
+        _clearExcute()
+        return
+      @$clearExpiredButton.addClass("hidden")
+      @$status.textContent = ":dat落ち削除中"
+
+      try
+        await @clearExpiredFunc()
+        @$status.textContent = ":dat落ち削除完了"
+      catch
+        @$status.textContent = ":dat落ち削除失敗"
+
+      @showCount()
+      @afterChangedFunc()
+      _clearExcute()
+      return
+    )
+    return
+  setupImportButton: ->
+    @$importButton.on("click", =>
+      return unless _checkExcute(@name, "import")
+      if @importFile isnt ""
+        @$status.setClass("loading")
+        @$status.textContent = ":更新中"
+        try
+          await @importFunc(JSON.parse(@importFile), @$progress)
+          count = await @countFunc()
+          @$status.setClass("done")
+          @$status.textContent = ":インポート完了"
+        catch
+          @$status.setClass("fail")
+          @$status.textContent = ":インポート失敗"
+        @showCount()
+        @afterChangedFunc()
+      else
+        @$status.addClass("fail")
+        @$status.textContent = ":ファイルを選択してください"
+      @$progress.textContent = ""
+      _clearExcute()
+      return
+    )
+    return
+  setupExportButton: ->
+    @$exportButton.on("click", =>
+      return unless _checkExcute(@name, "export")
+      data = await @exportFunc()
+      exportText = JSON.stringify(data)
+      blob = new Blob([exportText], type: "text/plain")
+      $a = $__("a").addClass("hidden")
+      $a.href = URL.createObjectURL(blob)
+      $a.setAttr("download", "read.crx-2_#{@name}.json")
+      @$exportButton.addAfter($a)
+      $a.click()
+      $a.remove()
+      _clearExcute()
+      return
+    )
+    return
+
+# 処理の排他制御用
+_excuteProcess = null
+_excuteFunction = null
+
+_procName = {
+  "history":      "閲覧履歴"
+  "writehistory": "書込履歴"
+  "bookmark":     "ブックマーク"
+  "cache":        "キャッシュ"
+  "config":       "設定"
+}
+_funcName = {
+  "import":       "インポート"
+  "export":       "エクスポート"
+  "clear":        "削除"
+  "clear_range":  "範囲指定削除"
+  "clear_expired":"dat落ち削除"
+  "file_select":  "ファイル読み込み"
+}
+
+_checkExcute = (procId, funcId) ->
+  unless _excuteProcess
+    _excuteProcess = procId
+    _excuteFunction = funcId
+    return true
+
+  message = null
+  if _excuteProcess is procId
+    if _excuteFunction is funcId
+      message = "既に実行中です。"
+    else
+      message = "#{_funcName[_excuteFunction]}の実行中です。"
+  else
+    message = "#{_procName[_excuteProcess]}の処理中です。"
+
+  if message
+    new app.Notification("現在この機能は使用できません", message, "", "invalid")
+
+  return false
+
+_clearExcute = ->
+  _excuteProcess = null
+  _excuteFunction = null
+  return
 
 app.boot("/view/config.html", ["Cache", "BBSMenu"], (Cache, BBSMenu) ->
   $view = document.documentElement
@@ -202,11 +383,20 @@ app.boot("/view/config.html", ["Cache", "BBSMenu"], (Cache, BBSMenu) ->
 
   whenClose = ->
     #NG設定
-    app.NG.set($view.$("textarea[name=\"ngwords\"]").value)
+    dom = $view.$("textarea[name=\"ngwords\"]")
+    if dom.getAttr("changed")?
+      dom.removeAttr("changed")
+      app.NG.set(dom.value)
     #ImageReplaceDat設定
-    app.ImageReplaceDat.set($view.$("textarea[name=\"image_replace_dat\"]").value)
+    dom = $view.$("textarea[name=\"image_replace_dat\"]")
+    if dom.getAttr("changed")?
+      dom.removeAttr("changed")
+      app.ImageReplaceDat.set(dom.value)
     #ReplaceStrTxt設定
-    app.ReplaceStrTxt.set($view.$("textarea[name=\"replace_str_txt\"]").value)
+    dom = $view.$("textarea[name=\"replace_str_txt\"]")
+    if dom.getAttr("changed")?
+      dom.removeAttr("changed")
+      app.ReplaceStrTxt.set(dom.value)
     return
 
   #閉じるボタン
@@ -217,7 +407,7 @@ app.boot("/view/config.html", ["Cache", "BBSMenu"], (Cache, BBSMenu) ->
     return
   )
 
-  window.on("view_unload", ->
+  window.on("beforeunload", ->
     whenClose()
     return
   )
@@ -234,6 +424,7 @@ app.boot("/view/config.html", ["Cache", "BBSMenu"], (Cache, BBSMenu) ->
     dom.value = app.config.get(dom.name) or ""
     dom.on("input", ->
       app.config.set(@name, @value)
+      @setAttr("changed", "true")
       return
     )
 
@@ -318,26 +509,26 @@ app.boot("/view/config.html", ["Cache", "BBSMenu"], (Cache, BBSMenu) ->
     name: "history"
     countFunc: ->
       return app.History.count()
-    importFunc: ({history, read_state: readState, historyVersion = 1}) ->
-      return Promise.all(
-        if historyVersion > 1
-          historyData = history.map( ({url, title, date, boardTitle}) ->
-            return app.History.add(url, title, date, boardTitle)
-          )
-        else
-          historyData = history.map( ({url, title, date}) ->
-            return app.History.add(url, title, date, "")
-          )
-        historyData.concat(readState.map( (rs) ->
-          return app.ReadState.set(rs)
-        ))
-      )
+    importFunc: ({history, read_state: readState, historyVersion = 1, readstateVersion = 1}, $progress) ->
+      total = history.length + readState.length
+      count = 0
+      for hs in history
+        hs.boardTitle = "" if historyVersion is 1
+        await app.History.add(hs.url, hs.title, hs.date, hs.boardTitle)
+        $progress.textContent = ":#{Math.floor((count++ / total) * 100)}%"
+      for rs in readState
+        rs.date = null if readstateVersion is 1
+        _rs = await app.ReadState.get(rs.url)
+        if app.util.isNewerReadState(_rs, rs)
+          await app.ReadState.set(rs)
+        $progress.textContent = ":#{Math.floor((count++ / total) * 100)}%"
+      return
     exportFunc: ->
       [readState, history] = await Promise.all([
         app.ReadState.getAll()
         app.History.getAll()
       ])
-      return {"read_state": readState, "history": history, "historyVersion": app.History.DB_VERSION}
+      return {"read_state": readState, "history": history, "historyVersion": app.History.DB_VERSION, "readstateVersion": app.ReadState.DB_VERSION}
     clearFunc: ->
       return Promise.all([app.History.clear(), app.ReadState.clear()])
     clearRangeFunc: (day) ->
@@ -351,11 +542,13 @@ app.boot("/view/config.html", ["Cache", "BBSMenu"], (Cache, BBSMenu) ->
     name: "writehistory"
     countFunc: ->
       return app.WriteHistory.count()
-    importFunc: ({writehistory = null, dbVersion = 1}) ->
+    importFunc: ({writehistory = null, dbVersion = 1}, $progress) ->
       return Promise.resolve() unless writehistory
+      total = writehistory.length
+      count = 0
 
       unixTime201710 = 1506783600 # 2017/10/01 0:00:00
-      return Promise.all(writehistory.map( (whis) ->
+      for whis in writehistory
         whis.inputName = whis.input_name
         whis.inputMail = whis.input_mail
         if dbVersion < 2
@@ -363,14 +556,48 @@ app.boot("/view/config.html", ["Cache", "BBSMenu"], (Cache, BBSMenu) ->
             date = new Date(+whis.date)
             date.setMonth(date.getMonth()-1)
             whis.date = date.valueOf()
-        return app.WriteHistory.add(whis)
-      ))
+        await app.WriteHistory.add(whis)
+        $progress.textContent = ":#{Math.floor((count++ / total) * 100)}%"
+      return
     exportFunc: ->
       return {"writehistory": await app.WriteHistory.getAll(), "dbVersion": app.WriteHistory.DB_VERSION}
     clearFunc: ->
       return app.WriteHistory.clear()
     clearRangeFunc: (day) ->
       return app.WriteHistory.clearRange(day)
+    afterChangedFunc: ->
+      updateIndexedDBUsage()
+      return
+  )
+
+  # ブックマーク
+  new BookmarkIO(
+    name: "bookmark"
+    countFunc: ->
+      return app.bookmark.getAll().length
+    importFunc: ({bookmark, readState, readstateVersion = 1}, $progress) ->
+      total = bookmark.length + readState.length
+      count = 0
+      for bm in bookmark
+        await app.bookmark.import(bm)
+        $progress.textContent = ":#{Math.floor((count++ / total) * 100)}%"
+      for rs in readState
+        rs.date = null if readstateVersion is 1
+        _rs = await app.ReadState.get(rs.url)
+        if app.util.isNewerReadState(_rs, rs)
+          await app.ReadState.set(rs)
+        $progress.textContent = ":#{Math.floor((count++ / total) * 100)}%"
+      return
+    exportFunc: ->
+      [bookmark, readState] = await Promise.all([
+        app.bookmark.getAll()
+        app.ReadState.getAll()
+      ])
+      return {"bookmark": bookmark, "readState": readState, "readstateVersion": app.ReadState.DB_VERSION}
+    clearFunc: ->
+      return app.bookmark.removeAll()
+    clearExpiredFunc: ->
+      return app.bookmark.removeAllExpired()
     afterChangedFunc: ->
       updateIndexedDBUsage()
       return
@@ -388,6 +615,7 @@ app.boot("/view/config.html", ["Cache", "BBSMenu"], (Cache, BBSMenu) ->
       return
 
     $clearButton.on("click", ->
+      return unless _checkExcute("cache", "clear")
       $status.textContent = ":削除中"
 
       try
@@ -398,11 +626,13 @@ app.boot("/view/config.html", ["Cache", "BBSMenu"], (Cache, BBSMenu) ->
 
       setCount()
       updateIndexedDBUsage()
+      _clearExcute()
       return
     )
     #キャッシュ範囲削除ボタン
     $clearRangeButton = $view.C("cache_range_clear")[0]
     $clearRangeButton.on("click", ->
+      return unless _checkExcute("cache", "clear_range")
       $status.textContent = ":範囲指定削除中"
 
       try
@@ -413,6 +643,7 @@ app.boot("/view/config.html", ["Cache", "BBSMenu"], (Cache, BBSMenu) ->
 
       setCount()
       updateIndexedDBUsage()
+      _clearExcute()
       return
     )
     return

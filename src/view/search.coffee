@@ -96,12 +96,8 @@ app.boot("/view/search.html", ["ThreadSearch"], (ThreadSearch) ->
     return
   )
 
-  window.on("view_unload", ->
-    app.config.set("thread_search_last_mode", scheme)
-    return
-  )
-
   await load()
   onScroll() # 20件分がスクロールなしで表示できる場合
+  app.config.set("thread_search_last_mode", scheme)
   return
 )

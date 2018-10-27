@@ -8,12 +8,12 @@ import {levenshteinDistance} from "./Util.ts"
 @class Anchor
 スレッドフロートBBSで用いられる「アンカー」形式の文字列を扱う。
 ###
-export class Anchor
-  @reg =
+export Anchor =
+  reg:
     ANCHOR: /(?:&gt;|＞){1,2}[\d\uff10-\uff19]+(?:[\-\u30fc][\d\uff10-\uff19]+)?(?:\s*[,、]\s*[\d\uff10-\uff19]+(?:[\-\u30fc][\d\uff10-\uff19]+)?)*/g
     _FW_NUMBER: /[\uff10-\uff19]/g
 
-  @parseAnchor: (str) ->
+  parseAnchor: (str) ->
     data =
       targetCount: 0
       segments: []
@@ -242,3 +242,26 @@ export stringToDate = (string) ->
   if flg
     return new Date(date[1], date[2] - 1, date[3], date[4], date[5], date[6])
   return null
+
+export isNewerReadState = (a, b) ->
+  if !b
+    return false
+  if !a
+    return true
+
+  if a.received isnt b.received
+    return (a.received < b.received)
+  if a.read isnt b.read
+    return (a.read < b.read)
+  if a.date and b.date
+    return (a.date < b.date)
+  else if a.date
+    return false
+  else if b.date
+    return true
+  if a.last isnt b.last
+    return true
+  if a.offset isnt b.offset
+    return true
+
+  return false

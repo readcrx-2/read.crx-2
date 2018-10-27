@@ -37,6 +37,9 @@ export default class BrowserBookmarkEntryList extends SyncableEntryList {
       if (entry.readState.offset) {
         param.offset = entry.readState.offset;
       }
+      if (entry.readState.date) {
+        param.date = entry.readState.date;
+      }
     }
 
     if (entry.expired === true) {
@@ -84,7 +87,8 @@ export default class BrowserBookmarkEntryList extends SyncableEntryList {
         received: +arg.get("received"),
         read: +arg.get("read"),
         last: +arg.get("last"),
-        offset: arg.get("offset") ? +arg.get("offset") : null
+        offset: arg.get("offset") ? +arg.get("offset") : null,
+        date: arg.get("date") ? +arg.get("date") : null
       };
     }
 

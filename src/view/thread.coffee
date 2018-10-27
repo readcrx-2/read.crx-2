@@ -1153,12 +1153,12 @@ app.viewThread._readStateManager = ($view) ->
 
   #read_stateの取得
   getReadState = do ->
+    readState = {received: 0, read: 0, last: 0, url: viewUrl, offset: null, date:null}
     readStateUpdated = false
     if (bookmark = app.bookmark.get(viewUrl))?.readState?
       {readState} = bookmark
-      return {readState, readStateUpdated}
     _readState = await app.ReadState.get(viewUrl)
-    readState = _readState or {received: 0, read: 0, last: 0, url: viewUrl, offset: null}
+    readState = _readState if app.util.isNewerReadState(readState, _readState)
     return {readState, readStateUpdated}
 
   #スレの描画時に、read_state関連のクラスを付与する
@@ -1196,6 +1196,7 @@ app.viewThread._readStateManager = ($view) ->
       if attachedReadState.read > 0 and attachedReadState.received > 0
         app.message.send("read_state_updated", {board_url: boardUrl, read_state: readState})
         if allRead
+          readState.date = Date.now()
           app.ReadState.set(readState)
           app.bookmark.updateReadState(readState)
           readStateUpdated = false
@@ -1221,8 +1222,9 @@ app.viewThread._readStateManager = ($view) ->
     if tmpReadState.read and tmpReadState.received
       app.message.send("read_state_updated", {board_url: boardUrl, read_state: tmpReadState})
       if allRead
-        app.ReadState.set(tmpReadState)
-        app.bookmark.updateReadState(tmpReadState)
+        attachedReadState.date = Date.now()
+        app.ReadState.set(attachedReadState)
+        app.bookmark.updateReadState(attachedReadState)
         readStateUpdated = false
         allRead = false
     requestReloadFlag = false
@@ -1251,7 +1253,7 @@ app.viewThread._readStateManager = ($view) ->
     if lastDisplay
       if (
         (!requestReloadFlag or scanCountByReloaded is 1) and
-        (!lastDisplay.bottom or lastDisplay.resNum is last)
+        !lastDisplay.bottom
       )
         if (
           readState.last isnt lastDisplay.resNum or
@@ -1281,6 +1283,7 @@ app.viewThread._readStateManager = ($view) ->
         data = JSON.parse(localStorage["zombie_read_state"])
       else
         data = []
+      readState.date = Date.now()
       data.push(readState)
       localStorage["zombie_read_state"] = JSON.stringify(data)
     return
@@ -1299,8 +1302,10 @@ app.viewThread._readStateManager = ($view) ->
       if readStateUpdated
         app.message.send("read_state_updated", {board_url: boardUrl, read_state: readState})
       if allRead
+        readState.date = Date.now()
         app.ReadState.set(readState)
         app.bookmark.updateReadState(readState)
+        readStateUpdated = false
         allRead = false
       isScaning = false
       return
@@ -1311,6 +1316,7 @@ app.viewThread._readStateManager = ($view) ->
   scanAndSave = ->
     scan()
     if readStateUpdated
+      readState.date = Date.now()
       app.ReadState.set(readState)
       app.bookmark.updateReadState(readState)
       readStateUpdated = false

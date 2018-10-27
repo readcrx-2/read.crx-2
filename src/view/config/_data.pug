@@ -6,6 +6,7 @@
     div.history
       span#history_count
       span#history_status
+      span#history_progress
       br
       button.history_clear(type="button") 削除
       |/
@@ -27,6 +28,7 @@
     div.writehistory
       span#writehistory_count
       span#writehistory_status
+      span#writehistory_progress
       br
       button.writehistory_clear(type="button") 削除
       |/
@@ -42,6 +44,23 @@
       label
         input.direct(type="checkbox" name="no_writehistory")
         |書込履歴を保存しない(チェック時のみ有効)
+
+  section
+    h2 ブックマーク
+    div.bookmark
+      span#bookmark_count
+      span#bookmark_status
+      span#bookmark_progress
+      br
+      button.bookmark_clear(type="button") 削除
+      |/
+      |dat落ちしたブックマークを
+      button.bookmark_expired_clear(type="button") 削除
+      br
+      input.hidden.bookmark_file_hide(type="file" accept=".json")
+      button.bookmark_export_button(type="button") エクスポート
+      button.bookmark_file_show(type="button") ファイル読み込み
+      button.bookmark_import_button(type="button") インポート
 
   section
     h2 キャッシュ

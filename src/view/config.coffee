@@ -383,11 +383,20 @@ app.boot("/view/config.html", ["Cache", "BBSMenu"], (Cache, BBSMenu) ->
 
   whenClose = ->
     #NG設定
-    app.NG.set($view.$("textarea[name=\"ngwords\"]").value)
+    dom = $view.$("textarea[name=\"ngwords\"]")
+    if dom.getAttr("changed")?
+      dom.removeAttr("changed")
+      app.NG.set(dom.value)
     #ImageReplaceDat設定
-    app.ImageReplaceDat.set($view.$("textarea[name=\"image_replace_dat\"]").value)
+    dom = $view.$("textarea[name=\"image_replace_dat\"]")
+    if dom.getAttr("changed")?
+      dom.removeAttr("changed")
+      app.ImageReplaceDat.set(dom.value)
     #ReplaceStrTxt設定
-    app.ReplaceStrTxt.set($view.$("textarea[name=\"replace_str_txt\"]").value)
+    dom = $view.$("textarea[name=\"replace_str_txt\"]")
+    if dom.getAttr("changed")?
+      dom.removeAttr("changed")
+      app.ReplaceStrTxt.set(dom.value)
     return
 
   #閉じるボタン
@@ -398,7 +407,7 @@ app.boot("/view/config.html", ["Cache", "BBSMenu"], (Cache, BBSMenu) ->
     return
   )
 
-  window.on("view_unload", ->
+  window.on("beforeunload", ->
     whenClose()
     return
   )
@@ -415,6 +424,7 @@ app.boot("/view/config.html", ["Cache", "BBSMenu"], (Cache, BBSMenu) ->
     dom.value = app.config.get(dom.name) or ""
     dom.on("input", ->
       app.config.set(@name, @value)
+      @setAttr("changed", "true")
       return
     )
 

@@ -215,6 +215,11 @@ app.boot("/view/thread.html", ->
               $res = dom
               break
             threadContent.scrollTo($res, true) if $res?
+          when "latest50"
+            lastResNum = +$content.$(":scope > article.last")?.C("num")[0].textContent
+            latest50ResNum = +$content.$(":scope > article.latest50")?.C("num")[0].textContent
+            if latest50ResNum > lastResNum
+              threadContent.scrollTo(latest50ResNum, true)
           when "newest"
             $res = $content.$(":scope > article:last-child")
             threadContent.scrollTo($res, true) if $res?
@@ -808,6 +813,7 @@ app.boot("/view/thread.html", ->
       ".jump_not_read": "article.read + article"
       ".jump_new": "article.received + article"
       ".jump_last": "article.last"
+      ".jump_latest50": "article.latest50"
 
     $jumpPanel = $view.C("jump_panel")[0]
 
@@ -1164,16 +1170,17 @@ app.viewThread._readStateManager = ($view) ->
   #スレの描画時に、read_state関連のクラスを付与する
   $view.on("view_loaded", ({ detail: {jumpResNum, loadCount} }) ->
     contentChild = $content.child()
+    contentLength = contentChild.length
     if loadCount is 1
       # 初回の処理
       {readState, readStateUpdated} = await getReadState
       $content.C("last")[0]?.removeClass("last")
       $content.C("read")[0]?.removeClass("read")
       $content.C("received")[0]?.removeClass("received")
+      $content.C("latest50")[0]?.removeClass("latest50")
 
       # キャッシュの内容が古い場合にreadStateの内容の方が大きくなることがあるので
       # その場合は次回の処理に委ねる
-      contentLength = $content.child().length
       if readState.last <= contentLength
         contentChild[readState.last - 1]?.addClass("last")
         contentChild[readState.last - 1]?.attr("last-offset", readState.offset)
@@ -1191,6 +1198,8 @@ app.viewThread._readStateManager = ($view) ->
         attachedReadState.received = -1
       else
         attachedReadState.received = readState.received
+      if contentLength > 50
+        contentChild[contentLength - 51]?.addClass("latest50")
 
       $view.emit(new CustomEvent("read_state_attached", detail: {jumpResNum, requestReloadFlag, loadCount}))
       if attachedReadState.read > 0 and attachedReadState.received > 0
@@ -1217,6 +1226,9 @@ app.viewThread._readStateManager = ($view) ->
       $content.C("received")[0]?.removeClass("received")
       contentChild[attachedReadState.received - 1]?.addClass("received")
       tmpReadState.received = attachedReadState.received
+    if contentLength > 50
+      $content.C("latest50")[0]?.removeClass("latest50")
+      contentChild[contentLength - 51]?.addClass("latest50")
 
     $view.emit(new CustomEvent("read_state_attached", detail: {jumpResNum, requestReloadFlag, loadCount}))
     if tmpReadState.read and tmpReadState.received

@@ -181,7 +181,7 @@ export default class Write
     )
     return
 
-  _onTimerFinish: ->
+  _onTimerFinish: =>
     @_onError("一定時間経過しても応答が無いため、処理を中断しました")
     return
 

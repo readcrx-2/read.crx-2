@@ -214,7 +214,7 @@ export default class Write
           {id} = await browser.tabs.getCurrent()
           browser.tabs.remove(id)
         when "confirm"
-          fadeIn($view.C("iframe_container")[0])
+          fadeIn(@$view.C("iframe_container")[0])
           @timer.kill()
         when "error"
           @_onError(message)

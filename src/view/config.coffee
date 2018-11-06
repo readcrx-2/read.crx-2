@@ -396,6 +396,12 @@ app.boot("/view/config.html", ["Cache", "BBSMenu"], (Cache, BBSMenu) ->
     if dom.getAttr("changed")?
       dom.removeAttr("changed")
       app.ReplaceStrTxt.set(dom.value)
+    #bbsmenu設定
+    dom = $view.$("textarea[name=\"bbsmenu\"]")
+    if dom.getAttr("changed")?
+      dom.removeAttr("changed")
+      app.config.set("bbsmenu", dom.value)
+      $view.C("bbsmenu_reload")[0].click()
     return
 
   #閉じるボタン
@@ -491,6 +497,9 @@ app.boot("/view/config.html", ["Cache", "BBSMenu"], (Cache, BBSMenu) ->
     $button.disabled = true
     $status.setClass("loading")
     $status.textContent = "更新中"
+    dom = $view.$("textarea[name=\"bbsmenu\"]")
+    dom.removeAttr("changed")
+    app.config.set("bbsmenu", dom.value)
 
     try
       await BBSMenu.get(true)
@@ -683,20 +692,12 @@ app.boot("/view/config.html", ["Cache", "BBSMenu"], (Cache, BBSMenu) ->
   #bbsmenu設定
   resetBBSMenu = ->
     await app.config.del("bbsmenu")
-    $view.$(".direct.bbsmenu").value = app.config.get("bbsmenu")
+    $view.$("textarea[name=\"bbsmenu\"]").value = app.config.get("bbsmenu")
     $$.C("bbsmenu_reload")[0].click()
     return
 
-  if $view.$(".direct.bbsmenu").value is ""
+  if $view.$("textarea[name=\"bbsmenu\"]").value is ""
     resetBBSMenu()
-
-  $view.$(".direct.bbsmenu").on("change", ->
-    if $view.$(".direct.bbsmenu").value isnt ""
-      $$.C("bbsmenu_reload")[0].click()
-    else
-      resetBBSMenu()
-    return
-  )
 
   $view.C("bbsmenu_reset")[0].on("click", ->
     resetBBSMenu()

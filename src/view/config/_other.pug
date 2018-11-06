@@ -8,7 +8,10 @@
       div: input.direct(type="text" name="default_mail")
 
   section
-    h2 板一覧
+    h2
+      |板一覧(
+      a(href="https://github.com/readcrx-2/read.crx-2/wiki/bbsmenu%E3%81%AE%E4%BB%95%E6%A7%98" target="_blank") 詳細
+      |)
     div
       button.bbsmenu_reload(type="button") 更新
       span#bbsmenu_reload_status
@@ -17,10 +20,12 @@
       input.direct.days(type="number" name="bbsmenu_update_interval" min="1" value="7")
       |日
       br
-      |URL(
-      a(href="https://github.com/readcrx-2/read.crx-2/wiki/bbsmenu%E3%81%AE%E4%BB%95%E6%A7%98" target="_blank") 詳細
-      |):
-      input.direct.bbsmenu(type="text" name="bbsmenu")
+      |URL:
+      br
+      |1行に1つのURLを指定できます
+      br
+      textarea.direct(name="bbsmenu" rows="6" cols="80")
+      br
       button.bbsmenu_reset(type="button") リセット
 
   section

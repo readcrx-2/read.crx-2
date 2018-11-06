@@ -74,7 +74,7 @@ export default class Config {
     ["no_history", "off"],
     ["no_writehistory", "off"],
     ["user_css", ""],
-    ["bbsmenu", "https://menu.5ch.net/bbsmenu.html"],
+    ["bbsmenu", "https://menu.5ch.net/bbsmenu.html\nhttps://menu.2ch.sc/bbsmenu.html\nhttps://menu.open2ch.net/bbsmenu.html\n"],
     ["bbsmenu_update_interval", "7"],
     ["useragent", ""],
     ["format_2chnet", "html"],

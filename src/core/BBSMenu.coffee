@@ -102,7 +102,27 @@ parse = (html) ->
       title: regCategoryRes[1]
       board: []
 
+    subName = null
     while regBoardRes = regBoard.exec(regCategoryRes[0])
+      unless subName
+        if regBoardRes[1].includes("open2ch.net")
+          subName = "op"
+        else if regBoardRes[1].includes("2ch.sc")
+          subName = "sc"
+        else
+          subName = ""
+        if (
+          subName isnt "" and
+          !(category.title.endsWith("(#{subName})") or
+            category.title.endsWith("_#{subName}"))
+        )
+          category.title += "(#{subName})"
+      if (
+        subName isnt "" and
+        !(regBoardRes[2].endsWith("(#{subName})") or
+          regBoardRes[2].endsWith("_#{subName}"))
+      )
+        regBoardRes[2] += "_#{subName}"
       category.board.push(
         url: regBoardRes[1]
         title: regBoardRes[2]

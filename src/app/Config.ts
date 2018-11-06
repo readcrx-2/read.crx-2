@@ -74,7 +74,7 @@ export default class Config {
     ["no_history", "off"],
     ["no_writehistory", "off"],
     ["user_css", ""],
-    ["bbsmenu", "http://kita.jikkyo.org/cbm/cbm.cgi/5r.p5.m0.op.sc.99/-all/bbsmenu.html"],
+    ["bbsmenu", "https://menu.5ch.net/bbsmenu.html"],
     ["bbsmenu_update_interval", "7"],
     ["useragent", ""],
     ["format_2chnet", "html"],

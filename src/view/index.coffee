@@ -301,9 +301,9 @@ app.boot("/view/index.html", ["BBSMenu"], (BBSMenu) ->
   app.main()
 
   {menu} = await BBSMenu.get()
-  await app.URL.pushServerInfo(app.config.get("bbsmenu"), menu)
+  await app.URL.pushServerInfo(menu)
   BBSMenu.target.on("change", ({detail: {menu}}) ->
-    app.URL.pushServerInfo(app.config.get("bbsmenu"), menu)
+    app.URL.pushServerInfo(menu)
   )
 
   return unless query

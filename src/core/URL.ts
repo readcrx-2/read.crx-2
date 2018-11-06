@@ -362,55 +362,32 @@ var serverNet = new Map<string, string>();
 var serverSc = new Map<string, string>();
 var serverPink = new Map<string, string>();
 
-function bbsmenuParam (url: string) {
-  var res = {net: false, sc: false, bbspink: false};
-  var tmp = /http:\/\/kita\.jikkyo\.org\/cbm\/cbm\.cgi\/([\w\d\.]+)(?:\/-all|-live2324)?(?:\/=[\d\w=!&$()[\]{}]+)?\/bbsmenuk?2?\.html/.exec(url);
-  if (tmp) {
-    var param = tmp[1].split(".");
-    for (var mode of param) {
-      switch (mode) {
-        case "20":
-        case "2r":
-        case "5r":
-          res.net = true; break;
-        case "sc":
-          res.sc = true; break;
-        case "p0":
-        case "p1":
-        case "p5":
-          res.bbspink = true; break;
-      }
-      if (res.net && res.sc && res.bbspink) {
-        break;
-      }
-    }
-  } else if (
-    url.endsWith("menu.2ch.net/bbsmenu.html") ||
-    url.endsWith("menu.5ch.net/bbsmenu.html")
-  ) {
-    res.net = true;
-    res.bbspink = true;
-  } else if (
-    url.endsWith("www.2ch.sc/bbsmenu.html")
-  ) {
-    res.sc = true;
-  }
-  return res;
+interface ResInfo {
+  net: boolean;
+  sc: boolean;
+  bbspink: boolean;
 }
 
-function applyServerInfo (res: {net: boolean, sc: boolean, bbspink: boolean}, menu: any[]) {
+function applyServerInfo (menu: any[]):ResInfo {
   var boardNet = new Map<string, string>(),
     boardSc = new Map<string, string>(),
     boardPink = new Map<string, string>(),
     tmp: string[]|null;
+  var res: ResInfo = {
+    net: (serverNet.size > 0),
+    sc: (serverSc.size > 0),
+    bbspink: (serverPink.size > 0)
+  };
+
+  if (res.net && res.sc && res.bbspink) return res;
 
   for (let category of menu) {
     for (let board of category.board) {
-      if (res.net && (tmp = /https?:\/\/(\w+)\.[25]ch\.net\/(\w+)\/.*?/.exec(board.url)) !== null) {
+      if (!res.net && (tmp = /https?:\/\/(\w+)\.[25]ch\.net\/(\w+)\/.*?/.exec(board.url)) !== null) {
         boardNet.set(tmp[2], tmp[1]);
-      }else if (res.sc && (tmp = /https?:\/\/(\w+)\.2ch\.sc\/(\w+)\/.*?/.exec(board.url)) !== null) {
+      }else if (!res.sc && (tmp = /https?:\/\/(\w+)\.2ch\.sc\/(\w+)\/.*?/.exec(board.url)) !== null) {
         boardSc.set(tmp[2], tmp[1]);
-      }else if (res.bbspink && (tmp = /https?:\/\/(\w+)\.bbspink\.com\/(\w+)\/.*?/.exec(board.url)) !== null) {
+      }else if (!res.bbspink && (tmp = /https?:\/\/(\w+)\.bbspink\.com\/(\w+)\/.*?/.exec(board.url)) !== null) {
         boardPink.set(tmp[2], tmp[1]);
       }
     }
@@ -419,26 +396,36 @@ function applyServerInfo (res: {net: boolean, sc: boolean, bbspink: boolean}, me
   if (boardNet.size > 0) serverNet = boardNet;
   if (boardSc.size > 0) serverSc = boardSc;
   if (boardPink.size > 0) serverPink = boardPink;
+
+  res = {
+    net: (serverNet.size > 0),
+    sc: (serverSc.size > 0),
+    bbspink: (serverPink.size > 0)
+  };
+
+  return res;
 }
 
-export async function pushServerInfo (url: string, menu: any[][]): Promise<void> {
-  var res = bbsmenuParam(url);
+export async function pushServerInfo (menu: any[][]): Promise<void> {
+  var res: ResInfo;
 
-  applyServerInfo(res, menu);
+  res = applyServerInfo(menu);
 
   if (res.net && res.sc && res.bbspink) {
     return;
   }
 
-  var param = "";
-  if (!res.net) param += "5r.";
-  if (!res.sc) param += "sc.";
-  if (!res.bbspink) param += "p5.";
-  param += "99";
-  var url = `http://kita.jikkyo.org/cbm/cbm.cgi/${param}/-all/bbsmenu.html`;
-  var menu = <any[][]>(await fetchBBSMenu(url, false)).menu
-  var res = bbsmenuParam(url);
-  applyServerInfo(res, menu);
+  var tmpUrl: string, tmpMenu: any[][];
+  if (!res.net || !res.bbspink) {
+    tmpUrl = `https://menu.5ch.net/bbsmenu.html`;
+    tmpMenu = <any[][]>(await fetchBBSMenu(tmpUrl, false)).menu
+    res = applyServerInfo(tmpMenu);
+  }
+  if (!res.sc) {
+    tmpUrl = `https://menu.2ch.sc/bbsmenu.html`;
+    tmpMenu = <any[][]>(await fetchBBSMenu(tmpUrl, false)).menu
+    res = applyServerInfo(tmpMenu);
+  }
 }
 
 function exchangeNetSc (url: string): string|null {

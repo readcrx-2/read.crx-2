@@ -397,10 +397,18 @@ app.boot("/view/config.html", ["Cache", "BBSMenu"], (Cache, BBSMenu) ->
       dom.removeAttr("changed")
       app.ReplaceStrTxt.set(dom.value)
     #bbsmenu設定
+    changeFlag = false
     dom = $view.$("textarea[name=\"bbsmenu\"]")
     if dom.getAttr("changed")?
       dom.removeAttr("changed")
       app.config.set("bbsmenu", dom.value)
+      changeFlag = true
+    dom = $view.$("textarea[name=\"bbsmenu_option\"]")
+    if dom.getAttr("changed")?
+      dom.removeAttr("changed")
+      app.config.set("bbsmenu_option", dom.value)
+      changeFlag = true
+    if changeFlag
       $view.C("bbsmenu_reload")[0].click()
     return
 
@@ -500,6 +508,9 @@ app.boot("/view/config.html", ["Cache", "BBSMenu"], (Cache, BBSMenu) ->
     dom = $view.$("textarea[name=\"bbsmenu\"]")
     dom.removeAttr("changed")
     app.config.set("bbsmenu", dom.value)
+    dom = $view.$("textarea[name=\"bbsmenu_option\"]")
+    dom.removeAttr("changed")
+    app.config.set("bbsmenu_option", dom.value)
 
     try
       await BBSMenu.get(true)

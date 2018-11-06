@@ -1,6 +1,8 @@
 import Cache from "./Cache.coffee"
 import {Request} from "./HTTP.ts"
 
+bbsmenuOption = null
+
 export target = $__("div")
 
 ###*
@@ -9,6 +11,16 @@ export target = $__("div")
 ###
 export fetchAll = (forceReload = false) ->
   bbsmenu = []
+
+  if !bbsmenuOption or forceReload
+    unless bbsmenuOption
+      bbsmenuOption = new Set()
+    else
+      bbsmenuOption.clear()
+    tmpOpt = app.config.get("bbsmenu_option").split("\n")
+    for opt in tmpOpt
+      continue if opt is "" or opt.startsWith("//")
+      bbsmenuOption.add(opt)
 
   bbsmenuUrl = app.config.get("bbsmenu").split("\n")
   for url in bbsmenuUrl
@@ -111,6 +123,7 @@ parse = (html) ->
   regBoard = ///<a\shref=(https?://(?!info\.[25]ch\.net/|headline\.bbspink\.com)
     (?:\w+\.(?:[25]ch\.net|open2ch\.net|2ch\.sc|bbspink\.com)|(?:\w+\.)?machi\.to)/\w+/)(?:\s.*?)?>(.+?)</a>///gi
   menu = []
+  bbspinkException = bbsmenuOption.has("bbspink.com")
 
   while regCategoryRes = regCategory.exec(html)
     category =
@@ -119,6 +132,8 @@ parse = (html) ->
 
     subName = null
     while regBoardRes = regBoard.exec(regCategoryRes[0])
+      continue if bbsmenuOption.has(app.URL.tsld(regBoardRes[1]))
+      continue if bbspinkException and regBoardRes[1].includes("5ch.net/bbypink")
       unless subName
         if regBoardRes[1].includes("open2ch.net")
           subName = "op"

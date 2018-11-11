@@ -26,6 +26,7 @@ ui = (browser) ->
       .pipe($.changed(output, extension: ".css"))
       .pipe($.sass(sassOptions).on("error", util.onScssError))
       .pipe($.postcss(defaultOptions.postcss))
+      .pipe($.bom())
       .pipe(gulp.dest(output))
 
 view = (browser) ->
@@ -39,6 +40,7 @@ view = (browser) ->
       .pipe($.changed(output, extension: ".css"))
       .pipe($.sass(sassOptions).on("error", util.onScssError))
       .pipe($.postcss(defaultOptions.postcss))
+      .pipe($.bom())
       .pipe(gulp.dest(output))
 
 write = (browser) ->
@@ -52,6 +54,7 @@ write = (browser) ->
       .pipe($.changed(output, extension: ".css"))
       .pipe($.sass(sassOptions).on("error", util.onScssError))
       .pipe($.postcss(defaultOptions.postcss))
+      .pipe($.bom())
       .pipe(gulp.dest(output))
 
 ###

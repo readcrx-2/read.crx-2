@@ -23,6 +23,7 @@ module.exports =
     sass: sass
     postcss: require "gulp-postcss"
     pug: require "gulp-pug"
+    bom: require "gulp-bom"
   rollup:
     rollup: require "rollup"
     ts: require "rollup-plugin-typescript2"

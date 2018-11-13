@@ -635,6 +635,12 @@ app.boot("/view/config.html", ["Cache", "BBSMenu"], (Cache, BBSMenu) ->
 
     $clearButton.on("click", ->
       return unless _checkExcute("cache", "clear")
+      result = await UI.Dialog("confirm",
+        message: "本当に削除しますか？"
+      )
+      unless result
+        _clearExcute()
+        return
       $status.textContent = ":削除中"
 
       try
@@ -652,6 +658,12 @@ app.boot("/view/config.html", ["Cache", "BBSMenu"], (Cache, BBSMenu) ->
     $clearRangeButton = $view.C("cache_range_clear")[0]
     $clearRangeButton.on("click", ->
       return unless _checkExcute("cache", "clear_range")
+      result = await UI.Dialog("confirm",
+        message: "本当に削除しますか？"
+      )
+      unless result
+        _clearExcute()
+        return
       $status.textContent = ":範囲指定削除中"
 
       try

@@ -711,6 +711,10 @@ app.boot("/view/config.html", ["Cache", "BBSMenu"], (Cache, BBSMenu) ->
     resetBBSMenu()
 
   $view.C("bbsmenu_reset")[0].on("click", ->
+    result = await UI.Dialog("confirm",
+      message: "設定内容をリセットします。よろしいですか？"
+    )
+    return unless result
     resetBBSMenu()
     return
   )

@@ -738,6 +738,44 @@ app.boot("/view/config.html", ["Cache", "BBSMenu"], (Cache, BBSMenu) ->
     )
     $dom.emit(new Event("change"))
 
+  # ImageReplaceDatのリセット
+  $view.C("dat_file_reset")[0].on("click", ->
+    result = await UI.Dialog("confirm",
+      message: "設定内容をリセットします。よろしいですか？"
+    )
+    return unless result
+    await app.config.del("image_replace_dat")
+    resetData = app.config.get("image_replace_dat")
+    $view.$("textarea[name=\"image_replace_dat\"]").value = resetData
+    app.ImageReplaceDat.set(resetData)
+    return
+  )
+
+  # ぼかし判定用正規表現のリセット
+  $view.C("image_blur_reset")[0].on("click", ->
+    result = await UI.Dialog("confirm",
+      message: "設定内容をリセットします。よろしいですか？"
+    )
+    return unless result
+    await app.config.del("image_blur_word")
+    resetData = app.config.get("image_blur_word")
+    $view.$("input[name=\"image_blur_word\"]").value = resetData
+    return
+  )
+
+  # NG設定のリセット
+  $view.C("ngwords_reset")[0].on("click", ->
+    result = await UI.Dialog("confirm",
+      message: "設定内容をリセットします。よろしいですか？"
+    )
+    return unless result
+    await app.config.del("ngwords")
+    resetData = app.config.get("ngwords")
+    $view.$("textarea[name=\"ngwords\"]").value = resetData
+    app.NG.set(resetData)
+    return
+  )
+
   # 設定をインポート/エクスポート
   new SettingIO(
     name: "config"

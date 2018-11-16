@@ -199,7 +199,8 @@ export const SHORT_URL_LIST = new Set([
   "ux.nu",
   "wb2.biz",
   "wk.tk",
-  "xrl.us"
+  "xrl.us",
+  "y2u.be"
 ]);
 
 export async function expandShortURL (shortUrl: string): Promise<string> {

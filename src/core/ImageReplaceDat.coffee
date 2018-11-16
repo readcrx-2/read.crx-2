@@ -42,6 +42,8 @@ _config =
 ###
 export get = ->
   unless _dat?
+    if app.config.get(_CONFIG_NAME) is ""
+      set(_config.getString())
     _dat = new Set(_config.get())
     _setupReg()
   return _dat

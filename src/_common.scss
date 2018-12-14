@@ -75,8 +75,7 @@ $z-indexes:(
   }
 
   html:not(.default_scrollbar) {
-    scrollbar-face-color: #999999;
-    scrollbar-track-color: #bbbbbb;
+    scrollbar-color: #999999 #bbbbbb;
 
     scrollbar-width: thin;
     .container, .content {

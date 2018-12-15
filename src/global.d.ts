@@ -5,7 +5,6 @@ interface Window {
   app: any;
 }
 
-declare var BroadcastChannel: any;
 declare var browser: any;
 
 declare namespace app {
@@ -19,8 +18,4 @@ declare namespace app {
   var bookmark: any;
   var HTTP: any;
   var util: any;
-}
-
-interface HTMLElement {
-  scrollIntoViewIfNeeded: Function;
 }

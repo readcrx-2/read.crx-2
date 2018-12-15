@@ -394,7 +394,7 @@ $z-indexes:(
     height: 0;
     flex-grow: 1;
     overflow-x: hidden;
-    overflow-y: auto;
+    overflow-y: vals(scroll);
     position: relative;
     outline: none;
     scroll-snap-type: y mandatory;

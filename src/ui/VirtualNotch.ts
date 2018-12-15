@@ -1,5 +1,9 @@
 ///<reference path="../global.d.ts" />
 
+interface NotchedMouseWheelEvent extends MouseEvent {
+  wheelDelta: number;
+}
+
 export default class VirtualNotch {
   private wheelDelta = 0;
   private lastMouseWheel = Date.now();
@@ -15,8 +19,8 @@ export default class VirtualNotch {
     }
   }
 
-  private onMouseWheel (e: any): void {
-    var event: any;
+  private onMouseWheel (e: WheelEvent): void {
+    var event: NotchedMouseWheelEvent;
 
     // @ts-ignore: true === falseは常にfalse
     if ("&[BROWSER]" === "chrome") {
@@ -29,7 +33,7 @@ export default class VirtualNotch {
     this.lastMouseWheel = Date.now();
 
     while (Math.abs(this.wheelDelta) >= this.threshold) {
-      event = new MouseEvent("notchedmousewheel");
+      event = <NotchedMouseWheelEvent>new MouseEvent("notchedmousewheel");
       event.wheelDelta = this.threshold * (this.wheelDelta > 0 ? 1 : -1);
       this.wheelDelta -= event.wheelDelta;
       this.element.emit(event);

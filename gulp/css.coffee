@@ -10,6 +10,15 @@ transform = (browser) ->
       nameVal = name.getValue()
       transformedStr = "url(/img/#{nameVal}.#{ext})"
       return c.sass.types.String(transformedStr)
+    "vals($name)": (name) ->
+      nameVal = name.getValue()
+      str = ""
+      switch nameVal
+        when "scroll"
+          str = if browser is "chrome" then "auto" else "scroll"
+        else
+          console.error("Error: Scss vals not found. Unknown val name: #{nameVal}")
+      return c.sass.types.String(str)
   }
 transforms = {}
 for browser in browsers

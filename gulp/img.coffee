@@ -73,9 +73,17 @@ logoBig = (browser, size) ->
     await fs.ensureDir(output)
     await o.sharp(src)
       .resize(firstSize, firstSize)
-      .background(r: 0, g: 0, b: 0, alpha: 0)
-      .extend(top: margin, bottom: margin, left: margin, right: margin)
-      .toFile(bin)
+      .extend(
+        top: margin
+        bottom: margin
+        left: margin
+        right: margin
+        background:
+          r: 0
+          g: 0
+          b: 0
+          alpha: 0
+      ).toFile(bin)
     return
   func.displayName = "img:logo#{size}:#{browser}"
   return func

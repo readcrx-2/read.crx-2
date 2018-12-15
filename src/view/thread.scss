@@ -456,16 +456,15 @@ header {
 
 .view.loading {
   .content {
-    display: block !important;
     ~ .loading_overlay {
-      display: none !important;
+      display: none;
     }
     ~ .thread_footer .loading_indicator {
       display: block;
     }
     &:empty {
       ~ .loading_overlay {
-        display: block !important;
+        display: block;
       }
       ~ .thread_footer .loading_indicator {
         display: none;

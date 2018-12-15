@@ -71,7 +71,7 @@ export function guessType (url:string):GuessResult {
 
 export const TSLD_REG = /^https?:\/\/(?:\w+\.)*(\w+\.\w+)\//;
 export function tsld (url:string):string {
-  var res:any;
+  var res:RegExpExecArray|null;
 
   res = TSLD_REG.exec(url);
   return res ? res[1] : "";
@@ -133,14 +133,14 @@ export function threadToBoard (url:string):string {
   );
 }
 
-export function parseQuery (urlStr:string, fromSearch:boolean = true):{[index:string]:any;} {
+export function parseQuery (urlStr:string, fromSearch:boolean = true):URLSearchParams {
   if (fromSearch) {
     return new URLSearchParams(urlStr.slice(1));
   }
   return (new window.URL(urlStr)).searchParams;
 }
 
-export function parseHashQuery (url:string):{[index:string]:any;} {
+export function parseHashQuery (url:string):URLSearchParams {
   var tmp;
 
   tmp = /#(.+)$/.exec(url);
@@ -148,8 +148,8 @@ export function parseHashQuery (url:string):{[index:string]:any;} {
   return tmp ? new URLSearchParams(tmp[1]) : new URLSearchParams();
 }
 
-export function buildQuery (data:{[index:string]:any;}) {
-  return (new URLSearchParams(<any>data)).toString();
+export function buildQuery (data:Record<string, string>) {
+  return (new URLSearchParams(data)).toString();
 }
 
 export const SHORT_URL_LIST = new Set([
@@ -278,7 +278,7 @@ export function getExtType (filename: string, {
 }
 
 export function convertUrlFromPhone (url: string): string {
-  var regs: any[];
+  var regs: RegExp[];
   var tmp: string[]|null = [];
   var mode: string;
   var scheme: string = "";

@@ -6,7 +6,12 @@ html(class=htmlClasses data-app-version=version)&attributes(html)
     meta(name="referrer" content="no-referrer")
     title= title
     if needFavicon
-      link(rel="icon" href="/img/favicon.ico")
+      link(rel="icon" href="/img/read.crx_16x16.png" sizes="16x16")
+      link(rel="icon" href="/img/read.crx_32x32.png" sizes="32x32")
+      link(rel="icon" href="/img/read.crx_48x48.png" sizes="48x48")
+      link(rel="icon" href="/img/read.crx_64x64.png" sizes="64x64")
+      link(rel="icon" href="/img/read.crx_96x96.png" sizes="96x96")
+      link(rel="icon" href="/img/read.crx_128x128.png" sizes="128x128")
     if needUI
       link(rel="stylesheet" href=`/ui.css?v=${version}`)
     if needCss

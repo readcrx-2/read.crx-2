@@ -33,6 +33,5 @@ module.exports =
     autoprefixer: require "autoprefixer"
   other:
     sharp: require "sharp"
-    toIco: require "to-ico"
     crx: require "crx"
     webExt: require("web-ext").default

@@ -256,7 +256,7 @@ export default class BrowserBookmarkEntryList extends SyncableEntryList {
   private async validateRootNodeSettings (): Promise<void> {
     try {
       await browser.bookmarks.getChildren(this.rootNodeId)
-    } catch (e) {
+    } catch {
       this.needReconfigureRootNodeId.call();
     }
   }
@@ -280,7 +280,7 @@ export default class BrowserBookmarkEntryList extends SyncableEntryList {
       }
 
       return true;
-    } catch (e) {
+    } catch {
       app.log("warn", "ブラウザのブックマークからの読み込みに失敗しました。");
       this.validateRootNodeSettings();
 

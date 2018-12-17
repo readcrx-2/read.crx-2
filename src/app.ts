@@ -17,7 +17,7 @@ export var manifest = (async () => {
     try {
       let response = await fetch("/manifest.json");
       return await response.json();
-    } catch (e) {}
+    } catch {}
   }
   throw new Error("manifest.jsonの取得に失敗しました");
 })();

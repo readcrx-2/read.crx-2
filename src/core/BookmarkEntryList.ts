@@ -26,8 +26,6 @@ export function newerEntry (a:Entry, b:Entry):Entry|null {
   }
 
   return app.util.isNewerReadState(a.readState, b.readState) ? b : a;
-
-  return null;
 }
 
 export class EntryList {

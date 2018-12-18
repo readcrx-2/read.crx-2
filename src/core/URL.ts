@@ -43,30 +43,29 @@ export function guessType (url:string):GuessResult {
   if (/^https?:\/\/jbbs\.shitaraba\.net\/bbs\/read(?:_archive)?\.cgi\/\w+\/\d+\/\d+\/$/.test(url)) {
     return {type: "thread", bbsType: "jbbs"};
   }
-  else if (/^https?:\/\/jbbs\.shitaraba\.net\/\w+\/\d+\/$/.test(url)) {
+  if (/^https?:\/\/jbbs\.shitaraba\.net\/\w+\/\d+\/$/.test(url)) {
     return {type: "board", bbsType: "jbbs"};
   }
-  else if (/^https?:\/\/(?:\w+\.)?machi\.to\/bbs\/read\.cgi\/\w+\/\d+\/$/.test(url)) {
+  if (/^https?:\/\/(?:\w+\.)?machi\.to\/bbs\/read\.cgi\/\w+\/\d+\/$/.test(url)) {
     return {type: "thread", bbsType: "machi"};
   }
-  else if (/^https?:\/\/(?:\w+\.)?machi\.to\/\w+\/$/.test(url)) {
+  if (/^https?:\/\/(?:\w+\.)?machi\.to\/\w+\/$/.test(url)) {
     return {type: "board", bbsType: "machi"};
   }
-  else if (/^https?:\/\/[\w\.]+\/(?:\w+\/)?test\/(?:read\.cgi|-)\/\w+\/\d+\/$/.test(url)) {
+  if (/^https?:\/\/[\w\.]+\/(?:\w+\/)?test\/(?:read\.cgi|-)\/\w+\/\d+\/$/.test(url)) {
     return {type: "thread", bbsType: "2ch"};
   }
-  else if (/^https?:\/\/(?:find|info|p2|ninja)\.5ch\.net\/\w+\/$/.test(url)) {
+  if (/^https?:\/\/(?:find|info|p2|ninja)\.5ch\.net\/\w+\/$/.test(url)) {
     return {type: "unknown", bbsType: "unknown"};
   }
-  else if (/^https?:\/\/\w+\.(?:[25]ch|open2ch|bbspink)\.\w+\/(?:subback\/|test\/-\/)?\w+\/?$/.test(url)) {
+  if (/^https?:\/\/\w+\.(?:[25]ch|open2ch|bbspink)\.\w+\/(?:subback\/|test\/-\/)?\w+\/?$/.test(url)) {
     return {type: "board", bbsType: "2ch"};
   }
-  else if (/^https?:\/\/(?:\w+\.){2,}\w+\/(?:subback\/|test\/-\/)?\w+\/?$/.test(url)) {
+  if (/^https?:\/\/(?:\w+\.){2,}\w+\/(?:subback\/|test\/-\/)?\w+\/?$/.test(url)) {
     return {type: "board", bbsType: "2ch"};
   }
-  else {
-    return {type: "unknown", bbsType: "unknown"};
-  }
+
+  return {type: "unknown", bbsType: "unknown"};
 }
 
 export const TSLD_REG = /^https?:\/\/(?:\w+\.)*(\w+\.\w+)\//;

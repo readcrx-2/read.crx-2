@@ -43,7 +43,7 @@ export default class SearchNextThread {
       }
 
       this.$element.C("status")[0].textContent = "";
-    } catch (e) {
+    } catch {
       this.$element.C("status")[0].textContent = "次スレ検索に失敗しました";
     }
   }

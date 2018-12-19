@@ -71,14 +71,25 @@ export default class Write
       return unless method is "POST" and isSameOrigin
       if getTsld(url) is "2ch.sc"
         url = setScheme(url, "http")
-      requestHeaders.push(name: "Referer", value: url)
 
-      # UA変更処理
       ua = app.config.get("useragent").trim()
-      if ua.length > 0
-        for {name}, i in requestHeaders when name is "User-Agent"
+      uaExists = (ua.length > 0)
+      setReferer = false
+      setUserAgent = !uaExists
+
+      for {name}, i in requestHeaders
+        if !setReferer and name is "Referer"
+          requestHeaders[i].value = url
+          setReferer = true
+        else if !setUserAgent and name is "User-Agent"
           requestHeaders[i].value = ua
-          break
+          setUserAgent = true
+        break if setReferer and setUserAgent
+
+      if not setReferer
+        requestHeaders.push(name: "Referer", value: url)
+      if not setUserAgent and uaExists
+        requestHeaders.push(name: "User-Agent", value: ua)
 
       return {requestHeaders}
 

@@ -115,6 +115,7 @@ class SubmitRes extends Write
             key: splittedUrl[6]
             FROM: args.rcrxName
             mail: args.rcrxMail
+            oekaki_thread1: ""
           textarea:
             MESSAGE: args.rcrxMessage
         }

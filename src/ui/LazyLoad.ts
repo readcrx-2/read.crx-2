@@ -132,14 +132,14 @@ export default class LazyLoad {
         case "extract":
           try {
             $newImg.src = await this.getWithExtract(mdata.src!, mdata.extract!, mdata.pattern!, mdata.extractReferrer!, mdata.userAgent!);
-          } catch (e) {
+          } catch {
             $newImg.src = "";
           }
           break;
         case "cookie":
           try {
             $newImg.src = await this.getWithCookie(mdata.src!, mdata.cookie!, mdata.cookieReferrer!, mdata.userAgent!);
-          } catch (e) {
+          } catch {
             $newImg.src = "";
           }
           break;
@@ -181,7 +181,7 @@ export default class LazyLoad {
         var cookie = res.headers["Set-Cookie"];
         return this.getWithReferrer(link, "", userAgent, cookie);
       }
-    } catch (e) {}
+    } catch {}
     throw new Error("通信に失敗しました");
   }
 
@@ -200,7 +200,7 @@ export default class LazyLoad {
           });
         }
       }
-    } catch (e) {}
+    } catch {}
     throw new Error("通信に失敗しました");
   }
 }

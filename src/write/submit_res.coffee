@@ -12,6 +12,10 @@ class SubmitRes extends Write
 
   _setHeaderModifier: ->
     {id} = await browser.tabs.getCurrent()
+    extraInfoSpec = ["requestHeaders", "blocking"]
+    if browser.webRequest.OnBeforeSendHeadersOptions.hasOwnProperty("EXTRA_HEADERS")
+      extraInfoSpec.push("extraHeaders")
+
     browser.webRequest.onBeforeSendHeaders.addListener(
       @_beforeSendFunc()
       {
@@ -22,7 +26,7 @@ class SubmitRes extends Write
           "*://jbbs.shitaraba.net/bbs/write.cgi/*"
         ]
       }
-      ["requestHeaders", "blocking"]
+      extraInfoSpec
     )
     browser.webRequest.onHeadersReceived.addListener( ({responseHeaders}) ->
       # X-Frame-Options回避

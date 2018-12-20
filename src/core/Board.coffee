@@ -44,7 +44,7 @@ export default class Board
 
       hasCache = false
 
-      #キャッシュ取得
+      # キャッシュ取得
       cache = new Cache(xhrPath)
       try
         await cache.get()
@@ -52,104 +52,105 @@ export default class Board
         unless Date.now() - cache.lastUpdated < 1000 * 3
           throw new Error("キャッシュの期限が切れているため通信します")
       catch
-        #通信
-        request = new Request("GET", xhrPath,
-          mimeType: "text/plain; charset=#{xhrCharset}"
-          preventCache: true
-        )
-        if hasCache
-          if cache.lastModified?
-            request.headers["If-Modified-Since"] =
-              new Date(cache.lastModified).toUTCString()
-          if cache.etag?
-            request.headers["If-None-Match"] = cache.etag
+        try
+          # 通信
+          request = new Request("GET", xhrPath,
+            mimeType: "text/plain; charset=#{xhrCharset}"
+            preventCache: true
+          )
+          if hasCache
+            if cache.lastModified?
+              request.headers["If-Modified-Since"] =
+                new Date(cache.lastModified).toUTCString()
+            if cache.etag?
+              request.headers["If-None-Match"] = cache.etag
 
-        response = await request.send()
+          response = await request.send()
 
-      #パース
-      try
-        # 2chで自動移動しているときはサーバー移転
-        if (
-          getTsld(@url) is "5ch.net" and
-          @url.split("/")[2] isnt response.responseURL.split("/")[2]
-        )
-          newBoardUrl = response.responseURL.slice(0, -"subject.txt".length)
-          throw {response, newBoardUrl}
+          # パース
 
-        if response?.status is 200
-          threadList = Board.parse(@url, response.body)
-        else if hasCache
-          threadList = Board.parse(@url, cache.data)
+          # 2chで自動移動しているときはサーバー移転
+          if (
+            getTsld(@url) is "5ch.net" and
+            @url.split("/")[2] isnt response.responseURL.split("/")[2]
+          )
+            newBoardUrl = response.responseURL.slice(0, -"subject.txt".length)
+            throw {response, newBoardUrl}
 
-        unless threadList?
-          throw {response}
-        unless response?.status is 200 or response?.status is 304 or (not response? and hasCache)
-          throw {response, threadList}
+          if response?.status is 200
+            threadList = Board.parse(@url, response.body)
+          else if hasCache
+            threadList = Board.parse(@url, cache.data)
 
-        #コールバック
-        @thread = threadList
-        resolve()
+          unless threadList?
+            throw {response}
+          unless response?.status is 200 or response?.status is 304 or (not response? and hasCache)
+            throw {response, threadList}
 
-        #キャッシュ更新部
-        if response?.status is 200
-          cache.data = response.body
-          cache.lastUpdated = Date.now()
+          #コールバック
+          @thread = threadList
+          resolve()
 
-          lastModified = new Date(
-            response.headers["Last-Modified"] or "dummy"
-          ).getTime()
+          #キャッシュ更新部
+          if response?.status is 200
+            cache.data = response.body
+            cache.lastUpdated = Date.now()
 
-          if Number.isFinite(lastModified)
-            cache.lastModified = lastModified
+            lastModified = new Date(
+              response.headers["Last-Modified"] or "dummy"
+            ).getTime()
 
-          if etag = response.headers["ETag"]
-            cache.etag = etag
+            if Number.isFinite(lastModified)
+              cache.lastModified = lastModified
 
-          cache.put()
+            if etag = response.headers["ETag"]
+              cache.etag = etag
 
-          for thread in threadList
-            app.bookmark.updateResCount(thread.url, thread.resCount)
+            cache.put()
 
-        else if hasCache and response?.status is 304
-          cache.lastUpdated = Date.now()
-          cache.put()
+            for thread in threadList
+              app.bookmark.updateResCount(thread.url, thread.resCount)
 
-      catch {response, threadList, newBoardUrl}
-        #コールバック
-        @message = "板の読み込みに失敗しました。"
+          else if hasCache and response?.status is 304
+            cache.lastUpdated = Date.now()
+            cache.put()
 
-        if newBoardUrl? and getTsld(@url) is "5ch.net"
-          try
-            newBoardUrl = await chServerMoveDetect(@url)
-            @message += """
-              サーバーが移転しています
+        catch {response, threadList, newBoardUrl}
+          #コールバック
+          @message = "板の読み込みに失敗しました。"
+
+          if newBoardUrl? and getTsld(@url) is "5ch.net"
+            try
+              newBoardUrl = await chServerMoveDetect(@url)
+              @message += """
+                サーバーが移転しています
+                (<a href="#{app.escapeHtml(app.safeHref(newBoardUrl))}"
+                class="open_in_rcrx">#{app.escapeHtml(newBoardUrl)}
+                </a>)
+                """
+          #2chでrejectされている場合は移転を疑う
+          else if getTsld(@url) is "5ch.net" and response?
+            try
+              newBoardUrl = await chServerMoveDetect(@url)
+              #移転検出時
+              @message += """
+              サーバーが移転している可能性が有ります
               (<a href="#{app.escapeHtml(app.safeHref(newBoardUrl))}"
               class="open_in_rcrx">#{app.escapeHtml(newBoardUrl)}
               </a>)
               """
-        #2chでrejectされている場合は移転を疑う
-        else if getTsld(@url) is "5ch.net" and response?
-          try
-            newBoardUrl = await chServerMoveDetect(@url)
-            #移転検出時
-            @message += """
-            サーバーが移転している可能性が有ります
-            (<a href="#{app.escapeHtml(app.safeHref(newBoardUrl))}"
-            class="open_in_rcrx">#{app.escapeHtml(newBoardUrl)}
-            </a>)
-            """
-          if hasCache and threadList?
-            @message += "キャッシュに残っていたデータを表示します。"
+            if hasCache and threadList?
+              @message += "キャッシュに残っていたデータを表示します。"
 
-          if threadList
-            @thread = threadList
-        else
-          if hasCache and threadList?
-            @message += "キャッシュに残っていたデータを表示します。"
+            if threadList
+              @thread = threadList
+          else
+            if hasCache and threadList?
+              @message += "キャッシュに残っていたデータを表示します。"
 
-          if threadList?
-            @thread = threadList
-        reject()
+            if threadList?
+              @thread = threadList
+          reject()
 
       #dat落ちスキャン
       return unless threadList

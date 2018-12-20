@@ -117,16 +117,17 @@ export default class BrowserBookmarkEntryList extends SyncableEntryList {
 
     // 既に同一URLのEntryが存在する場合、
     if (this.get(entry.url)) {
-      // node側の方が新しいと判定された場合のみupdateを行う。
-      if (newerEntry(entry, this.get(entry.url)) === entry) {
-        //重複ブックマークの削除(元のnodeが古いと判定されたため)
+      // addによりcreateBrowserBookmarkが呼ばれた場合
+      if (!this.nodeIdStore.has(entry.url)) {
+        this.nodeIdStore.set(entry.url, node.id);
+      } else if (newerEntry(entry, this.get(entry.url)) === entry) {
+        // node側の方が新しいと判定された場合のみupdateを行う。
+
+        // 重複ブックマークの削除(元のnodeが古いと判定されたため)
         browser.bookmarks.remove(this.nodeIdStore.get(entry.url));
 
         this.nodeIdStore.set(entry.url, node.id);
         this.update(entry, false);
-      } else if (!this.nodeIdStore.has(entry.url)) {
-        // addによりcreateBrowserBookmarkが呼ばれた場合
-        this.nodeIdStore.set(entry.url, node.id);
       } else {
         // 重複ブックマークの削除(node側の方が古いと判定された場合)
         browser.bookmarks.remove(node.id);
@@ -255,7 +256,7 @@ export default class BrowserBookmarkEntryList extends SyncableEntryList {
   private async validateRootNodeSettings (): Promise<void> {
     try {
       await browser.bookmarks.getChildren(this.rootNodeId)
-    } catch (e) {
+    } catch {
       this.needReconfigureRootNodeId.call();
     }
   }
@@ -279,7 +280,7 @@ export default class BrowserBookmarkEntryList extends SyncableEntryList {
       }
 
       return true;
-    } catch (e) {
+    } catch {
       app.log("warn", "ブラウザのブックマークからの読み込みに失敗しました。");
       this.validateRootNodeSettings();
 

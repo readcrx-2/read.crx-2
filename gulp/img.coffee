@@ -38,30 +38,6 @@ imgs = (browser) ->
   func.displayName = "img:imgs:#{browser}"
   return func
 
-ico = (browser) ->
-  output = paths.output[browser]+"/img"
-  src = paths.img.icon
-  bin = "#{output}/favicon.ico"
-  func = ->
-    return unless util.isSrcNewer(src, bin)
-    i = o.sharp(src).png()
-    filebuf = await Promise.all([
-      i.clone()
-        .resize(16, 16)
-        .toBuffer()
-      i.clone()
-        .resize(32, 32)
-        .toBuffer()
-      i.clone()
-        .resize(64, 64)
-        .toBuffer()
-    ])
-    buf = await o.toIco(filebuf)
-    await fs.outputFile(bin, buf)
-    return
-  func.displayName = "img:ico:#{browser}"
-  return func
-
 logoBig = (browser, size) ->
   output = paths.output[browser]+"/img"
   src = paths.img.logoBig
@@ -119,7 +95,6 @@ loading = (browser) ->
 for browser in browsers
   gulp.task "img:#{browser}", gulp.parallel(
     imgs(browser)
-    ico(browser)
     logoBig(browser, 96)
     logoBig(browser, 128)
     loading(browser)

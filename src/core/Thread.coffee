@@ -49,12 +49,13 @@ export default class Thread
         @tsld is "bbspink.com"
       )
 
-      #キャッシュ取得
+      # キャッシュ取得
+      needFetch = false
       try
         await cache.get()
         hasCache = true
         if forceUpdate or Date.now() - cache.lastUpdated > 1000 * 3
-          #通信が生じる場合のみ、progressでキャッシュを送出する
+          # 通信が生じる場合のみ、progressでキャッシュを送出する
           await app.defer()
           tmp = cache.parsed ? Thread.parse(@url, cache.data)
           if tmp?
@@ -63,84 +64,87 @@ export default class Thread
             progress()
           throw new Error("キャッシュの期限が切れているため通信します")
       catch
-        #通信
+        needFetch = true
+
+      try
+        # 通信
+        if needFetch
+          if (
+            (@tsld is "shitaraba.net" and not @url.includes("/read_archive.cgi/")) or
+            @tsld is "machi.to"
+          )
+            if hasCache
+              deltaFlg = true
+              xhrPath += (+cache.resLength + 1) + "-"
+          # 2ch.netは差分を-nで取得
+          else if isHtml
+            if hasCache
+              deltaFlg = true
+              {readcgiVer} = cache
+              if readcgiVer >= 6
+                xhrPath += (+cache.resLength + 1) + "-n"
+              else
+                xhrPath += (+cache.resLength) + "-n"
+
+          request = new Request("GET", xhrPath,
+            mimeType: "text/plain; charset=#{xhrCharset}"
+            preventCache: true
+          )
+
+          if hasCache
+            if cache.lastModified?
+              request.headers["If-Modified-Since"] =
+                new Date(cache.lastModified).toUTCString()
+            if cache.etag?
+              request.headers["If-None-Match"] = cache.etag
+
+          response = await request.send()
+
+        # パース
+        {bbsType} = guessType(@url)
+
         if (
-          (@tsld is "shitaraba.net" and not @url.includes("/read_archive.cgi/")) or
-          @tsld is "machi.to"
+          response?.status is 200 or
+          (readcgiVer >= 6 and response?.status is 500)
         )
-          if hasCache
-            deltaFlg = true
-            xhrPath += (+cache.resLength + 1) + "-"
-        # 2ch.netは差分を-nで取得
-        else if isHtml
-          if hasCache
-            deltaFlg = true
-            {readcgiVer} = cache
-            if readcgiVer >= 6
-              xhrPath += (+cache.resLength + 1) + "-n"
-            else
-              xhrPath += (+cache.resLength) + "-n"
-
-        request = new Request("GET", xhrPath,
-          mimeType: "text/plain; charset=#{xhrCharset}"
-          preventCache: true
-        )
-
-        if hasCache
-          if cache.lastModified?
-            request.headers["If-Modified-Since"] =
-              new Date(cache.lastModified).toUTCString()
-          if cache.etag?
-            request.headers["If-None-Match"] = cache.etag
-
-        response = await request.send()
-
-      #パース
-      {bbsType} = guessType(@url)
-
-      if (
-        response?.status is 200 or
-        (readcgiVer >= 6 and response?.status is 500)
-      )
-        if deltaFlg
-          # 2ch.netなら-nを使って前回取得したレスの後のレスからのものを取得する
-          if isHtml
-            threadCache = cache.parsed
-            # readcgi ver6,7だと変更がないと500が帰ってくる
-            if readcgiVer >= 6 and response.status is 500
-              noChangeFlg = true
-              thread = threadCache
-            else
-              threadResponse = Thread.parse(@url, response.body, +cache.resLength)
-              # 新しいレスがない場合は最後のレスのみ表示されるのでその場合はキャッシュを送る
-              if readcgiVer < 6 and threadResponse.res.length is 1
+          if deltaFlg
+            # 2ch.netなら-nを使って前回取得したレスの後のレスからのものを取得する
+            if isHtml
+              threadCache = cache.parsed
+              # readcgi ver6,7だと変更がないと500が帰ってくる
+              if readcgiVer >= 6 and response.status is 500
                 noChangeFlg = true
                 thread = threadCache
               else
-                if readcgiVer < 6
-                  threadResponse.res.shift()
-                thread = threadResponse
-                thread.res = threadCache.res.concat(threadResponse.res)
+                threadResponse = Thread.parse(@url, response.body, +cache.resLength)
+                # 新しいレスがない場合は最後のレスのみ表示されるのでその場合はキャッシュを送る
+                if readcgiVer < 6 and threadResponse.res.length is 1
+                  noChangeFlg = true
+                  thread = threadCache
+                else
+                  if readcgiVer < 6
+                    threadResponse.res.shift()
+                  thread = threadResponse
+                  thread.res = threadCache.res.concat(threadResponse.res)
+            else
+              thread = Thread.parse(@url, cache.data + response.body)
           else
-            thread = Thread.parse(@url, cache.data + response.body)
-        else
-          thread = Thread.parse(@url, response.body)
-      #2ch系BBSのdat落ち
-      else if bbsType is "2ch" and response?.status is 203
-        if hasCache
-          if deltaFlg and isHtml
+            thread = Thread.parse(@url, response.body)
+        # 2ch系BBSのdat落ち
+        else if bbsType is "2ch" and response?.status is 203
+          if hasCache
+            if deltaFlg and isHtml
+              thread = cache.parsed
+            else
+              thread = Thread.parse(@url, cache.data)
+          else
+            thread = Thread.parse(@url, response.body)
+        else if hasCache
+          if isHtml
             thread = cache.parsed
           else
             thread = Thread.parse(@url, cache.data)
-        else
-          thread = Thread.parse(@url, response.body)
-      else if hasCache
-        if isHtml
-          thread = cache.parsed
-        else
-          thread = Thread.parse(@url, cache.data)
 
-      try
         #パース成功
         if thread
           #2ch系BBSのdat落ち
@@ -267,7 +271,7 @@ export default class Thread
           reject()
         else if @tsld is "shitaraba.net" and @url.includes("/read.cgi/")
           @message += "スレッドの読み込みに失敗しました。"
-          {error} = response.headers
+          {error} = response?.headers?
           if error?
             switch error
               when "BBS NOT FOUND"

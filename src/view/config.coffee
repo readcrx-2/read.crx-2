@@ -61,11 +61,13 @@ class SettingIO
       return unless _checkExcute(@name, "export")
       blob = new Blob([@exportFunc()], type: "text/plain")
       $a = $__("a").addClass("hidden")
-      $a.href = URL.createObjectURL(blob)
+      url = URL.createObjectURL(blob)
+      $a.href = url
       $a.setAttr("download", "read.crx-2_#{@name}.json")
       @$exportButton.addAfter($a)
       $a.click()
       $a.remove()
+      URL.revokeObjectURL(url)
       _clearExcute()
       return
     )
@@ -183,11 +185,13 @@ class HistoryIO extends SettingIO
       exportText = JSON.stringify(data)
       blob = new Blob([exportText], type: "text/plain")
       $a = $__("a").addClass("hidden")
-      $a.href = URL.createObjectURL(blob)
+      url = URL.createObjectURL(blob)
+      $a.href = url
       $a.setAttr("download", "read.crx-2_#{@name}.json")
       @$exportButton.addAfter($a)
       $a.click()
       $a.remove()
+      URL.revokeObjectURL(url)
       _clearExcute()
       return
     )
@@ -303,11 +307,13 @@ class BookmarkIO extends SettingIO
       exportText = JSON.stringify(data)
       blob = new Blob([exportText], type: "text/plain")
       $a = $__("a").addClass("hidden")
-      $a.href = URL.createObjectURL(blob)
+      url = URL.createObjectURL(blob)
+      $a.href = url
       $a.setAttr("download", "read.crx-2_#{@name}.json")
       @$exportButton.addAfter($a)
       $a.click()
       $a.remove()
+      URL.revokeObjectURL(url)
       _clearExcute()
       return
     )

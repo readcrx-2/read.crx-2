@@ -1,4 +1,3 @@
-///<reference path="../global.d.ts" />
 // @ts-ignore
 import {slideDown, slideUp} from "./Animate.coffee"
 

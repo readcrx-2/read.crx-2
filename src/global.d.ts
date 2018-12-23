@@ -1,11 +1,8 @@
 ///<reference path="./shortQuery.d.ts" />
 
 interface Window {
-  browser: any;
   app: any;
 }
-
-declare var browser: any;
 
 declare namespace app {
   var config: any;
@@ -18,4 +15,9 @@ declare namespace app {
   var bookmark: any;
   var HTTP: any;
   var util: any;
+}
+
+declare namespace browser.bookmarks {
+  const onImportBegan: EvListener<() => void>;
+  const onImportEnded: EvListener<() => void>;
 }

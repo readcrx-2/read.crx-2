@@ -1,4 +1,3 @@
-///<reference path="../global.d.ts" />
 import {threadToBoard, fix as fixUrl} from "./URL"
 
 export interface ReadState {

@@ -126,10 +126,10 @@ export default class Write
     @_setSageDOM()
     @_setDefaultInput()
 
-    @$view.C("preview_button")[0].on("click", (e) ->
+    @$view.C("preview_button")[0].on("click", (e) =>
       e.preventDefault()
 
-      text = $view.T("textarea")[0].value
+      text = @$view.T("textarea")[0].value
       #行頭のスペースは削除される。複数のスペースは一つに纏められる。
       text = text.replace(/^\u0020*/g, "").replace(/\u0020+/g, " ")
 

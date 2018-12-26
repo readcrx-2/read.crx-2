@@ -1,4 +1,3 @@
-///<reference path="../global.d.ts" />
 // @ts-ignore
 import {fadeIn, fadeOut} from "./Animate.coffee"
 

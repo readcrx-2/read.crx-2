@@ -1,4 +1,3 @@
-///<reference path="../global.d.ts" />
 import {Entry} from "./BookmarkEntryList"
 import BrowserBookmarkEntryList from "./BrowserBookmarkEntryList"
 import {threadToBoard} from "./URL"

@@ -1,17 +1,7 @@
-///<reference path="../global.d.ts" />
 import {Entry, SyncableEntryList, newerEntry} from "./BookmarkEntryList"
 import {fix as fixUrl, buildQuery, GuessResult, guessType, parseHashQuery} from "./URL"
 
-interface BookmarkTreeNode {
-  id: string;
-  parentId: string;
-  index: number;
-  url: string;
-  title: string;
-  dateAdded: number;
-  dateGroupModified: number;
-  children: BookmarkTreeNode[];
-}
+type BookmarkTreeNode = browser.bookmarks.BookmarkTreeNode
 
 export default class BrowserBookmarkEntryList extends SyncableEntryList {
   rootNodeId: string;
@@ -124,7 +114,7 @@ export default class BrowserBookmarkEntryList extends SyncableEntryList {
         // node側の方が新しいと判定された場合のみupdateを行う。
 
         // 重複ブックマークの削除(元のnodeが古いと判定されたため)
-        browser.bookmarks.remove(this.nodeIdStore.get(entry.url));
+        browser.bookmarks.remove(this.nodeIdStore.get(entry.url)!);
 
         this.nodeIdStore.set(entry.url, node.id);
         this.update(entry, false);
@@ -325,8 +315,8 @@ export default class BrowserBookmarkEntryList extends SyncableEntryList {
 
     if (Object.keys(changes).length === 0) return true;
 
-    var res:BookmarkTreeNode[] = await browser.bookmarks.update(id, changes);
-    if (res) return true;
+    var res2:BookmarkTreeNode = await browser.bookmarks.update(id, changes);
+    if (res2) return true;
 
     app.log("error", "ブラウザのブックマーク更新に失敗しました");
     this.validateRootNodeSettings();

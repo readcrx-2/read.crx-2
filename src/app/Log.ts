@@ -9,8 +9,8 @@ export async function criticalError (message:string):Promise<void> {
     { body: `詳細 : ${message}` }
   );
 
-  var {id} = await parent.browser.tabs.getCurrent();
-  parent.browser.tabs.remove(id);
+  var {id} = await (<any>parent).browser.tabs.getCurrent();
+  (<any>parent).browser.tabs.remove(id);
 }
 
 export function log (level:logLevel, ...data:any[]) {

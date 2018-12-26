@@ -1,4 +1,3 @@
-///<reference path="../global.d.ts" />
 import VirtualNotch from "./VirtualNotch"
 
 export default class Tab {

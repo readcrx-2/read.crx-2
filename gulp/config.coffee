@@ -101,6 +101,10 @@ defaultOptions =
           "es2016"
           "es2017"
         ]
+        typeRoots: [
+          "node_modules/web-ext-types"
+          "src/global.d.ts"
+        ]
         skipLibCheck: true
         noUnusedLocals: true
         alwaysStrict: true

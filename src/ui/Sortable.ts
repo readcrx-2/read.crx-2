@@ -1,5 +1,3 @@
-///<reference path="../global.d.ts" />
-
 interface Position {
   x: number;
   y: number;

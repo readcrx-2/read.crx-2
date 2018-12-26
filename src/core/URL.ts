@@ -1,4 +1,3 @@
-///<reference path="../global.d.ts" />
 import {Request} from "./HTTP"
 // @ts-ignore
 import {fetch as fetchBBSMenu} from "./BBSMenu.coffee"

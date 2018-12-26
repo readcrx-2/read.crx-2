@@ -1,4 +1,3 @@
-///<reference path="../global.d.ts" />
 import Accordion from "./Accordion"
 
 /*

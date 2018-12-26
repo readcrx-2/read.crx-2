@@ -1,5 +1,3 @@
-///<reference path="../global.d.ts" />
-
 interface NotchedMouseWheelEvent extends MouseEvent {
   wheelDelta: number;
 }

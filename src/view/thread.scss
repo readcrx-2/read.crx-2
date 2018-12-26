@@ -293,7 +293,7 @@ header {
   border: 3px solid #666;
   border-radius: 3px;
   > article {
-    contain: content;
+    contain: layout;
     padding: 10px;
   }
   &.popup_linkinfo {

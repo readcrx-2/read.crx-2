@@ -98,7 +98,7 @@ export default class Bookmark {
       bookmarkData.push(this.bel.remove(url));
     }
 
-    return Boolean(await Promise.all(bookmarkData));
+    return (await Promise.all(bookmarkData)).every(v => v);
   }
 
   async removeAllExpired ():Promise<boolean> {
@@ -110,7 +110,7 @@ export default class Bookmark {
       }
     }
 
-    return Boolean(await Promise.all(bookmarkData));
+    return (await Promise.all(bookmarkData)).every(v => v);
   }
 
   async updateReadState (readState):Promise<boolean> {

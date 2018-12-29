@@ -824,9 +824,9 @@ app.boot("/view/config.html", ["Cache", "BBSMenu"], (Cache, BBSMenu) ->
       return
     exportFunc: ->
       content = app.config.getAll()
-        .replace(/"config_last_board_sort_config":".*?","/,"\"")
-        .replace(/"config_last_version":".*?","/,"\"")
-      return content
+      delete content.config_last_board_sort_config
+      delete content.config_last_version
+      return JSON.stringify(content)
   )
 
   # ImageReplaceDatをインポート

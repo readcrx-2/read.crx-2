@@ -145,16 +145,13 @@ export default class Config {
     return null;
   }
 
-  //設定の連想配列をjson文字列で渡す
-  getAll(): string {
-    const json = {};
+  getAll(): Record<string, string> {
+    const object = {};
     for(const [key, val] of Config._default) {
-      json[`config_${key}`] = val;
+      object[`config_${key}`] = val;
     }
-    for(const [key, val] of this._cache) {
-      json[key] = val;
-    }
-    return JSON.stringify(json);
+    Object.assign(object, this._cache);
+    return object;
   }
 
   isOn(key: string): boolean {

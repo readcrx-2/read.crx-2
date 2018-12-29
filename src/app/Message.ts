@@ -3,39 +3,39 @@ import {defer} from "./Defer";
 import {deepCopy} from "./Util";
 
 class Message {
-  private _listenerStore:Map<string, Callbacks> = new Map();
-  private _bc:BroadcastChannel;
+  static readonly CHANNEL_NAME = "readcrx";
+  private _listenerStore: Map<string, Callbacks> = new Map();
+  private _bc: BroadcastChannel;
 
-  constructor () {
-    this._bc = new BroadcastChannel("readcrx");
+  constructor() {
+    this._bc = new BroadcastChannel(Message.CHANNEL_NAME);
     this._bc.on("message", ({data: {type, message}}) => {
       this._fire(type, message);
     });
   }
 
-  private async _fire (type:string, message:any):Promise<void> {
-    var message = deepCopy(message);
+  private async _fire(type:string, message: any) {
+    const msg = deepCopy(message);
 
     await defer();
     if (this._listenerStore.has(type)) {
-      this._listenerStore.get(type)!.call(message);
+      this._listenerStore.get(type)!.call(msg);
     }
   }
 
-  send (type:string, message:any = {}):void {
+  send(type: string, message: any = {}) {
     this._fire(type, message);
     this._bc.postMessage({type, message});
-    return
   }
 
-  on (type:string, listener:Function) {
+  on(type: string, listener: Function) {
     if (!this._listenerStore.has(type)) {
       this._listenerStore.set(type, new Callbacks({persistent: true}));
     }
     this._listenerStore.get(type)!.add(listener);
   }
 
-  off (type:string, listener:Function) {
+  off(type: string, listener: Function) {
     if (this._listenerStore.has(type)) {
       this._listenerStore.get(type)!.remove(listener);
     }

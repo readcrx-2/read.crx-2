@@ -11,11 +11,11 @@ export default class Callbacks {
   private _latestCallArg: any[]|null = null;
   wasCalled = false;
 
-  constructor (config:CallbacksConfiguration = {}) {
+  constructor(config: CallbacksConfiguration = {}) {
     this._config = config;
   }
 
-  add (callback:Function):void {
+  add(callback: Function) {
     if (!this._config.persistent && this._latestCallArg) {
       callback(...deepCopy(this._latestCallArg));
     } else {
@@ -23,7 +23,7 @@ export default class Callbacks {
     }
   }
 
-  remove (callback:Function):void {
+  remove(callback: Function) {
     if (this._callbackStore.has(callback)) {
       this._callbackStore.delete(callback);
     } else {
@@ -32,32 +32,29 @@ export default class Callbacks {
     }
   }
 
-  call (...arg:any[]):void {
-    var callback:Function, tmpCallbackStore;
-
+  call(...arg: any[]) {
     if (!this._config.persistent && this._latestCallArg) {
       log("error",
         "app.Callbacks: persistentでないCallbacksが複数回callされました。");
-    } else {
-      this.wasCalled = true;
+      return;
+    }
 
-      this._latestCallArg = deepCopy(arg);
+    this.wasCalled = true;
+    this._latestCallArg = deepCopy(arg);
+    const tmpCallbackStore = new Set(this._callbackStore);
 
-      tmpCallbackStore = new Set(this._callbackStore);
-
-      for (callback of tmpCallbackStore) {
-        if (this._callbackStore.has(callback)) {
-          callback(...deepCopy(arg));
-        }
+    for (const callback of tmpCallbackStore) {
+      if (this._callbackStore.has(callback)) {
+        callback(...deepCopy(arg));
       }
+    }
 
-      if (!this._config.persistent) {
-        this._callbackStore.clear();
-      }
+    if (!this._config.persistent) {
+      this._callbackStore.clear();
     }
   }
 
-  destroy ():void {
+  destroy() {
     this._callbackStore.clear();
   }
 }

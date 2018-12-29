@@ -89,17 +89,16 @@ export default class Config {
 
   private _cache = new Map<string, string>();
   ready: Function;
-  _onChanged: any;
+  _onChanged: Function;
 
-  constructor () {
-    var ready = new Callbacks();
+  constructor() {
+    const ready = new Callbacks();
     this.ready = ready.add.bind(ready);
 
     ( async () => {
-      var key:string, val:any;
-      var res = await browser.storage.local.get(null);
+      const res = await browser.storage.local.get(null);
       if (this._cache !== null) {
-        for ([key, val] of Object.entries(res)) {
+        for (const [key, val] of Object.entries(res)) {
           if (
             key.startsWith("config_") &&
             (typeof val === "string" || typeof val === "number")
@@ -112,15 +111,13 @@ export default class Config {
     })();
 
     this._onChanged = (change, area) => {
-      var key:string, val:any;
-
       if (area !== "local") {
         return;
       }
 
-      for ([key, val] of Object.entries(change)) {
+      for (const [key, val] of Object.entries(change)) {
         if (!key.startsWith("config_")) continue;
-        var {newValue} = val;
+        const {newValue} = <any>val;
 
         if (typeof newValue === "string") {
           this._cache.set(key, newValue);
@@ -135,37 +132,36 @@ export default class Config {
       }
     };
 
-    browser.storage.onChanged.addListener(this._onChanged);
+    browser.storage.onChanged.addListener(<any>this._onChanged);
   }
 
-  get (key:string):string|null {
+  get(key: string): string|null {
     if (this._cache.has(`config_${key}`)) {
       return this._cache.get(`config_${key}`)!;
-    } else if (Config._default.has(key)) {
+    }
+    if (Config._default.has(key)) {
       return Config._default.get(key)!;
     }
     return null;
   }
 
   //設定の連想配列をjson文字列で渡す
-  getAll ():string {
-    var json = {};
-    for(var [key, val] of Config._default) {
+  getAll(): string {
+    const json = {};
+    for(const [key, val] of Config._default) {
       json[`config_${key}`] = val;
     }
-    for(var [key, val] of this._cache) {
+    for(const [key, val] of this._cache) {
       json[key] = val;
     }
     return JSON.stringify(json);
   }
 
-  isOn (key:string):boolean {
+  isOn(key: string): boolean {
     return this.get(key) === "on";
   }
 
-  async set (key:string, val:string): Promise<void> {
-    var tmp = {};
-
+  async set(key: string, val: string) {
     if (
       typeof key !== "string" ||
       !(typeof val === "string" || typeof val === "number")
@@ -175,12 +171,13 @@ export default class Config {
       throw new Error("app.Config::setに不適切な値が渡されました");
     }
 
+    const tmp = {};
     tmp[`config_${key}`] = val;
 
     await browser.storage.local.set(tmp)
   }
 
-  async del (key:string): Promise<void> {
+  async del(key: string) {
     if (typeof key !== "string") {
       log("error", "app.Config::delにstring以外の値が渡されました",
         arguments);
@@ -190,8 +187,8 @@ export default class Config {
     await browser.storage.local.remove(`config_${key}`)
   }
 
-  destroy ():void {
+  destroy() {
     this._cache.clear();
-    browser.storage.onChanged.removeListener(this._onChanged);
+    browser.storage.onChanged.removeListener(<any>this._onChanged);
   }
 }

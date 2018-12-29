@@ -1,28 +1,32 @@
 import {deepCopy} from "./Util";
 
 type logLevel = "log" | "debug" | "info" | "warn" | "error";
-var logLevels = <Set<logLevel>>new Set(["log", "debug", "info", "warn", "error"]);
+const logLevels = new Set(<logLevel[]>["log", "debug", "info", "warn", "error"]);
 
-export async function criticalError (message:string):Promise<void> {
+export async function criticalError(message: string) {
   new Notification(
     "深刻なエラーが発生したのでread.crxを終了します",
     { body: `詳細 : ${message}` }
   );
 
-  var {id} = await (<any>parent).browser.tabs.getCurrent();
+  const {id} = await (<any>parent).browser.tabs.getCurrent();
   (<any>parent).browser.tabs.remove(id);
 }
 
-export function log (level:logLevel, ...data:any[]) {
-  if (logLevels.has(level)) {
-    console[level](...data);
-  } else {
+export function log(level: logLevel, ...data: any[]) {
+  if (!logLevels.has(level)) {
     log("error", "app.log: 引数levelが不正な値です", level);
+    return;
   }
+
+  console[level](...data);
 }
 
-export function assertArg (name:string, rules:[any, string, boolean|undefined][]):boolean {
-  for (let [val, type, canbeNull] of rules) {
+// [Val, Type, isNullable]
+type Assertion = [any, string, boolean|undefined]
+
+export function assertArg(name: string, rules: Assertion[]): boolean {
+  for (const [val, type, canbeNull] of rules) {
     if (
       !(canbeNull && (val === null || val === void 0)) &&
       typeof val !== type

@@ -1,10 +1,41 @@
 import VirtualNotch from "./VirtualNotch"
 
+// T型のK以外のプロパティを持つ型
+type Omit<T, K> = Pick<T, Exclude<keyof T, K>>
+
+interface TabInfo {
+  tabId: string;
+  url: string;
+  title: string;
+  selected: boolean;
+  locked: boolean;
+}
+
+interface FormatedUrlTabInfo extends TabInfo {
+  formatedUrl: string;
+}
+
+type ClosedTabInfo = Omit<TabInfo, "selected">
+type SavedTabInfo = Omit<TabInfo,  "tabId">
+
+interface AddTabInfo {
+  title: string|null;
+  selected: boolean;
+  locked: boolean;
+  lazy: boolean;
+  restore: boolean;
+}
+
+interface UpdateTabInfo extends SavedTabInfo {
+  restore: boolean;
+  _internal: boolean;
+}
+
 export default class Tab {
   private static idSeed = 0;
   private static tabA: Tab|null = null;
   private static tabB: Tab|null = null;
-  private recentClosed: any[] = [];
+  private recentClosed: ClosedTabInfo[] = [];
   private historyStore = {};
 
   private static genId(): string {
@@ -12,7 +43,7 @@ export default class Tab {
   }
 
   public static saveTabs() {
-    const data: any[] = [];
+    const data: SavedTabInfo[] = [];
     for (const {formatedUrl, title, selected, locked} of this.tabA!.getAll().concat(this.tabB!.getAll())) {
       data.push({
         url: formatedUrl,
@@ -128,8 +159,8 @@ export default class Tab {
     });
   }
 
-  getAll(): any[] {
-    const res: any[] = [];
+  getAll(): FormatedUrlTabInfo[] {
+    const res: FormatedUrlTabInfo[] = [];
 
     for (const li of this.$element.$$("li")) {
       res.push({
@@ -145,7 +176,7 @@ export default class Tab {
     return res;
   }
 
-  getSelected(): any|null {
+  getSelected(): TabInfo|null {
     const li = this.$element.$("li.tab_selected");
 
     if (!li) return null;
@@ -167,13 +198,7 @@ export default class Tab {
       locked = false,
       lazy = false,
       restore = false
-    }: Partial<{
-      title: string|null,
-      selected: boolean,
-      locked: boolean,
-      lazy: boolean,
-      restore: boolean
-    }> = {}
+    }: Partial<AddTabInfo> = {}
   ): string {
     title = title === null ? url : title;
 
@@ -210,14 +235,7 @@ export default class Tab {
 
   async update (
     tabId: string,
-    param: Partial<{
-      url: string,
-      title: string,
-      selected: boolean,
-      locked: boolean,
-      restore: boolean,
-      _internal: boolean
-    }>
+    param: Partial<UpdateTabInfo>
   ) {
     if (typeof param.url === "string") {
       if (!param._internal) {
@@ -305,6 +323,7 @@ export default class Tab {
 
     if (tab.recentClosed.length > 50) {
       const tmp = tab.recentClosed.shift();
+      // @ts-ignore deleteはプロパティにするべきというエラー
       delete tab.historyStore[tmp.tabId];
     }
 
@@ -323,7 +342,7 @@ export default class Tab {
     Tab.saveTabs()
   }
 
-  getRecentClosed(): any {
+  getRecentClosed(): ClosedTabInfo[] {
     return app.deepCopy(this.recentClosed);
   }
 
@@ -334,7 +353,6 @@ export default class Tab {
         return this.add(tab.url, {title: tab.title});
       }
     }
-
     return null;
   }
 

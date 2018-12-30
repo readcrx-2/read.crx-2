@@ -31,12 +31,17 @@ interface UpdateTabInfo extends SavedTabInfo {
   _internal: boolean;
 }
 
+interface TabHistory {
+  current: number;
+  stack: {url: string, title: string}[];
+}
+
 export default class Tab {
   private static idSeed = 0;
   private static tabA: Tab|null = null;
   private static tabB: Tab|null = null;
   private recentClosed: ClosedTabInfo[] = [];
-  private historyStore = {};
+  private historyStore: Map<string, TabHistory>  = new Map();
 
   private static genId(): string {
     return "tabId" + ++Tab.idSeed;
@@ -110,7 +115,7 @@ export default class Tab {
       }
 
       const tabId = source.frameElement.dataset.tabid!;
-      const history = this.historyStore[tabId];
+      const history = this.historyStore.get(tabId)!;
 
       switch (message.type) {
         case "requestTabHistory":
@@ -204,10 +209,10 @@ export default class Tab {
 
     const tabId = Tab.genId();
 
-    this.historyStore[tabId] = {
+    this.historyStore.set(tabId, {
       current: 0,
       stack: [{url: url, title: url}]
-    };
+    });
 
     // 既存のタブが一つも無い場合、強制的にselectedオン
     if (!this.$element.$(".tab_tabbar > li")) {
@@ -239,7 +244,7 @@ export default class Tab {
   ) {
     if (typeof param.url === "string") {
       if (!param._internal) {
-        const history = this.historyStore[tabId];
+        const history = this.historyStore.get(tabId)!;
         history.stack.splice(history.current + 1);
         history.stack.push({url: param.url, title: param.url});
         history.current++;
@@ -253,8 +258,8 @@ export default class Tab {
     }
 
     if (typeof param.title === "string") {
-      const tmp = this.historyStore[tabId];
-      tmp.stack[tmp.current].title = param.title;
+      const history = this.historyStore.get(tabId)!;
+      history.stack[history.current].title = param.title;
 
       const $tmptab = this.$element.$(`li[data-tabid="${tabId}"]`);
       $tmptab.setAttr("title", param.title);
@@ -322,9 +327,8 @@ export default class Tab {
     });
 
     if (tab.recentClosed.length > 50) {
-      const tmp = tab.recentClosed.shift();
-      // @ts-ignore deleteはプロパティにするべきというエラー
-      delete tab.historyStore[tmp.tabId];
+      const tmp = tab.recentClosed.shift()!;
+      tab.historyStore.delete(tmp.tabId);
     }
 
     if ($tmptab.hasClass("tab_selected")) {

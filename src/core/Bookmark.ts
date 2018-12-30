@@ -8,24 +8,24 @@ export default class Bookmark {
   bel: BrowserBookmarkEntryList;
   promiseFirstScan;
 
-  constructor (rootIdNode: string) {
+  constructor(rootIdNode: string) {
     this.bel = new BrowserBookmarkEntryList(rootIdNode);
     this.promiseFirstScan = new Promise( (resolve, reject) => {
-      this.bel.ready.add(() => {
+      this.bel.ready.add( () => {
         resolve();
 
-        this.bel.onChanged.add(({type: typeName, entry: bookmark}) => {
-          var type = "";
+        this.bel.onChanged.add( ({type: typeName, entry: bookmark}) => {
+          let type = "";
           switch (typeName) {
-            case "ADD": type = "added"; break;
-            case "TITLE": type = "title"; break;
+            case "ADD":       type = "added";     break;
+            case "TITLE":     type = "title";     break;
             case "RES_COUNT": type = "res_count"; break;
-            case "EXPIRED": type = "expired"; break;
-            case "REMOVE": type = "removed"; break;
+            case "EXPIRED":   type = "expired";   break;
+            case "REMOVE":    type = "removed";   break;
           }
           if (type !== "") {
             app.message.send("bookmark_updated", {type, bookmark});
-            return
+            return;
           }
           if (typeName === "READ_STATE") {
             app.message.send("read_state_updated", {
@@ -43,34 +43,34 @@ export default class Bookmark {
     });
   }
 
-  get (url:string):Entry|null {
-    var entry = this.bel.get(url);
+  get(url: string): Entry|null {
+    const entry = this.bel.get(url);
 
     return entry ? entry : null;
   }
 
-  getByBoard (boardURL:string):Entry[] {
+  getByBoard(boardURL: string): Entry[] {
     return this.bel.getThreadsByBoardURL(boardURL);
   }
 
-  getAll ():Entry[] {
+  getAll(): Entry[] {
     return this.bel.getAll();
   }
 
-  getAllThreads ():Entry[] {
+  getAllThreads(): Entry[] {
     return this.bel.getAllThreads();
   }
 
-  getAllBoards ():Entry[] {
+  getAllBoards(): Entry[] {
     return this.bel.getAllBoards();
   }
 
-  async add (url:string, title:string, resCount?:number): Promise<boolean> {
-    var entry = BrowserBookmarkEntryList.URLToEntry(url)!;
+  async add(url: string, title: string, resCount?: number): Promise<boolean> {
+    const entry = BrowserBookmarkEntryList.URLToEntry(url)!;
 
     entry.title = title;
 
-    var readState = await getReadState(entry.url)
+    const readState = await getReadState(entry.url);
     if (readState) {
       entry.readState = readState;
     }
@@ -87,24 +87,24 @@ export default class Bookmark {
     return this.bel.add(entry);
   }
 
-  async remove (url:string):Promise<boolean> {
+  async remove(url: string): Promise<boolean> {
     return this.bel.remove(url);
   }
 
-  async removeAll ():Promise<boolean> {
-    var bookmarkData:Promise<boolean>[] = [];
+  async removeAll(): Promise<boolean> {
+    const bookmarkData: Promise<boolean>[] = [];
 
-    for (var {url} of this.bel.getAll()) {
+    for (const {url} of this.bel.getAll()) {
       bookmarkData.push(this.bel.remove(url));
     }
 
     return (await Promise.all(bookmarkData)).every(v => v);
   }
 
-  async removeAllExpired ():Promise<boolean> {
-    var bookmarkData:Promise<boolean>[] = [];
+  async removeAllExpired(): Promise<boolean> {
+    const bookmarkData: Promise<boolean>[] = [];
 
-    for (var {url, expired} of this.bel.getAll()) {
+    for (const {url, expired} of this.bel.getAll()) {
       if (expired) {
         bookmarkData.push(this.bel.remove(url));
       }
@@ -113,9 +113,9 @@ export default class Bookmark {
     return (await Promise.all(bookmarkData)).every(v => v);
   }
 
-  async updateReadState (readState):Promise<boolean> {
+  async updateReadState(readState): Promise<boolean> {
     // TODO
-    var entry = this.bel.get(readState.url);
+    const entry = this.bel.get(readState.url);
 
     if (entry && app.util.isNewerReadState(entry.readState, readState)) {
       entry.readState = readState;
@@ -124,8 +124,8 @@ export default class Bookmark {
     return true;
   }
 
-  async updateResCount (url:string, resCount:number):Promise<boolean> {
-    var entry = this.bel.get(url);
+  async updateResCount(url:string, resCount:number): Promise<boolean> {
+    const entry = this.bel.get(url);
 
     if (entry && (!entry.resCount || entry.resCount < resCount)) {
       entry.resCount = resCount;
@@ -134,8 +134,8 @@ export default class Bookmark {
     return true;
   }
 
-  async updateExpired (url:string, expired:boolean):Promise<boolean> {
-    var entry = this.bel.get(url);
+  async updateExpired(url:string, expired:boolean): Promise<boolean> {
+    const entry = this.bel.get(url);
 
     if (entry) {
       entry.expired = expired;
@@ -144,9 +144,9 @@ export default class Bookmark {
     return true;
   }
 
-  async import (newEntry:Entry):Promise<boolean> {
-    var entry = this.bel.get(newEntry.url);
-    var updateEntry = false;
+  async import(newEntry: Entry): Promise<boolean> {
+    let entry = this.bel.get(newEntry.url);
+    let updateEntry = false;
 
     if (!entry) {
       await this.add(newEntry.url, newEntry.title);

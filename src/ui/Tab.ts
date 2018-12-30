@@ -286,13 +286,12 @@ export default class Tab {
   }
 
   remove(tabId: string): void {
-    let key;
     const tab: Tab = this;
     const $tmptab = this.$element.$(`li[data-tabid="${tabId}"]`);
     const tabsrc = $tmptab.dataset.tabsrc;
 
-    for (const tmp of tab.recentClosed) {
-      if (tmp.url === tabsrc) {
+    for (const [key, {url}] of tab.recentClosed.entries()) {
+      if (url === tabsrc) {
         tab.recentClosed.splice(key, 1);
       }
     }
@@ -329,9 +328,7 @@ export default class Tab {
   }
 
   restoreClosed(tabId: string): string|null {
-    let key;
-
-    for (const tab of this.recentClosed) {
+    for (const [key, tab] of this.recentClosed.entries()) {
       if (tab.tabId === tabId) {
         this.recentClosed.splice(key, 1);
         return this.add(tab.url, {title: tab.title});

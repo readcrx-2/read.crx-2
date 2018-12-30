@@ -19,6 +19,7 @@ export default class Sortable {
   //ドラッグしているDOMの戻るときの中央座標
   targetCenter: Position|null = null;
 
+  // requestAnimationFrameId
   rAFId: number = 0;
 
   clicks: number = 1;
@@ -39,7 +40,7 @@ export default class Sortable {
     this.overlay.on("mouseout", this.onFinish.bind(this));
   }
 
-  setTarget(target: HTMLElement): void {
+  setTarget(target: HTMLElement) {
     this.target = target;
     this.target.addClass("sortable_dragging");
     this.target.style["will-change"] = "transform";
@@ -49,7 +50,7 @@ export default class Sortable {
     };
   }
 
-  removeTarget(): void {
+  removeTarget() {
     if (!this.target) return;
     this.target.removeClass("sortable_dragging");
     this.target.style.transform = null;
@@ -58,7 +59,7 @@ export default class Sortable {
     this.targetCenter = null;
   }
 
-  changeStart(func: Function): void {
+  changeStart(func: Function) {
     const beforeLeft = this.target!.offsetLeft;
     const beforeTop = this.target!.offsetTop;
     func();
@@ -74,7 +75,7 @@ export default class Sortable {
     };
   }
 
-  onMousedown ({target, button}): void {
+  onMousedown({target, button}) {
     if (target === this.container) return;
     if (button !== 0) return;
     if (
@@ -101,7 +102,7 @@ export default class Sortable {
     this.clicks++;
   }
 
-  onStart (target): void {
+  onStart(target) {
     if (!target) return;
     while (target.parent() !== this.container) {
       target = target.parent();
@@ -110,7 +111,7 @@ export default class Sortable {
     document.body.addLast(this.overlay);
   }
 
-  onMove({ pageX, pageY }): void {
+  onMove({ pageX, pageY }) {
     if (!this.isSorting) {
       this.start = {
         x: pageX,
@@ -131,7 +132,7 @@ export default class Sortable {
     }
   }
 
-  _animate (): void {
+  _animate() {
     let tmp = <HTMLElement>this.container.first();
     let diffX = this.last!.x - this.start!.x;
     let diffY = this.last!.y - this.start!.y;
@@ -177,7 +178,7 @@ export default class Sortable {
   }
   animate: Function = this._animate.bind(this);
 
-  onFinish (): void {
+  onFinish() {
     // removeするとmouseoutも発火するので二重に呼ばれる
     this.isSorting = false;
 
@@ -192,7 +193,7 @@ export default class Sortable {
     }
   }
 
-  onContextMenu (e): void {
+  onContextMenu(e) {
     e.preventDefault();
   }
 }

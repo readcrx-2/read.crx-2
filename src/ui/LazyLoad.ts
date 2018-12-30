@@ -5,10 +5,10 @@ type HTMLMediaElement = HTMLImageElement | HTMLAudioElement | HTMLVideoElement;
 
 export default class LazyLoad {
   container: HTMLElement;
-  isManualLoad: boolean = false;
+  isManualLoad = false;
   private observer: IntersectionObserver;
   private medias: HTMLMediaElement[] = [];
-  private pause: boolean = false;
+  private pause = false;
   private noNeedAttrs: string[] = [
     "data-src",
     "data-type",
@@ -21,13 +21,16 @@ export default class LazyLoad {
     "data-user-agent"
   ];
 
-  constructor (container: HTMLElement) {
+  constructor(container: HTMLElement) {
     this.container = container;
     this.isManualLoad = app.config.isOn("manual_image_load");
 
     if (this.isManualLoad) return;
 
-    this.observer = new IntersectionObserver(this.onChange.bind(this), {root: this.container, rootMargin: "10px"})
+    this.observer = new IntersectionObserver(
+      this.onChange.bind(this),
+      { root: this.container, rootMargin: "10px" }
+    );
     this.container.on("scrollstart", this.onScrollStart.bind(this));
     this.container.on("scrollfinish", this.onScrollFinish.bind(this));
     this.container.on("searchstart", this.onSearchStart.bind(this));
@@ -36,12 +39,10 @@ export default class LazyLoad {
     this.scan();
   }
 
-  private onChange(changes): void {
-    var change;
-
+  private onChange(changes) {
     if (this.pause) return;
 
-    for (change of changes) {
+    for (const change of changes) {
       if (change.isIntersecting) {
         this.load(change.target);
       }
@@ -49,66 +50,65 @@ export default class LazyLoad {
   }
 
   // スクロール中に無駄な画像ロードが発生するのを防止する
-  private onScrollStart(): void {
+  private onScrollStart() {
     this.pause = true;
   }
 
-  private onScrollFinish(): void {
+  private onScrollFinish() {
     this.pause = false;
   }
 
   // 検索中に無駄な画像ロードが発生するのを防止する
-  private onSearchStart(): void {
+  private onSearchStart() {
     this.pause = true;
   }
 
-  private onSearchFinish(): void {
+  private onSearchFinish() {
     this.pause = false;
   }
 
-  private onImmediateLoad (e): void {
+  private onImmediateLoad(e) {
     this.immediateLoad(e.target);
   }
 
-  public immediateLoad (media: HTMLMediaElement): void {
+  public immediateLoad(media: HTMLMediaElement) {
     if (media.tagName === "IMG" || media.tagName === "VIDEO") {
       if (media.dataset.src === undefined) return;
       this.load(media);
     }
   }
 
-  private async load ($media: HTMLMediaElement): Promise<void> {
-    var $newImg: HTMLImageElement, attrs: Attr[];
-    var imgFlg: boolean = ($media.tagName === "IMG");
-    var faviconFlg: boolean = $media.hasClass("favicon");
+  private async load($media: HTMLMediaElement) {
+    const imgFlg = ($media.tagName === "IMG");
+    const faviconFlg = $media.hasClass("favicon");
 
     // immediateLoadにて処理済みのものを除外する
     if ($media.dataset.src === undefined) return;
 
-    $newImg = $__("img");
+    const $newImg = <HTMLImageElement>$__("img");
 
     if (imgFlg && !faviconFlg) {
-      attrs = <Attr[]>Array.from($media.attributes);
-      for (var {name, value} of attrs) {
+      const attrs = <Attr[]>Array.from($media.attributes);
+      for (const {name, value} of attrs) {
         if (!this.noNeedAttrs.includes(name)) {
           $newImg.setAttr(name, value);
         }
       }
     }
 
-    var load = function (this:HTMLImageElement, e) {
+    const load = ({type, currentTarget}) => {
       $newImg.off("load", load);
       $newImg.off("error", load);
-      $media.parent().replaceChild(this, $media);
+      $media.parent().replaceChild(currentTarget, $media);
 
-      if (e.type === "load") {
-        fadeIn(this);
+      if (type === "load") {
+        fadeIn(currentTarget);
       }
     };
     $newImg.on("load", load);
     $newImg.on("error", load);
 
-    var loadmetadata = function (this: HTMLMediaElement, e) {
+    const loadmetadata = e => {
       if (imgFlg && (faviconFlg || $media.hasClass("loading"))) {
         return;
       }
@@ -118,7 +118,7 @@ export default class LazyLoad {
     $media.on("loadedmetadata", loadmetadata);
     $media.on("error", loadmetadata);
 
-    var mdata = $media.dataset;
+    const mdata = $media.dataset;
     if (imgFlg && !faviconFlg) {
       $media.src = "/img/loading.&[IMG_EXT]";
       switch (mdata.type) {
@@ -153,15 +153,14 @@ export default class LazyLoad {
     }
   }
 
-  scan (): void {
-    var media;
+  scan(): void {
     this.medias = <HTMLMediaElement[]>Array.from(this.container.$$("img[data-src], audio[data-src], video[data-src]"));
-    for (media of this.medias) {
+    for (const media of this.medias) {
       this.observer.observe(media);
     }
   }
 
-  private getWithReferrer (link: string, referrer: string, userAgent: string, cookie: string = ""): string {
+  private getWithReferrer(link: string, referrer: string, userAgent: string, cookie: string = ""): string {
     //TODO: use browser.webRequest, browser.cookies
     //if(referrer !== ""){ req.setRequestHeader("Referer", referrer); }
     //if(userAgent !== ""){ req.setRequestHeader("User-Agent", userAgent); }
@@ -169,30 +168,30 @@ export default class LazyLoad {
     return link;
   }
 
-  private async getWithCookie (link: string, cookieLink: string, referrer: string, userAgent: string): Promise<string> {
-    var req = new app.HTTP.Request("GET", cookieLink)
+  private async getWithCookie(link: string, cookieLink: string, referrer: string, userAgent: string): Promise<string> {
+    const req = new app.HTTP.Request("GET", cookieLink)
     //TODO: use browser.webRequest
     //if(referrer !== ""){ req.headers["Referer"] = referrer); }
     //if(userAgent !== ""){ req.headers["User-Agent"] = userAgent; }
     try {
-      var res = await req.send();
+      const res = await req.send();
       if (res.status === 200) {
-        var cookie = res.headers["Set-Cookie"];
+        const cookie = res.headers["Set-Cookie"];
         return this.getWithReferrer(link, "", userAgent, cookie);
       }
     } catch {}
     throw new Error("通信に失敗しました");
   }
 
-  private async getWithExtract (link: string, extractLink: string, pattern: string, referrer: string, userAgent: string): Promise<string> {
-    var req = new app.HTTP.Request("GET", extractLink)
+  private async getWithExtract(link: string, extractLink: string, pattern: string, referrer: string, userAgent: string): Promise<string> {
+    const req = new app.HTTP.Request("GET", extractLink)
     //TODO: use browser.webRequest
     //if(referrer !== ""){ req.headers["Referer"] = referrer); }
     //if(userAgent !== ""){ req.headers["User-Agent"] = userAgent; }
     try {
-      var res = await req.send();
+      const res = await req.send();
       if (res.status === 200) {
-        var m = res.body.match(new RegExp(pattern));
+        const m = res.body.match(new RegExp(pattern));
         if (m !== null) {
           return link.replace(/\$EXTRACT(\d+)?/g, (str, n) => {
             return (n === null) ? m![1] : m![n];

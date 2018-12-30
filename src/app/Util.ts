@@ -1,4 +1,4 @@
-export function deepCopy(src: any): any {
+export function deepCopy<T>(src: T): T {
   if (typeof src !== "object" || src === null) {
     return src;
   }
@@ -6,10 +6,10 @@ export function deepCopy(src: any): any {
   const copy = Array.isArray(src) ? [] : {};
 
   for (const key in src) {
-    copy[key] = deepCopy(src[key]);
+    copy[<string>key] = deepCopy(src[key]);
   }
 
-  return copy;
+  return <T>copy;
 }
 
 export function replaceAll(str: string, before: string, after: string): string {

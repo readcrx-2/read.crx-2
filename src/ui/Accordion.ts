@@ -6,9 +6,6 @@ export default class Accordion {
 
   constructor($element: HTMLElement) {
     this.$element = $element;
-
-    const accordion: Accordion = this;
-
     this.$element.addClass("accordion");
 
     const openAccordions = this.$element.C("accordion_open");
@@ -19,9 +16,9 @@ export default class Accordion {
     this.$element.on("click", ({target}) => {
       if (target.parent() === this.$element && target.tagName === "H3") {
         if (target.hasClass("accordion_open")) {
-          accordion.close(target);
+          this.close(target);
         } else {
-          accordion.open(target);
+          this.open(target);
         }
       }
     });
@@ -40,14 +37,12 @@ export default class Accordion {
   }
 
   open($header: HTMLElement) {
-    const accordion: Accordion = this;
-
     $header.addClass("accordion_open");
     slideDown($header.next());
 
     for (const dom of $header.parent().child()) {
       if (dom !== $header && dom.hasClass("accordion_open")) {
-        accordion.close(dom);
+        this.close(dom);
       }
     }
   }

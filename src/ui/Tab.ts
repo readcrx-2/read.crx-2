@@ -61,8 +61,6 @@ export default class Tab {
   }
 
   constructor(private $element: Element) {
-    const tab: Tab = this;
-
     const $ele = this.$element.addClass("tab");
     const $ul = $__("ul").addClass("tab_tabbar");
     $ul.on("notchedmousewheel", (e) => {
@@ -70,10 +68,10 @@ export default class Tab {
         e.preventDefault();
 
         const tmp = (e.wheelDelta < 0) ? "prev" : "next";
-        const next = (tab.$element.$("li.tab_selected") || {})[tmp]();
+        const next = (this.$element.$("li.tab_selected") || {})[tmp]();
 
         if (next) {
-          tab.update(next.dataset.tabid!, {selected: true});
+          this.update(next.dataset.tabid!, {selected: true});
         }
       }
     });
@@ -87,14 +85,14 @@ export default class Tab {
       if (e.button === 2) return;
 
       if (e.button === 1 && !target.hasClass("tab_locked")) {
-        tab.remove(target.dataset.tabid!);
+        this.remove(target.dataset.tabid!);
       } else {
-        tab.update(target.dataset.tabid!, {selected: true});
+        this.update(target.dataset.tabid!, {selected: true});
       }
     });
     $ul.on("click", ({target}) => {
       if (target.tagName === "IMG") {
-        tab.remove(target.parent().dataset.tabid);
+        this.remove(target.parent().dataset.tabid);
       }
     });
     new VirtualNotch($ul);
@@ -309,32 +307,31 @@ export default class Tab {
   }
 
   remove(tabId: string): void {
-    const tab: Tab = this;
     const $tmptab = this.$element.$(`li[data-tabid="${tabId}"]`);
     const tabsrc = $tmptab.dataset.tabsrc;
 
-    for (const [key, {url}] of tab.recentClosed.entries()) {
+    for (const [key, {url}] of this.recentClosed.entries()) {
       if (url === tabsrc) {
-        tab.recentClosed.splice(key, 1);
+        this.recentClosed.splice(key, 1);
       }
     }
 
-    tab.recentClosed.push({
+    this.recentClosed.push({
       tabId: $tmptab.dataset.tabid,
       url: tabsrc,
       title: $tmptab.title,
       locked: $tmptab.hasClass("tab_locked")
     });
 
-    if (tab.recentClosed.length > 50) {
-      const tmp = tab.recentClosed.shift()!;
-      tab.historyStore.delete(tmp.tabId);
+    if (this.recentClosed.length > 50) {
+      const tmp = this.recentClosed.shift()!;
+      this.historyStore.delete(tmp.tabId);
     }
 
     if ($tmptab.hasClass("tab_selected")) {
       const next = $tmptab.next() || $tmptab.prev();
       if (next) {
-        tab.update(next.dataset.tabid, {selected: true});
+        this.update(next.dataset.tabid, {selected: true});
       }
     }
     $tmptab.remove();

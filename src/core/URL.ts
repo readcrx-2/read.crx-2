@@ -4,15 +4,15 @@ import {fetch as fetchBBSMenu} from "./BBSMenu.coffee"
 // @ts-ignore
 import Cache from "./Cache.coffee"
 
-export const CH_THREAD_REG = /^(https?:\/\/[\w\.]+\/(?:\w+\/)?test\/(?:read\.cgi|-)\/\w+\/\d+).*$/;
-export const CH_THREAD_REG2 = /^(https?:\/\/[\w\.]+\/\w+)\/?(?!test)$/;
-export const CH_THREAD_ULA_REG = /^(https?):\/\/ula\.5ch\.net\/2ch\/(\w+)\/([\w\.]+)\/(\d+).*$/;
-export const MACHI_THREAD_REG = /^(https?):\/\/(?:\w+\.)?machi\.to\/bbs\/read\.cgi\/(\w+\/\d+).*$/;
-export const SHITARABA_THREAD_REG = /^(https?):\/\/jbbs\.(?:livedoor\.jp|shitaraba\.net)\/(bbs\/read(?:_archive)?\.cgi\/\w+\/\d+\/\d+).*$/;
-export const SHITARABA_ARCHIVE_REG = /^(https?):\/\/jbbs\.(?:livedoor\.jp|shitaraba\.net)\/(\w+\/\d+)\/storage\/(\d+)\.html$/;
-export const MACHI_BOARD_REG = /^(https?):\/\/(?:\w+\.)?machi\.to\/(\w+\/)(?:#.*)?$/;
-export const SHITARABA_BOARD_REG = /^(https?):\/\/jbbs\.(?:livedoor\.jp|shitaraba\.net)\/(\w+\/\d+\/)(?:#.*)?$/;
-export const CH_BOARD_REG = /^(https?:\/\/[\w\.]+\/(?:subback\/|test\/-\/)?\w+\/)(?:#.*)?$/;
+const CH_THREAD_REG = /^(https?:\/\/[\w\.]+\/(?:\w+\/)?test\/(?:read\.cgi|-)\/\w+\/\d+).*$/;
+const CH_THREAD_REG2 = /^(https?:\/\/[\w\.]+\/\w+)\/?(?!test)$/;
+const CH_THREAD_ULA_REG = /^(https?):\/\/ula\.5ch\.net\/2ch\/(\w+)\/([\w\.]+)\/(\d+).*$/;
+const MACHI_THREAD_REG = /^(https?):\/\/(?:\w+\.)?machi\.to\/bbs\/read\.cgi\/(\w+\/\d+).*$/;
+const SHITARABA_THREAD_REG = /^(https?):\/\/jbbs\.(?:livedoor\.jp|shitaraba\.net)\/(bbs\/read(?:_archive)?\.cgi\/\w+\/\d+\/\d+).*$/;
+const SHITARABA_ARCHIVE_REG = /^(https?):\/\/jbbs\.(?:livedoor\.jp|shitaraba\.net)\/(\w+\/\d+)\/storage\/(\d+)\.html$/;
+const MACHI_BOARD_REG = /^(https?):\/\/(?:\w+\.)?machi\.to\/(\w+\/)(?:#.*)?$/;
+const SHITARABA_BOARD_REG = /^(https?):\/\/jbbs\.(?:livedoor\.jp|shitaraba\.net)\/(\w+\/\d+\/)(?:#.*)?$/;
+const CH_BOARD_REG = /^(https?:\/\/[\w\.]+\/(?:subback\/|test\/-\/)?\w+\/)(?:#.*)?$/;
 export function fix(url: string): string {
   return (
     url
@@ -67,7 +67,7 @@ export function guessType(url: string): GuessResult {
   return {type: "unknown", bbsType: "unknown"};
 }
 
-export const TSLD_REG = /^https?:\/\/(?:\w+\.)*(\w+\.\w+)\//;
+const TSLD_REG = /^https?:\/\/(?:\w+\.)*(\w+\.\w+)\//;
 export function tsld(url: string): string {
   const res = TSLD_REG.exec(url);
   return res ? res[1] : "";

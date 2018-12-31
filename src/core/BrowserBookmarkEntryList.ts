@@ -2,8 +2,8 @@ import {Entry, SyncableEntryList, newerEntry} from "./BookmarkEntryList"
 import {fix as fixUrl, buildQuery, guessType, parseHashQuery} from "./URL"
 
 export default class BrowserBookmarkEntryList extends SyncableEntryList {
-  rootNodeId: string;
-  readonly nodeIdStore = new Map<string, string>();
+  private rootNodeId: string;
+  private readonly nodeIdStore = new Map<string, string>();
   readonly ready = new app.Callbacks();
   readonly needReconfigureRootNodeId = new app.Callbacks({persistent: true});
 

@@ -4,7 +4,7 @@ import {fadeIn} from "./Animate.coffee"
 type HTMLMediaElement = HTMLImageElement | HTMLAudioElement | HTMLVideoElement;
 
 export default class LazyLoad {
-  readonly container: HTMLElement;
+  private readonly container: HTMLElement;
   isManualLoad = false;
   private readonly observer: IntersectionObserver;
   private medias: HTMLMediaElement[] = [];

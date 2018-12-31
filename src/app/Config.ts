@@ -89,7 +89,7 @@ export default class Config {
 
   private readonly _cache = new Map<string, string>();
   readonly ready: Function;
-  readonly _onChanged: Function;
+  private readonly _onChanged: Function;
 
   constructor() {
     const ready = new Callbacks();

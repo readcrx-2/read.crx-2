@@ -2,7 +2,7 @@
 import {slideDown, slideUp} from "./Animate.coffee"
 
 export default class Accordion {
-  $element: HTMLElement;
+  readonly $element: HTMLElement;
 
   constructor($element: HTMLElement) {
     this.$element = $element;

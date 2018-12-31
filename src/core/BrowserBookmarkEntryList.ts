@@ -3,9 +3,9 @@ import {fix as fixUrl, buildQuery, guessType, parseHashQuery} from "./URL"
 
 export default class BrowserBookmarkEntryList extends SyncableEntryList {
   rootNodeId: string;
-  nodeIdStore = new Map<string, string>();
-  ready = new app.Callbacks();
-  needReconfigureRootNodeId = new app.Callbacks({persistent: true});
+  readonly nodeIdStore = new Map<string, string>();
+  readonly ready = new app.Callbacks();
+  readonly needReconfigureRootNodeId = new app.Callbacks({persistent: true});
 
   static entryToURL(entry: Entry): string {
     const url = fixUrl(entry.url);

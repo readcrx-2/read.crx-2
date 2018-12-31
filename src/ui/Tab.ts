@@ -40,8 +40,8 @@ export default class Tab {
   private static idSeed = 0;
   private static tabA: Tab|null = null;
   private static tabB: Tab|null = null;
-  private recentClosed: ClosedTabInfo[] = [];
-  private historyStore: Map<string, TabHistory>  = new Map();
+  private readonly recentClosed: ClosedTabInfo[] = [];
+  private readonly historyStore: Map<string, TabHistory>  = new Map();
 
   private static genId(): string {
     return "tabId" + ++Tab.idSeed;

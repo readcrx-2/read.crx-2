@@ -6,9 +6,9 @@ interface CallbacksConfiguration {
 }
 
 export default class Callbacks {
-  private _config: CallbacksConfiguration;
-  private _callbackStore = new Set<Function>();
-  private _latestCallArg: any[]|null = null;
+  private readonly _config: Readonly<CallbacksConfiguration>;
+  private readonly _callbackStore = new Set<Function>();
+  private _latestCallArg: ReadonlyArray<any>|null = null;
   wasCalled = false;
 
   constructor(config: CallbacksConfiguration = {}) {

@@ -5,8 +5,8 @@ import {threadToBoard} from "./URL"
 import {get as getReadState} from "./ReadState.coffee"
 
 export default class Bookmark {
-  bel: BrowserBookmarkEntryList;
-  promiseFirstScan;
+  readonly bel: BrowserBookmarkEntryList;
+  readonly promiseFirstScan;
 
   constructor(rootIdNode: string) {
     this.bel = new BrowserBookmarkEntryList(rootIdNode);

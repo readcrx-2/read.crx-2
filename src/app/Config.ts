@@ -3,7 +3,7 @@ import message from "./Message";
 import {log} from "./Log";
 
 export default class Config {
-  private static _default = new Map<string, string>([
+  private static readonly _default: ReadonlyMap<string, string> = new Map([
     ["layout", "pane-3"],
     ["theme_id", "default"],
     ["default_scrollbar", "off"],
@@ -87,9 +87,9 @@ export default class Config {
     ["replace_str_txt", ""]
   ]);
 
-  private _cache = new Map<string, string>();
-  ready: Function;
-  _onChanged: Function;
+  private readonly _cache = new Map<string, string>();
+  readonly ready: Function;
+  readonly _onChanged: Function;
 
   constructor() {
     const ready = new Callbacks();

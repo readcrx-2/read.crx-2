@@ -4,12 +4,12 @@ import {fadeIn} from "./Animate.coffee"
 type HTMLMediaElement = HTMLImageElement | HTMLAudioElement | HTMLVideoElement;
 
 export default class LazyLoad {
-  container: HTMLElement;
+  readonly container: HTMLElement;
   isManualLoad = false;
-  private observer: IntersectionObserver;
+  private readonly observer: IntersectionObserver;
   private medias: HTMLMediaElement[] = [];
   private pause = false;
-  private noNeedAttrs: string[] = [
+  private readonly noNeedAttrs: ReadonlySet<string> = new Set([
     "data-src",
     "data-type",
     "data-extract",
@@ -19,7 +19,7 @@ export default class LazyLoad {
     "data-cookie-referrer",
     "data-referrer",
     "data-user-agent"
-  ];
+  ]);
 
   constructor(container: HTMLElement) {
     this.container = container;
@@ -90,7 +90,7 @@ export default class LazyLoad {
     if (imgFlg && !faviconFlg) {
       const attrs = <Attr[]>Array.from($media.attributes);
       for (const {name, value} of attrs) {
-        if (!this.noNeedAttrs.includes(name)) {
+        if (!this.noNeedAttrs.has(name)) {
           $newImg.setAttr(name, value);
         }
       }

@@ -2,7 +2,7 @@
 import {fadeIn, fadeOut} from "./Animate.coffee"
 
 export default class SearchNextThread {
-  private $element: HTMLElement;
+  private readonly $element: HTMLElement;
 
   constructor($element: HTMLElement) {
     this.$element = $element;

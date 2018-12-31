@@ -4,8 +4,8 @@ import {deepCopy} from "./Util";
 
 class Message {
   static readonly CHANNEL_NAME = "readcrx";
-  private _listenerStore: Map<string, Callbacks> = new Map();
-  private _bc: BroadcastChannel;
+  private readonly _listenerStore: Map<string, Callbacks> = new Map();
+  private readonly _bc: BroadcastChannel;
 
   constructor() {
     this._bc = new BroadcastChannel(Message.CHANNEL_NAME);

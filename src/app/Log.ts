@@ -1,7 +1,7 @@
 import {deepCopy} from "./Util";
 
 type logLevel = "log" | "debug" | "info" | "warn" | "error";
-const logLevels = new Set(<logLevel[]>["log", "debug", "info", "warn", "error"]);
+const logLevels: ReadonlySet<logLevel> = new Set(<logLevel[]>["log", "debug", "info", "warn", "error"]);
 
 export async function criticalError(message: string) {
   new Notification(

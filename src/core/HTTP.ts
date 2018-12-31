@@ -1,12 +1,12 @@
 type headerList = Record<string, string>
 
 export class Request {
-  method: string;
-  url: string;
-  mimeType: string|null;
-  timeout: number;
-  headers: headerList;
-  preventCache: boolean;
+  readonly method: string;
+  readonly url: string;
+  readonly mimeType: string|null;
+  readonly timeout: number;
+  readonly headers: headerList;
+  readonly preventCache: boolean;
   private xhr: XMLHttpRequest;
 
   constructor(

@@ -4,11 +4,11 @@ interface Position {
 }
 
 export default class Sortable {
-  container: HTMLElement;
-  option: {exclude?: string};
-  overlay: HTMLElement;
+  readonly container: HTMLElement;
+  readonly option: {exclude?: string};
+  readonly overlay: HTMLElement;
 
-  isSorting: boolean = false;
+  isSorting = false;
   //ドラッグ開始時の場所
   start: Position|null = null;
   //ドラッグ中の場所
@@ -20,10 +20,10 @@ export default class Sortable {
   targetCenter: Position|null = null;
 
   // requestAnimationFrameId
-  rAFId: number = 0;
+  rAFId = 0;
 
-  clicks: number = 1;
-  clickTimer: number = 0;
+  clicks = 1;
+  clickTimer = 0;
 
   constructor (container: HTMLElement, option: {exclude?: string} = {}) {
     this.container = container;
@@ -176,7 +176,7 @@ export default class Sortable {
 
     this.rAFId = requestAnimationFrame(<any>this.animate);
   }
-  animate: Function = this._animate.bind(this);
+  readonly animate: Function = this._animate.bind(this);
 
   onFinish() {
     // removeするとmouseoutも発火するので二重に呼ばれる

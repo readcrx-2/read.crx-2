@@ -28,8 +28,8 @@ export function newerEntry(a:Entry, b:Entry): Entry|null {
 }
 
 export class EntryList {
-  private cache = new Map<string, Entry>();
-  private boardURLIndex = new Map<string, Set<string>>();
+  private readonly cache = new Map<string, Entry>();
+  private readonly boardURLIndex = new Map<string, Set<string>>();
 
   async add(entry: Entry): Promise<boolean> {
     if (this.get(entry.url)) return false;
@@ -151,8 +151,8 @@ export interface BookmarkUpdateEvent {
 }
 
 export class SyncableEntryList extends EntryList {
-  onChanged = new app.Callbacks({persistent: true});
-  private observerForSync: Function;
+  readonly onChanged = new app.Callbacks({persistent: true});
+  private readonly observerForSync: Function;
 
   constructor () {
     super();

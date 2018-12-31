@@ -139,7 +139,7 @@ export function buildQuery(data: Record<string, string>): string {
   return (new URLSearchParams(data)).toString();
 }
 
-export const SHORT_URL_LIST = new Set([
+export const SHORT_URL_LIST: ReadonlySet<string> = new Set([
   "amba.to",
   "amzn.to",
   "bit.ly",
@@ -199,8 +199,9 @@ export async function expandShortURL(shortUrl: string): Promise<string> {
       await cache.get();
       return {data: cache.data, url: null};
     } catch {
-      const req = new Request("HEAD", shortUrl);
-      req.timeout = parseInt(app.config.get("expand_short_url_timeout")!);
+      const req = new Request("HEAD", shortUrl, {
+        timeout: parseInt(app.config.get("expand_short_url_timeout")!)
+      });
 
       let {status, responseURL: resUrl} = await req.send();
 

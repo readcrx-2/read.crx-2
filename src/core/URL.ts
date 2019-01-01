@@ -205,7 +205,7 @@ export async function expandShortURL(shortUrl: string): Promise<string> {
 
       let {status, responseURL: resUrl} = await req.send();
 
-      if (status >= 400) {
+      if (shortUrl === resUrl && status >= 400) {
         return {data: null, url: null};
       }
       // 無限ループの防止

@@ -248,13 +248,13 @@ export class SyncableEntryList extends EntryList {
   }
 
   private followDeletion(b: EntryList) {
-    const aList = this.getAll().map( ({url}) => url);
-    const bList = b.getAll().map( ({url}) => url);
+    const aEntries = this.getAll();
+    const bList = new Set(b.getAll().map( ({url}) => url));
 
-    const rmList = aList.filter( url => !bList.includes(url));
-
-    for(const url of rmList) {
-      this.remove(url);
+    for (const {url} of aEntries) {
+      if (!bList.has(url)) {
+        this.remove(url);
+      }
     }
   }
 

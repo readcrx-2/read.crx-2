@@ -60,10 +60,10 @@ export class EntryList {
 
     if (!this.cache.has(url)) return false;
 
-    if (this.cache.get(url)!.type === "thread") {
+    if (this.cache.get(url).type === "thread") {
       const boardURL = threadToBoard(url);
       if (this.boardURLIndex.has(boardURL)) {
-        const threadList = this.boardURLIndex.get(boardURL)!;
+        const threadList = this.boardURLIndex.get(boardURL);
         if (threadList.has(url)) {
           threadList.delete(url);
         }
@@ -136,7 +136,7 @@ export class EntryList {
     url = fixUrl(url);
 
     if (this.boardURLIndex.has(url)) {
-      for (const threadURL of this.boardURLIndex.get(url)!) {
+      for (const threadURL of this.boardURLIndex.get(url)) {
         res.push(this.get(threadURL));
       }
     }

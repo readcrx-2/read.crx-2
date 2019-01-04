@@ -137,10 +137,10 @@ export default class Config {
 
   get(key: string): string|null {
     if (this._cache.has(`config_${key}`)) {
-      return this._cache.get(`config_${key}`)!;
+      return this._cache.get(`config_${key}`);
     }
     if (Config._default.has(key)) {
-      return Config._default.get(key)!;
+      return Config._default.get(key);
     }
     return null;
   }

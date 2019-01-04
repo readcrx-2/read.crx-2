@@ -27,7 +27,7 @@ export default class BrowserBookmarkEntryList extends SyncableEntryList {
       }
     }
 
-    if (entry.expired === true) {
+    if (entry.expired) {
       param.expired = "true";
     }
 

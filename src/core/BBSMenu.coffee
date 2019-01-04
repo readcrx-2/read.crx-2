@@ -27,8 +27,7 @@ export fetchAll = (forceReload = false) ->
     continue if url is "" or url.startsWith("//")
     try
       {menu} = await fetch(url, forceReload)
-      for item in menu
-        bbsmenu.push(item)
+      bbsmenu.push(menu...)
     catch
       app.message.send("notify",
         message: "板一覧の取得に失敗しました。(#{url})"

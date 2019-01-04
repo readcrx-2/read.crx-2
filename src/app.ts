@@ -13,7 +13,7 @@ if (!frameElement) {
 }
 
 export const manifest = (async () => {
-  if (!/^(?:chrome|moz)-extension:\/\//.test(location.origin)) {
+  if (!/^(?:chrome|moz)-extension:$/.test(location.protocol)) {
     throw new Error("manifest.jsonの取得に失敗しました");
   }
   try {

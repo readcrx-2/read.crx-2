@@ -63,7 +63,7 @@ class SettingIO
       $a = $__("a").addClass("hidden")
       url = URL.createObjectURL(blob)
       $a.href = url
-      $a.setAttr("download", "read.crx-2_#{@name}.json")
+      $a.download = "read.crx-2_#{@name}.json"
       @$exportButton.addAfter($a)
       $a.click()
       $a.remove()
@@ -187,7 +187,7 @@ class HistoryIO extends SettingIO
       $a = $__("a").addClass("hidden")
       url = URL.createObjectURL(blob)
       $a.href = url
-      $a.setAttr("download", "read.crx-2_#{@name}.json")
+      $a.download = "read.crx-2_#{@name}.json"
       @$exportButton.addAfter($a)
       $a.click()
       $a.remove()
@@ -309,7 +309,7 @@ class BookmarkIO extends SettingIO
       $a = $__("a").addClass("hidden")
       url = URL.createObjectURL(blob)
       $a.href = url
-      $a.setAttr("download", "read.crx-2_#{@name}.json")
+      $a.download = "read.crx-2_#{@name}.json"
       @$exportButton.addAfter($a)
       $a.click()
       $a.remove()

@@ -30,7 +30,7 @@ export default class VirtualNotch {
 
     while (Math.abs(this.wheelDelta) >= this.threshold) {
       const event = <NotchedMouseWheelEvent>new MouseEvent("notchedmousewheel");
-      event.wheelDelta = this.threshold * (this.wheelDelta > 0 ? 1 : -1);
+      event.wheelDelta = this.threshold * Math.sign(this.wheelDelta);
       this.wheelDelta -= event.wheelDelta;
       this.element.emit(event);
     }

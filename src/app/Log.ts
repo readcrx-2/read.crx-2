@@ -23,7 +23,7 @@ export function log(level: logLevel, ...data: any[]) {
 }
 
 // [Val, Type, isNullable]
-type Assertion = [any, string, boolean|undefined]
+type Assertion = [any, string, boolean]|[any, string];
 
 export function assertArg(name: string, rules: Assertion[]): boolean {
   let isError = false;

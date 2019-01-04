@@ -278,13 +278,13 @@ export default class Write
         iframeDoc = $iframe.contentDocument
         #フォーム生成
         form = iframeDoc.createElement("form")
-        form.setAttribute("accept-charset", formData.charset)
+        form.acceptCharset = formData.charset
         form.action = formData.action
         form.method = "POST"
         for key, val of formData.input
           input = iframeDoc.createElement("input")
           input.name = key
-          input.setAttribute("value", val)
+          input.value = val
           form.appendChild(input)
         for key, val of formData.textarea
           textarea = iframeDoc.createElement("textarea")

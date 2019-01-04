@@ -33,8 +33,8 @@ export function fix(url: string): string {
 }
 
 export interface GuessResult {
-  type: string;
-  bbsType: string;
+  type: "thread"|"board"|"unknown";
+  bbsType: "jbbs"|"machi"|"2ch"|"unknown";
 }
 export function guessType(url: string): GuessResult {
   url = fix(url);
@@ -247,7 +247,7 @@ export function getExtType(filename: string, {
     oggIsAudio: boolean,
     oggIsVideo: boolean
   }> = {}
-): string|null {
+): "audio"|"video"|null {
   if (audio && AUDIO_REG.test(filename)) {
     return "audio";
   }

@@ -89,7 +89,7 @@ export class EntryList {
     }
   }
 
-  serverMove(from:string, to:string): void {
+  serverMove(from: string, to: string): void {
     // 板ブックマーク移行
     const boardEntry = this.get(from)
     if (boardEntry) {

@@ -16,10 +16,10 @@ declare namespace shortQuery {
   }
 }
 
-declare var shortQuery: shortQuery.Static;
-declare var $$: shortQuery.Static;
-declare var $__: Document.createElement;
-declare var $_F: Document.createDocumentFragment;
+declare const shortQuery: shortQuery.Static;
+declare const $$: shortQuery.Static;
+declare const $__: Document.createElement;
+declare const $_F: Document.createDocumentFragment;
 
 interface HTMLCollection {
   [Symbol.iterator](): IterableIterator<HTMLElement>;

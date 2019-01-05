@@ -5,16 +5,16 @@ interface Window {
 }
 
 declare namespace app {
-  var config: any;
-  var Callbacks: any;
-  var log: any;
-  var deepCopy: any;
-  var message: any;
-  var defer: any;
+  const config: any;
+  const Callbacks: any;
+  const log: any;
+  const deepCopy: any;
+  const message: any;
+  const defer: any;
 
-  var bookmark: any;
-  var HTTP: any;
-  var util: any;
+  const bookmark: any;
+  const HTTP: any;
+  const util: any;
 }
 
 declare namespace browser.bookmarks {

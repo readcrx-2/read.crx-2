@@ -19,7 +19,7 @@ export interface Entry {
   expired: boolean;
 }
 
-export function newerEntry (a:Entry, b:Entry):Entry|null {
+export function newerEntry(a:Entry, b:Entry): Entry|null {
   if (a.resCount !== null && b.resCount !== null && a.resCount !== b.resCount) {
     return a.resCount > b.resCount ? a : b;
   }
@@ -28,12 +28,10 @@ export function newerEntry (a:Entry, b:Entry):Entry|null {
 }
 
 export class EntryList {
-  private cache = new Map<string, Entry>();
-  private boardURLIndex = new Map<string, Set<string>>();
+  private readonly cache = new Map<string, Entry>();
+  private readonly boardURLIndex = new Map<string, Set<string>>();
 
-  async add (entry:Entry):Promise<boolean> {
-    var boardURL:string;
-
+  async add(entry: Entry): Promise<boolean> {
     if (this.get(entry.url)) return false;
 
     entry = app.deepCopy(entry);
@@ -41,7 +39,7 @@ export class EntryList {
     this.cache.set(entry.url, entry);
 
     if (entry.type === "thread") {
-      boardURL = threadToBoard(entry.url);
+      const boardURL = threadToBoard(entry.url);
       if (!this.boardURLIndex.has(boardURL)) {
         this.boardURLIndex.set(boardURL, new Set());
       }
@@ -50,24 +48,22 @@ export class EntryList {
     return true;
   }
 
-  async update (entry:Entry):Promise<boolean> {
+  async update(entry: Entry): Promise<boolean> {
     if (!this.get(entry.url)) return false;
 
     this.cache.set(entry.url, app.deepCopy(entry));
     return true;
   }
 
-  async remove (url:string):Promise<boolean> {
-    var boardURL:string;
-
+  async remove(url: string): Promise<boolean> {
     url = fixUrl(url);
 
     if (!this.cache.has(url)) return false;
 
     if (this.cache.get(url)!.type === "thread") {
-      boardURL = threadToBoard(url);
+      const boardURL = threadToBoard(url);
       if (this.boardURLIndex.has(boardURL)) {
-        let threadList = this.boardURLIndex.get(boardURL)!;
+        const threadList = this.boardURLIndex.get(boardURL)!;
         if (threadList.has(url)) {
           threadList.delete(url);
         }
@@ -78,11 +74,10 @@ export class EntryList {
     return true;
   }
 
-  import (target:EntryList):void {
-    for(var b of target.getAll()) {
-      var a:Entry;
-
-      if (a = this.get(b.url)) {
+  import(target: EntryList): void {
+    for(const b of target.getAll()) {
+      const a = this.get(b.url);
+      if (a) {
         if (a.type === "thread" && b.type === "thread") {
           if (newerEntry(a, b) === b) {
             this.update(b);
@@ -94,20 +89,19 @@ export class EntryList {
     }
   }
 
-  serverMove (from:string, to:string):void {
-    var entry:Entry, tmp, reg;
-
+  serverMove(from:string, to:string): void {
     // 板ブックマーク移行
-    if (entry = this.get(from)) {
-      this.remove(entry.url);
-      entry.url = to;
-      this.add(entry);
+    const boardEntry = this.get(from)
+    if (boardEntry) {
+      this.remove(boardEntry.url);
+      boardEntry.url = to;
+      this.add(boardEntry);
     }
 
-    reg = /^https?:\/\/[\w\.]+\//
-    tmp = reg.exec(to)[0];
+    const reg = /^https?:\/\/[\w\.]+\//;
+    const tmp = reg.exec(to)![0];
     // スレブックマーク移行
-    for(var entry of this.getThreadsByBoardURL(from)) {
+    for(const entry of this.getThreadsByBoardURL(from)) {
       this.remove(entry.url);
 
       entry.url = entry.url.replace(reg, tmp);
@@ -119,33 +113,30 @@ export class EntryList {
     }
   }
 
-  get (url:string):Entry {
+  get(url: string): Entry {
     url = fixUrl(url);
 
     return this.cache.has(url) ? app.deepCopy(this.cache.get(url)) : null;
   }
 
-  getAll ():Entry[] {
+  getAll(): Entry[] {
     return Array.from(this.cache.values());
   }
 
-  getAllThreads ():Entry[] {
-    var res:Entry[] = Array.from(this.cache.values());
-    return res.filter( ({type}) => type === "thread");
+  getAllThreads(): Entry[] {
+    return this.getAll().filter( ({type}) => type === "thread");
   }
 
-  getAllBoards ():Entry[] {
-    var res:Entry[] = Array.from(this.cache.values());
-    return res.filter( ({type}) => type === "board");
+  getAllBoards(): Entry[] {
+    return this.getAll().filter( ({type}) => type === "board");
   }
 
-  getThreadsByBoardURL (url:string):Entry[] {
-    var res:Entry[] = [], threadURL:string;
-
+  getThreadsByBoardURL(url: string): Entry[] {
+    const res: Entry[] = [];
     url = fixUrl(url);
 
     if (this.boardURLIndex.has(url)) {
-      for (threadURL of this.boardURLIndex.get(url)!) {
+      for (const threadURL of this.boardURLIndex.get(url)!) {
         res.push(this.get(threadURL));
       }
     }
@@ -159,19 +150,19 @@ export interface BookmarkUpdateEvent {
   entry: Entry;
 }
 
-export class SyncableEntryList extends EntryList{
-  onChanged = new app.Callbacks({persistent: true});
-  private observerForSync:Function;
+export class SyncableEntryList extends EntryList {
+  readonly onChanged = new app.Callbacks({persistent: true});
+  private readonly observerForSync: Function;
 
   constructor () {
     super();
 
-    this.observerForSync = (e:BookmarkUpdateEvent) => {
+    this.observerForSync = (e: BookmarkUpdateEvent) => {
       this.manipulateByBookmarkUpdateEvent(e);
     };
   }
 
-  async add (entry:Entry):Promise<boolean> {
+  async add(entry: Entry): Promise<boolean> {
     if (!super.add(entry)) return false;
 
     this.onChanged.call({
@@ -181,8 +172,8 @@ export class SyncableEntryList extends EntryList{
     return true;
   }
 
-  async update (entry:Entry):Promise<boolean> {
-    var before = this.get(entry.url);
+  async update(entry: Entry): Promise<boolean> {
+    const before = this.get(entry.url);
 
     if (!super.update(entry)) return false;
 
@@ -227,8 +218,8 @@ export class SyncableEntryList extends EntryList{
     return true;
   }
 
-  async remove (url:string):Promise<boolean> {
-    var entry:Entry = this.get(url);
+  async remove(url: string): Promise<boolean> {
+    const entry = this.get(url);
 
     if (!super.remove(url)) return false;
 
@@ -239,43 +230,41 @@ export class SyncableEntryList extends EntryList{
     return true;
   }
 
-  private manipulateByBookmarkUpdateEvent (e:BookmarkUpdateEvent) {
-    switch (e.type) {
+  private manipulateByBookmarkUpdateEvent({type, entry}: BookmarkUpdateEvent) {
+    switch (type) {
       case "ADD":
-        this.add(e.entry);
+        this.add(entry);
         break;
       case "TITLE":
       case "RES_COUNT":
       case "READ_STATE":
       case "EXPIRED":
-        this.update(e.entry);
+        this.update(entry);
         break;
       case "REMOVE":
-        this.remove(e.entry.url);
+        this.remove(entry.url);
         break;
     }
   }
 
-  private followDeletion (b:EntryList):void {
-    var aList:string[], bList:string[], rmList:string[];
+  private followDeletion(b: EntryList) {
+    const aEntries = this.getAll();
+    const bList = new Set(b.getAll().map( ({url}) => url));
 
-    aList = this.getAll().map( ({url}) => url);
-    bList = b.getAll().map( ({url}) => url);
-
-    rmList = aList.filter( url => !bList.includes(url));
-
-    for(var url of rmList) {
-      this.remove(url);
+    for (const {url} of aEntries) {
+      if (!bList.has(url)) {
+        this.remove(url);
+      }
     }
   }
 
-  syncStart (b:SyncableEntryList):void {
+  syncStart(b: SyncableEntryList) {
     b.import(this);
 
     this.syncResume(b);
   }
 
-  syncResume (b:SyncableEntryList):void {
+  syncResume(b: SyncableEntryList) {
     this.import(b);
     this.followDeletion(b);
 
@@ -283,7 +272,7 @@ export class SyncableEntryList extends EntryList{
     b.onChanged.add(this.observerForSync);
   }
 
-  syncStop (b:SyncableEntryList):void {
+  syncStop(b: SyncableEntryList) {
     this.onChanged.remove(b.observerForSync);
     b.onChanged.remove(this.observerForSync);
   }

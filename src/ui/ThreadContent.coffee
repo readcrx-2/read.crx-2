@@ -751,9 +751,9 @@ export default class ThreadContent
           .replace(/<img src="([\w]+):\/\/(.*?)"[^>]*>/ig, "$1://$2")
           .replace(/<img src="\/\/(.*?)"[^>]*>/ig, "#{scheme}://$1")
           #Rock54
-          .replace(/(?:<small[^>]*>&#128064;|<i>&#128064;<\/i>)<br>Rock54: (Caution|Warning)\(([^<>()]+)\) ?.*?(?:<\/small>)?/ig, "<div-block class=\"rock54\">&#128064; Rock54: $1($2)</div-block>")
+          .replace(/(?:<small[^>]*>&#128064;|<i>&#128064;<\/i>)<br>Rock54: (Caution|Warning)\(([^<>()]+)\) ?.*?(?:<\/small>)?/ig, "<br><div-block class=\"rock54\">&#128064; Rock54: $1($2)</div-block>")
           #SLIPが変わったという表示
-          .replace(/<hr>VIPQ2_EXTDAT: ([^<>]+): EXT was configured /i, "<div-block class=\"slipchange\">VIPQ2_EXTDAT: $1: EXT configure</div-block>")
+          .replace(/<hr>VIPQ2_EXTDAT: ([^<>]+): EXT was configured /i, "<br><div-block class=\"slipchange\">VIPQ2_EXTDAT: $1: EXT configure</div-block>")
           #タグ除去
           .replace(/<(?!(?:br|hr|\/?div-block[^<>]*|\/?b)>).*?(?:>|$)/ig, "")
           .replace(/<(\/)?div-block([^<>]*)>/g, "<$1div$2>")

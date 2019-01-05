@@ -4,25 +4,26 @@ interface Position {
 }
 
 export default class Sortable {
-  container: HTMLElement;
-  option: {exclude?: string};
-  overlay: HTMLElement;
+  private readonly container: HTMLElement;
+  private readonly option: {exclude?: string};
+  private readonly overlay: HTMLElement;
 
-  isSorting: boolean = false;
+  private isSorting = false;
   //ドラッグ開始時の場所
-  start: Position|null = null;
+  private start: Position|null = null;
   //ドラッグ中の場所
-  last: Position|null = null;
+  private last: Position|null = null;
 
   //ドラッグしているDOM
-  target: HTMLElement|null = null;
+  private target: HTMLElement|null = null;
   //ドラッグしているDOMの戻るときの中央座標
-  targetCenter: Position|null = null;
+  private targetCenter: Position|null = null;
 
-  rAFId: number = 0;
+  // requestAnimationFrameId
+  private rAFId = 0;
 
-  clicks: number = 1;
-  clickTimer: number = 0;
+  private clicks = 1;
+  private clickTimer = 0;
 
   constructor (container: HTMLElement, option: {exclude?: string} = {}) {
     this.container = container;
@@ -39,7 +40,7 @@ export default class Sortable {
     this.overlay.on("mouseout", this.onFinish.bind(this));
   }
 
-  setTarget(target: HTMLElement): void {
+  private setTarget(target: HTMLElement) {
     this.target = target;
     this.target.addClass("sortable_dragging");
     this.target.style["will-change"] = "transform";
@@ -49,7 +50,7 @@ export default class Sortable {
     };
   }
 
-  removeTarget(): void {
+  private removeTarget() {
     if (!this.target) return;
     this.target.removeClass("sortable_dragging");
     this.target.style.transform = null;
@@ -58,7 +59,7 @@ export default class Sortable {
     this.targetCenter = null;
   }
 
-  changeStart(func: Function): void {
+  private changeStart(func: Function) {
     const beforeLeft = this.target!.offsetLeft;
     const beforeTop = this.target!.offsetTop;
     func();
@@ -74,7 +75,7 @@ export default class Sortable {
     };
   }
 
-  onMousedown ({target, button}): void {
+  private onMousedown({target, button}) {
     if (target === this.container) return;
     if (button !== 0) return;
     if (
@@ -101,7 +102,7 @@ export default class Sortable {
     this.clicks++;
   }
 
-  onStart (target): void {
+  private onStart(target) {
     if (!target) return;
     while (target.parent() !== this.container) {
       target = target.parent();
@@ -110,7 +111,7 @@ export default class Sortable {
     document.body.addLast(this.overlay);
   }
 
-  onMove({ pageX, pageY }): void {
+  private onMove({ pageX, pageY }) {
     if (!this.isSorting) {
       this.start = {
         x: pageX,
@@ -131,7 +132,7 @@ export default class Sortable {
     }
   }
 
-  _animate (): void {
+  private _animate() {
     let tmp = <HTMLElement>this.container.first();
     let diffX = this.last!.x - this.start!.x;
     let diffY = this.last!.y - this.start!.y;
@@ -175,9 +176,9 @@ export default class Sortable {
 
     this.rAFId = requestAnimationFrame(<any>this.animate);
   }
-  animate: Function = this._animate.bind(this);
+  private readonly animate: Function = this._animate.bind(this);
 
-  onFinish (): void {
+  private onFinish() {
     // removeするとmouseoutも発火するので二重に呼ばれる
     this.isSorting = false;
 
@@ -192,7 +193,7 @@ export default class Sortable {
     }
   }
 
-  onContextMenu (e): void {
+  private onContextMenu(e) {
     e.preventDefault();
   }
 }

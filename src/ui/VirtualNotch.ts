@@ -18,12 +18,19 @@ export default class VirtualNotch {
   }
 
   private onMouseWheel(e: WheelEvent) {
-    // @ts-ignore: true === falseは常にfalse
-    if ("&[BROWSER]" === "chrome") {
-      this.wheelDelta += e.deltaY;
-    // @ts-ignore: true === falseは常にfalse
-    } else if ("&[BROWSER]" === "firefox") {
-      this.wheelDelta += e.deltaY * 40;
+    switch (e.deltaMode) {
+      case WheelEvent.DOM_DELTA_PIXEL:
+        this.wheelDelta += e.deltaY;
+        break;
+      case WheelEvent.DOM_DELTA_LINE:
+        this.wheelDelta += e.deltaY * 40;
+        break;
+      case WheelEvent.DOM_DELTA_PAGE:
+        this.wheelDelta += e.deltaY * 120;
+        break;
+      default:
+        this.wheelDelta += e.deltaY;
+        return;
     }
 
     this.lastMouseWheel = Date.now();

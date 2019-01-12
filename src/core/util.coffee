@@ -1,7 +1,7 @@
 import {get as getBBSMenu} from "./BBSMenu.coffee"
 import Board from "./Board.coffee"
 import {Request} from "./HTTP.ts"
-import {fix as fixUrl, setScheme, changeScheme, threadToBoard} from "./URL.ts"
+import {URL, fix as fixUrl, setScheme, changeScheme, threadToBoard} from "./URL.ts"
 import {levenshteinDistance} from "./Util.ts"
 
 ###*
@@ -53,10 +53,10 @@ boardUrlReg = /^https?:\/\/\w+\.5ch\.net\/(\w+)\/$/
 #検出出来なかった場合はrejectする
 #htmlを渡す事で通信をスキップする事が出来る
 export chServerMoveDetect = (oldBoardUrl, html) ->
-  oldBoardUrl = changeScheme(oldBoardUrl, "http")
+  oldBoardUrl.protocol = "http:"
   unless typeof html is "string"
     #htmlが渡されなかった場合は通信する
-    {status, body: html} = await (new Request("GET", oldBoardUrl,
+    {status, body: html} = await (new Request("GET", oldBoardUrl.href,
       mimeType: "text/html; charset=Shift_JIS"
       cache: false
     )).send()
@@ -67,12 +67,12 @@ export chServerMoveDetect = (oldBoardUrl, html) ->
   res = ///location\.href="(https?://(\w+\.)?5ch\.net/\w*/)"///.exec(html)
   if res
     if res[2]?
-      newBoardUrlTmp = res[1]
+      newBoardUrlTmp = new URL(res[1])
     else
       {responseURL} = await (new Request("GET", res[1])).send()
-      newBoardUrlTmp = responseURL
-    newBoardUrlTmp = setScheme(newBoardUrlTmp, "http")
-    if newBoardUrlTmp isnt oldBoardUrl
+      newBoardUrlTmp = new URL(responseURL)
+    newBoardUrlTmp.protocol = "http"
+    if newBoardUrlTmp.hostname isnt oldBoardUrl.hostname
       newBoardUrl = newBoardUrlTmp
 
   #bbsmenuから検索
@@ -81,23 +81,23 @@ export chServerMoveDetect = (oldBoardUrl, html) ->
       {menu: data} = await getBBSMenu()
       unless data?
         throw new Error("BBSMenuの取得に失敗しました")
-      match = oldBoardUrl.match(boardUrlReg)
-      unless match.length > 0
+      boardKey = oldBoardUrl.pathname.split("/")?[1]
+      unless boardKey
         throw new Error("板のURL形式が不明です")
       for category in data
         for board in category.board
           m = board.url.match(boardUrlReg)
           if m?
-            oldUrl = setScheme(match[0], "http")
-            newUrl = setScheme(m[0], "http")
-            if match[1] is m[1] and oldUrl isnt newUrl
-              return oldUrl
+            newUrl = new URL(m[0])
+            newUrl.protocol = "http:"
+            if boardKey is m[1] and oldBoardUrl.hostname isnt newUrl.hostname
+              return newUrl
       throw new Error("BBSMenuにその板のサーバー情報が存在しません")
       return
 
   #移転を検出した場合は移転検出メッセージを送出
   app.message.send("detected_ch_server_move",
-    {before: oldBoardUrl, after: newBoardUrl})
+    {before: oldBoardUrl.href, after: newBoardUrl.href})
   return newBoardUrl
 
 #文字参照をデコード

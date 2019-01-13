@@ -13,14 +13,16 @@ export class URL extends window.URL {
   private guessedType: GuessResult = {type: "unknown", bbsType: "unknown"};
   private tsld: string|null = null;
   private readonly rawUrl: string;
+  private readonly rawHash: string;
   private archive = false;
 
   constructor(url: string) {
     super(url);
     this.rawUrl = url;
+    this.rawHash = this.hash;
+    this.hash = "";
 
     this.fix();
-    this.hash = "";
   }
 
   private static readonly CH_THREAD_REG = /^\/((?:\w+\/)?test\/(?:read\.cgi|-)\/\w+\/\d+).*$/;
@@ -155,6 +157,12 @@ export class URL extends window.URL {
     this.protocol = (this.protocol === "http:") ? "https:" : "http:";
   }
 
+  createProtocolToggled(): URL {
+    const toggled = new URL(this.href);
+    toggled.toggleProtocol();
+    return toggled;
+  }
+
   private static readonly CH_RESNUM_REG = /^https?:\/\/[\w\.]+\/(?:\w+\/)?test\/(?:read\.cgi|-)\/\w+\/\d+\/(?:i|g\?g=)?(\d+).*$/;
   private static readonly CH_RESNUM_REG2 = /^\/2ch\/\w+\/[\w\.]+\/\d+\/(\d+).*$/;
   private static readonly MACHI_RESNUM_REG = /^\/bbs\/read\.cgi\/\w+\/\d+\/(\d+).*$/;
@@ -212,6 +220,14 @@ export class URL extends window.URL {
       const pathname = this.pathname.replace(URL.CH_TO_BOARD_REG, "/$1/");
       return new URL(`${this.origin}${pathname}`);
     }
+  }
+
+  getHashParams(): URLSearchParams {
+    return this.rawHash ? new URLSearchParams(this.rawHash.slice(1)) : new URLSearchParams();
+  }
+
+  setHashParams(data: Record<string, string>) {
+    this.hash = (new URLSearchParams(data)).toString();
   }
 }
 
@@ -323,11 +339,7 @@ export function getResNumber(urlstr: string): string|null {
 }
 
 export function threadToBoard(url: string): string {
-  return (
-    fix(url)
-      .replace(/^(https?):\/\/([\w\.]+)\/(?:test|bbs)\/read\.cgi\/(\w+)\/\d+\/$/, "$1://$2/$3/")
-      .replace(/^(https?):\/\/jbbs\.shitaraba\.net\/bbs\/read(?:_archive)?\.cgi\/(\w+)\/(\d+)\/\d+\/$/, "$1://jbbs.shitaraba.net/$2/$3/")
-  );
+  return (new URL(url)).toBoard().href;
 }
 
 export function parseQuery(urlStr: string, fromSearch: boolean = true): URLSearchParams {
@@ -335,11 +347,6 @@ export function parseQuery(urlStr: string, fromSearch: boolean = true): URLSearc
     return new URLSearchParams(urlStr.slice(1));
   }
   return (new window.URL(urlStr)).searchParams;
-}
-
-export function parseHashQuery(url: string): URLSearchParams {
-  const tmp = /#(.+)$/.exec(url);
-  return tmp ? new URLSearchParams(tmp[1]) : new URLSearchParams();
 }
 
 export function buildQuery(data: Record<string, string>): string {

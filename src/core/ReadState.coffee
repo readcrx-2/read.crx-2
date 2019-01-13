@@ -1,5 +1,5 @@
 import {indexedDBRequestToPromise} from "./util.coffee"
-import {fix as fixUrl, threadToBoard} from "./URL.ts"
+import {URL} from "./URL.ts"
 
 ###*
 @class ReadState
@@ -32,18 +32,13 @@ _openDB = new Promise( (resolve, reject) ->
   return
 )
 
-_urlFilter = (originalUrl) ->
-  originalUrl = fixUrl(originalUrl)
+_urlFilter = (originalUrlStr) ->
+  original = new URL(originalUrlStr)
+  replaced = new URL(originalUrlStr)
+  if original.hostname.endsWith(".5ch.net")
+    replaced.hostname = "*.5ch.net"
 
-  return {
-    original: originalUrl
-    replaced: originalUrl
-      .replace(/// ^(https?)://\w+\.5ch\.net/ ///, "$1://*.5ch.net/")
-    originalOrigin: originalUrl
-      .replace(/// ^(https?://\w+\.5ch\.net)/.* ///, "$1")
-    replacedOrigin: originalUrl
-      .replace(/// ^(https?)://\w+\.5ch\.net/.* ///, "$1://*.5ch.net")
-  }
+  return { original, replaced }
 
 export set = (readState) ->
   if (
@@ -67,9 +62,9 @@ export set = (readState) ->
   readState = app.deepCopy(readState)
 
   url = _urlFilter(readState.url)
-  readState.url = url.replaced
-  boardUrl = threadToBoard(url.original)
-  readState.board_url = _urlFilter(boardUrl).replaced
+  readState.url = url.replaced.href
+  boardUrl = url.original.toBoard()
+  readState.board_url = _urlFilter(boardUrl.href).replaced.href
 
   try
     db = await _openDB
@@ -79,8 +74,8 @@ export set = (readState) ->
       .put(readState)
     await indexedDBRequestToPromise(req)
     delete readState.board_url
-    readState.url = readState.url.replace(url.replaced, url.original)
-    app.message.send("read_state_updated", {board_url: boardUrl, read_state: readState})
+    readState.url = url.original.href
+    app.message.send("read_state_updated", {board_url: boardUrl.href, read_state: readState})
   catch e
     app.log("error", "app.ReadState.set: トランザクション失敗")
     throw new Error(e)
@@ -97,10 +92,10 @@ export get = (url) ->
     req = db
       .transaction("ReadState")
       .objectStore("ReadState")
-      .get(url.replaced)
+      .get(url.replaced.href)
     { target: {result} } = await indexedDBRequestToPromise(req)
     data = app.deepCopy(result)
-    data.url = url.original if data?
+    data.url = url.original.href if data?
   catch e
     app.log("error", "app.ReadState.get: トランザクション中断")
     throw new Error(e)
@@ -131,10 +126,10 @@ export getByBoard = (url) ->
       .transaction("ReadState")
       .objectStore("ReadState")
       .index("board_url")
-      .getAll(IDBKeyRange.only(url.replaced))
+      .getAll(IDBKeyRange.only(url.replaced.href))
     { target: {result: data} } = await indexedDBRequestToPromise(req)
     for key, val of data
-      data[key].url = val.url.replace(url.replacedOrigin, url.originalOrigin)
+      data[key].url = val.url.replace(url.replaced.origin, url.original.origin)
   catch e
     app.log("error", "app.ReadState.getByBoard: トランザクション中断")
     throw new Error(e)
@@ -151,9 +146,9 @@ export remove = (url) ->
     req = db
       .transaction("ReadState", "readwrite")
       .objectStore("ReadState")
-      .delete(url.replaced)
+      .delete(url.replaced.href)
     await indexedDBRequestToPromise(req)
-    app.message.send("read_state_removed", url: url.original)
+    app.message.send("read_state_removed", url: url.original.href)
   catch e
     app.log("error", "app.ReadState.remove: トランザクション中断")
     throw new Error(e)

@@ -1,7 +1,7 @@
 import {get as getBBSMenu} from "./BBSMenu.coffee"
 import Board from "./Board.coffee"
 import {Request} from "./HTTP.ts"
-import {URL, fix as fixUrl, setScheme, changeScheme, threadToBoard} from "./URL.ts"
+import {URL} from "./URL.ts"
 import {levenshteinDistance} from "./Util.ts"
 
 ###*
@@ -137,16 +137,16 @@ export getHowToOpen = ({type, button, shiftKey, ctrlKey, metaKey}) ->
     return openMap.get(key) if openMap.has(key)
   return def
 
-export searchNextThread = (threadUrl, threadTitle, resString) ->
-  threadUrl = fixUrl(threadUrl)
-  boardUrl = threadToBoard(threadUrl)
+export searchNextThread = (threadUrlStr, threadTitle, resString) ->
+  threadUrl = new URL(threadUrlStr)
+  boardUrl = threadUrl.toBoard()
   threadTitle = normalize(threadTitle)
 
-  {data: threads} = await Board.get(boardUrl)
+  {data: threads} = await Board.get(boardUrl.href)
   unless threads?
     throw new Error("板の取得に失敗しました")
   threads = threads.filter( ({url, resCount}) ->
-    return (url isnt threadUrl and resCount < 1001)
+    return (url isnt threadUrl.href and resCount < 1001)
   ).map( ({title, url}) ->
     score = levenshteinDistance(threadTitle, normalize(title), false)
     m = url.match(/(?:https:\/\/)?(?:\w+(\.[25]ch\.net\/.+)|(.+))$/)

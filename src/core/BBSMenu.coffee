@@ -1,5 +1,6 @@
 import Cache from "./Cache.coffee"
 import {Request} from "./HTTP.ts"
+import {fix as fixUrl} from "./URL.ts"
 
 bbsmenuOption = null
 
@@ -153,7 +154,7 @@ parse = (html) ->
       )
         regBoardRes[2] += "_#{subName}"
       category.board.push(
-        url: regBoardRes[1]
+        url: fixUrl(regBoardRes[1])
         title: regBoardRes[2]
       )
 

@@ -33,8 +33,8 @@ export function fix(url: string): string {
 }
 
 export interface GuessResult {
-  type: string;
-  bbsType: string;
+  type: "thread"|"board"|"unknown";
+  bbsType: "jbbs"|"machi"|"2ch"|"unknown";
 }
 export function guessType(url: string): GuessResult {
   url = fix(url);
@@ -247,7 +247,7 @@ export function getExtType(filename: string, {
     oggIsAudio: boolean,
     oggIsVideo: boolean
   }> = {}
-): string|null {
+): "audio"|"video"|null {
   if (audio && AUDIO_REG.test(filename)) {
     return "audio";
   }
@@ -290,11 +290,11 @@ export function convertUrlFromPhone(url: string): string {
         board = tmp[2];
         thread = tmp[3] ? tmp[3] : null;
         if (board !== null) {
-          if (serverNet.has(board) === true) {
-            server = serverNet.get(board)!;
+          if (serverNet.has(board)) {
+            server = serverNet.get(board);
           // 携帯用bbspinkの可能性をチェック
-          } else if (serverPink.has(board) === true) {
-            server = serverPink.get(board)!;
+          } else if (serverPink.has(board)) {
+            server = serverPink.get(board);
             mode = "bbspink.com";
           }
         }
@@ -310,8 +310,8 @@ export function convertUrlFromPhone(url: string): string {
         scheme = tmp[1];
         board = tmp[2];
         thread = tmp[3] ? tmp[3] : null;
-        if (board !== null && serverSc.has(board) === true) {
-          server = serverSc.get(board)!;
+        if (board !== null && serverSc.has(board)) {
+          server = serverSc.get(board);
         }
       }
       break;
@@ -325,8 +325,8 @@ export function convertUrlFromPhone(url: string): string {
         scheme = tmp[1];
         board = tmp[2];
         thread = tmp[3] ? tmp[3] : null;
-        if (board !== null && serverPink.has(board) === true) {
-          server = serverPink.get(board)!;
+        if (board !== null && serverPink.has(board)) {
+          server = serverPink.get(board);
         }
       }
       break;
@@ -417,13 +417,13 @@ function exchangeNetSc(url: string): string|null {
   }
 
   if (mode[3] === "5ch.net") {
-    if (serverSc.has(mode[4]) === true) {
-      server = serverSc.get(mode[4])!;
+    if (serverSc.has(mode[4])) {
+      server = serverSc.get(mode[4]);
       target = "2ch.sc";
     }
   } else {
-    if (serverNet.has(mode[4]) === true) {
-      server = serverNet.get(mode[4])!;
+    if (serverNet.has(mode[4])) {
+      server = serverNet.get(mode[4]);
       target = "5ch.net";
     }
   }
@@ -458,7 +458,7 @@ export async function convertNetSc(url: string): Promise<string> {
     return resUrl;
   }
 
-  if (serverSc.has(tmp2[2]) === false) {
+  if (!serverSc.has(tmp2[2])) {
     serverSc.set(tmp2[2], tmp2[1]);
   }
   return `${scheme}://${tmp2[1]}.2ch.sc/test/read.cgi/${tmp2[2]}/${tmp2[3]}/`;

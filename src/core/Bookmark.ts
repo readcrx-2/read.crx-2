@@ -124,7 +124,7 @@ export default class Bookmark {
     return true;
   }
 
-  async updateResCount(url:string, resCount:number): Promise<boolean> {
+  async updateResCount(url: string, resCount: number): Promise<boolean> {
     const entry = this.bel.get(url);
 
     if (entry && (!entry.resCount || entry.resCount < resCount)) {
@@ -134,7 +134,7 @@ export default class Bookmark {
     return true;
   }
 
-  async updateExpired(url:string, expired:boolean): Promise<boolean> {
+  async updateExpired(url: string, expired: boolean): Promise<boolean> {
     const entry = this.bel.get(url);
 
     if (entry) {

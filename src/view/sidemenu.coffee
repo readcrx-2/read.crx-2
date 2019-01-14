@@ -71,8 +71,8 @@ app.boot("/view/sidemenu.html", ["BBSMenu"], (BBSMenu) ->
       target = e.target.closest("a")
       return unless target
 
-      url = target.getAttr("href")
-      title = target.getAttr("title")
+      url = target.href
+      title = target.title
       return unless url?
       e.preventDefault()
 

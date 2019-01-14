@@ -23,17 +23,18 @@ export function log(level: logLevel, ...data: any[]) {
 }
 
 // [Val, Type, isNullable]
-type Assertion = [any, string, boolean|undefined]
+type Assertion = [any, string, boolean]|[any, string];
 
 export function assertArg(name: string, rules: Assertion[]): boolean {
+  let isError = false;
   for (const [val, type, canbeNull] of rules) {
     if (
       !(canbeNull && (val === null || val === void 0)) &&
       typeof val !== type
     ) {
       log("error", `${name}: 不正な引数(予期していた型: ${type}, 受け取った型: ${typeof val})`, deepCopy(val));
-      return true
+      isError = true;
     }
   }
-  return false;
+  return isError;
 }

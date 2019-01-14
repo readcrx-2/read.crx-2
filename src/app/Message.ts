@@ -19,7 +19,7 @@ class Message {
 
     await defer();
     if (this._listenerStore.has(type)) {
-      this._listenerStore.get(type)!.call(msg);
+      this._listenerStore.get(type).call(msg);
     }
   }
 
@@ -37,7 +37,7 @@ class Message {
 
   off(type: string, listener: Function) {
     if (this._listenerStore.has(type)) {
-      this._listenerStore.get(type)!.remove(listener);
+      this._listenerStore.get(type).remove(listener);
     }
   }
 }

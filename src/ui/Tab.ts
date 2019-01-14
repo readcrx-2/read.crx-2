@@ -260,7 +260,7 @@ export default class Tab {
       history.stack[history.current].title = param.title;
 
       const $tmptab = this.$element.$(`li[data-tabid="${tabId}"]`);
-      $tmptab.setAttr("title", param.title);
+      $tmptab.title = param.title;
       $tmptab.T("span")[0].textContent = param.title;
     }
 

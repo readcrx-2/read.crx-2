@@ -60,17 +60,17 @@ do ->
   getMoveSec = ->
     sec = 3
     $refreshMeta = getRefreshMeta()
-    content = $refreshMeta?.getAttribute("content")
+    content = $refreshMeta?.content
     return sec if not content? or content is ""
     m = content.match(/^(\d+);/)
     return m?[1] ? sec
 
   getJumpUrl = ->
-    url = location.href
-    if url.includes("5ch.net") or url.includes("bbspink.com") or url.includes("open2ch.net")
+    domain = location.hostname
+    if domain.endsWith("5ch.net") or domain.endsWith("bbspink.com") or domain.endsWith("open2ch.net")
       $meta = getRefreshMeta()
-      return $meta?.getAttribute("content") ? ""
-    if url.includes("2ch.sc")
+      return $meta?.content ? ""
+    if domain.endsWith("2ch.sc")
       as = document.getElementsByTagName("a")
       return as?[0]?.href ? ""
     return ""

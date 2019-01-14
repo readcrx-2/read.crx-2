@@ -506,16 +506,16 @@ app.boot("/view/thread.html", ->
   onLink = (e) ->
     {target} = e
     return unless target.matches(".message a:not(.anchor)")
-    targetUrl = target.href
 
     #http、httpsスキーム以外ならクリックを無効化する
-    if not /// ^https?:// ///.test(targetUrl)
+    unless /^https?:$/.test(target.protocol)
       e.preventDefault()
       return
 
     #.open_in_rcrxが付与されている場合、処理は他モジュールに任せる
     return if target.hasClass("open_in_rcrx")
 
+    targetUrl = target.href
     {type: srcType, bbsType} = app.URL.guessType(targetUrl)
 
     #read.crxで開けるURLかどうかを判定

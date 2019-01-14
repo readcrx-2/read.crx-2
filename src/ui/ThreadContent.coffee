@@ -1300,13 +1300,13 @@ export default class ThreadContent
         switch mediaType
           when "audio"
             thumbnailLink.style.width = "#{app.config.get("audio_width")}px"
-            thumbnailLink.setAttr("controls", "")
+            thumbnailLink.controls = true
           when "video"
             thumbnailLink.style.WebkitFilter = webkitFilter
             thumbnailLink.style.maxWidth = "#{app.config.get("video_width")}px"
             thumbnailLink.style.maxHeight = "#{app.config.get("video_height")}px"
             if app.config.isOn("video_controls")
-              thumbnailLink.setAttr("controls", "")
+              thumbnailLink.controls = true
 
     thumbnail.addLast(thumbnailLink)
 
@@ -1372,12 +1372,12 @@ export default class ThreadContent
 
   ###*
   @method checkUrlExpand
-  @param {HTMLAElement} a
+  @param {HTMLAnchorElement} a
   ###
   checkUrlExpand: (a) ->
     if (
       app.config.get("expand_short_url") isnt "none" and
-      app.URL.SHORT_URL_LIST.has(app.URL.getDomain(a.href))
+      app.URL.SHORT_URL_LIST.has(a.hostname)
     )
       # 短縮URLの展開
       finalUrl = await app.URL.expandShortURL(a.href)

@@ -1,6 +1,6 @@
 import Callbacks from "./Callbacks";
 import message from "./Message";
-import {log} from "./Log";
+import {log, assertArg} from "./Log";
 
 export default class Config {
   private static readonly _default: ReadonlyMap<string, string> = new Map([
@@ -96,18 +96,20 @@ export default class Config {
     this.ready = ready.add.bind(ready);
 
     ( async () => {
-      const res = await browser.storage.local.get(null);
-      if (this._cache !== null) {
-        for (const [key, val] of Object.entries(res)) {
-          if (
-            key.startsWith("config_") &&
-            (typeof val === "string" || typeof val === "number")
-          ) {
-            this._cache.set(key, val.toString());
-          }
-        }
-        ready.call();
+      if (this._cache.size > 0) {
+        return;
       }
+
+      const res = await browser.storage.local.get(null);
+      for (const [key, val] of Object.entries(res)) {
+        if (
+          key.startsWith("config_") &&
+          (typeof val === "string" || typeof val === "number")
+        ) {
+          this._cache.set(key, val.toString());
+        }
+      }
+      ready.call();
     })();
 
     this._onChanged = (change, area) => {
@@ -137,10 +139,10 @@ export default class Config {
 
   get(key: string): string|null {
     if (this._cache.has(`config_${key}`)) {
-      return this._cache.get(`config_${key}`)!;
+      return this._cache.get(`config_${key}`);
     }
     if (Config._default.has(key)) {
-      return Config._default.get(key)!;
+      return Config._default.get(key);
     }
     return null;
   }
@@ -175,9 +177,7 @@ export default class Config {
   }
 
   async del(key: string) {
-    if (typeof key !== "string") {
-      log("error", "app.Config::delにstring以外の値が渡されました",
-        arguments);
+    if (assertArg("app.Config::del", [[key, "string"]])) {
       throw new Error("app.Config::delにstring以外の値が渡されました");
     }
 

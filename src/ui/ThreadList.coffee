@@ -129,6 +129,7 @@ export default class ThreadList
 
       if @_flg.bookmarkAddRm
         if type is "added"
+          url = new app.URL.URL(bookmark.url)
           boardUrl = app.URL.threadToBoard(bookmark.url)
           try
             boardTitle = await app.BoardTitleSolver.ask(boardUrl)
@@ -139,11 +140,11 @@ export default class ThreadList
             url: bookmark.url
             resCount: bookmark.resCount or 0
             readState: bookmark.readState or null
-            createdAt: /\/(\d+)\/$/.exec(bookmark.url)[1] * 1000
+            createdAt: /\/(\d+)\/$/.exec(url.pathname)[1] * 1000
             boardUrl
             boardTitle
             expired: bookmark.expired
-            isHttps: (app.URL.getScheme(bookmark.url) is "https")
+            isHttps: (url.protocol is "https:")
           })
         else if type is "removed"
           $table.$("tr[data-href=\"#{bookmark.url}\"]").remove()

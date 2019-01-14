@@ -1,13 +1,13 @@
 // @ts-ignore
 import {fadeIn} from "./Animate.coffee"
 
-type HTMLMediaElement = HTMLImageElement | HTMLAudioElement | HTMLVideoElement;
+type HTMLAudioVisualElement = HTMLImageElement | HTMLAudioElement | HTMLVideoElement;
 
 export default class LazyLoad {
   private readonly container: HTMLElement;
   isManualLoad = false;
   private readonly observer: IntersectionObserver;
-  private medias: HTMLMediaElement[] = [];
+  private medias: HTMLAudioVisualElement[] = [];
   private pause = false;
   private readonly noNeedAttrs: ReadonlySet<string> = new Set([
     "data-src",
@@ -71,14 +71,14 @@ export default class LazyLoad {
     this.immediateLoad(e.target);
   }
 
-  public immediateLoad(media: HTMLMediaElement) {
+  public immediateLoad(media: HTMLAudioVisualElement) {
     if (media.tagName === "IMG" || media.tagName === "VIDEO") {
       if (media.dataset.src === undefined) return;
       this.load(media);
     }
   }
 
-  private async load($media: HTMLMediaElement) {
+  private async load($media: HTMLAudioVisualElement) {
     const imgFlg = ($media.tagName === "IMG");
     const faviconFlg = $media.hasClass("favicon");
 
@@ -154,7 +154,7 @@ export default class LazyLoad {
   }
 
   scan(): void {
-    this.medias = <HTMLMediaElement[]>Array.from(this.container.$$("img[data-src], audio[data-src], video[data-src]"));
+    this.medias = <HTMLAudioVisualElement[]>Array.from(this.container.$$("img[data-src], audio[data-src], video[data-src]"));
     for (const media of this.medias) {
       this.observer.observe(media);
     }

@@ -96,11 +96,11 @@ export default class Config {
     this.ready = ready.add.bind(ready);
 
     ( async () => {
-      const res = await browser.storage.local.get(null);
-      if (this._cache === null) {
+      if (this._cache.size > 0) {
         return;
       }
 
+      const res = await browser.storage.local.get(null);
       for (const [key, val] of Object.entries(res)) {
         if (
           key.startsWith("config_") &&

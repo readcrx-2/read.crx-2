@@ -1,6 +1,6 @@
 import Cache from "./Cache.coffee"
 import {Request} from "./HTTP.ts"
-import {fix as fixUrl} from "./URL.ts"
+import {fix as fixUrl, tsld as getTsld} from "./URL.ts"
 
 bbsmenuOption = null
 
@@ -132,7 +132,7 @@ parse = (html) ->
 
     subName = null
     while regBoardRes = regBoard.exec(regCategoryRes[0])
-      continue if bbsmenuOption.has(app.URL.tsld(regBoardRes[1]))
+      continue if bbsmenuOption.has(getTsld(regBoardRes[1]))
       continue if bbspinkException and regBoardRes[1].includes("5ch.net/bbypink")
       unless subName
         if regBoardRes[1].includes("open2ch.net")

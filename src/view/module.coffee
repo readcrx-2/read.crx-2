@@ -604,32 +604,34 @@ class app.view.TabContentView extends app.view.PaneContentView
     return unless $button
     {url} = @$element.dataset
 
-    if url.startsWith("search:")
-      isViewSearch = true
-      scheme = @$element.getAttr("scheme") ? "http"
-    else
-      isViewSearch = false
-      scheme = app.URL.getScheme(url)
-
-    if ///^https?://\w///.test(url) or isViewSearch
-      if scheme is "https"
-        $button.addClass("https")
-      else
-        $button.removeClass("https")
-
-      $button.on("click", ->
-        obj =
-          new_tab: app.config.isOn("button_change_scheme_newtab")
-        if isViewSearch
-          obj.url = url
-          obj.scheme = if scheme is "http" then "https" else "http"
-        else
-          obj.url = app.URL.changeScheme(url)
-        app.message.send("open", obj)
-        return
-      )
-    else
+    unless url.startsWith("search:") or /^https?:/.test(url)
       $button.remove()
+      return
+
+    isViewSearch = (url.startsWith("search:"))
+
+    if isViewSearch
+      protocol = @$element.getAttr("scheme")+":" ? "http:"
+    else
+      urlObj = new app.URL.URL(url)
+      {protocol} = urlObj
+
+    if protocol is "https:"
+      $button.addClass("https")
+    else
+      $button.removeClass("https")
+
+    $button.on("click", ->
+      obj =
+        new_tab: app.config.isOn("button_change_scheme_newtab")
+      if isViewSearch
+        obj.url = url
+        obj.scheme = if protocol is "http:" then "https" else "http"
+      else
+        obj.url = urlObj.createProtocolToggled().href
+      app.message.send("open", obj)
+      return
+    )
     return
 
   ###*
@@ -819,32 +821,37 @@ class app.view.TabContentView extends app.view.PaneContentView
       return
     )
 
-    # 2ch.net/2ch.scに切り替え
-    url = @$element.dataset.url
-    if /https?:\/\/\w+\.(5ch\.net|2ch\.sc)\/\w+\/(.*?)/.test(url)
-      @$element.C("button_change_netsc")[0]?.on("click", =>
-        try
-          app.message.send("open",
-            url: await app.URL.convertNetSc(url),
-            new_tab: app.config.isOn("button_change_netsc_newtab")
-          )
-        catch
-          msg = """
-          スレッドのURLが古いか新しいため、板一覧に5ch.netと2ch.scのペアが存在しません。
-          板一覧が更新されるのを待つか、板一覧を更新してみてください。
-          """
-          new app.Notification("現在この機能は使用できません", msg, "", "invalid")
-        return
-      )
-    else
-      @$element.C("button_change_netsc")[0]?.remove()
+    do =>
+      urlStr = @$element.dataset.url
+      return unless /^https?:/.test(urlStr)
+      url = new app.URL.URL(urlStr)
 
-    #2ch.scでscの投稿だけ表示(スレ&レス)
-    if app.URL.tsld(url) is "2ch.sc"
-      @$element.C("button_only_sc")[0]?.on("click", =>
-        for dom in @$element.C("net")
-          dom.toggleClass("hidden")
-        return
-      )
-    else
-      @$element.C("button_only_sc")[0]?.remove()
+      # 2ch.net/2ch.scに切り替え
+      if url.getTsld() in ["5ch.net", "2ch.sc"]
+        @$element.C("button_change_netsc")[0]?.on("click", =>
+          try
+            app.message.send("open",
+              url: await app.URL.convertNetSc(url.href),
+              new_tab: app.config.isOn("button_change_netsc_newtab")
+            )
+          catch
+            msg = """
+            スレッドのURLが古いか新しいため、板一覧に5ch.netと2ch.scのペアが存在しません。
+            板一覧が更新されるのを待つか、板一覧を更新してみてください。
+            """
+            new app.Notification("現在この機能は使用できません", msg, "", "invalid")
+          return
+        )
+      else
+        @$element.C("button_change_netsc")[0]?.remove()
+
+      #2ch.scでscの投稿だけ表示(スレ&レス)
+      if url.getTsld() is "2ch.sc"
+        @$element.C("button_only_sc")[0]?.on("click", =>
+          for dom in @$element.C("net")
+            dom.toggleClass("hidden")
+          return
+        )
+      else
+        @$element.C("button_only_sc")[0]?.remove()
+      return

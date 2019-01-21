@@ -129,9 +129,10 @@ app.boot("/view/bookmark.html", ["Board"], (Board) ->
     readState = {url: url, read: 0, received: 0, last: 0}
     expired
   }) ->
-    boardUrl = app.URL.threadToBoard(url)
+    urlObj = new app.URL.URL(url)
+    boardUrlObj = urlObj.toBoard()
     try
-      boardTitle = await app.BoardTitleSolver.ask(boardUrl)
+      boardTitle = await app.BoardTitleSolver.ask(boardUrlObj.href)
     catch
       boardTitle = ""
     threadList.addItem({
@@ -139,11 +140,11 @@ app.boot("/view/bookmark.html", ["Board"], (Board) ->
       url
       resCount
       readState
-      createdAt: /\/(\d+)\/$/.exec(url)[1] * 1000
+      createdAt: /\/(\d+)\/$/.exec(urlObj.pathname)[1] * 1000
       expired
-      boardUrl
+      boardUrl: boardUrlObj.href
       boardTitle
-      isHttps: (app.URL.getScheme(url) is "https")
+      isHttps: (urlObj.protocol is "https:")
     })
     return
   )

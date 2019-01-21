@@ -231,63 +231,8 @@ export class URL extends window.URL {
   }
 }
 
-const CH_THREAD_REG = /^(https?:\/\/[\w\.]+\/(?:\w+\/)?test\/(?:read\.cgi|-)\/\w+\/\d+).*$/;
-const CH_THREAD_REG2 = /^(https?:\/\/[\w\.]+\/\w+)\/?(?!test)$/;
-const CH_THREAD_ULA_REG = /^(https?):\/\/ula\.5ch\.net\/2ch\/(\w+)\/([\w\.]+)\/(\d+).*$/;
-const MACHI_THREAD_REG = /^(https?):\/\/(?:\w+\.)?machi\.to\/bbs\/read\.cgi\/(\w+\/\d+).*$/;
-const SHITARABA_THREAD_REG = /^(https?):\/\/jbbs\.(?:livedoor\.jp|shitaraba\.net)\/(bbs\/read(?:_archive)?\.cgi\/\w+\/\d+\/\d+).*$/;
-const SHITARABA_ARCHIVE_REG = /^(https?):\/\/jbbs\.(?:livedoor\.jp|shitaraba\.net)\/(\w+\/\d+)\/storage\/(\d+)\.html$/;
-const MACHI_BOARD_REG = /^(https?):\/\/(?:\w+\.)?machi\.to\/(\w+\/)(?:#.*)?$/;
-const SHITARABA_BOARD_REG = /^(https?):\/\/jbbs\.(?:livedoor\.jp|shitaraba\.net)\/(\w+\/\d+\/)(?:#.*)?$/;
-const CH_BOARD_REG = /^(https?:\/\/[\w\.]+\/(?:subback\/|test\/-\/)?\w+\/)(?:#.*)?$/;
-export function fix(url: string): string {
-  return (
-    url
-      //2ch.net->5ch.net
-      .replace(/^(https?):\/\/(\w+)\.2ch\.net\//, "$1://$2.5ch.net/")
-      // スレ系 誤爆する事は考えられないので、パラメータ部分をバッサリ切ってしまう
-      .replace(CH_THREAD_REG, "$1/")
-      .replace(CH_THREAD_REG2, "$1/")
-      .replace(CH_THREAD_ULA_REG, "$1://$3/test/read.cgi/$2/$4/")
-      .replace(MACHI_THREAD_REG, "$1://machi.to/bbs/read.cgi/$2/")
-      .replace(SHITARABA_THREAD_REG, "$1://jbbs.shitaraba.net/$2/")
-      .replace(SHITARABA_ARCHIVE_REG, "$1://jbbs.shitaraba.net/bbs/read_archive.cgi/$2/$3/")
-      // 板系 完全に誤爆を少しでも減らすために、パラメータ形式も限定する
-      .replace(MACHI_BOARD_REG, "$1://machi.to/$2")
-      .replace(SHITARABA_BOARD_REG, "$1://jbbs.shitaraba.net/$2")
-      .replace(CH_BOARD_REG, "$1")
-  );
-}
-
-export function guessType(url: string): GuessResult {
-  url = fix(url);
-
-  if (/^https?:\/\/jbbs\.shitaraba\.net\/bbs\/read(?:_archive)?\.cgi\/\w+\/\d+\/\d+\/$/.test(url)) {
-    return {type: "thread", bbsType: "jbbs"};
-  }
-  if (/^https?:\/\/jbbs\.shitaraba\.net\/\w+\/\d+\/$/.test(url)) {
-    return {type: "board", bbsType: "jbbs"};
-  }
-  if (/^https?:\/\/(?:\w+\.)?machi\.to\/bbs\/read\.cgi\/\w+\/\d+\/$/.test(url)) {
-    return {type: "thread", bbsType: "machi"};
-  }
-  if (/^https?:\/\/(?:\w+\.)?machi\.to\/\w+\/$/.test(url)) {
-    return {type: "board", bbsType: "machi"};
-  }
-  if (/^https?:\/\/[\w\.]+\/(?:\w+\/)?test\/(?:read\.cgi|-)\/\w+\/\d+\/$/.test(url)) {
-    return {type: "thread", bbsType: "2ch"};
-  }
-  if (/^https?:\/\/(?:find|info|p2|ninja)\.5ch\.net\/\w+\/$/.test(url)) {
-    return {type: "unknown", bbsType: "unknown"};
-  }
-  if (/^https?:\/\/\w+\.(?:[25]ch|open2ch|bbspink)\.\w+\/(?:subback\/|test\/-\/)?\w+\/?$/.test(url)) {
-    return {type: "board", bbsType: "2ch"};
-  }
-  if (/^https?:\/\/(?:\w+\.){2,}\w+\/(?:subback\/|test\/-\/)?\w+\/?$/.test(url)) {
-    return {type: "board", bbsType: "2ch"};
-  }
-
-  return {type: "unknown", bbsType: "unknown"};
+export function fix(urlStr: string): string {
+  return (new URL(urlStr)).href;
 }
 
 const TSLD_REG = /^https?:\/\/(?:\w+\.)*(\w+\.\w+)\//;
@@ -296,9 +241,8 @@ export function tsld(url: string): string {
   return res ? res[1] : "";
 }
 
-export function getDomain(urlstr: string): string {
-  const start = urlstr.indexOf("://")+3;
-  return urlstr.slice(start, urlstr.indexOf("/", start));
+export function getDomain(urlStr: string): string {
+  return (new URL(urlStr)).hostname;
 }
 
 export function getScheme(urlstr: string): string {

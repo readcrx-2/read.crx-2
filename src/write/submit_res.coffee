@@ -1,6 +1,6 @@
 import Write from "./write.coffee"
 import {getByUrl as getWriteHistoryByUrl} from "../core/WriteHistory.coffee"
-import {tsld as getTsld} from "../core/URL.ts"
+import {URL} from "../core/URL.ts"
 
 Write.setFont()
 
@@ -48,18 +48,18 @@ class SubmitRes extends Write
   _onError: (message) ->
     super(message)
     {url, message: mes, name, mail} = @
-    browser.runtime.sendMessage({type: "written?", url, mes, name, mail})
+    browser.runtime.sendMessage({type: "written?", url: url.href, mes, name, mail})
     return
 
   _onSuccess: (key) ->
     mes = @$view.C("message")[0].value
     name = @$view.C("name")[0].value
     mail = @$view.C("mail")[0].value
-    browser.runtime.sendMessage({type: "written", url: @url, mes, name, mail})
+    browser.runtime.sendMessage({type: "written", url: @url.href, mes, name, mail})
     return
 
   _setupDatalist: ->
-    data = await getWriteHistoryByUrl(@url)
+    data = await getWriteHistoryByUrl(@url.href)
     names = []
     mails = []
     for {input_name, input_mail} in data
@@ -87,18 +87,19 @@ class SubmitRes extends Write
     return
 
   _getFormData: ->
-    {scheme, bbsType, splittedUrl, args} = super()
-    #2ch
+    {protocol, hostname} = @url
+    {bbsType, splittedUrl, args} = super()
+    # 2ch
     if bbsType is "2ch"
-      #open2ch
-      if getTsld(@url) is "open2ch.net"
+      # open2ch
+      if @url.getTsld() is "open2ch.net"
         return {
-          action: "#{scheme}://#{splittedUrl[2]}/test/bbs.cgi"
+          action: "#{protocol}//#{hostname}/test/bbs.cgi"
           charset: "UTF-8"
           input:
             submit: "書"
-            bbs: splittedUrl[5]
-            key: splittedUrl[6]
+            bbs: splittedUrl[3]
+            key: splittedUrl[4]
             FROM: args.rcrxName
             mail: args.rcrxMail
           textarea:
@@ -106,29 +107,29 @@ class SubmitRes extends Write
         }
       else
         return {
-          action: "#{scheme}://#{splittedUrl[2]}/test/bbs.cgi"
+          action: "#{protocol}//#{hostname}/test/bbs.cgi"
           charset: "Shift_JIS"
           input:
             submit: "書きこむ"
             time: (Date.now() // 1000) - 60
-            bbs: splittedUrl[5]
-            key: splittedUrl[6]
+            bbs: splittedUrl[3]
+            key: splittedUrl[4]
             FROM: args.rcrxName
             mail: args.rcrxMail
             oekaki_thread1: ""
           textarea:
             MESSAGE: args.rcrxMessage
         }
-    #したらば
+    # したらば
     else if bbsType is "jbbs"
       return {
-        action: "#{scheme}://jbbs.shitaraba.net/bbs/write.cgi/#{splittedUrl[5]}/#{splittedUrl[6]}/#{splittedUrl[7]}/"
+        action: "#{protocol}//jbbs.shitaraba.net/bbs/write.cgi/#{splittedUrl[3]}/#{splittedUrl[4]}/#{splittedUrl[5]}/"
         charset: "EUC-JP"
         input:
           TIME: (Date.now() // 1000) - 60
-          DIR: splittedUrl[5]
-          BBS: splittedUrl[6]
-          KEY: splittedUrl[7]
+          DIR: splittedUrl[3]
+          BBS: splittedUrl[4]
+          KEY: splittedUrl[5]
           NAME: args.rcrxName
           MAIL: args.rcrxMail
         textarea:
@@ -137,13 +138,13 @@ class SubmitRes extends Write
     # まちBBS
     else if bbsType is "machi"
       return {
-        action: "#{scheme}://#{splittedUrl[2]}/bbs/write.cgi"
+        action: "#{protocol}//#{hostname}/bbs/write.cgi"
         charset: "Shift_JIS"
         input:
           submit: "書きこむ"
           TIME: (Date.now() // 1000) - 60
-          BBS: splittedUrl[5]
-          KEY: splittedUrl[6]
+          BBS: splittedUrl[3]
+          KEY: splittedUrl[4]
           NAME: args.rcrxName
           MAIL: args.rcrxMail
         textarea:

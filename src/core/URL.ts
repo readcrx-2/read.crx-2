@@ -245,20 +245,14 @@ export function getDomain(urlStr: string): string {
   return (new URL(urlStr)).hostname;
 }
 
-export function getScheme(urlstr: string): string {
-  return urlstr.slice(0, urlstr.indexOf("://"));
+export function getProtocol(urlStr: string): string {
+  return (new URL(urlStr)).protocol;
 }
 
-export function setScheme(urlstr: string, protocol: string): string {
-  const split = urlstr.indexOf("://");
-  return protocol + "://" + urlstr.slice(split+3);
-}
-
-export function changeScheme(urlstr: string): string {
-  const split = urlstr.indexOf("://")
-  const protocol = (urlstr.slice(0, split) == "http") ? "https" : "http";
-
-  return protocol + "://" + urlstr.slice(split+3);
+export function setProtocol(urlStr: string, protocol: string): string {
+  const url = new URL(urlStr);
+  url.protocol = protocol;
+  return url.href;
 }
 
 export function getResNumber(urlstr: string): string|null {

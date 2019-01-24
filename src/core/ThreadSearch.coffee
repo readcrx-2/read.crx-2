@@ -1,31 +1,31 @@
 import {ask as askBoardTitleSolver} from "./BoardTitleSolver.coffee"
 import {Request} from "./HTTP.ts"
 import {stampToDate, decodeCharReference} from "./util.coffee"
-import {getScheme, setScheme} from "./URL.ts"
+import {getProtocol, setProtocol} from "./URL.ts"
 
 export default class
   loaded: "None"
   loaded20: null
 
-  constructor: (@query, @scheme) ->
+  constructor: (@query, @protocol) ->
     return
 
-  _parse = (scheme) ->
+  _parse = (protocol) ->
     return ({url, key, subject, resno, server, ita}) ->
-      urlScheme = getScheme(url)
-      boardUrl = "#{urlScheme}://#{server}/#{ita}/"
+      urlProtocol = getProtocol(url)
+      boardUrl = "#{urlProtocol}//#{server}/#{ita}/"
       try
         boardTitle = await askBoardTitleSolver(boardUrl)
       catch
         boardTitle = ""
       return {
-        url: setScheme(url, scheme)
+        url: setProtocol(url, protocol)
         createdAt: stampToDate(key)
         title: decodeCharReference(subject)
         resCount: +resno
         boardUrl
         boardTitle
-        isHttps: (scheme is "https")
+        isHttps: (protocol is "https:")
       }
 
   _read: (count) ->
@@ -38,7 +38,7 @@ export default class
       {result} = JSON.parse(body)
     catch
       throw new Error("検索のJSONのパースに失敗しました")
-    return Promise.all(result.map(_parse(@scheme)))
+    return Promise.all(result.map(_parse(@protocol)))
 
   _getDiff = (a, b) ->
     diffed = []

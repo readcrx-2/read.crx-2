@@ -14,7 +14,7 @@ app.boot("/view/inputurl.html", ->
     {type: guessType} = url.guessType()
     if guessType is "thread" or guessType is "board"
       paramResNumFlag = app.config.isOn("enable_link_with_res_number")
-      paramResNum = if paramResNumFlag then app.URL.getResNumber(url) else null
+      paramResNum = if paramResNumFlag then url.getResNumber() else null
       app.message.send("open", {
         url: url.href
         new_tab: true

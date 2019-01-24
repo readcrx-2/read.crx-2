@@ -255,29 +255,12 @@ export function setProtocol(urlStr: string, protocol: string): string {
   return url.href;
 }
 
-export function getResNumber(urlstr: string): string|null {
-  let tmp = /^https?:\/\/[\w\.]+\/(?:\w+\/)?test\/(?:read\.cgi|-)\/\w+\/\d+\/(?:i|g\?g=)?(\d+).*$/.exec(urlstr);
-  if (tmp !== null) {
-    return tmp[1];
-  }
-  tmp = /^https?:\/\/ula\.5ch\.net\/2ch\/\w+\/[\w\.]+\/\d+\/(\d+).*$/.exec(urlstr);
-  if (tmp !== null) {
-    return tmp[1];
-  }
-  tmp = /^https?:\/\/(?:\w+\.)?machi\.to\/bbs\/read\.cgi\/\w+\/\d+\/(\d+).*$/.exec(urlstr);
-  if (tmp !== null) {
-    return tmp[1];
-  }
-  tmp = /^https?:\/\/jbbs\.(?:livedoor\.jp|shitaraba\.net)\/bbs\/read(?:_archive)?\.cgi\/\w+\/\d+\/\d+\/(\d+).*$/.exec(urlstr);
-  if (tmp !== null) {
-    return tmp[1];
-  }
-
-  return null;
+export function getResNumber(urlStr: string): string|null {
+  return (new URL(urlStr)).getResNumber();
 }
 
-export function threadToBoard(url: string): string {
-  return (new URL(url)).toBoard().href;
+export function threadToBoard(urlStr: string): string {
+  return (new URL(urlStr)).toBoard().href;
 }
 
 export function parseQuery(urlStr: string, fromSearch: boolean = true): URLSearchParams {

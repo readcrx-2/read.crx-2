@@ -9,6 +9,10 @@ export interface GuessResult {
   bbsType: "jbbs"|"machi"|"2ch"|"unknown";
 }
 
+let serverNet = new Map<string, string>();
+let serverSc = new Map<string, string>();
+let serverPink = new Map<string, string>();
+
 export class URL extends window.URL {
   private guessedType: GuessResult = {type: "unknown", bbsType: "unknown"};
   private tsld: string|null = null;
@@ -229,6 +233,118 @@ export class URL extends window.URL {
   setHashParams(data: Record<string, string>) {
     this.hash = (new URLSearchParams(data)).toString();
   }
+
+  private static readonly ITEST_5CH_REG = /\/(?:(?:\w+\/)?test\/read\.cgi\/(\w+)\/(\d+)\/|(?:subback\/)?(\w+)(?:\/)?)/;
+  private static readonly C_5CH_NET_REG = /\/test\/-\/(\w+)\/(?:(\d+)\/)?/;
+  private static readonly SP_2CH_SC_REG = /\/(?:(?:\w+\/)?test\/read\.cgi\/(\w+)\/(\d+)\/|(?:subback\/)?(\w+)\/)/;
+  private static readonly ITEST_BBSPINK_REG = /\/(?:(?:\w+\/)?test\/read\.cgi\/(\w+)\/(\d+)\/|(?:subback\/)?(\w+)(?:\/)?)/;
+
+  convertFromPhone() {
+    let mode = this.getTsld();
+    let reg: RegExp;
+
+    switch (this.hostname) {
+      case "itest.5ch.net":
+        reg = URL.ITEST_5CH_REG;
+        break;
+
+      case "c.5ch.net":
+        reg = URL.C_5CH_NET_REG;
+        break;
+
+      case "sp.2ch.sc":
+        reg = URL.SP_2CH_SC_REG;
+        break;
+
+      case "itest.bbspink.com":
+        reg = URL.ITEST_BBSPINK_REG;
+        break;
+
+      default:
+        return;
+    }
+
+    const res = reg.exec(this.pathname);
+    if (!res) return;
+
+    const board = res[1];
+    const thread = res[2] ? res[2] : null;
+
+    if (!board) return;
+
+    let server: string|null = null;
+
+    if (mode === "5ch.net") {
+      if (serverNet.has(board)) {
+        server = serverNet.get(board);
+      // 携帯用bbspinkの可能性をチェック
+      } else if (serverPink.has(board)) {
+        server = serverPink.get(board);
+        mode = "bbspink.com";
+      }
+    } else if (mode === "2ch.sc" && serverSc.has(board)) {
+      server = serverSc.get(board);
+    } else if (mode === "bbspink.com" && serverPink.has(board)) {
+      server = serverPink.get(board);
+    }
+
+    if (server === null) return;
+
+    this.hostname = `${server}.${mode}`;
+    this.pathname = `/${board}/` + (thread ? `/${thread}/` : "");
+  }
+
+  private async exchangeNetSc() {
+    const splits = this.pathname.split("/");
+
+    if (splits.length <= 3) return;
+
+    const boardKey = splits[3];
+    const tsld = this.getTsld();
+
+    if (tsld === "5ch.net" && serverSc.has(boardKey)) {
+      const server = serverSc.get(boardKey);
+      this.hostname = `${server}.2ch.sc`;
+      return;
+    } else if (serverNet.has(boardKey)) {
+      const server = serverNet.get(boardKey);
+      this.hostname = `${server}.5ch.net`;
+      return;
+    }
+
+    if (tsld !== "5ch.net") return;
+
+    {
+      const hostname = this.hostname.replace(".5ch.net", ".2ch.sc");
+      const req = new Request("HEAD", `http://${hostname}${this.pathname}`);
+      const {status, responseURL: resUrlStr} = await req.send();
+      if (status >= 400) {
+        throw new Error("移動先情報の取得の通信に失敗しました");
+      }
+
+      const resUrl = new URL(resUrlStr);
+      const server = resUrl.hostname.split(".")[0];
+      const splits = resUrl.pathname.split("/");
+
+      if (splits.length <= 3) {
+        this.href = resUrlStr;
+        return;
+      }
+
+      const boardKey = splits[3];
+
+      if (!serverSc.has(boardKey)) {
+        serverSc.set(boardKey, server);
+      }
+      this.hostname = resUrl.hostname;
+    }
+  }
+
+  async createNetScConverted(): Promise<URL> {
+    const newUrl = new URL(this.href);
+    await newUrl.exchangeNetSc();
+    return newUrl;
+  }
 }
 
 export function fix(urlStr: string): string {
@@ -398,88 +514,6 @@ export function getExtType(filename: string, {
   return null;
 }
 
-export function convertUrlFromPhone(url: string): string {
-  let regs: RegExp[];
-  let tmp: string[]|null = [];
-  let scheme = "";
-  let server: string|null = null;
-  let board: string|null = null;
-  let thread: string|null = null;
-
-  const checkReg = (value: any): boolean => {
-    return (tmp = value.exec(url));
-  }
-
-  let mode = tsld(url);
-  switch (mode) {
-    case "2ch.net":
-    case "5ch.net":
-      regs = [
-        /(https?):\/\/itest\.5ch\.net\/(?:\w+\/)?test\/read\.cgi\/(\w+)\/(\d+)\//,
-        /(https?):\/\/itest\.5ch\.net\/(?:subback\/)?(\w+)(?:\/)?/,
-        /(https?):\/\/c\.2ch\.net\/test\/-\/(\w+)\/(\d+)\//,
-        /(https?):\/\/c\.2ch\.net\/test\/-\/(\w+)\//
-      ];
-      if (regs.some(checkReg)) {
-        scheme = tmp[1];
-        board = tmp[2];
-        thread = tmp[3] ? tmp[3] : null;
-        if (board !== null) {
-          if (serverNet.has(board)) {
-            server = serverNet.get(board);
-          // 携帯用bbspinkの可能性をチェック
-          } else if (serverPink.has(board)) {
-            server = serverPink.get(board);
-            mode = "bbspink.com";
-          }
-        }
-      }
-      break;
-
-    case "2ch.sc":
-      regs = [
-        /(https?):\/\/sp\.2ch\.sc\/(?:\w+\/)?test\/read\.cgi\/(\w+)\/(\d+)\//,
-        /(https?):\/\/sp\.2ch\.sc\/(?:subback\/)?(\w+)\//
-      ];
-      if (regs.some(checkReg)) {
-        scheme = tmp[1];
-        board = tmp[2];
-        thread = tmp[3] ? tmp[3] : null;
-        if (board !== null && serverSc.has(board)) {
-          server = serverSc.get(board);
-        }
-      }
-      break;
-
-    case "bbspink.com":
-      regs = [
-        /(https?):\/\/itest\.bbspink\.com\/(?:\w+\/)?test\/read\.cgi\/(\w+)\/(\d+)\//,
-        /(https?):\/\/itest\.bbspink\.com\/(?:subback\/)?(\w+)(?:\/)?/
-      ];
-      if (regs.some(checkReg)) {
-        scheme = tmp[1];
-        board = tmp[2];
-        thread = tmp[3] ? tmp[3] : null;
-        if (board !== null && serverPink.has(board)) {
-          server = serverPink.get(board);
-        }
-      }
-      break;
-  }
-
-  if (server === null) {
-    return url;
-  }
-  if (thread === null) {
-    return `${scheme}://${server}.${mode}/${board}/`;
-  }
-  return `${scheme}://${server}.${mode}/test/read.cgi/${board}/${thread}/`;
-}
-
-let serverNet = new Map<string, string>();
-let serverSc = new Map<string, string>();
-let serverPink = new Map<string, string>();
-
 interface ResInfo {
   net: boolean;
   sc: boolean;
@@ -502,7 +536,7 @@ function applyServerInfo(menu: any[]): ResInfo {
     for (const board of category.board) {
       let tmp: string[]|null;
 
-      if (!res.net && (tmp = /https?:\/\/(\w+)\.[25]ch\.net\/(\w+)\/.*?/.exec(board.url)) !== null) {
+      if (!res.net && (tmp = /https?:\/\/(\w+)\.5ch\.net\/(\w+)\/.*?/.exec(board.url)) !== null) {
         boardNet.set(tmp[2], tmp[1]);
       } else if (!res.sc && (tmp = /https?:\/\/(\w+)\.2ch\.sc\/(\w+)\/.*?/.exec(board.url)) !== null) {
         boardSc.set(tmp[2], tmp[1]);
@@ -540,61 +574,4 @@ export async function pushServerInfo(menu: any[][]) {
     const tmpMenu = <any[][]>(await fetchBBSMenu(tmpUrl, false)).menu
     applyServerInfo(tmpMenu);
   }
-}
-
-function exchangeNetSc(url: string): string|null {
-  let server: string|null = null;
-  let target: string|null = null;
-
-  const mode = /(https?):\/\/(\w+)\.(5ch\.net|2ch\.sc)\/test\/read\.cgi\/(\w+)\/(\d+)\//.exec(url);
-  if (mode === null) {
-    return null;
-  }
-
-  if (mode[3] === "5ch.net") {
-    if (serverSc.has(mode[4])) {
-      server = serverSc.get(mode[4]);
-      target = "2ch.sc";
-    }
-  } else {
-    if (serverNet.has(mode[4])) {
-      server = serverNet.get(mode[4]);
-      target = "5ch.net";
-    }
-  }
-
-  if (server === null) {
-    return null;
-  }
-  return `${mode[1]}://${server}.${target}/test/read.cgi/${mode[4]}/${mode[5]}/`;
-}
-
-export async function convertNetSc(url: string): Promise<string> {
-  const newUrl = exchangeNetSc(url);
-
-  if (newUrl) {
-    return newUrl;
-  }
-
-  const tmp = /(https?):\/\/(\w+)\.5ch\.net\/test\/read\.cgi\/(\w+\/\d+\/)/.exec(url);
-  if (tmp === null) {
-    throw new Error("不明なURL形式です");
-  }
-  const tmpUrl = `http://${tmp[2]}.2ch.sc/test/read.cgi/${tmp[3]}`;
-  const scheme = tmp[1];
-
-  const req = new Request("HEAD", tmpUrl);
-  const {status, responseURL: resUrl} = await req.send();
-  if (status >= 400) {
-    throw new Error("移動先情報の取得の通信に失敗しました");
-  }
-  const tmp2 = /https?:\/\/(\w+)\.2ch\.sc\/test\/read\.cgi\/(\w+)\/(\d+)\//.exec(resUrl);
-  if (tmp2 === null) {
-    return resUrl;
-  }
-
-  if (!serverSc.has(tmp2[2])) {
-    serverSc.set(tmp2[2], tmp2[1]);
-  }
-  return `${scheme}://${tmp2[1]}.2ch.sc/test/read.cgi/${tmp2[2]}/${tmp2[3]}/`;
 }

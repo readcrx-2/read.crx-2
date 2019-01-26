@@ -415,8 +415,7 @@ app.main = ->
         src: "/view/search.html?#{app.URL.buildQuery(param)}"
         url: url
     urlObj = new app.URL.URL(url)
-    url = app.URL.convertUrlFromPhone(urlObj.href)
-    urlObj = new app.URL.URL(url)
+    urlObj.convertFromPhone()
     url = urlObj.href
     {type} = urlObj.guessType()
     if type is "board"

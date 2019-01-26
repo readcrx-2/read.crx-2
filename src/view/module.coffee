@@ -831,7 +831,7 @@ class app.view.TabContentView extends app.view.PaneContentView
         @$element.C("button_change_netsc")[0]?.on("click", =>
           try
             app.message.send("open",
-              url: await app.URL.convertNetSc(url.href),
+              url: (await url.createNetScConverted()).href,
               new_tab: app.config.isOn("button_change_netsc_newtab")
             )
           catch

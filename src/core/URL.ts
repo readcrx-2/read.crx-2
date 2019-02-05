@@ -351,10 +351,8 @@ export function fix(urlStr: string): string {
   return (new URL(urlStr)).href;
 }
 
-const TSLD_REG = /^https?:\/\/(?:\w+\.)*(\w+\.\w+)\//;
-export function tsld(url: string): string {
-  const res = TSLD_REG.exec(url);
-  return res ? res[1] : "";
+export function tsld(urlStr: string): string {
+  return (new URL(urlStr).getTsld());
 }
 
 export function getDomain(urlStr: string): string {

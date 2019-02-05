@@ -98,7 +98,7 @@ app.boot("/view/board.html", ["Board"], (Board) ->
       await app.wait(150)
       return await app.ReadState.getByBoard(urlStr)
     getBoardPromise = do ->
-      {status, message, data} = await Board.get(urlStr)
+      {status, message, data} = await Board.get(url)
       $messageBar = $view.C("message_bar")[0]
       if status is "error"
         $messageBar.addClass("error")

@@ -142,7 +142,7 @@ export searchNextThread = (threadUrlStr, threadTitle, resString) ->
   boardUrl = threadUrl.toBoard()
   threadTitle = normalize(threadTitle)
 
-  {data: threads} = await Board.get(boardUrl.href)
+  {data: threads} = await Board.get(boardUrl)
   unless threads?
     throw new Error("板の取得に失敗しました")
   threads = threads.filter( ({url, resCount}) ->

@@ -35,7 +35,7 @@ app.boot("/view/thread.html", ->
   $view.dataset.url = viewUrlStr
 
   $content = $view.C("content")[0]
-  threadContent = new UI.ThreadContent(viewUrlStr, $content)
+  threadContent = new UI.ThreadContent(viewUrl, $content)
   mediaContainer = new UI.MediaContainer($view)
   lazyLoad = new UI.LazyLoad($content)
   app.DOMData.set($view, "threadContent", threadContent)
@@ -110,7 +110,7 @@ app.boot("/view/thread.html", ->
   $view.on("became_over1000", removeWriteButton, once: true)
 
   # したらばの過去ログ
-  if viewUrl.getTsld() is "shitaraba.net" and viewUrl.isArchive()
+  if viewUrl.isArchive()
     $view.emit(new Event("became_expired"))
   else
     $view.C("button_write")[0].on("click", ->

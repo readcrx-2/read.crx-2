@@ -57,6 +57,9 @@ app.boot("/view/bookmark.html", ["Board"], (Board) ->
       attributeFilter: ["class"]
     )
 
+    # TODO: Collection Normalization Proposalで書くとよりよく
+    # ES2019 Stage 2(2019/02/05現在)
+    # https://github.com/tc39/proposal-collection-normalization
     boardList = new Set()
     boardThreadTable = new Map()
     for {url} in app.bookmark.getAllThreads()
@@ -108,7 +111,7 @@ app.boot("/view/bookmark.html", ["Board"], (Board) ->
         continue if loadingServer.has(server)
         loadingServer.add(server)
         boardList.delete(board)
-        Board.get(board).then(fn.bind(prev: board))
+        Board.get(new URL(board)).then(fn.bind(prev: board))
         fn()
         break
 

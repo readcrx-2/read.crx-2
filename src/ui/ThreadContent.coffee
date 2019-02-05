@@ -9,12 +9,12 @@ import MediaContainer from "./MediaContainer.coffee"
 export default class ThreadContent
   _OVER1000_DATA = "Over 1000"
 
-  constructor: (urlStr, @container) ->
+  constructor: (url, @container) ->
     ###*
     @property url
     @type app.URL.URL
     ###
-    @url = new app.URL.URL(urlStr)
+    @url = url
 
     ###*
     @property urlStr

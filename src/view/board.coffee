@@ -83,7 +83,7 @@ app.boot("/view/board.html", ["Board"], (Board) ->
   new app.view.TabContentView($view)
 
   do ->
-    title = await app.BoardTitleSolver.ask(urlStr)
+    title = await app.BoardTitleSolver.ask(url)
     document.title = title if title
     unless app.config.isOn("no_history")
       app.History.add(urlStr, title or urlStr, openedAt, title or urlStr)

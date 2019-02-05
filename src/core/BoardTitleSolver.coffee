@@ -154,12 +154,10 @@ searchFromJbbsAPI = (url) ->
 
 ###*
 @method ask
-@param {String} urlStr
+@param {app.URL.URL} url
 @return Promise
 ###
-export ask = (urlStr) ->
-  url = new URL(urlStr)
-
+export ask = (url) ->
   # bbsmenu内を検索
   name = await searchFromBBSMenu(url)
   return name if name?

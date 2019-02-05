@@ -130,7 +130,7 @@ export default class ThreadList
       if @_flg.bookmarkAddRm
         if type is "added"
           url = new app.URL.URL(bookmark.url)
-          boardUrl = app.URL.threadToBoard(bookmark.url)
+          boardUrl = url.toBoard()
           try
             boardTitle = await app.BoardTitleSolver.ask(boardUrl)
           catch
@@ -141,7 +141,7 @@ export default class ThreadList
             resCount: bookmark.resCount or 0
             readState: bookmark.readState or null
             createdAt: /\/(\d+)\/$/.exec(url.pathname)[1] * 1000
-            boardUrl
+            boardUrl: boardUrl.href
             boardTitle
             expired: bookmark.expired
             isHttps: (url.protocol is "https:")

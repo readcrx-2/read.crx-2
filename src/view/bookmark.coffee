@@ -132,7 +132,7 @@ app.boot("/view/bookmark.html", ["Board"], (Board) ->
     urlObj = new app.URL.URL(url)
     boardUrlObj = urlObj.toBoard()
     try
-      boardTitle = await app.BoardTitleSolver.ask(boardUrlObj.href)
+      boardTitle = await app.BoardTitleSolver.ask(boardUrlObj)
     catch
       boardTitle = ""
     threadList.addItem({

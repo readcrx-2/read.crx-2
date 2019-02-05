@@ -13,7 +13,7 @@ export default class
   _parse = (protocol) ->
     return ({url, key, subject, resno, server, ita}) ->
       urlProtocol = getProtocol(url)
-      boardUrl = "#{urlProtocol}//#{server}/#{ita}/"
+      boardUrl = new URL("#{urlProtocol}//#{server}/#{ita}/")
       try
         boardTitle = await askBoardTitleSolver(boardUrl)
       catch
@@ -23,7 +23,7 @@ export default class
         createdAt: stampToDate(key)
         title: decodeCharReference(subject)
         resCount: +resno
-        boardUrl
+        boardUrl: boardUrl.href
         boardTitle
         isHttps: (protocol is "https:")
       }

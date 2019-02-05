@@ -240,7 +240,7 @@ app.boot("/view/thread.html", ->
       await app.viewThread._draw($view, {jumpResNum})
     boardUrl = viewUrl.toBoard()
     try
-      boardTitle = await app.BoardTitleSolver.ask(boardUrl.href)
+      boardTitle = await app.BoardTitleSolver.ask(boardUrl)
     catch
       boardTitle = ""
     app.History.add(viewUrlStr, document.title, openedAt, boardTitle) unless app.config.isOn("no_history")
@@ -568,7 +568,7 @@ app.boot("/view/thread.html", ->
         return
 
     try
-      title = await app.BoardTitleSolver.ask(boardUrl.href)
+      title = await app.BoardTitleSolver.ask(boardUrl)
       popupHelper(target, e, =>
         $div = $__("div").addClass("popup_linkinfo")
         $div2 = $__("div")
@@ -1068,7 +1068,7 @@ app.boot("/view/thread.html", ->
   do ->
     boardUrl = viewUrl.toBoard()
     try
-      title = (await app.BoardTitleSolver.ask(boardUrl.href)).replace(/板$/, "")
+      title = (await app.BoardTitleSolver.ask(boardUrl)).replace(/板$/, "")
     catch
       title = ""
     $a = $view.$(".breadcrumb > li > a")

@@ -1,5 +1,5 @@
 import {indexedDBRequestToPromise} from "./util.coffee"
-import {getProtocol} from "./URL.ts"
+import {isHttps} from "./URL.ts"
 
 ###*
 @class WriteHistory
@@ -147,7 +147,7 @@ export get = (offset = -1, limit = -1) ->
               cursor.advance(offset)
               return
           value = cursor.value
-          value.isHttps = (getProtocol(value.url) is "https:")
+          value.isHttps = isHttps(value.url)
           histories.push(value)
           cursor.continue()
         else

@@ -14,7 +14,7 @@ app.boot("/view/sidemenu.html", ["BBSMenu"], (BBSMenu) ->
     $a.title = board.title
     $a.textContent = board.title
     $a.href = app.safeHref(board.url)
-    $a.addClass("https") if app.URL.getProtocol(board.url) is "https:"
+    $a.addClass("https") if app.URL.isHttps(board.url)
     $li.addLast($a)
     return $li
 

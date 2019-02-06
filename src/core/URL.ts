@@ -71,7 +71,7 @@ export class URL extends window.URL {
     if (this.hostname.includes("machi.to")) {
       const isThread = this.fixPathAndSetType(
         URL.MACHI_THREAD_REG,
-        (res) => `/bbs/read.cgi/${res[1]}`,
+        (res) => `/bbs/read.cgi/${res[1]}/`,
         {type: "thread", bbsType: "machi"}
       );
       if (isThread) return;

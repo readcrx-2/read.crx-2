@@ -4,11 +4,12 @@ app.boot("/view/board.html", ["Board"], (Board) ->
   catch
     alert("不正な引数です")
     return
-  url = app.URL.fix(url)
+  url = new app.URL.URL(url)
+  urlStr = url.href
   openedAt = Date.now()
 
   $view = document.documentElement
-  $view.dataset.url = url
+  $view.dataset.url = urlStr
 
   $table = $__("table")
   threadList = new UI.ThreadList($table,
@@ -23,7 +24,7 @@ app.boot("/view/board.html", ["Board"], (Board) ->
 
   write = (param = {}) ->
     param.title = document.title
-    param.url = url
+    param.url = urlStr
     windowX = app.config.get("write_window_x")
     windowY = app.config.get("write_window_y")
     openUrl = "/write/submit_thread.html?#{app.URL.buildQuery(param)}"
@@ -45,7 +46,7 @@ app.boot("/view/board.html", ["Board"], (Board) ->
     return
 
   $writeButton = $view.C("button_write")[0]
-  if app.URL.tsld(url) in ["5ch.net", "shitaraba.net", "bbspink.com", "2ch.sc", "open2ch.net"]
+  if url.getTsld() in ["5ch.net", "shitaraba.net", "bbspink.com", "2ch.sc", "open2ch.net"]
     $writeButton.on("click", ->
       write()
       return
@@ -85,17 +86,17 @@ app.boot("/view/board.html", ["Board"], (Board) ->
     title = await app.BoardTitleSolver.ask(url)
     document.title = title if title
     unless app.config.isOn("no_history")
-      app.History.add(url, title or url, openedAt, title or url)
+      app.History.add(urlStr, title or urlStr, openedAt, title or urlStr)
     return
 
   load = (ex) ->
     $view.addClass("loading")
-    app.message.send("request_update_read_state", {board_url: url})
+    app.message.send("request_update_read_state", {board_url: urlStr})
 
     getReadStatePromise = do ->
       # request_update_read_stateを待つ
       await app.wait(150)
-      return await app.ReadState.getByBoard(url)
+      return await app.ReadState.getByBoard(urlStr)
     getBoardPromise = do ->
       {status, message, data} = await Board.get(url)
       $messageBar = $view.C("message_bar")[0]

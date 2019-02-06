@@ -380,9 +380,6 @@ app.view_setup_resizer = ->
 
 app.main = ->
   urlToIframeInfo = (url, obj = {}) ->
-    url = app.URL.fix(url)
-    url = app.URL.convertUrlFromPhone(url)
-    guessResult = app.URL.guessType(url)
     switch url
       when "config"
         return
@@ -417,11 +414,15 @@ app.main = ->
       return
         src: "/view/search.html?#{app.URL.buildQuery(param)}"
         url: url
-    if guessResult.type is "board"
+    urlObj = new app.URL.URL(url)
+    urlObj.convertFromPhone()
+    url = urlObj.href
+    {type} = urlObj.guessType()
+    if type is "board"
       return
         src: "/view/board.html?#{app.URL.buildQuery(q: url)}"
         url: url
-    if guessResult.type is "thread"
+    if type is "thread"
       return
         src: "/view/thread.html?#{app.URL.buildQuery(q: url)}"
         url: url
@@ -600,14 +601,15 @@ app.main = ->
         iframe = $$.$("iframe[data-tabid=\"#{tmp.tabId}\"]")
         tmpURL = iframe.dataset.url
 
-        if app.URL.guessType(tmpURL).type is "thread"
-          app.message.send("open",
-            new_tab: true
-            lazy: true
-            url: tmpURL
-            title: tmp.title
-          )
-          tabA.remove(tmp.tabId)
+        continue unless /^https?:/.test(tmpURL)
+        continue unless (new app.URL.URL(tmpURL)).guessType().type is "thread"
+        app.message.send("open",
+          new_tab: true
+          lazy: true
+          url: tmpURL
+          title: tmp.title
+        )
+        tabA.remove(tmp.tabId)
     #3->2
     if val is "pane-2"
       for tmp in tabB.getAll()

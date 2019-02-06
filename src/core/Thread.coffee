@@ -2,7 +2,7 @@ import Board from "./Board.coffee"
 import Cache from "./Cache.coffee"
 import {Request} from "./HTTP.ts"
 import {chServerMoveDetect, decodeCharReference, removeNeedlessFromTitle} from "./util.coffee"
-import {fix as fixUrl, tsld as getTsld, guessType, threadToBoard} from "./URL.ts"
+import {URL} from "./URL.ts"
 
 ###*
 @class Thread
@@ -11,11 +11,11 @@ import {fix as fixUrl, tsld as getTsld, guessType, threadToBoard} from "./URL.ts
 ###
 export default class Thread
   constructor: (url) ->
-    @url = fixUrl(url)
+    @url = new URL(url)
     @title = null
     @res = null
     @message = null
-    @tsld = getTsld(@url)
+    @tsld = @url.getTsld()
     @expired = false
     return
 
@@ -70,7 +70,7 @@ export default class Thread
         # 通信
         if needFetch
           if (
-            (@tsld is "shitaraba.net" and not @url.includes("/read_archive.cgi/")) or
+            (@tsld is "shitaraba.net" and not @url.isArchive()) or
             @tsld is "machi.to"
           )
             if hasCache
@@ -101,7 +101,7 @@ export default class Thread
           response = await request.send()
 
         # パース
-        {bbsType} = guessType(@url)
+        {bbsType} = @url.guessType()
 
         if (
           response?.status is 200 or
@@ -201,7 +201,7 @@ export default class Thread
 
             # 2ch(html)のみ
             if thread.expired
-              app.bookmark.updateExpired(@url, true)
+              app.bookmark.updateExpired(@url.href, true)
 
           if deltaFlg
             if isHtml and !noChangeFlg
@@ -245,19 +245,16 @@ export default class Thread
         #2chでrejectされてる場合は移転を疑う
         if @tsld is "5ch.net" and response
           try
-            newBoardURL = await chServerMoveDetect(threadToBoard(@url))
+            newBoardURL = await chServerMoveDetect(@url.toBoard())
             #移転検出時
-            tmp = ///^https?://(\w+)\.5ch\.net/ ///.exec(newBoardURL)[1]
-            newURL = @url.replace(
-              ///^(https?://)\w+(\.5ch\.net/test/read\.cgi/\w+/\d+/)$///,
-              ($0, $1, $2) -> $1 + tmp + $2
-            )
+            newUrl = new URL(@url)
+            newUrl.hostname = newBoardURL.hostname
 
             @message += """
             スレッドの読み込みに失敗しました。
             サーバーが移転している可能性が有ります
-            (<a href="#{app.escapeHtml(app.safeHref(newURL))}"
-              class="open_in_rcrx">#{app.escapeHtml(newURL)}</a>)
+            (<a href="#{app.escapeHtml(app.safeHref(newURL.href))}"
+              class="open_in_rcrx">#{app.escapeHtml(newURL.href)}</a>)
             """
           catch
             #移転検出出来なかった場合
@@ -269,7 +266,7 @@ export default class Thread
           if hasCache and !thread
             @message += "キャッシュに残っていたデータを表示します。"
           reject()
-        else if @tsld is "shitaraba.net" and @url.includes("/read.cgi/")
+        else if @tsld is "shitaraba.net" and not @url.isArchive()
           @message += "スレッドの読み込みに失敗しました。"
           {error} = response?.headers?
           if error?
@@ -284,7 +281,7 @@ export default class Thread
                 URLが間違っているか過去ログに移動せずに削除されています。
                 """
               when "STORAGE IN"
-                newURL = @url.replace("/read.cgi/", "/read_archive.cgi/")
+                newURL = @url.href.replace("/read.cgi/", "/read_archive.cgi/")
                 @message += """
                 過去ログが存在します
                 (<a href="#{app.escapeHtml(app.safeHref(newURL))}"
@@ -300,66 +297,64 @@ export default class Thread
           reject()
 
       #ブックマーク更新部
-      app.bookmark.updateResCount(@url, thread.res.length) if thread?
+      app.bookmark.updateResCount(@url.href, thread.res.length) if thread?
 
       #dat落ち検出
       if response?.status is 203
-        app.bookmark.updateExpired(@url, true)
+        app.bookmark.updateExpired(@url.href, true)
       return
     )
 
   ###*
   @method _getXhrInfo
   @static
-  @param {String} url
+  @param {app.URL.URL} url
   @return {null|Object}
   ###
   @_getXhrInfo = (url) ->
-    tmp = ///^(https?)://((?:\w+\.)*(\w+\.\w+))/(?:test|bbs)/read(?:_archive)?\.cgi/
-      (\w+)/(\d+)/(?:(\d+)/)?$///.exec(url)
+    tmp = ///^/(?:test|bbs)/read(?:_archive)?\.cgi/(\w+)/(\d+)/(?:(\d+)/)?$///.exec(url.pathname)
     unless tmp then return null
-    return switch tmp[3]
+    return switch url.getTsld()
       when "machi.to"
-        path: "#{tmp[1]}://#{tmp[2]}/bbs/offlaw.cgi/#{tmp[4]}/#{tmp[5]}/",
+        path: "#{url.origin}/bbs/offlaw.cgi/#{tmp[1]}/#{tmp[2]}/",
         charset: "Shift_JIS"
       when "shitaraba.net"
-        if url.includes("/read_archive.cgi/")
-          path: tmp[0],
+        if url.isArchive()
+          path: url.href,
           charset: "EUC-JP"
         else
-          path: "#{tmp[1]}://jbbs.shitaraba.net/" +
-            "bbs/rawmode.cgi/#{tmp[4]}/#{tmp[5]}/#{tmp[6]}/",
+          path: "#{url.origin}/bbs/rawmode.cgi/#{tmp[1]}/#{tmp[2]}/#{tmp[3]}/",
           charset: "EUC-JP"
       when "5ch.net"
         if app.config.get("format_2chnet") is "dat"
-          path: "#{tmp[1]}://#{tmp[2]}/#{tmp[4]}/dat/#{tmp[5]}.dat",
+          path: "#{url.origin}/#{tmp[1]}/dat/#{tmp[2]}.dat",
           charset: "Shift_JIS"
         else
-          path: tmp[0],
+          path: url.href,
           charset: "Shift_JIS"
       when "bbspink.com"
-        path: tmp[0],
+        path: url.href,
         charset: "Shift_JIS"
       else
-        path: "#{tmp[1]}://#{tmp[2]}/#{tmp[4]}/dat/#{tmp[5]}.dat",
+        path: "#{url.origin}/#{tmp[1]}/dat/#{tmp[2]}.dat",
         charset: "Shift_JIS"
 
   ###*
   @method parse
   @static
-  @param {String} url
+  @param {app.URL.URL} url
   @param {String} text
   @param {Number} resLength
   @return {null|Object}
   ###
   @parse: (url, text, resLength) ->
-    return switch getTsld(url)
+    return switch url.getTsld()
       when ""
         null
       when "machi.to"
         Thread._parseMachi(text)
       when "shitaraba.net"
-        if url.includes("/read_archive.cgi/")
+        if url.isArchive()
           Thread._parseJbbsArchive(text)
         else
           Thread._parseJbbs(text)

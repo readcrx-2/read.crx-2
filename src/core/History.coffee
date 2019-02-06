@@ -1,5 +1,5 @@
 import {indexedDBRequestToPromise} from "./util.coffee"
-import {getScheme} from "./URL.ts"
+import {getProtocol} from "./URL.ts"
 
 ###*
 @class History
@@ -137,7 +137,7 @@ export get = (offset = -1, limit = -1) ->
               cursor.advance(offset)
               return
           {value} = cursor
-          value.isHttps = (getScheme(value.url) is "https")
+          value.isHttps = (getProtocol(value.url) is "https:")
           histories.push(value)
           cursor.continue()
         else
@@ -183,7 +183,7 @@ export getUnique = (offset = -1, limit = -1) ->
               return
           {value} = cursor
           unless inserted.has(value.url)
-            value.isHttps = (getScheme(value.url) is "https")
+            value.isHttps = (getProtocol(value.url) is "https:")
             histories.push(value)
             inserted.add(value.url)
           cursor.continue()

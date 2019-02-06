@@ -57,6 +57,9 @@ app.boot("/view/bookmark.html", ["Board"], (Board) ->
       attributeFilter: ["class"]
     )
 
+    # TODO: Collection Normalization Proposalで書くとよりよく
+    # ES2019 Stage 2(2019/02/05現在)
+    # https://github.com/tc39/proposal-collection-normalization
     boardList = new Set()
     boardThreadTable = new Map()
     for {url} in app.bookmark.getAllThreads()
@@ -108,7 +111,7 @@ app.boot("/view/bookmark.html", ["Board"], (Board) ->
         continue if loadingServer.has(server)
         loadingServer.add(server)
         boardList.delete(board)
-        Board.get(board).then(fn.bind(prev: board))
+        Board.get(new URL(board)).then(fn.bind(prev: board))
         fn()
         break
 
@@ -129,9 +132,10 @@ app.boot("/view/bookmark.html", ["Board"], (Board) ->
     readState = {url: url, read: 0, received: 0, last: 0}
     expired
   }) ->
-    boardUrl = app.URL.threadToBoard(url)
+    urlObj = new app.URL.URL(url)
+    boardUrlObj = urlObj.toBoard()
     try
-      boardTitle = await app.BoardTitleSolver.ask(boardUrl)
+      boardTitle = await app.BoardTitleSolver.ask(boardUrlObj)
     catch
       boardTitle = ""
     threadList.addItem({
@@ -139,11 +143,11 @@ app.boot("/view/bookmark.html", ["Board"], (Board) ->
       url
       resCount
       readState
-      createdAt: /\/(\d+)\/$/.exec(url)[1] * 1000
+      createdAt: /\/(\d+)\/$/.exec(urlObj.pathname)[1] * 1000
       expired
-      boardUrl
+      boardUrl: boardUrlObj.href
       boardTitle
-      isHttps: (app.URL.getScheme(url) is "https")
+      isHttps: (urlObj.protocol is "https:")
     })
     return
   )

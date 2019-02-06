@@ -1,6 +1,6 @@
 import {get as getBBSMenu, target as BBSMenuTarget} from "./BBSMenu.coffee"
 import {Request} from "./HTTP.ts"
-import {fix as fixUrl, getScheme, changeScheme, tsld as getTsld, guessType} from "./URL.ts"
+import {URL} from "./URL.ts"
 
 ###*
 @class BoardTitleSolver
@@ -41,7 +41,7 @@ _generateBBSMenu = ({status, menu, message}) ->
   bbsmenu = new Map()
   for {board} in menu
     for {url, title} in board
-      bbsmenu.set(fixUrl(url), title)
+      bbsmenu.set(url, title)
   _bbsmenu = bbsmenu
   return
 
@@ -76,25 +76,25 @@ _getBBSMenu = ->
 
 ###*
 @method searchFromBBSMenu
-@param {String} url
+@param {app.URL.URL} url
 @return {Promise}
 ###
 searchFromBBSMenu = (url) ->
   bbsmenu = await _getBBSMenu()
   # スキーム違いについても確認をする
-  url2 = changeScheme(url)
-  boardName = bbsmenu.get(url) ? bbsmenu.get(url2) ? null
+  url2 = url.createProtocolToggled()
+  boardName = bbsmenu.get(url.href) ? bbsmenu.get(url2.href) ? null
   return boardName
 
 ###*
 @method _formatBoardTitle
 @param {String} title
-@param {String} url
+@param {app.URL.URL} url
 @private
 @return {String}
 ###
 _formatBoardTitle = (title, url) ->
-  switch getTsld(url)
+  switch url.getTsld()
     when "5ch.net" then title = title.replace("＠2ch掲示板", "")
     when "2ch.sc" then title += "_sc"
     when "open2ch.net" then title += "_op"
@@ -102,24 +102,24 @@ _formatBoardTitle = (title, url) ->
 
 ###*
 @method searchFromBookmark
-@param {String} url
+@param {app.URL.URL} url
 @return {Promise}
 ###
 searchFromBookmark = (url) ->
   # スキーム違いについても確認をする
-  url2 = changeScheme(url)
-  bookmark = app.bookmark.get(url) ? app.bookmark.get(url2)
+  url2 = url.createProtocolToggled()
+  bookmark = app.bookmark.get(url.href) ? app.bookmark.get(url2.href)
   if bookmark
-    return _formatBoardTitle(bookmark.title, bookmark.url)
+    return _formatBoardTitle(bookmark.title, new URL(bookmark.url))
   return null
 
 ###*
 @method searchFromSettingTXT
-@param {String} url
+@param {app.URL.URL} url
 @return {Promise}
 ###
 searchFromSettingTXT = (url) ->
-  {status, body} = await new Request("GET", "#{url}SETTING.TXT",
+  {status, body} = await new Request("GET", "#{url.href}SETTING.TXT",
     mimeType: "text/plain; charset=Shift_JIS"
     timeout: 1000 * 10
   ).send()
@@ -138,9 +138,8 @@ searchFromSettingTXT = (url) ->
 @return {Promise}
 ###
 searchFromJbbsAPI = (url) ->
-  tmp = url.split("/")
-  scheme = getScheme(url)
-  ajaxPath = "#{scheme}://jbbs.shitaraba.net/bbs/api/setting.cgi/#{tmp[3]}/#{tmp[4]}/"
+  tmp = url.pathname.split("/")
+  ajaxPath = "#{url.protocol}//jbbs.shitaraba.net/bbs/api/setting.cgi/#{tmp[1]}/#{tmp[2]}/"
 
   {status, body} = await new Request("GET", ajaxPath,
     mimeType: "text/plain; charset=EUC-JP"
@@ -155,12 +154,10 @@ searchFromJbbsAPI = (url) ->
 
 ###*
 @method ask
-@param {String} url
+@param {app.URL.URL} url
 @return Promise
 ###
 export ask = (url) ->
-  url = fixUrl(url)
-
   # bbsmenu内を検索
   name = await searchFromBBSMenu(url)
   return name if name?
@@ -171,10 +168,10 @@ export ask = (url) ->
 
   try
     # SETTING.TXTからの取得を試みる
-    if guessType(url).bbsType is "2ch"
+    if url.guessType().bbsType is "2ch"
       return await searchFromSettingTXT(url)
     # したらばのAPIから取得を試みる
-    if guessType(url).bbsType is "jbbs"
+    if url.guessType().bbsType is "jbbs"
       return await searchFromJbbsAPI(url)
   catch e
     throw new Error("板名の取得に失敗しました: #{e}")

@@ -1,4 +1,4 @@
-import {threadToBoard, fix as fixUrl} from "./URL"
+import {URL, fix as fixUrl, threadToBoard} from "./URL"
 
 export interface ReadState {
   url: string;
@@ -55,22 +55,23 @@ export class EntryList {
     return true;
   }
 
-  async remove(url: string): Promise<boolean> {
-    url = fixUrl(url);
+  async remove(urlStr: string): Promise<boolean> {
+    const url = new URL(urlStr);
+    urlStr = url.href;
 
-    if (!this.cache.has(url)) return false;
+    if (!this.cache.has(urlStr)) return false;
 
-    if (this.cache.get(url).type === "thread") {
-      const boardURL = threadToBoard(url);
+    if (this.cache.get(urlStr).type === "thread") {
+      const boardURL = url.toBoard().href;
       if (this.boardURLIndex.has(boardURL)) {
         const threadList = this.boardURLIndex.get(boardURL);
-        if (threadList.has(url)) {
-          threadList.delete(url);
+        if (threadList.has(urlStr)) {
+          threadList.delete(urlStr);
         }
       }
     }
 
-    this.cache.delete(url);
+    this.cache.delete(urlStr);
     return true;
   }
 
@@ -98,8 +99,8 @@ export class EntryList {
       this.add(boardEntry);
     }
 
+    const tmp = (new URL(to)).origin;
     const reg = /^https?:\/\/[\w\.]+\//;
-    const tmp = reg.exec(to)![0];
     // スレブックマーク移行
     for(const entry of this.getThreadsByBoardURL(from)) {
       this.remove(entry.url);

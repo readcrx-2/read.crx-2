@@ -1,5 +1,5 @@
 import {Entry, SyncableEntryList, newerEntry} from "./BookmarkEntryList"
-import {fix as fixUrl, buildQuery, guessType, parseHashQuery} from "./URL"
+import {URL} from "./URL"
 
 export default class BrowserBookmarkEntryList extends SyncableEntryList {
   private rootNodeId: string;
@@ -8,7 +8,7 @@ export default class BrowserBookmarkEntryList extends SyncableEntryList {
   readonly needReconfigureRootNodeId = new app.Callbacks({persistent: true});
 
   static entryToURL(entry: Entry): string {
-    const url = fixUrl(entry.url);
+    const url = new URL(entry.url);
     const param: Record<string, string> = {};
 
     if (entry.resCount !== null && Number.isFinite(entry.resCount)) {
@@ -31,23 +31,24 @@ export default class BrowserBookmarkEntryList extends SyncableEntryList {
       param.expired = "true";
     }
 
-    const hash = buildQuery(param);
+    url.setHashParams(param);
 
-    return url + (hash ? `#${hash}` : "");
+    return url.href;
   }
 
-  static URLToEntry(url: string): Entry|null {
-    const fixedURL = fixUrl(url);
-    const {type, bbsType} = guessType(fixedURL);
+  static URLToEntry(urlStr: string): Entry|null {
+    const url = new URL(urlStr);
+    urlStr = url.href;
+    const {type, bbsType} = url.guessType();
 
     if (type === "unknown") return null;
 
-    const arg = parseHashQuery(url);
+    const arg = url.getHashParams();
     const entry: Entry = {
       type,
       bbsType,
-      url: fixedURL,
-      title: fixedURL,
+      url: urlStr,
+      title: urlStr,
       resCount: null,
       readState: null,
       expired: false
@@ -64,7 +65,7 @@ export default class BrowserBookmarkEntryList extends SyncableEntryList {
       reg.test(arg.get("last")!)
     ) {
       entry.readState = {
-        url: fixedURL,
+        url: urlStr,
         received: +arg.get("received")!,
         read: +arg.get("read")!,
         last: +arg.get("last")!,

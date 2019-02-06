@@ -304,12 +304,18 @@ export class URL extends window.URL {
   }
 
   private async exchangeNetSc() {
+    const {type} = this.guessedType;
     const splits = this.pathname.split("/");
-
-    if (splits.length <= 3) return;
-
-    const boardKey = splits[3];
     const tsld = this.getTsld();
+
+    let boardKey;
+    if (type === "thread" && splits.length > 3) {
+      boardKey = splits[3];
+    } else if (type === "board" && splits.length > 1) {
+      boardKey = splits[1];
+    } else {
+      return;
+    }
 
     if (tsld === "5ch.net" && serverSc.has(boardKey)) {
       const server = serverSc.get(boardKey);
@@ -335,12 +341,15 @@ export class URL extends window.URL {
       const server = resUrl.hostname.split(".")[0];
       const splits = resUrl.pathname.split("/");
 
-      if (splits.length <= 3) {
+      let boardKey;
+      if (type === "thread" && splits.length > 3) {
+        boardKey = splits[3];
+      } else if (type === "board" && splits.length > 1) {
+        boardKey = splits[1];
+      } else {
         this.href = resUrlStr;
         return;
       }
-
-      const boardKey = splits[3];
 
       if (!serverSc.has(boardKey)) {
         serverSc.set(boardKey, server);

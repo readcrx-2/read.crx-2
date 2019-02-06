@@ -90,11 +90,16 @@ export class URL extends window.URL {
         (res) => `/bbs/${res[1]}/`,
         {type: "thread", bbsType: "jbbs"}
       );
-      if (isThread) return;
+      if (isThread) {
+        if (this.pathname.includes("read_archive")) {
+          this.archive = true;
+        }
+        return;
+      }
 
       const isArchive = this.fixPathAndSetType(
         URL.SHITARABA_ARCHIVE_REG,
-        (res) => `/bbs/read_archive.cgi/${res[1]}/${res[2]}`,
+        (res) => `/bbs/read_archive.cgi/${res[1]}/${res[2]}/`,
         {type: "thread", bbsType: "jbbs"}
       );
       if (isArchive) {

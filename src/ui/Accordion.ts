@@ -2,61 +2,52 @@
 import {slideDown, slideUp} from "./Animate.coffee"
 
 export default class Accordion {
-  $element: HTMLElement;
+  protected readonly $element: HTMLElement;
 
-  constructor ($element: HTMLElement) {
-    var accordion: Accordion, openAccordions;
-
+  constructor($element: HTMLElement) {
     this.$element = $element;
-
-    accordion = this;
-
     this.$element.addClass("accordion");
 
-    openAccordions = this.$element.C("accordion_open");
-    for (var i = openAccordions.length - 1; i >= 0; i--) {
+    const openAccordions = this.$element.C("accordion_open");
+    for (let i = openAccordions.length - 1; i >= 0; i--) {
       openAccordions[i].removeClass("accordion_open");
     }
 
     this.$element.on("click", ({target}) => {
       if (target.parent() === this.$element && target.tagName === "H3") {
         if (target.hasClass("accordion_open")) {
-          accordion.close(target);
+          this.close(target);
         } else {
-          accordion.open(target);
+          this.open(target);
         }
       }
     });
   }
 
-  update (): void {
-    for (var dom of this.$element.$$("h3 + *")) {
+  update() {
+    for (const dom of this.$element.$$("h3 + *")) {
       dom.addClass("hidden");
     }
     this.setOpen(this.$element.$("h3"));
   }
 
-  setOpen ($header: HTMLElement): void {
+  setOpen($header: HTMLElement) {
     $header.addClass("accordion_open");
     $header.next().removeClass("hidden");
   }
 
-  open ($header: HTMLElement): void {
-    var accordion: Accordion;
-
-    accordion = this;
-
+  open($header: HTMLElement) {
     $header.addClass("accordion_open");
     slideDown($header.next());
 
-    for (var dom of $header.parent().child()) {
+    for (const dom of $header.parent().child()) {
       if (dom !== $header && dom.hasClass("accordion_open")) {
-        accordion.close(dom);
+        this.close(dom);
       }
     }
   }
 
-  close ($header: HTMLElement): void {
+  close($header: HTMLElement) {
     $header.removeClass("accordion_open");
     slideUp($header.next());
   }

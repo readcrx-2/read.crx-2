@@ -1,19 +1,55 @@
 import VirtualNotch from "./VirtualNotch"
 
+// T型のK以外のプロパティを持つ型
+type Omit<T, K> = Pick<T, Exclude<keyof T, K>>
+
+interface TabInfo {
+  tabId: string;
+  url: string;
+  title: string;
+  selected: boolean;
+  locked: boolean;
+}
+
+interface FormatedUrlTabInfo extends TabInfo {
+  formatedUrl: string;
+}
+
+type ClosedTabInfo = Omit<TabInfo, "selected">
+type SavedTabInfo = Omit<TabInfo,  "tabId">
+
+interface AddTabInfo {
+  title: string|null;
+  selected: boolean;
+  locked: boolean;
+  lazy: boolean;
+  restore: boolean;
+}
+
+interface UpdateTabInfo extends SavedTabInfo {
+  restore: boolean;
+  _internal: boolean;
+}
+
+interface TabHistory {
+  current: number;
+  stack: {url: string, title: string}[];
+}
+
 export default class Tab {
   private static idSeed = 0;
   private static tabA: Tab|null = null;
   private static tabB: Tab|null = null;
-  private recentClosed = [];
-  private historyStore = {};
+  private readonly recentClosed: ClosedTabInfo[] = [];
+  private readonly historyStore: Map<string, TabHistory>  = new Map();
 
-  private static genId (): string {
+  private static genId(): string {
     return "tabId" + ++Tab.idSeed;
   }
 
-  public static saveTabs (): void {
-    var data: any[] = [];
-    for (var {formatedUrl, title, selected, locked} of this.tabA!.getAll().concat(this.tabB!.getAll())) {
+  public static saveTabs() {
+    const data: SavedTabInfo[] = [];
+    for (const {formatedUrl, title, selected, locked} of this.tabA!.getAll().concat(this.tabB!.getAll())) {
       data.push({
         url: formatedUrl,
         title,
@@ -24,28 +60,18 @@ export default class Tab {
     localStorage.tab_state = JSON.stringify(data);
   }
 
-  constructor (private $element: Element) {
-    var tab = this;
-
-    var $ele = this.$element.addClass("tab");
-    var $ul = $__("ul").addClass("tab_tabbar");
+  constructor(private $element: Element) {
+    const $ele = this.$element.addClass("tab");
+    const $ul = $__("ul").addClass("tab_tabbar");
     $ul.on("notchedmousewheel", (e) => {
       if (app.config.isOn("mousewheel_change_tab")) {
-        var tmp: string, next: HTMLElement;
-
         e.preventDefault();
 
-        if (e.wheelDelta < 0) {
-          tmp = "prev";
-        }
-        else {
-          tmp = "next";
-        }
-
-        next = (tab.$element.$("li.tab_selected") || {})[tmp]();
+        const tmp = (e.wheelDelta < 0) ? "prev" : "next";
+        const next = (this.$element.$("li.tab_selected") || {})[tmp]();
 
         if (next) {
-          tab.update(next.dataset.tabid!, {selected: true});
+          this.update(next.dataset.tabid!, {selected: true});
         }
       }
     });
@@ -54,31 +80,27 @@ export default class Tab {
         e.preventDefault();
         return;
       }
-      var target = e.target.closest("li")
+      const target = e.target.closest("li")
       if (target === null) return;
       if (e.button === 2) return;
 
       if (e.button === 1 && !target.hasClass("tab_locked")) {
-        tab.remove(target.dataset.tabid!);
-      }
-      else {
-        tab.update(target.dataset.tabid!, {selected: true});
+        this.remove(target.dataset.tabid!);
+      } else {
+        this.update(target.dataset.tabid!, {selected: true});
       }
     });
     $ul.on("click", ({target}) => {
       if (target.tagName === "IMG") {
-        tab.remove(target.parent().dataset.tabid);
+        this.remove(target.parent().dataset.tabid);
       }
     });
     new VirtualNotch($ul);
-    var $div = $__("div").addClass("tab_container");
+    const $div = $__("div").addClass("tab_container");
     $ele.addLast($ul, $div);
 
     window.on("message", ({ origin, data: message, source }) => {
-      var message, tabId: string, history;
-
       if (origin !== location.origin) return;
-
       if (![
           "requestTabHistory",
           "requestTabBack",
@@ -86,13 +108,12 @@ export default class Tab {
         ].includes(message.type)) {
         return;
       }
-
       if (!this.$element.contains(source.frameElement)) {
         return;
       }
 
-      tabId = source.frameElement.dataset.tabid!;
-      history = this.historyStore[tabId];
+      const tabId = source.frameElement.dataset.tabid!;
+      const history = this.historyStore.get(tabId)!;
 
       switch (message.type) {
         case "requestTabHistory":
@@ -141,10 +162,10 @@ export default class Tab {
     });
   }
 
-  getAll (): any {
-    var li: HTMLLIElement, res:Object[] = [];
+  getAll(): FormatedUrlTabInfo[] {
+    const res: FormatedUrlTabInfo[] = [];
 
-    for (li of this.$element.$$("li")) {
+    for (const li of this.$element.$$("li")) {
       res.push({
         tabId: li.dataset.tabid!,
         url: li.dataset.tabsrc!,
@@ -158,21 +179,18 @@ export default class Tab {
     return res;
   }
 
-  getSelected (): Object|null {
-    var li: HTMLLIElement;
+  getSelected(): TabInfo|null {
+    const li = this.$element.$("li.tab_selected");
 
-    if (li = this.$element.$("li.tab_selected")) {
-      return {
-        tabId: li.dataset.tabid,
-        url: li.dataset.tabsrc,
-        title: li.title,
-        selected: true,
-        locked: li.hasClass("tab_locked")
-      };
-    }
-    else {
-      return null;
-    }
+    if (!li) return null;
+
+    return {
+      tabId: li.dataset.tabid,
+      url: li.dataset.tabsrc,
+      title: li.title,
+      selected: true,
+      locked: li.hasClass("tab_locked")
+    };
   }
 
   add (
@@ -183,40 +201,32 @@ export default class Tab {
       locked = false,
       lazy = false,
       restore = false
-    }: Partial<{
-      title: string|null,
-      selected: boolean,
-      locked: boolean,
-      lazy: boolean,
-      restore: boolean
-    }> = {}
+    }: Partial<AddTabInfo> = {}
   ): string {
-    var tabId: string;
-
     title = title === null ? url : title;
 
-    tabId = Tab.genId();
+    const tabId = Tab.genId();
 
-    this.historyStore[tabId] = {
+    this.historyStore.set(tabId, {
       current: 0,
       stack: [{url: url, title: url}]
-    };
+    });
 
     // 既存のタブが一つも無い場合、強制的にselectedオン
     if (!this.$element.$(".tab_tabbar > li")) {
       selected = true;
     }
 
-    var $li = $__("li");
+    const $li = $__("li");
     $li.dataset.tabid = tabId;
     $li.dataset.tabsrc = url;
-    var $img = $__("img");
+    const $img = $__("img");
     $img.src = "/img/close_16x16.&[IMG_EXT]";
     $img.title = "閉じる";
     $li.addLast($__("span"), $img);
     this.$element.$(".tab_tabbar").addLast($li);
 
-    var $iframe = $__("iframe").addClass("tab_content");
+    const $iframe = $__("iframe").addClass("tab_content");
     $iframe.src = lazy ? "/view/empty.html" : url;
     $iframe.dataset.tabid = tabId;
     this.$element.$(".tab_container").addLast($iframe);
@@ -228,47 +238,39 @@ export default class Tab {
 
   async update (
     tabId: string,
-    param: Partial<{
-      url: string,
-      title: string,
-      selected: boolean,
-      locked: boolean,
-      restore: boolean,
-      _internal: boolean
-    }>
-  ): Promise<void> {
-    var history, $tmptab, $iframe, tmp;
-
+    param: Partial<UpdateTabInfo>
+  ) {
     if (typeof param.url === "string") {
       if (!param._internal) {
-        history = this.historyStore[tabId];
+        const history = this.historyStore.get(tabId)!;
         history.stack.splice(history.current + 1);
         history.stack.push({url: param.url, title: param.url});
         history.current++;
       }
 
       this.$element.$(`li[data-tabid="${tabId}"]`).dataset.tabsrc = param.url;
-      $tmptab = this.$element.$(`iframe[data-tabid="${tabId}"]`);
+      const $tmptab = this.$element.$(`iframe[data-tabid="${tabId}"]`);
       $tmptab.emit(new Event("tab_beforeurlupdate", {"bubbles": true}));
       $tmptab.src = param.url;
       $tmptab.emit(new Event("tab_urlupdated", {"bubbles": true}));
     }
 
     if (typeof param.title === "string") {
-      tmp = this.historyStore[tabId];
-      tmp.stack[tmp.current].title = param.title;
+      const history = this.historyStore.get(tabId)!;
+      history.stack[history.current].title = param.title;
 
-      $tmptab = this.$element.$(`li[data-tabid="${tabId}"]`);
-      $tmptab.setAttr("title", param.title);
+      const $tmptab = this.$element.$(`li[data-tabid="${tabId}"]`);
+      $tmptab.title = param.title;
       $tmptab.T("span")[0].textContent = param.title;
     }
 
     if (param.selected) {
-      var $selected = this.$element.C("tab_selected");
-      for (var i = $selected.length-1; i >= 0; i--) {
+      let $iframe;
+      const $selected = this.$element.C("tab_selected");
+      for (let i = $selected.length-1; i >= 0; i--) {
         $selected[i].removeClass("tab_selected");
       }
-      for (var dom of this.$element.$$(`[data-tabid="${tabId}"]`)) {
+      for (const dom of this.$element.$$(`[data-tabid="${tabId}"]`)) {
         dom.addClass("tab_selected");
         if (dom.hasClass("tab_content")) {
           $iframe = dom;
@@ -280,20 +282,20 @@ export default class Tab {
       // 遅延ロード指定のタブをロードする
       // 連続でlazy指定のタブがaddされた時のために非同期処理
       await app.defer();
-      var selectedTab, iframe: HTMLIFrameElement;
 
-      if (selectedTab = this.getSelected()) {
-        iframe = this.$element.$(`iframe[data-tabid="${selectedTab.tabId}"]`);
+      const selectedTab = this.getSelected();
+      if (selectedTab) {
+        const iframe = this.$element.$(`iframe[data-tabid="${selectedTab.tabId}"]`);
         if (iframe.getAttr("src") !== selectedTab.url) {
           iframe.src = selectedTab.url;
         }
       }
     }
     if (param.locked) {
-      $tmptab = this.$element.$(`li[data-tabid="${tabId}"]`);
+      const $tmptab = this.$element.$(`li[data-tabid="${tabId}"]`);
       $tmptab.addClass("tab_locked");
     } else if (!(param.locked === void 0 || param.locked === null)) {
-      $tmptab = this.$element.$(`li[data-tabid="${tabId}"].tab_locked`);
+      const $tmptab = this.$element.$(`li[data-tabid="${tabId}"].tab_locked`);
       if ($tmptab !== null) {
         $tmptab.removeClass("tab_locked");
       }
@@ -304,65 +306,59 @@ export default class Tab {
     }
   }
 
-  remove (tabId: string): void {
-    var tab, $tmptab, $tmptabcon, tabsrc: string, tmp, key, next;
+  remove(tabId: string): void {
+    const $tmptab = this.$element.$(`li[data-tabid="${tabId}"]`);
+    const tabsrc = $tmptab.dataset.tabsrc;
 
-    tab = this;
-
-    $tmptab = this.$element.$(`li[data-tabid="${tabId}"]`);
-    tabsrc = $tmptab.dataset.tabsrc;
-
-    for (tmp of tab.recentClosed) {
-      if (tmp.url === tabsrc) {
-        tab.recentClosed.splice(key, 1);
+    for (const [key, {url}] of this.recentClosed.entries()) {
+      if (url === tabsrc) {
+        this.recentClosed.splice(key, 1);
       }
     }
 
-    tab.recentClosed.push({
+    this.recentClosed.push({
       tabId: $tmptab.dataset.tabid,
       url: tabsrc,
       title: $tmptab.title,
       locked: $tmptab.hasClass("tab_locked")
     });
 
-    if (tab.recentClosed.length > 50) {
-      tmp = tab.recentClosed.shift();
-      delete tab.historyStore[tmp.tabId];
+    if (this.recentClosed.length > 50) {
+      const tmp = this.recentClosed.shift()!;
+      this.historyStore.delete(tmp.tabId);
     }
 
     if ($tmptab.hasClass("tab_selected")) {
-      if (next = $tmptab.next() || $tmptab.prev()) {
-        tab.update(next.dataset.tabid, {selected: true});
+      const next = $tmptab.next() || $tmptab.prev();
+      if (next) {
+        this.update(next.dataset.tabid, {selected: true});
       }
     }
     $tmptab.remove();
 
-    $tmptabcon = this.$element.$(`iframe[data-tabid="${tabId}"]`);
+    const $tmptabcon = this.$element.$(`iframe[data-tabid="${tabId}"]`);
     $tmptabcon.emit(new Event("tab_removed", {"bubbles": true}));
     $tmptabcon.remove();
 
     Tab.saveTabs()
   }
 
-  getRecentClosed (): any {
+  getRecentClosed(): ClosedTabInfo[] {
     return app.deepCopy(this.recentClosed);
   }
 
-  restoreClosed (tabId: string): string|null {
-    var tab, key;
-
-    for (tab of this.recentClosed) {
+  restoreClosed(tabId: string): string|null {
+    for (const [key, tab] of this.recentClosed.entries()) {
       if (tab.tabId === tabId) {
         this.recentClosed.splice(key, 1);
         return this.add(tab.url, {title: tab.title});
       }
     }
-
     return null;
   }
 
-  isLocked (tabId: string): boolean {
-    var tab = this.$element.$(`li[data-tabid="${tabId}"]`);
+  isLocked(tabId: string): boolean {
+    const tab = this.$element.$(`li[data-tabid="${tabId}"]`);
     return (tab !== null && tab.hasClass("tab_locked"));
   }
 }

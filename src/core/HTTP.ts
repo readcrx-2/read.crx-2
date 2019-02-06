@@ -1,15 +1,15 @@
-type headerList = {[index:string]: string;}
+type headerList = Record<string, string>
 
 export class Request {
-  method: string;
-  url: string;
-  mimeType: string|null;
-  timeout: number;
-  headers: headerList;
-  preventCache: boolean;
+  readonly method: string;
+  readonly url: string;
+  readonly mimeType: string|null;
+  readonly timeout: number;
+  readonly headers: headerList;
+  readonly preventCache: boolean;
   private xhr: XMLHttpRequest;
 
-  constructor (
+  constructor(
     method: string,
     url: string,
     {
@@ -33,10 +33,8 @@ export class Request {
     this.preventCache = preventCache;
   }
 
-  send ():Promise<Response> {
-    var xhr:XMLHttpRequest, url:string, key:string, val:string;
-
-    url = this.url;
+  send(): Promise<Response> {
+    const url = this.url;
 
     if (this.preventCache) {
       this.headers["Pragma"] = "no-cache";
@@ -44,7 +42,7 @@ export class Request {
     }
 
     return new Promise( (resolve, reject) => {
-      xhr = new XMLHttpRequest();
+      const xhr = new XMLHttpRequest();
 
       xhr.open(this.method, url);
 
@@ -54,14 +52,12 @@ export class Request {
 
       xhr.timeout = this.timeout;
 
-      for ([key, val] of Object.entries(this.headers)) {
+      for (const [key, val] of Object.entries(this.headers)) {
         xhr.setRequestHeader(key, val);
       }
 
       xhr.on("loadend", () => {
-        var resonseHeaders;
-
-        resonseHeaders = Request.parseHTTPHeader(xhr.getAllResponseHeaders());
+        const resonseHeaders = Request.parseHTTPHeader(xhr.getAllResponseHeaders());
 
         resolve(new Response(xhr.status, resonseHeaders, xhr.responseText, xhr.responseURL));
       });
@@ -81,16 +77,15 @@ export class Request {
     });
   }
 
-  abort ():void {
+  abort(): void {
     this.xhr.abort();
   }
 
-  static parseHTTPHeader (str: string):headerList {
-    var reg, res, headers, last;
-
-    reg = /^(?:([a-z\-]+):\s*|([ \t]+))(.+)\s*$/gim;
-    headers = {};
-    last = null;
+  static parseHTTPHeader(str: string): headerList {
+    const reg = /^(?:([a-z\-]+):\s*|([ \t]+))(.+)\s*$/gim;
+    const headers: headerList = {};
+    let last: string|undefined;
+    let res: RegExpExecArray|null;
 
     while (res = reg.exec(str)) {
       if (typeof res[1] !== "undefined") {
@@ -108,9 +103,9 @@ export class Request {
 
 export class Response {
   constructor (
-    public status:number,
-    public headers:headerList = {},
-    public body:string,
+    public status: number,
+    public headers: headerList = {},
+    public body: string,
     public responseURL: string
   ) {
   }

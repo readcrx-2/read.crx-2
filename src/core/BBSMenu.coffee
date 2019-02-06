@@ -1,5 +1,6 @@
 import Cache from "./Cache.coffee"
 import {Request} from "./HTTP.ts"
+import {fix as fixUrl, tsld as getTsld} from "./URL.ts"
 
 bbsmenuOption = null
 
@@ -27,8 +28,7 @@ export fetchAll = (forceReload = false) ->
     continue if url is "" or url.startsWith("//")
     try
       {menu} = await fetch(url, forceReload)
-      for item in menu
-        bbsmenu.push(item)
+      bbsmenu.push(menu...)
     catch
       app.message.send("notify",
         message: "板一覧の取得に失敗しました。(#{url})"
@@ -132,7 +132,7 @@ parse = (html) ->
 
     subName = null
     while regBoardRes = regBoard.exec(regCategoryRes[0])
-      continue if bbsmenuOption.has(app.URL.tsld(regBoardRes[1]))
+      continue if bbsmenuOption.has(getTsld(regBoardRes[1]))
       continue if bbspinkException and regBoardRes[1].includes("5ch.net/bbypink")
       unless subName
         if regBoardRes[1].includes("open2ch.net")
@@ -154,7 +154,7 @@ parse = (html) ->
       )
         regBoardRes[2] += "_#{subName}"
       category.board.push(
-        url: regBoardRes[1]
+        url: fixUrl(regBoardRes[1])
         title: regBoardRes[2]
       )
 

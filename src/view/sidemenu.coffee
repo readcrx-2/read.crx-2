@@ -14,7 +14,7 @@ app.boot("/view/sidemenu.html", ["BBSMenu"], (BBSMenu) ->
     $a.title = board.title
     $a.textContent = board.title
     $a.href = app.safeHref(board.url)
-    $a.addClass("https") if app.URL.getScheme(board.url) is "https"
+    $a.addClass("https") if app.URL.getProtocol(board.url) is "https:"
     $li.addLast($a)
     return $li
 
@@ -71,8 +71,8 @@ app.boot("/view/sidemenu.html", ["BBSMenu"], (BBSMenu) ->
       target = e.target.closest("a")
       return unless target
 
-      url = target.getAttr("href")
-      title = target.getAttr("title")
+      url = target.href
+      title = target.title
       return unless url?
       e.preventDefault()
 

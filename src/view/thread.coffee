@@ -24,14 +24,15 @@ app.viewThread = {}
 
 app.boot("/view/thread.html", ->
   try
-    viewUrl = app.URL.parseQuery(location.search).get("q")
+    viewUrlStr = app.URL.parseQuery(location.search).get("q")
   catch
     alert("不正な引数です")
     return
-  viewUrl = app.URL.fix(viewUrl)
+  viewUrl = new app.URL.URL(viewUrlStr)
+  viewUrlStr = viewUrl.href
 
   $view = document.documentElement
-  $view.dataset.url = viewUrl
+  $view.dataset.url = viewUrlStr
 
   $content = $view.C("content")[0]
   threadContent = new UI.ThreadContent(viewUrl, $content)
@@ -62,7 +63,7 @@ app.boot("/view/thread.html", ->
   , once: true)
 
   write = (param = {}) ->
-    param.url = viewUrl
+    param.url = viewUrlStr
     param.title = document.title
     windowX = app.config.get("write_window_x")
     windowY = app.config.get("write_window_y")
@@ -109,7 +110,7 @@ app.boot("/view/thread.html", ->
   $view.on("became_over1000", removeWriteButton, once: true)
 
   # したらばの過去ログ
-  if app.URL.tsld(viewUrl) is "shitaraba.net" and viewUrl.includes("/read_archive.cgi/")
+  if viewUrl.isArchive()
     $view.emit(new Event("became_expired"))
   else
     $view.C("button_write")[0].on("click", ->
@@ -140,7 +141,7 @@ app.boot("/view/thread.html", ->
       date = app.util.stringToDate(t.other).valueOf()
       if date?
         app.WriteHistory.add({
-          url: viewUrl
+          url: viewUrlStr
           res: i+1
           title: document.title
           name: app.util.decodeCharReference(t.name)
@@ -229,7 +230,7 @@ app.boot("/view/thread.html", ->
     , once: true)
 
     jumpResNum = -1
-    iframe = parent.$$.$("iframe[data-url=\"#{viewUrl}\"]")
+    iframe = parent.$$.$("iframe[data-url=\"#{viewUrlStr}\"]")
     if iframe
       jumpResNum = +iframe.dataset.writtenResNum
       jumpResNum = +iframe.dataset.paramResNum if jumpResNum < 1
@@ -237,12 +238,12 @@ app.boot("/view/thread.html", ->
 
     try
       await app.viewThread._draw($view, {jumpResNum})
-    boardUrl = app.URL.threadToBoard(viewUrl)
+    boardUrl = viewUrl.toBoard()
     try
       boardTitle = await app.BoardTitleSolver.ask(boardUrl)
     catch
       boardTitle = ""
-    app.History.add(viewUrl, document.title, openedAt, boardTitle) unless app.config.isOn("no_history")
+    app.History.add(viewUrlStr, document.title, openedAt, boardTitle) unless app.config.isOn("no_history")
     return
 
   #レスメニュー表示(ヘッダー上)
@@ -410,7 +411,7 @@ app.boot("/view/thread.html", ->
         AANoOverflow.setMiniAA($res)
 
     else if target.hasClass("res_permalink")
-      open(app.safeHref(viewUrl + $res.C("num")[0].textContent))
+      open(app.safeHref(viewUrlStr + $res.C("num")[0].textContent))
 
     # 画像をぼかす
     else if target.hasClass("set_image_blur")
@@ -506,17 +507,19 @@ app.boot("/view/thread.html", ->
   onLink = (e) ->
     {target} = e
     return unless target.matches(".message a:not(.anchor)")
-    targetUrl = target.href
 
     #http、httpsスキーム以外ならクリックを無効化する
-    if not /// ^https?:// ///.test(targetUrl)
+    unless /^https?:$/.test(target.protocol)
       e.preventDefault()
       return
 
     #.open_in_rcrxが付与されている場合、処理は他モジュールに任せる
     return if target.hasClass("open_in_rcrx")
 
-    {type: srcType, bbsType} = app.URL.guessType(targetUrl)
+    targetUrlStr = target.href
+    targetUrl = new app.URL.URL(targetUrlStr)
+    {type: srcType, bbsType} = targetUrl.guessType()
+    targetUrlStr = targetUrl.href
 
     #read.crxで開けるURLかどうかを判定
     flg = do ->
@@ -527,19 +530,19 @@ app.boot("/view/thread.html", ->
       #2chタイプの板は誤爆率が高いので、もう少し細かく判定する
       if srcType is "board" and bbsType is "2ch"
         #2ch自体の場合の判断はguess_typeを信じて板判定
-        return true if app.URL.tsld(targetUrl) is "5ch.net"
+        return true if targetUrl.getTsld() is "5ch.net"
         #ブックマークされている場合も板として判定
-        return true if app.bookmark.get(app.URL.fix(targetUrl))
+        return true if app.bookmark.get(targetUrlStr)
       return false
 
     #read.crxで開ける板だった場合は.open_in_rcrxを付与して再度クリックイベント送出
     if flg
       e.preventDefault()
       target.addClass("open_in_rcrx")
-      target.dataset.href = target.href
+      target.dataset.href = targetUrlStr
       target.href = "javascript:undefined;"
       if srcType is "thread"
-        paramResNum = app.URL.getResNumber(target.dataset.href)
+        paramResNum = targetUrl.getResNumber()
         target.dataset.paramResNum = paramResNum if paramResNum
       await app.defer()
       target.emit(e)
@@ -552,14 +555,14 @@ app.boot("/view/thread.html", ->
   $view.on("mouseenter", (e) ->
     {target} = e
     return unless target.matches(".message a:not(.anchor)")
-    url = app.URL.convertUrlFromPhone(target.href)
-    {type} = app.URL.guessType(url)
-    switch type
+    url = new app.URL.URL(target.href)
+    url.convertFromPhone()
+    switch url.guessType().type
       when "board"
-        boardUrl = app.URL.fix(url)
+        boardUrl = url
         after = ""
       when "thread"
-        boardUrl = app.URL.threadToBoard(url)
+        boardUrl = url.toBoard()
         after = "のスレ"
       else
         return
@@ -960,11 +963,11 @@ app.boot("/view/thread.html", ->
         next = null
 
         bookmarks = app.bookmark.getAll().filter( ({type, url}) ->
-          return (type is "thread") and (url isnt viewUrl)
+          return (type is "thread") and (url isnt viewUrlStr)
         )
 
         #閲覧中のスレッドに新着が有った場合は優先して扱う
-        if bookmark = app.bookmark.get(viewUrl)
+        if bookmark = app.bookmark.get(viewUrlStr)
           bookmarks.unshift(bookmark)
 
         for bookmark in bookmarks when bookmark.resCount?
@@ -981,7 +984,7 @@ app.boot("/view/thread.html", ->
             break
 
         if next
-          if next.url is viewUrl
+          if next.url is viewUrlStr
             text = "新着レスがあります"
           else
             text = "未読ブックマーク: #{next.title}"
@@ -1056,20 +1059,20 @@ app.boot("/view/thread.html", ->
     for dom in $view.$$(".button_tool_search_next_thread, .search_next_thread")
       dom.on("click", ->
         searchNextThread.show()
-        searchNextThread.search(viewUrl, document.title, $content.textContent)
+        searchNextThread.search(viewUrlStr, document.title, $content.textContent)
         return
       )
     return
 
   #パンくずリスト表示
   do ->
-    boardUrl = app.URL.threadToBoard(viewUrl)
+    boardUrl = viewUrl.toBoard()
     try
       title = (await app.BoardTitleSolver.ask(boardUrl)).replace(/板$/, "")
     catch
       title = ""
     $a = $view.$(".breadcrumb > li > a")
-    $a.href = app.URL.threadToBoard(viewUrl)
+    $a.href = boardUrl.href
     $a.textContent = "#{title}板"
     $a.addClass("hidden")
     # Windows版Chromeで描画が崩れる現象を防ぐため、わざとリフローさせる。
@@ -1149,8 +1152,10 @@ app.viewThread._draw = ($view, {forceUpdate = false, jumpResNum = -1} = {}) ->
 app.viewThread._readStateManager = ($view) ->
   threadContent = app.DOMData.get($view, "threadContent")
   $content = $view.C("content")[0]
-  viewUrl = $view.dataset.url
-  boardUrl = app.URL.threadToBoard(viewUrl)
+  viewUrlStr = $view.dataset.url
+  viewUrl = new app.URL.URL(viewUrlStr)
+  viewUrlStr = viewUrl.href
+  boardUrlStr = viewUrl.toBoard().href
   requestReloadFlag = false
   scanCountByReloaded = 0
   attachedReadState = {last: 0, read: 0, received: 0, offset: null}
@@ -1159,11 +1164,11 @@ app.viewThread._readStateManager = ($view) ->
 
   #read_stateの取得
   getReadState = do ->
-    readState = {received: 0, read: 0, last: 0, url: viewUrl, offset: null, date:null}
+    readState = {received: 0, read: 0, last: 0, url: viewUrlStr, offset: null, date:null}
     readStateUpdated = false
-    if (bookmark = app.bookmark.get(viewUrl))?.readState?
+    if (bookmark = app.bookmark.get(viewUrlStr))?.readState?
       {readState} = bookmark
-    _readState = await app.ReadState.get(viewUrl)
+    _readState = await app.ReadState.get(viewUrlStr)
     readState = _readState if app.util.isNewerReadState(readState, _readState)
     return {readState, readStateUpdated}
 
@@ -1203,7 +1208,7 @@ app.viewThread._readStateManager = ($view) ->
 
       $view.emit(new CustomEvent("read_state_attached", detail: {jumpResNum, requestReloadFlag, loadCount}))
       if attachedReadState.read > 0 and attachedReadState.received > 0
-        app.message.send("read_state_updated", {board_url: boardUrl, read_state: readState})
+        app.message.send("read_state_updated", {board_url: boardUrlStr, read_state: readState})
         if allRead
           readState.date = Date.now()
           app.ReadState.set(readState)
@@ -1213,7 +1218,7 @@ app.viewThread._readStateManager = ($view) ->
       return
     # 2回目の処理
     # 画像のロードにより位置がずれることがあるので初回処理時の内容を使用する
-    tmpReadState = {read: null, received: null, url: viewUrl}
+    tmpReadState = {read: null, received: null, url: viewUrlStr}
     if attachedReadState.last > 0
       $content.C("last")[0]?.removeClass("last")
       contentChild[attachedReadState.last - 1]?.addClass("last")
@@ -1232,7 +1237,7 @@ app.viewThread._readStateManager = ($view) ->
 
     $view.emit(new CustomEvent("read_state_attached", detail: {jumpResNum, requestReloadFlag, loadCount}))
     if tmpReadState.read and tmpReadState.received
-      app.message.send("read_state_updated", {board_url: boardUrl, read_state: tmpReadState})
+      app.message.send("read_state_updated", {board_url: boardUrlStr, read_state: tmpReadState})
       if allRead
         attachedReadState.date = Date.now()
         app.ReadState.set(attachedReadState)
@@ -1312,7 +1317,7 @@ app.viewThread._readStateManager = ($view) ->
       await app.waitAF()
       scan(true)
       if readStateUpdated
-        app.message.send("read_state_updated", {board_url: boardUrl, read_state: readState})
+        app.message.send("read_state_updated", {board_url: boardUrlStr, read_state: readState})
       if allRead
         readState.date = Date.now()
         app.ReadState.set(readState)
@@ -1335,7 +1340,7 @@ app.viewThread._readStateManager = ($view) ->
     return
 
   app.message.on("request_update_read_state", ({board_url} = {}) ->
-    if not board_url? or board_url is boardUrl
+    if not board_url? or board_url is boardUrlStr
       scanAndSave()
     return
   )

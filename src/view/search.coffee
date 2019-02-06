@@ -35,7 +35,7 @@ app.boot("/view/search.html", ["ThreadSearch"], (ThreadSearch) ->
 
   $view.$(".button_link > a").href = "#{scheme}://dig.5ch.net/search?maxResult=500&keywords=#{encodeURIComponent(query)}"
 
-  threadSearch = new ThreadSearch(query, scheme)
+  threadSearch = new ThreadSearch(query, "#{scheme}:")
   $tbody = $view.T("tbody")[0]
 
   load = (add = false) ->
@@ -89,7 +89,7 @@ app.boot("/view/search.html", ["ThreadSearch"], (ThreadSearch) ->
   $buttonReload.on("click", ->
     return if $buttonReload.hasClass("disabled")
     threadList.empty()
-    threadSearch = new ThreadSearch(query, scheme)
+    threadSearch = new ThreadSearch(query, "#{scheme}:")
     await load()
     onScroll() # 20件分がスクロールなしで表示できる場合
     $content.on("scroll", onScroll, passive: true)

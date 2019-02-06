@@ -9,7 +9,19 @@ import MediaContainer from "./MediaContainer.coffee"
 export default class ThreadContent
   _OVER1000_DATA = "Over 1000"
 
-  constructor: (@url, @container) ->
+  constructor: (url, @container) ->
+    ###*
+    @property url
+    @type app.URL.URL
+    ###
+    @url = url
+
+    ###*
+    @property urlStr
+    @type String
+    ###
+    @urlStr = @url.href
+
     ###*
     @property idIndex
     @type Object
@@ -609,8 +621,8 @@ export default class ThreadContent
 
     resNum = @container.child().length
     startResNum = resNum+1
-    {bbsType} = app.URL.guessType(@url)
-    writtenRes = await app.WriteHistory.getByUrl(@url)
+    {bbsType} = @url.guessType()
+    writtenRes = await app.WriteHistory.getByUrl(@urlStr)
     @_threadTitle = threadTitle
 
     $fragment = $_F()
@@ -620,9 +632,9 @@ export default class ThreadContent
 
       res.num = resNum
       res.class = []
-      scheme = app.URL.getScheme(@url)
+      {protocol} = @url
 
-      res = app.ReplaceStrTxt.replace(@url, document.title, res)
+      res = app.ReplaceStrTxt.replace(@urlStr, document.title, res)
 
       if /(?:\u3000{5}|\u3000\u0020|[^>]\u0020\u3000)(?!<br>|$)/i.test(res.message)
         res.class.push("aa")
@@ -713,7 +725,7 @@ export default class ThreadContent
           )
           #.beid
           .replace(/(?:^| )(BE:(\d+)\-[A-Z\d]+\(\d+\))/,
-            """<a class="beid" href="#{scheme}://be.5ch.net/test/p.php?i=$3" target="_blank">$1</a>""")
+            """<a class="beid" href="#{protocol}//be.5ch.net/test/p.php?i=$3" target="_blank">$1</a>""")
           #.date
           .replace(/\d{4}\/\d{1,2}\/\d{1,2}\(.\)\s\d{1,2}:\d\d(?::\d\d(?:\.\d+)?)?/, "<time class=\"date\">$&</time>")
       )
@@ -749,11 +761,11 @@ export default class ThreadContent
         res.message
           #imgタグ変換
           .replace(/<img src="([\w]+):\/\/(.*?)"[^>]*>/ig, "$1://$2")
-          .replace(/<img src="\/\/(.*?)"[^>]*>/ig, "#{scheme}://$1")
+          .replace(/<img src="\/\/(.*?)"[^>]*>/ig, "#{protocol}//$1")
           #Rock54
-          .replace(/(?:<small[^>]*>&#128064;|<i>&#128064;<\/i>)<br>Rock54: (Caution|Warning)\(([^<>()]+)\) ?.*?(?:<\/small>)?/ig, "<div-block class=\"rock54\">&#128064; Rock54: $1($2)</div-block>")
+          .replace(/(?:<small[^>]*>&#128064;|<i>&#128064;<\/i>)<br>Rock54: (Caution|Warning)\(([^<>()]+)\) ?.*?(?:<\/small>)?/ig, "<br><div-block class=\"rock54\">&#128064; Rock54: $1($2)</div-block>")
           #SLIPが変わったという表示
-          .replace(/<hr>VIPQ2_EXTDAT: ([^<>]+): EXT was configured /i, "<div-block class=\"slipchange\">VIPQ2_EXTDAT: $1: EXT configure</div-block>")
+          .replace(/<hr>VIPQ2_EXTDAT: ([^<>]+): EXT was configured /i, "<br><div-block class=\"slipchange\">VIPQ2_EXTDAT: $1: EXT configure</div-block>")
           #タグ除去
           .replace(/<(?!(?:br|hr|\/?div-block[^<>]*|\/?b)>).*?(?:>|$)/ig, "")
           .replace(/<(\/)?div-block([^<>]*)>/g, "<$1div$2>")
@@ -762,14 +774,14 @@ export default class ThreadContent
             '<a href="h$2" target="_blank">$1$2</a>')
           #Beアイコン埋め込み表示
           .replace(///^(?:\s*sssp|https?)://(img\.[25]ch\.net/(?:ico|premium)/[\w\-_]+\.gif)\s*<br>///, ($0, $1) =>
-            if app.URL.tsld(@url) in ["5ch.net", "bbspink.com", "2ch.sc"]
-              return """<img class="beicon" src="/img/dummy_1x1.&[IMG_EXT]" data-src="#{scheme}://#{$1}"><br>"""
+            if @url.getTsld() in ["5ch.net", "bbspink.com", "2ch.sc"]
+              return """<img class="beicon" src="/img/dummy_1x1.&[IMG_EXT]" data-src="#{protocol}//#{$1}"><br>"""
             return $0
           )
           #エモーティコン埋め込み表示
           .replace(///(?:\s*sssp|https?)://(img\.[25]ch\.net/emoji/[\w\-_]+\.gif)\s*///g, ($0, $1) =>
-            if app.URL.tsld(@url) in ["5ch.net", "bbspink.com", "2ch.sc"]
-              return """<img class="beicon emoticon" src="/img/dummy_1x1.&[IMG_EXT]" data-src="#{scheme}://#{$1}">"""
+            if @url.getTsld() in ["5ch.net", "bbspink.com", "2ch.sc"]
+              return """<img class="beicon emoticon" src="/img/dummy_1x1.&[IMG_EXT]" data-src="#{protocol}//#{$1}">"""
             return $0
           )
           #アンカーリンク
@@ -984,7 +996,7 @@ export default class ThreadContent
       continue if getRes.hasClass("ng")
       rn = +getRes.C("num")[0].textContent
       continue if app.NG.isIgnoreResNumForAuto(rn, app.NG.TYPE.AUTO_CHAIN)
-      continue if app.NG.isThreadIgnoreNgType(@_rawResData[rn], @_threadTitle, @url, app.NG.TYPE.AUTO_CHAIN)
+      continue if app.NG.isThreadIgnoreNgType(@_rawResData[rn], @_threadTitle, @urlStr, app.NG.TYPE.AUTO_CHAIN)
       @setNG(getRes, app.NG.TYPE.AUTO_CHAIN)
       # NG連鎖IDの登録
       if app.config.isOn("chain_ng_id") and app.config.isOn("chain_ng_id_by_chain")
@@ -1010,7 +1022,7 @@ export default class ThreadContent
       continue if r.hasClass("ng")
       rn = +r.C("num")[0].textContent
       continue if app.NG.isIgnoreResNumForAuto(rn, app.NG.TYPE.AUTO_CHAIN_ID)
-      continue if app.NG.isThreadIgnoreNgType(@_rawResData[rn], @_threadTitle, @url, app.NG.TYPE.AUTO_CHAIN_ID)
+      continue if app.NG.isThreadIgnoreNgType(@_rawResData[rn], @_threadTitle, @urlStr, app.NG.TYPE.AUTO_CHAIN_ID)
       @setNG(r, app.NG.TYPE.AUTO_CHAIN_ID)
       # 連鎖NG
       @_chainNG(r) if app.config.isOn("chain_ng")
@@ -1027,7 +1039,7 @@ export default class ThreadContent
       continue if r.hasClass("ng")
       rn = +r.C("num")[0].textContent
       continue if app.NG.isIgnoreResNumForAuto(rn, app.NG.TYPE.AUTO_CHAIN_SLIP)
-      continue if app.NG.isThreadIgnoreNgType(@_rawResData[rn], @_threadTitle, @url, app.NG.TYPE.AUTO_CHAIN_SLIP)
+      continue if app.NG.isThreadIgnoreNgType(@_rawResData[rn], @_threadTitle, @urlStr, app.NG.TYPE.AUTO_CHAIN_SLIP)
       @setNG(r, app.NG.TYPE.AUTO_CHAIN_SLIP)
       # 連鎖NG
       @_chainNG(r) if app.config.isOn("chain_ng")
@@ -1070,8 +1082,8 @@ export default class ThreadContent
 
     # 登録ワードのNG
     if (
-      (ngObj = app.NG.isNGThread(objRes, @_threadTitle, @url)) and
-      !app.NG.isThreadIgnoreNgType(objRes, @_threadTitle, @url, ngObj.type)
+      (ngObj = app.NG.isNGThread(objRes, @_threadTitle, @urlStr)) and
+      !app.NG.isThreadIgnoreNgType(objRes, @_threadTitle, @urlStr, ngObj.type)
     )
       return ngObj
 
@@ -1086,7 +1098,7 @@ export default class ThreadContent
           (judgementIdType is "exists_once" and @idIndex.size isnt 0)
         ) and
         !app.NG.isIgnoreResNumForAuto(objRes.num, app.NG.TYPE.AUTO_NOTHING_ID) and
-        !app.NG.isThreadIgnoreNgType(objRes, @_threadTitle, @url, app.NG.TYPE.AUTO_NOTHING_ID)
+        !app.NG.isThreadIgnoreNgType(objRes, @_threadTitle, @urlStr, app.NG.TYPE.AUTO_NOTHING_ID)
       )
         return {type: app.NG.TYPE.AUTO_NOTHING_ID}
       # slipなしをNG
@@ -1098,7 +1110,7 @@ export default class ThreadContent
           (judgementIdType is "exists_once" and @slipIndex.size isnt 0)
         ) and
         !app.NG.isIgnoreResNumForAuto(objRes.num, app.NG.TYPE.AUTO_NOTHING_SLIP) and
-        !app.NG.isThreadIgnoreNgType(objRes, @_threadTitle, @url, app.NG.TYPE.AUTO_NOTHING_SLIP)
+        !app.NG.isThreadIgnoreNgType(objRes, @_threadTitle, @urlStr, app.NG.TYPE.AUTO_NOTHING_SLIP)
       )
         return {type: app.NG.TYPE.AUTO_NOTHING_SLIP}
 
@@ -1108,7 +1120,7 @@ export default class ThreadContent
       objRes.id? and
       @_ngIdForChain.has(objRes.id) and
       !app.NG.isIgnoreResNumForAuto(objRes.num, app.NG.TYPE.AUTO_CHAIN_ID) and
-      !app.NG.isThreadIgnoreNgType(objRes, @_threadTitle, @url, app.NG.TYPE.AUTO_CHAIN_ID)
+      !app.NG.isThreadIgnoreNgType(objRes, @_threadTitle, @urlStr, app.NG.TYPE.AUTO_CHAIN_ID)
     )
       return {type: app.NG.TYPE.AUTO_CHAIN_ID}
     # 連鎖SLIPのNG
@@ -1117,7 +1129,7 @@ export default class ThreadContent
       objRes.slip? and
       @_ngSlipForChain.has(objRes.slip) and
       !app.NG.isIgnoreResNumForAuto(objRes.num, app.NG.TYPE.AUTO_CHAIN_SLIP) and
-      !app.NG.isThreadIgnoreNgType(objRes, @_threadTitle, @url, app.NG.TYPE.AUTO_CHAIN_SLIP)
+      !app.NG.isThreadIgnoreNgType(objRes, @_threadTitle, @urlStr, app.NG.TYPE.AUTO_CHAIN_SLIP)
     )
       return {type: app.NG.TYPE.AUTO_CHAIN_SLIP}
 
@@ -1142,7 +1154,7 @@ export default class ThreadContent
       if (
         @_resMessageMap.get(resMessage).size >= +app.config.get("repeat_message_ng_count") and
         !app.NG.isIgnoreResNumForAuto(objRes.num, app.NG.TYPE.AUTO_REPEAT_MESSAGE) and
-        !app.NG.isThreadIgnoreNgType(objRes, @_threadTitle, @url, app.NG.TYPE.AUTO_REPEAT_MESSAGE)
+        !app.NG.isThreadIgnoreNgType(objRes, @_threadTitle, @urlStr, app.NG.TYPE.AUTO_REPEAT_MESSAGE)
       )
         return {type: app.NG.TYPE.AUTO_REPEAT_MESSAGE}
 
@@ -1150,7 +1162,7 @@ export default class ThreadContent
     if (
       app.config.isOn("forward_link_ng") and
       !app.NG.isIgnoreResNumForAuto(objRes.num, app.NG.TYPE.AUTO_FORWARD_LINK) and
-      !app.NG.isThreadIgnoreNgType(objRes, @_threadTitle, @url, app.NG.TYPE.AUTO_FORWARD_LINK)
+      !app.NG.isThreadIgnoreNgType(objRes, @_threadTitle, @urlStr, app.NG.TYPE.AUTO_FORWARD_LINK)
     )
       ngFlag = false
       resMessage = (
@@ -1179,7 +1191,7 @@ export default class ThreadContent
   @method refreshNG
   ###
   refreshNG: =>
-    {bbsType} = app.URL.guessType(@url)
+    {bbsType} = @url.guessType()
     @_ngIdForChain.clear()
     @_ngSlipForChain.clear()
     @_resMessageMap.clear()
@@ -1300,13 +1312,13 @@ export default class ThreadContent
         switch mediaType
           when "audio"
             thumbnailLink.style.width = "#{app.config.get("audio_width")}px"
-            thumbnailLink.setAttr("controls", "")
+            thumbnailLink.controls = true
           when "video"
             thumbnailLink.style.WebkitFilter = webkitFilter
             thumbnailLink.style.maxWidth = "#{app.config.get("video_width")}px"
             thumbnailLink.style.maxHeight = "#{app.config.get("video_height")}px"
             if app.config.isOn("video_controls")
-              thumbnailLink.setAttr("controls", "")
+              thumbnailLink.controls = true
 
     thumbnail.addLast(thumbnailLink)
 
@@ -1372,12 +1384,12 @@ export default class ThreadContent
 
   ###*
   @method checkUrlExpand
-  @param {HTMLAElement} a
+  @param {HTMLAnchorElement} a
   ###
   checkUrlExpand: (a) ->
     if (
       app.config.get("expand_short_url") isnt "none" and
-      app.URL.SHORT_URL_LIST.has(app.URL.getDomain(a.href))
+      app.URL.SHORT_URL_LIST.has(a.hostname)
     )
       # 短縮URLの展開
       finalUrl = await app.URL.expandShortURL(a.href)
@@ -1416,7 +1428,7 @@ export default class ThreadContent
     date = app.util.stringToDate($res.C("other")[0].textContent).valueOf()
     if date?
       app.WriteHistory.add({
-        url: @url
+        url: @urlStr
         res: parseInt($res.C("num")[0].textContent)
         title: document.title
         name: $res.C("name")[0].textContent
@@ -1432,5 +1444,5 @@ export default class ThreadContent
   ###
   removeWriteHistory: ($res) ->
     resnum = parseInt($res.C("num")[0].textContent)
-    app.WriteHistory.remove(@url, resnum)
+    app.WriteHistory.remove(@urlStr, resnum)
     return

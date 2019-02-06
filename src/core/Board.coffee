@@ -1,7 +1,7 @@
 import Cache from "./Cache.coffee"
 import {isNGBoard} from "./NG.coffee"
 import {Request} from "./HTTP.ts"
-import {fix as fixUrl, tsld as getTsld, threadToBoard} from "./URL.ts"
+import {URL} from "./URL.ts"
 import {chServerMoveDetect, decodeCharReference, removeNeedlessFromTitle} from "./util.coffee"
 
 ###*
@@ -15,7 +15,7 @@ export default class Board
     @property url
     @type String
     ###
-    @url = fixUrl(url)
+    @url = new URL(url)
 
     ###*
     @property thread
@@ -74,8 +74,8 @@ export default class Board
         # 2chで自動移動しているときはサーバー移転
         if (
           response? and
-          getTsld(@url) is "5ch.net" and
-          @url.split("/")[2] isnt response.responseURL.split("/")[2]
+          @url.getTsld() is "5ch.net" and
+          @url.hostname isnt response.responseURL.split("/")[2]
         )
           newBoardUrl = response.responseURL.slice(0, -"subject.txt".length)
           throw {response, newBoardUrl}
@@ -122,9 +122,9 @@ export default class Board
         #コールバック
         @message = "板の読み込みに失敗しました。"
 
-        if newBoardUrl? and getTsld(@url) is "5ch.net"
+        if newBoardUrl? and @url.getTsld() is "5ch.net"
           try
-            newBoardUrl = await chServerMoveDetect(@url)
+            newBoardUrl = (await chServerMoveDetect(@url)).href
             @message += """
               サーバーが移転しています
               (<a href="#{app.escapeHtml(app.safeHref(newBoardUrl))}"
@@ -132,9 +132,9 @@ export default class Board
               </a>)
               """
         #2chでrejectされている場合は移転を疑う
-        else if getTsld(@url) is "5ch.net" and response?
+        else if @url.getTsld() is "5ch.net" and response?
           try
-            newBoardUrl = await chServerMoveDetect(@url)
+            newBoardUrl = (await chServerMoveDetect(@url)).href
             #移転検出時
             @message += """
             サーバーが移転している可能性が有ります
@@ -158,7 +158,7 @@ export default class Board
       # dat落ちスキャン
       return unless threadList
       dict = {}
-      for bookmark in app.bookmark.getByBoard(@url) when bookmark.type is "thread"
+      for bookmark in app.bookmark.getByBoard(@url.href) when bookmark.type is "thread"
         dict[bookmark.url] = true
 
       for thread in threadList when dict[thread.url]?
@@ -192,47 +192,47 @@ export default class Board
   @method _getXhrInfo
   @private
   @static
-  @param {String} boardUrl
+  @param {app.URL.URL} boardUrl
   @return {Object | null} xhrInfo
   ###
   @_getXhrInfo: (boardUrl) ->
-    tmp = ///^(https?)://((?:\w+\.)*(\w+\.\w+))/(\w+)(?:/(\d+)/|/?)$///.exec(boardUrl)
+    tmp = ///^/(\w+)(?:/(\d+)/|/?)$///.exec(boardUrl.pathname)
     return null unless tmp
-    return switch tmp[3]
+    return switch boardUrl.getTsld()
       when "machi.to"
-        path: "#{tmp[1]}://#{tmp[2]}/bbs/offlaw.cgi/#{tmp[4]}/"
+        path: "#{boardUrl.origin}/bbs/offlaw.cgi/#{tmp[1]}/"
         charset: "Shift_JIS"
-      when "livedoor.jp", "shitaraba.net"
-        path: "#{tmp[1]}://jbbs.shitaraba.net/#{tmp[4]}/#{tmp[5]}/subject.txt"
+      when "shitaraba.net"
+        path: "#{boardUrl.protocol}//jbbs.shitaraba.net/#{tmp[1]}/#{tmp[2]}/subject.txt"
         charset: "EUC-JP"
       else
-        path: "#{tmp[1]}://#{tmp[2]}/#{tmp[4]}/subject.txt"
+        path: "#{boardUrl.origin}/#{tmp[1]}/subject.txt"
         charset: "Shift_JIS"
 
   ###*
   @method parse
   @static
-  @param {String} url
+  @param {app.URL.URL} url
   @param {String} text
   @return {Array | null} board
   ###
   @parse: (url, text) ->
-    tmp = /^(https?):\/\/((?:\w+\.)*(\w+\.\w+))\/(\w+)(?:\/(\w+)|\/?)/.exec(url)
+    tmp = /^\/(\w+)(?:\/(\w+)|\/?)/.exec(url.pathname)
     scFlg = false
-    switch tmp[3]
+    switch url.getTsld()
       when "machi.to"
         bbsType = "machi"
         reg = /^\d+<>(\d+)<>(.+)\((\d+)\)$/gm
-        baseUrl = "#{tmp[1]}://#{tmp[2]}/bbs/read.cgi/#{tmp[4]}/"
+        baseUrl = "#{url.origin}/bbs/read.cgi/#{tmp[1]}/"
       when "shitaraba.net"
         bbsType = "jbbs"
         reg = /^(\d+)\.cgi,(.+)\((\d+)\)$/gm
-        baseUrl = "#{tmp[1]}://jbbs.shitaraba.net/bbs/read.cgi/#{tmp[4]}/#{tmp[5]}/"
+        baseUrl = "#{url.protocol}//jbbs.shitaraba.net/bbs/read.cgi/#{tmp[1]}/#{tmp[2]}/"
       else
-        scFlg = (tmp[3] is "2ch.sc")
+        scFlg = (url.getTsld() is "2ch.sc")
         bbsType = "2ch"
         reg = /^(\d+)\.dat<>(.+) \((\d+)\)$/gm
-        baseUrl = "#{tmp[1]}://#{tmp[2]}/test/read.cgi/#{tmp[4]}/"
+        baseUrl = "#{url.origin}/test/read.cgi/#{tmp[1]}/"
 
     board = []
     while (regRes = reg.exec(text))
@@ -246,7 +246,7 @@ export default class Board
         title
         resCount
         createdAt: +regRes[1] * 1000
-        ng: isNGBoard(title, url, resCount)
+        ng: isNGBoard(title, url.href, resCount)
         isNet: if scFlg then !title.startsWith("★") else null
       })
 
@@ -264,7 +264,7 @@ export default class Board
   @return {Promise}
   ###
   @getCachedResCount: (threadUrl) ->
-    boardUrl = threadToBoard(threadUrl)
+    boardUrl = threadUrl.toBoard()
     xhrPath = Board._getXhrInfo(boardUrl)?.path
 
     unless xhrPath?
@@ -274,7 +274,7 @@ export default class Board
     try
       await cache.get()
       {lastModified, data} = cache
-      for {url, resCount} in Board.parse(boardUrl, data) when url is threadUrl
+      for {url, resCount} in Board.parse(boardUrl, data) when url is threadUrl.href
         return {
           resCount
           modified: lastModified

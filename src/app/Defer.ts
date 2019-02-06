@@ -1,22 +1,22 @@
-export function defer (): Promise<void> {
+export function defer() {
   return new Promise( (resolve) => {
     setTimeout(resolve, 100);
   });
 }
 
-export function wait (ms: number): Promise<void> {
+export function wait(ms: number) {
   return new Promise( (resolve) => {
     setTimeout(resolve, ms);
   });
 }
 
-export function wait5s (): Promise<void> {
+export function wait5s() {
   return new Promise( (resolve) => {
     setTimeout(resolve, 5 * 1000);
   });
 }
 
-export function waitAF (): Promise<void> {
+export function waitAF() {
   return new Promise( (resolve) => {
     requestAnimationFrame(<any>resolve);
   });

@@ -1,4 +1,4 @@
-import {fix as fixUrl, parseQuery, setScheme, getScheme, tsld as getTsld, guessType} from "../core/URL.ts"
+import {URL, parseQuery} from "../core/URL.ts"
 import {fadeIn, fadeOut} from "../ui/Animate.coffee"
 
 class Timer
@@ -42,7 +42,7 @@ export default class Write
 
   constructor: ->
     param = parseQuery(location.search)
-    @url = fixUrl(param.get("url"))
+    @url = new URL(param.get("url"))
     @title = param.get("title") ? param.get("url")
     @name = param.get("name") ? app.config.get("default_name")
     @mail = param.get("mail") ? app.config.get("default_mail")
@@ -59,7 +59,7 @@ export default class Write
     return
 
   _beforeSendFunc: ->
-    url = @url
+    url = new URL(@url.href)
     return ({method, requestHeaders}) ->
       origin = browser.runtime.getURL("")[...-1]
       isSameOrigin = (
@@ -69,8 +69,8 @@ export default class Write
         !requestHeaders.includes("Origin")
       )
       return unless method is "POST" and isSameOrigin
-      if getTsld(url) is "2ch.sc"
-        url = setScheme(url, "http")
+      if url.getTsld() is "2ch.sc"
+        url.protocol = "http:"
 
       ua = app.config.get("useragent").trim()
       uaExists = (ua.length > 0)
@@ -79,7 +79,7 @@ export default class Write
 
       for {name}, i in requestHeaders
         if !setReferer and name is "Referer"
-          requestHeaders[i].value = url
+          requestHeaders[i].value = url.href
           setReferer = true
         else if !setUserAgent and name is "User-Agent"
           requestHeaders[i].value = ua
@@ -87,7 +87,7 @@ export default class Write
         break if setReferer and setUserAgent
 
       if not setReferer
-        requestHeaders.push(name: "Referer", value: url)
+        requestHeaders.push(name: "Referer", value: url.href)
       if not setUserAgent and uaExists
         requestHeaders.push(name: "User-Agent", value: ua)
 
@@ -182,7 +182,7 @@ export default class Write
     $h1 = @$view.T("h1")[0]
     document.title = @title
     $h1.textContent = @title
-    $h1.addClass("https") if getScheme(@url) is "https"
+    $h1.addClass("https") if @url.protocol is "https:"
     return
 
   _setBeforeUnload: ->
@@ -242,11 +242,10 @@ export default class Write
     }
 
   _getFormData: ->
-    scheme = getScheme(@url)
-    {bbsType} = guessType(@url)
-    splittedUrl = @url.split("/")
+    {bbsType} = @url.guessType()
+    splittedUrl = @url.pathname.split("/")
     args = @_getIframeArgs()
-    return {scheme, bbsType, splittedUrl, args}
+    return {bbsType, splittedUrl, args}
 
   _setupForm: ->
     @$view.C("hide_iframe")[0].on("click", =>
@@ -278,13 +277,13 @@ export default class Write
         iframeDoc = $iframe.contentDocument
         #フォーム生成
         form = iframeDoc.createElement("form")
-        form.setAttribute("accept-charset", formData.charset)
+        form.acceptCharset = formData.charset
         form.action = formData.action
         form.method = "POST"
         for key, val of formData.input
           input = iframeDoc.createElement("input")
           input.name = key
-          input.setAttribute("value", val)
+          input.value = val
           form.appendChild(input)
         for key, val of formData.textarea
           textarea = iframeDoc.createElement("textarea")

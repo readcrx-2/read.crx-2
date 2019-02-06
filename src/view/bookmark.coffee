@@ -147,7 +147,7 @@ app.boot("/view/bookmark.html", ["Board"], (Board) ->
       expired
       boardUrl: boardUrlObj.href
       boardTitle
-      isHttps: (urlObj.protocol is "https:")
+      isHttps: urlObj.isHttps()
     })
     return
   )

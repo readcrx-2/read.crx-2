@@ -157,8 +157,12 @@ export class URL extends window.URL {
     return this.tsld;
   }
 
+  isHttps() {
+    return (this.protocol === "https:");
+  }
+
   toggleProtocol() {
-    this.protocol = (this.protocol === "http:") ? "https:" : "http:";
+    this.protocol = this.isHttps() ? "http:" : "https:";
   }
 
   createProtocolToggled(): URL {
@@ -361,6 +365,10 @@ export function getDomain(urlStr: string): string {
 
 export function getProtocol(urlStr: string): string {
   return (new URL(urlStr)).protocol;
+}
+
+export function isHttps(urlStr: string): boolean {
+  return (getProtocol(urlStr) === "https:");
 }
 
 export function setProtocol(urlStr: string, protocol: string): string {

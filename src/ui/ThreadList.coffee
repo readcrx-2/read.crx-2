@@ -144,7 +144,7 @@ export default class ThreadList
             boardUrl: boardUrl.href
             boardTitle
             expired: bookmark.expired
-            isHttps: (url.protocol is "https:")
+            isHttps: url.isHttps()
           })
         else if type is "removed"
           $table.$("tr[data-href=\"#{bookmark.url}\"]").remove()

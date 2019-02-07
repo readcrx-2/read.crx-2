@@ -71,7 +71,7 @@ export class URL extends window.URL {
     if (this.hostname.includes("machi.to")) {
       const isThread = this.fixPathAndSetType(
         URL.MACHI_THREAD_REG,
-        (res) => `/bbs/read.cgi/${res[1]}`,
+        (res) => `/bbs/read.cgi/${res[1]}/`,
         {type: "thread", bbsType: "machi"}
       );
       if (isThread) return;
@@ -90,11 +90,16 @@ export class URL extends window.URL {
         (res) => `/bbs/${res[1]}/`,
         {type: "thread", bbsType: "jbbs"}
       );
-      if (isThread) return;
+      if (isThread) {
+        if (this.pathname.includes("read_archive")) {
+          this.archive = true;
+        }
+        return;
+      }
 
       const isArchive = this.fixPathAndSetType(
         URL.SHITARABA_ARCHIVE_REG,
-        (res) => `/bbs/read_archive.cgi/${res[1]}/${res[2]}`,
+        (res) => `/bbs/read_archive.cgi/${res[1]}/${res[2]}/`,
         {type: "thread", bbsType: "jbbs"}
       );
       if (isArchive) {
@@ -157,8 +162,12 @@ export class URL extends window.URL {
     return this.tsld;
   }
 
+  isHttps() {
+    return (this.protocol === "https:");
+  }
+
   toggleProtocol() {
-    this.protocol = (this.protocol === "http:") ? "https:" : "http:";
+    this.protocol = this.isHttps() ? "http:" : "https:";
   }
 
   createProtocolToggled(): URL {
@@ -295,12 +304,18 @@ export class URL extends window.URL {
   }
 
   private async exchangeNetSc() {
+    const {type} = this.guessedType;
     const splits = this.pathname.split("/");
-
-    if (splits.length <= 3) return;
-
-    const boardKey = splits[3];
     const tsld = this.getTsld();
+
+    let boardKey;
+    if (type === "thread" && splits.length > 3) {
+      boardKey = splits[3];
+    } else if (type === "board" && splits.length > 1) {
+      boardKey = splits[1];
+    } else {
+      return;
+    }
 
     if (tsld === "5ch.net" && serverSc.has(boardKey)) {
       const server = serverSc.get(boardKey);
@@ -326,12 +341,15 @@ export class URL extends window.URL {
       const server = resUrl.hostname.split(".")[0];
       const splits = resUrl.pathname.split("/");
 
-      if (splits.length <= 3) {
+      let boardKey;
+      if (type === "thread" && splits.length > 3) {
+        boardKey = splits[3];
+      } else if (type === "board" && splits.length > 1) {
+        boardKey = splits[1];
+      } else {
         this.href = resUrlStr;
         return;
       }
-
-      const boardKey = splits[3];
 
       if (!serverSc.has(boardKey)) {
         serverSc.set(boardKey, server);
@@ -361,6 +379,10 @@ export function getDomain(urlStr: string): string {
 
 export function getProtocol(urlStr: string): string {
   return (new URL(urlStr)).protocol;
+}
+
+export function isHttps(urlStr: string): boolean {
+  return (getProtocol(urlStr) === "https:");
 }
 
 export function setProtocol(urlStr: string, protocol: string): string {

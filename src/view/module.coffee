@@ -836,7 +836,7 @@ class app.view.TabContentView extends app.view.PaneContentView
             )
           catch
             msg = """
-            スレッドのURLが古いか新しいため、板一覧に5ch.netと2ch.scのペアが存在しません。
+            スレッド/板のURLが古いか新しいため、板一覧に5ch.netと2ch.scのペアが存在しません。
             板一覧が更新されるのを待つか、板一覧を更新してみてください。
             """
             new app.Notification("現在この機能は使用できません", msg, "", "invalid")

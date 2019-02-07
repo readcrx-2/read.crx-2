@@ -307,9 +307,7 @@ app.boot("/view/index.html", ["BBSMenu"], (BBSMenu) ->
   )
 
   return unless query
-  paramResNumFlag = app.config.isOn("enable_link_with_res_number")
-  paramResNum = if paramResNumFlag then app.URL.getResNumber(query) else null
-  app.message.send("open", url: query, new_tab: true, param_res_num: paramResNum)
+  app.message.send("open", url: query, new_tab: true)
   return
 )
 
@@ -696,8 +694,8 @@ app.main = ->
     restore
     scheme
     new_tab
-    written_res_num = null
     param_res_num = null
+    written_res_num = null
   }) ->
     iframeInfo = urlToIframeInfo(url, {scheme})
     return unless iframeInfo
@@ -712,6 +710,10 @@ app.main = ->
         UI.Animate.fadeIn($iframeEle)
     else
       $li = $view.$(".tab_tabbar > li[data-tabsrc=\"#{iframeInfo.src}\"]")
+
+      if app.config.isOn("enable_link_with_res_number") and /^https?:/.test(url)
+        param_res_num ?= app.URL.getResNumber(url)
+
       if $li?
         app.DOMData.get($li.closest(".tab"), "tab").update($li.dataset.tabid, selected: true)
         if url isnt "bookmark" #ブックマーク更新は時間がかかるので例外扱い
@@ -755,9 +757,7 @@ app.main = ->
   #openリクエストの監視
   browser.runtime.onMessage.addListener( ({type, query}) ->
     return unless type is "open"
-    paramResNumFlag = app.config.isOn("enable_link_with_res_number")
-    paramResNum = if paramResNumFlag then app.URL.getResNumber(query) else null
-    app.message.send("open", url: query, new_tab: true, param_res_num: paramResNum)
+    app.message.send("open", url: query, new_tab: true)
     return
   )
 

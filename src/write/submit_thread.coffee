@@ -37,7 +37,7 @@ class SubmitThread extends Write
     $h1 = @$view.T("h1")[0]
     document.title = title
     $h1.textContent = title
-    $h1.addClass("https") if @url.protocol is "https:"
+    $h1.addClass("https") if @url.isHttps()
     return
 
   _onSuccess: (key) ->

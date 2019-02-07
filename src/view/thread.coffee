@@ -949,6 +949,7 @@ app.boot("/view/thread.html", ->
     setObserve = ->
       observer.disconnect()
       $ele = $content.last()
+      return unless $ele?
       while threadContent.isHidden($ele)
         $pEle = $ele.prev()
         break unless $pEle?

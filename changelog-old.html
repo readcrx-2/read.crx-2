@@ -35,7 +35,118 @@
         <p class="header">This project is maintained by <a class="header name" href="https://github.com/readcrx-2">readcrx-2</a> team</p>
       </header>
       <section>
-        <h4><a href="changelog.html">&#x2190; Changes after v1.25.0</a></h4>
+        <h4><a href="changelog.html">&#x2190; Changes after v1.30.0</a></h4>
+        <h2 id="v1.29.1">v1.29.1 (2018-07-17)</h2>
+        <ul>
+          <li>正規表現検索アイコンの変更</li>
+          <li>設定のデザインを改善</li>
+          <li>アイコンファイルの軽量化/画質の向上</li>
+          <li>Windows環境以外で使用されるAA用フォントファイルの軽量化</li>
+        </ul>
+        <h2 id="v1.29.0">v1.29.0 (2018-07-11)</h2>
+        <ul>
+          <li>AAの縮小表示ができるように</li>
+          <li>スレ内検索/NG機能で意図したものがヒットしやすいように</li>
+          <li>次スレ検索/スレ内検索/NG機能などの軽量化/高速化</li>
+        </ul>
+        <h2 id="v1.28.1">v1.28.1 (2018-07-04)</h2>
+        <ul>
+          <li>ブックマークのソート順を保持できるように</li>
+          <li>正規表現検索アイコンが正しく表示されないのを修正</li>
+          <li>正規表現検索アイコンの変更</li>
+          <li>並び替えの高速化</li>
+          <li>設定のその他の整理</li>
+        </ul>
+        <h2 id="v1.28.0">v1.28.0 (2018-07-02)</h2>
+        <ul>
+          <li>スレ内検索で正規表現を使用できるように（Thank you, <a href="https://github.com/awazi">awazi</a>）</li>
+          <li>NGを返信に含めないように（Thank you, <a href="https://github.com/awazi">awazi</a>）</li>
+          <li>板一覧からブックマークに追加/解除できるように</li>
+          <li>ボップアップ内のNGをあぼーん表示設定と連動するように（Thank you, <a href="https://github.com/awazi">awazi</a>）</li>
+          <li>短縮URLの対象を追加（Thank you, <a href="https://github.com/awazi">awazi</a>）</li>
+          <li>「、」区切りのアンカーに対応</li>
+          <li>履歴などの削除やエクスポート後も件数を表示するように</li>
+          <li>ポップアップがAA表示に対応していなかったのを修正（Thank you, <a href="https://github.com/awazi">awazi</a>）</li>
+          <li>スレ検索を最初は20件だけ表示するように</li>
+          <li>スレ内検索時に非表示のNGはヒットから除外するように（Thank you, <a href="https://github.com/awazi">awazi</a>）</li>
+          <li>スレ検索時の板名取得で無駄に通信していたのを修正</li>
+          <li>あぼーん表示をする設定の場合のヘッダーの文字色を変更（Thank you, <a href="https://github.com/awazi">awazi</a>）</li>
+          <li>設定のデザインの微調整</li>
+        </ul>
+        <h2 id="v1.27.1">v1.27.1 (2018-06-20)</h2>
+        <ul>
+          <li>Jane総合掲示板の板名が表示されるように</li>
+          <li>ReplaceStr.txtでallを指定すると適用されないのを修正</li>
+          <li>ReplaceStr.txtの読み込みができないのを修正</li>
+        </ul>
+        <h2 id="v1.27.0">v1.27.0 (2018-06-19)</h2>
+        <ul>
+          <li>設定をタブにして整理</li>
+          <li>パー速や実況サロンfreeに書き込めるように</li>
+          <li>パー速や実況サロンfreeの板名が表示されるように</li>
+          <li>したらばのTRIPが認識できていなかったのを修正</li>
+          <li>Developers information: CoffeeScriptを2.3.1にアップデート</li>
+          <li>Developers information: TypeScriptを2.9.2にアップデート</li>
+        </ul>
+        <h2 id="v1.26.2">v1.26.2 (2018-06-15)</h2>
+        <ul>
+          <li>移転した板のスレの読み込み時に、板移転検出が作動してなく、永遠にスレを読み込んでいる表示になっていたのを修正</li>
+          <li>移転した板の読み込み時に、移転先が検出できていなかったのを修正</li>
+          <li>キャッシュの部分削除ボタンが正常に削除できていなかったのを修正</li>
+          <li>特定の場合で文字が意図していない値を出していたのを修正</li>
+        </ul>
+        <h2 id="v1.26.1">v1.26.1 (2018-06-06)</h2>
+        <ul>
+          <li>次スレ検索に失敗するのを修正</li>
+          <li>公式/非公式サポートBBSへのリンクをhttpsに</li>
+        </ul>
+        <h2 id="v1.26.0">v1.26.0 (2018-06-06)</h2>
+        <ul>
+          <li>板やブックマークのソート順をよりよいものに</li>
+          <li>データベース(IndexedDB,LocalStorage)の保存容量の使用状況を表示するように</li>
+          <li>同一SLIP/トリップのポップアップを直接ネストしないように</li>
+          <li>検索にフォーカスが当たっている表示がされるように</li>
+          <li>ポップアップ内のコンテキストメニューがかぶって一部しか表示されないのを修正（Thank you, <a href="https://github.com/awazi">awazi</a>）</li>
+          <li>特定の場合でポップアップの重なる順番が正常でなかったのを修正</li>
+          <li>履歴のインポートができないのを修正</li>
+          <li>低速通信環境下で板一覧が永遠に読み込まれないのを修正</li>
+          <li>板一覧の取得エラー文が表示されていなかったのを修正</li>
+          <li>特定の場合で2chの鯖移転検出が正常にできていなかったのを修正</li>
+          <li>設定で板一覧のURLを空欄にしたときにエラーが発生していたのを修正</li>
+          <li>長大なスレの読み込み時の高速化</li>
+          <li>デフォルトの非表示スレの更新</li>
+          <li>その他軽量化/高速化</li>
+          <li>Developers information: CoffeeScriptを2.3.0にアップデート</li>
+          <li>Developers information: TypeScriptを2.8.3にアップデート</li>
+          <li>Developers information: Pugを2.0.3にアップデート</li>
+          <li>Developers information: NodeSassを4.9.0にアップデート</li>
+          <li>Developers information: Gulpを4.0.0にアップデート</li>
+        </ul>
+        <h2 id="v1.25.2">v1.25.2 (2018-03-09)</h2>
+        <ul>
+          <li>したらばのSSL対応に伴う、無効化処理削除（Thank you, <a href="https://github.com/awazi">awazi</a>）</li>
+        </ul>
+        <h2 id="v1.25.1">v1.25.1 (2018-03-06)</h2>
+        <ul>
+          <li>NG機能のRegExpTitleが正常に機能していなかったのを修正（Thank you, <a href="https://github.com/awazi">awazi</a>）</li>
+          <li>ignoreNgTypeが正常に機能しない可能性があるのを修正（Thank you, <a href="https://github.com/awazi">awazi</a>）</li>
+        </ul>
+        <h2 id="v1.25.0">v1.25.0 (2018-03-05)</h2>
+        <ul>
+          <li>コンテキストメニューからのID/SLIPのNG指定時に有効期限の指定機能を追加（Thank you, <a href="https://github.com/awazi">awazi</a>）</li>
+          <li class="no">※NG機能 → コンテキストメニューの設定</li>
+          <li>あぼーん表示時に指定されたテキストを含めて表示する機能を追加（Thank you, <a href="https://github.com/awazi">awazi</a>）</li>
+          <li>NG機能にexpireDateプレフィックスを追加（Thank you, <a href="https://github.com/awazi">awazi</a>）</li>
+          <li>NG機能にUrl,RegExpUrlキーワードを追加（Thank you, <a href="https://github.com/awazi">awazi</a>）</li>
+          <li>NG機能のAND条件追加（Thank you, <a href="https://github.com/awazi">awazi</a>）</li>
+          <li class="no">※AND条件の追加により、「$[]$」を含むキーワードを指定しているNGが存在する場合に挙動が変わります。（該当する人はいないと思うので大丈夫だと思いますが…）</li>
+          <li class="no">※上記のNG機能使用方法は<a href="https://github.com/readcrx-2/read.crx-2/wiki/NG%E3%83%AF%E3%83%BC%E3%83%89%E3%81%AE%E4%BB%95%E6%A7%98">WikiのNGワード</a>、<a href="https://github.com/readcrx-2/read.crx-2/pull/421#issue-171512613">PRのコメント</a>を参照してください。</li>
+          <li>スレッド検索のhttps対応（Thank you, <a href="https://github.com/awazi">awazi</a>）</li>
+          <li class="no">※検索のレスポンスに含まれるスレッドのURLがhttpのため、それをhttpsに置き換える実装です。</li>
+          <li>最終レスがNGの時にフッターが表示されないのを修正（Thank you, <a href="https://github.com/awazi">awazi</a>）</li>
+          <li>設定のインポート時にラジオボタンの表示が変わらないのを修正（Thank you, <a href="https://github.com/awazi">awazi</a>）</li>
+          <li>メディアアドレスをNGが機能していなかったのを修正（Thank you, <a href="https://github.com/awazi">awazi</a>）</li>
+        </ul>
         <h2 id="v1.24.2">v1.24.2 (2018-02-26)</h2>
         <ul>
           <li>未来へのアンカーで内部で使用している文字列を変更(v1.24.1の修正漏れ)</li>

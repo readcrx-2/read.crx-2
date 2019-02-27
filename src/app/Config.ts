@@ -152,7 +152,13 @@ export default class Config {
     for(const [key, val] of Config._default) {
       object[`config_${key}`] = val;
     }
-    Object.assign(object, this._cache);
+    /*
+      // ES2019
+      Object.assign(object, Object.fromEntries(this._cache))
+    */
+    for(const [key, val] of this._cache) {
+      object[key] = val;
+    }
     return object;
   }
 

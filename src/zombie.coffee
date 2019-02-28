@@ -11,7 +11,7 @@ app.boot("/zombie.html", ->
     return
 
   save = ->
-    arrayOfReadState = await app.LocalStorage.get("zombie_read_state", true)
+    arrayOfReadState = JSON.parse(localStorage.zombie_read_state)
 
     app.bookmark = new app.Bookmark(app.config.get("bookmark_id"))
 
@@ -25,6 +25,8 @@ app.boot("/zombie.html", ->
     await app.LocalStorage.del("zombie_read_state")
 
     close()
+
+    delete localStorage.zombie_read_state
     return
 
   browser.runtime.sendMessage(type: "zombie_ping")
@@ -33,7 +35,7 @@ app.boot("/zombie.html", ->
   browser.runtime.onMessage.addListener( ({type}) ->
     return if alreadyRun or type isnt "rcrx_exit"
     alreadyRun = true
-    if (await app.LocalStorage.get("zombie_read_state"))?
+    if localStorage.zombie_read_state?
       $script = $__("script")
       $script.on("load", save)
       $script.src = "/app_core.js"

@@ -1297,10 +1297,13 @@ app.viewThread._readStateManager = ($view) ->
   onBeforezombie = ->
     scan()
     if readStateUpdated
-      data = await app.LocalStorage.get("zombie_read_state", true) ? []
+      if localStorage.zombie_read_state?
+        data = JSON.parse(localStorage["zombie_read_state"])
+      else
+        data = []
       readState.date = Date.now()
       data.push(readState)
-      await app.LocalStorage.set("zombie_read_state", data, true)
+      localStorage["zombie_read_state"] = JSON.stringify(data)
     return
 
   parent.window.on("beforezombie", onBeforezombie)

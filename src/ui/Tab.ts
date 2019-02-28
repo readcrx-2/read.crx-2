@@ -57,7 +57,7 @@ export default class Tab {
         locked
       });
     }
-    localStorage.tab_state = JSON.stringify(data);
+    app.LocalStorage.set("tab_state", data, true);
   }
 
   constructor(private $element: Element) {

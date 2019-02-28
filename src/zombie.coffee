@@ -22,6 +22,8 @@ app.boot("/zombie.html", ->
       bkarray = (app.bookmark.updateReadState(rs) for rs in arrayOfReadState)
       await Promise.all(rsarray.concat(bkarray))
 
+    await app.LocalStorage.del("zombie_read_state")
+
     close()
 
     delete localStorage.zombie_read_state

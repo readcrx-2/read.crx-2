@@ -12,7 +12,6 @@
     "ShortQuery.js": "github:S--Minecraft/ShortQuery.js#1.1.0",
     "autoprefixer": "^9.4.9",
     "coffeescript": "^2.3.2",
-    "crx": "^4.0.1",
     "crx3": "^1.1.2",
     "fs-extra": "^7.0.1",
     "gulp": "^4.0.0",

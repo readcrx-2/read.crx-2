@@ -34,4 +34,5 @@ module.exports =
   other:
     sharp: require "sharp"
     crx: require "crx"
+    crx3: require "crx3"
     webExt: require("web-ext").default

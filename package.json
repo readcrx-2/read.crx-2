@@ -5,7 +5,7 @@
     "node": ">=7.6"
   },
   "browserslist": [
-    "Chrome >= 61",
+    "Chrome >= 75",
     "Firefox >= 58"
   ],
   "devDependencies": {
@@ -13,6 +13,7 @@
     "autoprefixer": "^9.4.9",
     "coffeescript": "^2.3.2",
     "crx": "^4.0.1",
+    "crx3": "^1.1.2",
     "fs-extra": "^7.0.1",
     "gulp": "^4.0.0",
     "gulp-bom": "^2.0.0",

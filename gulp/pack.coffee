@@ -6,12 +6,14 @@ path = require "path"
 {browsers, paths, manifest} = require "./config"
 util = require "./util"
 
-createCrx = (tmpDir, pemPath) ->
-  pem = await fs.readFile(pemPath)
-  rcrx = new o.crx(privateKey: pem)
-  loadedCrx = await rcrx.load(tmpDir)
-  rcrxBuffer = await loadedCrx.pack()
-  await fs.outputFile("./build/read.crx_2.#{manifest.version}.crx", rcrxBuffer)
+createCrx3 = (tmpDir, pemPath) ->
+  await o.crx3(
+    [tmpDir],
+    {
+      keyPath: pemPath,
+      crxPath: "./build/read.crx_2.#{manifest.version}.crx",
+    }
+  )
   return
 
 createXpi = (tmpDir, apicrePath) ->
@@ -40,7 +42,7 @@ pack = (browser) ->
   switch browser
     when "chrome"
       type = "crx"
-      createFunc = createCrx
+      createFunc = createCrx3
       secretEnv = "read.crx-2-pem-path"
     when "firefox"
       type = "xpi"
@@ -48,7 +50,7 @@ pack = (browser) ->
       secretEnv = "read.crx-2-apicre-path"
     else
       type = "crx"
-      createFunc = createCrx
+      createFunc = createCrx3
       secretEnv = "read.crx-2-pem-path"
   return ->
     await fs.copy(output, tmpDir)

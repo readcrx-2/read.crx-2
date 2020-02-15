@@ -625,9 +625,15 @@ app.main = ->
   )
 
   app.bookmarkEntryList.ready.add( ->
-    #タブ復元
+    # タブ復元
+    # TODO: 少ししたら消す
     if localStorage.tab_state?
-      for tab in JSON.parse(localStorage.tab_state)
+      tabState = JSON.parse(localStorage.tab_state)
+      delete localStorage.tab_state
+    else
+      tabState = await app.LocalStorage.get("tab_state", true)
+    if tabState?
+      for tab in tabState
         isRestored = true
         app.message.send("open",
           url: tab.url

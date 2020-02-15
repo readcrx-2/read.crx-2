@@ -4,6 +4,7 @@ import Config from "./app/Config";
 export {default as Callbacks} from "./app/Callbacks";
 export * from "./app/Defer";
 export * from "./app/Log";
+export {default as LocalStorage} from "./app/LocalStorage";
 export {default as message} from "./app/Message";
 export * from "./app/Util";
 

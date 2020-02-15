@@ -1,5 +1,6 @@
 import Callbacks from "./Callbacks";
 import message from "./Message";
+import LocalStorage from "./LocalStorage";
 import {log, assertArg} from "./Log";
 
 export default class Config {
@@ -100,7 +101,7 @@ export default class Config {
         return;
       }
 
-      const res = await browser.storage.local.get(null);
+      const res = await LocalStorage.getAll();
       for (const [key, val] of Object.entries(res)) {
         if (
           key.startsWith("config_") &&
@@ -152,7 +153,13 @@ export default class Config {
     for(const [key, val] of Config._default) {
       object[`config_${key}`] = val;
     }
-    Object.assign(object, this._cache);
+    /*
+      // ES2019
+      Object.assign(object, Object.fromEntries(this._cache))
+    */
+    for(const [key, val] of this._cache) {
+      object[key] = val;
+    }
     return object;
   }
 
@@ -170,10 +177,7 @@ export default class Config {
       throw new Error("app.Config::setに不適切な値が渡されました");
     }
 
-    const tmp = {};
-    tmp[`config_${key}`] = val;
-
-    await browser.storage.local.set(tmp)
+    await LocalStorage.set(`config_${key}`, val);
   }
 
   async del(key: string) {
@@ -181,7 +185,7 @@ export default class Config {
       throw new Error("app.Config::delにstring以外の値が渡されました");
     }
 
-    await browser.storage.local.remove(`config_${key}`)
+    await LocalStorage.del(`config_${key}`);
   }
 
   destroy() {

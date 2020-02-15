@@ -8,6 +8,7 @@ declare namespace app {
   const config: any;
   const Callbacks: any;
   const log: any;
+  const LocalStorage: any;
   const deepCopy: any;
   const message: any;
   const defer: any;

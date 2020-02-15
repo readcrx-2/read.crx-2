@@ -65,6 +65,17 @@
           <li>拡張機能の管理画面で、「パッケージ化されてない拡張機能を読み込む…」ボタンをクリックし、3のディレクトリを選択します。</li>
         </ol>
         <h3>
+          <a id="registry" class="anchor" href="#registry" aria-hidden="true"></a>レジストリーエディタを使用する方法
+        </h3>
+        <ol>
+          <li>この方法で設定されるレジストリは、後述のポリシーエディタを使用する方法により設定されるレジストリと同様のものです。</li>
+          <li>
+            <a href="/readcrx2.reg">readcrx2.reg（右クリックからダウンロードして下さい。）</a>をダウンロードします。
+          </li>
+          <li>ダウンロードしたregファイルを実行します。</li>
+          <li>上記Chrome版のダウンロードのリンクを左クリックし、インストールします。</li>
+        </ol>
+        <h3>
           <a id="policy-editor" class="anchor" href="#policy-editor" aria-hidden="true"></a>ポリシーエディタを使用する方法
         </h3>
         <ol>
@@ -75,14 +86,16 @@
           <li>エクスプローラーで「C:\Windows\PolicyDefinitions」を開きます。</li>
           <li>展開したzipファイルの中身の「windows\admx」ディレクトリにある、「chrome.admx」ファイルと「ja」ディレクトリを3のディレクトリにコピーします。</li>
           <li>「gpedit.msc（ローカルグループポリシーエディター）」を実行します。</li>
-          <li>左のサイドバーの「コンピュータの構成-&gt;管理用テンプレート-&gt;Google-&gt;Google Chrome-&gt;拡張機能」をクリックします。</li>
+          <li>左のサイドバーの「コンピュータの構成-&gt;管理用テンプレート-&gt;Google Chrome-&gt;拡張機能」をクリックします。</li>
+          <li>右側に表示された「拡張機能、アプリ、ユーザースクリプトのインストールソースを設定する」 をダブルクリックします。</li>
+          <li>表示されたウィンドウの「有効」ラジオボタンを選択の上、オプションの「表示」ボタンをクリックします。</li>
+          <li>表示されたウィンドウの値に「https://readcrx-2.github.io/read.crx-2/*」を入力し、「OK」ボタンをクリックします。</li>
           <li>右側に表示された「拡張機能インストールのホワイトリストを設定する」をダブルクリックします。</li>
           <li>表示されたウィンドウの「有効」ラジオボタンを選択の上、オプションの「表示」ボタンをクリックします。</li>
           <li>表示されたウィンドウの値に「eaibgccboimjelecbmgfjhakekfdcpeh」を入力し、「OK」ボタンをクリックします。</li>
           <li>「適用」ボタンをクリックします。</li>
           <li>「gpedit.msc（ローカルグループポリシーエディター）」を終了します。</li>
-          <li>上記ダウンロードのリンクより、crxファイルをダウンロードします。</li>
-          <li>拡張機能の管理画面へ、ダウンロードしたcrxファイルをドラッグ&amp;ドロップします。</li>
+          <li>上記Chrome版のダウンロードのリンクを左クリックし、インストールします。</li>
         </ol>
         <h2>
           <a id="mac-os-x" class="anchor" href="#mac-os-x" aria-hidden="true"></a>Mac OS X
@@ -99,8 +112,7 @@
               <li>管理者権限を持っているユーザである必要があります。また、実行時にログインパスワードを求められます。</li>
             </ul>
           </li>
-          <li><a href="chrome://policy/">ポリシー</a>を開き「eaibgccboimjelecbmgfjhakekfdcpeh」がExtensionInstallWhitelistに設定されていることを確認します。</li>
-          <li>拡張機能の管理画面へ、ダウンロードしたcrxファイルをドラッグ&amp;ドロップします。</li>
+          <li>上記Chrome版のダウンロードのリンクを左クリックし、インストールします。</li>
         </ol>
         <h2>
           <a id="linux" class="anchor" href="#linux" aria-hidden="true"></a>Linux

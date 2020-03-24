@@ -27,7 +27,7 @@
     <div class="wrapper">
       <header>
         <h1 class="header">read.crx 2</h1>
-        <p class="header">Chromeアプリな2chブラウザ</p>
+        <p class="header">拡張機能な2chブラウザ</p>
         <ul>
           <li><a class="buttons github" href="https://github.com/readcrx-2/read.crx-2">View On GitHub</a></li>
         </ul>
@@ -37,18 +37,19 @@
         <h1>
           <a id="readcrx-2" class="anchor" href="#readcrx-2" aria-hidden="true"></a>read.crx 2
         </h1>
-        <p>read.crx 2は<a href="https://www.google.com/chrome">Google Chrome</a>/<a href="https://www.mozilla.org/firefox/">Mozilla Firefox</a> extensionとして作られた2chブラウザです。
+        <p>read.crx 2は<a href="https://www.google.com/chrome">Google Chrome</a>/<a href="https://www.microsoft.com/edge/">Microsoft Edge</a>/<a href="https://www.mozilla.org/firefox/">Mozilla Firefox</a> extensionとして作られた2chブラウザです。
           <a href="http://www.2ch.net/">2ch.net</a>、<a href="http://2ch.sc/">2ch.sc</a>、<a href="http://open2ch.net/">open2ch.net</a>及びその互換BBS、<a href="http://www.machi.to/">まちBBS</a>、<a href="http://rentalbbs.livedoor.com/">したらば</a>の閲覧に対応しています。
         </p>
         <p><a href="changelog.html">更新履歴はコチラ</a></p>
-        <p><a href="beta.html">ベータ版はコチラ</a></p>
+        <!-- p><a href="beta.html">ベータ版はコチラ</a></p -->
         <h1>
           <a id="section-download" class="anchor" href="#download" aria-hidden="true"></a>ダウンロード
         </h1>
-        <p>Chrome版: <a id="downloadcrx" href="#"><span id="downloadcrx-filename">読み込み中...</span>（右クリックからダウンロードして下さい。）</a></p>
-        <p>Firefox版: <a id="downloadxpi" href="#"><span id="downloadxpi-filename">読み込み中...</span>（左クリックでインストールして下さい。）</a></p>
+        <p>Chrome/Edge版: <a id="downloadcrx" href="#"><span id="downloadcrx-filename">読み込み中...</span></a></p>
+        <p>Firefox版: <a id="downloadxpi" href="#"><span id="downloadxpi-filename">読み込み中...</span></a></p>
+        <p>左クリックでインストールもしくは、右クリックからダウンロードして下さい。</p>
         <h1>
-          <a id="section-how-to-install-chrome" class="anchor" href="#section-how-to-install-chrome" aria-hidden="true"></a>インストール手順(Chrome)
+          <a id="section-how-to-install-chrome" class="anchor" href="#section-how-to-install-chrome" aria-hidden="true"></a>インストール手順(Chrome/Edge)
         </h1>
         <h2>
           <a id="windows" class="anchor" href="#windows" aria-hidden="true"></a>Windows
@@ -68,51 +69,24 @@
           <a id="registry" class="anchor" href="#registry" aria-hidden="true"></a>レジストリーエディタを使用する方法
         </h3>
         <ol>
-          <li>この方法で設定されるレジストリは、後述のポリシーエディタを使用する方法により設定されるレジストリと同様のものです。</li>
           <li>
             <a href="./readcrx2.reg">readcrx2.reg（右クリックからダウンロードして下さい。）</a>をダウンロードします。
           </li>
           <li>ダウンロードしたregファイルを実行します。</li>
-          <li>上記Chrome版のダウンロードのリンクを左クリックし、インストールします。</li>
-        </ol>
-        <h3>
-          <a id="policy-editor" class="anchor" href="#policy-editor" aria-hidden="true"></a>ポリシーエディタを使用する方法
-        </h3>
-        <ol>
-          <li>
-            <a href="https://support.google.com/chrome/a/answer/187202?hl=ja">デバイス用の Chrome ポリシーを設定する</a>ページより、<a href="http://dl.google.com/dl/edgedl/chrome/policy/policy_templates.zip">Google Chrome テンプレートの zip ファイルとドキュメント</a>をダウンロードします。
-          </li>
-          <li>ダウンロードしたzipファイルを展開します。</li>
-          <li>エクスプローラーで「C:\Windows\PolicyDefinitions」を開きます。</li>
-          <li>展開したzipファイルの中身の「windows\admx」ディレクトリにある、「chrome.admx」ファイルと「ja」ディレクトリを3のディレクトリにコピーします。</li>
-          <li>「gpedit.msc（ローカルグループポリシーエディター）」を実行します。</li>
-          <li>左のサイドバーの「コンピュータの構成-&gt;管理用テンプレート-&gt;Google Chrome-&gt;拡張機能」をクリックします。</li>
-          <li>右側に表示された「拡張機能、アプリ、ユーザースクリプトのインストールソースを設定する」 をダブルクリックします。</li>
-          <li>表示されたウィンドウの「有効」ラジオボタンを選択の上、オプションの「表示」ボタンをクリックします。</li>
-          <li>表示されたウィンドウの値に「https://readcrx-2.github.io/read.crx-2/*」を入力し、「OK」ボタンをクリックします。</li>
-          <li>右側に表示された「拡張機能インストールのホワイトリストを設定する」をダブルクリックします。</li>
-          <li>表示されたウィンドウの「有効」ラジオボタンを選択の上、オプションの「表示」ボタンをクリックします。</li>
-          <li>表示されたウィンドウの値に「eaibgccboimjelecbmgfjhakekfdcpeh」を入力し、「OK」ボタンをクリックします。</li>
-          <li>「適用」ボタンをクリックします。</li>
-          <li>「gpedit.msc（ローカルグループポリシーエディター）」を終了します。</li>
-          <li>上記Chrome版のダウンロードのリンクを左クリックし、インストールします。</li>
+          <li>上記Chrome/Edge版のダウンロードのリンクを左クリックし、インストールします。</li>
         </ol>
         <h2>
           <a id="mac-os-x" class="anchor" href="#mac-os-x" aria-hidden="true"></a>Mac OS X
         </h2>
         <p>Mac OS Xでも、Windowsと同様に制限がかかり始めたため、<a href="#developer-mode">デベロッパーモードを使用する方法</a>もしくは、下記の方法で制限を回避してインストールする必要があります。</p>
         <ol>
-          <li>上記ダウンロードのリンクより、crxファイルをダウンロードします。</li>
           <li>
-            ターミナルを起動し下記のコマンドを実行します。
-            <ul>
-              <li>
-                <pre>curl -s https://readcrx-2.github.io/read.crx-2/profile.mobileconfig | sudo /usr/bin/profiles -I -F -</pre>
-              </li>
-              <li>管理者権限を持っているユーザである必要があります。また、実行時にログインパスワードを求められます。</li>
-            </ul>
+            <a href="./readcrx2.mobileconfig">readcrx2.mobileconfig（右クリックからダウンロードして下さい。）</a>をダウンロードします。
           </li>
-          <li>上記Chrome版のダウンロードのリンクを左クリックし、インストールします。</li>
+          <li>
+            ダウンロードしたmobileconfigファイルを開きます。
+            管理者権限を持っているユーザである必要があります。また、実行時にログインパスワードを求められます。
+          <li>上記Chrome/Edge版のダウンロードのリンクを左クリックし、インストールします。</li>
         </ol>
         <h2>
           <a id="linux" class="anchor" href="#linux" aria-hidden="true"></a>Linux

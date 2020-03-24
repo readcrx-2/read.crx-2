@@ -3,7 +3,7 @@
 <plist version="1.0">
   <dict>
     <key>PayloadIdentifier</key>
-    <string>com.yourname.Angrybird</string>
+    <string>io.github.readcrx-2</string>
     <key>PayloadRemovalDisallowed</key>
     <false />
     <key>PayloadScope</key>
@@ -13,18 +13,18 @@
     <key>PayloadUUID</key>
     <string>FF17CA24-3E3D-4B3B-B051-352147AB3B4F</string>
     <key>PayloadOrganization</key>
-    <string>com.gloops</string>
+    <string>io.github.readcrx-2</string>
     <key>PayloadVersion</key>
-    <integer>1</integer>
+    <integer>2</integer>
     <key>PayloadDisplayName</key>
-    <string>com.gloops</string>
+    <string>io.github.readcrx-2</string>
     <key>PayloadContent</key>
     <array>
       <dict>
         <key>PayloadType</key>
         <string>com.apple.ManagedClient.preferences</string>
         <key>PayloadVersion</key>
-        <integer>1</integer>
+        <integer>2</integer>
         <key>PayloadIdentifier</key>
         <string>io.github.readcrx-2</string>
         <key>PayloadUUID</key>
@@ -45,7 +45,42 @@
                   <key>ExtensionInstallWhitelist</key>
                   <array>
                     <string>eaibgccboimjelecbmgfjhakekfdcpeh</string>
-                    <string>mglmonflpdcckjdpjnpenfdmkbmggmgm</string>
+                  </array>
+                  <key>ExtensionInstallSources</key>
+                  <array>
+                    <string>https://readcrx-2.github.io/read.crx-2/*</string>
+                  </array>
+                </dict>
+              </dict>
+            </array>
+          </dict>
+        </dict>
+      </dict>
+      <dict>
+        <key>PayloadType</key>
+        <string>com.apple.ManagedClient.preferences</string>
+        <key>PayloadVersion</key>
+        <integer>1</integer>
+        <key>PayloadIdentifier</key>
+        <string>io.github.readcrx-2</string>
+        <key>PayloadUUID</key>
+        <string>3AE12FB4-BC77-4399-B22F-1F2105B91410</string>
+        <key>PayloadEnabled</key>
+        <true />
+        <key>PayloadDisplayName</key>
+        <string>Microsoft Edge</string>
+        <key>PayloadContent</key>
+        <dict>
+          <key>com.microsoft.Edge</key>
+          <dict>
+            <key>Forced</key>
+            <array>
+              <dict>
+                <key>mcx_preference_settings</key>
+                <dict>
+                  <key>ExtensionInstallAllowlist</key>
+                  <array>
+                    <string>eaibgccboimjelecbmgfjhakekfdcpeh</string>
                   </array>
                   <key>ExtensionInstallSources</key>
                   <array>

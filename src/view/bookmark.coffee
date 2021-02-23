@@ -21,7 +21,7 @@ app.boot("/view/bookmark.html", ["Board"], (Board) ->
       when "none" then DEFAULT_SORT
       when "board" then JSON.parse(app.config.get("last_board_sort_config"))
       when "bookmark" then JSON.parse(app.config.get("last_bookmark_sort_config"))
-    if lastSort.sort_attribute is "data-thread-number"
+    if !lastSort || lastSort.sort_attribute is "data-thread-number"
       lastSort = DEFAULT_SORT
     tableSorter.updateSnake(lastSort)
 

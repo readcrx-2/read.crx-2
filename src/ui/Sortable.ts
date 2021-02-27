@@ -53,7 +53,7 @@ export default class Sortable {
   private removeTarget() {
     if (!this.target) return;
     this.target.removeClass("sortable_dragging");
-    this.target.style.transform = null;
+    this.target.style.transform = "none";
     this.target.style["will-change"] = null;
     this.target = null;
     this.targetCenter = null;

@@ -26,7 +26,7 @@
         <key>PayloadVersion</key>
         <integer>2</integer>
         <key>PayloadIdentifier</key>
-        <string>io.github.readcrx-2</string>
+        <string>io.github.readcrx-2.Chrome</string>
         <key>PayloadUUID</key>
         <string>F0FCC143-FA87-409F-BFCB-68F3923A5A9E</string>
         <key>PayloadEnabled</key>
@@ -62,7 +62,7 @@
         <key>PayloadVersion</key>
         <integer>1</integer>
         <key>PayloadIdentifier</key>
-        <string>io.github.readcrx-2</string>
+        <string>io.github.readcrx-2.Edge</string>
         <key>PayloadUUID</key>
         <string>3AE12FB4-BC77-4399-B22F-1F2105B91410</string>
         <key>PayloadEnabled</key>

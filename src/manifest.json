@@ -4,9 +4,11 @@
   "update_url": "https://readcrx-2.github.io/read.crx-2/updates.xml",
   "homepage_url": "https://readcrx-2.github.io/read.crx-2/",
   "description": "2chブラウザ",
-  "manifest_version": 2,
+  "manifest_version": 3,
   "minimum_chrome_version": "103",
-  "content_security_policy": "default-src 'self'; img-src 'self' http: https: data:; style-src 'self' 'unsafe-inline'; connect-src 'self' http: https:; frame-src 'self' http: https: blob:; font-src data:; media-src 'self' http: https:",
+  "content_security_policy": {
+    "extension_pages": "default-src 'self'; img-src 'self' http: https: data:; style-src 'self' 'unsafe-inline'; connect-src 'self' http: https:; frame-src 'self' http: https: blob:; font-src data:; media-src 'self' http: https:"
+  },
   "incognito": "split",
   "options_ui": {
     "page": "view/index.html?q=config",
@@ -22,7 +24,9 @@
     "webRequest",
     "webRequestBlocking",
     "declarativeNetRequest",
-    "contextMenus",
+    "contextMenus"
+  ],
+  "host_permissions": [
     "http://*/",
     "https://*/"
   ],
@@ -35,10 +39,11 @@
       }
     ]
   },
-  "background": {
-    "scripts": ["background.js"]
+  "background" : {
+    "scripts": ["background.js"],
+    "service_worker": "background.js"
   },
-  "browser_action": {
+  "action": {
     "default_icon": {
       "16": "img/read.crx_16x16.png",
       "32": "img/read.crx_32x32.png",
@@ -78,23 +83,39 @@
     }
   ],
   "web_accessible_resources": [
-    "/view/index.html",
-    "/view/board.html",
-    "/view/bookmark.html",
-    "/view/bookmark_source_selector.html",
-    "/view/config.html",
-    "/view/empty.html",
-    "/view/history.html",
-    "/view/writehistory.html",
-    "/view/inputurl.html",
-    "/view/search.html",
-    "/view/sidemenu.html",
-    "/view/thread.html"
+    {
+      "resources": [
+        "/view/index.html",
+        "/view/board.html",
+        "/view/bookmark.html",
+        "/view/bookmark_source_selector.html",
+        "/view/config.html",
+        "/view/empty.html",
+        "/view/history.html",
+        "/view/writehistory.html",
+        "/view/inputurl.html",
+        "/view/search.html",
+        "/view/sidemenu.html",
+        "/view/thread.html",
+        "/write/submit_res.html",
+        "/write/submit_thread.html"
+      ],
+      "matches": [
+        "*://*.2ch.net/*",
+        "*://*.5ch.net/*",
+        "*://jbbs.shitaraba.net/*",
+        "*://*.machi.to/*",
+        "*://*.open2ch.net/*",
+        "*://*.2ch.sc/*",
+        "*://*.bbspink.com/*"
+      ],
+      "extension_ids": []
+    }
   ],
   "applications": {
     "gecko": {
       "id": "read.crx2@read.crx",
-      "strict_min_version": "58.0",
+      "strict_min_version": "103",
       "update_url": "https://readcrx-2.github.io/read.crx-2/updates_firefox.json"
     }
   }

@@ -12,7 +12,7 @@ export default class Bookmark {
     this.bel = new BrowserBookmarkEntryList(rootIdNode);
     this.promiseFirstScan = new Promise( (resolve, reject) => {
       this.bel.ready.add( () => {
-        resolve();
+        resolve(true);
 
         this.bel.onChanged.add( ({type: typeName, entry: bookmark}) => {
           let type = "";

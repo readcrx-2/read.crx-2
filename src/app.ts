@@ -41,7 +41,7 @@ export async function boot(path: string, requirements, fn) {
   if (location.pathname === path) {
     const htmlVersion = document.documentElement.dataset.appVersion!;
     if ((await manifest).version !== htmlVersion) {
-      location.reload(true);
+      location.reload();
       return;
     }
 

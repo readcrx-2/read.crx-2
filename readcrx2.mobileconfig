@@ -42,7 +42,7 @@
               <dict>
                 <key>mcx_preference_settings</key>
                 <dict>
-                  <key>ExtensionInstallWhitelist</key>
+                  <key>ExtensionInstallAllowlist</key>
                   <array>
                     <string>eaibgccboimjelecbmgfjhakekfdcpeh</string>
                   </array>

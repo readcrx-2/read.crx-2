@@ -1,7 +1,5 @@
-sassCompiler = require "node-sass"
-sass = require "gulp-sass"
-sass = (require "gulp-sass")(require "sass")
-sass.compiler = sassCompiler
+sassCompiler = require "sass"
+sass = (require "gulp-sass")(sassCompiler)
 
 module.exports =
   compiler:

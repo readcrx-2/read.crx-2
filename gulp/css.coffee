@@ -9,7 +9,7 @@ transform = (browser) ->
     "img($name)": (name) ->
       nameVal = name.getValue()
       transformedStr = "url(/img/#{nameVal}.#{ext})"
-      return c.sass.types.String(transformedStr)
+      return c.sass.SassString(transformedStr)
     "vals($name)": (name) ->
       nameVal = name.getValue()
       str = ""
@@ -18,7 +18,7 @@ transform = (browser) ->
           str = if browser is "chrome" then "auto" else "scroll"
         else
           console.error("Error: Scss vals not found. Unknown val name: #{nameVal}")
-      return c.sass.types.String(str)
+      return c.sass.SassString(str)
   }
 transforms = {}
 for browser in browsers
@@ -33,7 +33,7 @@ ui = (browser) ->
     return gulp.src paths.css.ui
       .pipe($.progenyMtime())
       .pipe($.changed(output, extension: ".css"))
-      .pipe($.sass(sassOptions).on("error", util.onScssError))
+      .pipe($.sass.sync(sassOptions).on("error", util.onScssError))
       .pipe($.postcss(defaultOptions.postcss))
       .pipe($.bom())
       .pipe(gulp.dest(output))
@@ -47,7 +47,7 @@ view = (browser) ->
     return gulp.src paths.css.view
       .pipe($.progenyMtime())
       .pipe($.changed(output, extension: ".css"))
-      .pipe($.sass(sassOptions).on("error", util.onScssError))
+      .pipe($.sass.sync(sassOptions).on("error", util.onScssError))
       .pipe($.postcss(defaultOptions.postcss))
       .pipe($.bom())
       .pipe(gulp.dest(output))
@@ -61,7 +61,7 @@ write = (browser) ->
     return gulp.src paths.css.write
       .pipe($.progenyMtime())
       .pipe($.changed(output, extension: ".css"))
-      .pipe($.sass(sassOptions).on("error", util.onScssError))
+      .pipe($.sass.sync(sassOptions).on("error", util.onScssError))
       .pipe($.postcss(defaultOptions.postcss))
       .pipe($.bom())
       .pipe(gulp.dest(output))

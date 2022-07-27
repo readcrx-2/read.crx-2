@@ -80,12 +80,14 @@ export default class PopupView
   @param {Number} mouseY
   @param {Element} source
   ###
-  show: (@popup, @mouseX, @mouseY, @source) ->
+  show: (popup, mouseX, mouseY, source) ->
+    @popup = popup
+    @source = source
 
     # 同一ソースからのポップアップが既に有る場合は、処理を中断
     if @_popupStack.length > 0
       popupInfo = @_popupStack[@_popupStack.length - 1]
-      return if @source is popupInfo.source
+      return if source is popupInfo.source
 
     # sourceがpopup内のものならば、兄弟ノードの削除
     # それ以外は、全てのノードを削除
@@ -113,10 +115,10 @@ export default class PopupView
 
       # カーソルの上下左右のスペースを測定
       space =
-        left: @mouseX
-        right: bodyWidth - @mouseX
-        top: @mouseY
-        bottom: bodyHeight - @mouseY
+        left: mouseX
+        right: bodyWidth - mouseX
+        top: mouseY
+        bottom: bodyHeight - mouseY
 
       # 通常はカーソル左か右のスペースを用いるが、そのどちらもが狭い場合は上下に配置する
       if Math.max(space.left, space.right) > 400
@@ -151,8 +153,8 @@ export default class PopupView
 
     # マウス座標とコンテキストメニューの監視
     if @_popupStack.length is 0
-      @_currentX = @mouseX
-      @_currentY = @mouseY
+      @_currentX = mouseX
+      @_currentY = mouseY
       @defaultParent.on("mousemove", @_onMouseMove)
       @_popupArea.on("contextmenu_removed", @_onRemoveContextmenu)
 

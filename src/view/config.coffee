@@ -76,12 +76,12 @@ class SettingIO
 class HistoryIO extends SettingIO
   constructor: ({
     name
-    countFunc: @countFunc
+    countFunc
     importFunc
     exportFunc
-    clearFunc: @clearFunc
-    clearRangeFunc: @clearRangeFunc
-    afterChangedFunc: @afterChangedFunc
+    clearFunc
+    clearRangeFunc
+    afterChangedFunc
   }) ->
     super({
       name
@@ -89,8 +89,12 @@ class HistoryIO extends SettingIO
       exportFunc
     })
     @name = name
+    @countFunc = countFunc
     @importFunc = importFunc
     @exportFunc = exportFunc
+    @clearFunc = clearFunc
+    @clearRangeFunc = clearRangeFunc
+    @afterChangedFunc = afterChangedFunc
 
     @$count = $$.I("#{@name}_count")
     @$progress = $$.I("#{@name}_progress")
@@ -200,12 +204,12 @@ class HistoryIO extends SettingIO
 class BookmarkIO extends SettingIO
   constructor: ({
     name
-    countFunc: @countFunc
+    countFunc
     importFunc
     exportFunc
-    clearFunc: @clearFunc
-    clearExpiredFunc: @clearExpiredFunc
-    afterChangedFunc: @afterChangedFunc
+    clearFunc
+    clearExpiredFunc
+    afterChangedFunc
   }) ->
     super({
       name
@@ -213,8 +217,12 @@ class BookmarkIO extends SettingIO
       exportFunc
     })
     @name = name
+    @countFunc = countFunc
     @importFunc = importFunc
     @exportFunc = exportFunc
+    @clearFunc = clearFunc
+    @clearExpiredFunc = clearExpiredFunc
+    @afterChangedFunc = afterChangedFunc
 
     @$count = $$.I("#{@name}_count")
     @$progress = $$.I("#{@name}_progress")

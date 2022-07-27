@@ -16,10 +16,8 @@ for browser in browsers
 view = (browser) ->
   output = paths.output[browser]+"/view"
   return ->
-    return gulp.src paths.html.view
+    return gulp.src paths.html.view, { since: gulp.lastRun(view) }
       .pipe($.plumber(util.onPugError))
-      .pipe($.progenyMtime())
-      .pipe($.changed(output, extension: ".html"))
       .pipe($.filter(paths.html.notBasePugs))
       .pipe($.pug(pugOptions[browser]))
       .pipe(gulp.dest(output))
@@ -27,10 +25,8 @@ view = (browser) ->
 zombie = (browser) ->
   output = paths.output[browser]
   return ->
-    return gulp.src paths.html.zombie
+    return gulp.src paths.html.zombie, { since: gulp.lastRun(zombie) }
       .pipe($.plumber(util.onPugError))
-      .pipe($.progenyMtime())
-      .pipe($.changed(output, extension: ".html"))
       .pipe($.filter(paths.html.notBasePugs))
       .pipe($.pug(pugOptions[browser]))
       .pipe(gulp.dest(output))
@@ -38,10 +34,8 @@ zombie = (browser) ->
 write = (browser) ->
   output = paths.output[browser]+"/write"
   return ->
-    return gulp.src paths.html.write
+    return gulp.src paths.html.write, { since: gulp.lastRun(write) }
       .pipe($.plumber(util.onPugError))
-      .pipe($.progenyMtime())
-      .pipe($.changed(output, extension: ".html"))
       .pipe($.filter(paths.html.notBasePugs))
       .pipe($.pug(pugOptions[browser]))
       .pipe(gulp.dest(output))

@@ -21,16 +21,14 @@ manifest = (browser) ->
 shortQuery = (browser) ->
   output = paths.output[browser]+"/lib"
   return ->
-    return gulp.src paths.lib.shortQuery
+    return gulp.src paths.lib.shortQuery, { since: gulp.lastRun(shortQuery) }
       .pipe($.rename("shortQuery.min.js"))
-      .pipe($.changed(output, transformPath: (p) -> return path.join(path.dirname(p), "shortQuery.min.js")))
       .pipe(gulp.dest(output))
 
 webExtPolyfill = (browser) ->
   output = paths.output[browser]+"/lib"
   return ->
-    return gulp.src paths.lib.webExtPolyfill
-      .pipe($.changed(output))
+    return gulp.src paths.lib.webExtPolyfill, { since: gulp.lastRun(webExtPolyfill) }
       .pipe(gulp.dest(output))
 
 ###

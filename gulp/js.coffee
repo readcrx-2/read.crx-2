@@ -127,9 +127,8 @@ csAddlink = (browser) ->
   output = paths.output[browser]
   ro = makeReplaceOptions(browser)
   return ->
-    return gulp.src paths.js.csAddlink
+    return gulp.src paths.js.csAddlink, { since: gulp.lastRun(csAddlink) }
       .pipe($.plumber(util.onCoffeeError))
-      .pipe($.changed(output, extension: ".js"))
       .pipe($.replace(rr, ro))
       .pipe($.coffee(defaultOptions.coffee))
       .pipe(gulp.dest(output))
@@ -138,9 +137,8 @@ view = (browser) ->
   output = paths.output[browser]+"/view"
   ro = makeReplaceOptions(browser)
   return ->
-    return gulp.src paths.js.view
+    return gulp.src paths.js.view, { since: gulp.lastRun(view) }
       .pipe($.plumber(util.onCoffeeError))
-      .pipe($.changed(output, extension: ".js"))
       .pipe($.replace(rr, ro))
       .pipe($.coffee(defaultOptions.coffee))
       .pipe(gulp.dest(output))
@@ -149,9 +147,8 @@ zombie = (browser) ->
   output = paths.output[browser]
   ro = makeReplaceOptions(browser)
   return ->
-    return gulp.src paths.js.zombie
+    return gulp.src paths.js.zombie, { since: gulp.lastRun(zombie) }
       .pipe($.plumber(util.onCoffeeError))
-      .pipe($.changed(output, extension: ".js"))
       .pipe($.replace(rr, ro))
       .pipe($.coffee(defaultOptions.coffee))
       .pipe(gulp.dest(output))
@@ -160,9 +157,8 @@ csWrite = (browser) ->
   output = paths.output[browser]+"/write"
   ro = makeReplaceOptions(browser)
   return ->
-    return gulp.src paths.js.csWrite
+    return gulp.src paths.js.csWrite, { since: gulp.lastRun(csWrite) }
       .pipe($.plumber(util.onCoffeeError))
-      .pipe($.changed(output, extension: ".js"))
       .pipe($.replace(rr, ro))
       .pipe($.coffee(defaultOptions.coffee))
       .pipe(gulp.dest(output))

@@ -10,9 +10,7 @@ module.exports =
   gulp:
     gulp: require "gulp"
     plumber: require "gulp-plumber"
-    progenyMtime: require "gulp-progeny-mtime"
     filter: require "gulp-filter"
-    changed: require "gulp-changed"
     concat: require "gulp-concat"
     notify: require "gulp-notify"
     merge: require "merge2"
@@ -22,7 +20,6 @@ module.exports =
     sass: sass
     postcss: require "gulp-postcss"
     pug: require "gulp-pug"
-    bom: require "gulp-bom"
   rollup:
     rollup: require "rollup"
     ts: require "rollup-plugin-typescript2"

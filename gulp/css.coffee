@@ -30,12 +30,9 @@ ui = (browser) ->
     functions: transforms[browser]
   })
   return ->
-    return gulp.src paths.css.ui
-      .pipe($.progenyMtime())
-      .pipe($.changed(output, extension: ".css"))
+    return gulp.src paths.css.ui, { since: gulp.lastRun(ui) }
       .pipe($.sass.sync(sassOptions).on("error", util.onScssError))
       .pipe($.postcss(defaultOptions.postcss))
-      .pipe($.bom())
       .pipe(gulp.dest(output))
 
 view = (browser) ->
@@ -44,12 +41,9 @@ view = (browser) ->
     functions: transforms[browser]
   })
   return ->
-    return gulp.src paths.css.view
-      .pipe($.progenyMtime())
-      .pipe($.changed(output, extension: ".css"))
+    return gulp.src paths.css.view, { since: gulp.lastRun(view) }
       .pipe($.sass.sync(sassOptions).on("error", util.onScssError))
       .pipe($.postcss(defaultOptions.postcss))
-      .pipe($.bom())
       .pipe(gulp.dest(output))
 
 write = (browser) ->
@@ -58,12 +52,9 @@ write = (browser) ->
     functions: transforms[browser]
   })
   return ->
-    return gulp.src paths.css.write
-      .pipe($.progenyMtime())
-      .pipe($.changed(output, extension: ".css"))
+    return gulp.src paths.css.write, { since: gulp.lastRun(write) }
       .pipe($.sass.sync(sassOptions).on("error", util.onScssError))
       .pipe($.postcss(defaultOptions.postcss))
-      .pipe($.bom())
       .pipe(gulp.dest(output))
 
 ###

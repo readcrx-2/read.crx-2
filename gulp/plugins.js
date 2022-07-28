@@ -1,5 +1,8 @@
 const sassCompiler = require("sass");
 const sass = (require("gulp-sass"))(sassCompiler);
+const webExt = (async () => {
+  return await import("web-ext");
+})();
 
 module.exports = {
   compiler: {
@@ -31,6 +34,6 @@ module.exports = {
   other: {
     sharp: require("sharp"),
     crx3: require("crx3"),
-    webExt: require("web-ext")
+    webExt: webExt
   }
 };

@@ -10,7 +10,7 @@ const transform = function(browser) {
     "img($name)"(name) {
       const nameVal = name.getValue();
       const transformedStr = `url(/img/${nameVal}.${ext})`;
-      return c.sass.SassString(transformedStr);
+      return new c.sass.SassString(transformedStr, { quotes: false });
     },
     "vals($name)"(name) {
       const nameVal = name.getValue();
@@ -22,7 +22,7 @@ const transform = function(browser) {
         default:
           console.error(`Error: Scss vals not found. Unknown val name: ${nameVal}`);
       }
-      return c.sass.SassString(str);
+      return new c.sass.SassString(str, { quotes: false });
     }
   };
 };

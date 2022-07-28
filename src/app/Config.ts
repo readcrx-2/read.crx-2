@@ -1,7 +1,7 @@
 import Callbacks from "./Callbacks";
 import message from "./Message";
 import LocalStorage from "./LocalStorage";
-import {log, assertArg} from "./Log";
+import { log, assertArg } from "./Log";
 
 export default class Config {
   private static readonly _default: ReadonlyMap<string, string> = new Map([
@@ -26,7 +26,10 @@ export default class Config {
     ["manual_image_load", "off"],
     ["image_blur", "off"],
     ["image_blur_length", "4"],
-    ["image_blur_word", ".{0,5}[^ァ-ヺ^ー]グロ(?:[^ァ-ヺ^ー].{0,5}|$)|.{0,5}死ね.{0,5}"],
+    [
+      "image_blur_word",
+      ".{0,5}[^ァ-ヺ^ー]グロ(?:[^ァ-ヺ^ー].{0,5}|$)|.{0,5}死ね.{0,5}",
+    ],
     ["image_width", "150"],
     ["image_height", "100"],
     ["audio_supported", "off"],
@@ -49,8 +52,14 @@ export default class Config {
     ["aa_min_ratio", "40"],
     ["popup_trigger", "click"],
     ["popup_delay_time", "0"],
-    ["ngwords", "Title: 5ちゃんねるへようこそ\nTitle:【新着情報】5chブラウザがやってきた！"],
-    ["ngobj", "[{\"type\":\"Title\",\"word\":\"5ちゃんねるへようこそ\"},{\"type\":\"Title\",\"word\":\"【新着情報】5chぶらうざがやってきた！\"}]"],
+    [
+      "ngwords",
+      "Title: 5ちゃんねるへようこそ\nTitle:【新着情報】5chブラウザがやってきた！",
+    ],
+    [
+      "ngobj",
+      '[{"type":"Title","word":"5ちゃんねるへようこそ"},{"type":"Title","word":"【新着情報】5chぶらうざがやってきた！"}]',
+    ],
     ["chain_ng", "off"],
     ["chain_ng_id", "off"],
     ["chain_ng_id_by_chain", "off"],
@@ -75,7 +84,10 @@ export default class Config {
     ["no_history", "off"],
     ["no_writehistory", "off"],
     ["user_css", ""],
-    ["bbsmenu", "https://menu.5ch.net/bbsmenu.html\nhttps://menu.2ch.sc/bbsmenu.html\nhttps://menu.open2ch.net/bbsmenu.html\n"],
+    [
+      "bbsmenu",
+      "https://menu.5ch.net/bbsmenu.html\nhttps://menu.2ch.sc/bbsmenu.html\nhttps://menu.open2ch.net/bbsmenu.html\n",
+    ],
     ["bbsmenu_update_interval", "7"],
     ["bbsmenu_option", ""],
     ["useragent", ""],
@@ -83,9 +95,12 @@ export default class Config {
     ["sage_flag", "on"],
     ["mousewheel_change_tab", "on"],
     ["image_replace_dat_obj", ""],
-    ["image_replace_dat", "^https?:\\/\\/(?:www\\.youtube\\.com\\/watch\\?(?:.+&)?v=|youtu\\.be\\/)([\\w\\-]+).*\thttps://img.youtube.com/vi/$1/default.jpg\nhttp:\\/\\/(?:www\\.)?nicovideon?\\.jp\\/(?:(?:watch|thumb)(?:_naisho)?(?:\\?v=|\\/)|\\?p=)(?!am|fz)[a-z]{2}(\\d+)\thttp://tn-skr.smilevideo.jp/smile?i=$1\n\\.(png|jpe?g|gif|bmp|webp)([\\?#:].*)?$\t.$1$2"],
+    [
+      "image_replace_dat",
+      "^https?:\\/\\/(?:www\\.youtube\\.com\\/watch\\?(?:.+&)?v=|youtu\\.be\\/)([\\w\\-]+).*\thttps://img.youtube.com/vi/$1/default.jpg\nhttp:\\/\\/(?:www\\.)?nicovideon?\\.jp\\/(?:(?:watch|thumb)(?:_naisho)?(?:\\?v=|\\/)|\\?p=)(?!am|fz)[a-z]{2}(\\d+)\thttp://tn-skr.smilevideo.jp/smile?i=$1\n\\.(png|jpe?g|gif|bmp|webp)([\\?#:].*)?$\t.$1$2",
+    ],
     ["replace_str_txt_obj", "[]"],
-    ["replace_str_txt", ""]
+    ["replace_str_txt", ""],
   ]);
 
   private readonly _cache = new Map<string, string>();
@@ -96,7 +111,7 @@ export default class Config {
     const ready = new Callbacks();
     this.ready = ready.add.bind(ready);
 
-    ( async () => {
+    (async () => {
       if (this._cache.size > 0) {
         return;
       }
@@ -113,21 +128,21 @@ export default class Config {
       ready.call();
     })();
 
-    this._onChanged = (change, area) => {
+    this._onChanged = (change: object, area: string) => {
       if (area !== "local") {
         return;
       }
 
       for (const [key, val] of Object.entries(change)) {
         if (!key.startsWith("config_")) continue;
-        const {newValue} = <any>val;
+        const { newValue } = <any>val;
 
         if (typeof newValue === "string") {
           this._cache.set(key, newValue);
 
           message.send("config_updated", {
             key: key.slice(7),
-            val: newValue
+            val: newValue,
           });
         } else {
           this._cache.delete(key);
@@ -138,7 +153,7 @@ export default class Config {
     browser.storage.onChanged.addListener(<any>this._onChanged);
   }
 
-  get(key: string): string|null {
+  get(key: string): string | null {
     if (this._cache.has(`config_${key}`)) {
       return this._cache.get(`config_${key}`);
     }
@@ -149,17 +164,11 @@ export default class Config {
   }
 
   getAll(): Record<string, string> {
-    const object = {};
-    for(const [key, val] of Config._default) {
+    const object: Record<string, string> = {};
+    for (const [key, val] of Config._default) {
       object[`config_${key}`] = val;
     }
-    /*
-      // ES2019
-      Object.assign(object, Object.fromEntries(this._cache))
-    */
-    for(const [key, val] of this._cache) {
-      object[key] = val;
-    }
+    Object.assign(object, Object.fromEntries(this._cache));
     return object;
   }
 
@@ -172,8 +181,7 @@ export default class Config {
       typeof key !== "string" ||
       !(typeof val === "string" || typeof val === "number")
     ) {
-      log("error", "app.Config::setに不適切な値が渡されました",
-        arguments);
+      log("error", "app.Config::setに不適切な値が渡されました", arguments);
       throw new Error("app.Config::setに不適切な値が渡されました");
     }
 

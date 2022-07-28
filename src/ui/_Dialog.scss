@@ -33,6 +33,7 @@
   text-align: right;
 }
 
-.dialog_ok, .dialog_no {
+.dialog_ok,
+.dialog_no {
   @include button;
 }

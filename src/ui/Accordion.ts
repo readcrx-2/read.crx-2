@@ -1,5 +1,5 @@
 // @ts-ignore
-import {slideDown, slideUp} from "./Animate.coffee"
+import { slideDown, slideUp } from "./Animate.js";
 
 export default class Accordion {
   protected readonly $element: HTMLElement;
@@ -13,7 +13,7 @@ export default class Accordion {
       openAccordions[i].removeClass("accordion_open");
     }
 
-    this.$element.on("click", ({target}) => {
+    this.$element.on("click", ({ target }: { target: HTMLElement }) => {
       if (target.parent() === this.$element && target.tagName === "H3") {
         if (target.hasClass("accordion_open")) {
           this.close(target);

@@ -1,12 +1,12 @@
-import {URL, fix as fixUrl, threadToBoard} from "./URL"
+import { URL, fix as fixUrl, threadToBoard } from "./URL";
 
 export interface ReadState {
   url: string;
   received: number;
   read: number;
   last: number;
-  offset: number|null;
-  date: number|null;
+  offset: number | null;
+  date: number | null;
 }
 
 export interface Entry {
@@ -14,12 +14,12 @@ export interface Entry {
   title: string;
   type: string;
   bbsType: string;
-  resCount: number|null;
-  readState: ReadState|null;
+  resCount: number | null;
+  readState: ReadState | null;
   expired: boolean;
 }
 
-export function newerEntry(a:Entry, b:Entry): Entry|null {
+export function newerEntry(a: Entry, b: Entry): Entry | null {
   if (a.resCount !== null && b.resCount !== null && a.resCount !== b.resCount) {
     return a.resCount > b.resCount ? a : b;
   }
@@ -76,7 +76,7 @@ export class EntryList {
   }
 
   import(target: EntryList): void {
-    for(const b of target.getAll()) {
+    for (const b of target.getAll()) {
       const a = this.get(b.url);
       if (a) {
         if (a.type === "thread" && b.type === "thread") {
@@ -92,17 +92,17 @@ export class EntryList {
 
   serverMove(from: string, to: string): void {
     // 板ブックマーク移行
-    const boardEntry = this.get(from)
+    const boardEntry = this.get(from);
     if (boardEntry) {
       this.remove(boardEntry.url);
       boardEntry.url = to;
       this.add(boardEntry);
     }
 
-    const tmp = (new URL(to)).origin;
+    const tmp = new URL(to).origin;
     const reg = /^https?:\/\/[\w\.]+\//;
     // スレブックマーク移行
-    for(const entry of this.getThreadsByBoardURL(from)) {
+    for (const entry of this.getThreadsByBoardURL(from)) {
       this.remove(entry.url);
 
       entry.url = entry.url.replace(reg, tmp);
@@ -125,11 +125,11 @@ export class EntryList {
   }
 
   getAllThreads(): Entry[] {
-    return this.getAll().filter( ({type}) => type === "thread");
+    return this.getAll().filter(({ type }) => type === "thread");
   }
 
   getAllBoards(): Entry[] {
-    return this.getAll().filter( ({type}) => type === "board");
+    return this.getAll().filter(({ type }) => type === "board");
   }
 
   getThreadsByBoardURL(url: string): Entry[] {
@@ -152,10 +152,10 @@ export interface BookmarkUpdateEvent {
 }
 
 export class SyncableEntryList extends EntryList {
-  readonly onChanged = new app.Callbacks({persistent: true});
+  readonly onChanged = new app.Callbacks({ persistent: true });
   private readonly observerForSync: Function;
 
-  constructor () {
+  constructor() {
     super();
 
     this.observerForSync = (e: BookmarkUpdateEvent) => {
@@ -168,7 +168,7 @@ export class SyncableEntryList extends EntryList {
 
     this.onChanged.call({
       type: "ADD",
-      entry: app.deepCopy(entry)
+      entry: app.deepCopy(entry),
     });
     return true;
   }
@@ -181,39 +181,37 @@ export class SyncableEntryList extends EntryList {
     if (before.title !== entry.title) {
       this.onChanged.call({
         type: "TITLE",
-        entry: app.deepCopy(entry)
+        entry: app.deepCopy(entry),
       });
     }
 
     if (before.resCount !== entry.resCount) {
       this.onChanged.call({
         type: "RES_COUNT",
-        entry: app.deepCopy(entry)
+        entry: app.deepCopy(entry),
       });
     }
 
     if (
       (!before.readState && entry.readState) ||
-      (
-        (before.readState && entry.readState) && (
-          before.readState.received !== entry.readState.received ||
+      (before.readState &&
+        entry.readState &&
+        (before.readState.received !== entry.readState.received ||
           before.readState.read !== entry.readState.read ||
           before.readState.last !== entry.readState.last ||
           before.readState.offset !== entry.readState.offset ||
-          before.readState.date !== entry.readState.date
-        )
-      )
+          before.readState.date !== entry.readState.date))
     ) {
       this.onChanged.call({
         type: "READ_STATE",
-        entry: app.deepCopy(entry)
+        entry: app.deepCopy(entry),
       });
     }
 
     if (before.expired !== entry.expired) {
       this.onChanged.call({
         type: "EXPIRED",
-        entry: app.deepCopy(entry)
+        entry: app.deepCopy(entry),
       });
     }
     return true;
@@ -226,12 +224,15 @@ export class SyncableEntryList extends EntryList {
 
     this.onChanged.call({
       type: "REMOVE",
-      entry: entry
+      entry: entry,
     });
     return true;
   }
 
-  private manipulateByBookmarkUpdateEvent({type, entry}: BookmarkUpdateEvent) {
+  private manipulateByBookmarkUpdateEvent({
+    type,
+    entry,
+  }: BookmarkUpdateEvent) {
     switch (type) {
       case "ADD":
         this.add(entry);
@@ -250,9 +251,9 @@ export class SyncableEntryList extends EntryList {
 
   private followDeletion(b: EntryList) {
     const aEntries = this.getAll();
-    const bList = new Set(b.getAll().map( ({url}) => url));
+    const bList = new Set(b.getAll().map(({ url }) => url));
 
-    for (const {url} of aEntries) {
+    for (const { url } of aEntries) {
       if (!bList.has(url)) {
         this.remove(url);
       }

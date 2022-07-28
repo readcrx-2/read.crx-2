@@ -1,5 +1,5 @@
 // @ts-ignore
-import {fadeIn, fadeOut} from "./Animate.coffee"
+import { fadeIn, fadeOut } from "./Animate.js";
 
 export default class SearchNextThread {
   private readonly $element: HTMLElement;
@@ -20,7 +20,7 @@ export default class SearchNextThread {
     fadeOut(this.$element);
   }
 
-  async search(url:string, title:string, resString: string) {
+  async search(url: string, title: string, resString: string) {
     const $ol = this.$element.T("ol")[0];
 
     $ol.innerHTML = "";
@@ -30,7 +30,7 @@ export default class SearchNextThread {
     try {
       const res = await app.util.searchNextThread(url, title, resString);
 
-      for(const thread of res) {
+      for (const thread of res) {
         const $li = $__("li").addClass("open_in_rcrx");
         $li.textContent = thread.title;
         $li.dataset.href = thread.url;

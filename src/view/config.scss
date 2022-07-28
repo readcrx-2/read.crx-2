@@ -67,9 +67,9 @@ header {
     border-top-right-radius: 2px;
     min-width: 1em;
     min-height: 1em;
-    background: #CCC;
+    background: #ccc;
     &.selected {
-      background: #FFF;
+      background: #fff;
     }
   }
 }
@@ -107,7 +107,9 @@ label {
   cursor: pointer;
 }
 
-input[type="text"], input[type="number"], textarea {
+input[type="text"],
+input[type="number"],
+textarea {
   @include input-text;
 }
 
@@ -119,7 +121,8 @@ input[type="range"] {
   margin: 8px 2px;
   vertical-align: middle;
 
-  &:focus, &:active {
+  &:focus,
+  &:active {
     outline: none;
   }
 
@@ -140,7 +143,7 @@ section button {
   @include button;
   margin-bottom: 3px;
 
-  & + button{
+  & + button {
     margin-left: 3px;
   }
 }
@@ -191,10 +194,10 @@ section button {
   }
 
   &.grid_column_2 {
-    grid-template-columns: repeat(2, fit-content(100%))
+    grid-template-columns: repeat(2, fit-content(100%));
   }
   &.grid_column_3 {
-    grid-template-columns: repeat(3, fit-content(100%))
+    grid-template-columns: repeat(3, fit-content(100%));
   }
 }
 
@@ -202,13 +205,15 @@ input[type="text"]:invalid {
   background-color: #fcc;
 }
 
-.label_textarea, .label_textarea > a {
+.label_textarea,
+.label_textarea > a {
   vertical-align: top;
 }
 
 .ng_expire_input_container {
   &[data-value="none"] {
-    .ng_expire_input_date, .ng_expire_input_day {
+    .ng_expire_input_date,
+    .ng_expire_input_day {
       display: none;
     }
   }
@@ -236,6 +241,7 @@ input[type="text"]:invalid {
   width: 500px;
 }
 
-.bbsmenu, .useragent {
+.bbsmenu,
+.useragent {
   width: 560px;
 }

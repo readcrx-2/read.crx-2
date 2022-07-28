@@ -1,268 +1,241 @@
-<!doctype html>
+<!DOCTYPE html>
 <html>
   <head>
     <meta charset="utf-8" />
     <title></title>
     <style>
-body {
-  background-color: #333;
-}
-div {
-  width: 100px;
-  height: 100px;
-  float: left;
-  margin: 10px;
-  background-color: #fff;
-}
+      body {
+        background-color: #333;
+      }
+      div {
+        width: 100px;
+        height: 100px;
+        float: left;
+        margin: 10px;
+        background-color: #fff;
+      }
     </style>
     <script src="../../node_modules/raphael/raphael.min.js"></script>
     <script>
-window.addEventListener('load', function() {
-  var add;
+      window.addEventListener(
+        "load",
+        function () {
+          var add;
 
-  add = function(fn) {
-    var div;
+          add = function (fn) {
+            var div;
 
-    div = document.createElement('div');
-    document.body.appendChild(div);
+            div = document.createElement("div");
+            document.body.appendChild(div);
 
-    fn(Raphael(div, 100, 100), div);
-  };
+            fn(Raphael(div, 100, 100), div);
+          };
 
-  //read.crx
-  add(function(paper, container) {
-    paper
-      .rect(0, 0, 100, 100)
-      .attr({
-          fill: '#252525',
-          stroke: null,
-          r: 10
-        });
-    paper
-      .path('M30,20 L35,30 L20,45 L35,85 L65,85 L80,45 L65,30 L70,20 L30,20')
-      .attr({
-          stroke: '#ddd',
-          'stroke-width': 6,
-          'stroke-linecap': 'round',
-          'stroke-linejoin': 'round',
-          fill: '#fff'
-        });
-  });
+          //read.crx
+          add(function (paper, container) {
+            paper.rect(0, 0, 100, 100).attr({
+              fill: "#252525",
+              stroke: null,
+              r: 10,
+            });
+            paper
+              .path(
+                "M30,20 L35,30 L20,45 L35,85 L65,85 L80,45 L65,30 L70,20 L30,20"
+              )
+              .attr({
+                stroke: "#ddd",
+                "stroke-width": 6,
+                "stroke-linecap": "round",
+                "stroke-linejoin": "round",
+                fill: "#fff",
+              });
+          });
 
-  //閉じるボタン（タブ用）
-  add(function(paper, container) {
-    var line;
-    paper
-      .rect(0, 0, 100, 100, 10)
-      .attr({
-          fill: '#a55',
-          stroke: null
-        });
-    line = paper
-      .path('M30,30 L70,70')
-      .attr({
-          stroke: '#fff',
-          'stroke-width': 17.5,
-          'stroke-linecap': 'round'
-        });
-    line
-      .clone()
-      .rotate(90);
-  });
+          //閉じるボタン（タブ用）
+          add(function (paper, container) {
+            var line;
+            paper.rect(0, 0, 100, 100, 10).attr({
+              fill: "#a55",
+              stroke: null,
+            });
+            line = paper.path("M30,30 L70,70").attr({
+              stroke: "#fff",
+              "stroke-width": 17.5,
+              "stroke-linecap": "round",
+            });
+            line.clone().rotate(90);
+          });
 
-  //閉じるボタン（透過背景）
-  add(function(paper, container) {
-    var line;
-    line = paper
-      .path('M30,30 L70,70')
-      .attr({
-          stroke: '#fff',
-          'stroke-width': 17.5,
-          'stroke-linecap': 'round'
-        });
-    line
-      .clone()
-      .rotate(90);
+          //閉じるボタン（透過背景）
+          add(function (paper, container) {
+            var line;
+            line = paper.path("M30,30 L70,70").attr({
+              stroke: "#fff",
+              "stroke-width": 17.5,
+              "stroke-linecap": "round",
+            });
+            line.clone().rotate(90);
 
-    container.style['background-color'] = '#333';
-  });
+            container.style["background-color"] = "#333";
+          });
 
-  //2ペイン
-  add(function(paper, container) {
-    paper
-      .set(
-          paper.rect(10, 10, 80, 80, 5),
-          paper.path('M35,10 L35,90')
-        )
-      .attr({
-          stroke: '#333',
-          'stroke-width': 7.5,
-          fill: null
-        });
-  });
+          //2ペイン
+          add(function (paper, container) {
+            paper
+              .set(paper.rect(10, 10, 80, 80, 5), paper.path("M35,10 L35,90"))
+              .attr({
+                stroke: "#333",
+                "stroke-width": 7.5,
+                fill: null,
+              });
+          });
 
-  //3ペイン
-  add(function(paper, container) {
-    paper
-      .set(
-          paper.rect(10, 10, 80, 80, 5),
-          paper.path('M35,10 L35,90'),
-          paper.path('M35,50 L90,50')
-        )
-      .attr({
-          stroke: '#333',
-          'stroke-width': 7.5,
-          fill: null
-        });
-  });
+          //3ペイン
+          add(function (paper, container) {
+            paper
+              .set(
+                paper.rect(10, 10, 80, 80, 5),
+                paper.path("M35,10 L35,90"),
+                paper.path("M35,50 L90,50")
+              )
+              .attr({
+                stroke: "#333",
+                "stroke-width": 7.5,
+                fill: null,
+              });
+          });
 
-  //虫眼鏡
-  add(function(paper, container) {
-    paper
-      .set(
-          paper.circle(45, 45, 20),
-          paper.path('M60,60 L80,80')
-        )
-      .attr({
-          stroke: '#333',
-          'stroke-width': 10,
-          'stroke-linecap': 'round',
-          fill: null
-        });
-  });
+          //虫眼鏡
+          add(function (paper, container) {
+            paper
+              .set(paper.circle(45, 45, 20), paper.path("M60,60 L80,80"))
+              .attr({
+                stroke: "#333",
+                "stroke-width": 10,
+                "stroke-linecap": "round",
+                fill: null,
+              });
+          });
 
-  //↑
-  add(function(paper, container) {
-    paper
-      .set(
-          paper.path('M50,25 L50,80'),
-          paper.path('M30,45 L50,25 L70,45')
-        )
-      .attr({
-          stroke: '#333',
-          'stroke-width': 10,
-          'stroke-linecap': 'round',
-          'stroke-linejoin': 'round',
-          fill: null
-        });
-  });
+          //↑
+          add(function (paper, container) {
+            paper
+              .set(
+                paper.path("M50,25 L50,80"),
+                paper.path("M30,45 L50,25 L70,45")
+              )
+              .attr({
+                stroke: "#333",
+                "stroke-width": 10,
+                "stroke-linecap": "round",
+                "stroke-linejoin": "round",
+                fill: null,
+              });
+          });
 
-  //スター
-  add(function(paper, container) {
-    paper
-      .path([
-          'M50,15',
-          'L40,40 L15,45 L35,60 L25,85',
-          'L50,70',
-          'L75,85 L65,60 L85,45 L60 40',
-          'z'
-        ].join(''))
-      .attr({
-          fill: '#333',
-          stroke: '#333',
-          'stroke-width': 10,
-          'stroke-linecap': 'round',
-          'stroke-linejoin': 'round'
-        })
-      .scale(0.7, 0.7);
-  });
-
-  //リンク
-  add(function(paper, container) {
-    var p1;
-    p1 = paper
-      .ellipse(50, 27.5, 12, 15)
-      .attr({
-          stroke: '#333',
-          'stroke-width': 8
-        });
-
-    paper
-      .set(
-          p1.rotate(45, 50, 50),
-          p1.clone().rotate(180 + 45, 50, 50),
-          paper
-            .path('M50,40 l0,20')
-            .rotate(45, 50, 50)
-            .attr({
-                stroke: '#333',
-                'stroke-width': 10,
-                'stroke-linecap': 'round'
+          //スター
+          add(function (paper, container) {
+            paper
+              .path(
+                [
+                  "M50,15",
+                  "L40,40 L15,45 L35,60 L25,85",
+                  "L50,70",
+                  "L75,85 L65,60 L85,45 L60 40",
+                  "z",
+                ].join("")
+              )
+              .attr({
+                fill: "#333",
+                stroke: "#333",
+                "stroke-width": 10,
+                "stroke-linecap": "round",
+                "stroke-linejoin": "round",
               })
-        )
-      .scale(0.9, 0.9, 50, 50)
-      .translate(0, 2.5);
-  });
+              .scale(0.7, 0.7);
+          });
 
-  //リロード
-  add(function(paper, container) {
-    paper
-      .set(
-        paper
-          .path('M27.5,27.5 l22.5,22.5 l22.5,-22.5 z')
-          .translate(75 - 50, 40 - 50)
-          .translate(0, 10)
-          .rotate(-45, 75, 40)
-          .scale(0.9, 0.9, 75, 40)
-          .attr({
-              fill: '#333',
-              stroke: null
-            }),
-        paper
-          .path('M70,65 A25,25 0 1 1 75,40')
-          .attr({
-              stroke: '#333',
-              'stroke-width': 8,
-              'stroke-linecap': 'round'
-            })
-      )
-      .translate(0, 5);
-  });
+          //リンク
+          add(function (paper, container) {
+            var p1;
+            p1 = paper.ellipse(50, 27.5, 12, 15).attr({
+              stroke: "#333",
+              "stroke-width": 8,
+            });
 
-  //鉛筆
-  add(function(paper, container) {
-    paper
-      .set(
-        paper
-          .path('M50,10 L40,30 L40,90 L60,90 L60,30 z')
-          .attr({
-              fill: '#333',
-              stroke: null
-            }),
-        paper
-          .path('M40,30 L60,30')
-          .translate(0, 5)
-          .attr({
-              stroke: '#fff',
-              'stroke-width': 7.5
-            })
-      )
-      .rotate(-135, 50, 50)
-      .translate(0, 5);
-  });
+            paper
+              .set(
+                p1.rotate(45, 50, 50),
+                p1.clone().rotate(180 + 45, 50, 50),
+                paper.path("M50,40 l0,20").rotate(45, 50, 50).attr({
+                  stroke: "#333",
+                  "stroke-width": 10,
+                  "stroke-linecap": "round",
+                })
+              )
+              .scale(0.9, 0.9, 50, 50)
+              .translate(0, 2.5);
+          });
 
-  //alpha
-  add(function(paper, container) {
-    paper
-      .rect(0, 0, 80, 30)
-      .attr({
-        stroke: "#fff",
-        fill: "270-#ef2929-#cc0000",
-        r: 5
-      });
+          //リロード
+          add(function (paper, container) {
+            paper
+              .set(
+                paper
+                  .path("M27.5,27.5 l22.5,22.5 l22.5,-22.5 z")
+                  .translate(75 - 50, 40 - 50)
+                  .translate(0, 10)
+                  .rotate(-45, 75, 40)
+                  .scale(0.9, 0.9, 75, 40)
+                  .attr({
+                    fill: "#333",
+                    stroke: null,
+                  }),
+                paper.path("M70,65 A25,25 0 1 1 75,40").attr({
+                  stroke: "#333",
+                  "stroke-width": 8,
+                  "stroke-linecap": "round",
+                })
+              )
+              .translate(0, 5);
+          });
 
-    paper
-      .text(40, 15, "alpha")
-      .attr({
-        font: "inconsolata",
-        "font-size": "25",
-        "font-weight": "bold",
-        fill: "#fff"
-      });
-  });
-}, false);
+          //鉛筆
+          add(function (paper, container) {
+            paper
+              .set(
+                paper.path("M50,10 L40,30 L40,90 L60,90 L60,30 z").attr({
+                  fill: "#333",
+                  stroke: null,
+                }),
+                paper.path("M40,30 L60,30").translate(0, 5).attr({
+                  stroke: "#fff",
+                  "stroke-width": 7.5,
+                })
+              )
+              .rotate(-135, 50, 50)
+              .translate(0, 5);
+          });
+
+          //alpha
+          add(function (paper, container) {
+            paper.rect(0, 0, 80, 30).attr({
+              stroke: "#fff",
+              fill: "270-#ef2929-#cc0000",
+              r: 5,
+            });
+
+            paper.text(40, 15, "alpha").attr({
+              font: "inconsolata",
+              "font-size": "25",
+              "font-weight": "bold",
+              fill: "#fff",
+            });
+          });
+        },
+        false
+      );
     </script>
   </head>
-  <body>
-  </body>
+  <body></body>
 </html>

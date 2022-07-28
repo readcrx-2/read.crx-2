@@ -7,7 +7,7 @@ export class Request {
   readonly timeout: number;
   readonly headers: headerList;
   readonly preventCache: boolean;
-  private xhr: XMLHttpRequest;
+  private xhr?: XMLHttpRequest;
 
   constructor(
     method: string,
@@ -87,7 +87,7 @@ export class Request {
   }
 
   abort(): void {
-    this.xhr.abort();
+    this.xhr?.abort();
   }
 
   static parseHTTPHeader(str: string): headerList {

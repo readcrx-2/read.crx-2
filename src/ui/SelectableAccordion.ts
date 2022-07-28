@@ -54,7 +54,7 @@ export default class SelectableAccordion extends Accordion {
 
     if (current) {
       for (let key = 0; key < repeat; key++) {
-        const prevCurrent = current;
+        const prevCurrent: HTMLElement = current;
 
         if (current.tagName === "A" && current.parent().next()) {
           current = <HTMLElement>current.parent().next().first();
@@ -97,7 +97,7 @@ export default class SelectableAccordion extends Accordion {
 
     if (current) {
       for (let key = 0; key < repeat; key++) {
-        const prevCurrent = current;
+        const prevCurrent: HTMLElement = current;
 
         if (current.tagName === "A" && current.parent().prev()) {
           current = <HTMLElement>current.parent().prev().first();

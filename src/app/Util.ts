@@ -3,7 +3,7 @@ export function deepCopy<T>(src: T): T {
     return src;
   }
 
-  const copy = Array.isArray(src) ? [] : {};
+  const copy: any = Array.isArray(src) ? [] : {};
 
   for (const key in src) {
     copy[<string>key] = deepCopy(src[key]);

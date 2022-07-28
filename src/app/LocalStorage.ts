@@ -14,7 +14,7 @@ export default class LocalStorage {
   }
 
   static async set(key: string, val: string, isJson = false) {
-    const obj = {};
+    const obj: Record<string, string> = {};
     obj[key] = isJson ? JSON.stringify(val) : val;
     await browser.storage.local.set(obj);
   }

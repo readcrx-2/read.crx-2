@@ -43,7 +43,7 @@ export default class Sortable {
   private setTarget(target: HTMLElement) {
     this.target = target;
     this.target.addClass("sortable_dragging");
-    this.target.style["will-change"] = "transform";
+    this.target.style.willChange = "transform";
     this.targetCenter = {
       x: target.offsetLeft + target.offsetWidth / 2,
       y: target.offsetTop + target.offsetHeight / 2,
@@ -54,7 +54,7 @@ export default class Sortable {
     if (!this.target) return;
     this.target.removeClass("sortable_dragging");
     this.target.style.transform = "none";
-    this.target.style["will-change"] = null;
+    this.target.style.willChange = "inherit";
     this.target = null;
     this.targetCenter = null;
   }
@@ -75,7 +75,13 @@ export default class Sortable {
     };
   }
 
-  private onMousedown({ target, button }) {
+  private onMousedown({
+    target,
+    button,
+  }: {
+    target: HTMLElement;
+    button: number;
+  }) {
     if (target === this.container) return;
     if (button !== 0) return;
     if (this.option.exclude && target!.matches(this.option.exclude)) return;
@@ -99,7 +105,7 @@ export default class Sortable {
     this.clicks++;
   }
 
-  private onStart(target) {
+  private onStart(target: HTMLElement) {
     if (!target) return;
     while (target.parent() !== this.container) {
       target = target.parent();
@@ -108,7 +114,7 @@ export default class Sortable {
     document.body.addLast(this.overlay);
   }
 
-  private onMove({ pageX, pageY }) {
+  private onMove({ pageX, pageY }: { pageX: number; pageY: number }) {
     if (!this.isSorting) {
       this.start = {
         x: pageX,
@@ -190,7 +196,7 @@ export default class Sortable {
     }
   }
 
-  private onContextMenu(e) {
+  private onContextMenu(e: any) {
     e.preventDefault();
   }
 }

@@ -9,7 +9,7 @@ type HTMLAudioVisualElement =
 export default class LazyLoad {
   private readonly container: HTMLElement;
   isManualLoad = false;
-  private readonly observer: IntersectionObserver;
+  private readonly observer?: IntersectionObserver;
   private medias: HTMLAudioVisualElement[] = [];
   private pause = false;
   private readonly noNeedAttrs: ReadonlySet<string> = new Set([
@@ -42,7 +42,7 @@ export default class LazyLoad {
     this.scan();
   }
 
-  private onChange(changes) {
+  private onChange(changes: any) {
     if (this.pause) return;
 
     for (const change of changes) {
@@ -70,7 +70,7 @@ export default class LazyLoad {
     this.pause = false;
   }
 
-  private onImmediateLoad(e) {
+  private onImmediateLoad(e: any) {
     this.immediateLoad(e.target);
   }
 
@@ -99,7 +99,13 @@ export default class LazyLoad {
       }
     }
 
-    const load = ({ type, currentTarget }) => {
+    const load = ({
+      type,
+      currentTarget,
+    }: {
+      type: string;
+      currentTarget: HTMLAudioVisualElement;
+    }) => {
       $newImg.off("load", load);
       $newImg.off("error", load);
       $media.parent().replaceChild(currentTarget, $media);
@@ -111,7 +117,7 @@ export default class LazyLoad {
     $newImg.on("load", load);
     $newImg.on("error", load);
 
-    const loadmetadata = (e) => {
+    const loadmetadata = () => {
       if (imgFlg && (faviconFlg || $media.hasClass("loading"))) {
         return;
       }
@@ -168,7 +174,7 @@ export default class LazyLoad {
     }
     $media.removeAttr("data-src");
     if (!this.isManualLoad) {
-      this.observer.unobserve($media);
+      this.observer?.unobserve($media);
     }
   }
 
@@ -179,7 +185,7 @@ export default class LazyLoad {
       )
     );
     for (const media of this.medias) {
-      this.observer.observe(media);
+      this.observer?.observe(media);
     }
   }
 

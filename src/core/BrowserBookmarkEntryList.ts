@@ -2,7 +2,7 @@ import { Entry, SyncableEntryList, newerEntry } from "./BookmarkEntryList";
 import { URL } from "./URL";
 
 export default class BrowserBookmarkEntryList extends SyncableEntryList {
-  private rootNodeId: string;
+  private rootNodeId = "";
   private readonly nodeIdStore = new Map<string, string>();
   readonly ready = new app.Callbacks();
   readonly needReconfigureRootNodeId = new app.Callbacks({ persistent: true });
@@ -118,7 +118,7 @@ export default class BrowserBookmarkEntryList extends SyncableEntryList {
     }
   }
 
-  private applyNodeUpdateToEntryList(nodeId: string, changes) {
+  private applyNodeUpdateToEntryList(nodeId: string, changes: any) {
     const url = this.getURLFromNodeId(nodeId);
 
     if (!url) return;
@@ -189,7 +189,7 @@ export default class BrowserBookmarkEntryList extends SyncableEntryList {
       });
     }
 
-    browser.bookmarks.onCreated.addListener((nodeId, node) => {
+    browser.bookmarks.onCreated.addListener((_nodeId, node) => {
       if (!watching) return;
 
       if (node.parentId === this.rootNodeId && typeof node.url === "string") {

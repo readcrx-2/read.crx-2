@@ -68,7 +68,7 @@ export default class Tab {
   constructor(private $element: Element) {
     const $ele = this.$element.addClass("tab");
     const $ul = $__("ul").addClass("tab_tabbar");
-    $ul.on("notchedmousewheel", (e) => {
+    $ul.on("notchedmousewheel", (e: any) => {
       if (app.config.isOn("mousewheel_change_tab")) {
         e.preventDefault();
 
@@ -80,7 +80,7 @@ export default class Tab {
         }
       }
     });
-    $ul.on("mousedown", (e) => {
+    $ul.on("mousedown", (e: any) => {
       if (e.target.tagName === "IMG") {
         e.preventDefault();
         return;
@@ -95,79 +95,95 @@ export default class Tab {
         this.update(target.dataset.tabid!, { selected: true });
       }
     });
-    $ul.on("click", ({ target }) => {
+    $ul.on("click", ({ target }: { target: HTMLElement }) => {
       if (target.tagName === "IMG") {
-        this.remove(target.parent().dataset.tabid);
+        const tabid = target.parent().dataset.tabid;
+        if (tabid) {
+          this.remove(tabid);
+        }
       }
     });
     new VirtualNotch($ul);
     const $div = $__("div").addClass("tab_container");
     $ele.addLast($ul, $div);
 
-    window.on("message", ({ origin, data: message, source }) => {
-      if (origin !== location.origin) return;
-      if (
-        !["requestTabHistory", "requestTabBack", "requestTabForward"].includes(
-          message.type
-        )
-      ) {
-        return;
-      }
-      if (!this.$element.contains(source.frameElement)) {
-        return;
-      }
+    window.on(
+      "message",
+      ({
+        origin,
+        data: message,
+        source,
+      }: {
+        origin: string;
+        data: any;
+        source: any;
+      }) => {
+        if (origin !== location.origin) return;
+        if (
+          ![
+            "requestTabHistory",
+            "requestTabBack",
+            "requestTabForward",
+          ].includes(message.type)
+        ) {
+          return;
+        }
+        if (!this.$element.contains(source.frameElement)) {
+          return;
+        }
 
-      const tabId = source.frameElement.dataset.tabid!;
-      const history = this.historyStore.get(tabId)!;
+        const tabId = source.frameElement.dataset.tabid!;
+        const history = this.historyStore.get(tabId)!;
 
-      switch (message.type) {
-        case "requestTabHistory":
-          source.postMessage(
-            {
-              type: "responseTabHistory",
-              history,
-            },
-            origin
-          );
-          break;
-        case "requestTabBack":
-          if (history.current > 0) {
-            if (message.newTab) {
-              this.add(history.stack[history.current - 1].url, {
-                title: history.stack[history.current - 1].title,
-                selected: !message.background,
-                lazy: message.background,
-              });
-            } else {
-              history.current--;
-              this.update(tabId, {
-                title: history.stack[history.current].title,
-                url: history.stack[history.current].url,
-                _internal: true,
-              });
+        switch (message.type) {
+          case "requestTabHistory":
+            source.postMessage(
+              {
+                type: "responseTabHistory",
+                history,
+              },
+              origin
+            );
+            break;
+          case "requestTabBack":
+            if (history.current > 0) {
+              if (message.newTab) {
+                this.add(history.stack[history.current - 1].url, {
+                  title: history.stack[history.current - 1].title,
+                  selected: !message.background,
+                  lazy: message.background,
+                });
+              } else {
+                history.current--;
+                this.update(tabId, {
+                  title: history.stack[history.current].title,
+                  url: history.stack[history.current].url,
+                  _internal: true,
+                });
+              }
             }
-          }
-          break;
-        case "requestTabForward":
-          if (history.current < history.stack.length - 1) {
-            if (message.newTab) {
-              this.add(history.stack[history.current + 1].url, {
-                title: history.stack[history.current + 1].title,
-                selected: !message.background,
-                lazy: message.background,
-              });
-            } else {
-              history.current++;
-              this.update(tabId, {
-                title: history.stack[history.current].title,
-                url: history.stack[history.current].url,
-                _internal: true,
-              });
+            break;
+          case "requestTabForward":
+            if (history.current < history.stack.length - 1) {
+              if (message.newTab) {
+                this.add(history.stack[history.current + 1].url, {
+                  title: history.stack[history.current + 1].title,
+                  selected: !message.background,
+                  lazy: message.background,
+                });
+              } else {
+                history.current++;
+                this.update(tabId, {
+                  title: history.stack[history.current].title,
+                  url: history.stack[history.current].url,
+                  _internal: true,
+                });
+              }
             }
-          }
-          break;
+            break;
+        }
       }
-    });
+    );
   }
 
   getAll(): FormatedUrlTabInfo[] {

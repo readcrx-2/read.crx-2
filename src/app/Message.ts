@@ -9,9 +9,16 @@ class Message {
 
   constructor() {
     this._bc = new BroadcastChannel(Message.CHANNEL_NAME);
-    this._bc.on("message", ({ data: { type, message } }) => {
-      this._fire(type, message);
-    });
+    this._bc.on(
+      "message",
+      ({
+        data: { type, message },
+      }: {
+        data: { type: string; message: any };
+      }) => {
+        this._fire(type, message);
+      }
+    );
   }
 
   private async _fire(type: string, message: any) {

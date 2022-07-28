@@ -128,7 +128,7 @@ export default class Config {
       ready.call();
     })();
 
-    this._onChanged = (change, area) => {
+    this._onChanged = (change: object, area: string) => {
       if (area !== "local") {
         return;
       }
@@ -164,17 +164,11 @@ export default class Config {
   }
 
   getAll(): Record<string, string> {
-    const object = {};
+    const object: Record<string, string> = {};
     for (const [key, val] of Config._default) {
       object[`config_${key}`] = val;
     }
-    /*
-      // ES2019
-      Object.assign(object, Object.fromEntries(this._cache))
-    */
-    for (const [key, val] of this._cache) {
-      object[key] = val;
-    }
+    Object.assign(object, Object.fromEntries(this._cache));
     return object;
   }
 

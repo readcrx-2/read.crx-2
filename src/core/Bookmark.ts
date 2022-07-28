@@ -1,7 +1,6 @@
 import { Entry } from "./BookmarkEntryList";
 import BrowserBookmarkEntryList from "./BrowserBookmarkEntryList";
 import { threadToBoard } from "./URL";
-// @ts-ignore
 import { get as getReadState } from "./ReadState.js";
 
 export default class Bookmark {
@@ -10,47 +9,58 @@ export default class Bookmark {
 
   constructor(rootIdNode: string) {
     this.bel = new BrowserBookmarkEntryList(rootIdNode);
-    this.promiseFirstScan = new Promise((resolve, reject) => {
+    this.promiseFirstScan = new Promise((resolve, _reject) => {
       this.bel.ready.add(() => {
         resolve(true);
 
-        this.bel.onChanged.add(({ type: typeName, entry: bookmark }) => {
-          let type = "";
-          switch (typeName) {
-            case "ADD":
-              type = "added";
-              break;
-            case "TITLE":
-              type = "title";
-              break;
-            case "RES_COUNT":
-              type = "res_count";
-              break;
-            case "EXPIRED":
-              type = "expired";
-              break;
-            case "REMOVE":
-              type = "removed";
-              break;
+        this.bel.onChanged.add(
+          ({
+            type: typeName,
+            entry: bookmark,
+          }: {
+            type: string;
+            entry: any;
+          }) => {
+            let type = "";
+            switch (typeName) {
+              case "ADD":
+                type = "added";
+                break;
+              case "TITLE":
+                type = "title";
+                break;
+              case "RES_COUNT":
+                type = "res_count";
+                break;
+              case "EXPIRED":
+                type = "expired";
+                break;
+              case "REMOVE":
+                type = "removed";
+                break;
+            }
+            if (type !== "") {
+              app.message.send("bookmark_updated", { type, bookmark });
+              return;
+            }
+            if (typeName === "READ_STATE") {
+              app.message.send("read_state_updated", {
+                board_url: threadToBoard(bookmark.url),
+                read_state: bookmark.readState,
+              });
+            }
           }
-          if (type !== "") {
-            app.message.send("bookmark_updated", { type, bookmark });
-            return;
-          }
-          if (typeName === "READ_STATE") {
-            app.message.send("read_state_updated", {
-              board_url: threadToBoard(bookmark.url),
-              read_state: bookmark.readState,
-            });
-          }
-        });
+        );
       });
     });
 
     // 鯖移転検出時処理
-    app.message.on("detected_ch_server_move", ({ before, after }) => {
-      this.bel.serverMove(before, after);
-    });
+    app.message.on(
+      "detected_ch_server_move",
+      ({ before, after }: { before: string; after: string }) => {
+        this.bel.serverMove(before, after);
+      }
+    );
   }
 
   get(url: string): Entry | null {
@@ -123,7 +133,7 @@ export default class Bookmark {
     return (await Promise.all(bookmarkData)).every((v) => v);
   }
 
-  async updateReadState(readState): Promise<boolean> {
+  async updateReadState(readState: any): Promise<boolean> {
     // TODO
     const entry = this.bel.get(readState.url);
 

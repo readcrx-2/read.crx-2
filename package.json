@@ -2,11 +2,11 @@
   "name": "read.crx-2",
   "version": "0.0.0",
   "engines": {
-    "node": ">=7.6"
+    "node": ">=18.0"
   },
   "browserslist": [
-    "Chrome >= 75",
-    "Firefox >= 58"
+    "Chrome >= 103",
+    "Firefox >= 103"
   ],
   "devDependencies": {
     "@typescript-eslint/eslint-plugin": "^5.31.0",

@@ -1,5 +1,3 @@
-// TODO: This file was created by bulk-decaffeinate.
-// Sanity-check the conversion and remove this comment.
 app.boot("/view/writehistory.html", function() {
   const $view = document.documentElement;
   const $content = $$.C("content")[0];

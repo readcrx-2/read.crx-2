@@ -1,14 +1,3 @@
-// TODO: This file was created by bulk-decaffeinate.
-// Sanity-check the conversion and remove this comment.
-/*
- * decaffeinate suggestions:
- * DS102: Remove unnecessary code created because of implicit returns
- * DS103: Rewrite code to no longer use __guard__, or convert again using --optional-chaining
- * DS104: Avoid inline assignments
- * DS202: Simplify dynamic range loops
- * DS207: Consider shorter variations of null checks
- * Full docs: https://github.com/decaffeinate/decaffeinate/blob/main/docs/suggestions.md
- */
 (async function() {
   let font;
   if (navigator.platform.includes("Win")) { return; }
@@ -1123,7 +1112,7 @@ ${$res.C("message")[0].innerText.replace(/^/gm, '>')}\n\
 
         for (bookmark of bookmarks) {
           if (bookmark.resCount != null) {var iframe;
-          
+
             read = null;
 
             if (iframe = parent.$$.$(`[data-url=\"${bookmark.url}\"]`)) {

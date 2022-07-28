@@ -1,10 +1,3 @@
-// TODO: This file was created by bulk-decaffeinate.
-// Sanity-check the conversion and remove this comment.
-/*
- * decaffeinate suggestions:
- * DS207: Consider shorter variations of null checks
- * Full docs: https://github.com/decaffeinate/decaffeinate/blob/main/docs/suggestions.md
- */
 const reg = new RegExp(`^https?://(?:\
 (?:(?!find|info|p2)\\w+(?:\\.[25]ch\\.net|\\.2ch\\.sc|\\.open2ch\\.net|\\.bbspink\\.com)/(?:subback/)?\\w+/?(?:index\\.html)?(?:#\\d+)?$)|\
 (?:\\w+(?:\\.[25]ch\\.net|\\.2ch\\.sc|\\.open2ch\\.net|\\.bbspink\\.com)/(?:\\w+/)?test/read\\.cgi/\\w+/\\d+/?.*)|\

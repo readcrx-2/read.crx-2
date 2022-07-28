@@ -1,5 +1,3 @@
-// TODO: This file was created by bulk-decaffeinate.
-// Sanity-check the conversion and remove this comment.
 app.boot("/view/inputurl.html", function() {
   const $view = document.documentElement;
 

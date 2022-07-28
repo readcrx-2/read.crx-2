@@ -1,5 +1,3 @@
-// TODO: This file was created by bulk-decaffeinate.
-// Sanity-check the conversion and remove this comment.
 import * as BBSMenu from "./BBSMenu.js";
 import Board from "./Board.js";
 import * as BoardTitleSolver from "./BoardTitleSolver.js";

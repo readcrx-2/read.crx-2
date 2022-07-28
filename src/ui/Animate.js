@@ -1,10 +1,3 @@
-// TODO: This file was created by bulk-decaffeinate.
-// Sanity-check the conversion and remove this comment.
-/*
- * decaffeinate suggestions:
- * DS103: Rewrite code to no longer use __guard__, or convert again using --optional-chaining
- * Full docs: https://github.com/decaffeinate/decaffeinate/blob/main/docs/suggestions.md
- */
 const _TIMING = {
   duration: 250,
   easing: "ease-in-out"

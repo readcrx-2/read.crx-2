@@ -1,12 +1,3 @@
-// TODO: This file was created by bulk-decaffeinate.
-// Sanity-check the conversion and remove this comment.
-/*
- * decaffeinate suggestions:
- * DS104: Avoid inline assignments
- * DS206: Consider reworking classes to avoid initClass
- * DS207: Consider shorter variations of null checks
- * Full docs: https://github.com/decaffeinate/decaffeinate/blob/main/docs/suggestions.md
- */
 let Write;
 import {URL, parseQuery} from "../core/URL.ts";
 import {fadeIn, fadeOut} from "../ui/Animate.js";
@@ -44,7 +35,7 @@ export default Write = (function() {
       this.prototype.name = null;
       this.prototype.mail = null;
       this.prototype.message = null;
-  
+
       this.prototype.$view = $$.C("view_write")[0];
       this.prototype.timer = null;
       this.prototype._PONG_MSG = "write_iframe_pong";

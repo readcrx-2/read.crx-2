@@ -1,11 +1,3 @@
-// TODO: This file was created by bulk-decaffeinate.
-// Sanity-check the conversion and remove this comment.
-/*
- * decaffeinate suggestions:
- * DS206: Consider reworking classes to avoid initClass
- * DS207: Consider shorter variations of null checks
- * Full docs: https://github.com/decaffeinate/decaffeinate/blob/main/docs/suggestions.md
- */
 import {ask as askBoardTitleSolver} from "./BoardTitleSolver.js";
 import {Request} from "./HTTP.ts";
 import {stampToDate, decodeCharReference} from "./jsutil.js";
@@ -18,7 +10,7 @@ export default (function() {
     static initClass() {
       this.prototype.loaded = "None";
       this.prototype.loaded20 = null;
-  
+
       _parse = protocol => (async function(item) {
         let boardTitle;
         const url = item.T("guid")[0].textContent;
@@ -41,7 +33,7 @@ export default (function() {
           isHttps: (protocol === "https:")
         };
       });
-  
+
       _getDiff = function(a, b) {
         const diffed = [];
         const aUrls = [];

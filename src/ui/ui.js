@@ -1,5 +1,3 @@
-// TODO: This file was created by bulk-decaffeinate.
-// Sanity-check the conversion and remove this comment.
 import AANoOverflow from "./AANoOverflow.js";
 import * as Animate from "./Animate.js";
 import ContextMenu from "./ContextMenu.js";

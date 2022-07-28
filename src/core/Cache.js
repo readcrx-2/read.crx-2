@@ -1,13 +1,3 @@
-// TODO: This file was created by bulk-decaffeinate.
-// Sanity-check the conversion and remove this comment.
-/*
- * decaffeinate suggestions:
- * DS102: Remove unnecessary code created because of implicit returns
- * DS205: Consider reworking code to avoid use of IIFEs
- * DS206: Consider reworking classes to avoid initClass
- * DS207: Consider shorter variations of null checks
- * Full docs: https://github.com/decaffeinate/decaffeinate/blob/main/docs/suggestions.md
- */
 let Cache;
 import {indexedDBRequestToPromise} from "./jsutil.js";
 
@@ -19,7 +9,7 @@ import {indexedDBRequestToPromise} from "./jsutil.js";
 export default Cache = (function() {
   Cache = class Cache {
     static initClass() {
-  
+
       /**
       @property _dbOpen
       @type Promise

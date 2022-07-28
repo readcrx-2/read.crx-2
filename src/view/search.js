@@ -1,3 +1,5 @@
+// TODO: This file was created by bulk-decaffeinate.
+// Sanity-check the conversion and remove this comment.
 app.boot("/view/search.html", ["ThreadSearch"], async function(ThreadSearch) {
   let queries, query;
   try {

@@ -1,3 +1,5 @@
+// TODO: This file was created by bulk-decaffeinate.
+// Sanity-check the conversion and remove this comment.
 import * as BBSMenu from "./BBSMenu.coffee";
 import Board from "./Board.coffee";
 import * as BoardTitleSolver from "./BoardTitleSolver.coffee";

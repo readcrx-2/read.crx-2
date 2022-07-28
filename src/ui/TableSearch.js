@@ -1,3 +1,5 @@
+// TODO: This file was created by bulk-decaffeinate.
+// Sanity-check the conversion and remove this comment.
 let TableSearch;
 export default TableSearch = function($table, method, prop) {
   let dom;

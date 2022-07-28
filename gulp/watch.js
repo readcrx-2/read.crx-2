@@ -1,3 +1,5 @@
+// TODO: This file was created by bulk-decaffeinate.
+// Sanity-check the conversion and remove this comment.
 const gulp = require("gulp");
 const path = require("path");
 const {gulp: $, rollup: _} = require("./plugins");

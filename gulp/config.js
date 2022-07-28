@@ -1,3 +1,5 @@
+// TODO: This file was created by bulk-decaffeinate.
+// Sanity-check the conversion and remove this comment.
 const fs = require("fs-extra");
 const {compiler: c, rollup: _, postcss: p} = require("./plugins");
 const util = require("./util");

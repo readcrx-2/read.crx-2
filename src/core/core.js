@@ -19,7 +19,7 @@ import * as ReplaceStrTxt from "./ReplaceStrTxt.js";
 import Thread from "./Thread.js";
 import ThreadSearch from "./ThreadSearch.js";
 import * as URL from "./URL.ts";
-import * as util from "./util.js";
+import * as util from "./jsutil.js";
 import * as Util from "./Util.ts";
 import * as WriteHistory from "./WriteHistory.js";
 

@@ -8,7 +8,7 @@
  */
 import {ask as askBoardTitleSolver} from "./BoardTitleSolver.js";
 import {Request} from "./HTTP.ts";
-import {stampToDate, decodeCharReference} from "./util.js";
+import {stampToDate, decodeCharReference} from "./jsutil.js";
 import {getProtocol, setProtocol} from "./URL.ts";
 
 export default (function() {

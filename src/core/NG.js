@@ -5,7 +5,7 @@
  * DS207: Consider shorter variations of null checks
  * Full docs: https://github.com/decaffeinate/decaffeinate/blob/main/docs/suggestions.md
  */
-import {decodeCharReference, normalize, stringToDate} from "./util.js";
+import {decodeCharReference, normalize, stringToDate} from "./jsutil.js";
 
 /**
 @class NG

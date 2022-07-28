@@ -11,7 +11,7 @@ import Cache from "./Cache.js";
 import {isNGBoard} from "./NG.js";
 import {Request} from "./HTTP.ts";
 import {URL} from "./URL.ts";
-import {chServerMoveDetect, decodeCharReference, removeNeedlessFromTitle} from "./util.js";
+import {chServerMoveDetect, decodeCharReference, removeNeedlessFromTitle} from "./jsutil.js";
 
 /**
 @class Board

@@ -9,7 +9,7 @@
 import Board from "./Board.js";
 import Cache from "./Cache.js";
 import {Request} from "./HTTP.ts";
-import {chServerMoveDetect, decodeCharReference, removeNeedlessFromTitle} from "./util.js";
+import {chServerMoveDetect, decodeCharReference, removeNeedlessFromTitle} from "./jsutil.js";
 import {URL} from "./URL.ts";
 
 /**

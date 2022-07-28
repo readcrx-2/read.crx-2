@@ -9,7 +9,7 @@
  */
 let Write;
 import {URL, parseQuery} from "../core/URL.ts";
-import {fadeIn, fadeOut} from "../ui/Animate.coffee";
+import {fadeIn, fadeOut} from "../ui/Animate.js";
 
 class Timer {
   static initClass() {

@@ -7,8 +7,8 @@
  * DS207: Consider shorter variations of null checks
  * Full docs: https://github.com/decaffeinate/decaffeinate/blob/main/docs/suggestions.md
  */
-import {get as getBBSMenu} from "./BBSMenu.coffee";
-import Board from "./Board.coffee";
+import {get as getBBSMenu} from "./BBSMenu.js";
+import Board from "./Board.js";
 import {Request} from "./HTTP.ts";
 import {URL} from "./URL.ts";
 import {levenshteinDistance} from "./Util.ts";

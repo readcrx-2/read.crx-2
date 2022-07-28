@@ -117,9 +117,7 @@ background = (browser) ->
       gulp.src paths.lib.webExtPolyfill
     ,
       gulp.src paths.js.background
-        .pipe($.plumber(util.onCoffeeError))
         .pipe($.replace(rr, ro))
-        .pipe($.coffee(defaultOptions.coffee))
     ).pipe($.concat("background.js"))
     .pipe(gulp.dest(output))
 
@@ -128,9 +126,7 @@ csAddlink = (browser) ->
   ro = makeReplaceOptions(browser)
   return ->
     return gulp.src paths.js.csAddlink, { since: gulp.lastRun(csAddlink) }
-      .pipe($.plumber(util.onCoffeeError))
       .pipe($.replace(rr, ro))
-      .pipe($.coffee(defaultOptions.coffee))
       .pipe(gulp.dest(output))
 
 view = (browser) ->
@@ -138,9 +134,7 @@ view = (browser) ->
   ro = makeReplaceOptions(browser)
   return ->
     return gulp.src paths.js.view, { since: gulp.lastRun(view) }
-      .pipe($.plumber(util.onCoffeeError))
       .pipe($.replace(rr, ro))
-      .pipe($.coffee(defaultOptions.coffee))
       .pipe(gulp.dest(output))
 
 zombie = (browser) ->
@@ -148,9 +142,7 @@ zombie = (browser) ->
   ro = makeReplaceOptions(browser)
   return ->
     return gulp.src paths.js.zombie, { since: gulp.lastRun(zombie) }
-      .pipe($.plumber(util.onCoffeeError))
       .pipe($.replace(rr, ro))
-      .pipe($.coffee(defaultOptions.coffee))
       .pipe(gulp.dest(output))
 
 csWrite = (browser) ->
@@ -158,9 +150,7 @@ csWrite = (browser) ->
   ro = makeReplaceOptions(browser)
   return ->
     return gulp.src paths.js.csWrite, { since: gulp.lastRun(csWrite) }
-      .pipe($.plumber(util.onCoffeeError))
       .pipe($.replace(rr, ro))
-      .pipe($.coffee(defaultOptions.coffee))
       .pipe(gulp.dest(output))
 
 ###

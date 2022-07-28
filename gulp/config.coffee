@@ -14,15 +14,15 @@ do ->
     output: {}
     js:
       app: "#{i}/app.ts"
-      core: "#{i}/core/core.coffee"
-      ui: "#{i}/ui/ui.coffee"
-      submitRes: "#{i}/write/submit_res.coffee"
-      submitThread: "#{i}/write/submit_thread.coffee"
-      background: "#{i}/background.coffee"
-      csAddlink: "#{i}/cs_addlink.coffee"
-      view: "#{i}/view/*.coffee"
-      zombie: "#{i}/zombie.coffee"
-      csWrite: "#{i}/write/cs_write.coffee"
+      core: "#{i}/core/core.js"
+      ui: "#{i}/ui/ui.js"
+      submitRes: "#{i}/write/submit_res.js"
+      submitThread: "#{i}/write/submit_thread.js"
+      background: "#{i}/background.js"
+      csAddlink: "#{i}/cs_addlink.js"
+      view: "#{i}/view/*.js"
+      zombie: "#{i}/zombie.js"
+      csWrite: "#{i}/write/cs_write.js"
     css:
       ui: ["#{i}/ui/*.scss", "#{i}/_common.scss"]
       view: ["#{i}/view/*.scss", "#{i}/_common.scss"]
@@ -110,9 +110,6 @@ defaultOptions =
         alwaysStrict: true
         strictNullChecks: true
         noImplicitThis: true
-  coffee:
-    coffee: c.coffee
-    bare: true
   sass:
     outputStyle: "compressed"
   postcss: [
@@ -128,7 +125,6 @@ defaultOptions =
 defaultOptions.rollup =
   in:
     plugins: [
-      _.coffee(defaultOptions.coffee)
       _.ts(defaultOptions.rollupTs)
     ]
     context: "window"

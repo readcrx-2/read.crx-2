@@ -9,7 +9,7 @@
  * Full docs: https://github.com/decaffeinate/decaffeinate/blob/main/docs/suggestions.md
  */
 let Cache;
-import {indexedDBRequestToPromise} from "./util.coffee";
+import {indexedDBRequestToPromise} from "./util.js";
 
 /**
 @class Cache

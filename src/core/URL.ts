@@ -1,8 +1,8 @@
 import {Request} from "./HTTP"
 // @ts-ignore
-import {fetch as fetchBBSMenu} from "./BBSMenu.coffee"
+import {fetch as fetchBBSMenu} from "./BBSMenu.js"
 // @ts-ignore
-import Cache from "./Cache.coffee"
+import Cache from "./Cache.js"
 
 export interface GuessResult {
   type: "thread"|"board"|"unknown";

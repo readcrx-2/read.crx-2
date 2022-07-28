@@ -5,7 +5,7 @@
  * DS207: Consider shorter variations of null checks
  * Full docs: https://github.com/decaffeinate/decaffeinate/blob/main/docs/suggestions.md
  */
-import Cache from "./Cache.coffee";
+import Cache from "./Cache.js";
 import {Request} from "./HTTP.ts";
 import {fix as fixUrl, tsld as getTsld} from "./URL.ts";
 

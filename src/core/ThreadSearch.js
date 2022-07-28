@@ -6,9 +6,9 @@
  * DS207: Consider shorter variations of null checks
  * Full docs: https://github.com/decaffeinate/decaffeinate/blob/main/docs/suggestions.md
  */
-import {ask as askBoardTitleSolver} from "./BoardTitleSolver.coffee";
+import {ask as askBoardTitleSolver} from "./BoardTitleSolver.js";
 import {Request} from "./HTTP.ts";
-import {stampToDate, decodeCharReference} from "./util.coffee";
+import {stampToDate, decodeCharReference} from "./util.js";
 import {getProtocol, setProtocol} from "./URL.ts";
 
 export default (function() {

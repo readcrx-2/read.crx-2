@@ -5,7 +5,7 @@
  * DS207: Consider shorter variations of null checks
  * Full docs: https://github.com/decaffeinate/decaffeinate/blob/main/docs/suggestions.md
  */
-import {indexedDBRequestToPromise} from "./util.coffee";
+import {indexedDBRequestToPromise} from "./util.js";
 import {URL} from "./URL.ts";
 
 /**

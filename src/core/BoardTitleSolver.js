@@ -6,7 +6,7 @@
  * DS207: Consider shorter variations of null checks
  * Full docs: https://github.com/decaffeinate/decaffeinate/blob/main/docs/suggestions.md
  */
-import {get as getBBSMenu, target as BBSMenuTarget} from "./BBSMenu.coffee";
+import {get as getBBSMenu, target as BBSMenuTarget} from "./BBSMenu.js";
 import {Request} from "./HTTP.ts";
 import {URL} from "./URL.ts";
 

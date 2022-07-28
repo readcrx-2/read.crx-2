@@ -119,16 +119,3 @@ exports.onScssError = $.notify.onError( (e) ->
     message: e.message
   }
 )
-
-_spaceC = " ".repeat("[hh:mm:ss][CoffeeScript] ".length)
-exports.onCoffeeError = $.notify.onError( (e) ->
-  file = path.relative(process.cwd(), e.filename)
-  prefix = "[#{GRAY}#{getTimeString()}#{RESET}][#{GRAY}CoffeeScript#{RESET}] "
-  mes = prefix + "#{RED}Error(#{e.name})#{RESET} '#{CYAN}#{file}#{RESET}' L#{e.location.first_line+1}-#{e.location.last_line+1}:#{e.location.first_column+1}-#{e.location.last_column+1}: #{e.message}"
-  mes += "\n" + _spaceC + e.stack.replace(/\n/g, "\n"+_spaceC)
-  console.error(mes)
-  return {
-    title: "Error Coffee #{file} L#{e.location.first_line+1}:#{e.location.first_column+1}"
-    message: e.message
-  }
-)

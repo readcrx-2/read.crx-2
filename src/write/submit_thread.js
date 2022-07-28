@@ -8,7 +8,7 @@
  * DS207: Consider shorter variations of null checks
  * Full docs: https://github.com/decaffeinate/decaffeinate/blob/main/docs/suggestions.md
  */
-import Write from "./write.coffee";
+import Write from "./write.js";
 
 Write.setFont();
 

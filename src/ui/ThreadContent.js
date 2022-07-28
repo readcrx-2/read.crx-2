@@ -12,7 +12,7 @@
  * Full docs: https://github.com/decaffeinate/decaffeinate/blob/main/docs/suggestions.md
  */
 let ThreadContent;
-import MediaContainer from "./MediaContainer.coffee";
+import MediaContainer from "./MediaContainer.js";
 
 /**
 @class ThreadContent

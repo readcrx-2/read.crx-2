@@ -2,7 +2,7 @@ import {Entry} from "./BookmarkEntryList"
 import BrowserBookmarkEntryList from "./BrowserBookmarkEntryList"
 import {threadToBoard} from "./URL"
 // @ts-ignore
-import {get as getReadState} from "./ReadState.coffee"
+import {get as getReadState} from "./ReadState.js"
 
 export default class Bookmark {
   readonly bel: BrowserBookmarkEntryList;

@@ -4,7 +4,6 @@ sass = (require "gulp-sass")(sassCompiler)
 module.exports =
   compiler:
     ts: require "typescript"
-    coffee: require "coffeescript"
     sass: sassCompiler
     pug: require "pug"
   gulp:
@@ -15,7 +14,6 @@ module.exports =
     notify: require "gulp-notify"
     merge: require "merge2"
     rename: require "gulp-rename"
-    coffee: require "gulp-coffee"
     replace: require "gulp-replace"
     sass: sass
     postcss: require "gulp-postcss"
@@ -23,7 +21,6 @@ module.exports =
   rollup:
     rollup: require "rollup"
     ts: require "rollup-plugin-typescript2"
-    coffee: require "rollup-plugin-coffee-script"
     replace: require "rollup-plugin-replace"
   postcss:
     autoprefixer: require "autoprefixer"

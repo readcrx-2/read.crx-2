@@ -6,10 +6,10 @@
  * DS207: Consider shorter variations of null checks
  * Full docs: https://github.com/decaffeinate/decaffeinate/blob/main/docs/suggestions.md
  */
-import Board from "./Board.coffee";
-import Cache from "./Cache.coffee";
+import Board from "./Board.js";
+import Cache from "./Cache.js";
 import {Request} from "./HTTP.ts";
-import {chServerMoveDetect, decodeCharReference, removeNeedlessFromTitle} from "./util.coffee";
+import {chServerMoveDetect, decodeCharReference, removeNeedlessFromTitle} from "./util.js";
 import {URL} from "./URL.ts";
 
 /**

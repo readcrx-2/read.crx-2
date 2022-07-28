@@ -11,8 +11,8 @@
  * Full docs: https://github.com/decaffeinate/decaffeinate/blob/main/docs/suggestions.md
  */
 let ThreadList;
-import ContextMenu from "./ContextMenu.coffee";
-import TableSearch from "./TableSearch.coffee";
+import ContextMenu from "./ContextMenu.js";
+import TableSearch from "./TableSearch.js";
 
 /**
 @class ThreadList

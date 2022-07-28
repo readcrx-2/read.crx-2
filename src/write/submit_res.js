@@ -1,7 +1,7 @@
 // TODO: This file was created by bulk-decaffeinate.
 // Sanity-check the conversion and remove this comment.
-import Write from "./write.coffee";
-import {getByUrl as getWriteHistoryByUrl} from "../core/WriteHistory.coffee";
+import Write from "./write.js";
+import {getByUrl as getWriteHistoryByUrl} from "../core/WriteHistory.js";
 import {URL} from "../core/URL.ts";
 
 Write.setFont();

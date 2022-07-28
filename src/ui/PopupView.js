@@ -1,356 +1,399 @@
-import ContextMenu from "./ContextMenu.coffee"
+/*
+ * decaffeinate suggestions:
+ * DS102: Remove unnecessary code created because of implicit returns
+ * DS207: Consider shorter variations of null checks
+ * Full docs: https://github.com/decaffeinate/decaffeinate/blob/main/docs/suggestions.md
+ */
+import ContextMenu from "./ContextMenu.coffee";
 
-###*
+/**
 @class PopupView
 @constructor
 @param {Element} defaultParent
-###
-export default class PopupView
+*/
+export default class PopupView {
 
-  constructor: (@defaultParent)->
-    ###*
+  constructor(defaultParent){
+    /**
     @property _popupStack
     @type Array
     @private
-    ###
-    @_popupStack = []
+    */
+    this._onMouseEnter = this._onMouseEnter.bind(this);
+    this._onMouseLeave = this._onMouseLeave.bind(this);
+    this._onMouseMove = this._onMouseMove.bind(this);
+    this._onRemoveContextmenu = this._onRemoveContextmenu.bind(this);
+    this.defaultParent = defaultParent;
+    this._popupStack = [];
 
-    ###*
+    /**
     @property _popupArea
     @type Object
     @private
-    ###
-    @_popupArea = @defaultParent.C("popup_area")[0]
+    */
+    this._popupArea = this.defaultParent.C("popup_area")[0];
 
-    ###*
+    /**
     @property _popupStyle
     @type Object
     @private
-    ###
-    @_popupStyle = null
+    */
+    this._popupStyle = null;
 
-    ###*
+    /**
     @property _popupMarginHeight
     @type Number
     @private
-    ###
-    @_popupMarginHeight = -1
+    */
+    this._popupMarginHeight = -1;
 
-    ###*
+    /**
     @property _currentX
     @type Number
     @private
-    ###
-    @_currentX = 0
+    */
+    this._currentX = 0;
 
-    ###*
+    /**
     @property _currentY
     @type Number
     @private
-    ###
-    @_currentY = 0
+    */
+    this._currentY = 0;
 
-    ###*
+    /**
     @property _delayTime
     @type Number
     @private
-    ###
-    @_delayTime = parseInt(app.config.get("popup_delay_time"))
+    */
+    this._delayTime = parseInt(app.config.get("popup_delay_time"));
 
-    ###*
+    /**
     @property _delayTimeoutID
     @type Number
     @private
-    ###
-    @_delayTimeoutID = 0
+    */
+    this._delayTimeoutID = 0;
 
-    ###*
+    /**
     @property _delayRemoveTimeoutID
     @type Number
     @private
-    ###
-    @_delayRemoveTimeoutID = 0
+    */
+    this._delayRemoveTimeoutID = 0;
 
-    return
+  }
 
-  ###*
+  /**
   @method show
   @param {Element} popup
   @param {Number} mouseX
   @param {Number} mouseY
   @param {Element} source
-  ###
-  show: (popup, mouseX, mouseY, source) ->
-    @popup = popup
-    @source = source
+  */
+  async show(popup, mouseX, mouseY, source) {
+    let popupInfo;
+    this.popup = popup;
+    this.source = source;
 
-    # 同一ソースからのポップアップが既に有る場合は、処理を中断
-    if @_popupStack.length > 0
-      popupInfo = @_popupStack[@_popupStack.length - 1]
-      return if source is popupInfo.source
+    // 同一ソースからのポップアップが既に有る場合は、処理を中断
+    if (this._popupStack.length > 0) {
+      popupInfo = this._popupStack[this._popupStack.length - 1];
+      if (source === popupInfo.source) { return; }
+    }
 
-    # sourceがpopup内のものならば、兄弟ノードの削除
-    # それ以外は、全てのノードを削除
-    if @source.closest(".popup")
-      @source.closest(".popup").addClass("active")
-      @_remove(false)
-    else
-      @_remove(true)
+    // sourceがpopup内のものならば、兄弟ノードの削除
+    // それ以外は、全てのノードを削除
+    if (this.source.closest(".popup")) {
+      this.source.closest(".popup").addClass("active");
+      this._remove(false);
+    } else {
+      this._remove(true);
+    }
 
-    # 待機中の処理があればキャンセルする
-    if @_delayTimeoutID isnt 0
-      clearTimeout(@_delayTimeoutID)
-      @_delayTimeoutID = 0
+    // 待機中の処理があればキャンセルする
+    if (this._delayTimeoutID !== 0) {
+      clearTimeout(this._delayTimeoutID);
+      this._delayTimeoutID = 0;
+    }
 
-    # コンテキストメニューの破棄
-    ContextMenu.remove()
+    // コンテキストメニューの破棄
+    ContextMenu.remove();
 
-    # 表示位置の決定
-    setDispPosition = (popupNode) =>
-      margin = 20
-      {offsetHeight: bodyHeight, offsetWidth: bodyWidth} = document.body
-      viewTop = @defaultParent.$(".nav_bar").offsetHeight
-      viewHeight = bodyHeight - viewTop
-      maxWidth = bodyWidth - margin * 2
+    // 表示位置の決定
+    const setDispPosition = popupNode => {
+      let cssTop;
+      const margin = 20;
+      const {offsetHeight: bodyHeight, offsetWidth: bodyWidth} = document.body;
+      const viewTop = this.defaultParent.$(".nav_bar").offsetHeight;
+      const viewHeight = bodyHeight - viewTop;
+      const maxWidth = bodyWidth - (margin * 2);
 
-      # カーソルの上下左右のスペースを測定
-      space =
-        left: mouseX
-        right: bodyWidth - mouseX
-        top: mouseY
+      // カーソルの上下左右のスペースを測定
+      const space = {
+        left: mouseX,
+        right: bodyWidth - mouseX,
+        top: mouseY,
         bottom: bodyHeight - mouseY
+      };
 
-      # 通常はカーソル左か右のスペースを用いるが、そのどちらもが狭い場合は上下に配置する
-      if Math.max(space.left, space.right) > 400
-        # 例え右より左が広くても、右に十分なスペースが有れば右に配置
-        if space.right > 350
-          popupNode.style.left = "#{space.left + margin}px"
-          popupNode.style.maxWidth = "#{maxWidth - space.left}px"
-        else
-          popupNode.style.right = "#{space.right + margin}px"
-          popupNode.style.maxWidth = "#{maxWidth - space.right}px"
-        cursorTop = Math.max(space.top, viewTop + margin * 2)
-        outerHeight = @_getOuterHeight(popupNode, true)
-        if viewHeight > outerHeight + margin
-          cssTop = Math.min(cursorTop, bodyHeight - outerHeight) - margin
-        else
-          cssTop = viewTop + margin
-        popupNode.style.top = "#{cssTop}px"
-        popupNode.style.maxHeight = "#{bodyHeight - cssTop - margin}px"
-      else
-        popupNode.style.left = "#{margin}px"
-        popupNode.style.maxWidth = "#{maxWidth}px"
-        # 例え上より下が広くても、上に十分なスペースが有れば上に配置
-        if space.top > Math.min(350, space.bottom)
-          cssBottom = Math.max(space.bottom, margin)
-          popupNode.style.bottom = "#{cssBottom}px"
-          popupNode.style.maxHeight = "#{viewHeight - cssBottom - margin}px"
-        else
-          cssTop = bodyHeight - space.bottom + margin
-          popupNode.style.top = "#{cssTop}px"
-          popupNode.style.maxHeight = "#{viewHeight - cssTop - margin}px"
-      return
+      // 通常はカーソル左か右のスペースを用いるが、そのどちらもが狭い場合は上下に配置する
+      if (Math.max(space.left, space.right) > 400) {
+        // 例え右より左が広くても、右に十分なスペースが有れば右に配置
+        if (space.right > 350) {
+          popupNode.style.left = `${space.left + margin}px`;
+          popupNode.style.maxWidth = `${maxWidth - space.left}px`;
+        } else {
+          popupNode.style.right = `${space.right + margin}px`;
+          popupNode.style.maxWidth = `${maxWidth - space.right}px`;
+        }
+        const cursorTop = Math.max(space.top, viewTop + (margin * 2));
+        const outerHeight = this._getOuterHeight(popupNode, true);
+        if (viewHeight > (outerHeight + margin)) {
+          cssTop = Math.min(cursorTop, bodyHeight - outerHeight) - margin;
+        } else {
+          cssTop = viewTop + margin;
+        }
+        popupNode.style.top = `${cssTop}px`;
+        popupNode.style.maxHeight = `${bodyHeight - cssTop - margin}px`;
+      } else {
+        popupNode.style.left = `${margin}px`;
+        popupNode.style.maxWidth = `${maxWidth}px`;
+        // 例え上より下が広くても、上に十分なスペースが有れば上に配置
+        if (space.top > Math.min(350, space.bottom)) {
+          const cssBottom = Math.max(space.bottom, margin);
+          popupNode.style.bottom = `${cssBottom}px`;
+          popupNode.style.maxHeight = `${viewHeight - cssBottom - margin}px`;
+        } else {
+          cssTop = (bodyHeight - space.bottom) + margin;
+          popupNode.style.top = `${cssTop}px`;
+          popupNode.style.maxHeight = `${viewHeight - cssTop - margin}px`;
+        }
+      }
+    };
 
-    # マウス座標とコンテキストメニューの監視
-    if @_popupStack.length is 0
-      @_currentX = mouseX
-      @_currentY = mouseY
-      @defaultParent.on("mousemove", @_onMouseMove)
-      @_popupArea.on("contextmenu_removed", @_onRemoveContextmenu)
+    // マウス座標とコンテキストメニューの監視
+    if (this._popupStack.length === 0) {
+      this._currentX = mouseX;
+      this._currentY = mouseY;
+      this.defaultParent.on("mousemove", this._onMouseMove);
+      this._popupArea.on("contextmenu_removed", this._onRemoveContextmenu);
+    }
 
-    # 新規ノードの設定
-    setupNewNode = (sourceNode, popupNode) =>
-      # CSSContainmentの恩恵を受けるために表示位置決定前にクラスを付加する
-      popupNode.addClass("popup")
+    // 新規ノードの設定
+    const setupNewNode = (sourceNode, popupNode) => {
+      // CSSContainmentの恩恵を受けるために表示位置決定前にクラスを付加する
+      popupNode.addClass("popup");
 
-      # 表示位置の決定
-      setDispPosition(popupNode)
+      // 表示位置の決定
+      setDispPosition(popupNode);
 
-      # ノードの設定
-      sourceNode.addClass("popup_source")
-      sourceNode.setAttr("stack-index", @_popupStack.length)
-      sourceNode.on("mouseenter", @_onMouseEnter)
-      sourceNode.on("mouseleave", @_onMouseLeave)
-      if app.config.get("aa_font") is "aa"
-        popupNode.addClass("config_use_aa_font")
-      popupNode.setAttr("stack-index", @_popupStack.length)
-      popupNode.on("mouseenter", @_onMouseEnter)
-      popupNode.on("mouseleave", @_onMouseLeave)
+      // ノードの設定
+      sourceNode.addClass("popup_source");
+      sourceNode.setAttr("stack-index", this._popupStack.length);
+      sourceNode.on("mouseenter", this._onMouseEnter);
+      sourceNode.on("mouseleave", this._onMouseLeave);
+      if (app.config.get("aa_font") === "aa") {
+        popupNode.addClass("config_use_aa_font");
+      }
+      popupNode.setAttr("stack-index", this._popupStack.length);
+      popupNode.on("mouseenter", this._onMouseEnter);
+      popupNode.on("mouseleave", this._onMouseLeave);
 
-      # リンク情報の保管
-      popupInfo =
-        source: sourceNode
+      // リンク情報の保管
+      popupInfo = {
+        source: sourceNode,
         popup: popupNode
-      @_popupStack.push(popupInfo)
+      };
+      this._popupStack.push(popupInfo);
 
-      return
+    };
 
-    # 即時表示の場合
-    if @_delayTime < 100
-      # 新規ノードの設定
-      setupNewNode(@source, @popup)
-      # popupの表示
-      @_popupArea.addLast(@popup)
-      # ノードのアクティブ化
-      await app.defer()
-      @_activateNode()
+    // 即時表示の場合
+    if (this._delayTime < 100) {
+      // 新規ノードの設定
+      setupNewNode(this.source, this.popup);
+      // popupの表示
+      this._popupArea.addLast(this.popup);
+      // ノードのアクティブ化
+      await app.defer();
+      this._activateNode();
 
-    # 遅延表示の場合
-    else
-      do (sourceNode = @source, popupNode = @popup) =>
-        @_delayTimeoutID = setTimeout( =>
-          @_delayTimeoutID = 0
-          # マウス座標がポップアップ元のままの場合のみ実行する
-          ele = document.elementFromPoint(@_currentX, @_currentY)
-          if ele is sourceNode
-            # 新規ノードの設定
-            setupNewNode(sourceNode, popupNode)
-            # ノードのアクティブ化
-            sourceNode.addClass("active")
-            # popupの表示
-            @_popupArea.addLast(popupNode)
-        , @_delayTime)
-        return
+    // 遅延表示の場合
+    } else {
+      ((sourceNode, popupNode) => {
+        this._delayTimeoutID = setTimeout( () => {
+          this._delayTimeoutID = 0;
+          // マウス座標がポップアップ元のままの場合のみ実行する
+          const ele = document.elementFromPoint(this._currentX, this._currentY);
+          if (ele === sourceNode) {
+            // 新規ノードの設定
+            setupNewNode(sourceNode, popupNode);
+            // ノードのアクティブ化
+            sourceNode.addClass("active");
+            // popupの表示
+            return this._popupArea.addLast(popupNode);
+          }
+        }
+        , this._delayTime);
+      })(this.source, this.popup);
+    }
 
-    return
+  }
 
-  ###*
+  /**
   @method _remove
   @param {Boolean} forceRemove
-  ###
-  _remove: (forceRemove) ->
-    return if @_popupArea.hasClass("has_contextmenu")
-    for {popup, source} in @_popupStack by -1
-      # 末端の非アクティブ・ノードを選択
-      break if (
-        !forceRemove and
+  */
+  _remove(forceRemove) {
+    if (this._popupArea.hasClass("has_contextmenu")) { return; }
+    for (let i = this._popupStack.length - 1; i >= 0; i--) {
+      // 末端の非アクティブ・ノードを選択
+      const {popup, source} = this._popupStack[i];
+      if (
+        !forceRemove &&
         (
-          source.hasClass("active") or
+          source.hasClass("active") ||
           popup.hasClass("active")
         )
-      )
-      # 該当ノードの除去
-      source.off("mouseenter", @_onMouseEnter)
-      source.off("mouseleave", @_onMouseLeave)
-      popup.off("mouseenter", @_onMouseEnter)
-      popup.off("mouseleave", @_onMouseLeave)
-      source.removeClass("popup_source")
-      source.removeAttr("stack-index")
-      popup.remove()
-      @_popupStack.pop()
-      # コンテキストメニューの破棄
-      if @_popupArea.hasClass("has_contextmenu")
-        ContextMenu.remove()
+      ) { break; }
+      // 該当ノードの除去
+      source.off("mouseenter", this._onMouseEnter);
+      source.off("mouseleave", this._onMouseLeave);
+      popup.off("mouseenter", this._onMouseEnter);
+      popup.off("mouseleave", this._onMouseLeave);
+      source.removeClass("popup_source");
+      source.removeAttr("stack-index");
+      popup.remove();
+      this._popupStack.pop();
+      // コンテキストメニューの破棄
+      if (this._popupArea.hasClass("has_contextmenu")) {
+        ContextMenu.remove();
+      }
+    }
 
-    # マウス座標とコンテキストメニューの監視終了
-    if @_popupStack.length is 0
-      @defaultParent.off("mousemove", @_onMouseMove)
-      @_popupArea.off("contextmenu_removed", @_onRemoveContextmenu)
-    return
+    // マウス座標とコンテキストメニューの監視終了
+    if (this._popupStack.length === 0) {
+      this.defaultParent.off("mousemove", this._onMouseMove);
+      this._popupArea.off("contextmenu_removed", this._onRemoveContextmenu);
+    }
+  }
 
-  ###*
+  /**
   @method _delayRemove
   @param {Boolean} forceRemove
-  ###
-  _delayRemove: (forceRemove) ->
-    clearTimeout(@_delayRemoveTimeoutID) if @_delayRemoveTimeoutID isnt 0
-    @_delayRemoveTimeoutID = setTimeout( =>
-      @_delayRemoveTimeoutID = 0
-      @_remove(forceRemove)
-    , 300)
-    return
+  */
+  _delayRemove(forceRemove) {
+    if (this._delayRemoveTimeoutID !== 0) { clearTimeout(this._delayRemoveTimeoutID); }
+    this._delayRemoveTimeoutID = setTimeout( () => {
+      this._delayRemoveTimeoutID = 0;
+      return this._remove(forceRemove);
+    }
+    , 300);
+  }
 
-  ###*
+  /**
   @method _onMouseEnter
   @param {Object} Event
-  ###
-  _onMouseEnter: ({currentTarget: target}) =>
-    target.addClass("active")
-    # ペア・ノードの非アクティブ化
-    stackIndex = target.getAttr("stack-index")
-    if target.hasClass("popup")
-      @_popupStack[stackIndex].source.removeClass("active")
-    else if target.hasClass("popup_source")
-      @_popupStack[stackIndex].popup.removeClass("active")
-    # 末端ノードの非アクティブ化
-    if @_popupStack.length - 1 > stackIndex
-      @_popupStack[@_popupStack.length - 1].source.removeClass("active")
-      @_popupStack[@_popupStack.length - 1].popup.removeClass("active")
-      @_delayRemove(false)
-    return
+  */
+  _onMouseEnter({currentTarget: target}) {
+    target.addClass("active");
+    // ペア・ノードの非アクティブ化
+    const stackIndex = target.getAttr("stack-index");
+    if (target.hasClass("popup")) {
+      this._popupStack[stackIndex].source.removeClass("active");
+    } else if (target.hasClass("popup_source")) {
+      this._popupStack[stackIndex].popup.removeClass("active");
+    }
+    // 末端ノードの非アクティブ化
+    if ((this._popupStack.length - 1) > stackIndex) {
+      this._popupStack[this._popupStack.length - 1].source.removeClass("active");
+      this._popupStack[this._popupStack.length - 1].popup.removeClass("active");
+      this._delayRemove(false);
+    }
+  }
 
-  ###*
+  /**
   @method _onMouseLeave
   @param {Object} Event
-  ###
-  _onMouseLeave: ({ currentTarget: target }) =>
-    target.removeClass("active")
-    return if @_popupArea.hasClass("has_contextmenu")
-    @_delayRemove(false)
-    return
+  */
+  _onMouseLeave({ currentTarget: target }) {
+    target.removeClass("active");
+    if (this._popupArea.hasClass("has_contextmenu")) { return; }
+    this._delayRemove(false);
+  }
 
-  ###*
+  /**
   @method _onMouseMove
   @param {Object} Event
-  ###
-  _onMouseMove: ({clientX, clientY}) =>
-    @_currentX = clientX
-    @_currentY = clientY
-    return
+  */
+  _onMouseMove({clientX, clientY}) {
+    this._currentX = clientX;
+    this._currentY = clientY;
+  }
 
-  ###*
+  /**
   @method _activateNode
-  ###
-  _activateNode: ->
-    ele = document.elementFromPoint(@_currentX, @_currentY)
-    if ele is @source
-      @source.addClass("active")
-    else if (ele is @popup) or (ele.closest(".popup") is @popup)
-      @popup.addClass("active")
-    else if ele.hasClass("popup_source") or ele.hasClass("popup")
-      ele.addClass("active")
-    else if ele.closest(".popup")
-      ele.closest(".popup").addClass("active")
-    else
-      @source.removeClass("active")
-      @popup.removeClass("active")
-      @_delayRemove(false)
-    return
+  */
+  _activateNode() {
+    const ele = document.elementFromPoint(this._currentX, this._currentY);
+    if (ele === this.source) {
+      this.source.addClass("active");
+    } else if ((ele === this.popup) || (ele.closest(".popup") === this.popup)) {
+      this.popup.addClass("active");
+    } else if (ele.hasClass("popup_source") || ele.hasClass("popup")) {
+      ele.addClass("active");
+    } else if (ele.closest(".popup")) {
+      ele.closest(".popup").addClass("active");
+    } else {
+      this.source.removeClass("active");
+      this.popup.removeClass("active");
+      this._delayRemove(false);
+    }
+  }
 
-  ###*
+  /**
   @method _onRemoveContextmenu
-  ###
-  _onRemoveContextmenu: =>
-    @_activateNode()
-    @_remove(false)
-    return
+  */
+  _onRemoveContextmenu() {
+    this._activateNode();
+    this._remove(false);
+  }
 
-  ###*
+  /**
   @method _getOuterHeight
   @param {Object} ele
   @param {Boolean} margin
-  ###
-  # .outerHeight()の代用関数
-  _getOuterHeight: (ele, margin = false) ->
-    # 下層に表示してoffsetHeightを取得する
-    ele.style.zIndex = "-1"
-    @_popupArea.addLast(ele)
-    outerHeight = ele.offsetHeight
-    ele.remove()
-    ele.style.zIndex = "3"    # ソースでは"3"だが、getComputedStyleでは"0"になるため
-    # 表示済みのノードが存在すればCSSの値を取得する
-    if @_popupStyle is null and @_popupStack.length > 0
-      @_popupStyle = getComputedStyle(@_popupStack[0].popup, null)
-    # margin等の取得
-    if margin and @_popupStyle isnt null
-      if @_popupMarginHeight < 0
-        @_popupMarginHeight = 0
-        @_popupMarginHeight += parseInt(@_popupStyle.marginTop)
-        @_popupMarginHeight += parseInt(@_popupStyle.marginBottom)
-        boxShadow = @_popupStyle.boxShadow
-        tmp = /rgba?\(.*\) (-?[\d]+)px (-?[\d]+)px ([\d]+)px (-?[\d]+)px/.exec(boxShadow)
-        @_popupMarginHeight += Math.abs(parseInt(tmp[2]))
-        @_popupMarginHeight += Math.abs(parseInt(tmp[4]))
-      outerHeight += @_popupMarginHeight
-    ele.style.zIndex = null
-    return outerHeight
+  */
+  // .outerHeight()の代用関数
+  _getOuterHeight(ele, margin) {
+    // 下層に表示してoffsetHeightを取得する
+    if (margin == null) { margin = false; }
+    ele.style.zIndex = "-1";
+    this._popupArea.addLast(ele);
+    let outerHeight = ele.offsetHeight;
+    ele.remove();
+    ele.style.zIndex = "3";    // ソースでは"3"だが、getComputedStyleでは"0"になるため
+    // 表示済みのノードが存在すればCSSの値を取得する
+    if ((this._popupStyle === null) && (this._popupStack.length > 0)) {
+      this._popupStyle = getComputedStyle(this._popupStack[0].popup, null);
+    }
+    // margin等の取得
+    if (margin && (this._popupStyle !== null)) {
+      if (this._popupMarginHeight < 0) {
+        this._popupMarginHeight = 0;
+        this._popupMarginHeight += parseInt(this._popupStyle.marginTop);
+        this._popupMarginHeight += parseInt(this._popupStyle.marginBottom);
+        const {
+          boxShadow
+        } = this._popupStyle;
+        const tmp = /rgba?\(.*\) (-?[\d]+)px (-?[\d]+)px ([\d]+)px (-?[\d]+)px/.exec(boxShadow);
+        this._popupMarginHeight += Math.abs(parseInt(tmp[2]));
+        this._popupMarginHeight += Math.abs(parseInt(tmp[4]));
+      }
+      outerHeight += this._popupMarginHeight;
+    }
+    ele.style.zIndex = null;
+    return outerHeight;
+  }
+}

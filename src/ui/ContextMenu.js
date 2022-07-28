@@ -1,55 +1,69 @@
-altParent = null
+/*
+ * decaffeinate suggestions:
+ * DS103: Rewrite code to no longer use __guard__, or convert again using --optional-chaining
+ * DS207: Consider shorter variations of null checks
+ * Full docs: https://github.com/decaffeinate/decaffeinate/blob/main/docs/suggestions.md
+ */
+let altParent = null;
 
-cleanup = ->
-  $$.C("contextmenu_menu")[0]?.remove()
-  if altParent
-    altParent.removeClass("has_contextmenu")
-    altParent.$(".popup.has_contextmenu").removeClass("has_contextmenu")
-    altParent.emit(new Event("contextmenu_removed"))
-    altParent = null
-  return
+const cleanup = function() {
+  __guard__($$.C("contextmenu_menu")[0], x => x.remove());
+  if (altParent) {
+    altParent.removeClass("has_contextmenu");
+    altParent.$(".popup.has_contextmenu").removeClass("has_contextmenu");
+    altParent.emit(new Event("contextmenu_removed"));
+    altParent = null;
+  }
+};
 
-eventFn = (e) ->
-  if e.target?.hasClass("contextmenu_menu") or e.target?.parent()?.hasClass("contextmenu_menu")
-    return
-  cleanup()
-  return
+const eventFn = function(e) {
+  if ((e.target != null ? e.target.hasClass("contextmenu_menu") : undefined) || __guard__(e.target != null ? e.target.parent() : undefined, x => x.hasClass("contextmenu_menu"))) {
+    return;
+  }
+  cleanup();
+};
 
-doc = document.documentElement
-doc.on("keydown", ({key}) ->
-  if key is "Escape"
-    cleanup()
-  return
-)
-doc.on("mousedown", eventFn)
-doc.on("contextmenu", eventFn)
+const doc = document.documentElement;
+doc.on("keydown", function({key}) {
+  if (key === "Escape") {
+    cleanup();
+  }
+});
+doc.on("mousedown", eventFn);
+doc.on("contextmenu", eventFn);
 
-window.on("blur", ->
-  cleanup()
-  return
-)
+window.on("blur", function() {
+  cleanup();
+});
 
-ContextMenu = ($menu, x, y, $parent = null) ->
-  cleanup()
+const ContextMenu = function($menu, x, y, $parent = null) {
+  cleanup();
 
-  $menu.addClass("contextmenu_menu")
-  $menu.style.position = "fixed"
-  menuWidth = $menu.offsetWidth
-  $menu.style.left = "#{x}px"
-  $menu.style.top = "#{y}px"
-  if $parent
-    altParent = $parent
-    altParent.addClass("has_contextmenu")
+  $menu.addClass("contextmenu_menu");
+  $menu.style.position = "fixed";
+  const menuWidth = $menu.offsetWidth;
+  $menu.style.left = `${x}px`;
+  $menu.style.top = `${y}px`;
+  if ($parent) {
+    altParent = $parent;
+    altParent.addClass("has_contextmenu");
+  }
 
-  if window.innerWidth < $menu.offsetLeft + menuWidth
-    $menu.style.left = null
-    $menu.style.right = "1px"
-  if window.innerHeight < $menu.offsetTop + $menu.offsetHeight
-    $menu.style.top = "#{Math.max($menu.offsetTop - $menu.offsetHeight, 0)}px"
-  return
+  if (window.innerWidth < ($menu.offsetLeft + menuWidth)) {
+    $menu.style.left = null;
+    $menu.style.right = "1px";
+  }
+  if (window.innerHeight < ($menu.offsetTop + $menu.offsetHeight)) {
+    $menu.style.top = `${Math.max($menu.offsetTop - $menu.offsetHeight, 0)}px`;
+  }
+};
 
-ContextMenu.remove = ->
-  cleanup()
-  return
+ContextMenu.remove = function() {
+  cleanup();
+};
 
-export default ContextMenu
+export default ContextMenu;
+
+function __guard__(value, transform) {
+  return (typeof value !== 'undefined' && value !== null) ? transform(value) : undefined;
+}

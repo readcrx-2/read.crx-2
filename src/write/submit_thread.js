@@ -1,121 +1,147 @@
-import Write from "./write.coffee"
+/*
+ * decaffeinate suggestions:
+ * DS104: Avoid inline assignments
+ * DS204: Change includes calls to have a more natural evaluation order
+ * DS206: Consider reworking classes to avoid initClass
+ * DS207: Consider shorter variations of null checks
+ * Full docs: https://github.com/decaffeinate/decaffeinate/blob/main/docs/suggestions.md
+ */
+import Write from "./write.coffee";
 
-Write.setFont()
+Write.setFont();
 
-class SubmitThread extends Write
-  _PONG_MSG: "write_iframe_pong:thread"
+class SubmitThread extends Write {
+  static initClass() {
+    this.prototype._PONG_MSG = "write_iframe_pong:thread";
+  }
 
-  constructor: ->
-    super()
-    return
+  constructor() {
+    super();
+  }
 
-  _setHeaderModifier: ->
-    {id} = await browser.tabs.getCurrent()
-    extraInfoSpec = ["requestHeaders", "blocking"]
-    if browser.webRequest.OnBeforeSendHeadersOptions.hasOwnProperty("EXTRA_HEADERS")
-      extraInfoSpec.push("extraHeaders")
+  async _setHeaderModifier() {
+    const {id} = await browser.tabs.getCurrent();
+    const extraInfoSpec = ["requestHeaders", "blocking"];
+    if (browser.webRequest.OnBeforeSendHeadersOptions.hasOwnProperty("EXTRA_HEADERS")) {
+      extraInfoSpec.push("extraHeaders");
+    }
 
     browser.webRequest.onBeforeSendHeaders.addListener(
-      @_beforeSendFunc()
+      this._beforeSendFunc(),
       {
-        tabId: id
-        types: ["sub_frame"]
+        tabId: id,
+        types: ["sub_frame"],
         urls: [
-          "*://*.5ch.net/test/bbs.cgi*"
-          "*://*.bbspink.com/test/bbs.cgi*"
-          "*://*.2ch.sc/test/bbs.cgi*"
-          "*://*.open2ch.net/test/bbs.cgi*"
+          "*://*.5ch.net/test/bbs.cgi*",
+          "*://*.bbspink.com/test/bbs.cgi*",
+          "*://*.2ch.sc/test/bbs.cgi*",
+          "*://*.open2ch.net/test/bbs.cgi*",
           "*://jbbs.shitaraba.net/bbs/write.cgi/*"
         ]
-      }
+      },
       extraInfoSpec
-    )
-    return
+    );
+  }
 
-  _setTitle: ->
-    title = @title + "板"
-    $h1 = @$view.T("h1")[0]
-    document.title = title
-    $h1.textContent = title
-    $h1.addClass("https") if @url.isHttps()
-    return
+  _setTitle() {
+    const title = this.title + "板";
+    const $h1 = this.$view.T("h1")[0];
+    document.title = title;
+    $h1.textContent = title;
+    if (this.url.isHttps()) { $h1.addClass("https"); }
+  }
 
-  _onSuccess: (key) ->
-    mes = @$view.C("message")[0].value
-    name = @$view.C("name")[0].value
-    mail = @$view.C("mail")[0].value
-    title = @$view.C("title")[0].value
-    url = @url
+  _onSuccess(key) {
+    let needle;
+    const mes = this.$view.C("message")[0].value;
+    const name = this.$view.C("name")[0].value;
+    const mail = this.$view.C("mail")[0].value;
+    const title = this.$view.C("title")[0].value;
+    const {
+      url
+    } = this;
 
-    if url.getTsld() in ["5ch.net", "2ch.sc", "bbspink.com", "open2ch.net"]
-      keys = key.match(/.*\/test\/read\.cgi\/(\w+?)\/(\d+)\/l\d+/)
-      unless keys?
-        $notice.textContent = "書き込み失敗 - 不明な転送場所"
-      else
-        server = url.origin
-        thread_url = "#{server}/test/read.cgi/#{keys[1]}/#{keys[2]}/"
-        browser.runtime.sendMessage({type: "written", kind: "own", url: url.href, thread_url, mes, name, mail, title})
-    else if url.getTsld() is "shitaraba.net"
-      browser.runtime.sendMessage({type: "written", kind: "board", url: url.href, mes, name, mail, title})
-    return
-
-  _getIframeArgs: ->
-    args = super()
-    args.rcrxTitle = @$view.C("title")[0].value
-    return args
-
-  _getFormData: ->
-    {protocol, hostname} = @url
-    {bbsType, splittedUrl, args} = super()
-    # 2ch
-    if bbsType is "2ch"
-      # open2ch
-      if @url.getTsld() is "open2ch.net"
-        return {
-          action: "#{protocol}//#{hostname}/test/bbs.cgi"
-          charset: "UTF-8"
-          input:
-            submit: "新規スレッド作成"
-            bbs: splittedUrl[1]
-            subject: args.rcrxTitle
-            FROM: args.rcrxName
-            mail: args.rcrxMail
-          textarea:
-            MESSAGE: args.rcrxMessage
-        }
-      else
-        return {
-          action: "#{protocol}//#{hostname}/test/bbs.cgi"
-          charset: "Shift_JIS"
-          input:
-            submit: "新規スレッド作成"
-            time: (Date.now() // 1000) - 60
-            bbs: splittedUrl[1]
-            subject: args.rcrxTitle
-            FROM: args.rcrxName
-            mail: args.rcrxMail
-          textarea:
-            MESSAGE: args.rcrxMessage
-        }
-    # したらば
-    else if bbsType is "jbbs"
-      return {
-        action: "#{protocol}//jbbs.shitaraba.net/bbs/write.cgi/#{splittedUrl[1]}/#{splittedUrl[2]}/new/"
-        charset: "EUC-JP"
-        input:
-          submit: "新規スレッド作成"
-          TIME: (Date.now() // 1000) - 60
-          DIR: splittedUrl[1]
-          BBS: splittedUrl[2]
-          SUBJECT: args.rcrxTitle
-          NAME: args.rcrxName
-          MAIL: args.rcrxMail
-        textarea:
-          MESSAGE: args.rcrxMessage
+    if ((needle = url.getTsld(), ["5ch.net", "2ch.sc", "bbspink.com", "open2ch.net"].includes(needle))) {
+      const keys = key.match(/.*\/test\/read\.cgi\/(\w+?)\/(\d+)\/l\d+/);
+      if (keys == null) {
+        $notice.textContent = "書き込み失敗 - 不明な転送場所";
+      } else {
+        const server = url.origin;
+        const thread_url = `${server}/test/read.cgi/${keys[1]}/${keys[2]}/`;
+        browser.runtime.sendMessage({type: "written", kind: "own", url: url.href, thread_url, mes, name, mail, title});
       }
-    return
+    } else if (url.getTsld() === "shitaraba.net") {
+      browser.runtime.sendMessage({type: "written", kind: "board", url: url.href, mes, name, mail, title});
+    }
+  }
 
-app.boot("/write/submit_thread.html", ->
-  new SubmitThread()
-  return
-)
+  _getIframeArgs() {
+    const args = super._getIframeArgs();
+    args.rcrxTitle = this.$view.C("title")[0].value;
+    return args;
+  }
+
+  _getFormData() {
+    const {protocol, hostname} = this.url;
+    const {bbsType, splittedUrl, args} = super._getFormData();
+    // 2ch
+    if (bbsType === "2ch") {
+      // open2ch
+      if (this.url.getTsld() === "open2ch.net") {
+        return {
+          action: `${protocol}//${hostname}/test/bbs.cgi`,
+          charset: "UTF-8",
+          input: {
+            submit: "新規スレッド作成",
+            bbs: splittedUrl[1],
+            subject: args.rcrxTitle,
+            FROM: args.rcrxName,
+            mail: args.rcrxMail
+          },
+          textarea: {
+            MESSAGE: args.rcrxMessage
+          }
+        };
+      } else {
+        return {
+          action: `${protocol}//${hostname}/test/bbs.cgi`,
+          charset: "Shift_JIS",
+          input: {
+            submit: "新規スレッド作成",
+            time: (Math.floor(Date.now() / 1000)) - 60,
+            bbs: splittedUrl[1],
+            subject: args.rcrxTitle,
+            FROM: args.rcrxName,
+            mail: args.rcrxMail
+          },
+          textarea: {
+            MESSAGE: args.rcrxMessage
+          }
+        };
+      }
+    // したらば
+    } else if (bbsType === "jbbs") {
+      return {
+        action: `${protocol}//jbbs.shitaraba.net/bbs/write.cgi/${splittedUrl[1]}/${splittedUrl[2]}/new/`,
+        charset: "EUC-JP",
+        input: {
+          submit: "新規スレッド作成",
+          TIME: (Math.floor(Date.now() / 1000)) - 60,
+          DIR: splittedUrl[1],
+          BBS: splittedUrl[2],
+          SUBJECT: args.rcrxTitle,
+          NAME: args.rcrxName,
+          MAIL: args.rcrxMail
+        },
+        textarea: {
+          MESSAGE: args.rcrxMessage
+        }
+      };
+    }
+  }
+}
+SubmitThread.initClass();
+
+app.boot("/write/submit_thread.html", function() {
+  new SubmitThread();
+});

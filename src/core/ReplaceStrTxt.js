@@ -1,163 +1,200 @@
-###*
+/*
+ * decaffeinate suggestions:
+ * DS205: Consider reworking code to avoid use of IIFEs
+ * DS207: Consider shorter variations of null checks
+ * Full docs: https://github.com/decaffeinate/decaffeinate/blob/main/docs/suggestions.md
+ */
+/**
 @class ReplaceStrTxt
 @static
-###
+*/
 
-_replaceTable = null
-_CONFIG_NAME = "replace_str_txt_obj"
-_CONFIG_STRING_NAME = "replace_str_txt"
-_URL_PATTERN =
-  CONTAIN: 0
-  DONTCONTAIN: 1
-  MATCH: 2
-  DONTMATCH: 3
-  REGEX: 4
+let _replaceTable = null;
+const _CONFIG_NAME = "replace_str_txt_obj";
+const _CONFIG_STRING_NAME = "replace_str_txt";
+const _URL_PATTERN = {
+  CONTAIN: 0,
+  DONTCONTAIN: 1,
+  MATCH: 2,
+  DONTMATCH: 3,
+  REGEX: 4,
   DONTREGEX: 5
-_PLACE_TABLE = new Map([
-  ["name", "name"]
-  ["mail", "mail"]
-  ["date", "other"]
+};
+const _PLACE_TABLE = new Map([
+  ["name", "name"],
+  ["mail", "mail"],
+  ["date", "other"],
   ["msg", "message"]
-])
-_INVALID_BEFORE = "#^##invalid##^#"
-_INVALID_URL = "invalid://invalid"
+]);
+const _INVALID_BEFORE = "#^##invalid##^#";
+const _INVALID_URL = "invalid://invalid";
 
-#jsonには正規表現のオブジェクトが含めれないので
-#それを展開
-_setupReg = ->
-  for d from _replaceTable
-    try
-      d.beforeReg = switch d.type
-        when "rx"
-          new RegExp(d.before, "g")
-        when "rx2"
-          new RegExp(d.before, "ig")
-        when "ex"
-          new RegExp(d.before.replace(/[-\/\\^$*+?.()|[\]{}]/g, "\\$&"), "ig")
-    catch
-      app.message.send("notify",
-        message: """
-          ReplaceStr.txtの置換対象正規表現(#{d.before})を読み込むのに失敗しました
-          この行は無効化されます
-        """
+//jsonには正規表現のオブジェクトが含めれないので
+//それを展開
+const _setupReg = function() {
+  for (var d of _replaceTable) {
+    try {
+      d.beforeReg = (() => { switch (d.type) {
+        case "rx":
+          return new RegExp(d.before, "g");
+        case "rx2":
+          return new RegExp(d.before, "ig");
+        case "ex":
+          return new RegExp(d.before.replace(/[-\/\\^$*+?.()|[\]{}]/g, "\\$&"), "ig");
+      } })();
+    } catch (error) {
+      app.message.send("notify", {
+        message: `\
+ReplaceStr.txtの置換対象正規表現(${d.before})を読み込むのに失敗しました
+この行は無効化されます\
+`,
         background_color: "red"
-      )
-      d.before = _INVALID_BEFORE
+      }
+      );
+      d.before = _INVALID_BEFORE;
+    }
 
-    try
-      if d.urlPattern in [_URL_PATTERN.REGEX, _URL_PATTERN.DONTREGEX]
-        d.urlReg = new RegExp(d.url)
-    catch
-      app.message.send("notify",
-        message: """
-          ReplaceStr.txtの対象URL/タイトル正規表現(#{d.url})を読み込むのに失敗しました
-          この行は無効化されます
-        """
+    try {
+      if ([_URL_PATTERN.REGEX, _URL_PATTERN.DONTREGEX].includes(d.urlPattern)) {
+        d.urlReg = new RegExp(d.url);
+      }
+    } catch (error1) {
+      app.message.send("notify", {
+        message: `\
+ReplaceStr.txtの対象URL/タイトル正規表現(${d.url})を読み込むのに失敗しました
+この行は無効化されます\
+`,
         background_color: "red"
-      )
-      d.url = _INVALID_URL
-  return
+      }
+      );
+      d.url = _INVALID_URL;
+    }
+  }
+};
 
-_config =
-  get: ->
-    return JSON.parse(app.config.get(_CONFIG_NAME))
-  set: (str) ->
-    app.config.set(_CONFIG_NAME, JSON.stringify(str))
-    return
-  getString: ->
-    return app.config.get(_CONFIG_STRING_NAME)
-  setString: (str) ->
-    app.config.set(_CONFIG_STRING_NAME, str)
-    return
+const _config = {
+  get() {
+    return JSON.parse(app.config.get(_CONFIG_NAME));
+  },
+  set(str) {
+    app.config.set(_CONFIG_NAME, JSON.stringify(str));
+  },
+  getString() {
+    return app.config.get(_CONFIG_STRING_NAME);
+  },
+  setString(str) {
+    app.config.set(_CONFIG_STRING_NAME, str);
+  }
+};
 
-###*
+/**
 @method get
 @return {Object}
-###
-export get = ->
-  unless _replaceTable?
-    _replaceTable = new Set(_config.get())
-    _setupReg()
-  return _replaceTable
+*/
+export var get = function() {
+  if (_replaceTable == null) {
+    _replaceTable = new Set(_config.get());
+    _setupReg();
+  }
+  return _replaceTable;
+};
 
-###*
+/**
 @method parse
 @param {String} string
 @return {Object}
-###
-parse = (string) ->
-  replaceTable = new Set()
-  return replaceTable if string is ""
-  replaceStrSplit = string.split("\n")
-  for r in replaceStrSplit
-    continue if r is ""
-    continue if ["//",";", "'"].some((ele) -> r.startsWith(ele))
-    s = /(?:<(\w{2,3})>)?(.*)\t(.+)\t(name|mail|date|msg|all)(?:\t(?:<(\d)>)?(.+))?/.exec(r)
-    continue unless s?
-    obj =
-      type: s[1] ? "ex"
-      place: s[4]
-      before: s[2]
-      after: s[3]
-      urlPattern: s[5]
+*/
+const parse = function(string) {
+  const replaceTable = new Set();
+  if (string === "") { return replaceTable; }
+  const replaceStrSplit = string.split("\n");
+  for (var r of replaceStrSplit) {
+    if (r === "") { continue; }
+    if (["//",";", "'"].some(ele => r.startsWith(ele))) { continue; }
+    const s = /(?:<(\w{2,3})>)?(.*)\t(.+)\t(name|mail|date|msg|all)(?:\t(?:<(\d)>)?(.+))?/.exec(r);
+    if (s == null) { continue; }
+    const obj = {
+      type: s[1] != null ? s[1] : "ex",
+      place: s[4],
+      before: s[2],
+      after: s[3],
+      urlPattern: s[5],
       url: s[6]
-    if obj.type is ""
-      obj.type = "rx"
-    if obj.place is ""
-      obj.place = "all"
-    if s[6]? and !s[5]?
-      obj.urlPattern = 0
-    replaceTable.add(obj)
-  return replaceTable
+    };
+    if (obj.type === "") {
+      obj.type = "rx";
+    }
+    if (obj.place === "") {
+      obj.place = "all";
+    }
+    if ((s[6] != null) && (s[5] == null)) {
+      obj.urlPattern = 0;
+    }
+    replaceTable.add(obj);
+  }
+  return replaceTable;
+};
 
-###*
+/**
 @method set
 @param {String} string
-###
-export set = (string) ->
-  _replaceTable = parse(string)
-  _config.set([_replaceTable...])
-  _setupReg()
-  return
+*/
+export var set = function(string) {
+  _replaceTable = parse(string);
+  _config.set([..._replaceTable]);
+  _setupReg();
+};
 
-###
+/*
 @method replace
 @param {String} url
 @param {String} title
 @param {Object} res
-###
-export replace = (url, title, res) ->
-  for d from get()
-    continue if d.before is _INVALID_BEFORE
-    continue if d.url is _INVALID_URL
-    if d.url?
-      if d.urlPattern in [_URL_PATTERN.CONTAIN, _URL_PATTERN.DONTCONTAIN]
-        flag = (url.includes(d.url) or title.includes(d.url))
-      else if d.urlPattern in [_URL_PATTERN.MATCH, _URL_PATTERN.DONTMATCH]
-        flag = (d.url in [url, title])
-      if d.urlPattern in [_URL_PATTERN.DONTCONTAIN, _URL_PATTERN.DONTMATCH]
-        flag = !flag
-      continue unless flag
-    if d.type is "ex2"
-      {place, before, after} = d
-      if place is "all"
-        res =
-          name: app.replaceAll(res.name, before, after)
-          mail: app.replaceAll(res.mail, before, after)
-          other: app.replaceAll(res.other, before, after)
+*/
+export var replace = function(url, title, res) {
+  for (let d of get()) {
+    var after, before, place;
+    if (d.before === _INVALID_BEFORE) { continue; }
+    if (d.url === _INVALID_URL) { continue; }
+    if (d.url != null) {
+      var flag;
+      if ([_URL_PATTERN.CONTAIN, _URL_PATTERN.DONTCONTAIN].includes(d.urlPattern)) {
+        flag = (url.includes(d.url) || title.includes(d.url));
+      } else if ([_URL_PATTERN.MATCH, _URL_PATTERN.DONTMATCH].includes(d.urlPattern)) {
+        flag = ([url, title].includes(d.url));
+      }
+      if ([_URL_PATTERN.DONTCONTAIN, _URL_PATTERN.DONTMATCH].includes(d.urlPattern)) {
+        flag = !flag;
+      }
+      if (!flag) { continue; }
+    }
+    if (d.type === "ex2") {
+      ({place, before, after} = d);
+      if (place === "all") {
+        res = {
+          name: app.replaceAll(res.name, before, after),
+          mail: app.replaceAll(res.mail, before, after),
+          other: app.replaceAll(res.other, before, after),
           message: app.replaceAll(res.message, before, after)
-      else
-        place = _PLACE_TABLE.get(place)
-        res[place] = app.replaceAll(res[place], before, after)
-    else
-      {place, beforeReg: before, after} = d
-      if place is "all"
-        res =
-          name: res.name.replace(before, after)
-          mail: res.mail.replace(before, after)
-          other: res.other.replace(before, after)
+        };
+      } else {
+        place = _PLACE_TABLE.get(place);
+        res[place] = app.replaceAll(res[place], before, after);
+      }
+    } else {
+      ({place, beforeReg: before, after} = d);
+      if (place === "all") {
+        res = {
+          name: res.name.replace(before, after),
+          mail: res.mail.replace(before, after),
+          other: res.other.replace(before, after),
           message: res.message.replace(before, after)
-      else
-        place = _PLACE_TABLE.get(place)
-        res[place] = res[place].replace(before, after)
-  return res
+        };
+      } else {
+        place = _PLACE_TABLE.get(place);
+        res[place] = res[place].replace(before, after);
+      }
+    }
+  }
+  return res;
+};

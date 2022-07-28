@@ -1,169 +1,212 @@
-import Cache from "./Cache.coffee"
-import {Request} from "./HTTP.ts"
-import {fix as fixUrl, tsld as getTsld} from "./URL.ts"
+/*
+ * decaffeinate suggestions:
+ * DS207: Consider shorter variations of null checks
+ * Full docs: https://github.com/decaffeinate/decaffeinate/blob/main/docs/suggestions.md
+ */
+import Cache from "./Cache.coffee";
+import {Request} from "./HTTP.ts";
+import {fix as fixUrl, tsld as getTsld} from "./URL.ts";
 
-bbsmenuOption = null
+let bbsmenuOption = null;
 
-export target = $__("div")
+export var target = $__("div");
 
-###*
+/**
 @method fetchAll
 @param {Boolean} [forceReload=false]
-###
-export fetchAll = (forceReload = false) ->
-  bbsmenu = []
+*/
+export var fetchAll = async function(forceReload = false) {
+  let menu;
+  const bbsmenu = [];
 
-  if !bbsmenuOption or forceReload
-    unless bbsmenuOption
-      bbsmenuOption = new Set()
-    else
-      bbsmenuOption.clear()
-    tmpOpt = app.config.get("bbsmenu_option").split("\n")
-    for opt in tmpOpt
-      continue if opt is "" or opt.startsWith("//")
-      bbsmenuOption.add(opt)
+  if (!bbsmenuOption || forceReload) {
+    if (!bbsmenuOption) {
+      bbsmenuOption = new Set();
+    } else {
+      bbsmenuOption.clear();
+    }
+    const tmpOpt = app.config.get("bbsmenu_option").split("\n");
+    for (let opt of tmpOpt) {
+      if ((opt === "") || opt.startsWith("//")) { continue; }
+      bbsmenuOption.add(opt);
+    }
+  }
 
-  bbsmenuUrl = app.config.get("bbsmenu").split("\n")
-  for url in bbsmenuUrl
-    continue if url is "" or url.startsWith("//")
-    try
-      {menu} = await fetch(url, forceReload)
-      bbsmenu.push(menu...)
-    catch
-      app.message.send("notify",
-        message: "板一覧の取得に失敗しました。(#{url})"
+  const bbsmenuUrl = app.config.get("bbsmenu").split("\n");
+  for (let url of bbsmenuUrl) {
+    if ((url === "") || url.startsWith("//")) { continue; }
+    try {
+      ({menu} = await fetch(url, forceReload));
+      bbsmenu.push(...menu);
+    } catch (error) {
+      app.message.send("notify", {
+        message: `板一覧の取得に失敗しました。(${url})`,
         background_color: "red"
-      )
+      }
+      );
+    }
+  }
 
-  return {menu: bbsmenu}
+  return {menu: bbsmenu};
+};
 
-###*
+/**
 @method fetch
 @param {String} url
 @param {Boolean} [force=false]
-###
-export fetch = (url, force) ->
-  #キャッシュ取得
-  cache = new Cache(url)
+*/
+export var fetch = async function(url, force) {
+  //キャッシュ取得
+  let menu, response;
+  const cache = new Cache(url);
 
-  try
-    await cache.get()
-    if force
-      throw new Error("最新のものを取得するために通信します")
-    if Date.now() - cache.lastUpdated > +app.config.get("bbsmenu_update_interval")*1000*60*60*24
-      throw new Error("キャッシュが期限切れなので通信します")
-  catch
-    #通信
-    request = new Request("GET", url,
-      mimeType: "text/plain; charset=Shift_JIS"
-    )
-    if cache.lastModified?
-      request.headers["If-Modified-Since"] = new Date(cache.lastModified).toUTCString()
+  try {
+    await cache.get();
+    if (force) {
+      throw new Error("最新のものを取得するために通信します");
+    }
+    if ((Date.now() - cache.lastUpdated) > (+app.config.get("bbsmenu_update_interval")*1000*60*60*24)) {
+      throw new Error("キャッシュが期限切れなので通信します");
+    }
+  } catch (error) {
+    //通信
+    const request = new Request("GET", url,
+      {mimeType: "text/plain; charset=Shift_JIS"}
+    );
+    if (cache.lastModified != null) {
+      request.headers["If-Modified-Since"] = new Date(cache.lastModified).toUTCString();
+    }
 
-    if cache.etag?
-      request.headers["If-None-Match"] = cache.etag
-    response = await request.send()
+    if (cache.etag != null) {
+      request.headers["If-None-Match"] = cache.etag;
+    }
+    response = await request.send();
+  }
 
-  if response?.status is 200
-    menu = parse(response.body)
+  if ((response != null ? response.status : undefined) === 200) {
+    menu = parse(response.body);
 
-    #キャッシュ更新
-    cache.data = response.body
-    cache.lastUpdated = Date.now()
+    //キャッシュ更新
+    cache.data = response.body;
+    cache.lastUpdated = Date.now();
 
-    lastModified = new Date(
-      response.headers["Last-Modified"] or "dummy"
-    ).getTime()
+    const lastModified = new Date(
+      response.headers["Last-Modified"] || "dummy"
+    ).getTime();
 
-    if Number.isFinite(lastModified)
-      cache.lastModified = lastModified
-    cache.put()
+    if (Number.isFinite(lastModified)) {
+      cache.lastModified = lastModified;
+    }
+    cache.put();
 
-  else if cache.data?
-    menu = parse(cache.data)
+  } else if (cache.data != null) {
+    menu = parse(cache.data);
 
-    #キャッシュ更新
-    if response?.status is 304
-      cache.lastUpdated = Date.now()
-      cache.put()
+    //キャッシュ更新
+    if ((response != null ? response.status : undefined) === 304) {
+      cache.lastUpdated = Date.now();
+      cache.put();
+    }
+  }
 
-  unless menu?.length > 0
-    throw {response}
+  if (!((menu != null ? menu.length : undefined) > 0)) {
+    throw {response};
+  }
 
-  unless response?.status is 200 or response?.status is 304 or (not response and cache.data?)
-    throw {response, menu}
+  if (((response != null ? response.status : undefined) !== 200) && ((response != null ? response.status : undefined) !== 304) && (!!response || (cache.data == null))) {
+    throw {response, menu};
+  }
 
-  return {response, menu}
+  return {response, menu};
+};
 
-###*
+/**
 @method get
 @param {Function} Callback
 @param {Boolean} [ForceReload=false]
-###
-export get = (forceReload = false) ->
-  _updatingPromise = _update(forceReload) unless _updatingPromise?
-  try
-    obj = await _updatingPromise
-    obj.status = "success"
-    if forceReload
-      target.emit(new CustomEvent("change", detail: obj))
-  catch obj
-    obj.status = "error"
-    if forceReload
-      target.emit(new CustomEvent("change", detail: obj))
-  return obj
+*/
+export var get = async function(forceReload = false) {
+  let _updatingPromise, obj;
+  if (_updatingPromise == null) { _updatingPromise = _update(forceReload); }
+  try {
+    obj = await _updatingPromise;
+    obj.status = "success";
+    if (forceReload) {
+      target.emit(new CustomEvent("change", {detail: obj}));
+    }
+  } catch (error) {
+    obj = error;
+    obj.status = "error";
+    if (forceReload) {
+      target.emit(new CustomEvent("change", {detail: obj}));
+    }
+  }
+  return obj;
+};
 
-###*
+/**
 @method parse
 @param {String} html
 @return {Array}
-###
-parse = (html) ->
-  regCategory = ///<b>(.+?)</b>(?:.*[\r\n]+<a\s.*?>.+?</a>)+///gi
-  regBoard = ///<a\shref=(https?://(?!info\.[25]ch\.net/|headline\.bbspink\.com)
-    (?:\w+\.(?:[25]ch\.net|open2ch\.net|2ch\.sc|bbspink\.com)|(?:\w+\.)?machi\.to)/\w+/)(?:\s.*?)?>(.+?)</a>///gi
-  menu = []
-  bbspinkException = bbsmenuOption.has("bbspink.com")
+*/
+var parse = function(html) {
+  let regCategoryRes;
+  const regCategory = new RegExp(`<b>(.+?)</b>(?:.*[\\r\\n]+<a\\s.*?>.+?</a>)+`, 'gi');
+  const regBoard = new RegExp(`<a\\shref=(https?://(?!info\\.[25]ch\\.net/|headline\\.bbspink\\.com)\
+(?:\\w+\\.(?:[25]ch\\.net|open2ch\\.net|2ch\\.sc|bbspink\\.com)|(?:\\w+\\.)?machi\\.to)/\\w+/)(?:\\s.*?)?>(.+?)</a>`, 'gi');
+  const menu = [];
+  const bbspinkException = bbsmenuOption.has("bbspink.com");
 
-  while regCategoryRes = regCategory.exec(html)
-    category =
-      title: regCategoryRes[1]
+  while ((regCategoryRes = regCategory.exec(html))) {
+    var regBoardRes;
+    const category = {
+      title: regCategoryRes[1],
       board: []
+    };
 
-    subName = null
-    while regBoardRes = regBoard.exec(regCategoryRes[0])
-      continue if bbsmenuOption.has(getTsld(regBoardRes[1]))
-      continue if bbspinkException and regBoardRes[1].includes("5ch.net/bbypink")
-      unless subName
-        if regBoardRes[1].includes("open2ch.net")
-          subName = "op"
-        else if regBoardRes[1].includes("2ch.sc")
-          subName = "sc"
-        else
-          subName = ""
+    let subName = null;
+    while ((regBoardRes = regBoard.exec(regCategoryRes[0]))) {
+      if (bbsmenuOption.has(getTsld(regBoardRes[1]))) { continue; }
+      if (bbspinkException && regBoardRes[1].includes("5ch.net/bbypink")) { continue; }
+      if (!subName) {
+        if (regBoardRes[1].includes("open2ch.net")) {
+          subName = "op";
+        } else if (regBoardRes[1].includes("2ch.sc")) {
+          subName = "sc";
+        } else {
+          subName = "";
+        }
         if (
-          subName isnt "" and
-          !(category.title.endsWith("(#{subName})") or
-            category.title.endsWith("_#{subName}"))
-        )
-          category.title += "(#{subName})"
+          (subName !== "") &&
+          !(category.title.endsWith(`(${subName})`) ||
+            category.title.endsWith(`_${subName}`))
+        ) {
+          category.title += `(${subName})`;
+        }
+      }
       if (
-        subName isnt "" and
-        !(regBoardRes[2].endsWith("(#{subName})") or
-          regBoardRes[2].endsWith("_#{subName}"))
-      )
-        regBoardRes[2] += "_#{subName}"
-      category.board.push(
-        url: fixUrl(regBoardRes[1])
+        (subName !== "") &&
+        !(regBoardRes[2].endsWith(`(${subName})`) ||
+          regBoardRes[2].endsWith(`_${subName}`))
+      ) {
+        regBoardRes[2] += `_${subName}`;
+      }
+      category.board.push({
+        url: fixUrl(regBoardRes[1]),
         title: regBoardRes[2]
-      )
+      });
+    }
 
-    if category.board.length > 0
-      menu.push(category)
-  return menu
+    if (category.board.length > 0) {
+      menu.push(category);
+    }
+  }
+  return menu;
+};
 
-_updatingPromise = null
-_update = (forceReload) ->
-  {menu} = await fetchAll(forceReload)
-  _updatingPromise = null
-  return {menu}
+let _updatingPromise = null;
+var _update = async function(forceReload) {
+  const {menu} = await fetchAll(forceReload);
+  _updatingPromise = null;
+  return {menu};
+};

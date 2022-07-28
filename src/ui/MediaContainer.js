@@ -1,155 +1,168 @@
-###*
+/**
 @class MediaContainer
 @constructor
 @param {Element} container
-###
-export default class MediaContainer
+*/
+export default class MediaContainer {
 
-  constructor: (@container) ->
-    ###*
+  constructor(container) {
+    /**
     @property _videoPlayTime
     @type Number
     @private
-    ###
-    @_videoPlayTime = 0
+    */
+    this.container = container;
+    this._videoPlayTime = 0;
 
-    @setVideoEvents()
-    @setHoverEvents()
-    return
+    this.setVideoEvents();
+    this.setHoverEvents();
+  }
 
-  ###*
+  /**
   @method setHoverEvents
-  ###
-  setHoverEvents: ->
-    isImageOn = app.config.isOn("hover_zoom_image")
-    isVideoOn = app.config.isOn("hover_zoom_video")
-    imageRatio = app.config.get("zoom_ratio_image") / 100
-    videoRatio = app.config.get("zoom_ratio_video") / 100
+  */
+  setHoverEvents() {
+    const isImageOn = app.config.isOn("hover_zoom_image");
+    const isVideoOn = app.config.isOn("hover_zoom_video");
+    const imageRatio = app.config.get("zoom_ratio_image") / 100;
+    const videoRatio = app.config.get("zoom_ratio_video") / 100;
 
-    @container.on("mouseenter", ({target}) ->
-      return unless target.matches(".thumbnail > a > img.image, .thumbnail > video")
-      if isImageOn and target.tagName is "IMG"
-        zoomWidth = parseInt(target.offsetWidth * imageRatio)
-      else if isVideoOn and target.tagName is "VIDEO"
-        # Chromeでmouseenterイベントが複数回発生するのを回避するため
-        if "&[BROWSER]" is "chrome"
-          return unless target.style.width is ""
-        zoomWidth = parseInt(target.offsetWidth * videoRatio)
-      else
-        return
-      target.closest(".thumbnail").addClass("zoom")
-      target.style.width = "#{zoomWidth}px"
-      target.style.maxWidth = null
-      target.style.maxHeight = null
-      return
-    , true)
+    this.container.on("mouseenter", function({target}) {
+      let zoomWidth;
+      if (!target.matches(".thumbnail > a > img.image, .thumbnail > video")) { return; }
+      if (isImageOn && (target.tagName === "IMG")) {
+        zoomWidth = parseInt(target.offsetWidth * imageRatio);
+      } else if (isVideoOn && (target.tagName === "VIDEO")) {
+        // Chromeでmouseenterイベントが複数回発生するのを回避するため
+        if ("&[BROWSER]" === "chrome") {
+          if (target.style.width !== "") { return; }
+        }
+        zoomWidth = parseInt(target.offsetWidth * videoRatio);
+      } else {
+        return;
+      }
+      target.closest(".thumbnail").addClass("zoom");
+      target.style.width = `${zoomWidth}px`;
+      target.style.maxWidth = null;
+      target.style.maxHeight = null;
+    }
+    , true);
 
-    @container.on("mouseleave", ({target}) ->
-      return unless (
-        target.matches(".thumbnail > a > img.image, .thumbnail > video") and
+    this.container.on("mouseleave", function({target}) {
+      if (
+        !target.matches(".thumbnail > a > img.image, .thumbnail > video") ||
         (
-          (isImageOn and target.tagName is "IMG") or
-          (isVideoOn and target.tagName is "VIDEO")
+          (!isImageOn || (target.tagName !== "IMG")) &&
+          (!isVideoOn || (target.tagName !== "VIDEO"))
         )
-      )
-      target.closest(".thumbnail").removeClass("zoom")
-      target.style.width = null
-      if target.tagName is "IMG"
-        target.style.maxWidth = "#{app.config.get("image_width")}px"
-        target.style.maxHeight = "#{app.config.get("image_height")}px"
-      else if target.tagName is "VIDEO"
-        target.style.maxWidth = "#{app.config.get("video_width")}px"
-        target.style.maxHeight = "#{app.config.get("video_height")}px"
-      return
-    , true)
-    return
+      ) { return; }
+      target.closest(".thumbnail").removeClass("zoom");
+      target.style.width = null;
+      if (target.tagName === "IMG") {
+        target.style.maxWidth = `${app.config.get("image_width")}px`;
+        target.style.maxHeight = `${app.config.get("image_height")}px`;
+      } else if (target.tagName === "VIDEO") {
+        target.style.maxWidth = `${app.config.get("video_width")}px`;
+        target.style.maxHeight = `${app.config.get("video_height")}px`;
+      }
+    }
+    , true);
+  }
 
-  ###*
+  /**
   @method setVideoEvents
-  ###
-  setVideoEvents: ->
-    # VIDEOの再生/一時停止
-    @container.on("click", ({target}) ->
-      return unless target.matches(".thumbnail > video:not([data-src])")
-      target.preload = "auto" if target.preload is "metadata"
-      if target.paused
-        target.play()
-      else
-        target.pause()
-      return
-    )
+  */
+  setVideoEvents() {
+    // VIDEOの再生/一時停止
+    this.container.on("click", function({target}) {
+      if (!target.matches(".thumbnail > video:not([data-src])")) { return; }
+      if (target.preload === "metadata") { target.preload = "auto"; }
+      if (target.paused) {
+        target.play();
+      } else {
+        target.pause();
+      }
+    });
 
-    # VIDEO再生中はマウスポインタを消す
-    @container.on("mouseenter", ({target}) =>
-      return unless target.matches(".thumbnail > video:not([data-src])")
+    // VIDEO再生中はマウスポインタを消す
+    this.container.on("mouseenter", ({target}) => {
+      if (!target.matches(".thumbnail > video:not([data-src])")) { return; }
 
-      func = ({type}) =>
-        @_controlVideoCursor(target, type)
-        return
+      const func = ({type}) => {
+        this._controlVideoCursor(target, type);
+      };
 
-      target.on("play", func)
-      target.on("timeupdate", func)
-      target.on("pause", func)
-      target.on("ended", func)
-      return
-    , true)
+      target.on("play", func);
+      target.on("timeupdate", func);
+      target.on("pause", func);
+      target.on("ended", func);
+    }
+    , true);
 
-    # マウスポインタのリセット
-    @container.on("mousemove", ({target, type}) =>
-      return unless target.matches(".thumbnail > video:not([data-src])")
-      @_controlVideoCursor(target, type)
-      return
-    )
-    return
+    // マウスポインタのリセット
+    this.container.on("mousemove", ({target, type}) => {
+      if (!target.matches(".thumbnail > video:not([data-src])")) { return; }
+      this._controlVideoCursor(target, type);
+    });
+  }
 
-  ###*
+  /**
   @method _setImageBlurOne
   @param {Element} thumbnail
   @param {Boolean} blurMode
   @static
   @private
-  ###
-  @_setImageBlurOne: (thumbnail, blurMode) ->
-    media = thumbnail.$("a > img.image, video")
-    if blurMode
-      v = app.config.get("image_blur_length")
-      thumbnail.addClass("image_blur")
-      media.style.WebkitFilter = "blur(#{v}px)"
-    else
-      thumbnail.removeClass("image_blur")
-      media.style.WebkitFilter = "none"
-    return
+  */
+  static _setImageBlurOne(thumbnail, blurMode) {
+    const media = thumbnail.$("a > img.image, video");
+    if (blurMode) {
+      const v = app.config.get("image_blur_length");
+      thumbnail.addClass("image_blur");
+      media.style.WebkitFilter = `blur(${v}px)`;
+    } else {
+      thumbnail.removeClass("image_blur");
+      media.style.WebkitFilter = "none";
+    }
+  }
 
-  ###*
+  /**
   @method setImageBlur
   @param {Element} res
   @param {Boolean} blurMode
   @static
-  ###
-  @setImageBlur: (res, blurMode) ->
-    for thumb in res.$$(".thumbnail[media-type='image'], .thumbnail[media-type='video']")
-      MediaContainer._setImageBlurOne(thumb, blurMode)
-    return
+  */
+  static setImageBlur(res, blurMode) {
+    for (let thumb of res.$$(".thumbnail[media-type='image'], .thumbnail[media-type='video']")) {
+      MediaContainer._setImageBlurOne(thumb, blurMode);
+    }
+  }
 
-  ###*
+  /**
   @method _controlVideoCursor
   @param {Element} ele
   @param {String} act
   @private
-  ###
-  _controlVideoCursor: (ele, act) ->
-    switch act
-      when "play"
-        @_videoPlayTime = Date.now()
-      when "timeupdate"
-        return if ele.style.cursor is "none"
-        if Date.now() - @_videoPlayTime > 2000
-          ele.style.cursor = "none"
-      when "pause", "ended"
-        ele.style.cursor = "auto"
-        @_videoPlayTime = 0
-      when "mousemove"
-        return if @_videoPlayTime is 0
-        ele.style.cursor = "auto"
-        @_videoPlayTime = Date.now()
-    return
+  */
+  _controlVideoCursor(ele, act) {
+    switch (act) {
+      case "play":
+        this._videoPlayTime = Date.now();
+        break;
+      case "timeupdate":
+        if (ele.style.cursor === "none") { return; }
+        if ((Date.now() - this._videoPlayTime) > 2000) {
+          ele.style.cursor = "none";
+        }
+        break;
+      case "pause": case "ended":
+        ele.style.cursor = "auto";
+        this._videoPlayTime = 0;
+        break;
+      case "mousemove":
+        if (this._videoPlayTime === 0) { return; }
+        ele.style.cursor = "auto";
+        this._videoPlayTime = Date.now();
+        break;
+    }
+  }
+}

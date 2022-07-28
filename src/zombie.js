@@ -1,48 +1,65 @@
-app.boot("/zombie.html", ->
-  close = ->
-    {id} = await browser.tabs.getCurrent()
-    await browser.runtime.sendMessage(type: "zombie_done")
-    await browser.tabs.remove(id)
-    # Vivaldiで閉じないことがあるため遅延してもう一度閉じる
-    setTimeout( ->
-      await browser.tabs.remove(id)
-      return
-    , 1000)
-    return
+/*
+ * decaffeinate suggestions:
+ * DS205: Consider reworking code to avoid use of IIFEs
+ * DS207: Consider shorter variations of null checks
+ * Full docs: https://github.com/decaffeinate/decaffeinate/blob/main/docs/suggestions.md
+ */
+app.boot("/zombie.html", function() {
+  const close = async function() {
+    const {id} = await browser.tabs.getCurrent();
+    await browser.runtime.sendMessage({type: "zombie_done"});
+    await browser.tabs.remove(id);
+    // Vivaldiで閉じないことがあるため遅延してもう一度閉じる
+    setTimeout( async function() {
+      await browser.tabs.remove(id);
+    }
+    , 1000);
+  };
 
-  save = ->
-    arrayOfReadState = JSON.parse(localStorage.zombie_read_state)
+  const save = async function() {
+    let rs;
+    const arrayOfReadState = JSON.parse(localStorage.zombie_read_state);
 
-    app.bookmark = new app.Bookmark(app.config.get("bookmark_id"))
+    app.bookmark = new app.Bookmark(app.config.get("bookmark_id"));
 
-    try
-      await app.bookmark.promiseFirstScan
+    try {
+      await app.bookmark.promiseFirstScan;
 
-      rsarray = (app.ReadState.set(rs).catch(->return) for rs in arrayOfReadState)
-      bkarray = (app.bookmark.updateReadState(rs) for rs in arrayOfReadState)
-      await Promise.all(rsarray.concat(bkarray))
+      const rsarray = ((() => {
+        const result = [];
+        for (rs of arrayOfReadState) {           result.push(app.ReadState.set(rs).catch(function() {  }));
+        }
+        return result;
+      })());
+      const bkarray = ((() => {
+        const result1 = [];
+        for (rs of arrayOfReadState) {           result1.push(app.bookmark.updateReadState(rs));
+        }
+        return result1;
+      })());
+      await Promise.all(rsarray.concat(bkarray));
+    } catch (error) {}
 
-    await app.LocalStorage.del("zombie_read_state")
+    await app.LocalStorage.del("zombie_read_state");
 
-    close()
+    close();
 
-    delete localStorage.zombie_read_state
-    return
+    delete localStorage.zombie_read_state;
+  };
 
-  browser.runtime.sendMessage(type: "zombie_ping")
+  browser.runtime.sendMessage({type: "zombie_ping"});
 
-  alreadyRun = false
-  browser.runtime.onMessage.addListener( ({type}) ->
-    return if alreadyRun or type isnt "rcrx_exit"
-    alreadyRun = true
-    if localStorage.zombie_read_state?
-      $script = $__("script")
-      $script.on("load", save)
-      $script.src = "/app_core.js"
-      document.head.addLast($script)
-    else
-      close()
-    return
-  )
-  return
-)
+  let alreadyRun = false;
+  browser.runtime.onMessage.addListener( function({type}) {
+    if (alreadyRun || (type !== "rcrx_exit")) { return; }
+    alreadyRun = true;
+    if (localStorage.zombie_read_state != null) {
+      const $script = $__("script");
+      $script.on("load", save);
+      $script.src = "/app_core.js";
+      document.head.addLast($script);
+    } else {
+      close();
+    }
+  });
+});

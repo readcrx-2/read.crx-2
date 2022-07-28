@@ -1,9 +1,9 @@
-import {ask as askBoardTitleSolver} from "./BoardTitleSolver.js";
-import {Request} from "./HTTP.ts";
-import {stampToDate, decodeCharReference} from "./jsutil.js";
-import {getProtocol, setProtocol} from "./URL.ts";
+import { ask as askBoardTitleSolver } from "./BoardTitleSolver.js";
+import { Request } from "./HTTP.ts";
+import { stampToDate, decodeCharReference } from "./jsutil.js";
+import { getProtocol, setProtocol } from "./URL.ts";
 
-export default (function() {
+export default (function () {
   let _parse = undefined;
   let _getDiff = undefined;
   const Cls = class {
@@ -11,30 +11,31 @@ export default (function() {
       this.prototype.loaded = "None";
       this.prototype.loaded20 = null;
 
-      _parse = protocol => (async function(item) {
-        let boardTitle;
-        const url = item.T("guid")[0].textContent;
-        let title = decodeCharReference(item.T("title")[0].textContent);
-        const m = title.match(/\((\d+)\)$/);
-        title = title.replace(/\(\d+\)$/, "");
-        const boardUrl = (new app.URL.URL(url)).toBoard();
-        try {
-          boardTitle = await askBoardTitleSolver(boardUrl);
-        } catch (error) {
-          boardTitle = "";
-        }
-        return {
-          url: setProtocol(url, protocol),
-          createdAt: Date.parse(item.T("pubDate")[0].textContent),
-          title,
-          resCount: (m != null) ? m[1] : 0,
-          boardUrl: boardUrl.href,
-          boardTitle,
-          isHttps: (protocol === "https:")
+      _parse = (protocol) =>
+        async function (item) {
+          let boardTitle;
+          const url = item.T("guid")[0].textContent;
+          let title = decodeCharReference(item.T("title")[0].textContent);
+          const m = title.match(/\((\d+)\)$/);
+          title = title.replace(/\(\d+\)$/, "");
+          const boardUrl = new app.URL.URL(url).toBoard();
+          try {
+            boardTitle = await askBoardTitleSolver(boardUrl);
+          } catch (error) {
+            boardTitle = "";
+          }
+          return {
+            url: setProtocol(url, protocol),
+            createdAt: Date.parse(item.T("pubDate")[0].textContent),
+            title,
+            resCount: m != null ? m[1] : 0,
+            boardUrl: boardUrl.href,
+            boardTitle,
+            isHttps: protocol === "https:",
+          };
         };
-      });
 
-      _getDiff = function(a, b) {
+      _getDiff = function (a, b) {
         const diffed = [];
         const aUrls = [];
         for (let aVal of a) {
@@ -53,7 +54,7 @@ export default (function() {
       this.query = query;
       this.protocol = protocol;
     }
-      /*
+    /*
       return ({url, key, subject, resno, server, ita}) ->
         urlProtocol = getProtocol(url)
         boardUrl = new URL("#{urlProtocol}//#{server}/#{ita}/")
@@ -75,8 +76,10 @@ export default (function() {
     async _read(count) {
       //{status, body} = await new Request("GET", "https://dig.5ch.net/?keywords=#{encodeURIComponent(@query)}&maxResult=#{count}&json=1",
       let result;
-      const {status, body} = await new Request("GET", `https://ff5ch.syoboi.jp/?q=${encodeURIComponent(this.query)}&alt=rss`,
-        {cache: false}
+      const { status, body } = await new Request(
+        "GET",
+        `https://ff5ch.syoboi.jp/?q=${encodeURIComponent(this.query)}&alt=rss`,
+        { cache: false }
       ).send();
       if (status !== 200) {
         throw new Error("検索の通信に失敗しました");
@@ -102,8 +105,8 @@ export default (function() {
   };
   Cls.initClass();
   return Cls;
-}());
-    /*
+})();
+/*
     if @loaded is "None"
       @loaded = "Small"
       @loaded20 = @_read(20)

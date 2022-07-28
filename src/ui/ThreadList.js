@@ -18,10 +18,9 @@ import TableSearch from "./TableSearch.js";
   @param {Boolean} [option.bookmarkAddRm=false]
   @param {Element} [option.searchbox]
 */
-export default ThreadList = (function() {
+export default ThreadList = (function () {
   ThreadList = class ThreadList {
     static initClass() {
-
       /**
       @method _dateToString
       @static
@@ -29,13 +28,18 @@ export default ThreadList = (function() {
       @param {Date}
       @return {String}
       */
-      this._dateToString = (function() {
-        const fn = a => (a < 10 ? "0" : "") + a;
-        return date => date.getFullYear() +
-          "/" + fn(date.getMonth() + 1) +
-          "/" + fn(date.getDate()) +
-          " " + fn(date.getHours()) +
-          ":" + fn(date.getMinutes());
+      this._dateToString = (function () {
+        const fn = (a) => (a < 10 ? "0" : "") + a;
+        return (date) =>
+          date.getFullYear() +
+          "/" +
+          fn(date.getMonth() + 1) +
+          "/" +
+          fn(date.getDate()) +
+          " " +
+          fn(date.getHours()) +
+          ":" +
+          fn(date.getMinutes());
       })();
     }
     constructor(table, option) {
@@ -61,7 +65,7 @@ export default ThreadList = (function() {
         writtenDate: false,
 
         bookmarkAddRm: !!option.bookmarkAddRm,
-        searchbox: undefined
+        searchbox: undefined,
       };
 
       const keyToLabel = {
@@ -77,7 +81,7 @@ export default ThreadList = (function() {
         message: "本文",
         createdDate: "作成日時",
         viewedDate: "閲覧日時",
-        writtenDate: "書込日時"
+        writtenDate: "書込日時",
       };
 
       const $table = this.table;
@@ -87,19 +91,25 @@ export default ThreadList = (function() {
       $thead.addLast($tr);
 
       //項目のツールチップ表示
-      $table.on("mouseenter", async function({target}) {
-        if (target.tagName === "TD") {
-          await app.defer();
-          target.title = target.textContent;
-        }
-      }
-      , true);
-      $table.on("mouseleave", function({target}) {
-        if (target.tagName === "TD") {
-          target.removeAttr("title");
-        }
-      }
-      , true);
+      $table.on(
+        "mouseenter",
+        async function ({ target }) {
+          if (target.tagName === "TD") {
+            await app.defer();
+            target.title = target.textContent;
+          }
+        },
+        true
+      );
+      $table.on(
+        "mouseleave",
+        function ({ target }) {
+          if (target.tagName === "TD") {
+            target.removeAttr("title");
+          }
+        },
+        true
+      );
 
       const $cols = $_F();
       const selector = {};
@@ -109,7 +119,10 @@ export default ThreadList = (function() {
         const val = keyToLabel[key];
         if (option.th.includes(key)) {
           i++;
-          const className = key.replace(/([A-Z])/g, ($0, $1) => "_" + $1.toLowerCase());
+          const className = key.replace(
+            /([A-Z])/g,
+            ($0, $1) => "_" + $1.toLowerCase()
+          );
           const $th = $__("th").addClass(className);
           $th.textContent = val;
           $th.dataset.key = className;
@@ -125,9 +138,11 @@ export default ThreadList = (function() {
       $table.addFirst($cols);
 
       //ブックマーク更新時処理
-      app.message.on("bookmark_updated", async ({type, bookmark}) => {
+      app.message.on("bookmark_updated", async ({ type, bookmark }) => {
         let url;
-        if (bookmark.type !== "thread") { return; }
+        if (bookmark.type !== "thread") {
+          return;
+        }
 
         if (type === "expired") {
           $tr = $table.$(`tr[data-href=\"${bookmark.url}\"]`);
@@ -192,14 +207,14 @@ export default ThreadList = (function() {
               boardUrl: boardUrl.href,
               boardTitle,
               expired: bookmark.expired,
-              isHttps: url.isHttps()
+              isHttps: url.isHttps(),
             });
           } else if (type === "removed") {
             $table.$(`tr[data-href=\"${bookmark.url}\"]`).remove();
           }
         }
 
-        if (this._flg.res && (type === "res_count")) {
+        if (this._flg.res && type === "res_count") {
           const tr = $table.$(`tr[data-href=\"${bookmark.url}\"]`);
           if (tr) {
             let td = tr.$(selector.res);
@@ -228,7 +243,7 @@ export default ThreadList = (function() {
           }
         }
 
-        if (this._flg.title && (type === "title")) {
+        if (this._flg.title && type === "title") {
           $tr = $table.$(`tr[data-href=\"${bookmark.url}\"]`);
           if ($tr != null) {
             $tr.$(selector.title).textContent = bookmark.title;
@@ -238,7 +253,7 @@ export default ThreadList = (function() {
 
       //未読数更新
       if (this._flg.unread) {
-        app.message.on("read_state_updated", function({read_state}) {
+        app.message.on("read_state_updated", function ({ read_state }) {
           const tr = $table.$(`tr[data-href=\"${read_state.url}\"]`);
           if (tr) {
             const res = tr.$(selector.res);
@@ -256,7 +271,7 @@ export default ThreadList = (function() {
           }
         });
 
-        app.message.on("read_state_removed", function({url}) {
+        app.message.on("read_state_removed", function ({ url }) {
           const tr = $table.$(`tr[data-href=\"${url}\"]`);
           if (tr) {
             tr.$(selector.unread).textContent = "";
@@ -270,15 +285,19 @@ export default ThreadList = (function() {
         const titleIndex = column.title;
         const $searchbox = option.searchbox;
 
-        $searchbox.on("compositionend", function() {
+        $searchbox.on("compositionend", function () {
           this.emit(new Event("input"));
         });
-        $searchbox.on("input", function({isComposing}) {
+        $searchbox.on("input", function ({ isComposing }) {
           let dom;
-          if (isComposing) { return; }
+          if (isComposing) {
+            return;
+          }
           if (this.value !== "") {
-            TableSearch($table, "search",
-              {query: this.value, target_col: titleIndex});
+            TableSearch($table, "search", {
+              query: this.value,
+              target_col: titleIndex,
+            });
             const hitCount = $table.dataset.tableSearchHitCount;
             for (dom of this.parent().child()) {
               if (dom.hasClass("hit_count")) {
@@ -294,7 +313,7 @@ export default ThreadList = (function() {
             }
           }
         });
-        $searchbox.on("keyup", function({key}) {
+        $searchbox.on("keyup", function ({ key }) {
           if (key === "Escape") {
             this.value = "";
             this.emit(new Event("input"));
@@ -303,73 +322,107 @@ export default ThreadList = (function() {
       }
 
       //コンテキストメニュー
-      if (this._flg.bookmark || this._flg.bookmarkAddRm || this._flg.writtenRes || this._flg.viewedDate) {
+      if (
+        this._flg.bookmark ||
+        this._flg.bookmarkAddRm ||
+        this._flg.writtenRes ||
+        this._flg.viewedDate
+      ) {
         (() => {
-          return $table.on("contextmenu", async e => {
+          return $table.on("contextmenu", async (e) => {
             let fn;
             $tr = e.target.closest("tbody > tr");
-            if (!$tr) { return; }
+            if (!$tr) {
+              return;
+            }
             e.preventDefault();
 
             await app.defer();
-            const $menu = $$.I("template_thread_list_contextmenu").content.$(".thread_list_contextmenu").cloneNode(true);
+            const $menu = $$.I("template_thread_list_contextmenu")
+              .content.$(".thread_list_contextmenu")
+              .cloneNode(true);
             $table.closest(".view").addLast($menu);
 
             const url = $tr.dataset.href;
 
             if (app.bookmark.get(url)) {
-              __guard__($menu.C("add_bookmark")[0], x => x.remove());
+              __guard__($menu.C("add_bookmark")[0], (x) => x.remove());
             } else {
-              __guard__($menu.C("del_bookmark")[0], x1 => x1.remove());
+              __guard__($menu.C("del_bookmark")[0], (x1) => x1.remove());
             }
 
             if (
               !this._flg.unread ||
               !/^\d+$/.test($tr.$(selector.unread).textContent) ||
-              (app.bookmark.get(url) != null)
+              app.bookmark.get(url) != null
             ) {
-              __guard__($menu.C("del_read_state")[0], x2 => x2.remove());
+              __guard__($menu.C("del_read_state")[0], (x2) => x2.remove());
             }
 
-            $menu.on("click", (fn = function({target}) {
-              let left, left1;
-              if (target.tagName !== "LI") { return; }
-              $menu.off("click", fn);
+            $menu.on(
+              "click",
+              (fn = function ({ target }) {
+                let left, left1;
+                if (target.tagName !== "LI") {
+                  return;
+                }
+                $menu.off("click", fn);
 
-              if ($tr == null) { return; }
+                if ($tr == null) {
+                  return;
+                }
 
-              const threadURL = $tr.dataset.href;
-              const threadTitle = __guard__($tr.$(selector.title), x3 => x3.textContent);
-              const threadRes = parseInt((left = __guard__($tr.$(selector.res), x4 => x4.textContent)) != null ? left : 0);
-              const threadWrittenRes = parseInt((left1 = __guard__($tr.$(selector.writtenRes), x5 => x5.textContent)) != null ? left1 : 0);
-              const dateValue = __guard__($tr.$(selector.viewedDate), x6 => x6.getAttr("date-value"));
+                const threadURL = $tr.dataset.href;
+                const threadTitle = __guard__(
+                  $tr.$(selector.title),
+                  (x3) => x3.textContent
+                );
+                const threadRes = parseInt(
+                  (left = __guard__(
+                    $tr.$(selector.res),
+                    (x4) => x4.textContent
+                  )) != null
+                    ? left
+                    : 0
+                );
+                const threadWrittenRes = parseInt(
+                  (left1 = __guard__(
+                    $tr.$(selector.writtenRes),
+                    (x5) => x5.textContent
+                  )) != null
+                    ? left1
+                    : 0
+                );
+                const dateValue = __guard__($tr.$(selector.viewedDate), (x6) =>
+                  x6.getAttr("date-value")
+                );
 
-              switch (false) {
-                case !target.hasClass("add_bookmark"):
-                  app.bookmark.add(threadURL, threadTitle, threadRes);
-                  break;
-                case !target.hasClass("del_bookmark"):
-                  app.bookmark.remove(threadURL);
-                  break;
-                case !target.hasClass("del_history"):
-                  app.History.remove(threadURL, +dateValue);
-                  $tr.remove();
-                  break;
-                case !target.hasClass("del_writehistory"):
-                  app.WriteHistory.remove(threadURL, threadWrittenRes);
-                  $tr.remove();
-                  break;
-                case !target.hasClass("ignore_res_number"):
-                  $tr.setAttr("ignore-res-number", "on");
-                  $tr.emit(new Event("mousedown", {bubbles: true}));
-                  break;
-                case !target.hasClass("del_read_state"):
-                  app.ReadState.remove(threadURL);
-                  break;
-              }
+                switch (false) {
+                  case !target.hasClass("add_bookmark"):
+                    app.bookmark.add(threadURL, threadTitle, threadRes);
+                    break;
+                  case !target.hasClass("del_bookmark"):
+                    app.bookmark.remove(threadURL);
+                    break;
+                  case !target.hasClass("del_history"):
+                    app.History.remove(threadURL, +dateValue);
+                    $tr.remove();
+                    break;
+                  case !target.hasClass("del_writehistory"):
+                    app.WriteHistory.remove(threadURL, threadWrittenRes);
+                    $tr.remove();
+                    break;
+                  case !target.hasClass("ignore_res_number"):
+                    $tr.setAttr("ignore-res-number", "on");
+                    $tr.emit(new Event("mousedown", { bubbles: true }));
+                    break;
+                  case !target.hasClass("del_read_state"):
+                    app.ReadState.remove(threadURL);
+                    break;
+                }
 
-              this.remove();
-            })
+                this.remove();
+              })
             );
             ContextMenu($menu, e.clientX, e.clientY);
           });
@@ -389,7 +442,7 @@ export default ThreadList = (function() {
     */
     static _calcHeat(now, created, resCount) {
       if (!/^\d+$/.test(created)) {
-        created = (new Date(created)).getTime();
+        created = new Date(created).getTime();
       }
       if (created > now) {
         return "0.0";
@@ -403,7 +456,9 @@ export default ThreadList = (function() {
     @param {Object|Array}
     */
     addItem(arg) {
-      if (!Array.isArray(arg)) { arg = [arg]; }
+      if (!Array.isArray(arg)) {
+        arg = [arg];
+      }
 
       const $tbody = this.table.$("tbody");
       const now = Date.now();
@@ -414,10 +469,18 @@ export default ThreadList = (function() {
         var $td;
         const $tr = $__("tr").addClass("open_in_rcrx");
 
-        if (item.expired) { $tr.addClass("expired"); }
-        if (item.ng) { $tr.addClass("ng_thread"); }
-        if (item.isNet) { $tr.addClass("net"); }
-        if (item.isHttps) { $tr.addClass("https"); }
+        if (item.expired) {
+          $tr.addClass("expired");
+        }
+        if (item.ng) {
+          $tr.addClass("ng_thread");
+        }
+        if (item.isNet) {
+          $tr.addClass("net");
+        }
+        if (item.isHttps) {
+          $tr.addClass("https");
+        }
 
         if (item.expired && !app.config.isOn("bookmark_show_dat")) {
           $tr.addClass("hidden");
@@ -427,9 +490,9 @@ export default ThreadList = (function() {
         $tr.dataset.title = app.escapeHtml(item.title);
 
         if (item.threadNumber != null) {
-          $tr.dataset.threadNumber = app.escapeHtml(""+item.threadNumber);
+          $tr.dataset.threadNumber = app.escapeHtml("" + item.threadNumber);
         }
-        if (this._flg.writtenRes && (item.res > 0)) {
+        if (this._flg.writtenRes && item.res > 0) {
           $tr.dataset.writtenResNum = item.res;
         }
 
@@ -477,8 +540,8 @@ export default ThreadList = (function() {
         //未読数
         if (this._flg.unread) {
           $td = $__("td");
-          if (item.readState && (item.resCount > item.readState.read)) {
-            $td.textContent = (item.resCount - item.readState.read);
+          if (item.readState && item.resCount > item.readState.read) {
+            $td.textContent = item.resCount - item.readState.read;
             $tr.addClass("updated");
           }
           $tr.addLast($td);
@@ -487,7 +550,11 @@ export default ThreadList = (function() {
         //勢い
         if (this._flg.heat) {
           $td = $__("td");
-          $td.textContent = ThreadList._calcHeat(now, item.createdAt, item.resCount);
+          $td.textContent = ThreadList._calcHeat(
+            now,
+            item.createdAt,
+            item.resCount
+          );
           $tr.addLast($td);
         }
 
@@ -563,13 +630,21 @@ export default ThreadList = (function() {
       this.clearSelect();
 
       if (typeof target === "number") {
-        target = this.table.$(`tbody > tr:nth-child(${target}), tbody > tr:last-child`);
+        target = this.table.$(
+          `tbody > tr:nth-child(${target}), tbody > tr:last-child`
+        );
       }
 
-      if (!target) { return; }
+      if (!target) {
+        return;
+      }
 
       target.addClass("selected");
-      target.scrollIntoView({behavior: "instant", block: "center", inline: "center"});
+      target.scrollIntoView({
+        behavior: "instant",
+        block: "center",
+        inline: "center",
+      });
     }
 
     /**
@@ -577,15 +652,21 @@ export default ThreadList = (function() {
     @param {number} [repeat = 1]
     */
     selectNext(repeat) {
-      if (repeat == null) { repeat = 1; }
+      if (repeat == null) {
+        repeat = 1;
+      }
       let current = this.getSelected();
 
       if (current) {
-        for (let i = 0, end = repeat, asc = 0 <= end; asc ? i < end : i > end; asc ? i++ : i--) {
+        for (
+          let i = 0, end = repeat, asc = 0 <= end;
+          asc ? i < end : i > end;
+          asc ? i++ : i--
+        ) {
           const prevCurrent = current;
           current = current.next();
 
-          while (current && (current.offsetHeight === 0)) {
+          while (current && current.offsetHeight === 0) {
             current = current.next();
           }
 
@@ -608,15 +689,21 @@ export default ThreadList = (function() {
     @param {number} [repeat = 1]
     */
     selectPrev(repeat) {
-      if (repeat == null) { repeat = 1; }
+      if (repeat == null) {
+        repeat = 1;
+      }
       let current = this.getSelected();
 
       if (current) {
-        for (let i = 0, end = repeat, asc = 0 <= end; asc ? i < end : i > end; asc ? i++ : i--) {
+        for (
+          let i = 0, end = repeat, asc = 0 <= end;
+          asc ? i < end : i > end;
+          asc ? i++ : i--
+        ) {
           const prevCurrent = current;
           current = current.prev();
 
-          while (current && (current.offsetHeight === 0)) {
+          while (current && current.offsetHeight === 0) {
             current = current.prev();
           }
 
@@ -638,7 +725,7 @@ export default ThreadList = (function() {
     @method clearSelect
     */
     clearSelect() {
-      __guard__(this.getSelected(), x => x.removeClass("selected"));
+      __guard__(this.getSelected(), (x) => x.removeClass("selected"));
     }
   };
   ThreadList.initClass();
@@ -646,5 +733,7 @@ export default ThreadList = (function() {
 })();
 
 function __guard__(value, transform) {
-  return (typeof value !== 'undefined' && value !== null) ? transform(value) : undefined;
+  return typeof value !== "undefined" && value !== null
+    ? transform(value)
+    : undefined;
 }

@@ -1,7 +1,10 @@
 // @ts-ignore
-import {fadeIn} from "./Animate.js"
+import { fadeIn } from "./Animate.js";
 
-type HTMLAudioVisualElement = HTMLImageElement | HTMLAudioElement | HTMLVideoElement;
+type HTMLAudioVisualElement =
+  | HTMLImageElement
+  | HTMLAudioElement
+  | HTMLVideoElement;
 
 export default class LazyLoad {
   private readonly container: HTMLElement;
@@ -18,7 +21,7 @@ export default class LazyLoad {
     "data-cookie",
     "data-cookie-referrer",
     "data-referrer",
-    "data-user-agent"
+    "data-user-agent",
   ]);
 
   constructor(container: HTMLElement) {
@@ -27,10 +30,10 @@ export default class LazyLoad {
 
     if (this.isManualLoad) return;
 
-    this.observer = new IntersectionObserver(
-      this.onChange.bind(this),
-      { root: this.container, rootMargin: "10px" }
-    );
+    this.observer = new IntersectionObserver(this.onChange.bind(this), {
+      root: this.container,
+      rootMargin: "10px",
+    });
     this.container.on("scrollstart", this.onScrollStart.bind(this));
     this.container.on("scrollfinish", this.onScrollFinish.bind(this));
     this.container.on("searchstart", this.onSearchStart.bind(this));
@@ -79,7 +82,7 @@ export default class LazyLoad {
   }
 
   private async load($media: HTMLAudioVisualElement) {
-    const imgFlg = ($media.tagName === "IMG");
+    const imgFlg = $media.tagName === "IMG";
     const faviconFlg = $media.hasClass("favicon");
 
     // immediateLoadにて処理済みのものを除外する
@@ -89,14 +92,14 @@ export default class LazyLoad {
 
     if (imgFlg && !faviconFlg) {
       const attrs = <Attr[]>Array.from($media.attributes);
-      for (const {name, value} of attrs) {
+      for (const { name, value } of attrs) {
         if (!this.noNeedAttrs.has(name)) {
           $newImg.setAttr(name, value);
         }
       }
     }
 
-    const load = ({type, currentTarget}) => {
+    const load = ({ type, currentTarget }) => {
       $newImg.off("load", load);
       $newImg.off("error", load);
       $media.parent().replaceChild(currentTarget, $media);
@@ -108,7 +111,7 @@ export default class LazyLoad {
     $newImg.on("load", load);
     $newImg.on("error", load);
 
-    const loadmetadata = e => {
+    const loadmetadata = (e) => {
       if (imgFlg && (faviconFlg || $media.hasClass("loading"))) {
         return;
       }
@@ -126,23 +129,39 @@ export default class LazyLoad {
           $newImg.src = mdata.src!;
           break;
         case "referrer":
-          $newImg.src = this.getWithReferrer(mdata.src!, mdata.referrer!, mdata.userAgent!);
+          $newImg.src = this.getWithReferrer(
+            mdata.src!,
+            mdata.referrer!,
+            mdata.userAgent!
+          );
           break;
         case "extract":
           try {
-            $newImg.src = await this.getWithExtract(mdata.src!, mdata.extract!, mdata.pattern!, mdata.extractReferrer!, mdata.userAgent!);
+            $newImg.src = await this.getWithExtract(
+              mdata.src!,
+              mdata.extract!,
+              mdata.pattern!,
+              mdata.extractReferrer!,
+              mdata.userAgent!
+            );
           } catch {
             $newImg.src = "";
           }
           break;
         case "cookie":
           try {
-            $newImg.src = await this.getWithCookie(mdata.src!, mdata.cookie!, mdata.cookieReferrer!, mdata.userAgent!);
+            $newImg.src = await this.getWithCookie(
+              mdata.src!,
+              mdata.cookie!,
+              mdata.cookieReferrer!,
+              mdata.userAgent!
+            );
           } catch {
             $newImg.src = "";
           }
           break;
-        default: $newImg.src = mdata.src!;
+        default:
+          $newImg.src = mdata.src!;
       }
     } else {
       $media.src = $media.dataset.src!;
@@ -154,13 +173,22 @@ export default class LazyLoad {
   }
 
   scan(): void {
-    this.medias = <HTMLAudioVisualElement[]>Array.from(this.container.$$("img[data-src], audio[data-src], video[data-src]"));
+    this.medias = <HTMLAudioVisualElement[]>(
+      Array.from(
+        this.container.$$("img[data-src], audio[data-src], video[data-src]")
+      )
+    );
     for (const media of this.medias) {
       this.observer.observe(media);
     }
   }
 
-  private getWithReferrer(link: string, referrer: string, userAgent: string, cookie: string = ""): string {
+  private getWithReferrer(
+    link: string,
+    referrer: string,
+    userAgent: string,
+    cookie = ""
+  ): string {
     //TODO: use browser.webRequest, browser.cookies
     //if(referrer !== ""){ req.setRequestHeader("Referer", referrer); }
     //if(userAgent !== ""){ req.setRequestHeader("User-Agent", userAgent); }
@@ -168,8 +196,13 @@ export default class LazyLoad {
     return link;
   }
 
-  private async getWithCookie(link: string, cookieLink: string, referrer: string, userAgent: string): Promise<string> {
-    const req = new app.HTTP.Request("GET", cookieLink)
+  private async getWithCookie(
+    link: string,
+    cookieLink: string,
+    referrer: string,
+    userAgent: string
+  ): Promise<string> {
+    const req = new app.HTTP.Request("GET", cookieLink);
     //TODO: use browser.webRequest
     //if(referrer !== ""){ req.headers["Referer"] = referrer); }
     //if(userAgent !== ""){ req.headers["User-Agent"] = userAgent; }
@@ -183,8 +216,14 @@ export default class LazyLoad {
     throw new Error("通信に失敗しました");
   }
 
-  private async getWithExtract(link: string, extractLink: string, pattern: string, referrer: string, userAgent: string): Promise<string> {
-    const req = new app.HTTP.Request("GET", extractLink)
+  private async getWithExtract(
+    link: string,
+    extractLink: string,
+    pattern: string,
+    referrer: string,
+    userAgent: string
+  ): Promise<string> {
+    const req = new app.HTTP.Request("GET", extractLink);
     //TODO: use browser.webRequest
     //if(referrer !== ""){ req.headers["Referer"] = referrer); }
     //if(userAgent !== ""){ req.headers["User-Agent"] = userAgent; }
@@ -194,7 +233,7 @@ export default class LazyLoad {
         const m = res.body.match(new RegExp(pattern));
         if (m !== null) {
           return link.replace(/\$EXTRACT(\d+)?/g, (str, n) => {
-            return (n === null) ? m![1] : m![n];
+            return n === null ? m![1] : m![n];
           });
         }
       }

@@ -1,5 +1,5 @@
-import {indexedDBRequestToPromise} from "./jsutil.js";
-import {isHttps} from "./URL.ts";
+import { indexedDBRequestToPromise } from "./jsutil.js";
+import { isHttps } from "./URL.ts";
 
 /**
 @class WriteHistory
@@ -7,31 +7,38 @@ import {isHttps} from "./URL.ts";
 */
 const DB_VERSION = 2;
 
-const _openDB = () => new Promise( (resolve, reject) => {
-  const req = indexedDB.open("WriteHistory", DB_VERSION);
-  req.onerror = reject;
-  req.onupgradeneeded = ({ target: {result: db, transaction: tx}, oldVersion: oldVer }) => {
-    if (oldVer < 1) {
-      const objStore = db.createObjectStore("WriteHistory", {keyPath: "id", autoIncrement: true});
-      objStore.createIndex("url", "url", {unique: false});
-      objStore.createIndex("res", "res", {unique: false});
-      objStore.createIndex("title", "title", {unique: false});
-      objStore.createIndex("date", "date", {unique: false});
-      tx.oncomplete = function() {
-        resolve(db);
-      };
-    }
-    if (oldVer === 1) {
-      _recoveryOfDate(db, tx);
-      tx.oncomplete = function() {
-        resolve(db);
-      };
-    }
-  };
-  req.onsuccess = function({ target: {result: db} }) {
-    resolve(db);
-  };
-});
+const _openDB = () =>
+  new Promise((resolve, reject) => {
+    const req = indexedDB.open("WriteHistory", DB_VERSION);
+    req.onerror = reject;
+    req.onupgradeneeded = ({
+      target: { result: db, transaction: tx },
+      oldVersion: oldVer,
+    }) => {
+      if (oldVer < 1) {
+        const objStore = db.createObjectStore("WriteHistory", {
+          keyPath: "id",
+          autoIncrement: true,
+        });
+        objStore.createIndex("url", "url", { unique: false });
+        objStore.createIndex("res", "res", { unique: false });
+        objStore.createIndex("title", "title", { unique: false });
+        objStore.createIndex("date", "date", { unique: false });
+        tx.oncomplete = function () {
+          resolve(db);
+        };
+      }
+      if (oldVer === 1) {
+        _recoveryOfDate(db, tx);
+        tx.oncomplete = function () {
+          resolve(db);
+        };
+      }
+    };
+    req.onsuccess = function ({ target: { result: db } }) {
+      resolve(db);
+    };
+  });
 
 /**
 @method add
@@ -47,18 +54,30 @@ const _openDB = () => new Promise( (resolve, reject) => {
   @param {Number} [date]
 @return {Promise}
 */
-export var add = async function({url, res, title, name, mail, inputName = null, inputMail = null, message, date}) {
-  if (app.assertArg("WriteHistory.add", [
-    [url, "string"],
-    [res, "number"],
-    [title, "string"],
-    [name, "string"],
-    [mail, "string"],
-    [inputName, "string", true],
-    [inputMail, "string", true],
-    [message, "string"],
-    [date, "number"]
-  ])) {
+export var add = async function ({
+  url,
+  res,
+  title,
+  name,
+  mail,
+  inputName = null,
+  inputMail = null,
+  message,
+  date,
+}) {
+  if (
+    app.assertArg("WriteHistory.add", [
+      [url, "string"],
+      [res, "number"],
+      [title, "string"],
+      [name, "string"],
+      [mail, "string"],
+      [inputName, "string", true],
+      [inputMail, "string", true],
+      [message, "string"],
+      [date, "number"],
+    ])
+  ) {
     throw new Error("書込履歴に追加しようとしたデータが不正です");
   }
 
@@ -76,7 +95,7 @@ export var add = async function({url, res, title, name, mail, inputName = null, 
         input_name: inputName != null ? inputName : name,
         input_mail: inputMail != null ? inputMail : mail,
         message,
-        date
+        date,
       });
     await indexedDBRequestToPromise(req);
   } catch (e) {
@@ -91,11 +110,13 @@ export var add = async function({url, res, title, name, mail, inputName = null, 
 @param {Number} res
 @return {Promise}
 */
-export var remove = async function(url, res) {
-  if (app.assertArg("WriteHistory.remove", [
-    [url, "string"],
-    [res, "number"]
-  ])) {
+export var remove = async function (url, res) {
+  if (
+    app.assertArg("WriteHistory.remove", [
+      [url, "string"],
+      [res, "number"],
+    ])
+  ) {
     return Promise.reject();
   }
 
@@ -104,17 +125,19 @@ export var remove = async function(url, res) {
     const store = db
       .transaction("WriteHistory", "readwrite")
       .objectStore("WriteHistory");
-    let req = store
-      .index("url")
-      .getAll(IDBKeyRange.only(url));
-    const { target: { result: data } } = await indexedDBRequestToPromise(req);
+    let req = store.index("url").getAll(IDBKeyRange.only(url));
+    const {
+      target: { result: data },
+    } = await indexedDBRequestToPromise(req);
 
-    await Promise.all(data.map( async function(datum) {
-      if (datum.res === res) {
-        req = store.delete(datum.id);
-        await indexedDBRequestToPromise(req);
-      }
-    }));
+    await Promise.all(
+      data.map(async function (datum) {
+        if (datum.res === res) {
+          req = store.delete(datum.id);
+          await indexedDBRequestToPromise(req);
+        }
+      })
+    );
   } catch (e) {
     app.log("error", "WriteHistory.remove: トランザクション中断");
     throw new Error(e);
@@ -127,48 +150,55 @@ export var remove = async function(url, res) {
 @param {Number} limit
 @return {Promise}
 */
-export var get = function(offset, limit) {
-  if (offset == null) { offset = -1; }
-  if (limit == null) { limit = -1; }
-  if (app.assertArg("WriteHistory.get", [
-    [offset, "number"],
-    [limit, "number"]
-  ])) {
+export var get = function (offset, limit) {
+  if (offset == null) {
+    offset = -1;
+  }
+  if (limit == null) {
+    limit = -1;
+  }
+  if (
+    app.assertArg("WriteHistory.get", [
+      [offset, "number"],
+      [limit, "number"],
+    ])
+  ) {
     return Promise.reject();
   }
 
-  return _openDB().then( db => new Promise( function(resolve, reject) {
-    const req = db
-      .transaction("WriteHistory")
-      .objectStore("WriteHistory")
-      .index("date")
-      .openCursor(null, "prev");
-    let advanced = false;
-    const histories = [];
-    req.onsuccess = function({ target: {result: cursor} }) {
-      if (cursor && ((limit === -1) || (histories.length < limit))) {
-        if (!advanced) {
-          advanced = true;
-          if (offset !== -1) {
-            cursor.advance(offset);
-            return;
+  return _openDB().then(
+    (db) =>
+      new Promise(function (resolve, reject) {
+        const req = db
+          .transaction("WriteHistory")
+          .objectStore("WriteHistory")
+          .index("date")
+          .openCursor(null, "prev");
+        let advanced = false;
+        const histories = [];
+        req.onsuccess = function ({ target: { result: cursor } }) {
+          if (cursor && (limit === -1 || histories.length < limit)) {
+            if (!advanced) {
+              advanced = true;
+              if (offset !== -1) {
+                cursor.advance(offset);
+                return;
+              }
+            }
+            const { value } = cursor;
+            value.isHttps = isHttps(value.url);
+            histories.push(value);
+            cursor.continue();
+          } else {
+            resolve(histories);
           }
-        }
-        const {
-          value
-        } = cursor;
-        value.isHttps = isHttps(value.url);
-        histories.push(value);
-        cursor.continue();
-      } else {
-        resolve(histories);
-      }
-    };
-    req.onerror = function(e) {
-      app.log("error", "WriteHistory.get: トランザクション中断");
-      reject(e);
-    };
-  }));
+        };
+        req.onerror = function (e) {
+          app.log("error", "WriteHistory.get: トランザクション中断");
+          reject(e);
+        };
+      })
+  );
 };
 
 /**
@@ -176,7 +206,7 @@ export var get = function(offset, limit) {
 @param {String} url
 @return {Promise}
 */
-export var getByUrl = async function(url) {
+export var getByUrl = async function (url) {
   let res;
   if (app.assertArg("WriteHistory.getByUrl", [[url, "string"]])) {
     throw new Error("書込履歴を取得しようとしたデータが不正です");
@@ -201,7 +231,7 @@ export var getByUrl = async function(url) {
 @method getAll
 @return {Promise}
 */
-export var getAll = async function() {
+export var getAll = async function () {
   let res;
   try {
     const db = await _openDB();
@@ -221,7 +251,7 @@ export var getAll = async function() {
 @method count
 @return {Promise}
 */
-export var count = async function() {
+export var count = async function () {
   let res;
   try {
     const db = await _openDB();
@@ -242,38 +272,43 @@ export var count = async function() {
 @param {Number} offset
 @return {Promise}
 */
-export var clear = function(offset) {
-  if (offset == null) { offset = -1; }
+export var clear = function (offset) {
+  if (offset == null) {
+    offset = -1;
+  }
   if (app.assertArg("WriteHistory.clear", [[offset, "number"]])) {
     return Promise.reject();
   }
 
-  return _openDB().then( db => new Promise( function(resolve, reject) {
-    const req = db
-      .transaction("WriteHistory", "readwrite")
-      .objectStore("WriteHistory")
-      .openCursor();
-    let advanced = false;
-    req.onsuccess = function({ target: {result: cursor} }) {
-      if (cursor) {
-        if (!advanced) {
-          advanced = true;
-          if (offset !== -1) {
-            cursor.advance(offset);
-            return;
+  return _openDB().then(
+    (db) =>
+      new Promise(function (resolve, reject) {
+        const req = db
+          .transaction("WriteHistory", "readwrite")
+          .objectStore("WriteHistory")
+          .openCursor();
+        let advanced = false;
+        req.onsuccess = function ({ target: { result: cursor } }) {
+          if (cursor) {
+            if (!advanced) {
+              advanced = true;
+              if (offset !== -1) {
+                cursor.advance(offset);
+                return;
+              }
+            }
+            cursor.delete();
+            cursor.continue();
+          } else {
+            resolve();
           }
-        }
-        cursor.delete();
-        cursor.continue();
-      } else {
-        resolve();
-      }
-    };
-    req.onerror = function(e) {
-      app.log("error", "WriteHistory.clear: トランザクション中断");
-      reject(e);
-    };
-  }));
+        };
+        req.onerror = function (e) {
+          app.log("error", "WriteHistory.clear: トランザクション中断");
+          reject(e);
+        };
+      })
+  );
 };
 
 /**
@@ -281,12 +316,12 @@ export var clear = function(offset) {
 @param {Number} day
 @return {Promise}
 */
-export var clearRange = async function(day) {
+export var clearRange = async function (day) {
   if (app.assertArg("WriteHistory.clearRange", [[day, "number"]])) {
     return Promise.reject();
   }
 
-  const dayUnix = Date.now() - (day*24*60*60*1000);
+  const dayUnix = Date.now() - day * 24 * 60 * 60 * 1000;
   try {
     const db = await _openDB();
     const store = db
@@ -295,12 +330,16 @@ export var clearRange = async function(day) {
     let req = store
       .index("date")
       .getAllKeys(IDBKeyRange.upperBound(dayUnix, true));
-    const { target: { result: keys } } = await indexedDBRequestToPromise(req);
+    const {
+      target: { result: keys },
+    } = await indexedDBRequestToPromise(req);
 
-    await Promise.all(keys.map( async function(key) {
-      req = store.delete(key);
-      await indexedDBRequestToPromise(req);
-    }));
+    await Promise.all(
+      keys.map(async function (key) {
+        req = store.delete(key);
+        await indexedDBRequestToPromise(req);
+      })
+    );
   } catch (error) {
     app.log("error", "WriteHistory.clearRange: トランザクション中断");
     throw new Error(e);
@@ -314,27 +353,28 @@ export var clearRange = async function(day) {
 @return {Promise}
 @private
 */
-var _recoveryOfDate = (db, tx) => new Promise( function(resolve, reject) {
-  const unixTime201710 = 1506783600; // 2017/10/01 0:00:00
-  const req = tx
-    .objectStore("WriteHistory")
-    .index("date")
-    .openCursor(IDBKeyRange.lowerBound(unixTime201710, true));
-  req.onsuccess = function({ target: {result: cursor} }) {
-    if (cursor) {
-      if (cursor.value.res > 1) {
-        const date = new Date(+cursor.value.date);
-        date.setMonth(date.getMonth()-1);
-        cursor.value.date = date.valueOf();
-        cursor.update(cursor.value);
+var _recoveryOfDate = (db, tx) =>
+  new Promise(function (resolve, reject) {
+    const unixTime201710 = 1506783600; // 2017/10/01 0:00:00
+    const req = tx
+      .objectStore("WriteHistory")
+      .index("date")
+      .openCursor(IDBKeyRange.lowerBound(unixTime201710, true));
+    req.onsuccess = function ({ target: { result: cursor } }) {
+      if (cursor) {
+        if (cursor.value.res > 1) {
+          const date = new Date(+cursor.value.date);
+          date.setMonth(date.getMonth() - 1);
+          cursor.value.date = date.valueOf();
+          cursor.update(cursor.value);
+        }
+        cursor.continue();
+      } else {
+        resolve();
       }
-      cursor.continue();
-    } else {
-      resolve();
-    }
-  };
-  req.onerror = function(e) {
-    app.log("error", "WriteHistory._recoveryOfDate: トランザクション中断");
-    reject(e);
-  };
-});
+    };
+    req.onerror = function (e) {
+      app.log("error", "WriteHistory._recoveryOfDate: トランザクション中断");
+      reject(e);
+    };
+  });

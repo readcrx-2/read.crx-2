@@ -1,4 +1,4 @@
-app.boot("/view/search.html", ["ThreadSearch"], async function(ThreadSearch) {
+app.boot("/view/search.html", ["ThreadSearch"], async function (ThreadSearch) {
   let queries, query;
   try {
     queries = app.URL.parseQuery(location.search);
@@ -21,9 +21,8 @@ app.boot("/view/search.html", ["ThreadSearch"], async function(ThreadSearch) {
   const $table = $__("table");
   const threadList = new UI.ThreadList($table, {
     th: ["bookmark", "title", "boardTitle", "res", "heat", "createdDate"],
-    searchbox: $view.C("searchbox")[0]
-  }
-  );
+    searchbox: $view.C("searchbox")[0],
+  });
   app.DOMData.set($view, "threadList", threadList);
   app.DOMData.set($view, "selectableItemList", threadList);
   const tableSorter = new UI.TableSorter($table);
@@ -37,13 +36,19 @@ app.boot("/view/search.html", ["ThreadSearch"], async function(ThreadSearch) {
     app.History.add($view.dataset.url, document.title, openedAt, "");
   }
 
-  $view.$(".button_link > a").href = `${scheme}://dig.5ch.net/search?maxResult=500&keywords=${encodeURIComponent(query)}`;
+  $view.$(
+    ".button_link > a"
+  ).href = `${scheme}://dig.5ch.net/search?maxResult=500&keywords=${encodeURIComponent(
+    query
+  )}`;
 
   let threadSearch = new ThreadSearch(query, `${scheme}:`);
   const $tbody = $view.T("tbody")[0];
 
-  const load = async function(add = false) {
-    if ($view.hasClass("loading") && !add) { return; }
+  const load = async function (add = false) {
+    if ($view.hasClass("loading") && !add) {
+      return;
+    }
     $view.addClass("loading");
     $buttonReload.addClass("disabled");
     $view.C("more")[0].textContent = "検索中";
@@ -74,37 +79,39 @@ app.boot("/view/search.html", ["ThreadSearch"], async function(ThreadSearch) {
 
       $view.removeClass("loading");
     } catch (error) {
-      const {message} = error;
+      const { message } = error;
       $messageBar.addClass("error");
       $messageBar.textContent = message;
       $view.removeClass("loading");
     }
 
     $view.C("more")[0].addClass("hidden");
-    (async function() {
+    (async function () {
       await app.wait5s();
       $buttonReload.removeClass("disabled");
     })();
   };
 
-  var onScroll =  function() {
-    const {offsetHeight, scrollHeight, scrollTop} = $content;
+  var onScroll = function () {
+    const { offsetHeight, scrollHeight, scrollTop } = $content;
     const scrollPosition = offsetHeight + scrollTop;
 
-    if ((scrollHeight - scrollPosition) < 100) {
+    if (scrollHeight - scrollPosition < 100) {
       $content.off("scroll", onScroll);
       load(true);
     }
   };
-  $content.on("scroll", onScroll, {passive: true});
+  $content.on("scroll", onScroll, { passive: true });
 
-  $buttonReload.on("click", async function() {
-    if ($buttonReload.hasClass("disabled")) { return; }
+  $buttonReload.on("click", async function () {
+    if ($buttonReload.hasClass("disabled")) {
+      return;
+    }
     threadList.empty();
     threadSearch = new ThreadSearch(query, `${scheme}:`);
     await load();
     onScroll(); // 20件分がスクロールなしで表示できる場合
-    $content.on("scroll", onScroll, {passive: true});
+    $content.on("scroll", onScroll, { passive: true });
   });
 
   await load();

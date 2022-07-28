@@ -1,5 +1,5 @@
-import {log} from "./Log";
-import {deepCopy} from "./Util";
+import { log } from "./Log";
+import { deepCopy } from "./Util";
 
 interface CallbacksConfiguration {
   persistent?: boolean;
@@ -8,7 +8,7 @@ interface CallbacksConfiguration {
 export default class Callbacks {
   private readonly _config: Readonly<CallbacksConfiguration>;
   private readonly _callbackStore = new Set<Function>();
-  private _latestCallArg: ReadonlyArray<any>|null = null;
+  private _latestCallArg: ReadonlyArray<any> | null = null;
   wasCalled = false;
 
   constructor(config: CallbacksConfiguration = {}) {
@@ -27,15 +27,19 @@ export default class Callbacks {
     if (this._callbackStore.has(callback)) {
       this._callbackStore.delete(callback);
     } else {
-      log("error",
-        "app.Callbacks: 存在しないコールバックを削除しようとしました。");
+      log(
+        "error",
+        "app.Callbacks: 存在しないコールバックを削除しようとしました。"
+      );
     }
   }
 
   call(...arg: any[]) {
     if (!this._config.persistent && this._latestCallArg) {
-      log("error",
-        "app.Callbacks: persistentでないCallbacksが複数回callされました。");
+      log(
+        "error",
+        "app.Callbacks: persistentでないCallbacksが複数回callされました。"
+      );
       return;
     }
 

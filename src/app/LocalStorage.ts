@@ -1,5 +1,5 @@
 export default class LocalStorage {
-  static async get(key: string, isJson: boolean = false): Promise<string|null> {
+  static async get(key: string, isJson = false): Promise<string | null> {
     const val = await browser.storage.local.get(key);
     if (!val[key]) return null;
 
@@ -9,11 +9,11 @@ export default class LocalStorage {
     return <string>val[key];
   }
 
-  static async getAll(): Promise<Record<string, string|number>> {
+  static async getAll(): Promise<Record<string, string | number>> {
     return await browser.storage.local.get(null);
   }
 
-  static async set(key: string, val: string, isJson: boolean = false) {
+  static async set(key: string, val: string, isJson = false) {
     const obj = {};
     obj[key] = isJson ? JSON.stringify(val) : val;
     await browser.storage.local.set(obj);
@@ -23,4 +23,3 @@ export default class LocalStorage {
     await browser.storage.local.remove(key);
   }
 }
-

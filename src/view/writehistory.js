@@ -1,4 +1,4 @@
-app.boot("/view/writehistory.html", function() {
+app.boot("/view/writehistory.html", function () {
   const $view = document.documentElement;
   const $content = $$.C("content")[0];
 
@@ -7,9 +7,8 @@ app.boot("/view/writehistory.html", function() {
   const $table = $__("table");
   const threadList = new UI.ThreadList($table, {
     th: ["title", "writtenRes", "name", "mail", "message", "writtenDate"],
-    searchbox: $view.C("searchbox")[0]
-  }
-  );
+    searchbox: $view.C("searchbox")[0],
+  });
   app.DOMData.set($view, "threadList", threadList);
   app.DOMData.set($view, "selectableItemList", threadList);
   $content.addLast($table);
@@ -18,15 +17,21 @@ app.boot("/view/writehistory.html", function() {
   let loadAddCount = 0;
   let isLoadedEnd = false;
 
-  const load = async function({add = false} = {}) {
+  const load = async function ({ add = false } = {}) {
     let offset;
-    if ($view.hasClass("loading")) { return; }
-    if ($view.C("button_reload")[0].hasClass("disabled") && !add) { return; }
-    if (add && isLoadedEnd) { return; }
+    if ($view.hasClass("loading")) {
+      return;
+    }
+    if ($view.C("button_reload")[0].hasClass("disabled") && !add) {
+      return;
+    }
+    if (add && isLoadedEnd) {
+      return;
+    }
 
     $view.addClass("loading");
     if (add) {
-      offset = loadAddCount*NUMBER_OF_DATA_IN_ONCE;
+      offset = loadAddCount * NUMBER_OF_DATA_IN_ONCE;
     } else {
       offset = undefined;
     }
@@ -45,7 +50,9 @@ app.boot("/view/writehistory.html", function() {
 
     threadList.addItem(data);
     $view.removeClass("loading");
-    if (add && (data.length === 0)) { return; }
+    if (add && data.length === 0) {
+      return;
+    }
     $view.emit(new Event("view_loaded"));
     $view.C("button_reload")[0].addClass("disabled");
     await app.wait5s();
@@ -56,24 +63,27 @@ app.boot("/view/writehistory.html", function() {
   load();
 
   let isInLoadArea = false;
-  $content.on("scroll", function() {
-    const {offsetHeight, scrollHeight, scrollTop} = $content;
-    const scrollPosition = offsetHeight + scrollTop;
+  $content.on(
+    "scroll",
+    function () {
+      const { offsetHeight, scrollHeight, scrollTop } = $content;
+      const scrollPosition = offsetHeight + scrollTop;
 
-    if ((scrollHeight - scrollPosition) < 100) {
-      if (isInLoadArea) { return; }
-      isInLoadArea = true;
-      load({add: true});
-    } else {
-      isInLoadArea = false;
-    }
-  }
-  , {passive: true});
+      if (scrollHeight - scrollPosition < 100) {
+        if (isInLoadArea) {
+          return;
+        }
+        isInLoadArea = true;
+        load({ add: true });
+      } else {
+        isInLoadArea = false;
+      }
+    },
+    { passive: true }
+  );
 
-  $view.C("button_history_clear")[0].on("click", async function() {
-    if (await UI.Dialog("confirm",
-      {message: "履歴を削除しますか？"}
-    )) {
+  $view.C("button_history_clear")[0].on("click", async function () {
+    if (await UI.Dialog("confirm", { message: "履歴を削除しますか？" })) {
       try {
         await app.WriteHistory.clear();
         load();

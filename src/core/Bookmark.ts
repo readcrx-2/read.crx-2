@@ -1,8 +1,8 @@
-import {Entry} from "./BookmarkEntryList"
-import BrowserBookmarkEntryList from "./BrowserBookmarkEntryList"
-import {threadToBoard} from "./URL"
+import { Entry } from "./BookmarkEntryList";
+import BrowserBookmarkEntryList from "./BrowserBookmarkEntryList";
+import { threadToBoard } from "./URL";
 // @ts-ignore
-import {get as getReadState} from "./ReadState.js"
+import { get as getReadState } from "./ReadState.js";
 
 export default class Bookmark {
   readonly bel: BrowserBookmarkEntryList;
@@ -10,27 +10,37 @@ export default class Bookmark {
 
   constructor(rootIdNode: string) {
     this.bel = new BrowserBookmarkEntryList(rootIdNode);
-    this.promiseFirstScan = new Promise( (resolve, reject) => {
-      this.bel.ready.add( () => {
+    this.promiseFirstScan = new Promise((resolve, reject) => {
+      this.bel.ready.add(() => {
         resolve(true);
 
-        this.bel.onChanged.add( ({type: typeName, entry: bookmark}) => {
+        this.bel.onChanged.add(({ type: typeName, entry: bookmark }) => {
           let type = "";
           switch (typeName) {
-            case "ADD":       type = "added";     break;
-            case "TITLE":     type = "title";     break;
-            case "RES_COUNT": type = "res_count"; break;
-            case "EXPIRED":   type = "expired";   break;
-            case "REMOVE":    type = "removed";   break;
+            case "ADD":
+              type = "added";
+              break;
+            case "TITLE":
+              type = "title";
+              break;
+            case "RES_COUNT":
+              type = "res_count";
+              break;
+            case "EXPIRED":
+              type = "expired";
+              break;
+            case "REMOVE":
+              type = "removed";
+              break;
           }
           if (type !== "") {
-            app.message.send("bookmark_updated", {type, bookmark});
+            app.message.send("bookmark_updated", { type, bookmark });
             return;
           }
           if (typeName === "READ_STATE") {
             app.message.send("read_state_updated", {
-              "board_url": threadToBoard(bookmark.url),
-              "read_state": bookmark.readState
+              board_url: threadToBoard(bookmark.url),
+              read_state: bookmark.readState,
             });
           }
         });
@@ -38,12 +48,12 @@ export default class Bookmark {
     });
 
     // 鯖移転検出時処理
-    app.message.on("detected_ch_server_move", ({before, after}) => {
+    app.message.on("detected_ch_server_move", ({ before, after }) => {
       this.bel.serverMove(before, after);
     });
   }
 
-  get(url: string): Entry|null {
+  get(url: string): Entry | null {
     const entry = this.bel.get(url);
 
     return entry ? entry : null;
@@ -94,23 +104,23 @@ export default class Bookmark {
   async removeAll(): Promise<boolean> {
     const bookmarkData: Promise<boolean>[] = [];
 
-    for (const {url} of this.bel.getAll()) {
+    for (const { url } of this.bel.getAll()) {
       bookmarkData.push(this.bel.remove(url));
     }
 
-    return (await Promise.all(bookmarkData)).every(v => v);
+    return (await Promise.all(bookmarkData)).every((v) => v);
   }
 
   async removeAllExpired(): Promise<boolean> {
     const bookmarkData: Promise<boolean>[] = [];
 
-    for (const {url, expired} of this.bel.getAll()) {
+    for (const { url, expired } of this.bel.getAll()) {
       if (expired) {
         bookmarkData.push(this.bel.remove(url));
       }
     }
 
-    return (await Promise.all(bookmarkData)).every(v => v);
+    return (await Promise.all(bookmarkData)).every((v) => v);
   }
 
   async updateReadState(readState): Promise<boolean> {
@@ -150,15 +160,21 @@ export default class Bookmark {
 
     if (!entry) {
       await this.add(newEntry.url, newEntry.title);
-      entry = this.bel.get(newEntry.url)
+      entry = this.bel.get(newEntry.url);
     }
 
-    if (newEntry.readState && app.util.isNewerReadState(entry.readState, newEntry.readState)) {
+    if (
+      newEntry.readState &&
+      app.util.isNewerReadState(entry.readState, newEntry.readState)
+    ) {
       entry.readState = newEntry.readState;
       updateEntry = true;
     }
 
-    if (newEntry.resCount && (!entry.resCount || entry.resCount < newEntry.resCount)) {
+    if (
+      newEntry.resCount &&
+      (!entry.resCount || entry.resCount < newEntry.resCount)
+    ) {
       entry.resCount = newEntry.resCount;
       updateEntry = true;
     }

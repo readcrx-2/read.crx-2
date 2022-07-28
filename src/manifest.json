@@ -1,18 +1,18 @@
 {
-  "name" : "read.crx 2",
-  "version" : "2.7.5",
+  "name": "read.crx 2",
+  "version": "2.7.5",
   "update_url": "https://readcrx-2.github.io/read.crx-2/updates.xml",
   "homepage_url": "https://readcrx-2.github.io/read.crx-2/",
-  "description" : "2chブラウザ",
+  "description": "2chブラウザ",
   "manifest_version": 2,
-  "minimum_chrome_version" : "61",
+  "minimum_chrome_version": "61",
   "content_security_policy": "default-src 'self'; img-src 'self' http: https: data:; style-src 'self' 'unsafe-inline'; connect-src 'self' http: https:; frame-src 'self' http: https: blob:; font-src data:; media-src 'self' http: https:",
-  "incognito" : "split",
-  "options_ui" : {
+  "incognito": "split",
+  "options_ui": {
     "page": "view/index.html?q=config",
     "open_in_tab": true
   },
-  "permissions" : [
+  "permissions": [
     "bookmarks",
     "cookies",
     "tabs",
@@ -25,29 +25,27 @@
     "http://*/",
     "https://*/"
   ],
-  "background" : {
-    "scripts" : [
-      "background.js"
-    ]
+  "background": {
+    "scripts": ["background.js"]
   },
-  "browser_action" : {
-    "default_icon" : {
-      "16" : "img/read.crx_16x16.png",
-      "32" : "img/read.crx_32x32.png",
-      "64" : "img/read.crx_64x64.png"
+  "browser_action": {
+    "default_icon": {
+      "16": "img/read.crx_16x16.png",
+      "32": "img/read.crx_32x32.png",
+      "64": "img/read.crx_64x64.png"
     },
-    "default_title" : "read.crx-2を開く"
+    "default_title": "read.crx-2を開く"
   },
-  "icons" : {
-    "16" : "img/read.crx_16x16.png",
-    "32" : "img/read.crx_32x32.png",
-    "48" : "img/read.crx_48x48.png",
-    "96" : "img/read.crx_96x96.png",
-    "128" : "img/read.crx_128x128.png"
+  "icons": {
+    "16": "img/read.crx_16x16.png",
+    "32": "img/read.crx_32x32.png",
+    "48": "img/read.crx_48x48.png",
+    "96": "img/read.crx_96x96.png",
+    "128": "img/read.crx_128x128.png"
   },
-  "content_scripts" : [
+  "content_scripts": [
     {
-      "matches" : [
+      "matches": [
         "*://*.2ch.net/*",
         "*://*.5ch.net/*",
         "*://jbbs.shitaraba.net/*",
@@ -56,17 +54,17 @@
         "*://*.2ch.sc/*",
         "*://*.bbspink.com/*"
       ],
-      "js" : ["/cs_addlink.js"]
+      "js": ["/cs_addlink.js"]
     },
     {
-      "matches" : [
+      "matches": [
         "*://*/test/bbs.cgi*",
         "*://jbbs.shitaraba.net/bbs/write.cgi/*",
         "*://*.machi.to/*"
       ],
-      "js" : ["/write/cs_write.js"],
-      "run_at" : "document_end",
-      "all_frames" : true
+      "js": ["/write/cs_write.js"],
+      "run_at": "document_end",
+      "all_frames": true
     }
   ],
   "web_accessible_resources": [

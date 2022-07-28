@@ -1,4 +1,4 @@
-$z-indexes:(
+$z-indexes: (
   "tab-content",
   "selected-tab-content",
   "tabbed-view-nav-bar",
@@ -17,15 +17,20 @@ $z-indexes:(
   }
   --z-index-thumnail-zoom: 20;
 
-  --color-pending: #7F7F7F;
-  --color-loading: #AC7239;
+  --color-pending: #7f7f7f;
+  --color-loading: #ac7239;
   --color-success: #339933;
-  --color-error: #BF3F3F;
+  --color-error: #bf3f3f;
   --color-https: #109020;
 }
 
 @mixin common {
-  header, body, input, textarea, button, select {
+  header,
+  body,
+  input,
+  textarea,
+  button,
+  select {
     font-family: inherit;
   }
 
@@ -78,7 +83,8 @@ $z-indexes:(
     scrollbar-color: #999999 #bbbbbb;
 
     scrollbar-width: thin;
-    .container, .content {
+    .container,
+    .content {
       scrollbar-width: thin;
     }
   }
@@ -92,7 +98,7 @@ $z-indexes:(
   font: {
     size: 16px;
     family: "MS PGothic", "IPAMonaPGothic", "Konatu", "Monapo", "Textar";
-  };
+  }
   line-height: 18px;
 }
 
@@ -133,7 +139,7 @@ $z-indexes:(
   }
 }
 
-@mixin tab-content-theme (
+@mixin tab-content-theme(
   $nav-bar-background-color,
   $nav-bar-color,
   $nav-bar-item-border-color,
@@ -154,7 +160,9 @@ $z-indexes:(
   .nav_bar {
     background-color: $nav-bar-background-color;
     color: $nav-bar-color;
-    > .button:not(.disabled):hover, > label, > .sort_item_selector {
+    > .button:not(.disabled):hover,
+    > label,
+    > .sort_item_selector {
       border-color: $nav-bar-item-border-color;
     }
     > label {
@@ -233,7 +241,8 @@ $z-indexes:(
       display: inline-block !important;
     }
   }
-  html, body {
+  html,
+  body {
     width: 100%;
     height: 100%;
   }
@@ -251,7 +260,8 @@ $z-indexes:(
     &.loading {
       padding: 3px;
     }
-    &.info, &.error {
+    &.info,
+    &.error {
       padding: 3px;
       border: 1px solid;
     }
@@ -262,10 +272,13 @@ $z-indexes:(
     border-bottom: 2px solid hsla(0, 0%, 0%, 0.2);
     z-index: var(--z-index-tabbed-view-nav-bar);
     position: relative;
-    > label, > .button {
+    > label,
+    > .button {
       float: left;
     }
-    > .button, > .breadcrumb, > .sort_item_selector {
+    > .button,
+    > .breadcrumb,
+    > .sort_item_selector {
       border-width: 1px;
       border-style: solid;
       margin: 3px;
@@ -471,7 +484,8 @@ $z-indexes:(
     );
 
     .message_bar > {
-      a, a:visited {
+      a,
+      a:visited {
         color: #efa;
       }
     }
@@ -503,16 +517,21 @@ $z-indexes:(
     &.board_title {
       width: 10em;
     }
-    &.res, &.unread, &.written_res {
+    &.res,
+    &.unread,
+    &.written_res {
       width: 7ch;
     }
     &.heat {
       width: 9ch;
     }
-    &.name, &.mail {
+    &.name,
+    &.mail {
       width: 8em;
     }
-    &.created_date, &.viewed_date, &.written_date {
+    &.created_date,
+    &.viewed_date,
+    &.written_date {
       width: 18ch;
     }
   }
@@ -525,7 +544,8 @@ $z-indexes:(
     text-overflow: ellipsis;
     overflow: hidden;
   }
-  table::after, tbody::after {
+  table::after,
+  tbody::after {
     display: block;
     position: absolute;
     width: 100%;
@@ -586,11 +606,13 @@ $z-indexes:(
   background-color: $background-color;
   color: $color;
 
-  th, tr {
+  th,
+  tr {
     border-color: $cell-border-color;
   }
 
-  .table_sort th:hover, tbody > tr:hover {
+  .table_sort th:hover,
+  tbody > tr:hover {
     background-color: $cell-hover-background-color;
   }
 

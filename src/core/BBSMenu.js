@@ -1,6 +1,6 @@
 import Cache from "./Cache.js";
-import {Request} from "./HTTP.ts";
-import {fix as fixUrl, tsld as getTsld} from "./URL.ts";
+import { Request } from "./HTTP.ts";
+import { fix as fixUrl, tsld as getTsld } from "./URL.ts";
 
 let bbsmenuOption = null;
 
@@ -10,7 +10,7 @@ export var target = $__("div");
 @method fetchAll
 @param {Boolean} [forceReload=false]
 */
-export var fetchAll = async function(forceReload = false) {
+export var fetchAll = async function (forceReload = false) {
   let menu;
   const bbsmenu = [];
 
@@ -22,27 +22,30 @@ export var fetchAll = async function(forceReload = false) {
     }
     const tmpOpt = app.config.get("bbsmenu_option").split("\n");
     for (let opt of tmpOpt) {
-      if ((opt === "") || opt.startsWith("//")) { continue; }
+      if (opt === "" || opt.startsWith("//")) {
+        continue;
+      }
       bbsmenuOption.add(opt);
     }
   }
 
   const bbsmenuUrl = app.config.get("bbsmenu").split("\n");
   for (let url of bbsmenuUrl) {
-    if ((url === "") || url.startsWith("//")) { continue; }
+    if (url === "" || url.startsWith("//")) {
+      continue;
+    }
     try {
-      ({menu} = await fetch(url, forceReload));
+      ({ menu } = await fetch(url, forceReload));
       bbsmenu.push(...menu);
     } catch (error) {
       app.message.send("notify", {
         message: `板一覧の取得に失敗しました。(${url})`,
-        background_color: "red"
-      }
-      );
+        background_color: "red",
+      });
     }
   }
 
-  return {menu: bbsmenu};
+  return { menu: bbsmenu };
 };
 
 /**
@@ -50,7 +53,7 @@ export var fetchAll = async function(forceReload = false) {
 @param {String} url
 @param {Boolean} [force=false]
 */
-export var fetch = async function(url, force) {
+export var fetch = async function (url, force) {
   //キャッシュ取得
   let menu, response;
   const cache = new Cache(url);
@@ -60,16 +63,21 @@ export var fetch = async function(url, force) {
     if (force) {
       throw new Error("最新のものを取得するために通信します");
     }
-    if ((Date.now() - cache.lastUpdated) > (+app.config.get("bbsmenu_update_interval")*1000*60*60*24)) {
+    if (
+      Date.now() - cache.lastUpdated >
+      +app.config.get("bbsmenu_update_interval") * 1000 * 60 * 60 * 24
+    ) {
       throw new Error("キャッシュが期限切れなので通信します");
     }
   } catch (error) {
     //通信
-    const request = new Request("GET", url,
-      {mimeType: "text/plain; charset=Shift_JIS"}
-    );
+    const request = new Request("GET", url, {
+      mimeType: "text/plain; charset=Shift_JIS",
+    });
     if (cache.lastModified != null) {
-      request.headers["If-Modified-Since"] = new Date(cache.lastModified).toUTCString();
+      request.headers["If-Modified-Since"] = new Date(
+        cache.lastModified
+      ).toUTCString();
     }
 
     if (cache.etag != null) {
@@ -93,7 +101,6 @@ export var fetch = async function(url, force) {
       cache.lastModified = lastModified;
     }
     cache.put();
-
   } else if (cache.data != null) {
     menu = parse(cache.data);
 
@@ -105,14 +112,18 @@ export var fetch = async function(url, force) {
   }
 
   if (!((menu != null ? menu.length : undefined) > 0)) {
-    throw {response};
+    throw { response };
   }
 
-  if (((response != null ? response.status : undefined) !== 200) && ((response != null ? response.status : undefined) !== 304) && (!!response || (cache.data == null))) {
-    throw {response, menu};
+  if (
+    (response != null ? response.status : undefined) !== 200 &&
+    (response != null ? response.status : undefined) !== 304 &&
+    (!!response || cache.data == null)
+  ) {
+    throw { response, menu };
   }
 
-  return {response, menu};
+  return { response, menu };
 };
 
 /**
@@ -120,20 +131,22 @@ export var fetch = async function(url, force) {
 @param {Function} Callback
 @param {Boolean} [ForceReload=false]
 */
-export var get = async function(forceReload = false) {
+export var get = async function (forceReload = false) {
   let _updatingPromise, obj;
-  if (_updatingPromise == null) { _updatingPromise = _update(forceReload); }
+  if (_updatingPromise == null) {
+    _updatingPromise = _update(forceReload);
+  }
   try {
     obj = await _updatingPromise;
     obj.status = "success";
     if (forceReload) {
-      target.emit(new CustomEvent("change", {detail: obj}));
+      target.emit(new CustomEvent("change", { detail: obj }));
     }
   } catch (error) {
     obj = error;
     obj.status = "error";
     if (forceReload) {
-      target.emit(new CustomEvent("change", {detail: obj}));
+      target.emit(new CustomEvent("change", { detail: obj }));
     }
   }
   return obj;
@@ -144,11 +157,17 @@ export var get = async function(forceReload = false) {
 @param {String} html
 @return {Array}
 */
-var parse = function(html) {
+var parse = function (html) {
   let regCategoryRes;
-  const regCategory = new RegExp(`<b>(.+?)</b>(?:.*[\\r\\n]+<a\\s.*?>.+?</a>)+`, 'gi');
-  const regBoard = new RegExp(`<a\\shref=(https?://(?!info\\.[25]ch\\.net/|headline\\.bbspink\\.com)\
-(?:\\w+\\.(?:[25]ch\\.net|open2ch\\.net|2ch\\.sc|bbspink\\.com)|(?:\\w+\\.)?machi\\.to)/\\w+/)(?:\\s.*?)?>(.+?)</a>`, 'gi');
+  const regCategory = new RegExp(
+    `<b>(.+?)</b>(?:.*[\\r\\n]+<a\\s.*?>.+?</a>)+`,
+    "gi"
+  );
+  const regBoard = new RegExp(
+    `<a\\shref=(https?://(?!info\\.[25]ch\\.net/|headline\\.bbspink\\.com)\
+(?:\\w+\\.(?:[25]ch\\.net|open2ch\\.net|2ch\\.sc|bbspink\\.com)|(?:\\w+\\.)?machi\\.to)/\\w+/)(?:\\s.*?)?>(.+?)</a>`,
+    "gi"
+  );
   const menu = [];
   const bbspinkException = bbsmenuOption.has("bbspink.com");
 
@@ -156,13 +175,17 @@ var parse = function(html) {
     var regBoardRes;
     const category = {
       title: regCategoryRes[1],
-      board: []
+      board: [],
     };
 
     let subName = null;
     while ((regBoardRes = regBoard.exec(regCategoryRes[0]))) {
-      if (bbsmenuOption.has(getTsld(regBoardRes[1]))) { continue; }
-      if (bbspinkException && regBoardRes[1].includes("5ch.net/bbypink")) { continue; }
+      if (bbsmenuOption.has(getTsld(regBoardRes[1]))) {
+        continue;
+      }
+      if (bbspinkException && regBoardRes[1].includes("5ch.net/bbypink")) {
+        continue;
+      }
       if (!subName) {
         if (regBoardRes[1].includes("open2ch.net")) {
           subName = "op";
@@ -172,23 +195,27 @@ var parse = function(html) {
           subName = "";
         }
         if (
-          (subName !== "") &&
-          !(category.title.endsWith(`(${subName})`) ||
-            category.title.endsWith(`_${subName}`))
+          subName !== "" &&
+          !(
+            category.title.endsWith(`(${subName})`) ||
+            category.title.endsWith(`_${subName}`)
+          )
         ) {
           category.title += `(${subName})`;
         }
       }
       if (
-        (subName !== "") &&
-        !(regBoardRes[2].endsWith(`(${subName})`) ||
-          regBoardRes[2].endsWith(`_${subName}`))
+        subName !== "" &&
+        !(
+          regBoardRes[2].endsWith(`(${subName})`) ||
+          regBoardRes[2].endsWith(`_${subName}`)
+        )
       ) {
         regBoardRes[2] += `_${subName}`;
       }
       category.board.push({
         url: fixUrl(regBoardRes[1]),
-        title: regBoardRes[2]
+        title: regBoardRes[2],
       });
     }
 
@@ -200,8 +227,8 @@ var parse = function(html) {
 };
 
 let _updatingPromise = null;
-var _update = async function(forceReload) {
-  const {menu} = await fetchAll(forceReload);
+var _update = async function (forceReload) {
+  const { menu } = await fetchAll(forceReload);
   _updatingPromise = null;
-  return {menu};
+  return { menu };
 };

@@ -6,8 +6,7 @@ import ContextMenu from "./ContextMenu.js";
 @param {Element} defaultParent
 */
 export default class PopupView {
-
-  constructor(defaultParent){
+  constructor(defaultParent) {
     /**
     @property _popupStack
     @type Array
@@ -75,7 +74,6 @@ export default class PopupView {
     @private
     */
     this._delayRemoveTimeoutID = 0;
-
   }
 
   /**
@@ -93,7 +91,9 @@ export default class PopupView {
     // 同一ソースからのポップアップが既に有る場合は、処理を中断
     if (this._popupStack.length > 0) {
       popupInfo = this._popupStack[this._popupStack.length - 1];
-      if (source === popupInfo.source) { return; }
+      if (source === popupInfo.source) {
+        return;
+      }
     }
 
     // sourceがpopup内のものならば、兄弟ノードの削除
@@ -115,20 +115,21 @@ export default class PopupView {
     ContextMenu.remove();
 
     // 表示位置の決定
-    const setDispPosition = popupNode => {
+    const setDispPosition = (popupNode) => {
       let cssTop;
       const margin = 20;
-      const {offsetHeight: bodyHeight, offsetWidth: bodyWidth} = document.body;
+      const { offsetHeight: bodyHeight, offsetWidth: bodyWidth } =
+        document.body;
       const viewTop = this.defaultParent.$(".nav_bar").offsetHeight;
       const viewHeight = bodyHeight - viewTop;
-      const maxWidth = bodyWidth - (margin * 2);
+      const maxWidth = bodyWidth - margin * 2;
 
       // カーソルの上下左右のスペースを測定
       const space = {
         left: mouseX,
         right: bodyWidth - mouseX,
         top: mouseY,
-        bottom: bodyHeight - mouseY
+        bottom: bodyHeight - mouseY,
       };
 
       // 通常はカーソル左か右のスペースを用いるが、そのどちらもが狭い場合は上下に配置する
@@ -141,9 +142,9 @@ export default class PopupView {
           popupNode.style.right = `${space.right + margin}px`;
           popupNode.style.maxWidth = `${maxWidth - space.right}px`;
         }
-        const cursorTop = Math.max(space.top, viewTop + (margin * 2));
+        const cursorTop = Math.max(space.top, viewTop + margin * 2);
         const outerHeight = this._getOuterHeight(popupNode, true);
-        if (viewHeight > (outerHeight + margin)) {
+        if (viewHeight > outerHeight + margin) {
           cssTop = Math.min(cursorTop, bodyHeight - outerHeight) - margin;
         } else {
           cssTop = viewTop + margin;
@@ -159,7 +160,7 @@ export default class PopupView {
           popupNode.style.bottom = `${cssBottom}px`;
           popupNode.style.maxHeight = `${viewHeight - cssBottom - margin}px`;
         } else {
-          cssTop = (bodyHeight - space.bottom) + margin;
+          cssTop = bodyHeight - space.bottom + margin;
           popupNode.style.top = `${cssTop}px`;
           popupNode.style.maxHeight = `${viewHeight - cssTop - margin}px`;
         }
@@ -197,10 +198,9 @@ export default class PopupView {
       // リンク情報の保管
       popupInfo = {
         source: sourceNode,
-        popup: popupNode
+        popup: popupNode,
       };
       this._popupStack.push(popupInfo);
-
     };
 
     // 即時表示の場合
@@ -213,10 +213,10 @@ export default class PopupView {
       await app.defer();
       this._activateNode();
 
-    // 遅延表示の場合
+      // 遅延表示の場合
     } else {
       ((sourceNode, popupNode) => {
-        this._delayTimeoutID = setTimeout( () => {
+        this._delayTimeoutID = setTimeout(() => {
           this._delayTimeoutID = 0;
           // マウス座標がポップアップ元のままの場合のみ実行する
           const ele = document.elementFromPoint(this._currentX, this._currentY);
@@ -228,11 +228,9 @@ export default class PopupView {
             // popupの表示
             return this._popupArea.addLast(popupNode);
           }
-        }
-        , this._delayTime);
+        }, this._delayTime);
       })(this.source, this.popup);
     }
-
   }
 
   /**
@@ -240,17 +238,18 @@ export default class PopupView {
   @param {Boolean} forceRemove
   */
   _remove(forceRemove) {
-    if (this._popupArea.hasClass("has_contextmenu")) { return; }
+    if (this._popupArea.hasClass("has_contextmenu")) {
+      return;
+    }
     for (let i = this._popupStack.length - 1; i >= 0; i--) {
       // 末端の非アクティブ・ノードを選択
-      const {popup, source} = this._popupStack[i];
+      const { popup, source } = this._popupStack[i];
       if (
         !forceRemove &&
-        (
-          source.hasClass("active") ||
-          popup.hasClass("active")
-        )
-      ) { break; }
+        (source.hasClass("active") || popup.hasClass("active"))
+      ) {
+        break;
+      }
       // 該当ノードの除去
       source.off("mouseenter", this._onMouseEnter);
       source.off("mouseleave", this._onMouseLeave);
@@ -278,19 +277,20 @@ export default class PopupView {
   @param {Boolean} forceRemove
   */
   _delayRemove(forceRemove) {
-    if (this._delayRemoveTimeoutID !== 0) { clearTimeout(this._delayRemoveTimeoutID); }
-    this._delayRemoveTimeoutID = setTimeout( () => {
+    if (this._delayRemoveTimeoutID !== 0) {
+      clearTimeout(this._delayRemoveTimeoutID);
+    }
+    this._delayRemoveTimeoutID = setTimeout(() => {
       this._delayRemoveTimeoutID = 0;
       return this._remove(forceRemove);
-    }
-    , 300);
+    }, 300);
   }
 
   /**
   @method _onMouseEnter
   @param {Object} Event
   */
-  _onMouseEnter({currentTarget: target}) {
+  _onMouseEnter({ currentTarget: target }) {
     target.addClass("active");
     // ペア・ノードの非アクティブ化
     const stackIndex = target.getAttr("stack-index");
@@ -300,8 +300,10 @@ export default class PopupView {
       this._popupStack[stackIndex].popup.removeClass("active");
     }
     // 末端ノードの非アクティブ化
-    if ((this._popupStack.length - 1) > stackIndex) {
-      this._popupStack[this._popupStack.length - 1].source.removeClass("active");
+    if (this._popupStack.length - 1 > stackIndex) {
+      this._popupStack[this._popupStack.length - 1].source.removeClass(
+        "active"
+      );
       this._popupStack[this._popupStack.length - 1].popup.removeClass("active");
       this._delayRemove(false);
     }
@@ -313,7 +315,9 @@ export default class PopupView {
   */
   _onMouseLeave({ currentTarget: target }) {
     target.removeClass("active");
-    if (this._popupArea.hasClass("has_contextmenu")) { return; }
+    if (this._popupArea.hasClass("has_contextmenu")) {
+      return;
+    }
     this._delayRemove(false);
   }
 
@@ -321,7 +325,7 @@ export default class PopupView {
   @method _onMouseMove
   @param {Object} Event
   */
-  _onMouseMove({clientX, clientY}) {
+  _onMouseMove({ clientX, clientY }) {
     this._currentX = clientX;
     this._currentY = clientY;
   }
@@ -333,7 +337,7 @@ export default class PopupView {
     const ele = document.elementFromPoint(this._currentX, this._currentY);
     if (ele === this.source) {
       this.source.addClass("active");
-    } else if ((ele === this.popup) || (ele.closest(".popup") === this.popup)) {
+    } else if (ele === this.popup || ele.closest(".popup") === this.popup) {
       this.popup.addClass("active");
     } else if (ele.hasClass("popup_source") || ele.hasClass("popup")) {
       ele.addClass("active");
@@ -362,26 +366,29 @@ export default class PopupView {
   // .outerHeight()の代用関数
   _getOuterHeight(ele, margin) {
     // 下層に表示してoffsetHeightを取得する
-    if (margin == null) { margin = false; }
+    if (margin == null) {
+      margin = false;
+    }
     ele.style.zIndex = "-1";
     this._popupArea.addLast(ele);
     let outerHeight = ele.offsetHeight;
     ele.remove();
-    ele.style.zIndex = "3";    // ソースでは"3"だが、getComputedStyleでは"0"になるため
+    ele.style.zIndex = "3"; // ソースでは"3"だが、getComputedStyleでは"0"になるため
     // 表示済みのノードが存在すればCSSの値を取得する
-    if ((this._popupStyle === null) && (this._popupStack.length > 0)) {
+    if (this._popupStyle === null && this._popupStack.length > 0) {
       this._popupStyle = getComputedStyle(this._popupStack[0].popup, null);
     }
     // margin等の取得
-    if (margin && (this._popupStyle !== null)) {
+    if (margin && this._popupStyle !== null) {
       if (this._popupMarginHeight < 0) {
         this._popupMarginHeight = 0;
         this._popupMarginHeight += parseInt(this._popupStyle.marginTop);
         this._popupMarginHeight += parseInt(this._popupStyle.marginBottom);
-        const {
-          boxShadow
-        } = this._popupStyle;
-        const tmp = /rgba?\(.*\) (-?[\d]+)px (-?[\d]+)px ([\d]+)px (-?[\d]+)px/.exec(boxShadow);
+        const { boxShadow } = this._popupStyle;
+        const tmp =
+          /rgba?\(.*\) (-?[\d]+)px (-?[\d]+)px ([\d]+)px (-?[\d]+)px/.exec(
+            boxShadow
+          );
         this._popupMarginHeight += Math.abs(parseInt(tmp[2]));
         this._popupMarginHeight += Math.abs(parseInt(tmp[4]));
       }

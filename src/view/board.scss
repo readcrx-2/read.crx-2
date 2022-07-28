@@ -5,7 +5,8 @@
 @include content-table;
 
 @media (max-width: 650px) and (min-width: 501px) {
-  col, th {
+  col,
+  th {
     &:not(.table_sort_asc):not(.table_sort_desc).created_date {
       width: 0;
     }
@@ -13,7 +14,8 @@
 }
 
 @media (max-width: 500px) {
-  col, th {
+  col,
+  th {
     &:not(.table_sort_asc):not(.table_sort_desc):not(.bookmark):not(.title) {
       width: 0;
     }
@@ -21,7 +23,9 @@
 }
 
 td {
-  &:nth-child(3), &:nth-child(4), &:nth-child(5) {
+  &:nth-child(3),
+  &:nth-child(4),
+  &:nth-child(5) {
     text-align: right;
   }
 }

@@ -1,8 +1,12 @@
 import Cache from "./Cache.js";
-import {isNGBoard} from "./NG.js";
-import {Request} from "./HTTP.ts";
-import {URL} from "./URL.ts";
-import {chServerMoveDetect, decodeCharReference, removeNeedlessFromTitle} from "./jsutil.js";
+import { isNGBoard } from "./NG.js";
+import { Request } from "./HTTP.ts";
+import { URL } from "./URL.ts";
+import {
+  chServerMoveDetect,
+  decodeCharReference,
+  removeNeedlessFromTitle,
+} from "./jsutil.js";
 
 /**
 @class Board
@@ -36,10 +40,12 @@ export default class Board {
   */
   get() {
     const tmp = Board._getXhrInfo(this.url);
-    if (!tmp) { return Promise.reject(); }
-    const {path: xhrPath, charset: xhrCharset} = tmp;
+    if (!tmp) {
+      return Promise.reject();
+    }
+    const { path: xhrPath, charset: xhrCharset } = tmp;
 
-    return new Promise( async (resolve, reject) => {
+    return new Promise(async (resolve, reject) => {
       let bookmark, newBoardUrl, response, thread, threadList;
       let hasCache = false;
 
@@ -50,7 +56,7 @@ export default class Board {
       try {
         await cache.get();
         hasCache = true;
-        if (!((Date.now() - cache.lastUpdated) < (1000 * 3))) {
+        if (!(Date.now() - cache.lastUpdated < 1000 * 3)) {
           throw new Error("キャッシュの期限が切れているため通信します");
         }
       } catch (error1) {
@@ -62,13 +68,13 @@ export default class Board {
           // 通信
           const request = new Request("GET", xhrPath, {
             mimeType: `text/plain; charset=${xhrCharset}`,
-            preventCache: true
-          }
-          );
+            preventCache: true,
+          });
           if (hasCache) {
             if (cache.lastModified != null) {
-              request.headers["If-Modified-Since"] =
-                new Date(cache.lastModified).toUTCString();
+              request.headers["If-Modified-Since"] = new Date(
+                cache.lastModified
+              ).toUTCString();
             }
             if (cache.etag != null) {
               request.headers["If-None-Match"] = cache.etag;
@@ -81,12 +87,12 @@ export default class Board {
         // パース
         // 2chで自動移動しているときはサーバー移転
         if (
-          (response != null) &&
-          (this.url.getTsld() === "5ch.net") &&
-          (this.url.hostname !== response.responseURL.split("/")[2])
+          response != null &&
+          this.url.getTsld() === "5ch.net" &&
+          this.url.hostname !== response.responseURL.split("/")[2]
         ) {
           newBoardUrl = response.responseURL.slice(0, -"subject.txt".length);
-          throw {response, newBoardUrl};
+          throw { response, newBoardUrl };
         }
 
         if ((response != null ? response.status : undefined) === 200) {
@@ -96,10 +102,14 @@ export default class Board {
         }
 
         if (threadList == null) {
-          throw {response};
+          throw { response };
         }
-        if (((response != null ? response.status : undefined) !== 200) && ((response != null ? response.status : undefined) !== 304) && (!(response == null) || !hasCache)) {
-          throw {response, threadList};
+        if (
+          (response != null ? response.status : undefined) !== 200 &&
+          (response != null ? response.status : undefined) !== 304 &&
+          (!(response == null) || !hasCache)
+        ) {
+          throw { response, threadList };
         }
 
         //コールバック
@@ -120,7 +130,7 @@ export default class Board {
             cache.lastModified = lastModified;
           }
 
-          if (etag = response.headers["ETag"]) {
+          if ((etag = response.headers["ETag"])) {
             cache.etag = etag;
           }
 
@@ -129,18 +139,19 @@ export default class Board {
           for (thread of threadList) {
             app.bookmark.updateResCount(thread.url, thread.resCount);
           }
-
-        } else if (hasCache && ((response != null ? response.status : undefined) === 304)) {
+        } else if (
+          hasCache &&
+          (response != null ? response.status : undefined) === 304
+        ) {
           cache.lastUpdated = Date.now();
           cache.put();
         }
-
       } catch (error) {
         //コールバック
-        ({response, threadList, newBoardUrl} = error);
+        ({ response, threadList, newBoardUrl } = error);
         this.message = "板の読み込みに失敗しました。";
 
-        if ((newBoardUrl != null) && (this.url.getTsld() === "5ch.net")) {
+        if (newBoardUrl != null && this.url.getTsld() === "5ch.net") {
           try {
             newBoardUrl = (await chServerMoveDetect(this.url)).href;
             this.message += `\
@@ -150,8 +161,8 @@ class="open_in_rcrx">${app.escapeHtml(newBoardUrl)}
 </a>)\
 `;
           } catch (error2) {}
-        //2chでrejectされている場合は移転を疑う
-        } else if ((this.url.getTsld() === "5ch.net") && (response != null)) {
+          //2chでrejectされている場合は移転を疑う
+        } else if (this.url.getTsld() === "5ch.net" && response != null) {
           try {
             newBoardUrl = (await chServerMoveDetect(this.url)).href;
             //移転検出時
@@ -162,7 +173,7 @@ class="open_in_rcrx">${app.escapeHtml(newBoardUrl)}
 </a>)\
 `;
           } catch (error3) {}
-          if (hasCache && (threadList != null)) {
+          if (hasCache && threadList != null) {
             this.message += "キャッシュに残っていたデータを表示します。";
           }
 
@@ -170,7 +181,7 @@ class="open_in_rcrx">${app.escapeHtml(newBoardUrl)}
             this.thread = threadList;
           }
         } else {
-          if (hasCache && (threadList != null)) {
+          if (hasCache && threadList != null) {
             this.message += "キャッシュに残っていたデータを表示します。";
           }
 
@@ -182,7 +193,9 @@ class="open_in_rcrx">${app.escapeHtml(newBoardUrl)}
       }
 
       // dat落ちスキャン
-      if (!threadList) { return; }
+      if (!threadList) {
+        return;
+      }
       const dict = {};
       for (bookmark of app.bookmark.getByBoard(this.url.href)) {
         if (bookmark.type === "thread") {
@@ -216,12 +229,12 @@ class="open_in_rcrx">${app.escapeHtml(newBoardUrl)}
     const board = new Board(url);
     try {
       await board.get();
-      return {status: "success", data: board.thread};
+      return { status: "success", data: board.thread };
     } catch (error) {
       return {
         status: "error",
         message: board.message != null ? board.message : null,
-        data: board.thread != null ? board.thread : null
+        data: board.thread != null ? board.thread : null,
       };
     }
   }
@@ -235,22 +248,24 @@ class="open_in_rcrx">${app.escapeHtml(newBoardUrl)}
   */
   static _getXhrInfo(boardUrl) {
     const tmp = new RegExp(`^/(\\w+)(?:/(\\d+)/|/?)$`).exec(boardUrl.pathname);
-    if (!tmp) { return null; }
+    if (!tmp) {
+      return null;
+    }
     switch (boardUrl.getTsld()) {
       case "machi.to":
         return {
           path: `${boardUrl.origin}/bbs/offlaw.cgi/${tmp[1]}/`,
-          charset: "Shift_JIS"
+          charset: "Shift_JIS",
         };
       case "shitaraba.net":
         return {
           path: `${boardUrl.protocol}//jbbs.shitaraba.net/${tmp[1]}/${tmp[2]}/subject.txt`,
-          charset: "EUC-JP"
+          charset: "EUC-JP",
         };
       default:
         return {
           path: `${boardUrl.origin}/${tmp[1]}/subject.txt`,
-          charset: "Shift_JIS"
+          charset: "Shift_JIS",
         };
     }
   }
@@ -279,14 +294,14 @@ class="open_in_rcrx">${app.escapeHtml(newBoardUrl)}
         baseUrl = `${url.protocol}//jbbs.shitaraba.net/bbs/read.cgi/${tmp[1]}/${tmp[2]}/`;
         break;
       default:
-        scFlg = (url.getTsld() === "2ch.sc");
+        scFlg = url.getTsld() === "2ch.sc";
         bbsType = "2ch";
         reg = /^(\d+)\.dat<>(.+) \((\d+)\)$/gm;
         baseUrl = `${url.origin}/test/read.cgi/${tmp[1]}/`;
     }
 
     const board = [];
-    while (regRes = reg.exec(text)) {
+    while ((regRes = reg.exec(text))) {
       let title = decodeCharReference(regRes[2]);
       title = removeNeedlessFromTitle(title);
 
@@ -298,7 +313,7 @@ class="open_in_rcrx">${app.escapeHtml(newBoardUrl)}
         resCount,
         createdAt: +regRes[1] * 1000,
         ng: isNGBoard(title, url.href, resCount),
-        isNet: scFlg ? !title.startsWith("★") : null
+        isNet: scFlg ? !title.startsWith("★") : null,
       });
     }
 
@@ -320,7 +335,7 @@ class="open_in_rcrx">${app.escapeHtml(newBoardUrl)}
   */
   static async getCachedResCount(threadUrl) {
     const boardUrl = threadUrl.toBoard();
-    const xhrPath = __guard__(Board._getXhrInfo(boardUrl), x => x.path);
+    const xhrPath = __guard__(Board._getXhrInfo(boardUrl), (x) => x.path);
 
     if (xhrPath == null) {
       throw new Error("その板の取得方法の情報が存在しません");
@@ -329,12 +344,12 @@ class="open_in_rcrx">${app.escapeHtml(newBoardUrl)}
     const cache = new Cache(xhrPath);
     try {
       await cache.get();
-      const {lastModified, data} = cache;
-      for (let {url, resCount} of Board.parse(boardUrl, data)) {
+      const { lastModified, data } = cache;
+      for (let { url, resCount } of Board.parse(boardUrl, data)) {
         if (url === threadUrl.href) {
           return {
             resCount,
-            modified: lastModified
+            modified: lastModified,
           };
         }
       }
@@ -344,5 +359,7 @@ class="open_in_rcrx">${app.escapeHtml(newBoardUrl)}
 }
 
 function __guard__(value, transform) {
-  return (typeof value !== 'undefined' && value !== null) ? transform(value) : undefined;
+  return typeof value !== "undefined" && value !== null
+    ? transform(value)
+    : undefined;
 }

@@ -14,20 +14,27 @@ const reg = new RegExp(`^https?://(?:\
 
 const openButtonId = "36e5cda5";
 const closeButtonId = "92a5da13";
-let url = (typeof browser !== 'undefined' && browser !== null ? browser : chrome).runtime.getURL("/view/index.html");
+let url = (
+  typeof browser !== "undefined" && browser !== null ? browser : chrome
+).runtime.getURL("/view/index.html");
 url += `?q=${encodeURIComponent(location.href)}`;
 
-(function() {
-  if (!reg.test(location.href)) { return; }
-  document.body.addEventListener("mousedown", function({target, button, ctrlKey, shiftKey}) {
-    if (target.id === openButtonId) {
-      const a = document.createElement("a");
-      a.href = url;
-      a.dispatchEvent(new MouseEvent("click", {button, ctrlKey, shiftKey}));
-    } else if (target.id === closeButtonId) {
-      this.removeChild(target.parentElement);
+(function () {
+  if (!reg.test(location.href)) {
+    return;
+  }
+  document.body.addEventListener(
+    "mousedown",
+    function ({ target, button, ctrlKey, shiftKey }) {
+      if (target.id === openButtonId) {
+        const a = document.createElement("a");
+        a.href = url;
+        a.dispatchEvent(new MouseEvent("click", { button, ctrlKey, shiftKey }));
+      } else if (target.id === closeButtonId) {
+        this.removeChild(target.parentElement);
+      }
     }
-  });
+  );
 
   const container = document.createElement("div");
   container.style.cssText = `\

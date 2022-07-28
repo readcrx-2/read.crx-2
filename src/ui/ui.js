@@ -31,5 +31,5 @@ export {
   TableSorter,
   ThreadContent,
   ThreadList,
-  VirtualNotch
+  VirtualNotch,
 };

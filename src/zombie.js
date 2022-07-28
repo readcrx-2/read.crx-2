@@ -1,16 +1,15 @@
-app.boot("/zombie.html", function() {
-  const close = async function() {
-    const {id} = await browser.tabs.getCurrent();
-    await browser.runtime.sendMessage({type: "zombie_done"});
+app.boot("/zombie.html", function () {
+  const close = async function () {
+    const { id } = await browser.tabs.getCurrent();
+    await browser.runtime.sendMessage({ type: "zombie_done" });
     await browser.tabs.remove(id);
     // Vivaldiで閉じないことがあるため遅延してもう一度閉じる
-    setTimeout( async function() {
+    setTimeout(async function () {
       await browser.tabs.remove(id);
-    }
-    , 1000);
+    }, 1000);
   };
 
-  const save = async function() {
+  const save = async function () {
     let rs;
     const arrayOfReadState = JSON.parse(localStorage.zombie_read_state);
 
@@ -19,18 +18,20 @@ app.boot("/zombie.html", function() {
     try {
       await app.bookmark.promiseFirstScan;
 
-      const rsarray = ((() => {
+      const rsarray = (() => {
         const result = [];
-        for (rs of arrayOfReadState) {           result.push(app.ReadState.set(rs).catch(function() {  }));
+        for (rs of arrayOfReadState) {
+          result.push(app.ReadState.set(rs).catch(function () {}));
         }
         return result;
-      })());
-      const bkarray = ((() => {
+      })();
+      const bkarray = (() => {
         const result1 = [];
-        for (rs of arrayOfReadState) {           result1.push(app.bookmark.updateReadState(rs));
+        for (rs of arrayOfReadState) {
+          result1.push(app.bookmark.updateReadState(rs));
         }
         return result1;
-      })());
+      })();
       await Promise.all(rsarray.concat(bkarray));
     } catch (error) {}
 
@@ -41,11 +42,13 @@ app.boot("/zombie.html", function() {
     delete localStorage.zombie_read_state;
   };
 
-  browser.runtime.sendMessage({type: "zombie_ping"});
+  browser.runtime.sendMessage({ type: "zombie_ping" });
 
   let alreadyRun = false;
-  browser.runtime.onMessage.addListener( function({type}) {
-    if (alreadyRun || (type !== "rcrx_exit")) { return; }
+  browser.runtime.onMessage.addListener(function ({ type }) {
+    if (alreadyRun || type !== "rcrx_exit") {
+      return;
+    }
     alreadyRun = true;
     if (localStorage.zombie_read_state != null) {
       const $script = $__("script");

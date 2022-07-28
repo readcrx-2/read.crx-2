@@ -43,5 +43,5 @@ export {
   URL,
   util,
   Util,
-  WriteHistory
+  WriteHistory,
 };

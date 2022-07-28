@@ -5,7 +5,8 @@
 @include content-table;
 
 @media (max-width: 750px) {
-  col, th {
+  col,
+  th {
     &.written_date {
       width: 0;
     }
@@ -13,7 +14,8 @@
 }
 
 @media (max-width: 600px) {
-  col, th {
+  col,
+  th {
     &.mail {
       width: 4em;
     }

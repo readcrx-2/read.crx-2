@@ -1,4 +1,4 @@
-import {decodeCharReference, normalize, stringToDate} from "./jsutil.js";
+import { decodeCharReference, normalize, stringToDate } from "./jsutil.js";
 
 /**
 @class NG
@@ -31,7 +31,7 @@ export var TYPE = {
   AUTO_NOTHING_ID: "NothingID",
   AUTO_NOTHING_SLIP: "NothingSLIP",
   AUTO_REPEAT_MESSAGE: "RepeatMessage",
-  AUTO_FORWARD_LINK: "ForwardLink"
+  AUTO_FORWARD_LINK: "ForwardLink",
 };
 
 const _CONFIG_NAME = "ngobj";
@@ -46,8 +46,8 @@ const _expNgWords = /^\$\[(.*?)\]\$:(.*)$/;
 
 //jsonには正規表現のオブジェクトが含めれないので
 //それを展開
-const _setupReg = function(obj) {
-  const _convReg = function({type, word}) {
+const _setupReg = function (obj) {
+  const _convReg = function ({ type, word }) {
     let reg = null;
     try {
       reg = new RegExp(word);
@@ -57,9 +57,8 @@ const _setupReg = function(obj) {
 NG機能の正規表現(${type}: ${word})を読み込むのに失敗しました
 この行は無効化されます\
 `,
-        background_color: "red"
-      }
-      );
+        background_color: "red",
+      });
     }
     return reg;
   };
@@ -68,7 +67,9 @@ NG機能の正規表現(${type}: ${word})を読み込むのに失敗しました
     let convFlag = true;
     if (n.subElements != null) {
       for (let subElement of n.subElements) {
-        if (!subElement.type.startsWith(TYPE.REG_EXP)) { continue; }
+        if (!subElement.type.startsWith(TYPE.REG_EXP)) {
+          continue;
+        }
         subElement.reg = _convReg(subElement);
         if (!subElement.reg) {
           subElement.type = TYPE.INVALID;
@@ -79,9 +80,13 @@ NG機能の正規表現(${type}: ${word})を読み込むのに失敗しました
     }
     if (convFlag && n.type.startsWith(TYPE.REG_EXP)) {
       n.reg = _convReg(n);
-      if (!n.reg) { convFlag = false; }
+      if (!n.reg) {
+        convFlag = false;
+      }
     }
-    if (!convFlag) { n.type = TYPE.INVALID; }
+    if (!convFlag) {
+      n.type = TYPE.INVALID;
+    }
   }
 };
 
@@ -97,14 +102,14 @@ const _config = {
   },
   setString(str) {
     app.config.set(_CONFIG_STRING_NAME, str);
-  }
+  },
 };
 
 /**
 @method get
 @return {Object}
 */
-export var get = function() {
+export var get = function () {
   if (_ng == null) {
     _ng = new Set(_config.get());
     _setupReg(_ng);
@@ -117,17 +122,21 @@ export var get = function() {
 @param {String} string
 @return {Object}
 */
-const parse = function(string) {
+const parse = function (string) {
   const ng = new Set();
-  if (string === "") { return ng; }
+  if (string === "") {
+    return ng;
+  }
 
-  var _getNgElement = function(ngWord) {
+  var _getNgElement = function (ngWord) {
     let tmp;
-    if (ngWord.startsWith("Comment:") || (ngWord === "")) { return null; }
+    if (ngWord.startsWith("Comment:") || ngWord === "") {
+      return null;
+    }
     const ngElement = {
       type: "",
       word: "",
-      subElements: []
+      subElements: [],
     };
     // キーワードごとのNG処理
     switch (false) {
@@ -200,8 +209,10 @@ const parse = function(string) {
         ngElement.word = ngWord.substr(5);
         if (ngElement.word === "") {
           ngElement.word = "*";
-        } else if (tmp = /\$\((.*)\):/.exec(ngElement.word)) {
-          if (tmp[1] != null) { ngElement.subType = tmp[1].split(","); }
+        } else if ((tmp = /\$\((.*)\):/.exec(ngElement.word))) {
+          if (tmp[1] != null) {
+            ngElement.subType = tmp[1].split(",");
+          }
         }
         break;
       // AND条件用副要素の切り出し
@@ -209,17 +220,21 @@ const parse = function(string) {
         var m = _expNgWords.exec(ngWord);
         for (let i = 1; i <= 2; i++) {
           const ele = _getNgElement(m[i]);
-          if (!ele) { continue; }
+          if (!ele) {
+            continue;
+          }
           if (ngElement.type !== "") {
             const subElement = {
               type: ngElement.type,
-              word: ngElement.word
+              word: ngElement.word,
             };
             ngElement.subElements.push(subElement);
           }
           ngElement.type = ele.type;
           ngElement.word = ele.word;
-          if ((ele.subElements != null ? ele.subElements.length : undefined) > 0) {
+          if (
+            (ele.subElements != null ? ele.subElements.length : undefined) > 0
+          ) {
             ngElement.subElements.push(...ele.subElements);
           }
         }
@@ -235,7 +250,9 @@ const parse = function(string) {
   for (let ngWord of ngStrSplit) {
     // 関係ないプレフィックスは飛ばす
     var m;
-    if (ngWord.startsWith("Comment:") || (ngWord === "")) { continue; }
+    if (ngWord.startsWith("Comment:") || ngWord === "") {
+      continue;
+    }
 
     let ngElement = {};
 
@@ -243,34 +260,36 @@ const parse = function(string) {
     if ((m = ngWord.match(_ignoreResRegNumber)) != null) {
       ngElement = {
         start: m[1],
-        finish: m[2]
+        finish: m[2],
       };
       ngWord = m[3];
-    // 例外NgTypeの指定
+      // 例外NgTypeの指定
     } else if ((m = ngWord.match(_ignoreNgType)) != null) {
       ngElement = {
         exception: true,
-        subType: ((m[1] != null) ? m[1].split(",") : undefined)
+        subType: m[1] != null ? m[1].split(",") : undefined,
       };
       ngWord = m[2];
-    // 有効期限の指定
+      // 有効期限の指定
     } else if ((m = ngWord.match(_expireDate)) != null) {
       const expire = stringToDate(`${m[1]} 23:59:59`);
-      ngElement =
-        {expire: expire.valueOf() + 1000};
+      ngElement = { expire: expire.valueOf() + 1000 };
       ngWord = m[2];
-    // 名前の付与
+      // 名前の付与
     } else if ((m = ngWord.match(_attachName)) != null) {
-      ngElement =
-        {name: m[1]};
+      ngElement = { name: m[1] };
       ngWord = m[2];
     }
     // キーワードごとの取り出し
     const ele = _getNgElement(ngWord);
     ngElement.type = ele.type;
     ngElement.word = ele.word;
-    if (ele.subType != null) { ngElement.subType = ele.subType; }
-    if (ele.subElements != null) { ngElement.subElements = ele.subElements; }
+    if (ele.subType != null) {
+      ngElement.subType = ele.subType;
+    }
+    if (ele.subElements != null) {
+      ngElement.subElements = ele.subElements;
+    }
     // 拡張項目の設定
     if (ngElement.exception == null) {
       ngElement.exception = false;
@@ -288,7 +307,9 @@ const parse = function(string) {
       }
     }
 
-    if (ngElement.word !== "") { ng.add(ngElement); }
+    if (ngElement.word !== "") {
+      ng.add(ngElement);
+    }
   }
   return ng;
 };
@@ -297,7 +318,7 @@ const parse = function(string) {
 @method set
 @param {Object} obj
 */
-export var set = function(string) {
+export var set = function (string) {
   _ng = parse(string);
   _config.set([..._ng]);
   _setupReg(_ng);
@@ -307,7 +328,7 @@ export var set = function(string) {
 @method add
 @param {String} string
 */
-export var add = function(string) {
+export var add = function (string) {
   _config.setString(string + "\n" + _config.getString());
   const addNg = parse(string);
   _config.set([..._config.get()].concat([...addNg]));
@@ -324,25 +345,28 @@ export var add = function(string) {
 @param {Object} threadObj/resObj
 @private
 */
-const _checkWord = function({type, reg, word}, {all, name, mail, id, slip, mes, title, url, resCount}) {
+const _checkWord = function (
+  { type, reg, word },
+  { all, name, mail, id, slip, mes, title, url, resCount }
+) {
   if (
-    ( (type === TYPE.REG_EXP) && reg.test(all) ) ||
-    ( (type === TYPE.REG_EXP_NAME) && reg.test(name) ) ||
-    ( (type === TYPE.REG_EXP_MAIL) && reg.test(mail) ) ||
-    ( (type === TYPE.REG_EXP_ID) && (id != null) && reg.test(id) ) ||
-    ( (type === TYPE.REG_EXP_SLIP) && (slip != null) && reg.test(slip) ) ||
-    ( (type === TYPE.REG_EXP_BODY) && reg.test(mes) ) ||
-    ( (type === TYPE.REG_EXP_TITLE) && reg.test(title) ) ||
-    ( (type === TYPE.REG_EXP_URL) && reg.test(url) ) ||
-    ( (type === TYPE.TITLE) && normalize(title).includes(word) ) ||
-    ( (type === TYPE.NAME) && normalize(name).includes(word) ) ||
-    ( (type === TYPE.MAIL) && normalize(mail).includes(word) ) ||
-    ( (type === TYPE.ID) && (id != null ? id.includes(word) : undefined) ) ||
-    ( (type === TYPE.SLIP) && (slip != null ? slip.includes(word) : undefined) ) ||
-    ( (type === TYPE.BODY) && normalize(mes).includes(word) ) ||
-    ( (type === TYPE.WORD) && normalize(all).includes(word) ) ||
-    ( (type === TYPE.URL) && url.includes(word) ) ||
-    ( (type === TYPE.RES_COUNT) && (word < resCount) )
+    (type === TYPE.REG_EXP && reg.test(all)) ||
+    (type === TYPE.REG_EXP_NAME && reg.test(name)) ||
+    (type === TYPE.REG_EXP_MAIL && reg.test(mail)) ||
+    (type === TYPE.REG_EXP_ID && id != null && reg.test(id)) ||
+    (type === TYPE.REG_EXP_SLIP && slip != null && reg.test(slip)) ||
+    (type === TYPE.REG_EXP_BODY && reg.test(mes)) ||
+    (type === TYPE.REG_EXP_TITLE && reg.test(title)) ||
+    (type === TYPE.REG_EXP_URL && reg.test(url)) ||
+    (type === TYPE.TITLE && normalize(title).includes(word)) ||
+    (type === TYPE.NAME && normalize(name).includes(word)) ||
+    (type === TYPE.MAIL && normalize(mail).includes(word)) ||
+    (type === TYPE.ID && (id != null ? id.includes(word) : undefined)) ||
+    (type === TYPE.SLIP && (slip != null ? slip.includes(word) : undefined)) ||
+    (type === TYPE.BODY && normalize(mes).includes(word)) ||
+    (type === TYPE.WORD && normalize(all).includes(word)) ||
+    (type === TYPE.URL && url.includes(word)) ||
+    (type === TYPE.RES_COUNT && word < resCount)
   ) {
     return type;
   }
@@ -355,10 +379,10 @@ const _checkWord = function({type, reg, word}, {all, name, mail, id, slip, mes, 
 @param {Number} resNum
 @private
 */
-const _checkResNum = ({start, finish}, resNum) => (start != null) && (
-  ( (finish != null) && (start <= resNum && resNum <= finish) ) ||
-  ( parseInt(start) === resNum )
-);
+const _checkResNum = ({ start, finish }, resNum) =>
+  start != null &&
+  ((finish != null && start <= resNum && resNum <= finish) ||
+    parseInt(start) === resNum);
 
 /**
 @method isNGBoard
@@ -369,33 +393,67 @@ const _checkResNum = ({start, finish}, resNum) => (start != null) && (
 @param {String} subType
 @return {Object|null}
 */
-export var isNGBoard = function(threadTitle, url, resCount, exceptionFlg, subType = null) {
-  if (exceptionFlg == null) { exceptionFlg = false; }
+export var isNGBoard = function (
+  threadTitle,
+  url,
+  resCount,
+  exceptionFlg,
+  subType = null
+) {
+  if (exceptionFlg == null) {
+    exceptionFlg = false;
+  }
   const threadObj = {
     all: normalize(threadTitle),
     title: threadTitle,
     url,
-    resCount
+    resCount,
   };
 
   const now = Date.now();
   for (let n of get()) {
-    if ((n.type === TYPE.INVALID) || (n.type === "") || (n.word === "")) { continue; }
-    if (![TYPE.REG_EXP, TYPE.REG_EXP_TITLE, TYPE.TITLE, TYPE.WORD, TYPE.REG_EXP_URL, TYPE.URL, TYPE.RES_COUNT].includes(n.type)) { continue; }
+    if (n.type === TYPE.INVALID || n.type === "" || n.word === "") {
+      continue;
+    }
+    if (
+      ![
+        TYPE.REG_EXP,
+        TYPE.REG_EXP_TITLE,
+        TYPE.TITLE,
+        TYPE.WORD,
+        TYPE.REG_EXP_URL,
+        TYPE.URL,
+        TYPE.RES_COUNT,
+      ].includes(n.type)
+    ) {
+      continue;
+    }
     // 有効期限のチェック
-    if ((n.expire != null) && (now > n.expire)) { continue; }
+    if (n.expire != null && now > n.expire) {
+      continue;
+    }
     // ignoreNgType用例外フラグのチェック
-    if (n.exception !== exceptionFlg) { continue; }
+    if (n.exception !== exceptionFlg) {
+      continue;
+    }
     // ng-typeのチエック
-    if ((n.subType != null) && subType && !n.subType.includes(subType)) { continue; }
+    if (n.subType != null && subType && !n.subType.includes(subType)) {
+      continue;
+    }
 
     // サブ条件のチェック
     if (n.subElements != null) {
-      if (!n.subElements.every( subElement => _checkWord(subElement, threadObj))) { continue; }
+      if (
+        !n.subElements.every((subElement) => _checkWord(subElement, threadObj))
+      ) {
+        continue;
+      }
     }
     // メイン条件のチェック
     const ngType = _checkWord(n, threadObj);
-    if (ngType) { return {type: ngType, name: n.name}; }
+    if (ngType) {
+      return { type: ngType, name: n.name };
+    }
   }
   return null;
 };
@@ -410,8 +468,16 @@ export var isNGBoard = function(threadTitle, url, resCount, exceptionFlg, subTyp
 @param {String} subType
 @return {Object|null}
 */
-export var isNGThread = function(res, title, url, exceptionFlg, subType = null) {
-  if (exceptionFlg == null) { exceptionFlg = false; }
+export var isNGThread = function (
+  res,
+  title,
+  url,
+  exceptionFlg,
+  subType = null
+) {
+  if (exceptionFlg == null) {
+    exceptionFlg = false;
+  }
   const name = decodeCharReference(res.name);
   const mail = decodeCharReference(res.mail);
   const other = decodeCharReference(res.other);
@@ -425,28 +491,44 @@ export var isNGThread = function(res, title, url, exceptionFlg, subType = null) 
     slip: res.slip != null ? res.slip : null,
     mes,
     title,
-    url
+    url,
   };
 
   const now = Date.now();
   for (let n of get()) {
-    if ((n.type === TYPE.INVALID) || (n.type === "") || (n.word === "")) { continue; }
+    if (n.type === TYPE.INVALID || n.type === "" || n.word === "") {
+      continue;
+    }
     // ignoreResNumber用レス番号のチェック
-    if (_checkResNum(n, res.num)) { continue; }
+    if (_checkResNum(n, res.num)) {
+      continue;
+    }
     // 有効期限のチェック
-    if ((n.expire != null) && (now > n.expire)) { continue; }
+    if (n.expire != null && now > n.expire) {
+      continue;
+    }
     // ignoreNgType用例外フラグのチェック
-    if (n.exception !== exceptionFlg) { continue; }
+    if (n.exception !== exceptionFlg) {
+      continue;
+    }
     // ng-typeのチエック
-    if ((n.subType != null) && subType && !n.subType.includes(subType)) { continue; }
+    if (n.subType != null && subType && !n.subType.includes(subType)) {
+      continue;
+    }
 
     // サブ条件のチェック
     if (n.subElements != null) {
-      if (!n.subElements.every( subElement => _checkWord(subElement, resObj))) { continue; }
+      if (
+        !n.subElements.every((subElement) => _checkWord(subElement, resObj))
+      ) {
+        continue;
+      }
     }
     // メイン条件のチェック
     const ngType = _checkWord(n, resObj);
-    if (ngType) { return {type: ngType, name: n.name}; }
+    if (ngType) {
+      return { type: ngType, name: n.name };
+    }
   }
   return null;
 };
@@ -457,12 +539,20 @@ export var isNGThread = function(res, title, url, exceptionFlg, subType = null) 
 @param {String} subType
 @return {Boolean}
 */
-export var isIgnoreResNumForAuto = function(resNum, subType) {
-  if (subType == null) { subType = ""; }
+export var isIgnoreResNumForAuto = function (resNum, subType) {
+  if (subType == null) {
+    subType = "";
+  }
   for (let n of get()) {
-    if (n.type !== TYPE.AUTO) { continue; }
-    if ((n.subType != null) && !n.subType.includes(subType)) { continue; }
-    if (_checkResNum(n, resNum)) { return true; }
+    if (n.type !== TYPE.AUTO) {
+      continue;
+    }
+    if (n.subType != null && !n.subType.includes(subType)) {
+      continue;
+    }
+    if (_checkResNum(n, resNum)) {
+      return true;
+    }
   }
   return false;
 };
@@ -475,12 +565,13 @@ export var isIgnoreResNumForAuto = function(resNum, subType) {
 @param {String} ngType
 @return {Boolean}
 */
-export var isThreadIgnoreNgType = (res, threadTitle, url, ngType) => isNGThread(res, threadTitle, url, true, ngType);
+export var isThreadIgnoreNgType = (res, threadTitle, url, ngType) =>
+  isNGThread(res, threadTitle, url, true, ngType);
 
 /**
 @method execExpire
 */
-export var execExpire = function() {
+export var execExpire = function () {
   const configStr = _config.getString();
   let newConfigStr = "";
   let updateFlag = false;
@@ -492,12 +583,14 @@ export var execExpire = function() {
     if (_expireDate.test(ngWord)) {
       const m = ngWord.match(_expireDate);
       const expire = stringToDate(m[1] + " 23:59:59");
-      if ((expire.valueOf() + 1000) < now) {
+      if (expire.valueOf() + 1000 < now) {
         updateFlag = true;
         continue;
       }
     }
-    if (newConfigStr !== "") { newConfigStr += "\n"; }
+    if (newConfigStr !== "") {
+      newConfigStr += "\n";
+    }
     newConfigStr += ngWord;
   }
   // 期限切れデータが存在した場合はNG情報を更新する

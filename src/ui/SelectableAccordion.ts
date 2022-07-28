@@ -1,4 +1,4 @@
-import Accordion from "./Accordion"
+import Accordion from "./Accordion";
 
 /*
 .select対応のAccordion。
@@ -17,7 +17,7 @@ export default class SelectableAccordion extends Accordion {
     });
   }
 
-  getSelected(): HTMLElement|null {
+  getSelected(): HTMLElement | null {
     return this.$element.$("h3.selected, a.selected") || null;
   }
 
@@ -34,7 +34,11 @@ export default class SelectableAccordion extends Accordion {
     }
 
     target.addClass("selected");
-    target.scrollIntoView(<any>{behavior: "instant", block: "center", inline: "center"});
+    target.scrollIntoView(<any>{
+      behavior: "instant",
+      block: "center",
+      inline: "center",
+    });
   }
 
   clearSelect() {
@@ -88,7 +92,7 @@ export default class SelectableAccordion extends Accordion {
     }
   }
 
-  selectPrev (repeat = 1) {
+  selectPrev(repeat = 1) {
     let current = this.getSelected();
 
     if (current) {

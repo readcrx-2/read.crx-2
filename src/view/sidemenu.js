@@ -1,4 +1,4 @@
-app.boot("/view/sidemenu.html", ["BBSMenu"], function(BBSMenu) {
+app.boot("/view/sidemenu.html", ["BBSMenu"], function (BBSMenu) {
   const $view = document.documentElement;
 
   new app.view.PaneContentView($view);
@@ -7,40 +7,42 @@ app.boot("/view/sidemenu.html", ["BBSMenu"], function(BBSMenu) {
   app.DOMData.set($view, "accordion", accordion);
   app.DOMData.set($view, "selectableItemList", accordion);
 
-  const boardToLi = function(board) {
+  const boardToLi = function (board) {
     const $li = $__("li");
     const $a = $__("a");
     $a.setClass("open_in_rcrx");
     $a.title = board.title;
     $a.textContent = board.title;
     $a.href = app.safeHref(board.url);
-    if (app.URL.isHttps(board.url)) { $a.addClass("https"); }
+    if (app.URL.isHttps(board.url)) {
+      $a.addClass("https");
+    }
     $li.addLast($a);
     return $li;
   };
 
-  const entryToLi = function(entry) {
+  const entryToLi = function (entry) {
     const $li = boardToLi(entry);
     $li.addClass("bookmark");
     return $li;
   };
 
   //スレタイ検索ボックス
-  $view.C("search")[0].on("keydown", function({key}) {
+  $view.C("search")[0].on("keydown", function ({ key }) {
     if (key === "Escape") {
       this.q.value = "";
     }
   });
-  $view.C("search")[0].on("submit", function(e) {
+  $view.C("search")[0].on("submit", function (e) {
     e.preventDefault();
-    app.message.send("open", {url: `search:${this.q.value}`, new_tab: true});
+    app.message.send("open", { url: `search:${this.q.value}`, new_tab: true });
     this.q.value = "";
   });
 
   //ブックマーク関連
-  (function() {
+  (function () {
     //初回ブックマーク表示構築
-    app.bookmarkEntryList.ready.add( function() {
+    app.bookmarkEntryList.ready.add(function () {
       const frag = $_F();
 
       for (let entry of app.bookmark.getAllBoards()) {
@@ -52,8 +54,10 @@ app.boot("/view/sidemenu.html", ["BBSMenu"], function(BBSMenu) {
     });
 
     //ブックマーク更新時処理
-    app.message.on("bookmark_updated", function({type, bookmark}) {
-      if (bookmark.type !== "board") { return; }
+    app.message.on("bookmark_updated", function ({ type, bookmark }) {
+      if (bookmark.type !== "board") {
+        return;
+      }
 
       const $a = $view.$(`li.bookmark > a[href=\"${bookmark.url}\"]`);
 
@@ -72,56 +76,65 @@ app.boot("/view/sidemenu.html", ["BBSMenu"], function(BBSMenu) {
       }
     });
 
-    $view.on("contextmenu", async e => {
+    $view.on("contextmenu", async (e) => {
       let fn;
       const target = e.target.closest("a");
-      if (!target) { return; }
+      if (!target) {
+        return;
+      }
 
       const url = target.href;
-      const {
-        title
-      } = target;
-      if (url == null) { return; }
+      const { title } = target;
+      if (url == null) {
+        return;
+      }
       e.preventDefault();
 
       await app.defer();
-      const $menu = $$.I("template_contextmenu").content.$(".contextmenu").cloneNode(true);
+      const $menu = $$.I("template_contextmenu")
+        .content.$(".contextmenu")
+        .cloneNode(true);
       $view.addLast($menu);
 
       if (app.bookmark.get(url)) {
-        __guard__($menu.C("add_bookmark")[0], x => x.remove());
+        __guard__($menu.C("add_bookmark")[0], (x) => x.remove());
       } else {
-        __guard__($menu.C("del_bookmark")[0], x1 => x1.remove());
+        __guard__($menu.C("del_bookmark")[0], (x1) => x1.remove());
       }
 
-      $menu.on("click", (fn = function({target}) {
-        if (target.tagName !== "LI") { return; }
-        $menu.off("click", fn);
+      $menu.on(
+        "click",
+        (fn = function ({ target }) {
+          if (target.tagName !== "LI") {
+            return;
+          }
+          $menu.off("click", fn);
 
-        if (target.hasClass("add_bookmark")) {
-          app.bookmark.add(url, title);
-        } else if (target.hasClass("del_bookmark")) {
-          app.bookmark.remove(url);
-        }
-        this.remove();
-      })
+          if (target.hasClass("add_bookmark")) {
+            app.bookmark.add(url, title);
+          } else if (target.hasClass("del_bookmark")) {
+            app.bookmark.remove(url);
+          }
+          this.remove();
+        })
       );
       UI.ContextMenu($menu, e.clientX, e.clientY);
     });
   })();
 
   //板覧関連
-  (function() {
-    const setupDOM = function({status, menu, message}) {
-      for (let dom of $view.$$("h3:not(:first-of-type), ul:not(:first-of-type)")) {
+  (function () {
+    const setupDOM = function ({ status, menu, message }) {
+      for (let dom of $view.$$(
+        "h3:not(:first-of-type), ul:not(:first-of-type)"
+      )) {
         dom.remove();
       }
       if (status === "error") {
         app.message.send("notify", {
           message,
-          background_color: "red"
-        }
-        );
+          background_color: "red",
+        });
       }
       if (menu != null) {
         const frag = $_F();
@@ -142,17 +155,17 @@ app.boot("/view/sidemenu.html", ["BBSMenu"], function(BBSMenu) {
       $view.removeClass("loading");
     };
 
-    const load = async function() {
+    const load = async function () {
       $view.addClass("loading");
       // 表示用板一覧の取得
       const obj = await BBSMenu.get();
       setupDOM(obj);
-      BBSMenu.target.on("change", function({detail: obj}) {
+      BBSMenu.target.on("change", function ({ detail: obj }) {
         setupDOM(obj);
       });
     };
 
-    $view.on("request_reload", function() {
+    $view.on("request_reload", function () {
       load();
     });
 
@@ -161,5 +174,7 @@ app.boot("/view/sidemenu.html", ["BBSMenu"], function(BBSMenu) {
 });
 
 function __guard__(value, transform) {
-  return (typeof value !== 'undefined' && value !== null) ? transform(value) : undefined;
+  return typeof value !== "undefined" && value !== null
+    ? transform(value)
+    : undefined;
 }

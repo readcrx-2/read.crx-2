@@ -1,5 +1,5 @@
 let TableSearch;
-export default TableSearch = function($table, method, prop) {
+export default TableSearch = function ($table, method, prop) {
   let dom;
   $table.addClass("hidden");
   $table.removeAttr("data-table-search-hit-count");
@@ -20,8 +20,11 @@ export default TableSearch = function($table, method, prop) {
     $table.addClass("table_search");
     let hitCount = 0;
     for (let $tr of $table.T("tbody")[0].child()) {
-      const $td = $tr.child()[prop.target_col-1];
-      if (!$tr.hasClass("hidden") && app.util.normalize($td.textContent).includes(prop.query)) {
+      const $td = $tr.child()[prop.target_col - 1];
+      if (
+        !$tr.hasClass("hidden") &&
+        app.util.normalize($td.textContent).includes(prop.query)
+      ) {
         $tr.addClass("table_search_hit");
         hitCount++;
       } else {

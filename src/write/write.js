@@ -1,6 +1,6 @@
 let Write;
-import {URL, parseQuery} from "../core/URL.ts";
-import {fadeIn, fadeOut} from "../ui/Animate.js";
+import { URL, parseQuery } from "../core/URL.ts";
+import { fadeIn, fadeOut } from "../ui/Animate.js";
 
 class Timer {
   static initClass() {
@@ -13,11 +13,12 @@ class Timer {
   }
 
   wake() {
-    if (this._timeout != null) { this.kill(); }
-    this._timeout = setTimeout( () => {
-      this.onFinish();
+    if (this._timeout != null) {
+      this.kill();
     }
-    , this._MSEC);
+    this._timeout = setTimeout(() => {
+      this.onFinish();
+    }, this._MSEC);
   }
 
   kill() {
@@ -27,7 +28,7 @@ class Timer {
 }
 Timer.initClass();
 
-export default Write = (function() {
+export default Write = (function () {
   Write = class Write {
     static initClass() {
       this.prototype.url = null;
@@ -42,9 +43,13 @@ export default Write = (function() {
     }
 
     static setFont() {
-      if (navigator.platform.includes("Win")) { return; }
+      if (navigator.platform.includes("Win")) {
+        return;
+      }
       const font = localStorage.getItem("textar_font");
-      if (font == null) { return; }
+      if (font == null) {
+        return;
+      }
       const fontface = new FontFace("Textar", `url(${font})`);
       document.fonts.add(fontface);
     }
@@ -54,9 +59,16 @@ export default Write = (function() {
       this._onTimerFinish = this._onTimerFinish.bind(this);
       const param = parseQuery(location.search);
       this.url = new URL(param.get("url"));
-      this.title = (left = param.get("title")) != null ? left : param.get("url");
-      this.name = (left1 = param.get("name")) != null ? left1 : app.config.get("default_name");
-      this.mail = (left2 = param.get("mail")) != null ? left2 : app.config.get("default_mail");
+      this.title =
+        (left = param.get("title")) != null ? left : param.get("url");
+      this.name =
+        (left1 = param.get("name")) != null
+          ? left1
+          : app.config.get("default_name");
+      this.mail =
+        (left2 = param.get("mail")) != null
+          ? left2
+          : app.config.get("default_mail");
       this.message = (left3 = param.get("message")) != null ? left3 : "";
       this.timer = new Timer(this._onTimerFinish);
 
@@ -71,48 +83,52 @@ export default Write = (function() {
 
     _beforeSendFunc() {
       const url = new URL(this.url.href);
-      return function({method, requestHeaders}) {
+      return function ({ method, requestHeaders }) {
         let name;
         const origin = browser.runtime.getURL("").slice(0, -1);
-        const isSameOrigin = (
-          requestHeaders.some( ({name, value}) => (name === "Origin") && ((value === origin) || (value === "null"))) ||
-          !requestHeaders.includes("Origin")
-        );
-        if ((method !== "POST") || !isSameOrigin) { return; }
+        const isSameOrigin =
+          requestHeaders.some(
+            ({ name, value }) =>
+              name === "Origin" && (value === origin || value === "null")
+          ) || !requestHeaders.includes("Origin");
+        if (method !== "POST" || !isSameOrigin) {
+          return;
+        }
         if (url.getTsld() === "2ch.sc") {
           url.protocol = "http:";
         }
 
         const ua = app.config.get("useragent").trim();
-        const uaExists = (ua.length > 0);
+        const uaExists = ua.length > 0;
         let setReferer = false;
         let setUserAgent = !uaExists;
 
         for (let i = 0; i < requestHeaders.length; i++) {
-          ({name} = requestHeaders[i]);
-          if (!setReferer && (name === "Referer")) {
+          ({ name } = requestHeaders[i]);
+          if (!setReferer && name === "Referer") {
             requestHeaders[i].value = url.href;
             setReferer = true;
-          } else if (!setUserAgent && (name === "User-Agent")) {
+          } else if (!setUserAgent && name === "User-Agent") {
             requestHeaders[i].value = ua;
             setUserAgent = true;
           }
-          if (setReferer && setUserAgent) { break; }
+          if (setReferer && setUserAgent) {
+            break;
+          }
         }
 
         if (!setReferer) {
-          requestHeaders.push({name: "Referer", value: url.href});
+          requestHeaders.push({ name: "Referer", value: url.href });
         }
         if (!setUserAgent && uaExists) {
-          requestHeaders.push({name: "User-Agent", value: ua});
+          requestHeaders.push({ name: "User-Agent", value: ua });
         }
 
-        return {requestHeaders};
+        return { requestHeaders };
       };
     }
 
-    _setHeaderModifier() {
-    }
+    _setHeaderModifier() {}
 
     _setupTheme() {
       // テーマ適用
@@ -120,7 +136,7 @@ export default Write = (function() {
       this._insertUserCSS();
 
       // テーマ更新反映
-      app.message.on("config_updated", ({key, val}) => {
+      app.message.on("config_updated", ({ key, val }) => {
         if (key === "theme_id") {
           this._changeTheme(val);
         }
@@ -144,7 +160,7 @@ export default Write = (function() {
       this._setSageDOM();
       this._setDefaultInput();
 
-      this.$view.C("preview_button")[0].on("click", e => {
+      this.$view.C("preview_button")[0].on("click", (e) => {
         e.preventDefault();
 
         let text = this.$view.T("textarea")[0].value;
@@ -156,16 +172,18 @@ export default Write = (function() {
         $pre.textContent = text;
         const $button = $__("button").addClass("close_preview");
         $button.textContent = "戻る";
-        $button.on("click", function() {
+        $button.on("click", function () {
           this.parent().remove();
         });
         $div.addLast($pre, $button);
         document.body.addLast($div);
       });
 
-      this.$view.C("message")[0].on("keyup", ({target}) => {
+      this.$view.C("message")[0].on("keyup", ({ target }) => {
         const line = target.value.split(/\n/).length;
-        this.$view.C("notice")[0].textContent = `${target.value.length}文字 ${line}行`;
+        this.$view.C(
+          "notice"
+        )[0].textContent = `${target.value.length}文字 ${line}行`;
       });
     }
 
@@ -177,7 +195,7 @@ export default Write = (function() {
         $sage.checked = true;
         $mail.disabled = true;
       }
-      this.$view.C("sage")[0].on("change", function() {
+      this.$view.C("sage")[0].on("change", function () {
         if (this.checked) {
           app.config.set("sage_flag", "on");
           $mail.disabled = true;
@@ -198,12 +216,18 @@ export default Write = (function() {
       const $h1 = this.$view.T("h1")[0];
       document.title = this.title;
       $h1.textContent = this.title;
-      if (this.url.isHttps()) { $h1.addClass("https"); }
+      if (this.url.isHttps()) {
+        $h1.addClass("https");
+      }
     }
 
     _setBeforeUnload() {
-      window.on("beforeunload", function() {
-        browser.runtime.sendMessage({type: "write_position", x: screenX, y: screenY});
+      window.on("beforeunload", function () {
+        browser.runtime.sendMessage({
+          type: "write_position",
+          x: screenX,
+          y: screenY,
+        });
       });
     }
 
@@ -213,7 +237,9 @@ export default Write = (function() {
 
     _onError(message) {
       for (let dom of this.$view.$$("form input, form textarea")) {
-        if (!dom.hasClass("mail") || !app.config.isOn("sage_flag")) { dom.disabled = false; }
+        if (!dom.hasClass("mail") || !app.config.isOn("sage_flag")) {
+          dom.disabled = false;
+        }
       }
 
       const $notice = this.$view.C("notice")[0];
@@ -225,11 +251,10 @@ export default Write = (function() {
       }
     }
 
-    _onSuccess(key) {
-    }
+    _onSuccess(key) {}
 
     _setupMessage() {
-      window.on("message", async ({ data: {type, key, message}, source }) => {
+      window.on("message", async ({ data: { type, key, message }, source }) => {
         switch (type) {
           case "ping":
             source.postMessage(this._PONG_MSG, "*");
@@ -240,7 +265,7 @@ export default Write = (function() {
             this.timer.kill();
             await app.wait(message);
             this._onSuccess(key);
-            var {id} = await browser.tabs.getCurrent();
+            var { id } = await browser.tabs.getCurrent();
             browser.tabs.remove(id);
             break;
           case "confirm":
@@ -258,70 +283,79 @@ export default Write = (function() {
     _getIframeArgs() {
       return {
         rcrxName: this.$view.C("name")[0].value,
-        rcrxMail: this.$view.C("sage")[0].checked ? "sage" : this.$view.C("mail")[0].value,
-        rcrxMessage: this.$view.C("message")[0].value
+        rcrxMail: this.$view.C("sage")[0].checked
+          ? "sage"
+          : this.$view.C("mail")[0].value,
+        rcrxMessage: this.$view.C("message")[0].value,
       };
     }
 
     _getFormData() {
-      const {bbsType} = this.url.guessType();
+      const { bbsType } = this.url.guessType();
       const splittedUrl = this.url.pathname.split("/");
       const args = this._getIframeArgs();
-      return {bbsType, splittedUrl, args};
+      return { bbsType, splittedUrl, args };
     }
 
     _setupForm() {
       this.$view.C("hide_iframe")[0].on("click", () => {
         this.timer.kill();
         const $iframeC = this.$view.C("iframe_container")[0];
-        (async function() {
+        (async function () {
           const ani = await fadeOut($iframeC);
-          ani.on("finish", function() {
+          ani.on("finish", function () {
             $iframeC.T("iframe")[0].remove();
           });
         })();
         for (let dom of this.$view.$$("input, textarea")) {
-          if (!dom.hasClass("mail") || !app.config.isOn("sage_flag")) { dom.disabled = false; }
+          if (!dom.hasClass("mail") || !app.config.isOn("sage_flag")) {
+            dom.disabled = false;
+          }
         }
         this.$view.C("notice")[0].textContent = "";
       });
 
-      this.$view.T("form")[0].on("submit", e => {
+      this.$view.T("form")[0].on("submit", (e) => {
         e.preventDefault();
 
         for (let dom of this.$view.$$("input, textarea")) {
-          if (!dom.hasClass("mail") || !app.config.isOn("sage_flag")) { dom.disabled = true; }
+          if (!dom.hasClass("mail") || !app.config.isOn("sage_flag")) {
+            dom.disabled = true;
+          }
         }
 
         const $iframe = $__("iframe");
         $iframe.src = "/view/empty.html";
-        $iframe.on("load", () => {
-          let key, val;
-          const formData = this._getFormData();
-          const iframeDoc = $iframe.contentDocument;
-          //フォーム生成
-          const form = iframeDoc.createElement("form");
-          form.acceptCharset = formData.charset;
-          form.action = formData.action;
-          form.method = "POST";
-          for (key in formData.input) {
-            val = formData.input[key];
-            const input = iframeDoc.createElement("input");
-            input.name = key;
-            input.value = val;
-            form.appendChild(input);
-          }
-          for (key in formData.textarea) {
-            val = formData.textarea[key];
-            const textarea = iframeDoc.createElement("textarea");
-            textarea.name = key;
-            textarea.textContent = val;
-            form.appendChild(textarea);
-          }
-          iframeDoc.body.appendChild(form);
-          Object.getPrototypeOf(form).submit.call(form);
-        }
-        , {once: true});
+        $iframe.on(
+          "load",
+          () => {
+            let key, val;
+            const formData = this._getFormData();
+            const iframeDoc = $iframe.contentDocument;
+            //フォーム生成
+            const form = iframeDoc.createElement("form");
+            form.acceptCharset = formData.charset;
+            form.action = formData.action;
+            form.method = "POST";
+            for (key in formData.input) {
+              val = formData.input[key];
+              const input = iframeDoc.createElement("input");
+              input.name = key;
+              input.value = val;
+              form.appendChild(input);
+            }
+            for (key in formData.textarea) {
+              val = formData.textarea[key];
+              const textarea = iframeDoc.createElement("textarea");
+              textarea.name = key;
+              textarea.textContent = val;
+              form.appendChild(textarea);
+            }
+            iframeDoc.body.appendChild(form);
+            Object.getPrototypeOf(form).submit.call(form);
+          },
+          { once: true }
+        );
         $$.C("iframe_container")[0].addLast($iframe);
 
         this.timer.wake();

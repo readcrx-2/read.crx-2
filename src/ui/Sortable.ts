@@ -5,19 +5,19 @@ interface Position {
 
 export default class Sortable {
   private readonly container: HTMLElement;
-  private readonly option: {exclude?: string};
+  private readonly option: { exclude?: string };
   private readonly overlay: HTMLElement;
 
   private isSorting = false;
   //ドラッグ開始時の場所
-  private start: Position|null = null;
+  private start: Position | null = null;
   //ドラッグ中の場所
-  private last: Position|null = null;
+  private last: Position | null = null;
 
   //ドラッグしているDOM
-  private target: HTMLElement|null = null;
+  private target: HTMLElement | null = null;
   //ドラッグしているDOMの戻るときの中央座標
-  private targetCenter: Position|null = null;
+  private targetCenter: Position | null = null;
 
   // requestAnimationFrameId
   private rAFId = 0;
@@ -25,7 +25,7 @@ export default class Sortable {
   private clicks = 1;
   private clickTimer = 0;
 
-  constructor (container: HTMLElement, option: {exclude?: string} = {}) {
+  constructor(container: HTMLElement, option: { exclude?: string } = {}) {
     this.container = container;
     this.option = option;
 
@@ -45,8 +45,8 @@ export default class Sortable {
     this.target.addClass("sortable_dragging");
     this.target.style["will-change"] = "transform";
     this.targetCenter = {
-      x: target.offsetLeft + target.offsetWidth/2,
-      y: target.offsetTop + target.offsetHeight/2
+      x: target.offsetLeft + target.offsetWidth / 2,
+      y: target.offsetTop + target.offsetHeight / 2,
     };
   }
 
@@ -67,28 +67,25 @@ export default class Sortable {
     const diffY = this.target!.offsetTop - beforeTop;
     this.start = {
       x: this.start!.x + diffX,
-      y: this.start!.y + diffY
+      y: this.start!.y + diffY,
     };
     this.targetCenter = {
       x: this.targetCenter!.x + diffX,
-      y: this.targetCenter!.y + diffY
+      y: this.targetCenter!.y + diffY,
     };
   }
 
-  private onMousedown({target, button}) {
+  private onMousedown({ target, button }) {
     if (target === this.container) return;
     if (button !== 0) return;
-    if (
-      this.option.exclude &&
-      target!.matches(this.option.exclude)
-    ) return;
+    if (this.option.exclude && target!.matches(this.option.exclude)) return;
 
     if (this.clickTimer !== 0) {
       clearTimeout(this.clickTimer);
     }
 
     // 0.5秒待ってダブルクリックかシングルクリックか判定する
-    this.clickTimer = window.setTimeout( () => {
+    this.clickTimer = window.setTimeout(() => {
       this.clicks = 1;
     }, 500);
 
@@ -115,7 +112,7 @@ export default class Sortable {
     if (!this.isSorting) {
       this.start = {
         x: pageX,
-        y: pageY
+        y: pageY,
       };
       this.isSorting = true;
     }
@@ -124,7 +121,7 @@ export default class Sortable {
 
     this.last = {
       x: pageX,
-      y: pageY
+      y: pageY,
     };
 
     if (this.rAFId === 0) {
@@ -146,22 +143,22 @@ export default class Sortable {
         offsetLeft: tLeft,
         offsetTop: tTop,
         offsetWidth: tWidth,
-        offsetHeight: tHeight
+        offsetHeight: tHeight,
       } = tmp;
 
       if (
         tmp !== this.target &&
-        !( x < tLeft || y < tTop || x > tLeft+tWidth || y > tTop+tHeight )
+        !(x < tLeft || y < tTop || x > tLeft + tWidth || y > tTop + tHeight)
       ) {
         if (
           this.target!.compareDocumentPosition(tmp) === 4 &&
-          ( x > tLeft + tWidth/2 || y > tTop + tHeight/2 )
+          (x > tLeft + tWidth / 2 || y > tTop + tHeight / 2)
         ) {
-          this.changeStart( () => {
+          this.changeStart(() => {
             tmp.addAfter(this.target);
           });
-        } else if ( x < tLeft + tWidth/ 2 || y < tTop + tHeight/ 2 ) {
-          this.changeStart( () => {
+        } else if (x < tLeft + tWidth / 2 || y < tTop + tHeight / 2) {
+          this.changeStart(() => {
             tmp.addBefore(this.target);
           });
         }

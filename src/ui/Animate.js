@@ -1,14 +1,12 @@
 const _TIMING = {
   duration: 250,
-  easing: "ease-in-out"
+  easing: "ease-in-out",
 };
-const _FADE_IN_FRAMES =
-  {opacity: [0, 1]};
-const _FADE_OUT_FRAMES =
-  {opacity: [1, 0]};
+const _FADE_IN_FRAMES = { opacity: [0, 1] };
+const _FADE_OUT_FRAMES = { opacity: [1, 0] };
 const _INVALIDED_EVENT = new Event("invalided");
 
-const _getOriginHeight = function(ele) {
+const _getOriginHeight = function (ele) {
   const e = ele.cloneNode(true);
   e.style.cssText = `\
 contain: content;
@@ -24,11 +22,11 @@ display: block;\
 };
 
 const _animatingMap = new WeakMap();
-const _resetAnimatingMap = function(ele) {
-  __guard__(_animatingMap.get(ele), x => x.emit(_INVALIDED_EVENT));
+const _resetAnimatingMap = function (ele) {
+  __guard__(_animatingMap.get(ele), (x) => x.emit(_INVALIDED_EVENT));
 };
 
-export var fadeIn = async function(ele) {
+export var fadeIn = async function (ele) {
   await app.waitAF();
   _resetAnimatingMap(ele);
   ele.removeClass("hidden");
@@ -36,35 +34,44 @@ export var fadeIn = async function(ele) {
   const ani = ele.animate(_FADE_IN_FRAMES, _TIMING);
   _animatingMap.set(ele, ani);
 
-  ani.on("finish", function() {
-    _animatingMap.delete(ele);
-  }
-  , {once: true});
+  ani.on(
+    "finish",
+    function () {
+      _animatingMap.delete(ele);
+    },
+    { once: true }
+  );
   return ani;
 };
 
-export var fadeOut = function(ele) {
+export var fadeOut = function (ele) {
   _resetAnimatingMap(ele);
   const ani = ele.animate(_FADE_OUT_FRAMES, _TIMING);
   _animatingMap.set(ele, ani);
 
   let invalided = false;
-  ani.on("invalided", function() {
-    invalided = true;
-  }
-  , {once: true});
-  ani.on("finish", async function() {
-    if (!invalided) {
-      await app.waitAF();
-      ele.addClass("hidden");
-      _animatingMap.delete(ele);
-    }
-  }
-  , {once: true});
+  ani.on(
+    "invalided",
+    function () {
+      invalided = true;
+    },
+    { once: true }
+  );
+  ani.on(
+    "finish",
+    async function () {
+      if (!invalided) {
+        await app.waitAF();
+        ele.addClass("hidden");
+        _animatingMap.delete(ele);
+      }
+    },
+    { once: true }
+  );
   return Promise.resolve(ani);
 };
 
-export var slideDown = async function(ele) {
+export var slideDown = async function (ele) {
   await app.waitAF();
   const h = _getOriginHeight(ele);
 
@@ -74,14 +81,17 @@ export var slideDown = async function(ele) {
   const ani = ele.animate({ height: ["0px", `${h}px`] }, _TIMING);
   _animatingMap.set(ele, ani);
 
-  ani.on("finish", function() {
-    _animatingMap.delete(ele);
-  }
-  , {once: true});
+  ani.on(
+    "finish",
+    function () {
+      _animatingMap.delete(ele);
+    },
+    { once: true }
+  );
   return ani;
 };
 
-export var slideUp = async function(ele) {
+export var slideUp = async function (ele) {
   await app.waitAF();
   const h = ele.clientHeight;
 
@@ -94,22 +104,30 @@ export var slideUp = async function(ele) {
   _animatingMap.set(ele, ani);
 
   let invalided = false;
-  ani.on("invalided", function() {
-    invalided = true;
-  }
-  , {once: true});
-  ani.on("finish", async function() {
-    if (!invalided) {
-      await app.waitAF();
-      ele.addClass("hidden");
-      ele.style.height = null;
-      _animatingMap.delete(ele);
-    }
-  }
-  , {once: true});
+  ani.on(
+    "invalided",
+    function () {
+      invalided = true;
+    },
+    { once: true }
+  );
+  ani.on(
+    "finish",
+    async function () {
+      if (!invalided) {
+        await app.waitAF();
+        ele.addClass("hidden");
+        ele.style.height = null;
+        _animatingMap.delete(ele);
+      }
+    },
+    { once: true }
+  );
   return ani;
 };
 
 function __guard__(value, transform) {
-  return (typeof value !== 'undefined' && value !== null) ? transform(value) : undefined;
+  return typeof value !== "undefined" && value !== null
+    ? transform(value)
+    : undefined;
 }

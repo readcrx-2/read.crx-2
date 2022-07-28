@@ -1,11 +1,11 @@
 ///<reference path="global.d.ts" />
 import Config from "./app/Config";
 
-export {default as Callbacks} from "./app/Callbacks";
+export { default as Callbacks } from "./app/Callbacks";
 export * from "./app/Defer";
 export * from "./app/Log";
-export {default as LocalStorage} from "./app/LocalStorage";
-export {default as message} from "./app/Message";
+export { default as LocalStorage } from "./app/LocalStorage";
+export { default as message } from "./app/Message";
 export * from "./app/Util";
 
 export let config: Config;
@@ -30,10 +30,7 @@ export async function boot(path: string, requirements, fn) {
   }
 
   // Chromeがiframeのsrcと無関係な内容を読み込むバグへの対応
-  if (
-    frameElement &&
-    (<HTMLIFrameElement>frameElement).src !== location.href
-  ) {
+  if (frameElement && (<HTMLIFrameElement>frameElement).src !== location.href) {
     location.href = (<HTMLIFrameElement>frameElement).src;
     return;
   }
@@ -46,7 +43,7 @@ export async function boot(path: string, requirements, fn) {
     }
 
     const onload = () => {
-      config.ready( () => {
+      config.ready(() => {
         if (!requirements) {
           fn();
           return;

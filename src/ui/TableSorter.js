@@ -4,7 +4,7 @@
 @param {Element} table
 */
 let TableSorter;
-export default TableSorter = (function() {
+export default TableSorter = (function () {
   TableSorter = class TableSorter {
     static initClass() {
       this.collator = new Intl.Collator("ja", { numeric: true });
@@ -13,15 +13,19 @@ export default TableSorter = (function() {
     constructor(table) {
       this.table = table;
       this.table.addClass("table_sort");
-      this.table.on("click", ({target}) => {
-        if (target.tagName !== "TH") { return; }
+      this.table.on("click", ({ target }) => {
+        if (target.tagName !== "TH") {
+          return;
+        }
 
         const order = target.hasClass("table_sort_desc") ? "asc" : "desc";
 
         this.clearSortClass();
 
         target.addClass(`table_sort_${order}`);
-        this.table.$(`col.${target.dataset.key}`).addClass(`table_sort_${order}`);
+        this.table
+          .$(`col.${target.dataset.key}`)
+          .addClass(`table_sort_${order}`);
 
         this.update();
       });
@@ -36,21 +40,29 @@ export default TableSorter = (function() {
     */
     update(param) {
       let $th, $tr, data;
-      if (param == null) { param = {}; }
-      let {sortIndex, sortAttribute, sortOrder} = param;
+      if (param == null) {
+        param = {};
+      }
+      let { sortIndex, sortAttribute, sortOrder } = param;
       const event = new Event("table_sort_before_update");
       this.table.emit(event);
-      if (event.defaultPrevented) { return; }
+      if (event.defaultPrevented) {
+        return;
+      }
 
-      if ((sortIndex != null) && (sortOrder != null)) {
+      if (sortIndex != null && sortOrder != null) {
         this.clearSortClass();
         $th = this.table.$(`th:nth-child(${sortIndex + 1})`);
         $th.addClass(`table_sort_${sortOrder}`);
-        this.table.$(`col.${$th.dataset.key}`).addClass(`table_sort_${sortOrder}`);
-      } else if ((sortAttribute == null)) {
+        this.table
+          .$(`col.${$th.dataset.key}`)
+          .addClass(`table_sort_${sortOrder}`);
+      } else if (sortAttribute == null) {
         $th = this.table.$("th.table_sort_asc, th.table_sort_desc");
 
-        if (!$th) { return; }
+        if (!$th) {
+          return;
+        }
 
         sortIndex = 0;
         let tmp = $th;
@@ -64,7 +76,9 @@ export default TableSorter = (function() {
       if (sortIndex != null) {
         data = {};
         for (let $td of this.table.$$(`td:nth-child(${sortIndex + 1})`)) {
-          if (!data[$td.textContent]) { data[$td.textContent] = []; }
+          if (!data[$td.textContent]) {
+            data[$td.textContent] = [];
+          }
           data[$td.textContent].push($td.parent());
         }
       } else if (sortAttribute != null) {
@@ -73,16 +87,20 @@ export default TableSorter = (function() {
         data = {};
         for ($tr of this.table.$("tbody").T("tr")) {
           const value = $tr.getAttr(sortAttribute);
-          if (data[value] == null) { data[value] = []; }
+          if (data[value] == null) {
+            data[value] = [];
+          }
           data[value].push($tr);
         }
       }
 
       const dataKeys = Object.keys(data);
 
-      dataKeys.sort( function(a, b) {
+      dataKeys.sort(function (a, b) {
         let diff = TableSorter.collator.compare(a, b);
-        if (sortOrder === "desc") { diff *= -1; }
+        if (sortOrder === "desc") {
+          diff *= -1;
+        }
         return diff;
       });
 
@@ -94,7 +112,7 @@ export default TableSorter = (function() {
         }
       }
 
-      const exparam = {sort_order: sortOrder};
+      const exparam = { sort_order: sortOrder };
 
       if (sortIndex != null) {
         exparam.sort_index = sortIndex;
@@ -102,7 +120,9 @@ export default TableSorter = (function() {
         exparam.sort_attribute = sortAttribute;
       }
 
-      this.table.emit(new CustomEvent("table_sort_updated", { detail: exparam }));
+      this.table.emit(
+        new CustomEvent("table_sort_updated", { detail: exparam })
+      );
     }
 
     /**
@@ -112,11 +132,15 @@ export default TableSorter = (function() {
       @param {String} [param.sort_attribute]
       @param {String} [param.sort_order]
     */
-    updateSnake({sort_index = null, sort_attribute = null, sort_order = null}) {
+    updateSnake({
+      sort_index = null,
+      sort_attribute = null,
+      sort_order = null,
+    }) {
       this.update({
         sortIndex: sort_index,
         sortAttribute: sort_attribute,
-        sortOrder: sort_order
+        sortOrder: sort_order,
       });
     }
 

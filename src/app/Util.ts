@@ -16,25 +16,29 @@ export function replaceAll(str: string, before: string, after: string): string {
   let i = str.indexOf(before);
   if (i === -1) return str;
   let result = str.slice(0, i) + after;
-  let j = str.indexOf(before, i+before.length);
+  let j = str.indexOf(before, i + before.length);
   while (j !== -1) {
-    result += str.slice(i+before.length, j) + after;
+    result += str.slice(i + before.length, j) + after;
     i = j;
-    j = str.indexOf(before, i+before.length);
+    j = str.indexOf(before, i + before.length);
   }
-  return result + str.slice(i+before.length);
+  return result + str.slice(i + before.length);
 }
 
 export function escapeHtml(str: string): string {
   return replaceAll(
     replaceAll(
       replaceAll(
-        replaceAll(
-          replaceAll(str, "&", "&amp;")
-        , "<", "&lt;")
-      , ">", "&gt;")
-    , '"', "&quot;")
-  , "'", "&apos;");
+        replaceAll(replaceAll(str, "&", "&amp;"), "<", "&lt;"),
+        ">",
+        "&gt;"
+      ),
+      '"',
+      "&quot;"
+    ),
+    "'",
+    "&apos;"
+  );
 }
 
 export function safeHref(url: string): string {

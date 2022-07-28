@@ -52,8 +52,8 @@ interface DocumentFragment {
   addFirst: ParentNode.prepend;
   removeChildren<T extends Node>(): T;
   child(): HTMLCollection;
-  first(): Element|null;
-  last(): Element|null;
+  first(): Element | null;
+  last(): Element | null;
 }
 interface EventTarget {
   on: EventTarget.addEventListener;
@@ -87,7 +87,7 @@ interface Element {
   hasAttr: boolean;
   attr(name: string, value?: string): string | null | void;
   getClass(): DOMTokenList;
-  setClass(value: (string | Array)): Element;
+  setClass(value: string | Array): Element;
   class(value?: string): DOMTokenList | Element;
   addClass(value: string): Element;
   removeClass(value: string): Element;

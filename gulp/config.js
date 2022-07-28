@@ -100,26 +100,6 @@ const defaultOptions = {
   },
   rollupTs: {
     typescript: c.ts,
-    tsconfigDefaults: {
-      compilerOptions: {
-        target: "es2017",
-        lib: [
-          "dom",
-          "es2015",
-          "es2016",
-          "es2017"
-        ],
-        typeRoots: [
-          "node_modules/web-ext-types",
-          "src/global.d.ts"
-        ],
-        skipLibCheck: true,
-        noUnusedLocals: true,
-        alwaysStrict: true,
-        strictNullChecks: true,
-        noImplicitThis: true
-      }
-    }
   },
   sass: {
     outputStyle: "compressed"

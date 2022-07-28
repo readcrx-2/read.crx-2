@@ -1,0 +1,27 @@
+{
+  "compilerOptions": {
+    "target": "es2017",
+    "lib": [
+      "dom",
+      "es2015",
+      "es2016",
+      "es2017"
+    ],
+    // "module": "commonjs",
+    "typeRoots": [
+      "node_modules/web-ext-types",
+      "src/global.d.ts"
+    ],
+    // "allowJs": true,
+    // "checkJs": true,
+    // "sourceMap": true,
+    // "esModuleInterop": true,
+    // "forceConsistentCasingInFileNames": true,
+    // "strict": true,
+    "alwaysStrict": true,
+    "strictNullChecks": true,
+    "noImplicitThis": true,
+    "skipLibCheck": true,
+    "noUnusedLocals": true
+  }
+}

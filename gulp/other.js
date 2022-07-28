@@ -1,57 +1,59 @@
-gulp = require "gulp"
-path = require "path"
-fs = require "fs-extra"
-{gulp: $} = require "./plugins"
-{browsers, paths, defaultOptions} = require "./config"
-util = require "./util"
+const gulp = require("gulp");
+const path = require("path");
+const fs = require("fs-extra");
+const {gulp: $} = require("./plugins");
+const {browsers, paths, defaultOptions} = require("./config");
+const util = require("./util");
 
-###
+/*
   tasks
-###
-manifest = (browser) ->
-  output = paths.output[browser]
-  src = paths.manifest
-  bin = "#{output}/manifest.json"
-  return ->
-    return unless util.isSrcNewer(src, bin)
-    await fs.ensureDir(output)
-    await util.exec('"./node_modules/.bin/wemf"', [src, "-O", bin, "--browser", browser], true)
-    return
+*/
+const manifest = function(browser) {
+  const output = paths.output[browser];
+  const src = paths.manifest;
+  const bin = `${output}/manifest.json`;
+  return async function() {
+    if (!util.isSrcNewer(src, bin)) { return; }
+    await fs.ensureDir(output);
+    await util.exec('"./node_modules/.bin/wemf"', [src, "-O", bin, "--browser", browser], true);
+  };
+};
 
-shortQuery = (browser) ->
-  output = paths.output[browser]+"/lib"
-  return ->
-    return gulp.src paths.lib.shortQuery, { since: gulp.lastRun(shortQuery) }
-      .pipe($.rename("shortQuery.min.js"))
-      .pipe(gulp.dest(output))
+var shortQuery = function(browser) {
+  const output = paths.output[browser]+"/lib";
+  return () => gulp.src(paths.lib.shortQuery, { since: gulp.lastRun(shortQuery) })
+    .pipe($.rename("shortQuery.min.js"))
+    .pipe(gulp.dest(output));
+};
 
-webExtPolyfill = (browser) ->
-  output = paths.output[browser]+"/lib"
-  return ->
-    return gulp.src paths.lib.webExtPolyfill, { since: gulp.lastRun(webExtPolyfill) }
-      .pipe(gulp.dest(output))
+var webExtPolyfill = function(browser) {
+  const output = paths.output[browser]+"/lib";
+  return () => gulp.src(paths.lib.webExtPolyfill, { since: gulp.lastRun(webExtPolyfill) })
+    .pipe(gulp.dest(output));
+};
 
-###
+/*
   gulp task
-###
-for browser in browsers
-  gulp.task "manifest:#{browser}", manifest(browser)
+*/
+for (let browser of browsers) {
+  gulp.task(`manifest:${browser}`, manifest(browser));
 
-  gulp.task "lib:shortQuery:#{browser}", shortQuery(browser)
-  gulp.task "lib:webExtPolyfill:#{browser}", webExtPolyfill(browser)
+  gulp.task(`lib:shortQuery:${browser}`, shortQuery(browser));
+  gulp.task(`lib:webExtPolyfill:${browser}`, webExtPolyfill(browser));
 
-  gulp.task "lib:#{browser}", gulp.parallel(
-    "lib:shortQuery:#{browser}"
-    "lib:webExtPolyfill:#{browser}"
+  gulp.task(`lib:${browser}`, gulp.parallel(
+    `lib:shortQuery:${browser}`,
+    `lib:webExtPolyfill:${browser}`
   )
+  );
+}
 
-gulp.task "manifest", gulp.task("manifest:chrome")
-gulp.task "lib", gulp.task("lib:chrome")
+gulp.task("manifest", gulp.task("manifest:chrome"));
+gulp.task("lib", gulp.task("lib:chrome"));
 
-gulp.task "clean", ->
-  return Promise.all([
-    fs.remove("./.rpt2_cache")
-    fs.remove("./debug/chrome")
-    fs.remove("./debug/firefox")
-    fs.remove("./read.crx_2.zip")
-  ])
+gulp.task("clean", () => Promise.all([
+  fs.remove("./.rpt2_cache"),
+  fs.remove("./debug/chrome"),
+  fs.remove("./debug/firefox"),
+  fs.remove("./read.crx_2.zip")
+]));

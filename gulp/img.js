@@ -1,103 +1,118 @@
-gulp = require "gulp"
-fs = require "fs-extra"
-{other: o} = require "./plugins"
-{browsers, paths, defaultOptions} = require "./config"
-util = require "./util"
+/*
+ * decaffeinate suggestions:
+ * DS207: Consider shorter variations of null checks
+ * Full docs: https://github.com/decaffeinate/decaffeinate/blob/main/docs/suggestions.md
+ */
+const gulp = require("gulp");
+const fs = require("fs-extra");
+const {other: o} = require("./plugins");
+const {browsers, paths, defaultOptions} = require("./config");
+const util = require("./util");
 
-###
+/*
   tasks
-###
-imgs = (browser) ->
-  output = paths.output[browser]+"/img"
-  isChrome = (browser is "chrome")
-  func = ->
-    await fs.ensureDir(output)
-    await Promise.all(paths.img.imgs.map( (img) ->
-      img = img.replace(".webp", ".png") unless isChrome
-      m = img.match(/^(.+)_(\d+)x(\d+)(?:_([a-fA-F0-9]*))?(?:_r(\-?\d+))?\.(webp|png)$/)
-      src = "#{paths.img.imgsSrc}/#{m[1]}.svg"
-      bin = "#{output}/#{img}"
-      return unless util.isSrcNewer(src, bin)
+*/
+const imgs = function(browser) {
+  const output = paths.output[browser]+"/img";
+  const isChrome = (browser === "chrome");
+  const func = async function() {
+    await fs.ensureDir(output);
+    await Promise.all(paths.img.imgs.map( async function(img) {
+      if (!isChrome) { img = img.replace(".webp", ".png"); }
+      const m = img.match(/^(.+)_(\d+)x(\d+)(?:_([a-fA-F0-9]*))?(?:_r(\-?\d+))?\.(webp|png)$/);
+      const src = `${paths.img.imgsSrc}/${m[1]}.svg`;
+      const bin = `${output}/${img}`;
+      if (!util.isSrcNewer(src, bin)) { return; }
 
-      data = await fs.readFile(src, "utf-8")
-      # 塗りつぶし
-      if m[4]?
-        data = data.replace(/#333/g, "##{m[4]}")
-      buf = Buffer.from(data, "utf8")
-      sh = o.sharp(buf)
-      # 回転
-      if m[5]?
-        sh.rotate(parseInt(m[5]))
-      sh.resize(parseInt(m[2]), parseInt(m[3]))
-      if m[6] is "webp"
-        sh.webp(defaultOptions.sharp.webp)
-      await sh.toFile(bin)
-      return
-    ))
-    return
-  func.displayName = "img:imgs:#{browser}"
-  return func
+      let data = await fs.readFile(src, "utf-8");
+      // 塗りつぶし
+      if (m[4] != null) {
+        data = data.replace(/#333/g, `#${m[4]}`);
+      }
+      const buf = Buffer.from(data, "utf8");
+      const sh = o.sharp(buf);
+      // 回転
+      if (m[5] != null) {
+        sh.rotate(parseInt(m[5]));
+      }
+      sh.resize(parseInt(m[2]), parseInt(m[3]));
+      if (m[6] === "webp") {
+        sh.webp(defaultOptions.sharp.webp);
+      }
+      await sh.toFile(bin);
+    }));
+  };
+  func.displayName = `img:imgs:${browser}`;
+  return func;
+};
 
-logoBig = (browser, size) ->
-  output = paths.output[browser]+"/img"
-  src = paths.img.logoBig
-  bin = "#{output}/read.crx_#{size}x#{size}.png"
-  margin = size/8
-  firstSize = size - margin*2
-  func = ->
-    return unless util.isSrcNewer(src, bin)
-    await fs.ensureDir(output)
+const logoBig = function(browser, size) {
+  const output = paths.output[browser]+"/img";
+  const src = paths.img.logoBig;
+  const bin = `${output}/read.crx_${size}x${size}.png`;
+  const margin = size/8;
+  const firstSize = size - (margin*2);
+  const func = async function() {
+    if (!util.isSrcNewer(src, bin)) { return; }
+    await fs.ensureDir(output);
     await o.sharp(src)
       .resize(firstSize, firstSize)
-      .extend(
-        top: margin
-        bottom: margin
-        left: margin
-        right: margin
-        background:
-          r: 0
-          g: 0
-          b: 0
+      .extend({
+        top: margin,
+        bottom: margin,
+        left: margin,
+        right: margin,
+        background: {
+          r: 0,
+          g: 0,
+          b: 0,
           alpha: 0
-      ).toFile(bin)
-    return
-  func.displayName = "img:logo#{size}:#{browser}"
-  return func
+        }
+      }).toFile(bin);
+  };
+  func.displayName = `img:logo${size}:${browser}`;
+  return func;
+};
 
-loading = (browser) ->
-  output = paths.output[browser]+"/img"
-  src = paths.img.loading
-  if browser is "chrome"
-    bin = "#{output}/loading.webp"
-    func = ->
-      return unless util.isSrcNewer(src, bin)
-      await fs.ensureDir(output)
+const loading = function(browser) {
+  let bin, func;
+  const output = paths.output[browser]+"/img";
+  const src = paths.img.loading;
+  if (browser === "chrome") {
+    bin = `${output}/loading.webp`;
+    func = async function() {
+      if (!util.isSrcNewer(src, bin)) { return; }
+      await fs.ensureDir(output);
       await o.sharp(src)
         .resize(100, 100)
         .webp(defaultOptions.sharp.webp)
-        .toFile(bin)
-      return
-  else
-    bin = "#{output}/loading.png"
-    func = ->
-      return unless util.isSrcNewer(src, bin)
-      await fs.ensureDir(output)
+        .toFile(bin);
+    };
+  } else {
+    bin = `${output}/loading.png`;
+    func = async function() {
+      if (!util.isSrcNewer(src, bin)) { return; }
+      await fs.ensureDir(output);
       await o.sharp(src)
         .resize(100, 100)
-        .toFile(bin)
-      return
-  func.displayName = "img:loading:#{browser}"
-  return func
+        .toFile(bin);
+    };
+  }
+  func.displayName = `img:loading:${browser}`;
+  return func;
+};
 
-###
+/*
   gulp task
-###
-for browser in browsers
-  gulp.task "img:#{browser}", gulp.parallel(
-    imgs(browser)
-    logoBig(browser, 96)
-    logoBig(browser, 128)
+*/
+for (let browser of browsers) {
+  gulp.task(`img:${browser}`, gulp.parallel(
+    imgs(browser),
+    logoBig(browser, 96),
+    logoBig(browser, 128),
     loading(browser)
   )
+  );
+}
 
-gulp.task "img", gulp.task("img:chrome")
+gulp.task("img", gulp.task("img:chrome"));

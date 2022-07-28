@@ -1,70 +1,82 @@
-gulp = require "gulp"
-fs = require "fs-extra"
-os = require "os"
-path = require "path"
-{other: o} = require "./plugins"
-{browsers, paths, manifest} = require "./config"
-util = require "./util"
+/*
+ * decaffeinate suggestions:
+ * DS207: Consider shorter variations of null checks
+ * Full docs: https://github.com/decaffeinate/decaffeinate/blob/main/docs/suggestions.md
+ */
+const gulp = require("gulp");
+const fs = require("fs-extra");
+const os = require("os");
+const path = require("path");
+const {other: o} = require("./plugins");
+const {browsers, paths, manifest} = require("./config");
+const util = require("./util");
 
-createCrx3 = (tmpDir, pemPath) ->
+const createCrx3 = async function(tmpDir, pemPath) {
   await o.crx3(
     [tmpDir],
     {
       keyPath: pemPath,
-      crxPath: "./build/read.crx_2.#{manifest.version}.crx",
+      crxPath: `./build/read.crx_2.${manifest.version}.crx`,
     }
-  )
-  return
+  );
+};
 
-createXpi = (tmpDir, apicrePath) ->
-  apicre = await fs.readJson(apicrePath)
-  await o.webExt.cmd.sign(
-    sourceDir: tmpDir
-    artifactsDir: process.cwd()+"/build"
-    apiKey: apicre.issuer
+const createXpi = async function(tmpDir, apicrePath) {
+  const apicre = await fs.readJson(apicrePath);
+  await o.webExt.cmd.sign({
+    sourceDir: tmpDir,
+    artifactsDir: process.cwd()+"/build",
+    apiKey: apicre.issuer,
     apiSecret: apicre.secret
-  )
-  return
+  });
+};
 
-###
+/*
   tasks
-###
-scan = (browser) ->
-  output = path.normalize(paths.output[browser])
-  return ->
-    await util.exec("freshclam", [])
-    await util.exec("clamscan", ["-ir", output])
-    return
+*/
+const scan = function(browser) {
+  const output = path.normalize(paths.output[browser]);
+  return async function() {
+    await util.exec("freshclam", []);
+    await util.exec("clamscan", ["-ir", output]);
+  };
+};
 
-pack = (browser) ->
-  output = paths.output[browser]
-  tmpDir = path.join(os.tmpdir(), "debug-#{browser}")
-  switch browser
-    when "chrome"
-      type = "crx"
-      createFunc = createCrx3
-      secretEnv = "read.crx-2-pem-path"
-    when "firefox"
-      type = "xpi"
-      createFunc = createXpi
-      secretEnv = "read.crx-2-apicre-path"
-    else
-      type = "crx"
-      createFunc = createCrx3
-      secretEnv = "read.crx-2-pem-path"
-  return ->
-    await fs.copy(output, tmpDir)
-    secretPath = process.env[secretEnv] ? await util.puts("秘密鍵のパスを入力して下さい: ")
-    await createFunc(tmpDir, secretPath)
-    await fs.remove(tmpDir)
-    return
+const pack = function(browser) {
+  let createFunc, secretEnv;
+  const output = paths.output[browser];
+  const tmpDir = path.join(os.tmpdir(), `debug-${browser}`);
+  switch (browser) {
+    case "chrome":
+      var type = "crx";
+      createFunc = createCrx3;
+      secretEnv = "read.crx-2-pem-path";
+      break;
+    case "firefox":
+      type = "xpi";
+      createFunc = createXpi;
+      secretEnv = "read.crx-2-apicre-path";
+      break;
+    default:
+      type = "crx";
+      createFunc = createCrx3;
+      secretEnv = "read.crx-2-pem-path";
+  }
+  return async function() {
+    await fs.copy(output, tmpDir);
+    const secretPath = process.env[secretEnv] != null ? process.env[secretEnv] : await util.puts("秘密鍵のパスを入力して下さい: ");
+    await createFunc(tmpDir, secretPath);
+    await fs.remove(tmpDir);
+  };
+};
 
-###
+/*
   gulp task
-###
-for browser in browsers
-  gulp.task "scan:#{browser}", scan(browser)
-  gulp.task "pack-in:#{browser}", pack(browser)
+*/
+for (let browser of browsers) {
+  gulp.task(`scan:${browser}`, scan(browser));
+  gulp.task(`pack-in:${browser}`, pack(browser));
+}
 
-gulp.task "scan", gulp.task("scan:chrome")
-gulp.task "pack-in", gulp.task("pack-in:chrome")
+gulp.task("scan", gulp.task("scan:chrome"));
+gulp.task("pack-in", gulp.task("pack-in:chrome"));

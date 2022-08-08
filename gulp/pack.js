@@ -18,7 +18,8 @@ const createCrx3 = async function(tmpDir, pemPath) {
 
 const createXpi = async function(tmpDir, apicrePath) {
   const apicre = await fs.readJson(apicrePath);
-  await o.webExt.cmd.sign({
+  const webExt = await o.webExt;
+  await webExt.cmd.sign({
     sourceDir: tmpDir,
     artifactsDir: process.cwd()+"/build",
     apiKey: apicre.issuer,

@@ -17,16 +17,25 @@
 }
 
 @keyframes rotateThis {
-  0% {transform: rotate(-45deg);}
-  100% {transform: rotate(315deg);}
+  0% {
+    transform: rotate(-45deg);
+  }
+  100% {
+    transform: rotate(315deg);
+  }
 }
 
 @keyframes fadeIn {
-  0% {opacity: 0;}
-  100% {opacity: 1;}
+  0% {
+    opacity: 0;
+  }
+  100% {
+    opacity: 1;
+  }
 }
 
-header, body {
+header,
+body {
   font-size: 15px;
 }
 
@@ -99,7 +108,9 @@ article {
   }
 }
 
-.link, .freq, .name_anchor {
+.link,
+.freq,
+.name_anchor {
   cursor: pointer;
   &:hover {
     text-decoration: underline;
@@ -135,13 +146,14 @@ header {
 }
 
 .mail::before {
-  content: "["
+  content: "[";
 }
 .mail::after {
-  content: "]"
+  content: "]";
 }
 
-.one:not(:first-child), .popup > .one {
+.one:not(:first-child),
+.popup > .one {
   > header > .name::before {
     content: "(>>1)";
     margin-right: 1ex;
@@ -187,7 +199,8 @@ header {
   }
 }
 
-.beicon[src="/img/loading.webp"], .beicon[src="/img/loading.png"] {
+.beicon[src="/img/loading.webp"],
+.beicon[src="/img/loading.png"] {
   width: 32px;
   height: 32px;
   will-change: transform;
@@ -199,7 +212,9 @@ header {
   display: inline-block;
   margin: 10px;
 
-  > a, > audio, > video {
+  > a,
+  > audio,
+  > video {
     $a-padding: 3px;
     position: relative;
     display: inline-block;
@@ -211,7 +226,8 @@ header {
     background-color: white;
     > img.image {
       display: block;
-      &[src="/img/loading.webp"], &[src="/img/loading.png"] {
+      &[src="/img/loading.webp"],
+      &[src="/img/loading.png"] {
         width: 50px;
         height: 50px;
         will-change: transform;
@@ -232,11 +248,12 @@ header {
       border-radius: 2px;
     }
   }
-  > video, > audio {
+  > video,
+  > audio {
     background-color: #666666;
   }
   &.zoom {
-     z-index: var(--z-index-thumnail-zoom);
+    z-index: var(--z-index-thumnail-zoom);
   }
 }
 
@@ -269,7 +286,8 @@ header {
   display: none;
 }
 
-.rock54, .slipchange {
+.rock54,
+.slipchange {
   border: 1px solid;
   border-radius: 3px;
   margin-top: 15px;
@@ -377,7 +395,9 @@ header {
   left: 0;
   right: 75px;
   display: flex;
-  > .loading_indicator, > .next_unread, > .search_next_thread {
+  > .loading_indicator,
+  > .next_unread,
+  > .search_next_thread {
     margin: 10px;
     padding: 10px;
     border: 1px solid hsl(0, 0%, 70%);
@@ -395,7 +415,8 @@ header {
     white-space: nowrap;
     overflow: hidden;
   }
-  > .next_unread, > .search_next_thread {
+  > .next_unread,
+  > .search_next_thread {
     cursor: pointer;
     text-decoration: none;
   }
@@ -474,7 +495,7 @@ header {
   }
 }
 
-@mixin view_thread_theme (
+@mixin view_thread_theme(
   $background-color,
   $color,
   $res-header-color,
@@ -554,7 +575,9 @@ header {
     color: $res-name-ob-color;
   }
 
-  .link, .beid, .beid:visited {
+  .link,
+  .beid,
+  .beid:visited {
     color: $link-color;
   }
 
@@ -562,39 +585,41 @@ header {
     color: $freq-color;
   }
 
-    .ng {
-      header {
-        color: $ng-res-header-color;
-      }
+  .ng {
+    header {
+      color: $ng-res-header-color;
+    }
+    .name {
+      color: $ng-res-name-color;
+    }
+    .ob {
+      color: $ng-res-name-ob-color;
+    }
+    .link,
+    .beid,
+    .beid:visited {
+      color: $ng-link-color;
+    }
+    .freq {
+      color: $ng-freq-color;
+    }
+    &.to_written {
       .name {
-        color: $ng-res-name-color;
+        color: $ng-res-name-to-own-color;
       }
       .ob {
-        color: $ng-res-name-ob-color;
-      }
-      .link, .beid, .beid:visited {
-        color: $ng-link-color;
-      }
-      .freq {
-        color: $ng-freq-color;
-      }
-      &.to_written {
-        .name {
-          color: $ng-res-name-to-own-color;
-        }
-        .ob {
-          color: $ng-res-name-to-own-ob-color;
-        }
-      }
-      &.written {
-        .name {
-          color: $ng-res-name-own-color;
-        }
-        .ob {
-          color: $ng-res-name-own-ob-color;
-        }
+        color: $ng-res-name-to-own-ob-color;
       }
     }
+    &.written {
+      .name {
+        color: $ng-res-name-own-color;
+      }
+      .ob {
+        color: $ng-res-name-own-ob-color;
+      }
+    }
+  }
 
   .anchor.disabled {
     color: $anchor-disabled-color;
@@ -604,19 +629,24 @@ header {
     background-color: $background-color;
   }
 
-  .one:not(:first-child), .popup > .one {
+  .one:not(:first-child),
+  .popup > .one {
     > header > .name::before {
       color: $one-color;
     }
   }
 
-  .last, .read, .received {
+  .last,
+  .read,
+  .received {
     &:not(:last-child)::after {
       color: $thread-res-info-color;
     }
   }
 
-  .rock54, .slipchange, &.expired .content > article:last-child::after {
+  .rock54,
+  .slipchange,
+  &.expired .content > article:last-child::after {
     border-color: $thread-caution-border-color;
     background: $thread-caution-background-color;
   }
@@ -633,14 +663,16 @@ header {
     }
   }
 
-  .next_unread, .next_unread:visited, .search_next_thread {
+  .next_unread,
+  .next_unread:visited,
+  .search_next_thread {
     background-color: $thread-footer-button-background-color;
     color: $thread-footer-button-color;
   }
 }
 
 .view.theme_default {
-  @include view_thread_theme (
+  @include view_thread_theme(
     $background-color: #fafafa,
     $color: #000,
     $res-header-color: #222,
@@ -663,7 +695,7 @@ header {
     $ng-freq-color: #b88,
     $anchor-color: #00e,
     $anchor-active-color: hsl(10, 50%, 50%),
-    $anchor-visited-color: #551A8B,
+    $anchor-visited-color: #551a8b,
     $anchor-disabled-color: #666,
     $one-color: #a40000,
     $no-hit-message-color: #444,

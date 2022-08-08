@@ -1,12 +1,12 @@
-import {Request} from "./HTTP"
+import { Request } from "./HTTP";
 // @ts-ignore
-import {fetch as fetchBBSMenu} from "./BBSMenu.coffee"
+import { fetch as fetchBBSMenu } from "./BBSMenu.js";
 // @ts-ignore
-import Cache from "./Cache.coffee"
+import Cache from "./Cache.js";
 
 export interface GuessResult {
-  type: "thread"|"board"|"unknown";
-  bbsType: "jbbs"|"machi"|"2ch"|"unknown";
+  type: "thread" | "board" | "unknown";
+  bbsType: "jbbs" | "machi" | "2ch" | "unknown";
 }
 
 let serverNet = new Map<string, string>();
@@ -14,8 +14,8 @@ let serverSc = new Map<string, string>();
 let serverPink = new Map<string, string>();
 
 export class URL extends window.URL {
-  private guessedType: GuessResult = {type: "unknown", bbsType: "unknown"};
-  private tsld: string|null = null;
+  private guessedType: GuessResult = { type: "unknown", bbsType: "unknown" };
+  private tsld: string | null = null;
   private readonly rawUrl: string;
   private readonly rawHash: string;
   private archive = false;
@@ -29,17 +29,26 @@ export class URL extends window.URL {
     this.fix();
   }
 
-  private static readonly CH_THREAD_REG = /^\/((?:\w+\/)?test\/(?:read\.cgi|-)\/\w+\/\d+).*$/;
+  private static readonly CH_THREAD_REG =
+    /^\/((?:\w+\/)?test\/(?:read\.cgi|-)\/\w+\/\d+).*$/;
   //private static readonly CH_THREAD_REG2 = /^\/(\w+)\/?(?!test)$/;
-  private static readonly CH_THREAD_ULA_REG = /^\/2ch\/(\w+)\/([\w\.]+)\/(\d+).*$/;
-  private static readonly CH_BOARD_REG = /^\/((?:subback\/|test\/-\/)?\w+\/)(?:#.*)?$/;
+  private static readonly CH_THREAD_ULA_REG =
+    /^\/2ch\/(\w+)\/([\w\.]+)\/(\d+).*$/;
+  private static readonly CH_BOARD_REG =
+    /^\/((?:subback\/|test\/-\/)?\w+\/)(?:#.*)?$/;
   private static readonly MACHI_THREAD_REG = /^\/bbs\/read\.cgi\/(\w+\/\d+).*$/;
   private static readonly MACHI_BOARD_REG = /^\/(\w+\/)(?:#.*)?$/;
-  private static readonly SHITARABA_THREAD_REG = /^\/bbs\/(read(?:_archive)?\.cgi\/\w+\/\d+\/\d+).*$/;
-  private static readonly SHITARABA_ARCHIVE_REG = /^\/(\w+\/\d+)\/storage\/(\d+)\.html$/;
+  private static readonly SHITARABA_THREAD_REG =
+    /^\/bbs\/(read(?:_archive)?\.cgi\/\w+\/\d+\/\d+).*$/;
+  private static readonly SHITARABA_ARCHIVE_REG =
+    /^\/(\w+\/\d+)\/storage\/(\d+)\.html$/;
   private static readonly SHITARABA_BOARD_REG = /^\/(\w+\/\d+\/)(?:#.*)?$/;
 
-  private fixPathAndSetType(reg: RegExp, replace: (res: string[]) => string, type: GuessResult): boolean {
+  private fixPathAndSetType(
+    reg: RegExp,
+    replace: (res: string[]) => string,
+    type: GuessResult
+  ): boolean {
     const res = reg.exec(this.pathname);
     if (res) {
       this.pathname = replace(res);
@@ -63,7 +72,7 @@ export class URL extends window.URL {
       if (res) {
         this.hostname = res[2];
         this.pathname = `/test/read.cgi/${res[1]}/${res[3]}/`;
-        this.guessedType = {type: "thread", bbsType: "2ch"};
+        this.guessedType = { type: "thread", bbsType: "2ch" };
       }
       return;
     }
@@ -72,15 +81,14 @@ export class URL extends window.URL {
       const isThread = this.fixPathAndSetType(
         URL.MACHI_THREAD_REG,
         (res) => `/bbs/read.cgi/${res[1]}/`,
-        {type: "thread", bbsType: "machi"}
+        { type: "thread", bbsType: "machi" }
       );
       if (isThread) return;
 
-      this.fixPathAndSetType(
-        URL.MACHI_BOARD_REG,
-        (res) => `/${res[1]}`,
-        {type: "board", bbsType: "machi"}
-      );
+      this.fixPathAndSetType(URL.MACHI_BOARD_REG, (res) => `/${res[1]}`, {
+        type: "board",
+        bbsType: "machi",
+      });
       return;
     }
 
@@ -88,7 +96,7 @@ export class URL extends window.URL {
       const isThread = this.fixPathAndSetType(
         URL.SHITARABA_THREAD_REG,
         (res) => `/bbs/${res[1]}/`,
-        {type: "thread", bbsType: "jbbs"}
+        { type: "thread", bbsType: "jbbs" }
       );
       if (isThread) {
         if (this.pathname.includes("read_archive")) {
@@ -100,18 +108,17 @@ export class URL extends window.URL {
       const isArchive = this.fixPathAndSetType(
         URL.SHITARABA_ARCHIVE_REG,
         (res) => `/bbs/read_archive.cgi/${res[1]}/${res[2]}/`,
-        {type: "thread", bbsType: "jbbs"}
+        { type: "thread", bbsType: "jbbs" }
       );
       if (isArchive) {
         this.archive = true;
         return;
       }
 
-      this.fixPathAndSetType(
-        URL.SHITARABA_BOARD_REG,
-        (res) => `/${res[1]}`,
-        {type: "board", bbsType: "jbbs"}
-      );
+      this.fixPathAndSetType(URL.SHITARABA_BOARD_REG, (res) => `/${res[1]}`, {
+        type: "board",
+        bbsType: "jbbs",
+      });
       return;
     }
 
@@ -120,7 +127,7 @@ export class URL extends window.URL {
       const isThread = this.fixPathAndSetType(
         URL.CH_THREAD_REG,
         (res) => `/${res[1]}/`,
-        {type: "thread", bbsType: "2ch"}
+        { type: "thread", bbsType: "2ch" }
       );
       if (isThread) return;
 
@@ -133,11 +140,10 @@ export class URL extends window.URL {
       if (isThread2) return;
       */
 
-      this.fixPathAndSetType(
-        URL.CH_BOARD_REG,
-        (res) => `/${res[1]}`,
-        {type: "board", bbsType: "2ch"}
-      );
+      this.fixPathAndSetType(URL.CH_BOARD_REG, (res) => `/${res[1]}`, {
+        type: "board",
+        bbsType: "2ch",
+      });
     }
   }
 
@@ -154,7 +160,7 @@ export class URL extends window.URL {
       const dotList = this.hostname.split(".");
       const len = dotList.length;
       if (len >= 2) {
-        this.tsld = `${dotList[len-2]}.${dotList[len-1]}`;
+        this.tsld = `${dotList[len - 2]}.${dotList[len - 1]}`;
       } else {
         this.tsld = "";
       }
@@ -163,7 +169,7 @@ export class URL extends window.URL {
   }
 
   isHttps() {
-    return (this.protocol === "https:");
+    return this.protocol === "https:";
   }
 
   toggleProtocol() {
@@ -176,13 +182,17 @@ export class URL extends window.URL {
     return toggled;
   }
 
-  private static readonly CH_RESNUM_REG = /^https?:\/\/[\w\.]+\/(?:\w+\/)?test\/(?:read\.cgi|-)\/\w+\/\d+\/(?:i|g\?g=)?(\d+).*$/;
-  private static readonly CH_RESNUM_REG2 = /^\/2ch\/\w+\/[\w\.]+\/\d+\/(\d+).*$/;
-  private static readonly MACHI_RESNUM_REG = /^\/bbs\/read\.cgi\/\w+\/\d+\/(\d+).*$/;
-  private static readonly SHITARABA_RESNUM_REG = /^\/bbs\/read(?:_archive)?\.cgi\/\w+\/\d+\/\d+\/(\d+).*$/;
+  private static readonly CH_RESNUM_REG =
+    /^https?:\/\/[\w\.]+\/(?:\w+\/)?test\/(?:read\.cgi|-)\/\w+\/\d+\/(?:i|g\?g=)?(\d+).*$/;
+  private static readonly CH_RESNUM_REG2 =
+    /^\/2ch\/\w+\/[\w\.]+\/\d+\/(\d+).*$/;
+  private static readonly MACHI_RESNUM_REG =
+    /^\/bbs\/read\.cgi\/\w+\/\d+\/(\d+).*$/;
+  private static readonly SHITARABA_RESNUM_REG =
+    /^\/bbs\/read(?:_archive)?\.cgi\/\w+\/\d+\/\d+\/(\d+).*$/;
 
-  getResNumber(): string|null {
-    const {type, bbsType} = this.guessedType;
+  getResNumber(): string | null {
+    const { type, bbsType } = this.guessedType;
 
     if (type !== "thread" || bbsType === "unknown") {
       return null;
@@ -215,17 +225,24 @@ export class URL extends window.URL {
     return null;
   }
 
-  private static readonly CH_TO_BOARD_REG = /^\/(?:test|bbs)\/read\.cgi\/(\w+)\/\d+\/$/;
-  private static readonly SHITARABA_TO_BOARD_REG = /^\/bbs\/read(?:_archive)?\.cgi\/(\w+\/\d+)\/\d+\/$/;
+  private static readonly CH_TO_BOARD_REG =
+    /^\/(?:test|bbs)\/read\.cgi\/(\w+)\/\d+\/$/;
+  private static readonly SHITARABA_TO_BOARD_REG =
+    /^\/bbs\/read(?:_archive)?\.cgi\/(\w+\/\d+)\/\d+\/$/;
 
   toBoard(): URL {
-    const {type, bbsType} = this.guessedType;
+    const { type, bbsType } = this.guessedType;
     if (type !== "thread") {
-      throw new Error("app.URL.URL.toBoard: toBoard()はThreadでのみ呼び出せます")
+      throw new Error(
+        "app.URL.URL.toBoard: toBoard()はThreadでのみ呼び出せます"
+      );
     }
 
     if (bbsType === "jbbs") {
-      const pathname = this.pathname.replace(URL.SHITARABA_TO_BOARD_REG, "/$1/");
+      const pathname = this.pathname.replace(
+        URL.SHITARABA_TO_BOARD_REG,
+        "/$1/"
+      );
       return new URL(`${this.origin}${pathname}`);
     }
 
@@ -236,17 +253,22 @@ export class URL extends window.URL {
   }
 
   getHashParams(): URLSearchParams {
-    return this.rawHash ? new URLSearchParams(this.rawHash.slice(1)) : new URLSearchParams();
+    return this.rawHash
+      ? new URLSearchParams(this.rawHash.slice(1))
+      : new URLSearchParams();
   }
 
   setHashParams(data: Record<string, string>) {
-    this.hash = (new URLSearchParams(data)).toString();
+    this.hash = new URLSearchParams(data).toString();
   }
 
-  private static readonly ITEST_5CH_REG = /\/(?:(?:\w+\/)?test\/read\.cgi\/(\w+)\/(\d+)\/|(?:subback\/)?(\w+)(?:\/)?)/;
+  private static readonly ITEST_5CH_REG =
+    /\/(?:(?:\w+\/)?test\/read\.cgi\/(\w+)\/(\d+)\/|(?:subback\/)?(\w+)(?:\/)?)/;
   private static readonly C_5CH_NET_REG = /\/test\/-\/(\w+)\/(?:(\d+)\/)?/;
-  private static readonly SP_2CH_SC_REG = /\/(?:(?:\w+\/)?test\/read\.cgi\/(\w+)\/(\d+)\/|(?:subback\/)?(\w+)\/)/;
-  private static readonly ITEST_BBSPINK_REG = /\/(?:(?:\w+\/)?test\/read\.cgi\/(\w+)\/(\d+)\/|(?:subback\/)?(\w+)(?:\/)?)/;
+  private static readonly SP_2CH_SC_REG =
+    /\/(?:(?:\w+\/)?test\/read\.cgi\/(\w+)\/(\d+)\/|(?:subback\/)?(\w+)\/)/;
+  private static readonly ITEST_BBSPINK_REG =
+    /\/(?:(?:\w+\/)?test\/read\.cgi\/(\w+)\/(\d+)\/|(?:subback\/)?(\w+)(?:\/)?)/;
 
   convertFromPhone() {
     let mode = this.getTsld();
@@ -281,12 +303,12 @@ export class URL extends window.URL {
 
     if (!board) return;
 
-    let server: string|null = null;
+    let server: string | null = null;
 
     if (mode === "5ch.net") {
       if (serverNet.has(board)) {
         server = serverNet.get(board);
-      // 携帯用bbspinkの可能性をチェック
+        // 携帯用bbspinkの可能性をチェック
       } else if (serverPink.has(board)) {
         server = serverPink.get(board);
         mode = "bbspink.com";
@@ -304,7 +326,7 @@ export class URL extends window.URL {
   }
 
   private async exchangeNetSc() {
-    const {type} = this.guessedType;
+    const { type } = this.guessedType;
     const splits = this.pathname.split("/");
     const tsld = this.getTsld();
 
@@ -332,7 +354,7 @@ export class URL extends window.URL {
     {
       const hostname = this.hostname.replace(".5ch.net", ".2ch.sc");
       const req = new Request("HEAD", `http://${hostname}${this.pathname}`);
-      const {status, responseURL: resUrlStr} = await req.send();
+      const { status, responseURL: resUrlStr } = await req.send();
       if (status >= 400) {
         throw new Error("移動先情報の取得の通信に失敗しました");
       }
@@ -366,23 +388,23 @@ export class URL extends window.URL {
 }
 
 export function fix(urlStr: string): string {
-  return (new URL(urlStr)).href;
+  return new URL(urlStr).href;
 }
 
 export function tsld(urlStr: string): string {
-  return (new URL(urlStr).getTsld());
+  return new URL(urlStr).getTsld();
 }
 
 export function getDomain(urlStr: string): string {
-  return (new URL(urlStr)).hostname;
+  return new URL(urlStr).hostname;
 }
 
 export function getProtocol(urlStr: string): string {
-  return (new URL(urlStr)).protocol;
+  return new URL(urlStr).protocol;
 }
 
 export function isHttps(urlStr: string): boolean {
-  return (getProtocol(urlStr) === "https:");
+  return getProtocol(urlStr) === "https:";
 }
 
 export function setProtocol(urlStr: string, protocol: string): string {
@@ -391,23 +413,23 @@ export function setProtocol(urlStr: string, protocol: string): string {
   return url.href;
 }
 
-export function getResNumber(urlStr: string): string|null {
-  return (new URL(urlStr)).getResNumber();
+export function getResNumber(urlStr: string): string | null {
+  return new URL(urlStr).getResNumber();
 }
 
 export function threadToBoard(urlStr: string): string {
-  return (new URL(urlStr)).toBoard().href;
+  return new URL(urlStr).toBoard().href;
 }
 
-export function parseQuery(urlStr: string, fromSearch: boolean = true): URLSearchParams {
+export function parseQuery(urlStr: string, fromSearch = true): URLSearchParams {
   if (fromSearch) {
     return new URLSearchParams(urlStr.slice(1));
   }
-  return (new window.URL(urlStr)).searchParams;
+  return new window.URL(urlStr).searchParams;
 }
 
 export function buildQuery(data: Record<string, string>): string {
-  return (new URLSearchParams(data)).toString();
+  return new URLSearchParams(data).toString();
 }
 
 export const SHORT_URL_LIST: ReadonlySet<string> = new Set([
@@ -458,38 +480,38 @@ export const SHORT_URL_LIST: ReadonlySet<string> = new Set([
   "wb2.biz",
   "wk.tk",
   "xrl.us",
-  "y2u.be"
+  "y2u.be",
 ]);
 
 export async function expandShortURL(shortUrl: string): Promise<string> {
   let finalUrl = "";
   const cache = new Cache(shortUrl);
 
-  const res = await ( async () => {
+  const res = await (async () => {
     try {
       await cache.get();
-      return {data: cache.data, url: null};
+      return { data: cache.data, url: null };
     } catch {
       const req = new Request("HEAD", shortUrl, {
-        timeout: parseInt(app.config.get("expand_short_url_timeout")!)
+        timeout: parseInt(app.config.get("expand_short_url_timeout")!),
       });
 
-      let {status, responseURL: resUrl} = await req.send();
+      let { status, responseURL: resUrl } = await req.send();
 
       if (shortUrl === resUrl && status >= 400) {
-        return {data: null, url: null};
+        return { data: null, url: null };
       }
       // 無限ループの防止
       if (resUrl === shortUrl) {
-        return {data: null, url: null};
+        return { data: null, url: null };
       }
 
       // 取得したURLが短縮URLだった場合は再帰呼出しする
       if (SHORT_URL_LIST.has(getDomain(resUrl))) {
-        resUrl = await expandShortURL(resUrl)
-        return {data: null, url: resUrl};
+        resUrl = await expandShortURL(resUrl);
+        return { data: null, url: resUrl };
       }
-      return {data: null, url: resUrl};
+      return { data: null, url: resUrl };
     }
   })();
 
@@ -507,18 +529,20 @@ export async function expandShortURL(shortUrl: string): Promise<string> {
 const AUDIO_REG = /\.(?:mp3|m4a|wav|oga|spx)(?:[\?#:&].*)?$/;
 const VIDEO_REG = /\.(?:mp4|m4v|webm|ogv)(?:[\?#:&].*)?$/;
 const OGG_REG = /\.(?:ogg|ogx)(?:[\?#:&].*)?$/;
-export function getExtType(filename: string, {
+export function getExtType(
+  filename: string,
+  {
     audio = true,
     video = true,
     oggIsAudio = false,
-    oggIsVideo = true
+    oggIsVideo = true,
   }: Partial<{
-    audio: boolean,
-    video: boolean,
-    oggIsAudio: boolean,
-    oggIsVideo: boolean
+    audio: boolean;
+    video: boolean;
+    oggIsAudio: boolean;
+    oggIsVideo: boolean;
   }> = {}
-): "audio"|"video"|null {
+): "audio" | "video" | null {
   if (audio && AUDIO_REG.test(filename)) {
     return "audio";
   }
@@ -545,22 +569,33 @@ function applyServerInfo(menu: any[]): ResInfo {
   const boardSc = new Map<string, string>();
   const boardPink = new Map<string, string>();
   const res: ResInfo = {
-    net: (serverNet.size > 0),
-    sc: (serverSc.size > 0),
-    bbspink: (serverPink.size > 0)
+    net: serverNet.size > 0,
+    sc: serverSc.size > 0,
+    bbspink: serverPink.size > 0,
   };
 
   if (res.net && res.sc && res.bbspink) return res;
 
   for (const category of menu) {
     for (const board of category.board) {
-      let tmp: string[]|null;
+      let tmp: string[] | null;
 
-      if (!res.net && (tmp = /https?:\/\/(\w+)\.5ch\.net\/(\w+)\/.*?/.exec(board.url)) !== null) {
+      if (
+        !res.net &&
+        (tmp = /https?:\/\/(\w+)\.5ch\.net\/(\w+)\/.*?/.exec(board.url)) !==
+          null
+      ) {
         boardNet.set(tmp[2], tmp[1]);
-      } else if (!res.sc && (tmp = /https?:\/\/(\w+)\.2ch\.sc\/(\w+)\/.*?/.exec(board.url)) !== null) {
+      } else if (
+        !res.sc &&
+        (tmp = /https?:\/\/(\w+)\.2ch\.sc\/(\w+)\/.*?/.exec(board.url)) !== null
+      ) {
         boardSc.set(tmp[2], tmp[1]);
-      } else if (!res.bbspink && (tmp = /https?:\/\/(\w+)\.bbspink\.com\/(\w+)\/.*?/.exec(board.url)) !== null) {
+      } else if (
+        !res.bbspink &&
+        (tmp = /https?:\/\/(\w+)\.bbspink\.com\/(\w+)\/.*?/.exec(board.url)) !==
+          null
+      ) {
         boardPink.set(tmp[2], tmp[1]);
       }
     }
@@ -571,9 +606,9 @@ function applyServerInfo(menu: any[]): ResInfo {
   if (boardPink.size > 0) serverPink = boardPink;
 
   return {
-    net: (serverNet.size > 0),
-    sc: (serverSc.size > 0),
-    bbspink: (serverPink.size > 0)
+    net: serverNet.size > 0,
+    sc: serverSc.size > 0,
+    bbspink: serverPink.size > 0,
   };
 }
 
@@ -586,12 +621,12 @@ export async function pushServerInfo(menu: any[][]) {
 
   if (!res.net || !res.bbspink) {
     const tmpUrl = `https://menu.5ch.net/bbsmenu.html`;
-    const tmpMenu = <any[][]>(await fetchBBSMenu(tmpUrl, false)).menu
+    const tmpMenu = <any[][]>(await fetchBBSMenu(tmpUrl, false)).menu;
     applyServerInfo(tmpMenu);
   }
   if (!res.sc) {
     const tmpUrl = `https://menu.2ch.sc/bbsmenu.html`;
-    const tmpMenu = <any[][]>(await fetchBBSMenu(tmpUrl, false)).menu
+    const tmpMenu = <any[][]>(await fetchBBSMenu(tmpUrl, false)).menu;
     applyServerInfo(tmpMenu);
   }
 }

@@ -23,10 +23,10 @@ export default class VirtualNotch {
         this.wheelDelta += e.deltaY + e.deltaX;
         break;
       case WheelEvent.DOM_DELTA_LINE:
-        this.wheelDelta += e.deltaY*40 + e.deltaX*40;
+        this.wheelDelta += e.deltaY * 40 + e.deltaX * 40;
         break;
       case WheelEvent.DOM_DELTA_PAGE:
-        this.wheelDelta += e.deltaY*120 + e.deltaX*120;
+        this.wheelDelta += e.deltaY * 120 + e.deltaX * 120;
         break;
       default:
         this.wheelDelta += e.deltaY + e.deltaX;

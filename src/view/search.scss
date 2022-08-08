@@ -5,7 +5,8 @@
 @include content-table;
 
 @media (max-width: 750px) and (min-width: 601px) {
-  col, th {
+  col,
+  th {
     &.created_date {
       width: 0;
     }
@@ -13,7 +14,8 @@
 }
 
 @media (max-width: 600px) {
-  col, th {
+  col,
+  th {
     &:not(.bookmark):not(.title) {
       width: 0;
     }
@@ -28,14 +30,15 @@
 }
 
 td {
-  &:nth-child(4), &:nth-child(5) {
+  &:nth-child(4),
+  &:nth-child(5) {
     text-align: right;
   }
 }
 
 tr.https td:nth-child(2)::before {
-    content: img(lock_12x12_3a5);
-    vertical-align: middle;
+  content: img(lock_12x12_3a5);
+  vertical-align: middle;
 }
 
 .theme_default {

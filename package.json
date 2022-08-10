@@ -64,6 +64,6 @@
     "pack:all": "gulp pack:all",
     "lint": "run-s -c -l lint:*",
     "lint:eslint": "eslint --cache --fix src/",
-    "lint:prettier": "prettier --write src/"
+    "lint:prettier": "prettier --write src/ gulp/"
   }
 }

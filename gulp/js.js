@@ -1,12 +1,12 @@
 const path = require("path");
 const gulp = require("gulp");
-const {gulp: $, rollup: _} = require("./plugins");
-const {browsers, paths, defaultOptions} = require("./config");
+const { gulp: $, rollup: _ } = require("./plugins");
+const { browsers, paths, defaultOptions } = require("./config");
 const util = require("./util");
 
-const getReplaceMap = browser => ({
-  "BROWSER": browser,
-  "IMG_EXT": browser === "chrome" ? "webp" : "png"
+const getReplaceMap = (browser) => ({
+  BROWSER: browser,
+  IMG_EXT: browser === "chrome" ? "webp" : "png",
 });
 
 /*
@@ -14,23 +14,28 @@ const getReplaceMap = browser => ({
 */
 const cache = {};
 
-const makeInOut = function(browser, {output, pathname, plugins, outObj = {} }) {
+const makeInOut = function (
+  browser,
+  { output, pathname, plugins, outObj = {} }
+) {
   const i = Object.assign({}, defaultOptions.rollup.in);
   i.input = paths.js[pathname];
   cache[pathname] = null;
   i.cache = cache[pathname];
-  if (plugins != null) { i.plugins = plugins.concat(i.plugins); }
+  if (plugins != null) {
+    i.plugins = plugins.concat(i.plugins);
+  }
 
   const o = Object.assign({}, defaultOptions.rollup.out, outObj);
   o.file = `${paths.output[browser]}/${output}`;
-  return {input: i, output: o};
+  return { input: i, output: o };
 };
 exports.makeInOut = makeInOut;
 
-const getRollupIOConfigs = function(name, browser) {
+const getRollupIOConfigs = function (name, browser) {
   const replace = _.replace({
     delimiters: ["&[", "]"],
-    values: getReplaceMap(browser)
+    values: getReplaceMap(browser),
   });
   switch (name) {
     case "app":
@@ -39,8 +44,8 @@ const getRollupIOConfigs = function(name, browser) {
         output: "app.js",
         plugins: [replace],
         outObj: {
-          name: "app"
-        }
+          name: "app",
+        },
       };
       break;
     case "core":
@@ -50,8 +55,8 @@ const getRollupIOConfigs = function(name, browser) {
         plugins: [replace],
         outObj: {
           name: "app",
-          extend: true
-        }
+          extend: true,
+        },
       };
       break;
     case "ui":
@@ -60,22 +65,22 @@ const getRollupIOConfigs = function(name, browser) {
         output: "ui.js",
         plugins: [replace],
         outObj: {
-          name: "UI"
-        }
+          name: "UI",
+        },
       };
       break;
     case "submitRes":
       return {
         pathname: "submitRes",
         output: "write/submit_res.js",
-        plugins: [replace]
+        plugins: [replace],
       };
       break;
     case "submitThread":
       return {
         pathname: "submitThread",
         output: "write/submit_thread.js",
-        plugins: [replace]
+        plugins: [replace],
       };
       break;
   }
@@ -83,11 +88,11 @@ const getRollupIOConfigs = function(name, browser) {
 };
 exports.getRollupIOConfigs = getRollupIOConfigs;
 
-const makeFunc = function(browser, configName) {
+const makeFunc = function (browser, configName) {
   const args = getRollupIOConfigs(configName, browser);
   const filename = path.basename(args.output);
-  const {input: i, output: o} = makeInOut(browser, args);
-  const func = async function() {
+  const { input: i, output: o } = makeInOut(browser, args);
+  const func = async function () {
     try {
       const bundle = await _.rollup.rollup(i);
       cache[args.pathname] = bundle;
@@ -100,63 +105,71 @@ const makeFunc = function(browser, configName) {
   return func;
 };
 
-const app = browser => makeFunc(browser, "app");
-const core = browser => makeFunc(browser, "core");
-const ui = browser => makeFunc(browser, "ui");
-const submitRes = browser => makeFunc(browser, "submitRes");
-const submitThread = browser => makeFunc(browser, "submitThread");
+const app = (browser) => makeFunc(browser, "app");
+const core = (browser) => makeFunc(browser, "core");
+const ui = (browser) => makeFunc(browser, "ui");
+const submitRes = (browser) => makeFunc(browser, "submitRes");
+const submitThread = (browser) => makeFunc(browser, "submitThread");
 
 /*
   tasks
 */
 const rr = /&\[(\w+)\]/g;
-const makeReplaceOptions = function(browser) {
+const makeReplaceOptions = function (browser) {
   const rm = getReplaceMap(browser);
   return (m, p1) => rm[p1];
 };
 
-const background = function(browser) {
+const background = function (browser) {
   const output = paths.output[browser];
   const ro = makeReplaceOptions(browser);
-  return () => $.merge(
-    gulp.src(paths.lib.webExtPolyfill)
-  ,
-    gulp.src(paths.js.background)
+  return () =>
+    $.merge(
+      gulp.src(paths.lib.webExtPolyfill),
+      gulp.src(paths.js.background).pipe($.replace(rr, ro))
+    )
+      .pipe($.concat("background.js"))
+      .pipe(gulp.dest(output));
+};
+
+var csAddlink = function (browser) {
+  const output = paths.output[browser];
+  const ro = makeReplaceOptions(browser);
+  return () =>
+    gulp
+      .src(paths.js.csAddlink, { since: gulp.lastRun(csAddlink) })
       .pipe($.replace(rr, ro))
-  ).pipe($.concat("background.js"))
-  .pipe(gulp.dest(output));
+      .pipe(gulp.dest(output));
 };
 
-var csAddlink = function(browser) {
+var view = function (browser) {
+  const output = paths.output[browser] + "/view";
+  const ro = makeReplaceOptions(browser);
+  return () =>
+    gulp
+      .src(paths.js.view, { since: gulp.lastRun(view) })
+      .pipe($.replace(rr, ro))
+      .pipe(gulp.dest(output));
+};
+
+var zombie = function (browser) {
   const output = paths.output[browser];
   const ro = makeReplaceOptions(browser);
-  return () => gulp.src(paths.js.csAddlink, { since: gulp.lastRun(csAddlink) })
-    .pipe($.replace(rr, ro))
-    .pipe(gulp.dest(output));
+  return () =>
+    gulp
+      .src(paths.js.zombie, { since: gulp.lastRun(zombie) })
+      .pipe($.replace(rr, ro))
+      .pipe(gulp.dest(output));
 };
 
-var view = function(browser) {
-  const output = paths.output[browser]+"/view";
+var csWrite = function (browser) {
+  const output = paths.output[browser] + "/write";
   const ro = makeReplaceOptions(browser);
-  return () => gulp.src(paths.js.view, { since: gulp.lastRun(view) })
-    .pipe($.replace(rr, ro))
-    .pipe(gulp.dest(output));
-};
-
-var zombie = function(browser) {
-  const output = paths.output[browser];
-  const ro = makeReplaceOptions(browser);
-  return () => gulp.src(paths.js.zombie, { since: gulp.lastRun(zombie) })
-    .pipe($.replace(rr, ro))
-    .pipe(gulp.dest(output));
-};
-
-var csWrite = function(browser) {
-  const output = paths.output[browser]+"/write";
-  const ro = makeReplaceOptions(browser);
-  return () => gulp.src(paths.js.csWrite, { since: gulp.lastRun(csWrite) })
-    .pipe($.replace(rr, ro))
-    .pipe(gulp.dest(output));
+  return () =>
+    gulp
+      .src(paths.js.csWrite, { since: gulp.lastRun(csWrite) })
+      .pipe($.replace(rr, ro))
+      .pipe(gulp.dest(output));
 };
 
 /*
@@ -169,18 +182,20 @@ for (let browser of browsers) {
   gulp.task(`js:zombie.js:${browser}`, zombie(browser));
   gulp.task(`js:cs_write.js:${browser}`, csWrite(browser));
 
-  gulp.task(`js:${browser}`, gulp.parallel(
-    app(browser),
-    core(browser),
-    ui(browser),
-    submitRes(browser),
-    submitThread(browser),
-    `js:background.js:${browser}`,
-    `js:cs_addlink.js:${browser}`,
-    `js:view:${browser}`,
-    `js:zombie.js:${browser}`,
-    `js:cs_write.js:${browser}`
-  )
+  gulp.task(
+    `js:${browser}`,
+    gulp.parallel(
+      app(browser),
+      core(browser),
+      ui(browser),
+      submitRes(browser),
+      submitThread(browser),
+      `js:background.js:${browser}`,
+      `js:cs_addlink.js:${browser}`,
+      `js:view:${browser}`,
+      `js:zombie.js:${browser}`,
+      `js:cs_write.js:${browser}`
+    )
   );
 }
 

@@ -83,6 +83,7 @@ let paths = {};
         "./node_modules/webextension-polyfill/dist/browser-polyfill.min.js",
     },
     manifest: `${i}/manifest.json`,
+    rules: `${i}/rules.json`,
   };
 })();
 

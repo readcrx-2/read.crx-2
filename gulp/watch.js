@@ -53,6 +53,7 @@ const watch = function (browser) {
     gulp.watch(paths.html.write, gulp.task(`html:write:${browser}`));
     gulp.watch(paths.img.imgsSrc, gulp.task(`img:${browser}`));
     gulp.watch(paths.manifest, gulp.task(`manifest:${browser}`));
+    gulp.watch(paths.rules, gulp.task(`rules:${browser}`));
     gulp.watch(paths.lib.shortQuery, gulp.task(`lib:shortQuery:${browser}`));
     gulp.watch(
       paths.lib.webExtPolyfill,

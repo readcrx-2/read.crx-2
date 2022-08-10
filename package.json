@@ -41,8 +41,7 @@
     "typescript": "^4.6.3",
     "web-ext": "^7.0.0",
     "web-ext-types": "^3.2.1",
-    "webextension-polyfill": "^0.9.0",
-    "wemf": "^1.3.0"
+    "webextension-polyfill": "^0.9.0"
   },
   "repository": {
     "type": "git",

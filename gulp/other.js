@@ -1,28 +1,48 @@
 const gulp = require("gulp");
-const path = require("path");
 const fs = require("fs-extra");
 const { gulp: $ } = require("./plugins");
-const { browsers, paths, defaultOptions } = require("./config");
-const util = require("./util");
+const { browsers, paths } = require("./config");
 
 /*
   tasks
 */
 const manifest = function (browser) {
   const output = paths.output[browser];
-  const src = paths.manifest;
   const bin = `${output}/manifest.json`;
+
   return async function () {
-    if (!util.isSrcNewer(src, bin)) {
-      return;
+    const tmpManifest = await fs.readJson(paths.manifest);
+
+    if (browser === "chrome") {
+      tmpManifest.permissions = tmpManifest.permissions.filter(
+        (v) => !["webRequest", "webRequestBlocking"].includes(v)
+      );
+      delete tmpManifest.applications;
+    } else if (browser === "firefox") {
+      delete tmpManifest.update_url;
+      delete tmpManifest.minimum_chrome_version;
+      delete tmpManifest.incognito;
+      tmpManifest.permissions = tmpManifest.permissions.filter(
+        (v) => !["declarativeNetRequest"].includes(v)
+      );
+      delete tmpManifest.declarative_net_request;
     }
+
     await fs.ensureDir(output);
-    await util.exec(
-      '"./node_modules/.bin/wemf"',
-      [src, "-O", bin, "--browser", browser],
-      true
-    );
+    await fs.writeJson(bin, tmpManifest, { spaces: 2 });
   };
+};
+
+const rules = function (browser) {
+  if (browser === "firefox") {
+    return async () => {};
+  }
+
+  const output = paths.output[browser];
+  return () =>
+    gulp
+      .src(paths.rules, { since: gulp.lastRun(rules) })
+      .pipe(gulp.dest(output));
 };
 
 var shortQuery = function (browser) {
@@ -47,6 +67,7 @@ var webExtPolyfill = function (browser) {
 */
 for (let browser of browsers) {
   gulp.task(`manifest:${browser}`, manifest(browser));
+  gulp.task(`rules:${browser}`, rules(browser));
 
   gulp.task(`lib:shortQuery:${browser}`, shortQuery(browser));
   gulp.task(`lib:webExtPolyfill:${browser}`, webExtPolyfill(browser));
@@ -58,6 +79,7 @@ for (let browser of browsers) {
 }
 
 gulp.task("manifest", gulp.task("manifest:chrome"));
+gulp.task("rules", gulp.task("rules:chrome"));
 gulp.task("lib", gulp.task("lib:chrome"));
 
 gulp.task("clean", () =>

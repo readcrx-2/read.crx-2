@@ -21,10 +21,20 @@
     "notifications",
     "webRequest",
     "webRequestBlocking",
+    "declarativeNetRequest",
     "contextMenus",
     "http://*/",
     "https://*/"
   ],
+  "declarative_net_request": {
+    "rule_resources": [
+      {
+        "id": "ruleset",
+        "enabled": true,
+        "path": "rules.json"
+      }
+    ]
+  },
   "background": {
     "scripts": ["background.js"]
   },

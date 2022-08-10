@@ -42,8 +42,7 @@ app.boot("/view/board.html", ["Board"], function (Board) {
     } else if ("&[BROWSER]" === "chrome") {
       parent.browser.windows.create({
         type: "popup",
-        // chrome v103でbrowser.webRequest.onBeforeSendHeaders.addListenerを呼び出すとクラッシュするので暫定対応
-        url: param.url,
+        url: openUrl,
         width: 600,
         height: 300,
         left: parseInt(windowX),

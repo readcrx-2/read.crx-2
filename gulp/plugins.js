@@ -1,5 +1,5 @@
 const sassCompiler = require("sass");
-const sass = (require("gulp-sass"))(sassCompiler);
+const sass = require("gulp-sass")(sassCompiler);
 const webExt = (async () => {
   return await import("web-ext");
 })();
@@ -8,7 +8,7 @@ module.exports = {
   compiler: {
     ts: require("typescript"),
     sass: sassCompiler,
-    pug: require("pug")
+    pug: require("pug"),
   },
   gulp: {
     gulp: require("gulp"),
@@ -21,19 +21,19 @@ module.exports = {
     replace: require("gulp-replace"),
     sass,
     postcss: require("gulp-postcss"),
-    pug: require("gulp-pug")
+    pug: require("gulp-pug"),
   },
   rollup: {
     rollup: require("rollup"),
     ts: require("rollup-plugin-typescript2"),
-    replace: require("rollup-plugin-replace")
+    replace: require("rollup-plugin-replace"),
   },
   postcss: {
-    autoprefixer: require("autoprefixer")
+    autoprefixer: require("autoprefixer"),
   },
   other: {
     sharp: require("sharp"),
     crx3: require("crx3"),
-    webExt: webExt
-  }
+    webExt: webExt,
+  },
 };

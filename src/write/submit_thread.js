@@ -11,7 +11,7 @@ class SubmitThread extends Write {
     super();
   }
 
-  async _setHeaderModifier() {
+  async _setHeaderModifierWebRequest() {
     const { id } = await browser.tabs.getCurrent();
     const extraInfoSpec = ["requestHeaders", "blocking"];
     if (
@@ -27,13 +27,7 @@ class SubmitThread extends Write {
       {
         tabId: id,
         types: ["sub_frame"],
-        urls: [
-          "*://*.5ch.net/test/bbs.cgi*",
-          "*://*.bbspink.com/test/bbs.cgi*",
-          "*://*.2ch.sc/test/bbs.cgi*",
-          "*://*.open2ch.net/test/bbs.cgi*",
-          "*://jbbs.shitaraba.net/bbs/write.cgi/*",
-        ],
+        urls: ["*://*/test/bbs.cgi*", "*://jbbs.shitaraba.net/bbs/write.cgi/*"],
       },
       extraInfoSpec
     );

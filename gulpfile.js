@@ -11,6 +11,7 @@ for (let browser of browsers) {
     `html:${browser}`,
     `img:${browser}`,
     `manifest:${browser}`,
+    `rules:${browser}`,
     `lib:${browser}`
   )
   );

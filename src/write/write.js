@@ -84,7 +84,6 @@ export default Write = (function () {
     _beforeSendFunc() {
       const url = new URL(this.url.href);
       return function ({ method, requestHeaders }) {
-        let name;
         const origin = browser.runtime.getURL("").slice(0, -1);
         const isSameOrigin =
           requestHeaders.some(
@@ -102,17 +101,21 @@ export default Write = (function () {
         const uaExists = ua.length > 0;
         let setReferer = false;
         let setUserAgent = !uaExists;
+        let setOrigin = false;
 
         for (let i = 0; i < requestHeaders.length; i++) {
-          ({ name } = requestHeaders[i]);
+          const { name } = requestHeaders[i];
           if (!setReferer && name === "Referer") {
             requestHeaders[i].value = url.href;
             setReferer = true;
           } else if (!setUserAgent && name === "User-Agent") {
             requestHeaders[i].value = ua;
             setUserAgent = true;
+          } else if (!setOrigin && name === "Origin") {
+            requestHeaders[i].value = url.origin;
+            setOrigin = true;
           }
-          if (setReferer && setUserAgent) {
+          if (setReferer && setUserAgent && setOrigin) {
             break;
           }
         }
@@ -123,12 +126,72 @@ export default Write = (function () {
         if (!setUserAgent && uaExists) {
           requestHeaders.push({ name: "User-Agent", value: ua });
         }
+        if (!setOrigin) {
+          requestHeaders.push({ name: "Origin", value: url.origin });
+        }
 
         return { requestHeaders };
       };
     }
 
-    _setHeaderModifier() {}
+    async _setHeaderModifierWebRequest() {}
+
+    async _setHeaderModifierDeclarativeNetRequest() {
+      const { id } = await browser.tabs.getCurrent();
+      const formData = this._getFormData();
+      browser.declarativeNetRequest.getSessionRules((rules) => {
+        const oldRule = rules.find(
+          (rule) => rule.condition?.urlFilter === formData?.action
+        );
+
+        const rule = {
+          id: oldRule ? oldRule.id : rules.length + 1,
+          priority: 1,
+          action: {
+            type: "modifyHeaders",
+            requestHeaders: [
+              {
+                header: "Origin",
+                operation: "set",
+                value: this.url.origin,
+              },
+              {
+                header: "Referer",
+                operation: "set",
+                value: this.url.href,
+              },
+            ],
+          },
+          condition: {
+            tabIds: [id],
+            urlFilter: formData?.action,
+            requestMethods: ["post"],
+            resourceTypes: ["sub_frame"],
+          },
+        };
+        const ua = app.config.get("useragent").trim();
+        if (ua.length) {
+          rule.action.requestHeaders.push({
+            header: "User-Agent",
+            operation: "set",
+            value: ua,
+          });
+        }
+
+        browser.declarativeNetRequest.updateSessionRules({
+          addRules: [rule],
+          removeRuleIds: oldRule ? [oldRule.id] : [],
+        });
+      });
+    }
+
+    async _setHeaderModifier() {
+      if ("&[BROWSER]" === "firefox") {
+        await this._setHeaderModifierWebRequest();
+      } else {
+        await this._setHeaderModifierDeclarativeNetRequest();
+      }
+    }
 
     _setupTheme() {
       // テーマ適用

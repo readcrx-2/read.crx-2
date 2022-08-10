@@ -1,6 +1,6 @@
 {
   "name": "read.crx 2",
-  "version": "2.8.0",
+  "version": "2.8.1",
   "update_url": "https://readcrx-2.github.io/read.crx-2/updates.xml",
   "homepage_url": "https://readcrx-2.github.io/read.crx-2/",
   "description": "2chブラウザ",
@@ -21,10 +21,20 @@
     "notifications",
     "webRequest",
     "webRequestBlocking",
+    "declarativeNetRequest",
     "contextMenus",
     "http://*/",
     "https://*/"
   ],
+  "declarative_net_request": {
+    "rule_resources": [
+      {
+        "id": "ruleset",
+        "enabled": true,
+        "path": "rules.json"
+      }
+    ]
+  },
   "background": {
     "scripts": ["background.js"]
   },

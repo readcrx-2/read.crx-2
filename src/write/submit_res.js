@@ -1,6 +1,5 @@
 import Write from "./write.js";
 import { getByUrl as getWriteHistoryByUrl } from "../core/WriteHistory.js";
-import { URL } from "../core/URL.ts";
 
 Write.setFont();
 
@@ -10,7 +9,7 @@ class SubmitRes extends Write {
     this._setupDatalist();
   }
 
-  async _setHeaderModifier() {
+  async _setHeaderModifierWebRequest() {
     const { id } = await browser.tabs.getCurrent();
     const extraInfoSpec = ["requestHeaders", "blocking"];
     if (

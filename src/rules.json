@@ -16,5 +16,47 @@
       "requestDomains": ["t.co"],
       "resourceTypes": ["xmlhttprequest"]
     }
+  },
+  {
+    "id": 2,
+    "priority": 1,
+    "action": {
+      "type": "modifyHeaders",
+      "responseHeaders": [
+        {
+          "header": "x-frame-options",
+          "operation": "remove"
+        },
+        {
+          "header": "content-security-policy",
+          "operation": "remove"
+        }
+      ]
+    },
+    "condition": {
+      "urlFilter": "*://*/test/bbs.cgi*",
+      "resourceTypes": ["sub_frame"]
+    }
+  },
+  {
+    "id": 3,
+    "priority": 1,
+    "action": {
+      "type": "modifyHeaders",
+      "responseHeaders": [
+        {
+          "header": "x-frame-options",
+          "operation": "remove"
+        },
+        {
+          "header": "content-security-policy",
+          "operation": "remove"
+        }
+      ]
+    },
+    "condition": {
+      "urlFilter": "*://jbbs.shitaraba.net/bbs/write.cgi/*",
+      "resourceTypes": ["sub_frame"]
+    }
   }
 ]

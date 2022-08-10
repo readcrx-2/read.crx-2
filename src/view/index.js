@@ -1028,30 +1028,33 @@ ${name} の ${newVer} が利用可能です\
   });
 
   // リクエスト・ヘッダーの監視
-  browser.webRequest.onBeforeSendHeaders.addListener(
-    function ({ method, url, requestHeaders }) {
-      const replaceHeader = function (name, value) {
-        for (let header of requestHeaders) {
-          if (header.name.toLowerCase() === name) {
-            header.value = value;
-            break;
+  // TODO: firefox manifest v3
+  if ("&[BROWSER]" === "firefox") {
+    browser.webRequest.onBeforeSendHeaders.addListener(
+      function ({ method, url, requestHeaders }) {
+        const replaceHeader = function (name, value) {
+          for (let header of requestHeaders) {
+            if (header.name.toLowerCase() === name) {
+              header.value = value;
+              break;
+            }
           }
+        };
+
+        // 短縮URLの展開でのt.coに対する例外
+        if (method === "HEAD" && app.URL.getDomain(url) === "t.co") {
+          replaceHeader("user-agent", "");
         }
-      };
 
-      // 短縮URLの展開でのt.coに対する例外
-      if (method === "HEAD" && app.URL.getDomain(url) === "t.co") {
-        replaceHeader("user-agent", "");
-      }
-
-      return { requestHeaders };
-    },
-    {
-      urls: ["*://t.co/*"],
-      types: ["xmlhttprequest"],
-    },
-    ["blocking", "requestHeaders"]
-  );
+        return { requestHeaders };
+      },
+      {
+        urls: ["*://t.co/*"],
+        types: ["xmlhttprequest"],
+      },
+      ["blocking", "requestHeaders"]
+    );
+  }
 
   //viewからのメッセージを監視
   window.on("message", async function ({ origin, source, data: message }) {

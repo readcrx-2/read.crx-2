@@ -34,7 +34,8 @@ exports.makeInOut = makeInOut;
 
 const getRollupIOConfigs = function (name, browser) {
   const replace = _.replace({
-    delimiters: ["&[", "]"],
+    delimiters: ["&\\[", "\\]"],
+    preventAssignment: true,
     values: getReplaceMap(browser),
   });
   switch (name) {

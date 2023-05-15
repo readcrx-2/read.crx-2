@@ -164,8 +164,8 @@ var parse = function (html) {
     "gi"
   );
   const regBoard = new RegExp(
-    `<a\\shref=(https?://(?!info\\.[25]ch\\.net/|headline\\.bbspink\\.com)\
-(?:\\w+\\.(?:[25]ch\\.net|open2ch\\.net|2ch\\.sc|bbspink\\.com)|(?:\\w+\\.)?machi\\.to)/\\w+/)(?:\\s.*?)?>(.+?)</a>`,
+    `<a\\shref="?(https?://(?!info\\.[25]ch\\.net/|headline\\.bbspink\\.com)\
+(?:\\w+\\.(?:[25]ch\\.net|open2ch\\.net|2ch\\.sc|bbspink\\.com)|(?:\\w+\\.)?machi\\.to)/\\w+/)"?(?:\\s.*?)?>(.+?)</a>`,
     "gi"
   );
   const menu = [];

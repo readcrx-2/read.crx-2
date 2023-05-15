@@ -9,6 +9,7 @@
     "Firefox >= 103"
   ],
   "devDependencies": {
+    "@rollup/plugin-replace": "^5.0.2",
     "@typescript-eslint/eslint-plugin": "^5.31.0",
     "@typescript-eslint/parser": "^5.31.0",
     "autoprefixer": "^10.4.4",
@@ -33,7 +34,6 @@
     "pug": "^3.0.2",
     "require-dir": "^1.2.0",
     "rollup": "^3.5.0",
-    "rollup-plugin-replace": "^2.1.0",
     "rollup-plugin-typescript2": "^0.34.1",
     "sass": "^1.54.0",
     "sharp": "^0.31.2",

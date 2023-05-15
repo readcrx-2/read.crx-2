@@ -5,18 +5,18 @@ read.crx 2は[Google Chrome][chrome]/[Mozilla Firefox][firefox] extensionとし�
 一般の利用者向けの配布は[こちら](https://readcrx-2.github.io/read.crx-2/)
 
 # ビルド手順
-[npm][npm], [ClamAV][clamav]が予め導入されている必要が有ります。
+[pnpm][pnpm], [ClamAV][clamav]が予め導入されている必要が有ります。
 
     git clone git://github.com/readcrx-2/read.crx-2.git
 
     cd read.crx-2
 
-    npm install
+    pnpm install
 
-    npm run build
-    npm run watch
-    npm run pack
-    npm run clean
+    pnpm run build
+    pnpm run watch
+    pnpm run pack
+    pnpm run clean
 
 詳細 : [Windows][winbuild]  [macOS][macosbuild]  [Linux][linuxbuild]
 
@@ -40,7 +40,7 @@ read.crx 2のソースコードはMITライセンスですが、read.crx 2がア
 [clamav]: http://www.clamav.net/
 [jbbs]: http://rentalbbs.livedoor.com/
 [machi]: http://www.machi.to/
-[npm]: https://npmjs.org/
+[pnpm]: https://pnpm.io/
 [winbuild]: https://github.com/readcrx-2/read.crx-2/wiki/Windows%E3%81%A7%E3%81%AE%E3%83%93%E3%83%AB%E3%83%89%E6%96%B9%E6%B3%95
 [macosbuild]: https://github.com/readcrx-2/read.crx-2/wiki/macOS%E3%81%A7%E3%81%AE%E3%83%93%E3%83%AB%E3%83%89%E6%96%B9%E6%B3%95
 [linuxbuild]: https://github.com/readcrx-2/read.crx-2/wiki/Linux%E3%81%A7%E3%81%AE%E3%83%93%E3%83%AB%E3%83%89%E6%96%B9%E6%B3%95

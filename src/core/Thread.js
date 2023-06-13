@@ -491,6 +491,7 @@ URLが間違っているか過去ログに移動せずに削除されていま�
   */
   static _parseNet(text) {
     // name, mail, other, message, thread_title
+    let titleReg = /<h1 [^<>]*>(.*)\n?<\/h1>/;
     let reg, separator;
     if (
       text.includes('<div class="footer push">read.cgi ver 06') &&
@@ -508,12 +509,16 @@ URLが間違っているか過去ログに移動せずに削除されていま�
       reg =
         /<div class="post"[^<>]*><div class="meta"><span class="number">\d+<\/span><span class="name"><b>(?:<a href="mailto:([^<>]*)">|<font [^<>]*>)?(.*?)(?:<\/(?:a|font)>)?<\/b><\/span><span class="date">(.*)<\/span><\/div><div class="message">(?:<span class="escaped">)? ?(.*)(?:<\/span>)/;
       separator = "</div></div><br>";
+    } else if (text.includes("<footer><br>read.cgi ver 08.0c")) {
+      titleReg = /<div id="threadtitle">(.*)\n?<\/div>/;
+      reg =
+        /<article[^<>]*><details[^<>]*><summary><span class="postid">\d+<\/span><span class="postusername"><b>(?:<a href="mailto:([^<>]*)">|<font [^<>]*>)?(.*?)(?:<\/(?:a|font)>)?<\/b><\/span><\/summary><span class="date">(.*)<\/span><\/details><section class="post-content"> ?(.*)<\/section>/;
+      separator = "</article>";
     } else {
       reg =
         /^(?:<\/?div.*?(?:<br><br>)?)?<dt>\d+.*：(?:<a href="mailto:([^<>]*)">|<font [^>]*>)?<b>(.*)<\/b>.*：(.*)<dd> ?(.*)<br><br>$/;
       separator = "\n";
     }
-    const titleReg = /<h1 [^<>]*>(.*)\n?<\/h1>/;
     const numberOfBroken = 0;
     const thread = { res: [] };
     let gotTitle = false;
@@ -526,7 +531,8 @@ URLが間違っているか過去ログに移動せずに削除されていま�
         thread.title = decodeCharReference(title[1]);
         thread.title = removeNeedlessFromTitle(thread.title);
         gotTitle = true;
-      } else if (regRes) {
+      }
+      if (regRes) {
         thread.res.push({
           name: regRes[2],
           mail: regRes[1] || "",

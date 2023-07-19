@@ -319,6 +319,9 @@ export default ThreadList = (function () {
             this.emit(new Event("input"));
           }
         });
+        $searchColumn.on("change", function () {
+          $searchbox.emit(new Event("input"));
+        });
       }
 
       //コンテキストメニュー

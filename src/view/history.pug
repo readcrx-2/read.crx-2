@@ -23,6 +23,10 @@ block body
         li.button_history_clear 閲覧履歴を消去
         li.button_show_unique.hidden 同じものは最新を一つだけ表示
         li.button_show_all 同じものでも全て表示
+    select.sort_item_selector
+      option(data-sort-index="0") タイトル
+      option(data-sort-index="1") 板名
+      option(data-sort-index="2") 閲覧日時
   .content(tabindex="0")
   .loading_overlay Loading...
 

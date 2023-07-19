@@ -20,7 +20,7 @@ export default TableSearch = function ($table, method, prop) {
     $table.addClass("table_search");
     let hitCount = 0;
     for (let $tr of $table.T("tbody")[0].child()) {
-      const $td = $tr.child()[prop.target_col - 1];
+      const $td = $tr.child()[prop.target_col];
       if (
         !$tr.hasClass("hidden") &&
         app.util.normalize($td.textContent).includes(prop.query)

@@ -282,7 +282,7 @@ export default ThreadList = (function () {
 
       //リスト内検索
       if (typeof option.searchbox === "object") {
-        const titleIndex = column.title;
+        const $searchColumn = option.searchColumn;
         const $searchbox = option.searchbox;
 
         $searchbox.on("compositionend", function () {
@@ -296,7 +296,7 @@ export default ThreadList = (function () {
           if (this.value !== "") {
             TableSearch($table, "search", {
               query: this.value,
-              target_col: titleIndex,
+              target_col: $searchColumn.selectedOptions[0].dataset.searchIndex,
             });
             const hitCount = $table.dataset.tableSearchHitCount;
             for (dom of this.parent().child()) {

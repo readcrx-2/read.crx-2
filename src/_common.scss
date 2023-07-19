@@ -162,7 +162,8 @@ $z-indexes: (
     color: $nav-bar-color;
     > .button:not(.disabled):hover,
     > label,
-    > .sort_item_selector {
+    > .sort_item_selector,
+    > .search_item_selector {
       border-color: $nav-bar-item-border-color;
     }
     > label {
@@ -278,7 +279,8 @@ $z-indexes: (
     }
     > .button,
     > .breadcrumb,
-    > .sort_item_selector {
+    > .sort_item_selector,
+    > .search_item_selector {
       border-width: 1px;
       border-style: solid;
       margin: 3px;
@@ -390,9 +392,8 @@ $z-indexes: (
       }
     }
   }
-  .sort_item_selector {
-    display: none;
-    float: right;
+  .sort_item_selector,
+  .search_item_selector {
     color: inherit;
     background-color: inherit;
     border-radius: 3px;
@@ -402,6 +403,13 @@ $z-indexes: (
     > option {
       background-color: inherit;
     }
+  }
+  .sort_item_selector {
+    display: none;
+    float: right;
+  }
+  .search_item_selector {
+    float: left;
   }
   .content {
     height: 0;

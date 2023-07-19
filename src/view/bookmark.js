@@ -13,6 +13,7 @@ app.boot("/view/bookmark.html", ["Board"], function (Board) {
   const threadList = new UI.ThreadList($table, {
     th: tableHeaders,
     bookmarkAddRm: true,
+    searchColumn: $view.C("search_item_selector")[0],
     searchbox: $view.C("searchbox")[0],
   });
   app.DOMData.set($view, "threadList", threadList);

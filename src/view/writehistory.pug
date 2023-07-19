@@ -12,6 +12,11 @@ block vars
 
 block body
   nav.nav_bar
+    select.search_item_selector
+      option(data-search-index="0") タイトル
+      option(data-search-index="2") 名前
+      option(data-search-index="3") メール
+      option(data-search-index="4") 本文
     label
       input.searchbox(type="search" placeholder="検索")
       span.hit_count

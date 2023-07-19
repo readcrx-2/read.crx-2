@@ -2,16 +2,19 @@ app.boot("/view/history.html", function () {
   const $view = document.documentElement;
   const $content = $$.C("content")[0];
 
-  new app.view.TabContentView($view);
-
   const $table = $__("table");
   const threadList = new UI.ThreadList($table, {
     th: ["title", "boardTitle", "viewedDate"],
+    searchColumn: $view.C("search_item_selector")[0],
     searchbox: $view.C("searchbox")[0],
   });
   app.DOMData.set($view, "threadList", threadList);
   app.DOMData.set($view, "selectableItemList", threadList);
   $content.addLast($table);
+  const tableSorter = new UI.TableSorter($table);
+  app.DOMData.set($table, "tableSorter", tableSorter);
+
+  new app.view.TabContentView($view);
 
   let isOnlyUnique = true;
   const NUMBER_OF_DATA_IN_ONCE = 500;

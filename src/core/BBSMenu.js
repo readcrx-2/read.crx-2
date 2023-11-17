@@ -39,7 +39,7 @@ export var fetchAll = async function (forceReload = false) {
       bbsmenu.push(...menu);
     } catch (error) {
       app.message.send("notify", {
-        message: `板一覧の取得に失敗しました。(${url})`,
+        html: `板一覧の取得に失敗しました。(<a href="${url}" target="_blank">${url}</a>)`,
         background_color: "red",
       });
     }

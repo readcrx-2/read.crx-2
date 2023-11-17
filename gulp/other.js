@@ -17,15 +17,26 @@ const manifest = function (browser) {
       tmpManifest.permissions = tmpManifest.permissions.filter(
         (v) => !["webRequest", "webRequestBlocking"].includes(v)
       );
+      delete tmpManifest.background.scripts;
       delete tmpManifest.applications;
     } else if (browser === "firefox") {
+      tmpManifest.manifest_version = 2;
       delete tmpManifest.update_url;
       delete tmpManifest.minimum_chrome_version;
+      tmpManifest.content_security_policy =
+        tmpManifest.content_security_policy.extension_pages;
       delete tmpManifest.incognito;
       tmpManifest.permissions = tmpManifest.permissions.filter(
         (v) => !["declarativeNetRequest"].includes(v)
       );
       delete tmpManifest.declarative_net_request;
+      delete tmpManifest.background.service_worker;
+      tmpManifest.permissions.push(...tmpManifest.host_permissions);
+      delete tmpManifest.host_permissions;
+      tmpManifest.browser_action = tmpManifest.action;
+      delete tmpManifest.action;
+      tmpManifest.web_accessible_resources =
+        tmpManifest.web_accessible_resources[0].resources;
     }
 
     await fs.ensureDir(output);

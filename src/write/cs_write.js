@@ -7,53 +7,35 @@
 
   let submitThreadFlag = false;
 
-  const exec = function (javascript) {
-    const script = document.createElement("script");
-    script.innerHTML = javascript;
-    document.body.appendChild(script);
-  };
-
   const sendMessagePing = function () {
-    exec(`\
-parent.postMessage({type: "ping"}, "${origin}");\
-`);
+    parent.postMessage({type: "ping"}, `${origin}`);
   };
 
   const sendMessageSuccess = function (moveMs) {
     if (submitThreadFlag) {
       const jumpUrl = getJumpUrl();
-      exec(`\
-parent.postMessage({
-  type : "success",
-  key: "${jumpUrl}",
-  message: ${moveMs}
-}, "${origin}");\
-`);
+      parent.postMessage({
+        type : "success",
+        key: `${jumpUrl}`,
+        message: `${moveMs}`
+      }, `${origin}`);
     } else {
-      exec(`\
-parent.postMessage({type: "success", message: ${moveMs}}, "${origin}");\
-`);
+      parent.postMessage({type: "success", message: `${moveMs}`}, `${origin}`);
     }
   };
 
   const sendMessageConfirm = function () {
-    exec(`\
-parent.postMessage({type: "confirm"}, "${origin}");\
-`);
+    parent.postMessage({type: "confirm"}, `${origin}`);
   };
 
   const sendMessageError = function (message) {
     if (typeof message === "string") {
-      exec(`\
-parent.postMessage({
-  type: "error",
-  message: "${message.replace(/\"/g, "&quot;")}"
-}, "${origin}");\
-`);
+      parent.postMessage({
+        type: "error",
+        message: `${message.replace(/\"/g, "&quot;")}`
+      }, `${origin}`);
     } else {
-      exec(`\
-parent.postMessage({type: "error"}, "${origin}");\
-`);
+      parent.postMessage({type: "error"}, `${origin}`);
     }
   };
 

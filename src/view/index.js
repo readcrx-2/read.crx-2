@@ -417,7 +417,7 @@ app.boot("/view/index.html", ["BBSMenu"], async function (BBSMenu) {
         browser.windows.update(win.id, { focused: true });
         browser.tabs.update(tab.id, { active: true });
         if (query) {
-          browser.runtime.sendMessage({ type: "open", query });
+          await browser.runtime.sendMessage({ type: "open", query });
         }
         browser.tabs.remove(currentTab.id);
         return;

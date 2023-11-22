@@ -61,11 +61,11 @@ class SubmitRes extends Write {
     });
   }
 
-  _onSuccess(key) {
+  async _onSuccess(key) {
     const mes = this.$view.C("message")[0].value;
     const name = this.$view.C("name")[0].value;
     const mail = this.$view.C("mail")[0].value;
-    browser.runtime.sendMessage({
+    await browser.runtime.sendMessage({
       type: "written",
       url: this.url.href,
       mes,

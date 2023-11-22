@@ -43,7 +43,7 @@ class SubmitThread extends Write {
     }
   }
 
-  _onSuccess(key) {
+  async _onSuccess(key) {
     let needle;
     const mes = this.$view.C("message")[0].value;
     const name = this.$view.C("name")[0].value;
@@ -61,7 +61,7 @@ class SubmitThread extends Write {
       } else {
         const server = url.origin;
         const thread_url = `${server}/test/read.cgi/${keys[1]}/${keys[2]}/`;
-        browser.runtime.sendMessage({
+        await browser.runtime.sendMessage({
           type: "written",
           kind: "own",
           url: url.href,
@@ -73,7 +73,7 @@ class SubmitThread extends Write {
         });
       }
     } else if (url.getTsld() === "shitaraba.net") {
-      browser.runtime.sendMessage({
+      await browser.runtime.sendMessage({
         type: "written",
         kind: "board",
         url: url.href,

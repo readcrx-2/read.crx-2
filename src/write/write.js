@@ -314,7 +314,7 @@ export default Write = (function () {
       }
     }
 
-    _onSuccess(key) {}
+    async _onSuccess(key) {}
 
     _setupMessage() {
       window.on("message", async ({ data: { type, key, message }, source }) => {
@@ -327,7 +327,7 @@ export default Write = (function () {
             this.$view.C("notice")[0].textContent = "書き込み成功";
             this.timer.kill();
             await app.wait(message);
-            this._onSuccess(key);
+            await this._onSuccess(key);
             var { id } = await browser.tabs.getCurrent();
             browser.tabs.remove(id);
             break;

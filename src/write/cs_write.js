@@ -138,7 +138,7 @@
         sendMessageSuccess(getMoveSec() * 1000);
       } else if (text.includes("確認")) {
         setTimeout(sendMessageConfirm, 1000 * 6);
-      } else if (text.includes("ＥＲＲＯＲ")) {
+      } else if (text.includes("ＥＲＲＯＲ") || text.includes("ERROR")) {
         sendMessageError();
       }
 
@@ -150,7 +150,7 @@
         sendMessageSuccess(getMoveSec() * 1000);
       } else if (title.includes("確認")) {
         setTimeout(sendMessageConfirm, 1000 * 6);
-      } else if (title.includes("ＥＲＲＯＲ")) {
+      } else if (title.includes("ＥＲＲＯＲ") || title.includes("ERROR")) {
         sendMessageError();
       }
     }

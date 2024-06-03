@@ -26,10 +26,7 @@
     "declarativeNetRequest",
     "contextMenus"
   ],
-  "host_permissions": [
-    "http://*/",
-    "https://*/"
-  ],
+  "host_permissions": ["http://*/", "https://*/"],
   "declarative_net_request": {
     "rule_resources": [
       {
@@ -39,7 +36,7 @@
       }
     ]
   },
-  "background" : {
+  "background": {
     "scripts": ["background.js"],
     "service_worker": "background.js"
   },

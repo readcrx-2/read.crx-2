@@ -12,7 +12,8 @@ const searchRcrx = async function () {
 };
 
 // アイコンクリック時の動作
-const browserAction = "&[BROWSER]" === "chrome" ? browser.action : browser.browserAction;
+const browserAction =
+  "&[BROWSER]" === "chrome" ? browser.action : browser.browserAction;
 browserAction.onClicked.addListener(async function (currentTab) {
   // 現在のタブが自分自身なら何もしない
   if (isTabReadcrx(currentTab)) {

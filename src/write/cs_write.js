@@ -8,34 +8,43 @@
   let submitThreadFlag = false;
 
   const sendMessagePing = function () {
-    parent.postMessage({type: "ping"}, `${origin}`);
+    parent.postMessage({ type: "ping" }, `${origin}`);
   };
 
   const sendMessageSuccess = function (moveMs) {
     if (submitThreadFlag) {
       const jumpUrl = getJumpUrl();
-      parent.postMessage({
-        type : "success",
-        key: `${jumpUrl}`,
-        message: `${moveMs}`
-      }, `${origin}`);
+      parent.postMessage(
+        {
+          type: "success",
+          key: `${jumpUrl}`,
+          message: `${moveMs}`,
+        },
+        `${origin}`
+      );
     } else {
-      parent.postMessage({type: "success", message: `${moveMs}`}, `${origin}`);
+      parent.postMessage(
+        { type: "success", message: `${moveMs}` },
+        `${origin}`
+      );
     }
   };
 
   const sendMessageConfirm = function () {
-    parent.postMessage({type: "confirm"}, `${origin}`);
+    parent.postMessage({ type: "confirm" }, `${origin}`);
   };
 
   const sendMessageError = function (message) {
     if (typeof message === "string") {
-      parent.postMessage({
-        type: "error",
-        message: `${message.replace(/\"/g, "&quot;")}`
-      }, `${origin}`);
+      parent.postMessage(
+        {
+          type: "error",
+          message: `${message.replace(/\"/g, "&quot;")}`,
+        },
+        `${origin}`
+      );
     } else {
-      parent.postMessage({type: "error"}, `${origin}`);
+      parent.postMessage({ type: "error" }, `${origin}`);
     }
   };
 

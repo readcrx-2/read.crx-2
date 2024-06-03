@@ -164,7 +164,7 @@ var parse = function (html) {
     "gi"
   );
   const regBoard = new RegExp(
-    `<a\\shref="?(https?://(?!info\\.[25]ch\\.net/|headline\\.bbspink\\.com)\
+    `<a\\shref="?((?:https?:)?//(?!info\\.[25]ch\\.net/|headline\\.bbspink\\.com)\
 (?:\\w+\\.(?:[25]ch\\.net|open2ch\\.net|2ch\\.sc|bbspink\\.com)|(?:\\w+\\.)?machi\\.to)/\\w+/)"?(?:\\s.*?)?>(.+?)</a>`,
     "gi"
   );
@@ -180,16 +180,21 @@ var parse = function (html) {
 
     let subName = null;
     while ((regBoardRes = regBoard.exec(regCategoryRes[0]))) {
-      if (bbsmenuOption.has(getTsld(regBoardRes[1]))) {
+      const tmpBoardUrl = regBoardRes[1];
+      const boardUrl = tmpBoardUrl.startsWith("//")
+        ? `https:${tmpBoardUrl}`
+        : tmpBoardUrl;
+
+      if (bbsmenuOption.has(getTsld(boardUrl))) {
         continue;
       }
-      if (bbspinkException && regBoardRes[1].includes("5ch.net/bbypink")) {
+      if (bbspinkException && boardUrl.includes("5ch.net/bbypink")) {
         continue;
       }
       if (!subName) {
-        if (regBoardRes[1].includes("open2ch.net")) {
+        if (boardUrl.includes("open2ch.net")) {
           subName = "op";
-        } else if (regBoardRes[1].includes("2ch.sc")) {
+        } else if (boardUrl.includes("2ch.sc")) {
           subName = "sc";
         } else {
           subName = "";
@@ -214,7 +219,7 @@ var parse = function (html) {
         regBoardRes[2] += `_${subName}`;
       }
       category.board.push({
-        url: fixUrl(regBoardRes[1]),
+        url: fixUrl(boardUrl),
         title: regBoardRes[2],
       });
     }

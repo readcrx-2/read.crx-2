@@ -510,7 +510,7 @@ URLが間違っているか過去ログに移動せずに削除されていま�
         /<div class="post"[^<>]*><div class="meta"><span class="number">\d+<\/span><span class="name"><b>(?:<a href="mailto:([^<>]*)">|<font [^<>]*>)?(.*?)(?:<\/(?:a|font)>)?<\/b><\/span><span class="date">(.*)<\/span><\/div><div class="message">(?:<span class="escaped">)? ?(.*)(?:<\/span>)/;
       separator = "</div></div><br>";
     } else if (text.match(/<footer[^<>]*><br>read\.cgi ver 0(7|8)/)) {
-      titleReg = /<div id="threadtitle">(.*)\n?<\/div>/;
+      titleReg = /<(?:div|h1) id="threadtitle">(.*)\n?<\/(?:(div|h1)>/;
       reg =
         /<article[^<>]*><details[^<>]*><summary><span class="postid">\d+<\/span><span class="postusername"><b>(?:<a href="mailto:([^<>]*)">|<font [^<>]*>)?(.*?)(?:<\/(?:a|font)>)?<\/b><\/span>(?:<span style=".*">.*<\/span>)?<\/summary>(?:<span style=".*">)?<span class="date">(.*)<\/span><\/details><section class="post-content"> ?(.*)<\/section>/;
       separator = "</article>";

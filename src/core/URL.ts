@@ -264,9 +264,6 @@ export class URL extends window.URL {
 
   private static readonly ITEST_5CH_REG =
     /\/(?:(?:\w+\/)?test\/read\.cgi\/(\w+)\/(\d+)\/|(?:subback\/)?(\w+)(?:\/)?)/;
-  private static readonly C_5CH_NET_REG = /\/test\/-\/(\w+)\/(?:(\d+)\/)?/;
-  private static readonly SP_2CH_SC_REG =
-    /\/(?:(?:\w+\/)?test\/read\.cgi\/(\w+)\/(\d+)\/|(?:subback\/)?(\w+)\/)/;
   private static readonly ITEST_BBSPINK_REG =
     /\/(?:(?:\w+\/)?test\/read\.cgi\/(\w+)\/(\d+)\/|(?:subback\/)?(\w+)(?:\/)?)/;
 
@@ -277,14 +274,6 @@ export class URL extends window.URL {
     switch (this.hostname) {
       case "itest.5ch.net":
         reg = URL.ITEST_5CH_REG;
-        break;
-
-      case "c.5ch.net":
-        reg = URL.C_5CH_NET_REG;
-        break;
-
-      case "sp.2ch.sc":
-        reg = URL.SP_2CH_SC_REG;
         break;
 
       case "itest.bbspink.com":
@@ -298,12 +287,13 @@ export class URL extends window.URL {
     const res = reg.exec(this.pathname);
     if (!res) return;
 
-    const board = res[1];
-    const thread = res[2] ? res[2] : null;
+    const board = res[1] || res[3];
+    const thread = res[2] || null;
 
     if (!board) return;
 
     let server: string | null = null;
+    let bbsType: GuessResult["bbsType"] = "unknown";
 
     if (mode === "5ch.net") {
       if (serverNet.has(board)) {
@@ -313,16 +303,24 @@ export class URL extends window.URL {
         server = serverPink.get(board);
         mode = "bbspink.com";
       }
-    } else if (mode === "2ch.sc" && serverSc.has(board)) {
-      server = serverSc.get(board);
+      bbsType = "2ch";
     } else if (mode === "bbspink.com" && serverPink.has(board)) {
       server = serverPink.get(board);
+      bbsType = "2ch";
     }
 
     if (server === null) return;
 
+    let type: GuessResult["type"] = "unknown";
     this.hostname = `${server}.${mode}`;
-    this.pathname = `/${board}/` + (thread ? `/${thread}/` : "");
+    if (thread) {
+      this.pathname = `/test/read.cgi/${board}/${thread}/`;
+      type = "thread";
+    } else {
+      this.pathname = `/${board}/`;
+      type = "board";
+    }
+    this.guessedType = { type, bbsType };
   }
 
   private async exchangeNetSc() {

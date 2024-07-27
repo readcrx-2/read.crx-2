@@ -104,6 +104,7 @@ export default class Thread {
                 xhrPath += +cache.resLength + "-n";
               }
             }
+            xhrPath += "?v=pc";
           }
 
           const request = new Request("GET", xhrPath, {

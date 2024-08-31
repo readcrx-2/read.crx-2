@@ -17,6 +17,7 @@
       "NG",
       "Notification",
       "ReadState",
+      "SikiGuard",
       "URL",
       "util",
     ];

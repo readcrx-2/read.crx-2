@@ -78,6 +78,7 @@ export default class Config {
     ["ng_slip_expire_date", "0"],
     ["ng_slip_expire_day", "0"],
     ["reject_ng_rep", "off"],
+    ["use_siki_guard", "off"],
     ["bookmark_show_dat", "on"],
     ["default_name", ""],
     ["default_mail", ""],

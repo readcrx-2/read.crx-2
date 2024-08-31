@@ -32,6 +32,7 @@ export var TYPE = {
   AUTO_NOTHING_SLIP: "NothingSLIP",
   AUTO_REPEAT_MESSAGE: "RepeatMessage",
   AUTO_FORWARD_LINK: "ForwardLink",
+  SIKI_GUARD: "Siki Guard",
 };
 
 const _CONFIG_NAME = "ngobj";

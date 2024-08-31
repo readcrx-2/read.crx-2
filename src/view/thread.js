@@ -28,7 +28,7 @@
 
 app.viewThread = {};
 
-app.boot("/view/thread.html", function () {
+app.boot("/view/thread.html", async function () {
   let AANoOverflow, viewUrlStr;
   try {
     viewUrlStr = app.URL.parseQuery(location.search).get("q");
@@ -43,7 +43,7 @@ app.boot("/view/thread.html", function () {
   $view.dataset.url = viewUrlStr;
 
   const $content = $view.C("content")[0];
-  const threadContent = new UI.ThreadContent(viewUrl, $content);
+  const threadContent = await UI.ThreadContent.init(viewUrl, $content);
   const mediaContainer = new UI.MediaContainer($view);
   const lazyLoad = new UI.LazyLoad($content);
   app.DOMData.set($view, "threadContent", threadContent);

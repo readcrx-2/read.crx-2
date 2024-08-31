@@ -14,6 +14,7 @@ import * as NG from "./NG.js";
 import Notification from "./Notification.js";
 import * as ReadState from "./ReadState.js";
 import * as ReplaceStrTxt from "./ReplaceStrTxt.js";
+import SikiGuard from "./SikiGuard.js";
 import Thread from "./Thread.js";
 import ThreadSearch from "./ThreadSearch.js";
 import * as URL from "./URL.ts";
@@ -38,6 +39,7 @@ export {
   Notification,
   ReadState,
   ReplaceStrTxt,
+  SikiGuard,
   Thread,
   ThreadSearch,
   URL,

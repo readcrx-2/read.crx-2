@@ -14,6 +14,11 @@ export default ThreadContent = (function () {
       _OVER1000_DATA = "Over 1000";
     }
 
+    /**
+    @method constructor
+    @param {String} url
+    @param {Element} container
+    */
     constructor(url, container) {
       /**
       @property url
@@ -179,6 +184,13 @@ export default ThreadContent = (function () {
       */
       this._threadTitle = null;
 
+      /**
+      @property _sikiGuardNgIdSet
+      @type Object
+      @private
+      */
+      this._sikiGuardNgIdSet = new Set();
+
       try {
         this.harmfulReg = new RegExp(app.config.get("image_blur_word"));
         this.findHarmfulFlag = true;
@@ -199,6 +211,33 @@ export default ThreadContent = (function () {
       this.container.on("scrollfinish", () => {
         this._isScrolling = false;
       });
+    }
+
+    /**
+    @method init
+    @static
+    @param {String} url
+    @param {Element} container
+    @return {Promise<ThreadContent>}
+    */
+    static async init(url, container) {
+      const threadContent = new ThreadContent(url, container);
+      await threadContent.initSikiGuard();
+
+      return threadContent;
+    }
+
+    /**
+    @method initSikiGuard
+    */
+    async initSikiGuard() {
+      if (app.config.isOn("use_siki_guard")) {
+        const { status, message, data } = await app.SikiGuard.get(this.url);
+        if (status !== "success") {
+          app.message.send("notify", { message });
+        }
+        this._sikiGuardNgIdSet = data;
+      }
     }
 
     /**
@@ -1557,6 +1596,11 @@ export default ThreadContent = (function () {
         ) {
           return { type: app.NG.TYPE.AUTO_NOTHING_SLIP };
         }
+      }
+
+      // Siki GuardのNG
+      if (this._sikiGuardNgIdSet.has(objRes.id)) {
+        return { type: app.NG.TYPE.SIKI_GUARD };
       }
 
       // 連鎖IDのNG

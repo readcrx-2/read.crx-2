@@ -19,7 +19,7 @@ export default class SikiGuard {
     @property thread
     @type Object
     */
-    this.idSet = new Set();
+    this.idMap = new Map();
 
     /**
     @property message
@@ -34,12 +34,12 @@ export default class SikiGuard {
   */
   get() {
     return new Promise(async (resolve, reject) => {
-      let response, idSet;
+      let response, idMap;
       let hasCache = false;
 
       const xhrInfo = SikiGuard._getXhrInfo(this.url);
       if (xhrInfo == null) {
-        this.idSet = new Set();
+        this.idMap = new Map();
         resolve();
         return;
       }
@@ -81,25 +81,25 @@ export default class SikiGuard {
         }
 
         // パース
-        let idSet = null;
+        let idMap = null;
         if ((response != null ? response.status : undefined) === 200) {
-          idSet = SikiGuard.parse(response.body);
+          idMap = SikiGuard.parse(response.body);
         } else if (hasCache) {
-          idSet = SikiGuard.parse(cache.data);
+          idMap = SikiGuard.parse(cache.data);
         }
 
-        if (idSet == null) {
+        if (idMap == null) {
           throw { response };
         }
         if (
           (response != null ? response.status : undefined) !== 200 &&
           (!(response == null) || !hasCache)
         ) {
-          throw { response, idSet };
+          throw { response, idMap };
         }
 
         // コールバック
-        this.idSet = idSet;
+        this.idMap = idMap;
         resolve();
 
         // キャッシュ更新部
@@ -124,15 +124,15 @@ export default class SikiGuard {
         }
       } catch (error) {
         // コールバック
-        ({ response, idSet } = error);
+        ({ response, idMap } = error);
         this.message = "Siki Guardの読み込みに失敗しました。";
 
-        if (hasCache && idSet != null) {
+        if (hasCache && idMap != null) {
           this.message += "キャッシュに残っていたデータを使用します。";
         }
 
-        if (idSet != null) {
-          this.idSet = idSet;
+        if (idMap != null) {
+          this.idMap = idMap;
         }
 
         reject();
@@ -150,12 +150,12 @@ export default class SikiGuard {
     const board = new SikiGuard(url);
     try {
       await board.get();
-      return { status: "success", data: board.idSet };
+      return { status: "success", data: board.idMap };
     } catch (error) {
       return {
         status: "error",
         message: board.message != null ? board.message : null,
-        data: board.idSet !== null ? board.idSet : new Set(),
+        data: board.idMap !== null ? board.idMap : new Map(),
       };
     }
   }
@@ -190,12 +190,19 @@ export default class SikiGuard {
   static parse(text) {
     try {
       const { result } = JSON.parse(text);
-      return Object.keys(result).reduce((acc, key) => {
-        return new Set([...acc, ...result[key].map((id) => `ID:${id}`)]);
-      }, new Set());
+
+      const idMap = new Map();
+      Object.keys(result).forEach((key) => {
+        idMap.set(
+          `20${key.slice(0, 2)}/${key.slice(2, 4)}/${key.slice(4)}`,
+          new Set(result[key].map((id) => `ID:${id}`))
+        );
+      });
+
+      return idMap;
     } catch (error) {
       // TODO:
-      return new Set();
+      return new Map();
     }
   }
 }

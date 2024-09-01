@@ -81,18 +81,21 @@ export default class SikiGuard {
         }
 
         // パース
-        let idMap = null;
-        if ((response != null ? response.status : undefined) === 200) {
+        const responseStatus = response != null ? response.status : undefined;
+        if (responseStatus === 200) {
           idMap = SikiGuard.parse(response.body);
         } else if (hasCache) {
           idMap = SikiGuard.parse(cache.data);
+        } else if (responseStatus === 404) {
+          // NG対象がない場合404が返ってくる
+          idMap = new Map();
         }
 
         if (idMap == null) {
           throw { response };
         }
         if (
-          (response != null ? response.status : undefined) !== 200 &&
+          ![200, 404].includes(responseStatus) &&
           (!(response == null) || !hasCache)
         ) {
           throw { response, idMap };

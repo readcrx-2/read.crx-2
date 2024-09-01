@@ -185,11 +185,11 @@ export default ThreadContent = (function () {
       this._threadTitle = null;
 
       /**
-      @property _sikiGuardNgIdSet
+      @property _sikiGuardNgIdMap
       @type Object
       @private
       */
-      this._sikiGuardNgIdSet = new Set();
+      this._sikiGuardNgIdMap = new Map();
 
       try {
         this.harmfulReg = new RegExp(app.config.get("image_blur_word"));
@@ -236,7 +236,7 @@ export default ThreadContent = (function () {
         if (status !== "success") {
           app.message.send("notify", { message });
         }
-        this._sikiGuardNgIdSet = data;
+        this._sikiGuardNgIdMap = data;
       }
     }
 
@@ -1599,8 +1599,12 @@ export default ThreadContent = (function () {
       }
 
       // Siki GuardのNG
-      if (this._sikiGuardNgIdSet.has(objRes.id)) {
-        return { type: app.NG.TYPE.SIKI_GUARD };
+      if (app.config.isOn("use_siki_guard")) {
+        const sikiGuardNgKey = objRes.other.slice(0, 10);
+        const sikiGuardIdSet = this._sikiGuardNgIdMap.get(sikiGuardNgKey);
+        if (sikiGuardIdSet && sikiGuardIdSet.has(objRes.id)) {
+          return { type: app.NG.TYPE.SIKI_GUARD };
+        }
       }
 
       // 連鎖IDのNG

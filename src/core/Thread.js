@@ -513,7 +513,7 @@ URLが間違っているか過去ログに移動せずに削除されていま�
     } else if (text.match(/<footer[^<>]*><br>read\.cgi ver 07\.6/)) {
       titleReg = /<(?:div|h1) id="threadtitle">(.*)\n?<\/(?:div|h1)>/;
       reg =
-        /<span class="postid">\d+<\/span><span class="postusername"><b>(?:<a href="mailto:([^<>]*)">|<font [^<>]*>)?(.*?)(?:<\/(?:a|font)>)?<\/b><\/span>(?:<span style=".*">.*<\/span>)?<\/div>(?:<span style=".*">)?<span class="date">(.*)<\/span><\/div><div class="post-content"> ?(.*)/;
+        /<span class="postid">\d+<\/span><span class="postusername"><b>(?:<a rel="nofollow" href="mailto:([^<>]*)">|<font [^<>]*>)?(.*?)(?:<\/(?:a|font)>)?<\/b><\/span>(?:<span style=".*">.*<\/span>)?<\/div>(?:<span style=".*">)?<span class="date">(.*)<\/span><\/div><div class="post-content"> ?(.*)/;
       separator = "</div></div>";
     } else if (text.match(/<footer[^<>]*><br>read\.cgi ver 0(7|8)/)) {
       titleReg = /<(?:div|h1) id="threadtitle">(.*)\n?<\/(?:div|h1)>/;

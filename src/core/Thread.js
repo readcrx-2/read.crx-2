@@ -789,7 +789,7 @@ URLが間違っているか過去ログに移動せずに削除されていま�
       reg =
         /<div class="post"[^<>]*><div class="meta"><span class="number">(\d+).*<\/span><span class="name"><b>(?:<a href="mailto:([^<>]*)">|<font [^<>]*>)?(.*?)(?:<\/(?:a|font)>)?<\/b><\/span>(?:<span style=".*">;.*<\/span>)?(?:<span style=".*">)?<span class="date">(.*)<\/span><\/div><div class="message">(?:<span class="escaped">)? ?(.*)(?:<\/span>)/;
       separator = "</div></div><br>";
-    } else if (text.includes("<footer><br>read.cgi ver 08")) {
+    } else if (text.match(/<footer[^<>]*><br>read\.cgi ver 0(8|9)/)) {
       titleReg = /<div id="threadtitle">(.*)\n?<\/div>/;
       reg =
         /<article id="(\d+)"[^<>]*><details[^<>]*><summary><span class="postid">\d+<\/span><span class="postusername"><b>(?:<a href="mailto:([^<>]*)">|<font [^<>]*>)?(.*?)(?:<\/(?:a|font)>)?<\/b><\/span>(?:<span style=".*">;.*<\/span>)?<\/summary>(?:<span style=".*">)?<span class="date">(.*)<\/span><\/details><section class="post-content"> ?(.*)<\/section>/;

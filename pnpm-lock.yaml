@@ -926,8 +926,8 @@ packages:
   core-util-is@1.0.3:
     resolution: {integrity: sha512-ZQBvi1DcpJ4GDqanjucZ2Hj3wEO5pZDS89BWbkcrvdxksJorwUDDZamX9ldFkp9aw2lmBDLgkObEA4DWNJ9FYQ==}
 
-  cross-spawn@6.0.5:
-    resolution: {integrity: sha512-eTVLrBSt7fjbDygz805pMnstIs2VTBNkRm0qxZd+M7A5XDdxVRWO5MxGBXZhjY4cqLYLdtrGqRf8mBPmzwSpWQ==}
+  cross-spawn@6.0.6:
+    resolution: {integrity: sha512-VqCUuhcd1iB+dsv8gxPttb5iZh/D0iubSP21g36KXdEuf6I5JiioesUVjpCdHV9MZRUfVFlvwtIUyPfxo5trtw==}
     engines: {node: '>=4.8'}
 
   cross-spawn@7.0.3:
@@ -2411,8 +2411,8 @@ packages:
   nan@2.17.0:
     resolution: {integrity: sha512-2ZTgtl0nJsO0KQCjEpxcIr5D+Yv90plTitZt9JBfQvVJDS5seMl3FOvsh3+9CoYWXf/1l5OaZzzF6nDm4cagaQ==}
 
-  nanoid@3.3.6:
-    resolution: {integrity: sha512-BGcqMMJuToF7i1rt+2PWSNVnWIkGCU78jBG3RxO/bZlnZPK2Cmi2QaffxGO/2RvWi9sL+FAiRiXMgsyxQ1DIDA==}
+  nanoid@3.3.8:
+    resolution: {integrity: sha512-WNLf5Sd8oZxOm+TzppcYk8gVOgP+l58xNy58D0nbUnOxOWRWvlcCV4kUF7ltmI6PsrLl/BgKEyS4mqsGChFN0w==}
     engines: {node: ^10 || ^12 || ^13.7 || ^14 || >=15.0.1}
     hasBin: true
 
@@ -4744,7 +4744,7 @@ snapshots:
 
   core-util-is@1.0.3: {}
 
-  cross-spawn@6.0.5:
+  cross-spawn@6.0.6:
     dependencies:
       nice-try: 1.0.5
       path-key: 2.0.1
@@ -6444,7 +6444,7 @@ snapshots:
   nan@2.17.0:
     optional: true
 
-  nanoid@3.3.6: {}
+  nanoid@3.3.8: {}
 
   nanomatch@1.2.13:
     dependencies:
@@ -6541,7 +6541,7 @@ snapshots:
     dependencies:
       ansi-styles: 3.2.1
       chalk: 2.4.2
-      cross-spawn: 6.0.5
+      cross-spawn: 6.0.6
       memorystream: 0.3.1
       minimatch: 3.1.2
       pidtree: 0.3.1
@@ -6837,13 +6837,13 @@ snapshots:
 
   postcss@8.4.21:
     dependencies:
-      nanoid: 3.3.6
+      nanoid: 3.3.8
       picocolors: 1.0.0
       source-map-js: 1.0.2
 
   postcss@8.4.23:
     dependencies:
-      nanoid: 3.3.6
+      nanoid: 3.3.8
       picocolors: 1.0.0
       source-map-js: 1.0.2
 

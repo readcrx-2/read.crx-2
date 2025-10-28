@@ -1,0 +1,7 @@
+onlyBuiltDependencies:
+  - core-js
+  - dtrace-provider
+  - es5-ext
+  - fsevents
+  - sharp
+  - spawn-sync

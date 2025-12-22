@@ -599,7 +599,7 @@ app.main = function () {
   const $view = document.documentElement;
   new app.view.Index($view);
 
-  (function () {
+  app.config.ready(function () {
     // bookmark_idが未設定の場合、わざと無効な値を渡してneedReconfigureRootNodeId
     // をcallさせる。
     app.bookmark = new app.Bookmark(app.config.get("bookmark_id") || "dummy");
@@ -607,10 +607,10 @@ app.main = function () {
     app.bookmarkEntryList.needReconfigureRootNodeId.add(function () {
       app.message.send("open", { url: "bookmark_source_selector" });
     });
-  })();
 
-  app.bookmarkEntryList.ready.add(function () {
-    $$.I("left_pane").src = "/view/sidemenu.html";
+    app.bookmarkEntryList.ready.add(function () {
+      $$.I("left_pane").src = "/view/sidemenu.html";
+    });
   });
 
   (async function () {

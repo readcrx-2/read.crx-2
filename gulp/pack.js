@@ -21,6 +21,8 @@ const createXpi = async function (tmpDir, apicrePath) {
     artifactsDir: process.cwd() + "/build",
     apiKey: apicre.issuer,
     apiSecret: apicre.secret,
+    channel: "unlisted",
+    amoBaseUrl: "https://addons.mozilla.org/api/v5/",
   });
 };
 

@@ -937,7 +937,7 @@ export default ThreadContent = (function () {
         let tmp = res.other
           //be
           .replace(
-            /<\/div><div class="be[^>]*?"><a href="(https?:\/\/be\.[25]ch\.net\/user\/\d+?)"[^>]*>(.*?)<\/a>/,
+            /<\/div><div class="be[^>]*?"><a href="(https?:\/\/be\.(?:[25]ch\.net|5ch\.io)\/user\/\d+?)"[^>]*>(.*?)<\/a>/,
             '<a class="beid" href="$1" target="_blank">$2</a>'
           )
           //タグ除去
@@ -1046,13 +1046,13 @@ export default ThreadContent = (function () {
           .replace(/<(\/)?div-block([^<>]*)>/g, "<$1div$2>")
           //URLリンク
           .replace(
-            /(h)?(ttps?:\/\/(?!img\.[25]ch\.net\/(?:ico|emoji|premium)\/[\w\-_]+\.gif)(?:[a-hj-zA-HJ-Z\d_\-.!~*'();\/?:@=+$,%#]|\&(?!gt;)|[iI](?![dD]:)+)+)/g,
+            /(h)?(ttps?:\/\/(?!img\.(?:[25]ch)\.net\/(?:ico|emoji|premium)\/[\w\-_]+\.gif)(?:[a-hj-zA-HJ-Z\d_\-.!~*'();\/?:@=+$,%#]|\&(?!gt;)|[iI](?![dD]:)+)+)/g,
             '<a href="h$2" target="_blank">$1$2</a>'
           )
           //Beアイコン埋め込み表示
           .replace(
             new RegExp(
-              `^(?:\\s*sssp|https?)://(img\\.[25]ch\\.net/(?:ico|premium)/[\\w\\-_]+\\.gif)\\s*<br>`
+              `^(?:\\s*sssp|https?)://(img\\.(?:[25]ch\\.net|5ch\\.io)/(?:ico|premium)/[\\w\\-_]+\\.gif)\\s*<br>`
             ),
             ($0, $1) => {
               let needle;
@@ -1068,7 +1068,7 @@ export default ThreadContent = (function () {
           //エモーティコン埋め込み表示
           .replace(
             new RegExp(
-              `(?:\\s*sssp|https?)://(img\\.[25]ch\\.net/emoji/[\\w\\-_]+\\.gif)\\s*`,
+              `(?:\\s*sssp|https?)://(img\\.(?:[25]ch\\.net|5ch\\.io)/emoji/[\\w\\-_]+\\.gif)\\s*`,
               "g"
             ),
             ($0, $1) => {

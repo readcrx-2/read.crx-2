@@ -67,6 +67,7 @@ browser.contextMenus.create({
   targetUrlPatterns: [
     "*://*.2ch.net/*",
     "*://*.5ch.net/*",
+    "*://*.5ch.io/*",
     "*://*.2ch.sc/*",
     "*://*.open2ch.net/*",
     "*://*.bbspink.com/*",

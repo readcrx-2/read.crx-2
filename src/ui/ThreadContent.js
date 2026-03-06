@@ -984,7 +984,7 @@ export default ThreadContent = (function () {
           //.beid
           .replace(
             /(?:^| )(BE:(\d+)\-[A-Z\d]+\(\d+\))/,
-            `<a class="beid" href="${protocol}//be.5ch.net/test/p.php?i=$3" target="_blank">$1</a>`
+            `<a class="beid" href="${protocol}//be.5ch.io/test/p.php?i=$3" target="_blank">$1</a>`
           )
           //.date
           .replace(
@@ -1058,7 +1058,7 @@ export default ThreadContent = (function () {
               let needle;
               if (
                 ((needle = this.url.getTsld()),
-                ["5ch.net", "bbspink.com", "2ch.sc"].includes(needle))
+                ["5ch.io", "bbspink.com", "2ch.sc"].includes(needle))
               ) {
                 return `<img class="beicon" src="/img/dummy_1x1.&[IMG_EXT]" data-src="${protocol}//${$1}"><br>`;
               }
@@ -1075,7 +1075,7 @@ export default ThreadContent = (function () {
               let needle;
               if (
                 ((needle = this.url.getTsld()),
-                ["5ch.net", "bbspink.com", "2ch.sc"].includes(needle))
+                ["5ch.io", "bbspink.com", "2ch.sc"].includes(needle))
               ) {
                 return `<img class="beicon emoticon" src="/img/dummy_1x1.&[IMG_EXT]" data-src="${protocol}//${$1}">`;
               }

@@ -1,6 +1,6 @@
 {
   "name": "read.crx 2",
-  "version": "2.11.5",
+  "version": "2.11.6",
   "update_url": "https://readcrx-2.github.io/read.crx-2/updates.xml",
   "homepage_url": "https://readcrx-2.github.io/read.crx-2/",
   "description": "2chブラウザ",
@@ -60,6 +60,7 @@
       "matches": [
         "*://*.2ch.net/*",
         "*://*.5ch.net/*",
+        "*://*.5ch.io/*",
         "*://jbbs.shitaraba.net/*",
         "*://*.machi.to/*",
         "*://*.open2ch.net/*",
@@ -100,6 +101,7 @@
       "matches": [
         "*://*.2ch.net/*",
         "*://*.5ch.net/*",
+        "*://*.5ch.io/*",
         "*://jbbs.shitaraba.net/*",
         "*://*.machi.to/*",
         "*://*.open2ch.net/*",

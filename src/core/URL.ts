@@ -58,16 +58,23 @@ export class URL extends window.URL {
   }
 
   private fix() {
-    // 2ch.net -> 5ch.net & jbbs.livedoor.jp -> jbbs.shitaraba.net
-    if (this.hostname === "2ch.net" || this.hostname.endsWith(".2ch.net")) {
-      this.hostname = this.hostname.replace("2ch.net", "5ch.net");
+    // 2ch.net/5ch.net/5ch.io -> 5ch.io & jbbs.livedoor.jp -> jbbs.shitaraba.net
+    if (
+      this.hostname.endsWith(".2ch.net") ||
+      this.hostname === "2ch.net" ||
+      this.hostname.endsWith(".5ch.net") ||
+      this.hostname === "5ch.net" ||
+      this.hostname.endsWith(".5ch.io") ||
+      this.hostname === "5ch.io"
+    ) {
+      this.hostname = this.hostname.replace(/(2ch|5ch)\.(net|io)$/, "5ch.io");
     } else if (this.hostname === "jbbs.livedoor.jp") {
       this.hostname = "jbbs.shitaraba.net";
     }
 
     // スレ系: 誤爆する事は考えられないので、パラメータ部分をバッサリ切ってしまう
     // 板系: 完全に誤爆を少しでも減らすために、パラメータ形式も限定する
-    if (this.hostname === "ula.5ch.net") {
+    if (this.hostname === "ula.5ch.io") {
       const res = URL.CH_THREAD_ULA_REG.exec(this.pathname);
       if (res) {
         this.hostname = res[2];
@@ -210,7 +217,7 @@ export class URL extends window.URL {
       return res ? res[1] : null;
     }
 
-    if (raw.hostname === "ula.5ch.net") {
+    if (raw.hostname === "ula.5ch.io") {
       const res = URL.CH_RESNUM_REG2.exec(raw.pathname);
       return res ? res[1] : null;
     }
@@ -272,7 +279,7 @@ export class URL extends window.URL {
     let reg: RegExp;
 
     switch (this.hostname) {
-      case "itest.5ch.net":
+      case "itest.5ch.io":
         reg = URL.ITEST_5CH_REG;
         break;
 
@@ -295,7 +302,7 @@ export class URL extends window.URL {
     let server: string | null = null;
     let bbsType: GuessResult["bbsType"] = "unknown";
 
-    if (mode === "5ch.net") {
+    if (mode === "5ch.io") {
       if (serverNet.has(board)) {
         server = serverNet.get(board);
         // 携帯用bbspinkの可能性をチェック
@@ -337,20 +344,20 @@ export class URL extends window.URL {
       return;
     }
 
-    if (tsld === "5ch.net" && serverSc.has(boardKey)) {
+    if (tsld === "5ch.io" && serverSc.has(boardKey)) {
       const server = serverSc.get(boardKey);
       this.hostname = `${server}.2ch.sc`;
       return;
     } else if (serverNet.has(boardKey)) {
       const server = serverNet.get(boardKey);
-      this.hostname = `${server}.5ch.net`;
+      this.hostname = `${server}.5ch.io`;
       return;
     }
 
-    if (tsld !== "5ch.net") return;
+    if (tsld !== "5ch.io") return;
 
     {
-      const hostname = this.hostname.replace(".5ch.net", ".2ch.sc");
+      const hostname = this.hostname.replace(".5ch.io", ".2ch.sc");
       const req = new Request("HEAD", `http://${hostname}${this.pathname}`);
       const { status, responseURL: resUrlStr } = await req.send();
       if (status >= 400) {
@@ -580,10 +587,11 @@ function applyServerInfo(menu: any[]): ResInfo {
 
       if (
         !res.net &&
-        (tmp = /https?:\/\/(\w+)\.5ch\.net\/(\w+)\/.*?/.exec(board.url)) !==
-          null
+        (tmp = /https?:\/\/(\w+)\.5ch\.(net|io)\/(\w+)\/.*?/.exec(
+          board.url
+        )) !== null
       ) {
-        boardNet.set(tmp[2], tmp[1]);
+        boardNet.set(tmp[3], tmp[1]);
       } else if (
         !res.sc &&
         (tmp = /https?:\/\/(\w+)\.2ch\.sc\/(\w+)\/.*?/.exec(board.url)) !== null
@@ -618,7 +626,7 @@ export async function pushServerInfo(menu: any[][]) {
   }
 
   if (!res.net || !res.bbspink) {
-    const tmpUrl = `https://menu.5ch.net/bbsmenu.html`;
+    const tmpUrl = `https://menu.5ch.io/bbsmenu.html`;
     const tmpMenu = <any[][]>(await fetchBBSMenu(tmpUrl, false)).menu;
     applyServerInfo(tmpMenu);
   }

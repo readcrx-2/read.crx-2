@@ -724,7 +724,7 @@ ${$res.C("message")[0].innerText.replace(/^/gm, ">")}\n\
       //2chタイプの板は誤爆率が高いので、もう少し細かく判定する
       if (srcType === "board" && bbsType === "2ch") {
         //2ch自体の場合の判断はguess_typeを信じて板判定
-        if (targetUrl.getTsld() === "5ch.net") {
+        if (targetUrl.getTsld() === "5ch.io") {
           return true;
         }
         //ブックマークされている場合も板として判定

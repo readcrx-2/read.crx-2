@@ -174,7 +174,7 @@ export default class SikiGuard {
     const tsld = threadUrl.getTsld();
     const splits = threadUrl.pathname.split("/");
 
-    if (["5ch.net", "bbspink.com"].includes(tsld)) {
+    if (["5ch.io", "bbspink.com"].includes(tsld)) {
       return {
         tsld,
         board: splits[3],

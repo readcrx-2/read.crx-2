@@ -39,7 +39,7 @@ app.boot("/view/search.html", ["ThreadSearch"], async function (ThreadSearch) {
 
   $view.$(
     ".button_link > a"
-  ).href = `${scheme}://dig.5ch.net/search?maxResult=500&keywords=${encodeURIComponent(
+  ).href = `${scheme}://dig.5ch.io/search?maxResult=500&keywords=${encodeURIComponent(
     query
   )}`;
 

@@ -39,8 +39,8 @@ const _openDB = new Promise(function (resolve, reject) {
 const _urlFilter = function (originalUrlStr) {
   const original = new URL(originalUrlStr);
   const replaced = new URL(originalUrlStr);
-  if (original.hostname.endsWith(".5ch.net")) {
-    replaced.hostname = "*.5ch.net";
+  if (original.hostname.endsWith(".5ch.io")) {
+    replaced.hostname = "*.5ch.io";
   }
 
   return { original, replaced };

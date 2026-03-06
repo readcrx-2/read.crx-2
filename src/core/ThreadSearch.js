@@ -74,7 +74,7 @@ export default (function () {
       */
 
     async _read(count) {
-      //{status, body} = await new Request("GET", "https://dig.5ch.net/?keywords=#{encodeURIComponent(@query)}&maxResult=#{count}&json=1",
+      //{status, body} = await new Request("GET", "https://dig.5ch.io/?keywords=#{encodeURIComponent(@query)}&maxResult=#{count}&json=1",
       let result;
       const { status, body } = await new Request(
         "GET",

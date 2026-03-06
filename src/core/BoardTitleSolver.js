@@ -110,7 +110,7 @@ const searchFromBBSMenu = async function (url) {
 */
 const _formatBoardTitle = function (title, url) {
   switch (url.getTsld()) {
-    case "5ch.net":
+    case "5ch.io":
       title = title.replace("＠2ch掲示板", "");
       break;
     case "2ch.sc":

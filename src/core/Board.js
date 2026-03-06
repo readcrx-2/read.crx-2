@@ -88,7 +88,7 @@ export default class Board {
         // 2chで自動移動しているときはサーバー移転
         if (
           response != null &&
-          this.url.getTsld() === "5ch.net" &&
+          this.url.getTsld() === "5ch.io" &&
           this.url.hostname !== response.responseURL.split("/")[2]
         ) {
           newBoardUrl = response.responseURL.slice(0, -"subject.txt".length);
@@ -151,7 +151,7 @@ export default class Board {
         ({ response, threadList, newBoardUrl } = error);
         this.message = "板の読み込みに失敗しました。";
 
-        if (newBoardUrl != null && this.url.getTsld() === "5ch.net") {
+        if (newBoardUrl != null && this.url.getTsld() === "5ch.io") {
           try {
             newBoardUrl = (await chServerMoveDetect(this.url)).href;
             this.message += `\
@@ -162,7 +162,7 @@ class="open_in_rcrx">${app.escapeHtml(newBoardUrl)}
 `;
           } catch (error2) {}
           //2chでrejectされている場合は移転を疑う
-        } else if (this.url.getTsld() === "5ch.net" && response != null) {
+        } else if (this.url.getTsld() === "5ch.io" && response != null) {
           try {
             newBoardUrl = (await chServerMoveDetect(this.url)).href;
             //移転検出時

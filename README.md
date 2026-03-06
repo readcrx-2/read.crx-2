@@ -1,6 +1,6 @@
 # read.crx 2 [![GitHub version](https://badge.fury.io/gh/readcrx-2%2Fread.crx-2.svg)][repolink] [![MIT License](http://img.shields.io/badge/license-MIT-blue.svg?style=flat)](LICENSE)
 read.crx 2は[Google Chrome][chrome]/[Mozilla Firefox][firefox] extensionとして作られた2chブラウザです。
-[2ch.net(5ch.net)][5ch.net]、[2ch.sc][2ch.sc]、[open2ch.net][open2ch.net]及びその互換BBS、[まちBBS][machi]、[したらば][jbbs]の閲覧に対応しています。
+[2ch.net(5ch.net/5ch.io)][5ch.io]、[2ch.sc][2ch.sc]、[open2ch.net][open2ch.net]及びその互換BBS、[まちBBS][machi]、[したらば][jbbs]の閲覧に対応しています。
 
 一般の利用者向けの配布は[こちら](https://readcrx-2.github.io/read.crx-2/)
 
@@ -32,7 +32,7 @@ read.crx 2のソースコードはMITライセンスですが、read.crx 2がア
 * [Kazuki Hashimoto](https://github.com/eru)
 * [S](https://github.com/S--Minecraft)
 
-[5ch.net]: http://www.5ch.net/
+[5ch.io]: http://www.5ch.io/
 [2ch.sc]: http://2ch.sc/
 [open2ch.net]: http://open2ch.net/
 [chrome]: https://www.google.com/chrome

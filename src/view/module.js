@@ -1012,7 +1012,7 @@ app.view.TabContentView = class TabContentView extends (
       const url = new app.URL.URL(urlStr);
 
       // 2ch.net/2ch.scに切り替え
-      if (((needle = url.getTsld()), ["5ch.net", "2ch.sc"].includes(needle))) {
+      if (((needle = url.getTsld()), ["5ch.io", "2ch.sc"].includes(needle))) {
         __guard__(this.$element.C("button_change_netsc")[0], (x6) =>
           x6.on("click", async () => {
             try {
@@ -1022,7 +1022,7 @@ app.view.TabContentView = class TabContentView extends (
               });
             } catch (error) {
               const msg = `\
-スレッド/板のURLが古いか新しいため、板一覧に5ch.netと2ch.scのペアが存在しません。
+スレッド/板のURLが古いか新しいため、板一覧に5ch.ioと2ch.scのペアが存在しません。
 板一覧が更新されるのを待つか、板一覧を更新してみてください。\
 `;
               new app.Notification(

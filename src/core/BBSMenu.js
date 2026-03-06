@@ -188,7 +188,7 @@ var parse = function (html) {
       if (bbsmenuOption.has(getTsld(boardUrl))) {
         continue;
       }
-      if (bbspinkException && boardUrl.includes("5ch.net/bbypink")) {
+      if (bbspinkException && boardUrl.includes("5ch.io/bbypink")) {
         continue;
       }
       if (!subName) {

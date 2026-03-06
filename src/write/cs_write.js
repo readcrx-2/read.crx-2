@@ -76,7 +76,7 @@
   var getJumpUrl = function () {
     const domain = location.hostname;
     if (
-      domain.endsWith("5ch.net") ||
+      domain.endsWith("5ch.io") ||
       domain.endsWith("bbspink.com") ||
       domain.endsWith("open2ch.net")
     ) {

@@ -56,7 +56,7 @@ app.boot("/view/board.html", ["Board"], function (Board) {
   if (
     ((needle = url.getTsld()),
     [
-      "5ch.net",
+      "5ch.io",
       "shitaraba.net",
       "bbspink.com",
       "2ch.sc",

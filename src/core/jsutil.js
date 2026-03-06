@@ -215,7 +215,9 @@ export var searchNextThread = async function (
     .map(function ({ title, url }) {
       let left;
       let score = levenshteinDistance(threadTitle, normalize(title), false);
-      const m = url.match(/(?:https:\/\/)?(?:\w+(\.[25]ch\.net\/.+)|(.+))$/);
+      const m = url.match(
+        /(?:https:\/\/)?(?:\w+(\.(?:[25]ch\.net|5ch\.io)\/.+)|(.+))$/
+      );
       if (
         resString.includes(
           (left = m[1] != null ? m[1] : m[2]) != null ? left : url

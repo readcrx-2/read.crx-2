@@ -1,7 +1,7 @@
 const reg = new RegExp(`^https?://(?:\
-(?:(?!find|info|p2)\\w+(?:\\.[25]ch\\.net|\\.2ch\\.sc|\\.open2ch\\.net|\\.bbspink\\.com)/(?:subback/)?\\w+/?(?:index\\.html)?(?:#\\d+)?$)|\
-(?:\\w+(?:\\.[25]ch\\.net|\\.2ch\\.sc|\\.open2ch\\.net|\\.bbspink\\.com)/(?:\\w+/)?test/read\\.cgi/\\w+/\\d+/?.*)|\
-(?:ula\\.[25]ch\\.net/2ch/\\w+/[\\w+\\.]+/\\d+/.*)|\
+(?:(?!find|info|p2)\\w+(?:\\.[25]ch\\.net|\\.5ch\\.io|\\.2ch\\.sc|\\.open2ch\\.net|\\.bbspink\\.com)/(?:subback/)?\\w+/?(?:index\\.html)?(?:#\\d+)?$)|\
+(?:\\w+(?:\\.[25]ch\\.net|\\.5ch\\.io|\\.2ch\\.sc|\\.open2ch\\.net|\\.bbspink\\.com)/(?:\\w+/)?test/read\\.cgi/\\w+/\\d+/?.*)|\
+(?:ula\\.(?:[25]ch\\.net|5ch\\.io)/2ch/\\w+/[\\w+\\.]+/\\d+/.*)|\
 (?:c\\.2ch\\.net/test/-/\\w+/i?(?:\\?.+)?)|\
 (?:c\\.2ch\\.net/test/-/\\w+/\\d+/(?:[ig]|\\d+)?(?:\\?.+)?)|\
 (?:jbbs\\.shitaraba\\.net/\\w+/\\d+/(?:index\\.html)?(?:#\\d+)?$)|\

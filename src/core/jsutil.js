@@ -165,6 +165,26 @@ export var decodeCharReference = (str) =>
     }
   );
 
+export var decodeCloudflareEmail = function (str) {
+  if (typeof str !== "string" || str === "") return "";
+  if (str.includes("@")) return str;
+  if (str.length < 2 || str.length % 2 !== 0 || !/^[0-9a-fA-F]+$/.test(str)) {
+    return str;
+  }
+
+  try {
+    let email = "";
+    const key = parseInt(str.substring(0, 2), 16);
+    for (let n = 2; n < str.length; n += 2) {
+      const charCode = parseInt(str.substring(n, n + 2), 16) ^ key;
+      email += String.fromCharCode(charCode);
+    }
+    return email;
+  } catch (e) {
+    return str;
+  }
+};
+
 //マウスクリックのイベントオブジェクトから、リンク先をどう開くべきかの情報を導く
 const openMap = new Map([
   //button(number), shift(bool), ctrl(bool)の文字列

@@ -32,39 +32,44 @@ export class EntryList {
   private readonly boardURLIndex = new Map<string, Set<string>>();
 
   async add(entry: Entry): Promise<boolean> {
-    if (this.get(entry.url)) return false;
+    const url = fixUrl(entry.url);
+    if (this.cache.has(url)) return false;
 
     entry = app.deepCopy(entry);
+    entry.url = url;
 
-    this.cache.set(entry.url, entry);
+    this.cache.set(url, entry);
 
     if (entry.type === "thread") {
-      const boardURL = threadToBoard(entry.url);
+      const boardURL = threadToBoard(url);
       if (!this.boardURLIndex.has(boardURL)) {
         this.boardURLIndex.set(boardURL, new Set());
       }
-      this.boardURLIndex.get(boardURL)!.add(entry.url);
+      this.boardURLIndex.get(boardURL)!.add(url);
     }
     return true;
   }
 
   async update(entry: Entry): Promise<boolean> {
-    if (!this.get(entry.url)) return false;
+    const url = fixUrl(entry.url);
+    if (!this.cache.has(url)) return false;
 
-    this.cache.set(entry.url, app.deepCopy(entry));
+    entry = app.deepCopy(entry);
+    entry.url = url;
+
+    this.cache.set(url, entry);
     return true;
   }
 
   async remove(urlStr: string): Promise<boolean> {
-    const url = new URL(urlStr);
-    urlStr = url.href;
+    urlStr = fixUrl(urlStr);
 
     if (!this.cache.has(urlStr)) return false;
 
-    if (this.cache.get(urlStr).type === "thread") {
-      const boardURL = url.toBoard().href;
+    if (this.cache.get(urlStr)!.type === "thread") {
+      const boardURL = threadToBoard(urlStr);
       if (this.boardURLIndex.has(boardURL)) {
-        const threadList = this.boardURLIndex.get(boardURL);
+        const threadList = this.boardURLIndex.get(boardURL)!;
         if (threadList.has(urlStr)) {
           threadList.delete(urlStr);
         }

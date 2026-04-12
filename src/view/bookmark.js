@@ -22,6 +22,19 @@ app.boot("/view/bookmark.html", ["Board"], function (Board) {
   const tableSorter = new UI.TableSorter($table);
   app.DOMData.set($table, "tableSorter", tableSorter);
 
+  // リストの変更（追加・削除）があった際にソートを再適用
+  (function () {
+    let timer = null;
+    $table.on("thread_list_changed", function () {
+      clearTimeout(timer);
+      timer = setTimeout(function () {
+        if (!$view.hasClass("loading")) {
+          tableSorter.update();
+        }
+      }, 100);
+    });
+  })();
+
   // ソート関連
   (function () {
     const DEFAULT_SORT = { sort_index: 3, sort_order: "desc" };
@@ -47,14 +60,6 @@ app.boot("/view/bookmark.html", ["Board"], function (Board) {
 
   new app.view.TabContentView($view);
 
-  const trUpdatedObserver = new MutationObserver(function (records) {
-    for (let { target: $record } of records) {
-      if ($record.matches("tr.updated")) {
-        $record.parent().addLast($record);
-      }
-    }
-  });
-
   //リロード時処理
   $view.on("request_reload", function (param) {
     let url;
@@ -75,12 +80,6 @@ app.boot("/view/bookmark.html", ["Board"], function (Board) {
     const $loadingOverlay = $view.C("loading_overlay")[0];
 
     $reloadButton.addClass("disabled");
-
-    trUpdatedObserver.observe($view.T("tbody")[0], {
-      subtree: true,
-      attributes: true,
-      attributeFilter: ["class"],
-    });
 
     // TODO: Collection Normalization Proposalで書くとよりよく
     // ES2019 Stage 2(2019/02/05現在)
@@ -133,11 +132,7 @@ app.boot("/view/bookmark.html", ["Board"], function (Board) {
         //ソート後にブックマークが更新されてしまう場合に備えて、少し待つ
         (async function () {
           await app.wait(500);
-          tableSorter.clearSortClass();
-          for (let tr of $view.$$("tr:not(.updated)")) {
-            tr.parent().addLast(tr);
-          }
-          trUpdatedObserver.disconnect();
+          tableSorter.update();
           $view.removeClass("loading");
           if (app.config.isOn("auto_bookmark_notify") && auto) {
             notify();

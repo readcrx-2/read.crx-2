@@ -190,6 +190,9 @@ export default ThreadList = (function () {
 
         if (this._flg.bookmarkAddRm) {
           if (type === "added") {
+            if ($table.$(`tr[data-href=\"${bookmark.url}\"]`)) {
+              return;
+            }
             let boardTitle;
             url = new app.URL.URL(bookmark.url);
             const boardUrl = url.toBoard();
@@ -210,7 +213,11 @@ export default ThreadList = (function () {
               isHttps: url.isHttps(),
             });
           } else if (type === "removed") {
-            $table.$(`tr[data-href=\"${bookmark.url}\"]`).remove();
+            const $tr = $table.$(`tr[data-href=\"${bookmark.url}\"]`);
+            if ($tr) {
+              $tr.remove();
+              $table.emit(new Event("thread_list_changed"));
+            }
           }
         }
 
@@ -608,6 +615,7 @@ export default ThreadList = (function () {
       }
 
       $tbody.addLast($fragment);
+      this.table.emit(new Event("thread_list_changed"));
     }
 
     /**

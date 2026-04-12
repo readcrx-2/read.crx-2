@@ -58,6 +58,8 @@ export class URL extends window.URL {
   }
 
   private fix() {
+    this.convertFromPhone();
+
     // 2ch.net/5ch.net/5ch.io -> 5ch.io & jbbs.livedoor.jp -> jbbs.shitaraba.net
     if (
       this.hostname.endsWith(".2ch.net") ||
@@ -68,7 +70,10 @@ export class URL extends window.URL {
       this.hostname === "5ch.io"
     ) {
       this.hostname = this.hostname.replace(/(2ch|5ch)\.(net|io)$/, "5ch.io");
-    } else if (this.hostname === "jbbs.livedoor.jp") {
+    } else if (
+      this.hostname === "jbbs.livedoor.jp" ||
+      this.hostname === "jbbs.shitaraba.net"
+    ) {
       this.hostname = "jbbs.shitaraba.net";
     }
 

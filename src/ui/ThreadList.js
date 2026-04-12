@@ -213,7 +213,11 @@ export default ThreadList = (function () {
               isHttps: url.isHttps(),
             });
           } else if (type === "removed") {
-            $table.$(`tr[data-href=\"${bookmark.url}\"]`).remove();
+            const $tr = $table.$(`tr[data-href=\"${bookmark.url}\"]`);
+            if ($tr) {
+              $tr.remove();
+              $table.emit(new Event("thread_list_changed"));
+            }
           }
         }
 
@@ -611,6 +615,7 @@ export default ThreadList = (function () {
       }
 
       $tbody.addLast($fragment);
+      this.table.emit(new Event("thread_list_changed"));
     }
 
     /**

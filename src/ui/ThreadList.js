@@ -190,6 +190,9 @@ export default ThreadList = (function () {
 
         if (this._flg.bookmarkAddRm) {
           if (type === "added") {
+            if ($table.$(`tr[data-href=\"${bookmark.url}\"]`)) {
+              return;
+            }
             let boardTitle;
             url = new app.URL.URL(bookmark.url);
             const boardUrl = url.toBoard();

@@ -469,6 +469,15 @@ export default ThreadList = (function () {
       const $fragment = $_F();
 
       for (let item of arg) {
+        if (!this._flg.viewedDate && !this._flg.writtenDate) {
+          if (
+            $tbody.$(`tr[data-href="${item.url}"]`) != null ||
+            $fragment.$(`tr[data-href="${item.url}"]`) != null
+          ) {
+            continue;
+          }
+        }
+
         var $td;
         const $tr = $__("tr").addClass("open_in_rcrx");
 

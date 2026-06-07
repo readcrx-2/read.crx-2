@@ -164,7 +164,7 @@ export class SyncableEntryList extends EntryList {
   }
 
   async add(entry: Entry): Promise<boolean> {
-    if (!super.add(entry)) return false;
+    if (!(await super.add(entry))) return false;
 
     this.onChanged.call({
       type: "ADD",
@@ -176,7 +176,7 @@ export class SyncableEntryList extends EntryList {
   async update(entry: Entry): Promise<boolean> {
     const before = this.get(entry.url);
 
-    if (!super.update(entry)) return false;
+    if (!(await super.update(entry))) return false;
 
     if (before.title !== entry.title) {
       this.onChanged.call({
@@ -220,7 +220,7 @@ export class SyncableEntryList extends EntryList {
   async remove(url: string): Promise<boolean> {
     const entry = this.get(url);
 
-    if (!super.remove(url)) return false;
+    if (!(await super.remove(url))) return false;
 
     this.onChanged.call({
       type: "REMOVE",

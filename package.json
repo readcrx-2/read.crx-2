@@ -4,6 +4,12 @@
   "engines": {
     "node": ">=18.0"
   },
+  "devEngines": {
+    "packageManager": {
+      "name": "pnpm",
+      "version": "11.5.2"
+    }
+  },
   "browserslist": [
     "Chrome >= 103",
     "Firefox >= 103"

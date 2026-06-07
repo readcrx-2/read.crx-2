@@ -117,7 +117,7 @@ const defaultOptions = {
 
 defaultOptions.rollup = {
   in: {
-    plugins: [_.ts(defaultOptions.rollupTs)],
+    plugins: [],
     context: "window",
     onwarn: util.rollupOnWarn,
   },

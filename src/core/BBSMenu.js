@@ -164,12 +164,13 @@ var parse = function (html) {
     "gi"
   );
   const regBoard = new RegExp(
-    `<a\\shref="?((?:https?:)?//(?!info\\.(?:[25]ch\\.net|5ch\\.io)/|headline\\.bbspink\\.com)\
-(?:\\w+\\.(?:[25]ch\\.net|5ch\\.io|open2ch\\.net|2ch\\.sc|bbspink\\.com)|(?:\\w+\\.)?machi\\.to)/\\w+/)"?(?:\\s.*?)?>(.+?)</a>`,
+    `<a\\shref="?((?:https?:)?//(?!info\\.(?:[25]ch\\.net|5ch\\.io)/|headline\\.bbspink\\.(?:com|org))\
+(?:(?:\\w+\\.)?(?:[25]ch\\.net|5ch\\.io|open2ch\\.net|2ch\\.sc|bbspink\\.com|bbspink\\.org)|(?:\\w+\\.)?machi\\.to)/(?:ex0ch/)?\\w+/)"?(?:\\s.*?)?>(.+?)</a>`,
     "gi"
   );
   const menu = [];
-  const bbspinkException = bbsmenuOption.has("bbspink.com");
+  const bbspinkException =
+    bbsmenuOption.has("bbspink.com") || bbsmenuOption.has("bbspink.org");
 
   while ((regCategoryRes = regCategory.exec(html))) {
     var regBoardRes;

@@ -78,6 +78,7 @@
     if (
       domain.endsWith("5ch.io") ||
       domain.endsWith("bbspink.com") ||
+      domain.endsWith("bbspink.org") ||
       domain.endsWith("open2ch.net")
     ) {
       const $meta = getRefreshMeta();

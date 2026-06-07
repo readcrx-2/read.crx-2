@@ -58,6 +58,12 @@ export class URL extends window.URL {
   }
 
   private fix() {
+    if (
+      this.hostname.endsWith("bbspink.org") &&
+      this.pathname.startsWith("/ex0ch/")
+    ) {
+      this.pathname = this.pathname.replace(/^\/ex0ch(?=\/|$)/, "");
+    }
     // 2ch.net/5ch.net/5ch.io -> 5ch.io & jbbs.livedoor.jp -> jbbs.shitaraba.net
     if (
       this.hostname.endsWith(".2ch.net") ||

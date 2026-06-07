@@ -65,7 +65,9 @@
         "*://*.machi.to/*",
         "*://*.open2ch.net/*",
         "*://*.2ch.sc/*",
-        "*://*.bbspink.com/*"
+        "*://*.bbspink.com/*",
+        "*://*.bbspink.org/*",
+        "*://bbspink.org/*"
       ],
       "js": ["/cs_addlink.js"]
     },
@@ -106,7 +108,9 @@
         "*://*.machi.to/*",
         "*://*.open2ch.net/*",
         "*://*.2ch.sc/*",
-        "*://*.bbspink.com/*"
+        "*://*.bbspink.com/*",
+        "*://*.bbspink.org/*",
+        "*://bbspink.org/*"
       ],
       "extension_ids": []
     }

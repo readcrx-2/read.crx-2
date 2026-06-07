@@ -22,9 +22,13 @@ const makeInOut = function (
   i.input = paths.js[pathname];
   cache[pathname] = null;
   i.cache = cache[pathname];
-  if (plugins != null) {
-    i.plugins = plugins.concat(i.plugins);
-  }
+
+  const tsPlugin = _.ts(
+    Object.assign({}, defaultOptions.rollupTs, {
+      outDir: paths.output[browser],
+    })
+  );
+  i.plugins = (plugins || []).concat([tsPlugin]);
 
   const o = Object.assign({}, defaultOptions.rollup.out, outObj);
   o.file = `${paths.output[browser]}/${output}`;

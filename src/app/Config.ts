@@ -87,7 +87,7 @@ export default class Config {
     ["user_css", ""],
     [
       "bbsmenu",
-      "https://menu.5ch.io/bbsmenu.html\nhttps://menu.2ch.sc/bbsmenu.html\n// open2chは一度手動でbbsmenuのURLへアクセスする必要があります。\n// https://menu.open2ch.net/bbsmenu.html\n",
+      "https://menu.5ch.io/bbsmenu.html\nhttps://menu.2ch.sc/bbsmenu.html\nhttps://bbspink.org/ex0ch/bbsmenu.html\n// open2chは一度手動でbbsmenuのURLへアクセスする必要があります。\n// https://menu.open2ch.net/bbsmenu.html\n",
     ],
     ["bbsmenu_update_interval", "7"],
     ["bbsmenu_option", ""],

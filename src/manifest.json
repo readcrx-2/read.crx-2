@@ -1,6 +1,6 @@
 {
   "name": "read.crx 2",
-  "version": "2.11.9",
+  "version": "2.12.0",
   "update_url": "https://readcrx-2.github.io/read.crx-2/updates.xml",
   "homepage_url": "https://readcrx-2.github.io/read.crx-2/",
   "description": "2chブラウザ",
@@ -65,7 +65,9 @@
         "*://*.machi.to/*",
         "*://*.open2ch.net/*",
         "*://*.2ch.sc/*",
-        "*://*.bbspink.com/*"
+        "*://*.bbspink.com/*",
+        "*://*.bbspink.org/*",
+        "*://bbspink.org/*"
       ],
       "js": ["/cs_addlink.js"]
     },
@@ -106,7 +108,9 @@
         "*://*.machi.to/*",
         "*://*.open2ch.net/*",
         "*://*.2ch.sc/*",
-        "*://*.bbspink.com/*"
+        "*://*.bbspink.com/*",
+        "*://*.bbspink.org/*",
+        "*://bbspink.org/*"
       ],
       "extension_ids": []
     }

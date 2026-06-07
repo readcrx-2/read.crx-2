@@ -71,6 +71,8 @@ browser.contextMenus.create({
     "*://*.2ch.sc/*",
     "*://*.open2ch.net/*",
     "*://*.bbspink.com/*",
+    "*://*.bbspink.org/*",
+    "*://bbspink.org/*",
     "*://jbbs.shitaraba.net/*",
     "*://jbbs.livedoor.jp/*",
     "*://*.machi.to/*",

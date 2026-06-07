@@ -53,7 +53,13 @@ class SubmitThread extends Write {
 
     if (
       ((needle = url.getTsld()),
-      ["5ch.io", "2ch.sc", "bbspink.com", "open2ch.net"].includes(needle))
+      [
+        "5ch.io",
+        "2ch.sc",
+        "bbspink.com",
+        "bbspink.org",
+        "open2ch.net",
+      ].includes(needle))
     ) {
       const keys = key.match(/.*\/test\/read\.cgi\/(\w+?)\/(\d+)\/l\d+/);
       if (keys == null) {

@@ -25,7 +25,7 @@ module.exports = {
   },
   rollup: {
     rollup: require("rollup"),
-    ts: require("rollup-plugin-typescript2"),
+    ts: require("@rollup/plugin-typescript"),
     replace: require("@rollup/plugin-replace"),
   },
   postcss: {

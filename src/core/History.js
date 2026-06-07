@@ -361,23 +361,21 @@ export var clearRange = async function (day) {
 @return {Promise}
 @private
 */
-({
-  _recoveryOfBoardTitle(db, tx) {
-    return new Promise(function (resolve, reject) {
-      const req = tx.objectStore("History").openCursor();
-      req.onsuccess = function ({ target: { result: cursor } }) {
-        if (cursor) {
-          cursor.value.boardTitle = "";
-          cursor.update(cursor.value);
-          cursor.continue();
-        } else {
-          resolve();
-        }
-      };
-      req.onerror = function (e) {
-        app.log("error", "History._recoveryOfBoardTitle: トランザクション中断");
-        reject(e);
-      };
-    });
-  },
-});
+export const _recoveryOfBoardTitle = function (db, tx) {
+  return new Promise(function (resolve, reject) {
+    const req = tx.objectStore("History").openCursor();
+    req.onsuccess = function ({ target: { result: cursor } }) {
+      if (cursor) {
+        cursor.value.boardTitle = "";
+        cursor.update(cursor.value);
+        cursor.continue();
+      } else {
+        resolve();
+      }
+    };
+    req.onerror = function (e) {
+      app.log("error", "History._recoveryOfBoardTitle: トランザクション中断");
+      reject(e);
+    };
+  });
+};

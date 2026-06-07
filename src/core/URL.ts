@@ -1,7 +1,7 @@
 import { Request } from "./HTTP";
-// @ts-ignore
+// @ts-expect-error: JS import
 import { fetch as fetchBBSMenu } from "./BBSMenu.js";
-// @ts-ignore
+// @ts-expect-error: JS import
 import Cache from "./Cache.js";
 
 export interface GuessResult {
@@ -507,7 +507,8 @@ export async function expandShortURL(shortUrl: string): Promise<string> {
         timeout: parseInt(app.config.get("expand_short_url_timeout")!),
       });
 
-      let { status, responseURL: resUrl } = await req.send();
+      const { status, responseURL } = await req.send();
+      let resUrl = responseURL;
 
       if (shortUrl === resUrl && status >= 400) {
         return { data: null, url: null };

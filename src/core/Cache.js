@@ -255,7 +255,7 @@ export default Cache = (function () {
         const req = db
           .transaction("Cache", "readwrite")
           .objectStore("Cache")
-          .delete(url);
+          .delete(this.key);
         await indexedDBRequestToPromise(req);
       } catch (e) {
         app.log("error", "Cache::delete: トランザクション中断");

@@ -4,6 +4,7 @@ import { URL } from "./URL";
 export default class BrowserBookmarkEntryList extends SyncableEntryList {
   private rootNodeId = "";
   private readonly nodeIdStore = new Map<string, string>();
+  private loadFromBrowserBookmarkPromise: Promise<boolean> | null = null;
   readonly ready = new app.Callbacks();
   readonly needReconfigureRootNodeId = new app.Callbacks({ persistent: true });
 
@@ -96,15 +97,22 @@ export default class BrowserBookmarkEntryList extends SyncableEntryList {
     entry.title = node.title;
 
     // 既に同一URLのEntryが存在する場合、
-    if (this.get(entry.url)) {
-      // addによりcreateBrowserBookmarkが呼ばれた場合
-      if (!this.nodeIdStore.has(entry.url)) {
+    const currentEntry = this.get(entry.url);
+    if (currentEntry) {
+      const currentId = this.nodeIdStore.get(entry.url);
+      // addによりcreateBrowserBookmarkが呼ばれた場合、もしくは重複ノードが存在する場合
+      if (currentId === undefined) {
         this.nodeIdStore.set(entry.url, node.id);
-      } else if (newerEntry(entry, this.get(entry.url)) === entry) {
+      } else if (currentId === node.id) {
+        // 同じノードの場合は更新のみ（loadFromBrowserBookmarkから呼ばれた場合など）
+        if (newerEntry(entry, currentEntry) === entry) {
+          this.update(entry, false);
+        }
+      } else if (newerEntry(entry, currentEntry) === entry) {
         // node側の方が新しいと判定された場合のみupdateを行う。
 
         // 重複ブックマークの削除(元のnodeが古いと判定されたため)
-        browser.bookmarks.remove(this.nodeIdStore.get(entry.url)!);
+        browser.bookmarks.remove(currentId);
 
         this.nodeIdStore.set(entry.url, node.id);
         this.update(entry, false);
@@ -239,14 +247,28 @@ export default class BrowserBookmarkEntryList extends SyncableEntryList {
   }
 
   private async loadFromBrowserBookmark(): Promise<boolean> {
-    // EntryListクリア
-    for (const entry of this.getAll()) {
-      this.remove(entry.url, false);
+    if (this.loadFromBrowserBookmarkPromise) {
+      return this.loadFromBrowserBookmarkPromise;
     }
 
-    // ロード
-    try {
-      const res = await browser.bookmarks.getChildren(this.rootNodeId);
+    this.loadFromBrowserBookmarkPromise = (async () => {
+      // ロード
+      let res: browser.bookmarks.BookmarkTreeNode[];
+      try {
+        res = await browser.bookmarks.getChildren(this.rootNodeId);
+      } catch {
+        app.log("warn", "ブラウザのブックマークからの読み込みに失敗しました。");
+        this.validateRootNodeSettings();
+        this.loadFromBrowserBookmarkPromise = null;
+
+        return false;
+      }
+
+      // EntryListクリア
+      for (const entry of this.getAll()) {
+        this.remove(entry.url, false);
+      }
+      this.nodeIdStore.clear();
 
       for (const node of res) {
         this.applyNodeAddToEntryList(node);
@@ -256,13 +278,11 @@ export default class BrowserBookmarkEntryList extends SyncableEntryList {
         this.ready.call();
       }
 
+      this.loadFromBrowserBookmarkPromise = null;
       return true;
-    } catch {
-      app.log("warn", "ブラウザのブックマークからの読み込みに失敗しました。");
-      this.validateRootNodeSettings();
+    })();
 
-      return false;
-    }
+    return this.loadFromBrowserBookmarkPromise;
   }
 
   private async createBrowserBookmark(entry: Entry): Promise<boolean> {

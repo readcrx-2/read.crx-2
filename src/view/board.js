@@ -59,6 +59,7 @@ app.boot("/view/board.html", ["Board"], function (Board) {
       "5ch.io",
       "shitaraba.net",
       "bbspink.com",
+      "bbspink.org",
       "2ch.sc",
       "open2ch.net",
     ].includes(needle))

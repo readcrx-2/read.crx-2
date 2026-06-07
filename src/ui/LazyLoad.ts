@@ -1,4 +1,3 @@
-// @ts-expect-error: JS import
 import { fadeIn } from "./Animate.js";
 
 type HTMLAudioVisualElement =

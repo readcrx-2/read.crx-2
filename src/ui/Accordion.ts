@@ -1,4 +1,3 @@
-// @ts-expect-error: JS import
 import { slideDown, slideUp } from "./Animate.js";
 
 export default class Accordion {

@@ -1,4 +1,3 @@
-// @ts-expect-error: JS import
 import { fadeIn, fadeOut } from "./Animate.js";
 
 export default class SearchNextThread {

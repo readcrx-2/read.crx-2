@@ -1,7 +1,5 @@
 import { Request } from "./HTTP";
-// @ts-expect-error: JS import
 import { fetch as fetchBBSMenu } from "./BBSMenu.js";
-// @ts-expect-error: JS import
 import Cache from "./Cache.js";
 
 export interface GuessResult {

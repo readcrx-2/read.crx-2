@@ -342,7 +342,7 @@ export var clearRange = async function (day) {
     );
   } catch (error) {
     app.log("error", "WriteHistory.clearRange: トランザクション中断");
-    throw new Error(e);
+    throw new Error(error);
   }
 };
 

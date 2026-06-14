@@ -517,38 +517,32 @@ app.main = function () {
           url: "config",
           modal: true,
         };
-        break;
       case "history":
         return {
           src: "/view/history.html",
           url: "history",
         };
-        break;
       case "writehistory":
         return {
           src: "/view/writehistory.html",
           url: "writehistory",
         };
-        break;
       case "bookmark":
         return {
           src: "/view/bookmark.html",
           url: "bookmark",
         };
-        break;
       case "inputurl":
         return {
           src: "/view/inputurl.html",
           url: "inputurl",
         };
-        break;
       case "bookmark_source_selector":
         return {
           src: "/view/bookmark_source_selector.html",
           url: "bookmark_source_selector",
           modal: true,
         };
-        break;
     }
     if ((res = /^search:(.+)$/.exec(url))) {
       let left;

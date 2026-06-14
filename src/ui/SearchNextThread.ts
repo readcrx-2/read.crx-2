@@ -1,4 +1,3 @@
-// @ts-ignore
 import { fadeIn, fadeOut } from "./Animate.js";
 
 export default class SearchNextThread {

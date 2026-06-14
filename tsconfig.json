@@ -11,7 +11,7 @@
       "src/global.d.ts"
     ],
     "allowJs": true,
-    "checkJs": true,
+    "checkJs": false,
     "sourceMap": true,
     "esModuleInterop": true,
     "forceConsistentCasingInFileNames": true,

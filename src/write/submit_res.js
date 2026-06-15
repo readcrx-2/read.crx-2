@@ -133,11 +133,13 @@ class SubmitRes extends Write {
           },
         };
       } else {
+        // eddibb
+        const submit = hostname === "bbs.eddibb.cc" ? "書き込む" : "書きこむ";
         return {
           action: `${protocol}//${hostname}/test/bbs.cgi`,
           charset: "Shift_JIS",
           input: {
-            submit: "書きこむ",
+            submit,
             time: Math.floor(Date.now() / 1000) - 60,
             bbs: splittedUrl[3],
             key: splittedUrl[4],

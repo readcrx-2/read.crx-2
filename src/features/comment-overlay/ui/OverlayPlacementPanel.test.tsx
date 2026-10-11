@@ -22,7 +22,7 @@ function createPlatform(targetId: string | null): {
     },
     getMonitors: vi.fn().mockResolvedValue([
       {
-        id: "main",
+        id: "monitor-1",
         name: "メインモニター",
         x: 0,
         y: 0,
@@ -30,7 +30,17 @@ function createPlatform(targetId: string | null): {
         height: 1080,
         scaleFactor: 1,
       },
+      {
+        id: "monitor-2",
+        name: "サブモニター",
+        x: 1920,
+        y: 0,
+        width: 2560,
+        height: 1440,
+        scaleFactor: 1,
+      },
     ]),
+    getHostMonitorId: vi.fn().mockResolvedValue("monitor-1"),
     getGeometry: vi.fn().mockResolvedValue({ x: 100, y: 100, width: 800, height: 600 }),
     watchGeometry: vi.fn().mockResolvedValue(() => {}),
     setGeometry: vi.fn().mockResolvedValue(undefined),
@@ -76,5 +86,18 @@ describe("OverlayPlacementPanel", () => {
     expect(screen.getByLabelText("追従先ウィンドウ")).toHaveValue("");
     expect(screen.queryByRole("checkbox", { name: /縦横比を固定/ })).toBeNull();
     expect(setTarget).not.toHaveBeenCalled();
+  });
+
+  it("最初はOverlayの位置ではなく、ChLensのあるモニターをプレビューする", async () => {
+    const { platform } = createPlatform(null);
+    // Overlay（100, 100）はメインモニターにあるが、ChLensはサブモニターにある。
+    platform.getHostMonitorId = vi.fn().mockResolvedValue("monitor-2");
+    render(<OverlayPlacementPanel platform={platform} />);
+
+    await waitFor(() =>
+      expect(screen.getByRole("img", { name: "サブモニターのプレビュー" })).toBeInTheDocument(),
+    );
+    fireEvent.click(screen.getByRole("button", { name: "前のディスプレイをプレビュー" }));
+    expect(screen.getByRole("img", { name: "メインモニターのプレビュー" })).toBeInTheDocument();
   });
 });

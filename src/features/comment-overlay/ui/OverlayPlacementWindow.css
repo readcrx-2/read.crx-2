@@ -4,55 +4,35 @@
   color: var(--sys-color-text);
 }
 
-/* 別窓のbodyはスクロールを止めているため、窓の高さを超えた分はこの中でスクロールする。 */
+/*
+ * 変更理由: プレビューを幅いっぱいに描くと、窓の高さを超えてスクロールが出ていた。
+ * 窓の高さを固定した縦並びにし、余った高さの中へプレビューを縮めて収める。
+ */
 .overlay-placement-window {
-  display: grid;
-  align-content: start;
-  gap: var(--sys-space-5);
-  height: 100vh;
-  overflow-y: auto;
-  padding: var(--sys-space-8);
-  box-sizing: border-box;
-}
-
-.overlay-placement-window__header {
   display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: var(--sys-space-4);
-}
-
-.overlay-placement-window__header h1 {
-  margin: 0;
-  font-size: var(--sys-font-size-lg);
-}
-
-.overlay-placement-window__header button,
-.overlay-placement__mode label {
-  font: inherit;
-}
-
-.overlay-placement-window__header button {
-  padding: var(--sys-space-2) var(--sys-space-5);
-  color: var(--sys-color-text);
-  background: var(--sys-color-surface-muted);
-  border: var(--sys-border-width-thin) solid var(--sys-color-border);
-  border-radius: var(--sys-radius-sm);
-  cursor: pointer;
+  flex-direction: column;
+  height: 100vh;
+  padding: var(--sys-space-6) var(--sys-space-8);
+  box-sizing: border-box;
+  overflow: hidden;
 }
 
 .overlay-placement {
-  display: grid;
+  display: flex;
+  flex: 1;
+  flex-direction: column;
   gap: var(--sys-space-5);
+  min-height: 0;
 }
 
 .overlay-placement__mode {
   display: flex;
+  flex: none;
   flex-wrap: wrap;
   align-items: center;
   gap: var(--sys-space-6);
   margin: 0;
-  padding: var(--sys-space-4) var(--sys-space-6);
+  padding: var(--sys-space-3) var(--sys-space-6) var(--sys-space-4);
   border: var(--sys-border-width-thin) solid var(--sys-color-border);
   border-radius: var(--sys-radius-md);
 }
@@ -67,11 +47,45 @@
   display: flex;
   align-items: center;
   gap: var(--sys-space-2);
+  font: inherit;
   cursor: pointer;
 }
 
 /* 別窓自体が面と余白を持つので、パネル側の背景と内側余白は重ねない。 */
 .overlay-placement .overlay-control-panel {
+  flex: none;
   padding: 0;
   background: transparent;
+}
+
+/* 表示領域パネルだけを伸縮させ、残りの高さをプレビューへ割り当てる。 */
+.overlay-placement > .overlay-control-panel:not(.overlay-window-attachment) {
+  display: flex;
+  flex: 1;
+  flex-direction: column;
+  min-height: 0;
+}
+
+.overlay-placement .overlay-control-panel__desktop-frame {
+  display: flex;
+  flex: 1;
+  align-items: center;
+  justify-content: center;
+  min-height: 120px;
+  container-type: size;
+}
+
+/* 枠の幅と高さの両方に収まる最大サイズを、モニターの縦横比を保って選ぶ。 */
+.overlay-placement .overlay-control-panel__desktop {
+  width: min(100cqw, 100cqh * var(--overlay-preview-ratio));
+  height: auto;
+  /* 枠線を含めて枠内に収め、1px分のはみ出しでスクロールを出さない。 */
+  box-sizing: border-box;
+}
+
+/* プレビュー以外の行は縮めず、高さが足りないときはプレビューだけを小さくする。 */
+.overlay-placement
+  > .overlay-control-panel:not(.overlay-window-attachment)
+  > :not(.overlay-control-panel__desktop-frame) {
+  flex-shrink: 0;
 }

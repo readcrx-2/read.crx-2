@@ -44,7 +44,7 @@ export function useOpenOverlayPlacementWindow(): OpenOverlayPlacementWindow {
 export const OverlayPlacementWindowProvider: React.FC<{ children: React.ReactNode }> = ({
   children,
 }) => {
-  const { root, open, close } = useAuxiliaryWindow(OVERLAY_PLACEMENT_WINDOW_OPTIONS);
+  const { root, open } = useAuxiliaryWindow(OVERLAY_PLACEMENT_WINDOW_OPTIONS);
   const theme = useTheme();
 
   // メイン窓でテーマを切り替えたときも、開いている調整窓の色を追従させる。
@@ -67,12 +67,7 @@ export const OverlayPlacementWindowProvider: React.FC<{ children: React.ReactNod
         createPortal(
           <ViewSurfaceProvider surface={viewSurface}>
             <main className="overlay-placement-window">
-              <header className="overlay-placement-window__header">
-                <h1>コメントの表示位置</h1>
-                <button type="button" onClick={close}>
-                  閉じる
-                </button>
-              </header>
+              {/* 窓のタイトルバーに名前と閉じる操作があるため、本文に見出しや閉じるボタンは置かない。 */}
               <OverlayPlacementPanel platform={commentOverlayWindowPlatform} />
             </main>
           </ViewSurfaceProvider>,

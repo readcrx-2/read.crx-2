@@ -1,6 +1,7 @@
 import "./OverlayControlPanel.css";
 
 import {
+  type CSSProperties,
   type MouseEvent as ReactMouseEvent,
   type PointerEvent as ReactPointerEvent,
   useEffect,
@@ -78,6 +79,8 @@ export interface OverlayControlPanelProps {
    * 縦横比固定と手動の範囲指定を受け付けず、実際の表示領域をそのまま示す。
    */
   readOnly?: boolean;
+  /** 利用者が画面を切り替えるまで、最初にプレビューするモニターのid。 */
+  initialMonitorId?: string | null;
 }
 
 function getMonitorBounds(monitor: CommentOverlayMonitor | null): DesktopBounds {
@@ -273,6 +276,7 @@ export function OverlayControlPanel({
   onGeometryChange,
   captureMonitorPreview,
   readOnly = false,
+  initialMonitorId = null,
 }: OverlayControlPanelProps) {
   // 変更理由: 追従中の表示領域は追従先ウィンドウの内側サイズで決まるため、16:9へ補正して
   // 表示すると実際の位置とずれる。閲覧専用の間は縦横比固定を適用しない。
@@ -293,6 +297,7 @@ export function OverlayControlPanel({
   // 操作対象を1画面へ限定し、その画面本来の縦横比でプレビューする。
   const previewMonitor =
     monitors.find((monitor) => monitor.id === previewMonitorId) ??
+    monitors.find((monitor) => monitor.id === initialMonitorId) ??
     geometryMonitor ??
     monitors[0] ??
     null;
@@ -554,125 +559,137 @@ export function OverlayControlPanel({
               </span>
             </div>
           )}
-          <svg
-            ref={svgRef}
-            className={`overlay-control-panel__desktop${
-              readOnly ? " overlay-control-panel__desktop--readonly" : ""
-            }`}
-            data-testid="overlay-control-panel-desktop"
-            viewBox={`${bounds.x} ${bounds.y} ${bounds.width} ${bounds.height}`}
-            preserveAspectRatio="xMidYMid meet"
-            style={{ aspectRatio: `${bounds.width} / ${bounds.height}` }}
-            role="img"
-            aria-label={`${previewMonitor?.name ?? "ディスプレイ"}のプレビュー`}
-            onPointerMove={updateDrag}
-            onPointerUp={finishDrag}
-            onPointerCancel={finishDrag}
-            onDoubleClick={(event) => {
-              if (previewMonitor) handleMonitorDoubleClick(event, previewMonitor);
-            }}
+          {/* 窓の高さに合わせてプレビューを縮められるよう、縦横比をCSSへ渡す枠で包む。 */}
+          <div
+            className="overlay-control-panel__desktop-frame"
+            style={
+              {
+                "--overlay-preview-ratio": String(bounds.width / bounds.height),
+              } as CSSProperties
+            }
           >
-            <rect
-              className="overlay-control-panel__desktop-background"
-              x={bounds.x}
-              y={bounds.y}
-              width={bounds.width}
-              height={bounds.height}
-              data-overlay-control-background="true"
-              onPointerDown={(event) => startDrag(event, "select")}
-            />
-            {previewMonitor && (
-              <g
-                className="overlay-control-panel__monitor overlay-control-panel__monitor--selected"
-                data-monitor-id={previewMonitor.id}
-              >
-                <rect
-                  x={previewMonitor.x}
-                  y={previewMonitor.y}
-                  width={previewMonitor.width}
-                  height={previewMonitor.height}
-                  className="overlay-control-panel__monitor-screen"
-                  onPointerDown={(event) => startDrag(event, "select")}
-                />
-                {currentPreview?.image ? (
-                  <image
-                    href={currentPreview.image}
-                    x={bounds.x}
-                    y={bounds.y}
-                    width={bounds.width}
-                    height={bounds.height}
-                    preserveAspectRatio="none"
-                    className="overlay-control-panel__screen-preview"
-                    onPointerDown={(event) => startDrag(event, "select")}
-                    onError={() => {
-                      console.error("[ChLens] ディスプレイのプレビュー画像を表示できませんでした");
-                      setScreenPreview((current) =>
-                        current ? { ...current, image: null, error: true } : null,
-                      );
-                    }}
-                  />
-                ) : (
-                  <text
-                    x={previewMonitor.x + previewMonitor.width / 2}
-                    y={previewMonitor.y + previewMonitor.height / 2}
-                    className="overlay-control-panel__monitor-label"
-                    textAnchor="middle"
-                    dominantBaseline="middle"
-                  >
-                    {previewMonitor.name}
-                  </text>
-                )}
-              </g>
-            )}
-            {displayedGeometry && (
+            <svg
+              ref={svgRef}
+              className={`overlay-control-panel__desktop${
+                readOnly ? " overlay-control-panel__desktop--readonly" : ""
+              }`}
+              data-testid="overlay-control-panel-desktop"
+              viewBox={`${bounds.x} ${bounds.y} ${bounds.width} ${bounds.height}`}
+              preserveAspectRatio="xMidYMid meet"
+              style={{ aspectRatio: `${bounds.width} / ${bounds.height}` }}
+              role="img"
+              aria-label={`${previewMonitor?.name ?? "ディスプレイ"}のプレビュー`}
+              onPointerMove={updateDrag}
+              onPointerUp={finishDrag}
+              onPointerCancel={finishDrag}
+              onDoubleClick={(event) => {
+                if (previewMonitor) handleMonitorDoubleClick(event, previewMonitor);
+              }}
+            >
               <rect
-                className="overlay-control-panel__selection"
-                data-testid="overlay-control-panel-selection"
-                x={displayedGeometry.x}
-                y={displayedGeometry.y}
-                width={displayedGeometry.width}
-                height={displayedGeometry.height}
-                onPointerDown={(event) => startDrag(event, "move")}
+                className="overlay-control-panel__desktop-background"
+                x={bounds.x}
+                y={bounds.y}
+                width={bounds.width}
+                height={bounds.height}
+                data-overlay-control-background="true"
+                onPointerDown={(event) => startDrag(event, "select")}
               />
-            )}
-            {displayedGeometry &&
-              !readOnly &&
-              RESIZE_HANDLES.map(({ direction, cursor }) => {
-                const x = direction.includes("West")
-                  ? displayedGeometry.x
-                  : direction.includes("East")
-                    ? displayedGeometry.x + displayedGeometry.width
-                    : displayedGeometry.x + displayedGeometry.width / 2;
-                const y = direction.includes("North")
-                  ? displayedGeometry.y
-                  : direction.includes("South")
-                    ? displayedGeometry.y + displayedGeometry.height
-                    : displayedGeometry.y + displayedGeometry.height / 2;
-                return (
-                  <g key={direction}>
-                    {/* 縮小表示でもクリック領域を画面上の太さで確保し、細い枠を狙わせない。 */}
-                    <rect
-                      className="overlay-control-panel__handle-target"
-                      style={{ cursor }}
-                      x={x - Math.max(8, bounds.width * 0.006)}
-                      y={y - Math.max(8, bounds.height * 0.012)}
-                      width={Math.max(16, bounds.width * 0.012)}
-                      height={Math.max(16, bounds.height * 0.024)}
-                      aria-label={`${direction}方向へリサイズ`}
-                      onPointerDown={(event) => startDrag(event, "resize", direction)}
+              {previewMonitor && (
+                <g
+                  className="overlay-control-panel__monitor overlay-control-panel__monitor--selected"
+                  data-monitor-id={previewMonitor.id}
+                >
+                  <rect
+                    x={previewMonitor.x}
+                    y={previewMonitor.y}
+                    width={previewMonitor.width}
+                    height={previewMonitor.height}
+                    className="overlay-control-panel__monitor-screen"
+                    onPointerDown={(event) => startDrag(event, "select")}
+                  />
+                  {currentPreview?.image ? (
+                    <image
+                      href={currentPreview.image}
+                      x={bounds.x}
+                      y={bounds.y}
+                      width={bounds.width}
+                      height={bounds.height}
+                      preserveAspectRatio="none"
+                      className="overlay-control-panel__screen-preview"
+                      onPointerDown={(event) => startDrag(event, "select")}
+                      onError={() => {
+                        console.error(
+                          "[ChLens] ディスプレイのプレビュー画像を表示できませんでした",
+                        );
+                        setScreenPreview((current) =>
+                          current ? { ...current, image: null, error: true } : null,
+                        );
+                      }}
                     />
-                    <rect
-                      className="overlay-control-panel__handle"
-                      x={x}
-                      y={y}
-                      width={0.01}
-                      height={0.01}
-                      aria-hidden="true"
-                    />
-                  </g>
-                );
-              })}
-          </svg>
+                  ) : (
+                    <text
+                      x={previewMonitor.x + previewMonitor.width / 2}
+                      y={previewMonitor.y + previewMonitor.height / 2}
+                      className="overlay-control-panel__monitor-label"
+                      textAnchor="middle"
+                      dominantBaseline="middle"
+                    >
+                      {previewMonitor.name}
+                    </text>
+                  )}
+                </g>
+              )}
+              {displayedGeometry && (
+                <rect
+                  className="overlay-control-panel__selection"
+                  data-testid="overlay-control-panel-selection"
+                  x={displayedGeometry.x}
+                  y={displayedGeometry.y}
+                  width={displayedGeometry.width}
+                  height={displayedGeometry.height}
+                  onPointerDown={(event) => startDrag(event, "move")}
+                />
+              )}
+              {displayedGeometry &&
+                !readOnly &&
+                RESIZE_HANDLES.map(({ direction, cursor }) => {
+                  const x = direction.includes("West")
+                    ? displayedGeometry.x
+                    : direction.includes("East")
+                      ? displayedGeometry.x + displayedGeometry.width
+                      : displayedGeometry.x + displayedGeometry.width / 2;
+                  const y = direction.includes("North")
+                    ? displayedGeometry.y
+                    : direction.includes("South")
+                      ? displayedGeometry.y + displayedGeometry.height
+                      : displayedGeometry.y + displayedGeometry.height / 2;
+                  return (
+                    <g key={direction}>
+                      {/* 縮小表示でもクリック領域を画面上の太さで確保し、細い枠を狙わせない。 */}
+                      <rect
+                        className="overlay-control-panel__handle-target"
+                        style={{ cursor }}
+                        x={x - Math.max(8, bounds.width * 0.006)}
+                        y={y - Math.max(8, bounds.height * 0.012)}
+                        width={Math.max(16, bounds.width * 0.012)}
+                        height={Math.max(16, bounds.height * 0.024)}
+                        aria-label={`${direction}方向へリサイズ`}
+                        onPointerDown={(event) => startDrag(event, "resize", direction)}
+                      />
+                      <rect
+                        className="overlay-control-panel__handle"
+                        x={x}
+                        y={y}
+                        width={0.01}
+                        height={0.01}
+                        aria-hidden="true"
+                      />
+                    </g>
+                  );
+                })}
+            </svg>
+          </div>
           {!readOnly && (
             <div className="overlay-control-panel__help">
               <span>ドラッグ: 範囲指定 / 移動</span>

@@ -2,6 +2,7 @@ import { invoke } from "@tauri-apps/api/core";
 import { emit, listen } from "@tauri-apps/api/event";
 import {
   availableMonitors,
+  currentMonitor,
   LogicalPosition,
   LogicalSize,
   PhysicalPosition,
@@ -278,6 +279,18 @@ export function createTauriCommentOverlayPlatform(): CommentOverlayWindowPlatfor
     },
     async getMonitors() {
       return readCommentOverlayMonitors();
+    },
+    async getHostMonitorId() {
+      // 変更理由: 調整窓を開いた直後に、ChLensを表示している画面をプレビューしたい。
+      // 座標の比較はDPI倍率の違いでずれるため、native側が判定したモニターを使い、
+      // getMonitorsと同じ並び順のidへ対応付ける。
+      const [monitors, current] = await Promise.all([availableMonitors(), currentMonitor()]);
+      if (!current) return null;
+      const index = monitors.findIndex(
+        (monitor) =>
+          monitor.position.x === current.position.x && monitor.position.y === current.position.y,
+      );
+      return index < 0 ? null : `monitor-${index + 1}`;
     },
     async captureMonitorPreview(monitor) {
       // nativeの物理座標を使い、負座標や画面ごとのDPI倍率も実際の撮影先へ反映する。

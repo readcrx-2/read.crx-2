@@ -30,6 +30,7 @@ export const OverlayPlacementPanel: React.FC<OverlayPlacementPanelProps> = ({ pl
   const [isModeChanging, setIsModeChanging] = useState(false);
   const [monitors, setMonitors] = useState<readonly CommentOverlayMonitor[]>([]);
   const [geometry, setGeometry] = useState<CommentOverlayGeometry | null>(null);
+  const [hostMonitorId, setHostMonitorId] = useState<string | null>(null);
   const { value: lockAspectRatio, setValue: setLockAspectRatio } = useConfigBooleanSetting(
     "comment_overlay_lock_aspect_ratio",
   );
@@ -39,11 +40,20 @@ export const OverlayPlacementPanel: React.FC<OverlayPlacementPanelProps> = ({ pl
     // 変更理由: Overlayは表示専用に固定したため、実モニターと現在geometryを
     // 調整窓を開いた時だけ取得し、Overlay側の再計測を発生させない。
     let disposed = false;
-    void Promise.all([platform.getMonitors(), platform.getGeometry()])
-      .then(([nextMonitors, nextGeometry]) => {
+    // ChLensのあるモニターが判定できなくても調整はできるため、失敗はログに残して続ける。
+    const hostMonitorRequest = (platform.getHostMonitorId?.() ?? Promise.resolve(null)).catch(
+      (error: unknown) => {
+        console.error("[ChLens] ChLensを表示しているモニターの判定に失敗しました:", error);
+        return null;
+      },
+    );
+    void Promise.all([platform.getMonitors(), platform.getGeometry(), hostMonitorRequest])
+      .then(([nextMonitors, nextGeometry, nextHostMonitorId]) => {
         if (disposed) return;
+        // 別画面を一瞬表示してから切り替わらないよう、モニター一覧と同時に反映する。
         setMonitors(nextMonitors);
         setGeometry(nextGeometry);
+        setHostMonitorId(nextHostMonitorId);
       })
       .catch((error: unknown) => {
         console.error("[ChLens] コメントOverlay表示位置の初期化に失敗しました:", error);
@@ -155,6 +165,7 @@ export const OverlayPlacementPanel: React.FC<OverlayPlacementPanelProps> = ({ pl
         onGeometryChange={handleGeometryChange}
         captureMonitorPreview={platform.captureMonitorPreview}
         readOnly={isFollowing}
+        initialMonitorId={hostMonitorId}
       />
     </div>
   );

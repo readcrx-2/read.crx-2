@@ -50,6 +50,8 @@ describe("useTheme", () => {
   afterEach(() => {
     vi.unstubAllGlobals();
     vi.restoreAllMocks();
+    document.documentElement.removeAttribute("data-theme");
+    document.querySelector('meta[name="color-scheme"]')?.remove();
   });
 
   it("設定の非同期読み込み完了後に保存済みのダークテーマを反映する", () => {
@@ -66,5 +68,24 @@ describe("useTheme", () => {
     });
 
     expect(result.current).toBe("dark");
+  });
+
+  it("ライトへ変更したら起動時のルート配色も更新する", () => {
+    mocks.configGet.mockReturnValue("dark");
+    const meta = document.createElement("meta");
+    meta.name = "color-scheme";
+    meta.content = "dark";
+    document.head.append(meta);
+    const { result } = renderHook(() => useTheme());
+    expect(document.documentElement.dataset.theme).toBe("dark");
+
+    const handleConfigUpdated = mocks.messageOn.mock.calls.find(
+      ([type]) => type === "config_updated",
+    )?.[1] as (event: { key: string; val: string }) => void;
+    act(() => handleConfigUpdated({ key: "theme_id", val: "default" }));
+
+    expect(result.current).toBe("light");
+    expect(document.documentElement.dataset.theme).toBe("light");
+    expect(meta.content).toBe("light");
   });
 });

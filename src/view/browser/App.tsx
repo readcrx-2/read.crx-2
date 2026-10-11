@@ -232,6 +232,22 @@ const BrowserAppContent: React.FC = () => {
   useNotificationListener();
   const { isAnyExpanded: isUrlBarExpanded } = useUrlBarVisibility();
 
+  useEffect(() => {
+    if (!/^(?:chrome|moz)-extension:$/.test(location.protocol)) return;
+
+    // 新規タブは裏で読み込み、テーマとシェルの準備後に背景側から選択して白い初期画面を避ける。
+    // 拡張ページからの通知ではsender.tabが省略される場合があるため、タブIDを明示する。
+    void browser.tabs
+      .getCurrent()
+      .then(async (tab) => {
+        if (tab?.id === undefined) return;
+        await browser.runtime.sendMessage({ type: "viewer-ready", tabId: tab.id });
+      })
+      .catch((error: unknown) => {
+        console.error("[ChLens] ビューアーの起動準備完了を通知できませんでした", error);
+      });
+  }, []);
+
   // 変更理由: URL解決用のサーバー対応表は板一覧から更新し、画面の操作中は同期参照できるようにする。
   // 前回セッションの localStorage キャッシュがあるため、ここでの取得は
   // 次回以降の起動に備えた更新も兼ねる。

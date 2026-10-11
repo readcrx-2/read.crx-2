@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useEffect, useLayoutEffect, useState } from "react";
 import { useViewSurface } from "src/features/auxiliary-window/browser/use-view-surface";
 import { container } from "src/service-container/index";
 
@@ -45,6 +45,13 @@ export function useTheme(): ResolvedTheme {
     if (id === "system") return resolveSystemTheme(viewWindow);
     return "light";
   });
+
+  useLayoutEffect(() => {
+    // 起動時のルート配色も追従させないと、ライトへ戻してもダーク用トークンが継承される。
+    const viewDocument = viewWindow.document;
+    viewDocument.documentElement.setAttribute("data-theme", resolved);
+    viewDocument.querySelector('meta[name="color-scheme"]')?.setAttribute("content", resolved);
+  }, [resolved, viewWindow]);
 
   useEffect(() => {
     if (themeId === "dark") {

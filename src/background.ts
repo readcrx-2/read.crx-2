@@ -1,5 +1,6 @@
 import browser from "webextension-polyfill";
 
+import { createReadyViewerTab } from "./app/platform/browser/ready-viewer-tab";
 import { startMcpWorker } from "./mcp/worker-bridge";
 
 const NEW_UI_URL_PREFIX = browser.runtime.getURL("view/index.html");
@@ -44,7 +45,7 @@ const focusTabById = async (tabId: number): Promise<void> => {
 // 指定されたウィンドウID、または現在のウィンドウにタブを作成
 const createTabInWindow = async (url: string, windowId?: number): Promise<browser.Tabs.Tab> => {
   const targetWindowId = windowId ?? (await browser.windows.getCurrent()).id;
-  return browser.tabs.create({ url, active: true, windowId: targetWindowId });
+  return createReadyViewerTab(url, targetWindowId);
 };
 
 // URLを開く、または既存のタブを更新してフォーカスする（唯一の入り口）

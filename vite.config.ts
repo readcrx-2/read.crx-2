@@ -79,7 +79,8 @@ function browserHtmlPlugin(outputDir: string, entry: string, platform: string): 
         platform === "tauri"
           ? '<link rel="stylesheet" href="/lib/monaco/vs/editor/editor.main.css">'
           : "";
-      const html = `<!DOCTYPE html><html class="view view_browser" data-app-version="${version}"><head><meta charset="utf-8"><meta name="referrer" content="strict-origin-when-cross-origin"><title>read.crx-2</title><script src="../theme-init.js"></script><script src="../browser.js?v=${version}" defer></script><link rel="stylesheet" href="/browser.css?v=${version}">${monacoStyle}</head><body><div id="root"></div></body></html>`;
+      // CSSやテーマスクリプトの取得待ちにも、ブラウザの初期背景をOSの配色へ合わせる。
+      const html = `<!DOCTYPE html><html class="view view_browser" data-app-version="${version}"><head><meta charset="utf-8"><meta name="color-scheme" content="light dark"><meta name="referrer" content="strict-origin-when-cross-origin"><title>read.crx-2</title><script src="../theme-init.js"></script><script src="../browser.js?v=${version}" defer></script><link rel="stylesheet" href="/browser.css?v=${version}">${monacoStyle}</head><body><div id="root"></div></body></html>`;
 
       const outputFile = path.join(outputDir, "view", "index.html");
       await fs.ensureDir(path.dirname(outputFile));

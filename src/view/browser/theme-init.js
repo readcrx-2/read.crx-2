@@ -10,4 +10,7 @@ try {
 const prefersDark = window.matchMedia("(prefers-color-scheme: dark)").matches;
 const isDark = themeId === "dark" || ((themeId === "system" || themeId === null) && prefersDark);
 
-document.documentElement.dataset.theme = isDark ? "dark" : "light";
+const theme = isDark ? "dark" : "light";
+document.documentElement.dataset.theme = theme;
+// 属性だけではCSSの読み込みを待つため、ブラウザの初期背景にも保存済みの配色を指定する。
+document.querySelector('meta[name="color-scheme"]')?.setAttribute("content", theme);

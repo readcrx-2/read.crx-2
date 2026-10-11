@@ -45,6 +45,12 @@ vi.mock("src/features/comment-overlay/application/use-comment-overlay", () => ({
   }),
 }));
 
+// 表示位置ダイアログはTauriのモニターAPIに依存するため、開閉の受け渡しだけを確認する。
+vi.mock("src/features/comment-overlay/ui/OverlayPlacementDialog", () => ({
+  OverlayPlacementDialog: ({ open }: { open: boolean }) =>
+    open ? <div role="dialog" aria-label="コメントの表示位置" /> : null,
+}));
+
 import { CommentOverlayStatusItem } from "src/features/comment-overlay/ui/CommentOverlayStatusItem";
 
 function renderItem(): void {
@@ -207,5 +213,15 @@ describe("CommentOverlayStatusItem", () => {
     expect(screen.getByText("コメントOverlay")).toBeInTheDocument();
     expect(screen.getByText("コメントを画面に流す")).toBeInTheDocument();
     expect(screen.queryByText("Overlay表示")).toBeNull();
+  });
+
+  it("表示位置の調整は小窓を閉じてダイアログで開く", () => {
+    renderItem();
+
+    fireEvent.click(screen.getByRole("button", { name: /コメントOverlay制御/ }));
+    fireEvent.click(screen.getByRole("button", { name: "表示位置を調整…" }));
+
+    expect(screen.getByRole("dialog", { name: "コメントの表示位置" })).toBeInTheDocument();
+    expect(screen.queryByText("コメントを画面に流す")).toBeNull();
   });
 });

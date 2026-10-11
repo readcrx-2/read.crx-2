@@ -1,14 +1,8 @@
-import { AlertTriangle, MessagesCircle } from "lucide-react";
-import React, { useCallback, useEffect, useRef, useState } from "react";
+import { AlertTriangle, MessagesCircle, Move } from "lucide-react";
+import React, { useCallback, useRef, useState } from "react";
 import { isTauriRuntime } from "src/app/platform/runtime";
 import { useCommentOverlay } from "src/features/comment-overlay/application/use-comment-overlay";
-import {
-  type CommentOverlayGeometry,
-  type CommentOverlayMonitor,
-  commentOverlayWindowPlatform,
-} from "src/features/comment-overlay/platform";
-import { OverlayControlPanel } from "src/features/comment-overlay/ui/OverlayControlPanel";
-import { WindowAttachmentControl } from "src/features/comment-overlay/ui/WindowAttachmentControl";
+import { OverlayPlacementDialog } from "src/features/comment-overlay/ui/OverlayPlacementDialog";
 import { useTabStore } from "src/features/tabs/browser/use-tab-store";
 import { MiniWindow } from "src/view/browser/components/MiniWindow";
 import {
@@ -19,7 +13,6 @@ import {
 } from "src/view/browser/components/MiniWindowControls";
 import { STATUS_BAR_PRIORITY } from "src/view/browser/components/status-bar-priority";
 import { StatusBarItem } from "src/view/browser/components/StatusBar";
-import { useConfigBooleanSetting } from "src/view/browser/hooks/use-config-boolean-setting";
 import { useMiniWindowTrigger } from "src/view/browser/hooks/use-mini-window-trigger";
 
 interface CommentOverlayStatusItemProps {
@@ -30,15 +23,9 @@ interface CommentOverlayStatusItemProps {
 export const CommentOverlayStatusItem: React.FC<CommentOverlayStatusItemProps> = ({ isActive }) => {
   const { viewPage } = useTabStore();
   const { controller, snapshot } = useCommentOverlay();
-  const [isControlPanelOpen, setIsControlPanelOpen] = useState(false);
-  const [monitors, setMonitors] = useState<readonly CommentOverlayMonitor[]>([]);
-  const [panelGeometry, setPanelGeometry] = useState<CommentOverlayGeometry | null>(null);
+  const [isPlacementDialogOpen, setIsPlacementDialogOpen] = useState(false);
   const [isFlowChanging, setIsFlowChanging] = useState(false);
   const flowChangingRef = useRef(false);
-  const { value: lockAspectRatio, setValue: setLockAspectRatio } = useConfigBooleanSetting(
-    "comment_overlay_lock_aspect_ratio",
-  );
-  const panelWriteTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const isTauri = isTauriRuntime();
   const threadUrl = viewPage.type === "thread" ? viewPage.threadUrl : null;
   // 変更理由: 別スレッドへ移動した後に、直前のスレッド向け操作が開いたままに
@@ -49,44 +36,10 @@ export const CommentOverlayStatusItem: React.FC<CommentOverlayStatusItemProps> =
     toggle: toggleMiniWindow,
     close: closeMiniWindow,
   } = useMiniWindowTrigger(threadUrl);
-  const isWindowOpen = miniWindowAnchor != null;
 
   const isRunning = snapshot.state.status === "running";
   const isFlowing = isRunning && snapshot.visible;
   const errorLabel = snapshot.error == null ? null : `コメント実況エラー: ${snapshot.error}`;
-
-  useEffect(() => {
-    setIsControlPanelOpen(false);
-  }, [threadUrl]);
-
-  useEffect(() => {
-    if (!isWindowOpen || !isControlPanelOpen) return;
-    // 変更理由: Overlayは表示専用に固定したため、実モニターと現在geometryを
-    // Mainの操作パネルを開いた時だけ取得し、Overlay側の再計測を発生させない。
-    let disposed = false;
-    void Promise.all([
-      commentOverlayWindowPlatform.getMonitors(),
-      commentOverlayWindowPlatform.getGeometry(),
-    ])
-      .then(([nextMonitors, nextGeometry]) => {
-        if (disposed) return;
-        setMonitors(nextMonitors);
-        setPanelGeometry(nextGeometry);
-      })
-      .catch((error: unknown) => {
-        console.error("[ChLens] コメントOverlay操作パネルの初期化に失敗しました:", error);
-      });
-
-    return () => {
-      disposed = true;
-    };
-  }, [isControlPanelOpen, isWindowOpen]);
-
-  useEffect(() => {
-    return () => {
-      if (panelWriteTimerRef.current) clearTimeout(panelWriteTimerRef.current);
-    };
-  }, []);
 
   const handleFlowToggle = useCallback(() => {
     if (flowChangingRef.current || (!isRunning && !threadUrl)) return;
@@ -110,23 +63,11 @@ export const CommentOverlayStatusItem: React.FC<CommentOverlayStatusItemProps> =
       });
   }, [controller, isFlowing, isRunning, threadUrl]);
 
-  const handlePanelGeometryChange = useCallback((nextGeometry: CommentOverlayGeometry) => {
-    // 変更理由: ドラッグ中の連続座標を40ms単位へまとめ、表示の追従性とnative IPC量を両立する。
-    setPanelGeometry(nextGeometry);
-    if (panelWriteTimerRef.current) clearTimeout(panelWriteTimerRef.current);
-    panelWriteTimerRef.current = setTimeout(() => {
-      panelWriteTimerRef.current = null;
-      void commentOverlayWindowPlatform
-        .setGeometry(nextGeometry)
-        .then(() => commentOverlayWindowPlatform.saveGeometry(nextGeometry))
-        .catch((error: unknown) => {
-          console.error(
-            "[ChLens] コメントOverlay操作パネルからのgeometry反映に失敗しました:",
-            error,
-          );
-        });
-    }, 40);
-  }, []);
+  const openPlacementDialog = useCallback(() => {
+    // 小窓とモーダルを重ねず、調整中はダイアログだけに集中できるようにする。
+    closeMiniWindow();
+    setIsPlacementDialogOpen(true);
+  }, [closeMiniWindow]);
 
   if (!isTauri || !isActive || (threadUrl == null && !isRunning)) return null;
 
@@ -165,11 +106,10 @@ export const CommentOverlayStatusItem: React.FC<CommentOverlayStatusItemProps> =
 
       {miniWindowAnchor && (
         <MiniWindow
-          title={isControlPanelOpen ? "コメントOverlay表示領域" : "コメントOverlay"}
+          title="コメントOverlay"
           anchor={miniWindowAnchor}
           onClose={closeMiniWindow}
           triggerRef={miniWindowTriggerRef}
-          width={isControlPanelOpen ? 560 : 280}
         >
           <MiniWindowSection>
             <MiniWindowToggle
@@ -186,31 +126,11 @@ export const CommentOverlayStatusItem: React.FC<CommentOverlayStatusItemProps> =
           <MiniWindowSeparator />
 
           <MiniWindowSection>
-            <button
-              type="button"
-              className="mini-window__action-btn"
-              onClick={() => setIsControlPanelOpen((current) => !current)}
-            >
-              {isControlPanelOpen ? "表示領域パネルを閉じる" : "表示領域を調整"}
+            <button type="button" className="mini-window__action-btn" onClick={openPlacementDialog}>
+              <Move size={14} aria-hidden="true" />
+              <span>表示位置を調整…</span>
             </button>
           </MiniWindowSection>
-
-          {isControlPanelOpen && (
-            <>
-              <MiniWindowSeparator />
-              {commentOverlayWindowPlatform.attachment && (
-                <WindowAttachmentControl attachment={commentOverlayWindowPlatform.attachment} />
-              )}
-              <OverlayControlPanel
-                monitors={monitors}
-                geometry={panelGeometry}
-                lockAspectRatio={lockAspectRatio}
-                onLockAspectRatioChange={setLockAspectRatio}
-                onGeometryChange={handlePanelGeometryChange}
-                captureMonitorPreview={commentOverlayWindowPlatform.captureMonitorPreview}
-              />
-            </>
-          )}
 
           {errorLabel && (
             <>
@@ -222,6 +142,11 @@ export const CommentOverlayStatusItem: React.FC<CommentOverlayStatusItemProps> =
           )}
         </MiniWindow>
       )}
+
+      <OverlayPlacementDialog
+        open={isPlacementDialogOpen}
+        onOpenChange={setIsPlacementDialogOpen}
+      />
     </>
   );
 };

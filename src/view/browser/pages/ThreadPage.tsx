@@ -208,6 +208,7 @@ export const ThreadPage: React.FC<ThreadPageProps> = ({
     // 変更理由: Overlay対象のタブを画面上で隠しても、新着snapshotの共有を続けて
     // コメント表示を止めない。未開始スレッドのsnapshot保持はフォーカス中だけでよい。
     isActive: isOverlayTarget || isCommentOverlayTarget,
+    isAutoRefreshEnabled,
     ownResponseNumbers: ownResNums,
   });
 

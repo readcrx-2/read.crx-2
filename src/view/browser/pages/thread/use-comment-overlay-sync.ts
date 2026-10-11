@@ -1,14 +1,18 @@
-import { useEffect } from "react";
+import { useEffect, useRef } from "react";
 import type { CommentOverlayController } from "src/features/comment-overlay/application/controller";
 import type { IRes } from "src/service-container/interfaces";
 
-type CommentOverlaySyncController = Pick<CommentOverlayController, "syncThread">;
+type CommentOverlaySyncController = Pick<
+  CommentOverlayController,
+  "syncThread" | "getSnapshot" | "stop"
+>;
 
 interface UseCommentOverlaySyncOptions {
   controller: CommentOverlaySyncController;
   threadUrl: string;
   responses: readonly IRes[];
   isActive: boolean;
+  isAutoRefreshEnabled: boolean;
   ownResponseNumbers?: ReadonlySet<number>;
 }
 
@@ -18,8 +22,26 @@ export function useCommentOverlaySync({
   threadUrl,
   responses,
   isActive,
+  isAutoRefreshEnabled,
   ownResponseNumbers,
 }: UseCommentOverlaySyncOptions): void {
+  const previousRefreshRef = useRef({ threadUrl, enabled: isAutoRefreshEnabled });
+
+  useEffect(() => {
+    const previous = previousRefreshRef.current;
+    previousRefreshRef.current = { threadUrl, enabled: isAutoRefreshEnabled };
+    if (previous.threadUrl !== threadUrl || !previous.enabled || isAutoRefreshEnabled) return;
+
+    const { state } = controller.getSnapshot();
+    if (state.status !== "running" || state.targetThreadUrl !== threadUrl) return;
+
+    // 自動更新のOFFをどのUIから操作しても実況を止める。初期OFFや別スレへの移動では
+    // 停止せず、非表示タブでも実況対象スレッドのONからOFFへの変化だけを扱う。
+    void controller.stop().catch((error: unknown) => {
+      console.error("[ChLens] 自動更新停止に伴うコメント実況の停止に失敗しました:", error);
+    });
+  }, [controller, isAutoRefreshEnabled, threadUrl]);
+
   useEffect(() => {
     if (!isActive) return;
 

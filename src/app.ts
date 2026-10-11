@@ -1,9 +1,10 @@
 import "webextension-polyfill";
 
+import { bootView } from "src/app/boot";
 ///<reference path="global.d" />
 import * as platformInternal from "src/app/platform";
 import { config, configInstance as _config } from "src/service-container/config-instance";
-import { getBookmarkRuntime, setupContainer } from "src/service-container/setup";
+import { getBookmarkRuntime } from "src/service-container/setup";
 
 export * from "./app/BrowserDetect";
 export { default as Callbacks } from "./app/Callbacks";
@@ -136,27 +137,8 @@ export {
   WriteHistory,
 };
 
-export const manifest = (async () => {
-  // ブラウザ拡張の環境では拡張マニフェストを取得するが、
-  // Tauriやローカル実行など拡張APIが無い環境では失敗させず
-  // フォールバックでHTML側のバージョン情報を返す。
-  if (!/^(?:chrome|moz)-extension:$/.test(location.protocol)) {
-    try {
-      const response = await fetch("/manifest.json");
-      return await response.json();
-    } catch {
-      return { version: document.documentElement.dataset.appVersion || "" };
-    }
-  }
-
-  try {
-    const response = await fetch("/manifest.json");
-    return await response.json();
-  } catch (e) {
-    console.error("manifest.json fetch failed:", e);
-    return { version: document.documentElement.dataset.appVersion || "" };
-  }
-})();
+// 起動処理は過去実況窓とも共有するため、旧互換のwindow.appから切り離したbootViewへまとめた。
+export { manifest } from "src/app/boot";
 
 type BootCallback = (...modules: unknown[]) => void;
 type BootRequirements = BootCallback | string[] | null;
@@ -171,55 +153,30 @@ export async function boot(
   if (callback == null && typeof requirements === "function") {
     callback = requirements;
   }
-
-  // Chromeがiframeのsrcと無関係な内容を読み込むバグへの対応
-  if (frameElement && (<HTMLIFrameElement>frameElement).src !== location.href) {
-    location.href = (<HTMLIFrameElement>frameElement).src;
+  const bootCallback = callback;
+  if (bootCallback == null) {
     return;
   }
 
-  if (location.pathname === path) {
-    const htmlVersion = document.documentElement.dataset.appVersion!;
-    if ((await manifest).version !== htmlVersion) {
-      location.reload();
+  await bootView(path, () => {
+    const localApp = (window as unknown as { app: LegacyAppObject }).app;
+    const bookmarkRuntime = getBookmarkRuntime();
+    if (bookmarkRuntime) {
+      // ブックマーク移行中の旧画面とroot設定UIが参照する互換APIを維持する。
+      localApp.bookmark = bookmarkRuntime;
+      localApp.bookmarkEntryList = bookmarkRuntime.bel;
+    }
+
+    if (moduleNames == null) {
+      bootCallback();
       return;
     }
 
-    const bootCallback = callback;
-    if (bootCallback == null) {
-      return;
+    const modules: unknown[] = [];
+    const modulesByName = localApp as unknown as Record<string, unknown>;
+    for (const module of moduleNames) {
+      modules.push(modulesByName[module]);
     }
-
-    const onload = () => {
-      config.ready(() => {
-        setupContainer();
-        const localApp = (window as unknown as { app: LegacyAppObject }).app;
-        const bookmarkRuntime = getBookmarkRuntime();
-        if (bookmarkRuntime) {
-          // ブックマーク移行中の旧画面とroot設定UIが参照する互換APIを維持する。
-          localApp.bookmark = bookmarkRuntime;
-          localApp.bookmarkEntryList = bookmarkRuntime.bel;
-        }
-
-        if (moduleNames == null) {
-          bootCallback();
-          return;
-        }
-
-        const modules: unknown[] = [];
-        const modulesByName = localApp as unknown as Record<string, unknown>;
-        for (const module of moduleNames) {
-          modules.push(modulesByName[module]);
-        }
-        bootCallback(...modules);
-      });
-    };
-
-    // async関数のためDOMContentLoadedに間に合わないことがある
-    if (document.readyState === "loading") {
-      document.addEventListener("DOMContentLoaded", onload);
-    } else {
-      onload();
-    }
-  }
+    bootCallback(...modules);
+  });
 }

@@ -122,6 +122,8 @@
   color-scheme: light;
 }
 
+/* 初回描画ではルート属性、起動後はシェル属性から同じダーク配色を適用する。 */
+:root[data-theme="dark"],
 .browser-shell[data-theme="dark"] {
   --sys-color-surface: var(--ref-color-dark-neutral-0);
   --sys-color-surface-muted: var(--ref-color-dark-neutral-100);

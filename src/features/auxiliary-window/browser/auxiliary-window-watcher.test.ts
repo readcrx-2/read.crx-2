@@ -147,4 +147,23 @@ describe("watchAuxiliaryWindow", () => {
 
     expect(fake.close).not.toHaveBeenCalled();
   });
+
+  it("元の窓が再読み込み・終了するときは別窓も閉じる", () => {
+    const { fake, onClosed } = setup();
+
+    window.dispatchEvent(new Event("pagehide"));
+
+    expect(fake.close).toHaveBeenCalledTimes(1);
+    // 元の窓が消えるだけなので、別窓側の終了処理（タブを閉じる等）は走らせない。
+    expect(onClosed).not.toHaveBeenCalled();
+  });
+
+  it("監視を外した後は元の窓のpagehideで別窓を閉じない", () => {
+    const { fake, watcher } = setup();
+
+    watcher.unwatch();
+    window.dispatchEvent(new Event("pagehide"));
+
+    expect(fake.close).not.toHaveBeenCalled();
+  });
 });

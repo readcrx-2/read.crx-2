@@ -5,7 +5,10 @@ import {
 
 export interface AuxiliaryWindowWatcherParams {
   window: Window;
-  /** 再読み込み後にrootとスタイルを複製する元のDocument。 */
+  /**
+   * 再読み込み後にrootとスタイルを複製する元のDocument。
+   * この窓が再読み込み・終了したときは、別窓も一緒に閉じる。
+   */
   sourceDocument: Document;
   /** この窓が、呼び出し側のレジストリで現在も有効なentryか。同じキーの再オープンを誤って閉じないために使う。 */
   isCurrent: () => boolean;
@@ -31,6 +34,10 @@ export interface AuxiliaryWindowWatcher {
  * 確認してから終了する処理と、`load`でPortal rootを再接続する処理を別々に持っていた。
  * 判定の食い違いでreloadのたびにタブやビューアが消えないよう、ここへ一本化する。
  * `closed`のポーリングは窓数が異なるため、各ホスト側で行う。
+ *
+ * 別窓の中身は開いた元の窓のコードがPortalで描いているため、元の窓が再読み込みや
+ * 終了で消えると、別窓には操作できないDOMだけが残る。再読み込み後の元の窓も
+ * その別窓を把握できないので、元の窓のpagehideで別窓を閉じて抜け殻を残さない。
  */
 export function watchAuxiliaryWindow(params: AuxiliaryWindowWatcherParams): AuxiliaryWindowWatcher {
   const { window: targetWindow } = params;
@@ -60,21 +67,34 @@ export function watchAuxiliaryWindow(params: AuxiliaryWindowWatcherParams): Auxi
     }
   };
 
-  targetWindow.addEventListener("beforeunload", onBeforeUnload);
-  targetWindow.addEventListener("load", onLoad);
+  const sourceWindow = params.sourceDocument.defaultView;
 
   const unwatch = () => {
     targetWindow.removeEventListener("beforeunload", onBeforeUnload);
     targetWindow.removeEventListener("load", onLoad);
+    sourceWindow?.removeEventListener("pagehide", onSourcePageHide);
   };
 
-  return {
-    unwatch,
-    release: () => {
-      unwatch();
-      if (!targetWindow.closed) {
-        targetWindow.close();
-      }
-    },
+  const release = () => {
+    unwatch();
+    if (!targetWindow.closed) {
+      targetWindow.close();
+    }
   };
+
+  // pagehideは再読み込み・ページ移動・終了のいずれでも発火し、beforeunloadと違って
+  // 確認ダイアログで取り消されることもないため、元の窓が消える合図として使う。
+  const onSourcePageHide = () => {
+    try {
+      release();
+    } catch (error) {
+      console.error("[AuxiliaryWindow] 元の窓の終了時に別窓を閉じられませんでした", error);
+    }
+  };
+
+  targetWindow.addEventListener("beforeunload", onBeforeUnload);
+  targetWindow.addEventListener("load", onLoad);
+  sourceWindow?.addEventListener("pagehide", onSourcePageHide);
+
+  return { unwatch, release };
 }

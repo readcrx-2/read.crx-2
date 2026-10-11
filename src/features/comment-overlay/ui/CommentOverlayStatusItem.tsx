@@ -2,7 +2,7 @@ import { AlertTriangle, MessagesCircle, Move } from "lucide-react";
 import React, { useCallback, useRef, useState } from "react";
 import { isTauriRuntime } from "src/app/platform/runtime";
 import { useCommentOverlay } from "src/features/comment-overlay/application/use-comment-overlay";
-import { OverlayPlacementDialog } from "src/features/comment-overlay/ui/OverlayPlacementDialog";
+import { useOpenOverlayPlacementWindow } from "src/features/comment-overlay/ui/OverlayPlacementWindow";
 import { useTabStore } from "src/features/tabs/browser/use-tab-store";
 import { MiniWindow } from "src/view/browser/components/MiniWindow";
 import {
@@ -23,7 +23,7 @@ interface CommentOverlayStatusItemProps {
 export const CommentOverlayStatusItem: React.FC<CommentOverlayStatusItemProps> = ({ isActive }) => {
   const { viewPage } = useTabStore();
   const { controller, snapshot } = useCommentOverlay();
-  const [isPlacementDialogOpen, setIsPlacementDialogOpen] = useState(false);
+  const openOverlayPlacementWindow = useOpenOverlayPlacementWindow();
   const [isFlowChanging, setIsFlowChanging] = useState(false);
   const flowChangingRef = useRef(false);
   const isTauri = isTauriRuntime();
@@ -63,11 +63,13 @@ export const CommentOverlayStatusItem: React.FC<CommentOverlayStatusItemProps> =
       });
   }, [controller, isFlowing, isRunning, threadUrl]);
 
-  const openPlacementDialog = useCallback(() => {
-    // 小窓とモーダルを重ねず、調整中はダイアログだけに集中できるようにする。
+  const openPlacementWindow = useCallback(() => {
+    // 調整は別窓で行うため小窓は閉じる。切り離したタブの窓から開いた場合も、
+    // クリック元の窓を起点にしてポップアップ許可を引き継ぐ。
+    const sourceWindow = miniWindowTriggerRef.current?.ownerDocument.defaultView ?? undefined;
     closeMiniWindow();
-    setIsPlacementDialogOpen(true);
-  }, [closeMiniWindow]);
+    openOverlayPlacementWindow(sourceWindow);
+  }, [closeMiniWindow, miniWindowTriggerRef, openOverlayPlacementWindow]);
 
   if (!isTauri || !isActive || (threadUrl == null && !isRunning)) return null;
 
@@ -126,7 +128,7 @@ export const CommentOverlayStatusItem: React.FC<CommentOverlayStatusItemProps> =
           <MiniWindowSeparator />
 
           <MiniWindowSection>
-            <button type="button" className="mini-window__action-btn" onClick={openPlacementDialog}>
+            <button type="button" className="mini-window__action-btn" onClick={openPlacementWindow}>
               <Move size={14} aria-hidden="true" />
               <span>表示位置を調整…</span>
             </button>
@@ -142,11 +144,6 @@ export const CommentOverlayStatusItem: React.FC<CommentOverlayStatusItemProps> =
           )}
         </MiniWindow>
       )}
-
-      <OverlayPlacementDialog
-        open={isPlacementDialogOpen}
-        onOpenChange={setIsPlacementDialogOpen}
-      />
     </>
   );
 };

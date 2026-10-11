@@ -1,0 +1,77 @@
+.overlay-placement-window-shell {
+  min-height: 100vh;
+  background: var(--sys-color-surface);
+  color: var(--sys-color-text);
+}
+
+/* 別窓のbodyはスクロールを止めているため、窓の高さを超えた分はこの中でスクロールする。 */
+.overlay-placement-window {
+  display: grid;
+  align-content: start;
+  gap: var(--sys-space-5);
+  height: 100vh;
+  overflow-y: auto;
+  padding: var(--sys-space-8);
+  box-sizing: border-box;
+}
+
+.overlay-placement-window__header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--sys-space-4);
+}
+
+.overlay-placement-window__header h1 {
+  margin: 0;
+  font-size: var(--sys-font-size-lg);
+}
+
+.overlay-placement-window__header button,
+.overlay-placement__mode label {
+  font: inherit;
+}
+
+.overlay-placement-window__header button {
+  padding: var(--sys-space-2) var(--sys-space-5);
+  color: var(--sys-color-text);
+  background: var(--sys-color-surface-muted);
+  border: var(--sys-border-width-thin) solid var(--sys-color-border);
+  border-radius: var(--sys-radius-sm);
+  cursor: pointer;
+}
+
+.overlay-placement {
+  display: grid;
+  gap: var(--sys-space-5);
+}
+
+.overlay-placement__mode {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--sys-space-6);
+  margin: 0;
+  padding: var(--sys-space-4) var(--sys-space-6);
+  border: var(--sys-border-width-thin) solid var(--sys-color-border);
+  border-radius: var(--sys-radius-md);
+}
+
+.overlay-placement__mode legend {
+  padding: 0 var(--sys-space-2);
+  color: var(--sys-color-text-muted);
+  font-size: var(--sys-font-size-sm);
+}
+
+.overlay-placement__mode label {
+  display: flex;
+  align-items: center;
+  gap: var(--sys-space-2);
+  cursor: pointer;
+}
+
+/* 別窓自体が面と余白を持つので、パネル側の背景と内側余白は重ねない。 */
+.overlay-placement .overlay-control-panel {
+  padding: 0;
+  background: transparent;
+}

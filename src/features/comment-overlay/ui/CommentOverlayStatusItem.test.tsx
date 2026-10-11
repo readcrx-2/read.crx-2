@@ -23,6 +23,7 @@ const mocks = vi.hoisted(() => ({
     visible: false,
     error: null as string | null,
   },
+  openPlacementWindow: vi.fn().mockReturnValue(true),
   controller: {
     start: vi.fn().mockResolvedValue(undefined),
     stop: vi.fn().mockResolvedValue(undefined),
@@ -45,10 +46,9 @@ vi.mock("src/features/comment-overlay/application/use-comment-overlay", () => ({
   }),
 }));
 
-// 表示位置ダイアログはTauriのモニターAPIに依存するため、開閉の受け渡しだけを確認する。
-vi.mock("src/features/comment-overlay/ui/OverlayPlacementDialog", () => ({
-  OverlayPlacementDialog: ({ open }: { open: boolean }) =>
-    open ? <div role="dialog" aria-label="コメントの表示位置" /> : null,
+// 表示位置の調整窓はTauriのモニターAPIと別窓に依存するため、開く要求だけを確認する。
+vi.mock("src/features/comment-overlay/ui/OverlayPlacementWindow", () => ({
+  useOpenOverlayPlacementWindow: () => mocks.openPlacementWindow,
 }));
 
 import { CommentOverlayStatusItem } from "src/features/comment-overlay/ui/CommentOverlayStatusItem";
@@ -215,13 +215,14 @@ describe("CommentOverlayStatusItem", () => {
     expect(screen.queryByText("Overlay表示")).toBeNull();
   });
 
-  it("表示位置の調整は小窓を閉じてダイアログで開く", () => {
+  it("表示位置の調整は小窓を閉じ、クリック元の窓を起点に別窓で開く", () => {
+    mocks.openPlacementWindow.mockClear();
     renderItem();
 
     fireEvent.click(screen.getByRole("button", { name: /コメントOverlay制御/ }));
     fireEvent.click(screen.getByRole("button", { name: "表示位置を調整…" }));
 
-    expect(screen.getByRole("dialog", { name: "コメントの表示位置" })).toBeInTheDocument();
+    expect(mocks.openPlacementWindow).toHaveBeenCalledExactlyOnceWith(window);
     expect(screen.queryByText("コメントを画面に流す")).toBeNull();
   });
 });

@@ -60,7 +60,7 @@ export function WindowAttachmentControl({ attachment }: { attachment: Attachment
 
   return (
     <section className="overlay-control-panel overlay-window-attachment">
-      <label htmlFor="overlay-attachment-target">ウィンドウに追従</label>
+      <label htmlFor="overlay-attachment-target">追従先ウィンドウ</label>
       <div className="overlay-window-attachment__controls">
         <select
           id="overlay-attachment-target"
@@ -70,7 +70,13 @@ export function WindowAttachmentControl({ attachment }: { attachment: Attachment
             void selectTarget(event.target.value || null);
           }}
         >
-          <option value="">追従しない（手動調整）</option>
+          {/* 変更理由: 追従の解除は配置方法の切り替えで行うため、ここには「追従しない」を置かず、
+              未選択の間だけ選択を促す項目を出す。 */}
+          {state.targetId == null && (
+            <option value="" disabled>
+              ウィンドウを選択…
+            </option>
+          )}
           {state.targetId && !windows.some((window) => window.id === state.targetId) && (
             <option value={state.targetId}>選択中のウィンドウ</option>
           )}
@@ -97,7 +103,7 @@ export function WindowAttachmentControl({ attachment }: { attachment: Attachment
         </p>
       )}
       <p className="mini-window__note">
-        選んだウィンドウの内側に合わせて移動・サイズ変更します。最小化中はコメントを隠します。手動調整すると追従を解除します。
+        選んだウィンドウの内側に合わせて移動・サイズ変更します。最小化中はコメントを隠します。
       </p>
       {(error || state.error) && <p role="alert">{error || state.error}</p>}
     </section>

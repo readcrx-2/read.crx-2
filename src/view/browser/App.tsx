@@ -7,6 +7,7 @@ import { AutoRefreshStatusItem } from "src/features/auto-refresh/ui/AutoRefreshS
 import { BookmarkRootSelectorDialog } from "src/features/bookmark/ui/BookmarkRootSelectorDialog";
 import { CommentOverlayJumpBridge } from "src/features/comment-overlay/ui/CommentOverlayJumpBridge";
 import { CommentOverlayStatusItem } from "src/features/comment-overlay/ui/CommentOverlayStatusItem";
+import { OverlayPlacementWindowProvider } from "src/features/comment-overlay/ui/OverlayPlacementWindow";
 import { useNextThreadSearch } from "src/features/next-thread/browser/use-next-thread-search";
 import { NextThreadSearchDialog } from "src/features/next-thread/ui/NextThreadSearchDialog";
 import { NgStatusProvider } from "src/features/ng/browser/use-ng-status";
@@ -249,40 +250,43 @@ const BrowserAppContent: React.FC = () => {
     <TooltipProvider>
       <TabProvider>
         <WriteSessionProvider>
-          <TabWindowHost>
-            <CommentOverlayJumpBridge />
-            <WriteWindowHost />
-            <ArchiveReplayMainThreadSyncBridge />
-            {/*
+          {/* 実況の表示位置調整窓は、各ペインと切り離したタブの両方から開けるよう外側に置く。 */}
+          <OverlayPlacementWindowProvider>
+            <TabWindowHost>
+              <CommentOverlayJumpBridge />
+              <WriteWindowHost />
+              <ArchiveReplayMainThreadSyncBridge />
+              {/*
               ステータス／NG／書き込み／自動スクロールの各プロバイダは PaneColumn 内へ移設した。
               シェル直下には全ペイン共通のグローバル UI（トースト・ダイアログ）だけを残す。
             */}
-            {/* data-theme を使ってダークモード CSS 変数を切り替える */}
-            <div
-              className="browser-shell"
-              data-theme={theme}
-              data-tab-orientation={shellTabBarOrientation}
-            >
-              <WindowNavigationBridge />
-              {/* 変更理由: 本文を覆う範囲を減らし、通知を上部バー直下の右端へ寄せる。 */}
-              <ToastProvider
-                topOffset={
-                  isUrlBarExpanded
-                    ? "calc(var(--sys-space-13) + var(--sys-space-10))"
-                    : "var(--sys-space-13)"
-                }
-                rightOffset="var(--sys-space-4)"
-              />
-              {/*
+              {/* data-theme を使ってダークモード CSS 変数を切り替える */}
+              <div
+                className="browser-shell"
+                data-theme={theme}
+                data-tab-orientation={shellTabBarOrientation}
+              >
+                <WindowNavigationBridge />
+                {/* 変更理由: 本文を覆う範囲を減らし、通知を上部バー直下の右端へ寄せる。 */}
+                <ToastProvider
+                  topOffset={
+                    isUrlBarExpanded
+                      ? "calc(var(--sys-space-13) + var(--sys-space-10))"
+                      : "var(--sys-space-13)"
+                  }
+                  rightOffset="var(--sys-space-4)"
+                />
+                {/*
                 水平モードではタイトルと必須のレイアウト操作はペインの外に置く。
                 これにより2ペイン時も操作が重複せず、アクティブペインのタイトルだけを表示できる。
                 垂直モードではタイトルバーもペイン単位にするため、共通バーは表示しない。
               */}
-              {shellTabBarOrientation === "vertical" ? null : <TitleBar />}
-              <PaneRow />
-              <BookmarkRootSelectorDialog />
-            </div>
-          </TabWindowHost>
+                {shellTabBarOrientation === "vertical" ? null : <TitleBar />}
+                <PaneRow />
+                <BookmarkRootSelectorDialog />
+              </div>
+            </TabWindowHost>
+          </OverlayPlacementWindowProvider>
         </WriteSessionProvider>
       </TabProvider>
     </TooltipProvider>

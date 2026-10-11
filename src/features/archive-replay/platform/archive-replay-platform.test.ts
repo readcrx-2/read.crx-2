@@ -36,7 +36,7 @@ import {
   requestArchiveReplaySeek,
   subscribeArchiveReplayMainThreadRequests,
   subscribeArchiveReplayWindowClose,
-} from "./archive-replay-window";
+} from ".";
 
 describe("過去実況操作窓のTauri platform", () => {
   beforeEach(() => {

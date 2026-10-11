@@ -1,4 +1,4 @@
-import React from "react";
+import React, { useId } from "react";
 
 // MiniWindowの中身で繰り返し書いていた行レイアウトを部品にまとめ、
 // クラス名・ON/OFF表示・無効時の理由表示を各ステータス項目で揃える。
@@ -57,9 +57,11 @@ export const MiniWindowToggle: React.FC<MiniWindowToggleProps> = ({
 }) => (
   <div className="mini-window__toggle-row">
     <span className="mini-window__toggle-label">{label}</span>
+    {/* 変更理由: ON/OFFの文字ボタンより状態を一目で読めるスイッチ表示にする。
+        文字は読み上げと既存のテキスト照合のため、視覚的に隠して残す。 */}
     <button
       type="button"
-      className={`mini-window__toggle-btn${checked ? " mini-window__toggle-btn--on" : ""}`}
+      className="mini-window__switch"
       onClick={onToggle}
       disabled={disabled}
       aria-pressed={checked}
@@ -67,7 +69,8 @@ export const MiniWindowToggle: React.FC<MiniWindowToggleProps> = ({
       aria-label={buttonLabel}
       title={disabled && disabledReason ? disabledReason : buttonLabel}
     >
-      {checked ? "ON" : "OFF"}
+      <span className="mini-window__switch-thumb" aria-hidden="true" />
+      <span className="mini-window__switch-text">{checked ? "ON" : "OFF"}</span>
     </button>
   </div>
 );
@@ -116,6 +119,8 @@ export function MiniWindowSelect<T extends string>({
 }
 
 interface MiniWindowSliderProps {
+  /** 指定すると、ラベル・スライダー・値を1行に並べる。 */
+  label?: string;
   ariaLabel?: string;
   min: number;
   max: number;
@@ -126,6 +131,7 @@ interface MiniWindowSliderProps {
 }
 
 export const MiniWindowSlider: React.FC<MiniWindowSliderProps> = ({
+  label,
   ariaLabel,
   min,
   max,
@@ -133,21 +139,30 @@ export const MiniWindowSlider: React.FC<MiniWindowSliderProps> = ({
   value,
   valueLabel,
   onChange,
-}) => (
-  <div className="mini-window__slider-row">
-    <input
-      className="mini-window__slider"
-      type="range"
-      min={min}
-      max={max}
-      step={step}
-      value={value}
-      aria-label={ariaLabel}
-      onChange={(event) => onChange(Number(event.target.value))}
-    />
-    <span className="mini-window__slider-value">{valueLabel}</span>
-  </div>
-);
+}) => {
+  const sliderId = useId();
+  return (
+    <div className="mini-window__slider-row">
+      {label != null && (
+        <label className="mini-window__toggle-label" htmlFor={sliderId}>
+          {label}
+        </label>
+      )}
+      <input
+        id={sliderId}
+        className="mini-window__slider"
+        type="range"
+        min={min}
+        max={max}
+        step={step}
+        value={value}
+        aria-label={ariaLabel}
+        onChange={(event) => onChange(Number(event.target.value))}
+      />
+      <span className="mini-window__slider-value">{valueLabel}</span>
+    </div>
+  );
+};
 
 interface MiniWindowFieldProps {
   label: string;

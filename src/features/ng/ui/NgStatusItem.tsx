@@ -74,14 +74,13 @@ export const NgStatusItem: React.FC = () => {
             </button>
           </MiniWindowSection>
 
-          <MiniWindowSection title="現在の件数">
-            <MiniWindowNote>NG: {activeStats.ngCount}件</MiniWindowNote>
-            <MiniWindowNote>ハイライト: {activeStats.highlightCount}件</MiniWindowNote>
-          </MiniWindowSection>
-
           <MiniWindowSeparator />
 
           <MiniWindowSection>
+            {/* 件数は見出し付きの2行より、1行の要約で足りる。 */}
+            <MiniWindowNote>
+              現在の件数: NG {activeStats.ngCount}件・ハイライト {activeStats.highlightCount}件
+            </MiniWindowNote>
             {/* 一時解除はUI表示の切り替えだけに限定し、既存NG定義は保持する。 */}
             <MiniWindowToggle
               label="一時的にNGを解除"

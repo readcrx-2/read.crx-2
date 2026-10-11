@@ -105,11 +105,8 @@ const ThreadAutoRefreshPanelContent: React.FC<ThreadAutoRefreshPanelContentProps
         disabledReason={THREAD_ONLY_REASON}
       />
       {!isOnThread && <MiniWindowNote>{THREAD_ONLY_REASON}</MiniWindowNote>}
-    </MiniWindowSection>
-
-    <MiniWindowSection title="更新間隔">
       <MiniWindowSlider
-        ariaLabel="更新間隔"
+        label="更新間隔"
         min={MIN_INTERVAL_SEC}
         max={MAX_INTERVAL_SEC}
         step={5}
@@ -117,10 +114,7 @@ const ThreadAutoRefreshPanelContent: React.FC<ThreadAutoRefreshPanelContentProps
         valueLabel={`${intervalSec}秒`}
         onChange={onIntervalChange}
       />
-    </MiniWindowSection>
-
-    {/* 表示形式と取得周期を一つのパネルで扱い、ライブ専用の通信設定を増やさない。 */}
-    <MiniWindowSection>
+      {/* 表示形式と取得周期を一つのパネルで扱い、ライブ専用の通信設定を増やさない。 */}
       <MiniWindowField label="表示形式" htmlFor={`${idPrefix}-display-mode`}>
         <MiniWindowSelect
           id={`${idPrefix}-display-mode`}
@@ -190,12 +184,8 @@ const ThreadListAutoRefreshPanelContent: React.FC<ThreadListAutoRefreshPanelCont
     <MiniWindowSection>
       <MiniWindowToggle label="自動更新" checked={isEnabled} onToggle={onToggle} />
       <MiniWindowNote>スレ一覧を開いている間だけ、同じタブで自動更新します</MiniWindowNote>
-    </MiniWindowSection>
-
-    <MiniWindowSeparator />
-
-    <MiniWindowSection title="更新間隔">
       <MiniWindowSlider
+        label="更新間隔"
         min={MIN_BOARD_INTERVAL_SEC}
         max={MAX_BOARD_INTERVAL_SEC}
         step={10}
@@ -203,7 +193,6 @@ const ThreadListAutoRefreshPanelContent: React.FC<ThreadListAutoRefreshPanelCont
         valueLabel={`${intervalSec}秒`}
         onChange={onIntervalChange}
       />
-      <MiniWindowNote>10秒から300秒の範囲で設定できます</MiniWindowNote>
     </MiniWindowSection>
   </>
 );

@@ -75,9 +75,9 @@ export const PopularFilterStatusItem: React.FC = () => {
           onClose={closeMiniWindow}
           triggerRef={miniWindowTriggerRef}
         >
-          <MiniWindowSection title="人気レス閾値">
+          <MiniWindowSection>
             <MiniWindowSlider
-              ariaLabel="人気レス閾値"
+              label="人気レス閾値"
               min={MIN_POPULAR_REPLY_THRESHOLD}
               max={MAX_POPULAR_REPLY_THRESHOLD}
               step={1}

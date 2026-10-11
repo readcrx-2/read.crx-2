@@ -57,8 +57,20 @@
   overflow-y: auto;
 }
 
+/* 行同士の間隔はgapでそろえ、見出し・注記ごとの個別marginに頼らない。 */
 .mini-window__section {
-  padding: var(--sys-space-5) var(--sys-space-6);
+  display: flex;
+  flex-direction: column;
+  gap: var(--sys-space-4);
+  padding: var(--sys-space-4) var(--sys-space-6);
+}
+
+.mini-window__section > .mini-window__section-header {
+  margin-bottom: 0;
+}
+
+.mini-window__section > .mini-window__note:not(:first-child) {
+  margin-top: calc(var(--sys-space-2) * -1);
 }
 
 .mini-window__separator {
@@ -85,33 +97,65 @@
 .mini-window__toggle-label {
   font-size: var(--sys-font-size-md);
   color: var(--sys-color-text);
+  white-space: nowrap;
 }
 
-.mini-window__toggle-btn {
-  padding: var(--sys-space-1) var(--sys-space-6);
+.mini-window__switch {
+  position: relative;
+  flex-shrink: 0;
+  width: 30px;
+  height: 18px;
+  padding: 0;
   border: 1px solid var(--sys-color-input-border);
   border-radius: var(--sys-radius-pill);
   background: var(--sys-color-surface-muted);
-  color: var(--sys-color-text-muted);
-  font-size: var(--sys-font-size-xs);
-  font-weight: 700;
-  font-family: inherit;
   cursor: pointer;
   transition:
     background var(--sys-duration-fast),
-    color var(--sys-duration-fast),
     border-color var(--sys-duration-fast);
 }
 
-.mini-window__toggle-btn--on {
+.mini-window__switch-thumb {
+  position: absolute;
+  top: 2px;
+  left: 2px;
+  width: 12px;
+  height: 12px;
+  border-radius: var(--sys-radius-pill);
+  background: var(--sys-color-text-muted);
+  transition:
+    transform var(--sys-duration-fast),
+    background var(--sys-duration-fast);
+}
+
+.mini-window__switch[aria-pressed="true"] {
   background: var(--sys-color-accent);
-  color: var(--sys-color-accent-fg);
   border-color: var(--sys-color-accent);
 }
 
-.mini-window__toggle-btn:disabled {
+.mini-window__switch[aria-pressed="true"] .mini-window__switch-thumb {
+  transform: translateX(12px);
+  background: var(--sys-color-accent-fg);
+}
+
+.mini-window__switch:focus-visible {
+  outline: 2px solid var(--sys-color-focus-ring);
+  outline-offset: 2px;
+}
+
+.mini-window__switch:disabled {
   opacity: 0.45;
   cursor: default;
+}
+
+/* 読み上げと既存のテキスト照合のために残す状態文字。 */
+.mini-window__switch-text {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  overflow: hidden;
+  clip-path: inset(50%);
+  white-space: nowrap;
 }
 
 .mini-window__action-btn {
@@ -237,19 +281,13 @@
   gap: var(--sys-space-4);
 }
 
-.mini-window__field-row + .mini-window__field-row,
-.mini-window__field-row + .mini-window__toggle-row,
-.mini-window__toggle-row + .mini-window__field-row,
-.mini-window__toggle-row + .mini-window__toggle-row {
-  margin-top: var(--sys-space-4);
-}
-
 .mini-window__field-row .mini-window__select-row {
-  flex-shrink: 0;
+  min-width: 0;
 }
 
 .mini-window__field-row .mini-window__select {
   width: auto;
+  max-width: 100%;
   height: 26px;
 }
 

@@ -8,6 +8,7 @@ import {
   commentOverlayWindowPlatform,
 } from "src/features/comment-overlay/platform";
 import { OverlayControlPanel } from "src/features/comment-overlay/ui/OverlayControlPanel";
+import { WindowAttachmentControl } from "src/features/comment-overlay/ui/WindowAttachmentControl";
 import { useTabStore } from "src/features/tabs/browser/use-tab-store";
 import { MiniWindow } from "src/view/browser/components/MiniWindow";
 import { STATUS_BAR_PRIORITY } from "src/view/browser/components/status-bar-priority";
@@ -204,6 +205,9 @@ export const CommentOverlayStatusItem: React.FC<CommentOverlayStatusItemProps> =
           {isControlPanelOpen && (
             <>
               <div className="mini-window__separator" />
+              {commentOverlayWindowPlatform.attachment && (
+                <WindowAttachmentControl attachment={commentOverlayWindowPlatform.attachment} />
+              )}
               <OverlayControlPanel
                 monitors={monitors}
                 geometry={panelGeometry}

@@ -49,6 +49,8 @@ vi.mock("@tauri-apps/api/window", () => ({
   availableMonitors: tauriMocks.availableMonitors,
   LogicalPosition: tauriMocks.logicalPosition,
   LogicalSize: tauriMocks.logicalSize,
+  PhysicalPosition: tauriMocks.logicalPosition,
+  PhysicalSize: tauriMocks.logicalSize,
   Window: {
     getByLabel: tauriMocks.window.getByLabel,
   },
@@ -138,6 +140,67 @@ describe("TauriコメントOverlay window platform", () => {
       width: 900,
       height: 160,
     });
+  });
+
+  it("対象の移動と最小化に追従し、実況停止中は復元されても表示しない", async () => {
+    vi.useFakeTimers();
+    tauriMocks.window.show.mockClear();
+    tauriMocks.window.hide.mockClear();
+    const platform = createTauriCommentOverlayPlatform();
+    tauriMocks.invoke.mockResolvedValue({ x: -1200, y: 80, width: 800, height: 600 });
+    await platform.attachment!.setTarget("10:20");
+    expect(tauriMocks.window.setPosition).toHaveBeenLastCalledWith({ x: -1200, y: 80 });
+    expect(tauriMocks.window.setSize).toHaveBeenLastCalledWith({ width: 800, height: 600 });
+    await platform.show();
+    tauriMocks.invoke.mockResolvedValue(null);
+    await vi.advanceTimersByTimeAsync(100);
+    expect(tauriMocks.window.hide).toHaveBeenCalledTimes(1);
+    tauriMocks.invoke.mockResolvedValue({ x: 400, y: 80, width: 1200, height: 900 });
+    await vi.advanceTimersByTimeAsync(100);
+    expect(tauriMocks.window.show).toHaveBeenCalledTimes(2);
+    expect(tauriMocks.window.setPosition).toHaveBeenLastCalledWith({ x: 400, y: 80 });
+    tauriMocks.invoke.mockResolvedValue(null);
+    await vi.advanceTimersByTimeAsync(100);
+    await platform.hide();
+    tauriMocks.invoke.mockResolvedValue({ x: 400, y: 80, width: 1200, height: 900 });
+    await vi.advanceTimersByTimeAsync(100);
+    expect(tauriMocks.window.show).toHaveBeenCalledTimes(2);
+    await platform.attachment!.setTarget(null);
+  });
+
+  it("対象が閉じたらエラーを残して追従を止め、手動調整でも解除する", async () => {
+    vi.useFakeTimers();
+    const errorLog = vi.spyOn(console, "error").mockImplementation(() => {});
+    const platform = createTauriCommentOverlayPlatform();
+    tauriMocks.invoke.mockResolvedValue({ x: 0, y: 0, width: 800, height: 600 });
+    await platform.attachment!.setTarget("10:20");
+    tauriMocks.invoke.mockRejectedValue(new Error("対象が閉じました"));
+    await vi.advanceTimersByTimeAsync(100);
+    expect(platform.attachment!.getState()).toEqual({
+      targetId: null,
+      error: "Error: 対象が閉じました",
+    });
+    expect(errorLog).toHaveBeenCalled();
+    tauriMocks.invoke.mockResolvedValue({ x: 0, y: 0, width: 800, height: 600 });
+    await platform.attachment!.setTarget("10:21");
+    await platform.setGeometry({ x: 100, y: 100, width: 640, height: 360 });
+    expect(platform.attachment!.getState().targetId).toBeNull();
+    tauriMocks.invoke.mockClear();
+    await vi.advanceTimersByTimeAsync(500);
+    expect(tauriMocks.invoke).not.toHaveBeenCalled();
+    errorLog.mockRestore();
+  });
+
+  it("最小化中に実況を止めて追従を解除しても、次回は手動領域を表示できる", async () => {
+    vi.useFakeTimers();
+    tauriMocks.window.show.mockClear();
+    const platform = createTauriCommentOverlayPlatform();
+    tauriMocks.invoke.mockResolvedValue(null);
+    await platform.attachment!.setTarget("10:20");
+    await platform.hide();
+    await platform.attachment!.setTarget(null);
+    await platform.show();
+    expect(tauriMocks.window.show).toHaveBeenCalledTimes(1);
   });
 
   it("geometry設定を論理座標のままnative windowへ適用する", async () => {

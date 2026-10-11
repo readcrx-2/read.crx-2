@@ -1,6 +1,13 @@
 import { invoke } from "@tauri-apps/api/core";
 import { emit, listen } from "@tauri-apps/api/event";
-import { availableMonitors, LogicalPosition, LogicalSize, Window } from "@tauri-apps/api/window";
+import {
+  availableMonitors,
+  LogicalPosition,
+  LogicalSize,
+  PhysicalPosition,
+  PhysicalSize,
+  Window,
+} from "@tauri-apps/api/window";
 
 import {
   cloneCommentOverlayGeometry,
@@ -129,23 +136,96 @@ async function fitGeometryToAvailableMonitor(
 }
 
 export function createTauriCommentOverlayPlatform(): CommentOverlayWindowPlatform {
+  let targetId: string | null = null;
+  let attachmentError: string | null = null;
+  let attachmentTimer: ReturnType<typeof setTimeout> | null = null;
+  let wantedVisible = false;
+  let revision = 0;
+  let lastBounds = "";
+  let targetHidden = false;
+  const followTarget = async (expectedRevision: number): Promise<void> => {
+    if (!targetId || expectedRevision !== revision) return;
+    try {
+      const bounds = await invoke<CommentOverlayGeometry | null>("read_comment_overlay_target", {
+        id: targetId,
+      });
+      const overlay = await getCommentOverlayWindow();
+      if (expectedRevision !== revision) return;
+      if (bounds) {
+        const serialized = JSON.stringify(bounds);
+        if (serialized !== lastBounds) {
+          // native側の物理座標をそのまま使い、画面をまたぐ際のDPI換算のずれを防ぐ。
+          await overlay.setPosition(new PhysicalPosition(bounds.x, bounds.y));
+          if (expectedRevision !== revision) return;
+          await overlay.setSize(new PhysicalSize(bounds.width, bounds.height));
+          lastBounds = serialized;
+        }
+        if (expectedRevision !== revision) return;
+        if (wantedVisible && targetHidden) await overlay.show();
+        targetHidden = false;
+      } else {
+        if (!targetHidden) await overlay.hide();
+        targetHidden = true;
+      }
+    } catch (error: unknown) {
+      if (expectedRevision !== revision) return;
+      console.error("[ChLens] コメントOverlayのウィンドウ追従に失敗しました:", error);
+      attachmentError = String(error);
+      targetId = null;
+      if (wantedVisible && targetHidden) {
+        try {
+          await (await getCommentOverlayWindow()).show();
+        } catch (showError: unknown) {
+          console.error("[ChLens] 追従解除後のOverlay再表示に失敗しました:", showError);
+        }
+      }
+      targetHidden = false;
+    }
+    // Overlay自身の表示・非表示と切り離してMain側で直列に更新し、IPCの重複を防ぐ。
+    if (targetId && expectedRevision === revision) {
+      attachmentTimer = setTimeout(() => {
+        void followTarget(expectedRevision);
+      }, 100);
+    }
+  };
   const publishWindowVisibility = async (visible: boolean): Promise<void> => {
     // MainとOverlayは別WebViewでplatform instanceも分かれるため、broadcastで状態を共有する。
     await emit(COMMENT_OVERLAY_VISIBILITY_EVENT_NAME, { visible });
   };
 
   const platform: CommentOverlayWindowPlatform = {
+    attachment: {
+      listWindows: () => invoke("list_comment_overlay_windows"),
+      getState: () => ({ targetId, error: attachmentError }),
+      async setTarget(id) {
+        const nextRevision = ++revision;
+        if (attachmentTimer) clearTimeout(attachmentTimer);
+        targetId = id;
+        attachmentError = null;
+        lastBounds = "";
+        if (id) {
+          await followTarget(nextRevision);
+          if (attachmentError) throw new Error(attachmentError);
+        } else {
+          if (wantedVisible && targetHidden) await (await getCommentOverlayWindow()).show();
+          targetHidden = false;
+        }
+      },
+    },
     async show() {
+      wantedVisible = true;
       const overlay = await getCommentOverlayWindow();
       await overlay.unminimize();
-      await overlay.show();
+      if (!targetHidden) await overlay.show();
       await publishWindowVisibility(true);
     },
     async hide() {
+      wantedVisible = false;
       await (await getCommentOverlayWindow()).hide();
       await publishWindowVisibility(false);
     },
     async focus() {
+      wantedVisible = true;
       const overlay = await getCommentOverlayWindow();
       await overlay.unminimize();
       await overlay.show();
@@ -153,6 +233,7 @@ export function createTauriCommentOverlayPlatform(): CommentOverlayWindowPlatfor
       await overlay.setFocus();
     },
     async minimize() {
+      wantedVisible = false;
       await (await getCommentOverlayWindow()).minimize();
       await publishWindowVisibility(false);
     },
@@ -169,7 +250,9 @@ export function createTauriCommentOverlayPlatform(): CommentOverlayWindowPlatfor
       const synchronize = async (): Promise<void> => {
         const requestedRevision = ++revision;
         try {
-          const visible = await (await getCommentOverlayWindow()).isVisible();
+          const nativeVisible = await (await getCommentOverlayWindow()).isVisible();
+          // 追従先の最小化による一時的な非表示は、実況OFFとしてMainへ戻さない。
+          const visible = targetId && targetHidden ? wantedVisible : nativeVisible;
           // 遅れて届いた初期取得や古いeventで、新しいnative表示状態を上書きしない。
           if (!disposed && requestedRevision === revision) listener(visible);
         } catch (error: unknown) {
@@ -232,6 +315,8 @@ export function createTauriCommentOverlayPlatform(): CommentOverlayWindowPlatfor
       };
     },
     async setGeometry(geometry: CommentOverlayGeometry) {
+      // 手動調整を始めたら追従を解除し、次の更新で元の範囲へ戻されないようにする。
+      await platform.attachment?.setTarget(null);
       const normalized = fallbackCommentOverlayGeometry(geometry);
       const overlay = await getCommentOverlayWindow();
       await overlay.setPosition(new LogicalPosition(normalized.x, normalized.y));

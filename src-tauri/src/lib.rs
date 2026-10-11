@@ -1,5 +1,6 @@
 mod download;
 mod monitor_preview;
+mod overlay_attachment;
 mod write_cookies;
 mod write_transport;
 
@@ -76,6 +77,8 @@ pub fn run() {
     .invoke_handler(tauri::generate_handler![
       download::save_download_file,
       monitor_preview::capture_comment_overlay_monitor_preview,
+      overlay_attachment::list_comment_overlay_windows,
+      overlay_attachment::read_comment_overlay_target,
       write_transport::clear_all_write_cookies,
       write_transport::clear_write_cookies,
       write_transport::has_any_write_cookies,

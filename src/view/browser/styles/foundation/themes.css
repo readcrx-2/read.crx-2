@@ -1,5 +1,7 @@
 /* Semantic color roles. Theme files may select reference values, but must not add literals. */
 :root {
+  --sys-overlay-handle-size: var(--ref-overlay-handle-size);
+  --sys-overlay-handle-hit-size: var(--ref-overlay-handle-hit-size);
   --sys-status-operation-max-width: var(--ref-status-operation-max-width);
   --sys-status-operation-icon-size: var(--ref-status-operation-icon-size);
   --sys-home-content-max-width: var(--ref-home-content-max-width);

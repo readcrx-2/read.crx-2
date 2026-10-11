@@ -40,7 +40,10 @@ tauri-plugin-sql = { version = "2", features = ["sqlite"] }
 [target.'cfg(windows)'.dependencies]
 base64 = "0.22"
 png = "0.17"
-windows-sys = { version = "0.61", features = ["Win32_Graphics_Gdi"] }
+windows-sys = { version = "0.61", features = [
+  "Win32_Graphics_Gdi",
+  "Win32_UI_WindowsAndMessaging",
+] }
 
 [[bin]]
 name = "chlens"

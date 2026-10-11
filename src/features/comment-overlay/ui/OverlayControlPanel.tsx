@@ -630,17 +630,27 @@ export function OverlayControlPanel({
                     ? displayedGeometry.y + displayedGeometry.height
                     : displayedGeometry.y + displayedGeometry.height / 2;
                 return (
-                  <rect
-                    key={direction}
-                    className="overlay-control-panel__handle"
-                    style={{ cursor }}
-                    x={x - Math.max(8, bounds.width * 0.006)}
-                    y={y - Math.max(8, bounds.height * 0.012)}
-                    width={Math.max(16, bounds.width * 0.012)}
-                    height={Math.max(16, bounds.height * 0.024)}
-                    aria-label={`${direction}方向へリサイズ`}
-                    onPointerDown={(event) => startDrag(event, "resize", direction)}
-                  />
+                  <g key={direction}>
+                    {/* 縮小表示でもクリック領域を画面上の太さで確保し、細い枠を狙わせない。 */}
+                    <rect
+                      className="overlay-control-panel__handle-target"
+                      style={{ cursor }}
+                      x={x - Math.max(8, bounds.width * 0.006)}
+                      y={y - Math.max(8, bounds.height * 0.012)}
+                      width={Math.max(16, bounds.width * 0.012)}
+                      height={Math.max(16, bounds.height * 0.024)}
+                      aria-label={`${direction}方向へリサイズ`}
+                      onPointerDown={(event) => startDrag(event, "resize", direction)}
+                    />
+                    <rect
+                      className="overlay-control-panel__handle"
+                      x={x}
+                      y={y}
+                      width={0.01}
+                      height={0.01}
+                      aria-hidden="true"
+                    />
+                  </g>
                 );
               })}
           </svg>

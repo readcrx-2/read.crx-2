@@ -27,6 +27,12 @@ export interface CommentOverlayMonitor {
 }
 
 export interface CommentOverlayWindowPlatform {
+  /** 外部ウィンドウの識別子は再起動後に再利用せず、その起動中だけ保持する。 */
+  attachment?: {
+    listWindows(): Promise<readonly { id: string; title: string }[]>;
+    getState(): { targetId: string | null; error: string | null };
+    setTarget(id: string | null): Promise<void>;
+  };
   show(): Promise<void>;
   hide(): Promise<void>;
   focus(): Promise<void>;

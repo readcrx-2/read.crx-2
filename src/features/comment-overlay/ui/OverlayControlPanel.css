@@ -137,6 +137,8 @@
 }
 
 .overlay-control-panel__desktop {
+  /* 画面端のハンドルの当たり判定も外側へ残し、全画面指定後もつかめるようにする。 */
+  overflow: visible;
   display: block;
   width: 100%;
   height: auto;
@@ -182,10 +184,48 @@
 }
 
 .overlay-control-panel__handle {
-  fill: var(--sys-color-accent, #65a9ff);
-  stroke: var(--sys-color-surface, #152338);
-  stroke-width: 2;
+  fill: var(--sys-color-accent);
+  stroke: var(--sys-color-accent);
+  stroke-width: var(--sys-overlay-handle-size);
   vector-effect: non-scaling-stroke;
+  pointer-events: none;
+}
+
+.overlay-control-panel__handle-target {
+  fill: transparent;
+  stroke: transparent;
+  stroke-width: var(--sys-overlay-handle-hit-size);
+  vector-effect: non-scaling-stroke;
+  pointer-events: all;
+}
+
+.overlay-control-panel__handle-target:hover + .overlay-control-panel__handle {
+  stroke: var(--sys-color-focus-ring);
+}
+
+.overlay-window-attachment__controls {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--sys-space-3);
+}
+
+.overlay-window-attachment__controls select {
+  flex: 1;
+  min-width: 0;
+}
+
+.overlay-window-attachment__controls :is(select, button) {
+  padding: var(--sys-space-2) var(--sys-space-3);
+  color: var(--sys-color-text);
+  background: var(--sys-color-surface-muted);
+  border: var(--sys-border-width-thin) solid var(--sys-color-border);
+  border-radius: var(--sys-radius-sm);
+  font: inherit;
+}
+
+.overlay-window-attachment__controls :is(select, button):focus-visible {
+  outline: var(--sys-border-width-strong) solid var(--sys-color-focus-ring);
+  outline-offset: var(--sys-space-1);
 }
 
 .overlay-control-panel__help {

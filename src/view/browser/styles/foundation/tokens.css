@@ -12,6 +12,8 @@
  */
 
 :root {
+  --ref-overlay-handle-size: 14px;
+  --ref-overlay-handle-hit-size: 24px;
   --ref-rule-editor-height: 500px;
   --ref-rule-example-max-height: 360px;
   /* 変更理由: 独立した議論判定画像でも参考カードの寸法と書体を共有トークンから参照する。 */

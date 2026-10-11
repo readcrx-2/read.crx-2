@@ -1,5 +1,5 @@
 import { Clock3, Pause, RefreshCw } from "lucide-react";
-import React from "react";
+import React, { useState } from "react";
 import { IDLE_STOP_TIMEOUT_OPTIONS } from "src/features/auto-refresh/browser/auto-refresh-config";
 import {
   MAX_BOARD_INTERVAL_SEC,
@@ -19,6 +19,8 @@ import { useAutoNextThreadSetting } from "src/features/next-thread/browser/use-a
 import { useTabStore } from "src/features/tabs/browser/use-tab-store";
 import { MiniWindow } from "src/view/browser/components/MiniWindow";
 import {
+  MiniWindowDetails,
+  MiniWindowField,
   MiniWindowNote,
   MiniWindowSection,
   MiniWindowSelect,
@@ -35,7 +37,8 @@ import { useMiniWindowTrigger } from "src/view/browser/hooks/use-mini-window-tri
 // ミニウィンドウの中身（UI のみ、ロジックは props 経由）
 // -----------------------------------------------------------------------
 interface ThreadAutoRefreshPanelContentProps {
-  displayModeId: string;
+  /** 2ペインで同時にパネルを開いても、ラベルが別タブの選択欄へ結び付かないようにする。 */
+  idPrefix: string;
   displayMode: ThreadDisplayMode;
   onDisplayModeChange: (mode: ThreadDisplayMode) => void;
   isEnabled: boolean;
@@ -45,6 +48,8 @@ interface ThreadAutoRefreshPanelContentProps {
   intervalSec: number;
   idleStopTimeoutValue: string;
   pauseAutoScrollOnPopup: boolean;
+  isDetailsOpen: boolean;
+  onDetailsOpenChange: (open: boolean) => void;
   onAutoNextThreadToggle: () => void;
   onAutoNextThreadModeChange: (mode: AutoNextThreadMode) => void;
   onPauseAutoScrollOnPopupToggle: () => void;
@@ -58,15 +63,20 @@ const THREAD_DISPLAY_MODE_OPTIONS: readonly MiniWindowSelectOption<ThreadDisplay
   { value: "live-chat", label: "ライブチャット風" },
 ];
 
+// 変更理由: 判定モードの違いを別の注記で説明すると縦に長くなるため、選択肢名に含める。
 const AUTO_NEXT_THREAD_MODE_OPTIONS: readonly MiniWindowSelectOption<AutoNextThreadMode>[] = [
-  { value: "balanced", label: "標準" },
-  { value: "aggressive", label: "積極（変化を許容）" },
+  { value: "balanced", label: "標準（精度重視）" },
+  { value: "aggressive", label: "積極（スレタイ変化を許容）" },
 ];
 
 const THREAD_ONLY_REASON = "スレッドを開いているときに有効です";
 
+/**
+ * よく触る「ON/OFF・間隔・表示形式」を上に置き、一度決めたら触らない設定は
+ * 折りたたみへ入れて、開いた直後のミニウィンドウの高さを抑える。
+ */
 const ThreadAutoRefreshPanelContent: React.FC<ThreadAutoRefreshPanelContentProps> = ({
-  displayModeId,
+  idPrefix,
   displayMode,
   onDisplayModeChange,
   isEnabled,
@@ -76,6 +86,8 @@ const ThreadAutoRefreshPanelContent: React.FC<ThreadAutoRefreshPanelContentProps
   intervalSec,
   idleStopTimeoutValue,
   pauseAutoScrollOnPopup,
+  isDetailsOpen,
+  onDetailsOpenChange,
   onAutoNextThreadToggle,
   onAutoNextThreadModeChange,
   onPauseAutoScrollOnPopupToggle,
@@ -84,91 +96,6 @@ const ThreadAutoRefreshPanelContent: React.FC<ThreadAutoRefreshPanelContentProps
   onIdleStopTimeoutChange,
 }) => (
   <>
-    <MiniWindowSeparator />
-
-    {/* 1. 自動次スレ検索 */}
-    <MiniWindowSection>
-      <MiniWindowToggle
-        label="自動次スレ移動"
-        checked={isAutoNextThreadEnabled}
-        onToggle={onAutoNextThreadToggle}
-        disabled={!isOnThread}
-        disabledReason={THREAD_ONLY_REASON}
-      />
-      <MiniWindowNote>
-        1000到達後に3秒ごとに次スレを探します。候補が見つからない場合や1000未満でdat落ちした場合は停止します
-      </MiniWindowNote>
-      <MiniWindowNote>標準・積極では、移動直後により勢いのある本流候補も監視します</MiniWindowNote>
-      <MiniWindowSelect
-        ariaLabel="次スレ判定"
-        value={autoNextThreadMode}
-        options={AUTO_NEXT_THREAD_MODE_OPTIONS}
-        onChange={onAutoNextThreadModeChange}
-        disabled={!isOnThread}
-      />
-      <MiniWindowNote>
-        標準は精度と追従性のバランスを取り、積極はスレタイの変化を広く許容します
-      </MiniWindowNote>
-    </MiniWindowSection>
-
-    <MiniWindowSeparator />
-
-    {/* 表示形式と取得周期を一つのパネルで扱い、ライブ専用の通信設定を増やさない。 */}
-    <MiniWindowSection title="表示形式" titleFor={displayModeId}>
-      <MiniWindowSelect
-        id={displayModeId}
-        value={displayMode}
-        options={THREAD_DISPLAY_MODE_OPTIONS}
-        onChange={onDisplayModeChange}
-      />
-      <MiniWindowNote>
-        ライブチャット風では新着レスを時間差で表示します。取得には下の自動更新設定を使います
-      </MiniWindowNote>
-    </MiniWindowSection>
-
-    <MiniWindowSeparator />
-
-    {/* 3. ポップアップ表示中の自動スクロール */}
-    <MiniWindowSection>
-      <MiniWindowToggle
-        label="ポップアップ表示中は一時停止"
-        checked={pauseAutoScrollOnPopup}
-        onToggle={onPauseAutoScrollOnPopupToggle}
-      />
-      <MiniWindowNote>ポップアップを表示している間の自動スクロールを一時停止します</MiniWindowNote>
-    </MiniWindowSection>
-
-    <MiniWindowSeparator />
-
-    {/* 4. 自動更新停止までの時間 */}
-    <MiniWindowSection title="自動更新停止までの時間">
-      <MiniWindowSelect
-        value={idleStopTimeoutValue}
-        options={IDLE_STOP_TIMEOUT_OPTIONS}
-        onChange={onIdleStopTimeoutChange}
-      />
-      <MiniWindowNote>
-        この時間だけ新着が来ないと自動更新を停止します。「無効」にすると停止しません
-      </MiniWindowNote>
-    </MiniWindowSection>
-
-    <MiniWindowSeparator />
-
-    {/* 5. 更新間隔 */}
-    <MiniWindowSection title="更新間隔">
-      <MiniWindowSlider
-        min={MIN_INTERVAL_SEC}
-        max={MAX_INTERVAL_SEC}
-        step={5}
-        value={intervalSec}
-        valueLabel={`${intervalSec}秒`}
-        onChange={onIntervalChange}
-      />
-    </MiniWindowSection>
-
-    <MiniWindowSeparator />
-
-    {/* 6. 自動更新 */}
     <MiniWindowSection>
       <MiniWindowToggle
         label="自動更新"
@@ -179,6 +106,70 @@ const ThreadAutoRefreshPanelContent: React.FC<ThreadAutoRefreshPanelContentProps
       />
       {!isOnThread && <MiniWindowNote>{THREAD_ONLY_REASON}</MiniWindowNote>}
     </MiniWindowSection>
+
+    <MiniWindowSection title="更新間隔">
+      <MiniWindowSlider
+        ariaLabel="更新間隔"
+        min={MIN_INTERVAL_SEC}
+        max={MAX_INTERVAL_SEC}
+        step={5}
+        value={intervalSec}
+        valueLabel={`${intervalSec}秒`}
+        onChange={onIntervalChange}
+      />
+    </MiniWindowSection>
+
+    {/* 表示形式と取得周期を一つのパネルで扱い、ライブ専用の通信設定を増やさない。 */}
+    <MiniWindowSection>
+      <MiniWindowField label="表示形式" htmlFor={`${idPrefix}-display-mode`}>
+        <MiniWindowSelect
+          id={`${idPrefix}-display-mode`}
+          value={displayMode}
+          options={THREAD_DISPLAY_MODE_OPTIONS}
+          onChange={onDisplayModeChange}
+        />
+      </MiniWindowField>
+    </MiniWindowSection>
+
+    <MiniWindowDetails summary="詳細設定" open={isDetailsOpen} onOpenChange={onDetailsOpenChange}>
+      <MiniWindowSection>
+        <MiniWindowToggle
+          label="自動次スレ移動"
+          checked={isAutoNextThreadEnabled}
+          onToggle={onAutoNextThreadToggle}
+          disabled={!isOnThread}
+          disabledReason={THREAD_ONLY_REASON}
+        />
+        <MiniWindowField label="次スレ判定" htmlFor={`${idPrefix}-next-thread-mode`}>
+          <MiniWindowSelect
+            id={`${idPrefix}-next-thread-mode`}
+            value={autoNextThreadMode}
+            options={AUTO_NEXT_THREAD_MODE_OPTIONS}
+            onChange={onAutoNextThreadModeChange}
+            disabled={!isOnThread}
+          />
+        </MiniWindowField>
+        <MiniWindowNote>1000到達後に次スレを探し、見つからなければ停止します</MiniWindowNote>
+      </MiniWindowSection>
+
+      <MiniWindowSeparator />
+
+      <MiniWindowSection>
+        <MiniWindowField label="新着なしで停止" htmlFor={`${idPrefix}-idle-stop`}>
+          <MiniWindowSelect
+            id={`${idPrefix}-idle-stop`}
+            value={idleStopTimeoutValue}
+            options={IDLE_STOP_TIMEOUT_OPTIONS}
+            onChange={onIdleStopTimeoutChange}
+          />
+        </MiniWindowField>
+        <MiniWindowToggle
+          label="ポップアップ表示中は一時停止"
+          checked={pauseAutoScrollOnPopup}
+          onToggle={onPauseAutoScrollOnPopupToggle}
+        />
+      </MiniWindowSection>
+    </MiniWindowDetails>
   </>
 );
 
@@ -242,6 +233,8 @@ export const AutoRefreshStatusItem: React.FC = () => {
   const { enabled: pauseAutoScrollOnPopup, setEnabled: setPauseAutoScrollOnPopup } =
     usePopupAutoScrollPauseSetting();
   const { canAutoScroll, isAutoScrolling, isPaused } = useAutoScrollState();
+  // ミニウィンドウを閉じ直しても、詳細設定を開いたまま使い続けられるよう本体側で保持する。
+  const [isDetailsOpen, setIsDetailsOpen] = useState(false);
 
   // 早期returnする前にすべてのhooksを呼び出す必要があるため、panelKindが変わったら
   // フック側で閉じ、表示可否はJSXレベルで分岐する。
@@ -342,8 +335,7 @@ export const AutoRefreshStatusItem: React.FC = () => {
         >
           {panelKind === "thread" ? (
             <ThreadAutoRefreshPanelContent
-              // 2ペインで同時にパネルを開いても、ラベルが別タブの選択欄へ結び付かないようにする。
-              displayModeId={`thread-display-mode-${viewTab?.id ?? "current"}`}
+              idPrefix={`thread-auto-refresh-${viewTab?.id ?? "current"}`}
               displayMode={displayMode}
               onDisplayModeChange={setDisplayMode}
               isEnabled={isEnabled}
@@ -353,6 +345,8 @@ export const AutoRefreshStatusItem: React.FC = () => {
               intervalSec={intervalSec}
               idleStopTimeoutValue={idleStopTimeoutValue}
               pauseAutoScrollOnPopup={pauseAutoScrollOnPopup}
+              isDetailsOpen={isDetailsOpen}
+              onDetailsOpenChange={setIsDetailsOpen}
               onAutoNextThreadToggle={() => setAutoNextThreadEnabled(!isAutoNextThreadEnabled)}
               onAutoNextThreadModeChange={setAutoNextThreadMode}
               onPauseAutoScrollOnPopupToggle={() =>

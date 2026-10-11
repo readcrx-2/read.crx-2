@@ -148,3 +148,46 @@ export const MiniWindowSlider: React.FC<MiniWindowSliderProps> = ({
     <span className="mini-window__slider-value">{valueLabel}</span>
   </div>
 );
+
+interface MiniWindowFieldProps {
+  label: string;
+  htmlFor: string;
+  children: React.ReactNode;
+}
+
+/** ラベルと操作を1行に並べ、セクション見出しを置くより縦幅を抑える。 */
+export const MiniWindowField: React.FC<MiniWindowFieldProps> = ({ label, htmlFor, children }) => (
+  <div className="mini-window__field-row">
+    <label className="mini-window__toggle-label" htmlFor={htmlFor}>
+      {label}
+    </label>
+    {children}
+  </div>
+);
+
+interface MiniWindowDetailsProps {
+  summary: string;
+  open: boolean;
+  onOpenChange: (open: boolean) => void;
+  children: React.ReactNode;
+}
+
+/**
+ * 頻繁に触らない設定を折りたたむ。
+ * MiniWindowは閉じるたびに中身がアンマウントされるため、開閉状態は呼び出し側で保持する。
+ */
+export const MiniWindowDetails: React.FC<MiniWindowDetailsProps> = ({
+  summary,
+  open,
+  onOpenChange,
+  children,
+}) => (
+  <details
+    className="mini-window__details"
+    open={open}
+    onToggle={(event) => onOpenChange(event.currentTarget.open)}
+  >
+    <summary className="mini-window__details-summary">{summary}</summary>
+    {children}
+  </details>
+);

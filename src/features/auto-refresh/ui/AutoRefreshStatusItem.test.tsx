@@ -280,6 +280,31 @@ describe("AutoRefreshStatusItem", () => {
     expect(screen.getByText("40 s")).toBeInTheDocument();
   });
 
+  it("詳細設定は既定で折りたたみ、開き直しても開閉状態を保つ", () => {
+    renderItem();
+
+    const button = screen.getByRole("button", { name: /自動更新/ });
+    Object.defineProperty(button, "getBoundingClientRect", {
+      configurable: true,
+      value: () => createRect(),
+    });
+
+    fireEvent.click(button);
+    const details = screen.getByText("詳細設定").closest("details");
+    expect(details).not.toHaveAttribute("open");
+    // よく使う操作は折りたたみの外に置く。
+    expect(screen.getByRole("slider", { name: "更新間隔" }).closest("details")).toBeNull();
+
+    (details as HTMLDetailsElement).open = true;
+    fireEvent(details as HTMLDetailsElement, new Event("toggle"));
+
+    fireEvent.pointerDown(button);
+    fireEvent.click(button);
+    fireEvent.click(button);
+
+    expect(screen.getByText("詳細設定").closest("details")).toHaveAttribute("open");
+  });
+
   it("ミニウィンドウから自動次スレ移動を切り替えられる", () => {
     renderItem();
 

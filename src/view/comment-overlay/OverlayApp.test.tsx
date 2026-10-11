@@ -1,6 +1,6 @@
 import "@testing-library/jest-dom/vitest";
 
-import { act, cleanup, render, screen } from "@testing-library/react";
+import { act, cleanup, fireEvent, render, screen } from "@testing-library/react";
 import { MemoryArchiveReplayOverlayEventBus } from "src/features/archive-replay/platform";
 import type { CommentCandidate } from "src/features/comment-overlay/domain";
 import { MemoryCommentOverlayEventBus } from "src/features/comment-overlay/domain";
@@ -9,6 +9,14 @@ import { COMMENT_OVERLAY_FONT_SIZE } from "src/features/comment-overlay/ui/Overl
 import { afterEach, beforeEach, describe, expect, it, vi } from "vite-plus/test";
 
 import { OverlayApp } from "./OverlayApp";
+
+const { publishJump } = vi.hoisted(() => ({
+  publishJump: vi.fn<() => Promise<void>>(),
+}));
+
+vi.mock("src/features/comment-overlay/platform/jump-events", () => ({
+  publishCommentOverlayJump: publishJump,
+}));
 
 const THREAD_URL = "https://example.test/live/1";
 
@@ -43,6 +51,8 @@ describe("OverlayApp", () => {
 
   beforeEach(() => {
     scheduledFrame = null;
+    publishJump.mockReset();
+    publishJump.mockResolvedValue(undefined);
     vi.spyOn(window, "requestAnimationFrame").mockImplementation((callback) => {
       scheduledFrame = callback;
       return 1;
@@ -258,6 +268,91 @@ describe("OverlayApp", () => {
     const renderedComment = screen.getByText("過去実況");
     expect(renderedComment).toHaveStyle({ animationPlayState: "paused" });
     expect(screen.queryByText("前回の実況")).not.toBeInTheDocument();
+  });
+
+  it("通常実況の右クリックメニューにはジャンプ項目を表示しない", async () => {
+    const eventBus = new MemoryCommentOverlayEventBus();
+    render(<OverlayApp eventBus={eventBus} platform={createBrowserCommentOverlayPlatform()} />);
+    await act(async () => {
+      await Promise.resolve();
+      await eventBus.publish({
+        version: 1,
+        type: "batch",
+        batch: {
+          threadUrl: THREAD_URL,
+          comments: [targetComment],
+          latestResponseNumber: 1,
+        },
+      });
+    });
+    act(() => scheduledFrame?.(0));
+
+    fireEvent.contextMenu(screen.getByText(targetComment.text));
+
+    expect(screen.queryByRole("menuitem", { name: "このレスへジャンプ" })).not.toBeInTheDocument();
+    expect(screen.getByRole("menuitem", { name: "レスをコピー" })).toBeVisible();
+  });
+
+  it("過去実況の一時停止中もジャンプでき、再生終了後の通常実況では項目を隠す", async () => {
+    const eventBus = new MemoryCommentOverlayEventBus();
+    const archiveReplayEventBus = new MemoryArchiveReplayOverlayEventBus();
+    render(
+      <OverlayApp
+        eventBus={eventBus}
+        archiveReplayEventBus={archiveReplayEventBus}
+        platform={createBrowserCommentOverlayPlatform()}
+      />,
+    );
+    await act(async () => {
+      await Promise.resolve();
+      await archiveReplayEventBus.publish({ version: 1, type: "reset", sessionId: "replay-1" });
+      await archiveReplayEventBus.publish({
+        version: 1,
+        type: "comment",
+        sessionId: "replay-1",
+        comment: targetComment,
+      });
+      await archiveReplayEventBus.publish({
+        version: 1,
+        type: "playback",
+        sessionId: "replay-1",
+        playing: true,
+      });
+    });
+    act(() => scheduledFrame?.(0));
+    await act(async () => {
+      await archiveReplayEventBus.publish({
+        version: 1,
+        type: "playback",
+        sessionId: "replay-1",
+        playing: false,
+      });
+    });
+
+    fireEvent.contextMenu(screen.getByText(targetComment.text));
+    fireEvent.click(screen.getByRole("menuitem", { name: "このレスへジャンプ" }));
+
+    expect(publishJump).toHaveBeenCalledWith({
+      threadUrl: THREAD_URL,
+      responseNumber: targetComment.responseNumber,
+    });
+
+    await act(async () => {
+      await archiveReplayEventBus.publish({ version: 1, type: "stop", sessionId: "replay-1" });
+      await eventBus.publish({
+        version: 1,
+        type: "batch",
+        batch: {
+          threadUrl: THREAD_URL,
+          comments: [targetComment],
+          latestResponseNumber: 1,
+        },
+      });
+    });
+    act(() => scheduledFrame?.(0));
+    fireEvent.contextMenu(screen.getByText(targetComment.text));
+
+    expect(screen.queryByRole("menuitem", { name: "このレスへジャンプ" })).not.toBeInTheDocument();
   });
 
   it("実況開始時の設定をOverlayStageへ反映し、文字サイズはコード定数を使う", async () => {

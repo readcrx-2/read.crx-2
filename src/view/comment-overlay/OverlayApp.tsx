@@ -59,6 +59,7 @@ export function OverlayApp({
   const seenResponseNumbersRef = useRef(new Set<string>());
   const seenResponseOrderRef = useRef<string[]>([]);
   const archiveReplaySessionRef = useRef<string | null>(null);
+  const [isArchiveReplay, setIsArchiveReplay] = useState(false);
   const liveQueueEpochRef = useRef(0);
   const [archiveReplayPlaying, setArchiveReplayPlaying] = useState(true);
   const overlayRootRef = useRef<HTMLElement>(null);
@@ -240,6 +241,7 @@ export function OverlayApp({
     const handleArchiveReplayEvent = (event: ArchiveReplayOverlayEvent): void => {
       if (event.type === "reset") {
         archiveReplaySessionRef.current = event.sessionId;
+        setIsArchiveReplay(true);
         setArchiveReplayPlaying(false);
         liveQueueEpochRef.current += 1;
         archiveSeenRef.clear();
@@ -251,6 +253,7 @@ export function OverlayApp({
       if (archiveReplaySessionRef.current !== event.sessionId) return;
       if (event.type === "stop") {
         archiveReplaySessionRef.current = null;
+        setIsArchiveReplay(false);
         setArchiveReplayPlaying(true);
         liveQueueEpochRef.current += 1;
         archiveSeenRef.clear();
@@ -388,17 +391,25 @@ export function OverlayApp({
         scaleToContainer
         scaleReferenceWidth={DEFAULT_COMMENT_OVERLAY_GEOMETRY.width}
         scaleReferenceHeight={DEFAULT_COMMENT_OVERLAY_GEOMETRY.height}
-        playing={archiveReplaySessionRef.current === null ? true : archiveReplayPlaying}
+        playing={isArchiveReplay ? archiveReplayPlaying : true}
         interactive
-        onCommentJump={(comment) => {
-          if (!comment.sourceThreadUrl || comment.responseNumber <= 0) return;
-          void publishCommentOverlayJump({
-            threadUrl: comment.sourceThreadUrl,
-            responseNumber: comment.responseNumber,
-          }).catch((error: unknown) => {
-            console.error("[ChLens] コメントOverlayからのレスジャンプ要求に失敗しました:", error);
-          });
-        }}
+        // 過去ログの再生位置を確認する操作なので、通常実況ではジャンプ項目を表示しない。
+        onCommentJump={
+          isArchiveReplay
+            ? (comment) => {
+                if (!comment.sourceThreadUrl || comment.responseNumber <= 0) return;
+                void publishCommentOverlayJump({
+                  threadUrl: comment.sourceThreadUrl,
+                  responseNumber: comment.responseNumber,
+                }).catch((error: unknown) => {
+                  console.error(
+                    "[ChLens] コメントOverlayからのレスジャンプ要求に失敗しました:",
+                    error,
+                  );
+                });
+              }
+            : undefined
+        }
         showCommentInfo={false}
         backgroundColor="transparent"
       />

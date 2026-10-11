@@ -279,3 +279,9 @@
   font-size: 0.7rem;
   text-align: center;
 }
+
+/* 追従中は範囲を操作できないため、操作可能に見えるカーソルを出さない。 */
+.overlay-control-panel__desktop--readonly,
+.overlay-control-panel__desktop--readonly * {
+  cursor: default;
+}

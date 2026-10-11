@@ -27,7 +27,8 @@ const secondMonitor: CommentOverlayMonitor = {
 };
 
 describe("OverlayControlPanel", () => {
-  it("選択した実画面を静止画で表示し、更新ボタンで撮影し直して範囲を指定できる", async () => {
+  it("選択した実画面のプレビューを自動で撮影し直し、範囲を指定できる", async () => {
+    vi.useFakeTimers({ shouldAdvanceTime: true });
     const capture = vi.fn().mockResolvedValue("data:image/png;base64,preview");
     const onGeometryChange = vi.fn();
     render(
@@ -39,15 +40,19 @@ describe("OverlayControlPanel", () => {
         captureMonitorPreview={capture}
       />,
     );
-    await waitFor(() => expect(screen.getByText("静止画プレビュー")).toBeInTheDocument());
+    await waitFor(() => expect(screen.getByText("プレビューを自動更新中")).toBeInTheDocument());
     expect(capture).toHaveBeenCalledExactlyOnceWith(monitor);
+    expect(screen.queryByRole("button", { name: "プレビューを更新" })).toBeNull();
     expect(document.querySelector("image")).toHaveAttribute(
       "href",
       "data:image/png;base64,preview",
     );
     fireEvent.doubleClick(screen.getByTestId("overlay-control-panel-desktop"));
     expect(onGeometryChange).toHaveBeenCalledWith({ x: 0, y: 0, width: 1920, height: 1080 });
-    fireEvent.click(screen.getByRole("button", { name: "プレビューを更新" }));
+    // 前回の撮影が終わってから一定間隔で撮り直す。
+    await act(async () => {
+      await vi.advanceTimersByTimeAsync(2_000);
+    });
     await waitFor(() => expect(capture).toHaveBeenCalledTimes(2));
     fireEvent.click(screen.getByRole("button", { name: "次のディスプレイをプレビュー" }));
     await waitFor(() => expect(capture).toHaveBeenLastCalledWith(secondMonitor));
@@ -87,7 +92,8 @@ describe("OverlayControlPanel", () => {
     expect(document.querySelector("image")).toHaveAttribute("href", "data:image/png;base64,second");
   });
 
-  it("撮影に失敗しても範囲指定を維持し、更新で再試行できる", async () => {
+  it("撮影に失敗しても範囲指定を維持し、次の周期で自動的に再試行する", async () => {
+    vi.useFakeTimers({ shouldAdvanceTime: true });
     const capture = vi
       .fn()
       .mockRejectedValueOnce(new Error("撮影失敗"))
@@ -103,12 +109,57 @@ describe("OverlayControlPanel", () => {
     );
     await waitFor(() => expect(screen.getByText(/画面を取得できませんでした/)).toBeInTheDocument());
     expect(screen.getByTestId("overlay-control-panel-selection")).toBeInTheDocument();
-    fireEvent.click(screen.getByRole("button", { name: "プレビューを更新" }));
-    await waitFor(() => expect(screen.getByText("静止画プレビュー")).toBeInTheDocument());
+    await act(async () => {
+      await vi.advanceTimersByTimeAsync(2_000);
+    });
+    await waitFor(() => expect(screen.getByText("プレビューを自動更新中")).toBeInTheDocument());
   });
   afterEach(() => {
     cleanup();
+    vi.useRealTimers();
     vi.restoreAllMocks();
+  });
+
+  it("撮影に対応しない環境では同じ撮影を繰り返し要求しない", async () => {
+    vi.useFakeTimers({ shouldAdvanceTime: true });
+    const capture = vi.fn().mockResolvedValue(null);
+    render(
+      <OverlayControlPanel
+        monitors={[monitor]}
+        lockAspectRatio={false}
+        onLockAspectRatioChange={vi.fn()}
+        onGeometryChange={vi.fn()}
+        captureMonitorPreview={capture}
+      />,
+    );
+    await waitFor(() =>
+      expect(screen.getByText("この環境では画面の撮影に対応していません。")).toBeInTheDocument(),
+    );
+    await act(async () => {
+      await vi.advanceTimersByTimeAsync(6_000);
+    });
+    expect(capture).toHaveBeenCalledTimes(1);
+  });
+
+  it("閲覧専用では縦横比固定と範囲操作を出さず、実際の表示領域をそのまま示す", () => {
+    const onGeometryChange = vi.fn();
+    render(
+      <OverlayControlPanel
+        monitors={[monitor]}
+        geometry={{ x: 100, y: 100, width: 800, height: 600 }}
+        lockAspectRatio
+        onLockAspectRatioChange={vi.fn()}
+        onGeometryChange={onGeometryChange}
+        readOnly
+      />,
+    );
+
+    expect(screen.queryByRole("checkbox", { name: /縦横比を固定/ })).toBeNull();
+    expect(screen.queryByRole("button", { name: "初期位置" })).toBeNull();
+    // 縦横比固定が保存されていても、追従先の4:3をそのまま表示する。
+    expect(screen.getByText("800 × 600")).toBeInTheDocument();
+    fireEvent.doubleClick(screen.getByTestId("overlay-control-panel-desktop"));
+    expect(onGeometryChange).not.toHaveBeenCalled();
   });
 
   it("ディスプレイをダブルクリックすると全画面geometryを通知する", () => {

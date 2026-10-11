@@ -22,6 +22,9 @@ import {
 
 const MIN_WIDTH = 320;
 const MIN_HEIGHT = 80;
+// 変更理由: 手動の「プレビューを更新」を押さないと画面の変化が見えなかったため、
+// 撮影が終わってから次を予約する形で定期更新する。重い撮影を重複させない。
+const PREVIEW_REFRESH_INTERVAL_MS = 2_000;
 
 interface DesktopBounds {
   x: number;
@@ -70,6 +73,11 @@ export interface OverlayControlPanelProps {
   onLockAspectRatioChange: (locked: boolean) => void;
   onGeometryChange: (geometry: CommentOverlayGeometry) => void;
   captureMonitorPreview?: (monitor: CommentOverlayMonitor) => Promise<string | null>;
+  /**
+   * ウィンドウ追従中など、表示領域が外部で決まる間は閲覧専用にする。
+   * 縦横比固定と手動の範囲指定を受け付けず、実際の表示領域をそのまま示す。
+   */
+  readOnly?: boolean;
 }
 
 function getMonitorBounds(monitor: CommentOverlayMonitor | null): DesktopBounds {
@@ -260,11 +268,15 @@ function monitorGeometry(
 export function OverlayControlPanel({
   monitors,
   geometry = DEFAULT_COMMENT_OVERLAY_GEOMETRY,
-  lockAspectRatio,
+  lockAspectRatio: requestedLockAspectRatio,
   onLockAspectRatioChange,
   onGeometryChange,
   captureMonitorPreview,
+  readOnly = false,
 }: OverlayControlPanelProps) {
+  // 変更理由: 追従中の表示領域は追従先ウィンドウの内側サイズで決まるため、16:9へ補正して
+  // 表示すると実際の位置とずれる。閲覧専用の間は縦横比固定を適用しない。
+  const lockAspectRatio = requestedLockAspectRatio && !readOnly;
   const svgRef = useRef<SVGSVGElement>(null);
   const dragRef = useRef<DragState | null>(null);
   const [dragPreview, setDragPreview] = useState<CommentOverlayGeometry | null>(null);
@@ -297,58 +309,60 @@ export function OverlayControlPanel({
       : null;
   }, [bounds, geometry, lockAspectRatio, previewMonitor]);
   const displayedGeometry = dragPreview ?? currentGeometry;
-  const [previewRevision, setPreviewRevision] = useState(0);
   const [screenPreview, setScreenPreview] = useState<{
     monitor: CommentOverlayMonitor;
-    revision: number;
     image: string | null;
     error: boolean;
   } | null>(null);
-  const currentPreview =
-    screenPreview?.monitor === previewMonitor && screenPreview.revision === previewRevision
-      ? screenPreview
-      : null;
+  const currentPreview = screenPreview?.monitor === previewMonitor ? screenPreview : null;
   const isPreviewLoading =
     captureMonitorPreview != null && previewMonitor != null && !currentPreview;
 
   useEffect(() => {
     if (!captureMonitorPreview || !previewMonitor) return;
     let disposed = false;
-    // 選択中の画面だけを要求時に撮影し、連続キャプチャや非表示パネルでの負荷を避ける。
-    void captureMonitorPreview(previewMonitor)
-      .then((image) => {
-        if (!disposed) {
-          setScreenPreview({
-            monitor: previewMonitor,
-            revision: previewRevision,
-            image,
-            error: false,
-          });
-        }
-      })
-      .catch((error: unknown) => {
+    let timer: ReturnType<typeof setTimeout> | null = null;
+    const scheduleNext = (): void => {
+      if (!disposed) timer = setTimeout(() => void captureOnce(), PREVIEW_REFRESH_INTERVAL_MS);
+    };
+    const captureOnce = async (): Promise<void> => {
+      // 窓が最小化・背面タブなどで見えない間は撮影せず、表示されたら再開する。
+      if (svgRef.current?.ownerDocument.visibilityState === "hidden") {
+        scheduleNext();
+        return;
+      }
+      try {
+        const image = await captureMonitorPreview(previewMonitor);
+        if (disposed) return;
+        setScreenPreview({ monitor: previewMonitor, image, error: false });
+        // 撮影に対応しない環境（null）では、同じ結果を繰り返し要求しない。
+        if (image != null) scheduleNext();
+      } catch (error: unknown) {
         console.error("[ChLens] ディスプレイのプレビュー取得に失敗しました:", error);
-        if (!disposed) {
-          setScreenPreview({
-            monitor: previewMonitor,
-            revision: previewRevision,
-            image: null,
-            error: true,
-          });
-        }
-      });
+        if (disposed) return;
+        // 一時的な失敗で直前の画像を消さず、次の周期で自動的に再試行する。
+        setScreenPreview((current) => ({
+          monitor: previewMonitor,
+          image: current?.monitor === previewMonitor ? current.image : null,
+          error: true,
+        }));
+        scheduleNext();
+      }
+    };
+    void captureOnce();
     return () => {
       // 画面切り替え後に前の撮影が完了しても、別画面の画像を表示しない。
       disposed = true;
+      if (timer) clearTimeout(timer);
     };
-  }, [captureMonitorPreview, previewMonitor, previewRevision]);
+  }, [captureMonitorPreview, previewMonitor]);
 
   const startDrag = (
     event: ReactPointerEvent<SVGElement>,
     mode: DragMode,
     direction?: ResizeDirection,
   ): void => {
-    if (event.button !== 0 || !svgRef.current) return;
+    if (readOnly || event.button !== 0 || !svgRef.current) return;
     event.preventDefault();
     event.stopPropagation();
     const start = pointFromEvent(event, svgRef.current, bounds);
@@ -419,6 +433,7 @@ export function OverlayControlPanel({
   ): void => {
     // 変更理由: Overlay自身は常時クリック透過なので、ディスプレイ単位の操作は
     // この仮想画面からgeometryを直接作り、実ウィンドウへ遠隔反映する。
+    if (readOnly) return;
     event.preventDefault();
     event.stopPropagation();
     dragRef.current = null;
@@ -457,35 +472,43 @@ export function OverlayControlPanel({
       <header className="overlay-control-panel__header">
         <div>
           <h2>コメント表示領域</h2>
-          <p>ディスプレイのプレビュー上で範囲を指定します。</p>
+          <p>
+            {readOnly
+              ? "追従先ウィンドウに合わせて自動で決まります。"
+              : "ディスプレイのプレビュー上で範囲を指定します。"}
+          </p>
         </div>
-        <button type="button" onClick={handleReset}>
-          初期位置
-        </button>
+        {!readOnly && (
+          <button type="button" onClick={handleReset}>
+            初期位置
+          </button>
+        )}
       </header>
 
-      <label className="overlay-control-panel__aspect-ratio">
-        <input
-          type="checkbox"
-          checked={lockAspectRatio}
-          onChange={(event) => {
-            const locked = event.target.checked;
-            dragRef.current = null;
-            setDragPreview(null);
-            onLockAspectRatioChange(locked);
-            if (locked && currentGeometry) {
-              onGeometryChange(
-                clampGeometry(
-                  fitCommentOverlayGeometryToAspectRatio(currentGeometry),
-                  bounds,
-                  true,
-                ),
-              );
-            }
-          }}
-        />
-        縦横比を固定（16:9）
-      </label>
+      {!readOnly && (
+        <label className="overlay-control-panel__aspect-ratio">
+          <input
+            type="checkbox"
+            checked={lockAspectRatio}
+            onChange={(event) => {
+              const locked = event.target.checked;
+              dragRef.current = null;
+              setDragPreview(null);
+              onLockAspectRatioChange(locked);
+              if (locked && currentGeometry) {
+                onGeometryChange(
+                  clampGeometry(
+                    fitCommentOverlayGeometryToAspectRatio(currentGeometry),
+                    bounds,
+                    true,
+                  ),
+                );
+              }
+            }}
+          />
+          縦横比を固定（16:9）
+        </label>
+      )}
 
       {monitors.length === 0 ? (
         <p className="overlay-control-panel__empty" role="status">
@@ -524,23 +547,18 @@ export function OverlayControlPanel({
                 {isPreviewLoading
                   ? "画面を取得中…"
                   : currentPreview?.error
-                    ? "画面を取得できませんでした。再度更新してください。"
+                    ? "画面を取得できませんでした。自動で再試行します。"
                     : currentPreview?.image
-                      ? "静止画プレビュー"
+                      ? "プレビューを自動更新中"
                       : "この環境では画面の撮影に対応していません。"}
               </span>
-              <button
-                type="button"
-                disabled={isPreviewLoading}
-                onClick={() => setPreviewRevision((value) => value + 1)}
-              >
-                プレビューを更新
-              </button>
             </div>
           )}
           <svg
             ref={svgRef}
-            className="overlay-control-panel__desktop"
+            className={`overlay-control-panel__desktop${
+              readOnly ? " overlay-control-panel__desktop--readonly" : ""
+            }`}
             data-testid="overlay-control-panel-desktop"
             viewBox={`${bounds.x} ${bounds.y} ${bounds.width} ${bounds.height}`}
             preserveAspectRatio="xMidYMid meet"
@@ -618,6 +636,7 @@ export function OverlayControlPanel({
               />
             )}
             {displayedGeometry &&
+              !readOnly &&
               RESIZE_HANDLES.map(({ direction, cursor }) => {
                 const x = direction.includes("West")
                   ? displayedGeometry.x
@@ -654,10 +673,12 @@ export function OverlayControlPanel({
                 );
               })}
           </svg>
-          <div className="overlay-control-panel__help">
-            <span>ドラッグ: 範囲指定 / 移動</span>
-            <span>ダブルクリック: ディスプレイ全体</span>
-          </div>
+          {!readOnly && (
+            <div className="overlay-control-panel__help">
+              <span>ドラッグ: 範囲指定 / 移動</span>
+              <span>ダブルクリック: ディスプレイ全体</span>
+            </div>
+          )}
           {displayedGeometry ? (
             <dl className="overlay-control-panel__geometry" aria-label="選択中のサイズ">
               <div>
@@ -675,7 +696,9 @@ export function OverlayControlPanel({
             </dl>
           ) : (
             <p className="overlay-control-panel__unselected">
-              このディスプレイには表示領域がありません。ドラッグまたはダブルクリックで指定します。
+              {readOnly
+                ? "このディスプレイには表示領域がありません。"
+                : "このディスプレイには表示領域がありません。ドラッグまたはダブルクリックで指定します。"}
             </p>
           )}
         </>

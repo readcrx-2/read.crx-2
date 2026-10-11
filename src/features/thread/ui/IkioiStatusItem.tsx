@@ -1,12 +1,14 @@
 import { Flame } from "lucide-react";
-import React, { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import React, { useEffect, useMemo, useRef, useState } from "react";
 import { useViewSurface } from "src/features/auxiliary-window/browser/use-view-surface";
 import { useTabStore } from "src/features/tabs/browser/use-tab-store";
 import { container } from "src/service-container/index";
 import type { IRes, IThreadDetail } from "src/service-container/interfaces";
 import { MiniWindow } from "src/view/browser/components/MiniWindow";
+import { MiniWindowSection } from "src/view/browser/components/MiniWindowControls";
 import { STATUS_BAR_PRIORITY } from "src/view/browser/components/status-bar-priority";
 import { StatusBarItem } from "src/view/browser/components/StatusBar";
+import { useMiniWindowTrigger } from "src/view/browser/hooks/use-mini-window-trigger";
 import { Spinner } from "src/view/browser/ui/Spinner";
 
 const MOMENTUM_BUCKET_COUNT = 30;
@@ -246,28 +248,21 @@ export const IkioiStatusItem: React.FC = () => {
   const [ikioi, setIkioi] = useState<number | null>(null);
   const [loading, setLoading] = useState(false);
   const [momentumData, setMomentumData] = useState<MomentumGraphData | null>(null);
-  const [isWindowOpen, setIsWindowOpen] = useState(false);
-  const [anchorRect, setAnchorRect] = useState<DOMRect | null>(null);
-  const btnRef = useRef<HTMLButtonElement>(null);
 
   const threadUrl = viewPage.type === "thread" ? viewPage.threadUrl : null;
   const reloadKey = viewTab.reloadKey;
-
-  const closeWindow = useCallback(() => setIsWindowOpen(false), []);
-
-  const handleClick = useCallback(() => {
-    if (btnRef.current) {
-      setAnchorRect(btnRef.current.getBoundingClientRect());
-    }
-    setIsWindowOpen((prev) => !prev);
-  }, []);
+  const {
+    triggerRef: miniWindowTriggerRef,
+    anchor: miniWindowAnchor,
+    toggle: toggleMiniWindow,
+    close: closeMiniWindow,
+  } = useMiniWindowTrigger(threadUrl);
 
   useEffect(() => {
     if (threadUrl == null) {
       setIkioi(null);
       setMomentumData(null);
       setLoading(false);
-      setIsWindowOpen(false);
       return;
     }
 
@@ -335,9 +330,9 @@ export const IkioiStatusItem: React.FC = () => {
         interactive
       >
         <button
-          ref={btnRef}
+          ref={miniWindowTriggerRef}
           className="status-bar__btn"
-          onClick={handleClick}
+          onClick={toggleMiniWindow}
           title={`勢い: ${displayValue}`}
           aria-label={`勢い ${displayValue}`}
         >
@@ -348,12 +343,16 @@ export const IkioiStatusItem: React.FC = () => {
         </button>
       </StatusBarItem>
 
-      {isWindowOpen && anchorRect && (
-        <MiniWindow title="勢い" anchor={anchorRect} onClose={closeWindow} triggerRef={btnRef}>
-          <div className="mini-window__section">
-            <div className="mini-window__section-header">勢いグラフ</div>
+      {miniWindowAnchor && (
+        <MiniWindow
+          title="勢い"
+          anchor={miniWindowAnchor}
+          onClose={closeMiniWindow}
+          triggerRef={miniWindowTriggerRef}
+        >
+          <MiniWindowSection title="勢いグラフ">
             <MomentumLineChart data={momentumData} loading={loading} />
-          </div>
+          </MiniWindowSection>
         </MiniWindow>
       )}
     </>

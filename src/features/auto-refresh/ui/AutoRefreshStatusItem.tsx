@@ -1,6 +1,5 @@
 import { Clock3, Pause, RefreshCw } from "lucide-react";
-import React, { useCallback, useEffect, useRef, useState } from "react";
-import type { IdleStopTimeoutOption } from "src/features/auto-refresh/browser/auto-refresh-config";
+import React from "react";
 import { IDLE_STOP_TIMEOUT_OPTIONS } from "src/features/auto-refresh/browser/auto-refresh-config";
 import {
   MAX_BOARD_INTERVAL_SEC,
@@ -12,7 +11,6 @@ import {
 import { useAutoScrollState } from "src/features/auto-refresh/browser/use-auto-scroll-state";
 import { usePopupAutoScrollPauseSetting } from "src/features/auto-refresh/browser/use-popup-auto-scroll-pause-setting";
 import {
-  normalizeThreadDisplayMode,
   type ThreadDisplayMode,
   useThreadDisplayModeSetting,
 } from "src/features/live-chat/browser/use-thread-display-mode-setting";
@@ -20,8 +18,18 @@ import type { AutoNextThreadMode } from "src/features/next-thread/browser/next-t
 import { useAutoNextThreadSetting } from "src/features/next-thread/browser/use-auto-next-thread-setting";
 import { useTabStore } from "src/features/tabs/browser/use-tab-store";
 import { MiniWindow } from "src/view/browser/components/MiniWindow";
+import {
+  MiniWindowNote,
+  MiniWindowSection,
+  MiniWindowSelect,
+  type MiniWindowSelectOption,
+  MiniWindowSeparator,
+  MiniWindowSlider,
+  MiniWindowToggle,
+} from "src/view/browser/components/MiniWindowControls";
 import { STATUS_BAR_PRIORITY } from "src/view/browser/components/status-bar-priority";
 import { StatusBarItem, StatusBarMode } from "src/view/browser/components/StatusBar";
+import { useMiniWindowTrigger } from "src/view/browser/hooks/use-mini-window-trigger";
 
 // -----------------------------------------------------------------------
 // ミニウィンドウの中身（UI のみ、ロジックは props 経由）
@@ -45,6 +53,18 @@ interface ThreadAutoRefreshPanelContentProps {
   onIdleStopTimeoutChange: (value: string) => void;
 }
 
+const THREAD_DISPLAY_MODE_OPTIONS: readonly MiniWindowSelectOption<ThreadDisplayMode>[] = [
+  { value: "normal", label: "通常" },
+  { value: "live-chat", label: "ライブチャット風" },
+];
+
+const AUTO_NEXT_THREAD_MODE_OPTIONS: readonly MiniWindowSelectOption<AutoNextThreadMode>[] = [
+  { value: "balanced", label: "標準" },
+  { value: "aggressive", label: "積極（変化を許容）" },
+];
+
+const THREAD_ONLY_REASON = "スレッドを開いているときに有効です";
+
 const ThreadAutoRefreshPanelContent: React.FC<ThreadAutoRefreshPanelContentProps> = ({
   displayModeId,
   displayMode,
@@ -64,148 +84,101 @@ const ThreadAutoRefreshPanelContent: React.FC<ThreadAutoRefreshPanelContentProps
   onIdleStopTimeoutChange,
 }) => (
   <>
-    <div className="mini-window__separator" />
+    <MiniWindowSeparator />
 
     {/* 1. 自動次スレ検索 */}
-    <div className="mini-window__section">
-      <div className="mini-window__toggle-row">
-        <span className="mini-window__toggle-label">自動次スレ移動</span>
-        <button
-          className={`mini-window__toggle-btn${
-            isAutoNextThreadEnabled ? " mini-window__toggle-btn--on" : ""
-          }`}
-          onClick={onAutoNextThreadToggle}
-          disabled={!isOnThread}
-          title={!isOnThread ? "スレッドを開いているときに有効です" : undefined}
-        >
-          {isAutoNextThreadEnabled ? "ON" : "OFF"}
-        </button>
-      </div>
-      <p className="mini-window__note">
+    <MiniWindowSection>
+      <MiniWindowToggle
+        label="自動次スレ移動"
+        checked={isAutoNextThreadEnabled}
+        onToggle={onAutoNextThreadToggle}
+        disabled={!isOnThread}
+        disabledReason={THREAD_ONLY_REASON}
+      />
+      <MiniWindowNote>
         1000到達後に3秒ごとに次スレを探します。候補が見つからない場合や1000未満でdat落ちした場合は停止します
-      </p>
-      <p className="mini-window__note">
-        標準・積極では、移動直後により勢いのある本流候補も監視します
-      </p>
-      <div className="mini-window__select-row">
-        <select
-          className="mini-window__select"
-          aria-label="次スレ判定"
-          value={autoNextThreadMode}
-          onChange={(event) => onAutoNextThreadModeChange(event.target.value as AutoNextThreadMode)}
-          disabled={!isOnThread}
-        >
-          <option value="balanced">標準</option>
-          <option value="aggressive">積極（変化を許容）</option>
-        </select>
-      </div>
-      <p className="mini-window__note">
+      </MiniWindowNote>
+      <MiniWindowNote>標準・積極では、移動直後により勢いのある本流候補も監視します</MiniWindowNote>
+      <MiniWindowSelect
+        ariaLabel="次スレ判定"
+        value={autoNextThreadMode}
+        options={AUTO_NEXT_THREAD_MODE_OPTIONS}
+        onChange={onAutoNextThreadModeChange}
+        disabled={!isOnThread}
+      />
+      <MiniWindowNote>
         標準は精度と追従性のバランスを取り、積極はスレタイの変化を広く許容します
-      </p>
-    </div>
+      </MiniWindowNote>
+    </MiniWindowSection>
 
-    <div className="mini-window__separator" />
+    <MiniWindowSeparator />
 
     {/* 表示形式と取得周期を一つのパネルで扱い、ライブ専用の通信設定を増やさない。 */}
-    <div className="mini-window__section">
-      <label className="mini-window__section-header" htmlFor={displayModeId}>
-        表示形式
-      </label>
-      <div className="mini-window__select-row">
-        <select
-          id={displayModeId}
-          className="mini-window__select"
-          value={displayMode}
-          onChange={(event) => onDisplayModeChange(normalizeThreadDisplayMode(event.target.value))}
-        >
-          <option value="normal">通常</option>
-          <option value="live-chat">ライブチャット風</option>
-        </select>
-      </div>
-      <p className="mini-window__note">
+    <MiniWindowSection title="表示形式" titleFor={displayModeId}>
+      <MiniWindowSelect
+        id={displayModeId}
+        value={displayMode}
+        options={THREAD_DISPLAY_MODE_OPTIONS}
+        onChange={onDisplayModeChange}
+      />
+      <MiniWindowNote>
         ライブチャット風では新着レスを時間差で表示します。取得には下の自動更新設定を使います
-      </p>
-    </div>
+      </MiniWindowNote>
+    </MiniWindowSection>
 
-    <div className="mini-window__separator" />
+    <MiniWindowSeparator />
 
     {/* 3. ポップアップ表示中の自動スクロール */}
-    <div className="mini-window__section">
-      <div className="mini-window__toggle-row">
-        <span className="mini-window__toggle-label">ポップアップ表示中は一時停止</span>
-        <button
-          className={`mini-window__toggle-btn${
-            pauseAutoScrollOnPopup ? " mini-window__toggle-btn--on" : ""
-          }`}
-          onClick={onPauseAutoScrollOnPopupToggle}
-        >
-          {pauseAutoScrollOnPopup ? "ON" : "OFF"}
-        </button>
-      </div>
-      <p className="mini-window__note">
-        ポップアップを表示している間の自動スクロールを一時停止します
-      </p>
-    </div>
+    <MiniWindowSection>
+      <MiniWindowToggle
+        label="ポップアップ表示中は一時停止"
+        checked={pauseAutoScrollOnPopup}
+        onToggle={onPauseAutoScrollOnPopupToggle}
+      />
+      <MiniWindowNote>ポップアップを表示している間の自動スクロールを一時停止します</MiniWindowNote>
+    </MiniWindowSection>
 
-    <div className="mini-window__separator" />
+    <MiniWindowSeparator />
 
     {/* 4. 自動更新停止までの時間 */}
-    <div className="mini-window__section">
-      <div className="mini-window__section-header">自動更新停止までの時間</div>
-      <div className="mini-window__select-row">
-        <select
-          className="mini-window__select"
-          value={idleStopTimeoutValue}
-          onChange={(e) => onIdleStopTimeoutChange(e.target.value)}
-        >
-          {IDLE_STOP_TIMEOUT_OPTIONS.map((opt: IdleStopTimeoutOption) => (
-            <option key={opt.value} value={opt.value}>
-              {opt.label}
-            </option>
-          ))}
-        </select>
-      </div>
-      <p className="mini-window__note">
+    <MiniWindowSection title="自動更新停止までの時間">
+      <MiniWindowSelect
+        value={idleStopTimeoutValue}
+        options={IDLE_STOP_TIMEOUT_OPTIONS}
+        onChange={onIdleStopTimeoutChange}
+      />
+      <MiniWindowNote>
         この時間だけ新着が来ないと自動更新を停止します。「無効」にすると停止しません
-      </p>
-    </div>
+      </MiniWindowNote>
+    </MiniWindowSection>
 
-    <div className="mini-window__separator" />
+    <MiniWindowSeparator />
 
     {/* 5. 更新間隔 */}
-    <div className="mini-window__section">
-      <div className="mini-window__section-header">更新間隔</div>
-      <div className="mini-window__slider-row">
-        <input
-          className="mini-window__slider"
-          type="range"
-          min={MIN_INTERVAL_SEC}
-          max={MAX_INTERVAL_SEC}
-          step={5}
-          value={intervalSec}
-          onChange={(e) => onIntervalChange(Number(e.target.value))}
-        />
-        <span className="mini-window__slider-value">{intervalSec}秒</span>
-      </div>
-    </div>
+    <MiniWindowSection title="更新間隔">
+      <MiniWindowSlider
+        min={MIN_INTERVAL_SEC}
+        max={MAX_INTERVAL_SEC}
+        step={5}
+        value={intervalSec}
+        valueLabel={`${intervalSec}秒`}
+        onChange={onIntervalChange}
+      />
+    </MiniWindowSection>
 
-    <div className="mini-window__separator" />
+    <MiniWindowSeparator />
 
     {/* 6. 自動更新 */}
-    <div className="mini-window__section">
-      <div className="mini-window__toggle-row">
-        <span className="mini-window__toggle-label">自動更新</span>
-        <button
-          className={`mini-window__toggle-btn${isEnabled ? " mini-window__toggle-btn--on" : ""}`}
-          onClick={onToggle}
-          disabled={!isOnThread}
-          title={!isOnThread ? "スレッドを開いているときに有効です" : undefined}
-        >
-          {isEnabled ? "ON" : "OFF"}
-        </button>
-      </div>
-      {!isOnThread && <p className="mini-window__note">スレッドを開いているときに有効です</p>}
-    </div>
+    <MiniWindowSection>
+      <MiniWindowToggle
+        label="自動更新"
+        checked={isEnabled}
+        onToggle={onToggle}
+        disabled={!isOnThread}
+        disabledReason={THREAD_ONLY_REASON}
+      />
+      {!isOnThread && <MiniWindowNote>{THREAD_ONLY_REASON}</MiniWindowNote>}
+    </MiniWindowSection>
   </>
 );
 
@@ -223,37 +196,24 @@ const ThreadListAutoRefreshPanelContent: React.FC<ThreadListAutoRefreshPanelCont
   onIntervalChange,
 }) => (
   <>
-    <div className="mini-window__section">
-      <div className="mini-window__toggle-row">
-        <span className="mini-window__toggle-label">自動更新</span>
-        <button
-          className={`mini-window__toggle-btn${isEnabled ? " mini-window__toggle-btn--on" : ""}`}
-          onClick={onToggle}
-        >
-          {isEnabled ? "ON" : "OFF"}
-        </button>
-      </div>
-      <p className="mini-window__note">スレ一覧を開いている間だけ、同じタブで自動更新します</p>
-    </div>
+    <MiniWindowSection>
+      <MiniWindowToggle label="自動更新" checked={isEnabled} onToggle={onToggle} />
+      <MiniWindowNote>スレ一覧を開いている間だけ、同じタブで自動更新します</MiniWindowNote>
+    </MiniWindowSection>
 
-    <div className="mini-window__separator" />
+    <MiniWindowSeparator />
 
-    <div className="mini-window__section">
-      <div className="mini-window__section-header">更新間隔</div>
-      <div className="mini-window__slider-row">
-        <input
-          className="mini-window__slider"
-          type="range"
-          min={MIN_BOARD_INTERVAL_SEC}
-          max={MAX_BOARD_INTERVAL_SEC}
-          step={10}
-          value={intervalSec}
-          onChange={(e) => onIntervalChange(Number(e.target.value))}
-        />
-        <span className="mini-window__slider-value">{intervalSec}秒</span>
-      </div>
-      <p className="mini-window__note">10秒から300秒の範囲で設定できます</p>
-    </div>
+    <MiniWindowSection title="更新間隔">
+      <MiniWindowSlider
+        min={MIN_BOARD_INTERVAL_SEC}
+        max={MAX_BOARD_INTERVAL_SEC}
+        step={10}
+        value={intervalSec}
+        valueLabel={`${intervalSec}秒`}
+        onChange={onIntervalChange}
+      />
+      <MiniWindowNote>10秒から300秒の範囲で設定できます</MiniWindowNote>
+    </MiniWindowSection>
   </>
 );
 
@@ -283,9 +243,14 @@ export const AutoRefreshStatusItem: React.FC = () => {
     usePopupAutoScrollPauseSetting();
   const { canAutoScroll, isAutoScrolling, isPaused } = useAutoScrollState();
 
-  const [isWindowOpen, setIsWindowOpen] = useState(false);
-  const [anchorRect, setAnchorRect] = useState<DOMRect | null>(null);
-  const btnRef = useRef<HTMLButtonElement>(null);
+  // 早期returnする前にすべてのhooksを呼び出す必要があるため、panelKindが変わったら
+  // フック側で閉じ、表示可否はJSXレベルで分岐する。
+  const {
+    triggerRef: miniWindowTriggerRef,
+    anchor: miniWindowAnchor,
+    toggle: toggleMiniWindow,
+    close: closeMiniWindow,
+  } = useMiniWindowTrigger(panelKind);
 
   // 変更理由: 全体の status-bar accent は StatusBarMode が source of truth なので、
   // スレ/スレ一覧の両方で同じ active 判定をここに集約する。
@@ -296,22 +261,6 @@ export const AutoRefreshStatusItem: React.FC = () => {
         ? isEnabled
         : false;
   const intervalLabel = `${intervalSec} s`;
-
-  // 早期returnする前にすべてのhooksを呼び出す必要があるため、
-  // panelKindのチェックはif文で早期return前に移動するのではなく、
-  // JSXレベルで条件分岐を実装する
-  useEffect(() => {
-    setIsWindowOpen(false);
-  }, [panelKind]);
-
-  const handleClick = useCallback(() => {
-    if (btnRef.current) {
-      setAnchorRect(btnRef.current.getBoundingClientRect());
-    }
-    setIsWindowOpen((prev) => !prev);
-  }, []);
-
-  const closeWindow = useCallback(() => setIsWindowOpen(false), []);
 
   // panelKindがnullの場合はこのコンポーネント全体を表示しない
   if (panelKind == null) {
@@ -369,9 +318,9 @@ export const AutoRefreshStatusItem: React.FC = () => {
         interactive
       >
         <button
-          ref={btnRef}
+          ref={miniWindowTriggerRef}
           className={buttonClassName}
-          onClick={handleClick}
+          onClick={toggleMiniWindow}
           title={itemTitle}
           aria-label={itemTitle}
         >
@@ -384,12 +333,12 @@ export const AutoRefreshStatusItem: React.FC = () => {
         </button>
       </StatusBarItem>
 
-      {isWindowOpen && anchorRect && (
+      {miniWindowAnchor && (
         <MiniWindow
           title={windowTitle}
-          anchor={anchorRect}
-          onClose={closeWindow}
-          triggerRef={btnRef}
+          anchor={miniWindowAnchor}
+          onClose={closeMiniWindow}
+          triggerRef={miniWindowTriggerRef}
         >
           {panelKind === "thread" ? (
             <ThreadAutoRefreshPanelContent

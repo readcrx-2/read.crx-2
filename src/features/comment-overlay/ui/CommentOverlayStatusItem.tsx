@@ -11,9 +11,16 @@ import { OverlayControlPanel } from "src/features/comment-overlay/ui/OverlayCont
 import { WindowAttachmentControl } from "src/features/comment-overlay/ui/WindowAttachmentControl";
 import { useTabStore } from "src/features/tabs/browser/use-tab-store";
 import { MiniWindow } from "src/view/browser/components/MiniWindow";
+import {
+  MiniWindowNote,
+  MiniWindowSection,
+  MiniWindowSeparator,
+  MiniWindowToggle,
+} from "src/view/browser/components/MiniWindowControls";
 import { STATUS_BAR_PRIORITY } from "src/view/browser/components/status-bar-priority";
 import { StatusBarItem } from "src/view/browser/components/StatusBar";
 import { useConfigBooleanSetting } from "src/view/browser/hooks/use-config-boolean-setting";
+import { useMiniWindowTrigger } from "src/view/browser/hooks/use-mini-window-trigger";
 
 interface CommentOverlayStatusItemProps {
   isActive: boolean;
@@ -23,7 +30,6 @@ interface CommentOverlayStatusItemProps {
 export const CommentOverlayStatusItem: React.FC<CommentOverlayStatusItemProps> = ({ isActive }) => {
   const { viewPage } = useTabStore();
   const { controller, snapshot } = useCommentOverlay();
-  const [isWindowOpen, setIsWindowOpen] = useState(false);
   const [isControlPanelOpen, setIsControlPanelOpen] = useState(false);
   const [monitors, setMonitors] = useState<readonly CommentOverlayMonitor[]>([]);
   const [panelGeometry, setPanelGeometry] = useState<CommentOverlayGeometry | null>(null);
@@ -32,20 +38,24 @@ export const CommentOverlayStatusItem: React.FC<CommentOverlayStatusItemProps> =
   const { value: lockAspectRatio, setValue: setLockAspectRatio } = useConfigBooleanSetting(
     "comment_overlay_lock_aspect_ratio",
   );
-  const [anchorRect, setAnchorRect] = useState<DOMRect | null>(null);
-  const btnRef = useRef<HTMLButtonElement>(null);
   const panelWriteTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const isTauri = isTauriRuntime();
   const threadUrl = viewPage.type === "thread" ? viewPage.threadUrl : null;
+  // 変更理由: 別スレッドへ移動した後に、直前のスレッド向け操作が開いたままに
+  // 見えないよう、ステータス項目の対象が変わるタイミングで小窓を閉じる。
+  const {
+    triggerRef: miniWindowTriggerRef,
+    anchor: miniWindowAnchor,
+    toggle: toggleMiniWindow,
+    close: closeMiniWindow,
+  } = useMiniWindowTrigger(threadUrl);
+  const isWindowOpen = miniWindowAnchor != null;
 
   const isRunning = snapshot.state.status === "running";
   const isFlowing = isRunning && snapshot.visible;
   const errorLabel = snapshot.error == null ? null : `コメント実況エラー: ${snapshot.error}`;
 
   useEffect(() => {
-    // 変更理由: 別スレッドへ移動した後に、直前のスレッド向け操作が開いたままに
-    // 見えないよう、ステータス項目の対象が変わるタイミングで小窓を閉じる。
-    setIsWindowOpen(false);
     setIsControlPanelOpen(false);
   }, [threadUrl]);
 
@@ -100,15 +110,6 @@ export const CommentOverlayStatusItem: React.FC<CommentOverlayStatusItemProps> =
       });
   }, [controller, isFlowing, isRunning, threadUrl]);
 
-  const handleWindowToggle = useCallback(() => {
-    if (btnRef.current) {
-      setAnchorRect(btnRef.current.getBoundingClientRect());
-    }
-    setIsWindowOpen((current) => !current);
-  }, []);
-
-  const closeWindow = useCallback(() => setIsWindowOpen(false), []);
-
   const handlePanelGeometryChange = useCallback((nextGeometry: CommentOverlayGeometry) => {
     // 変更理由: ドラッグ中の連続座標を40ms単位へまとめ、表示の追従性とnative IPC量を両立する。
     setPanelGeometry(nextGeometry);
@@ -145,10 +146,10 @@ export const CommentOverlayStatusItem: React.FC<CommentOverlayStatusItemProps> =
         interactive
       >
         <button
-          ref={btnRef}
+          ref={miniWindowTriggerRef}
           type="button"
           className="status-bar__btn"
-          onClick={handleWindowToggle}
+          onClick={toggleMiniWindow}
           title={statusLabel}
           aria-label={statusLabel}
         >
@@ -162,37 +163,29 @@ export const CommentOverlayStatusItem: React.FC<CommentOverlayStatusItemProps> =
         </button>
       </StatusBarItem>
 
-      {isWindowOpen && anchorRect && (
+      {miniWindowAnchor && (
         <MiniWindow
           title={isControlPanelOpen ? "コメントOverlay表示領域" : "コメントOverlay"}
-          anchor={anchorRect}
-          onClose={closeWindow}
-          triggerRef={btnRef}
+          anchor={miniWindowAnchor}
+          onClose={closeMiniWindow}
+          triggerRef={miniWindowTriggerRef}
           width={isControlPanelOpen ? 560 : 280}
         >
-          <div className="mini-window__section">
-            <div className="mini-window__toggle-row">
-              <span className="mini-window__toggle-label">コメントを画面に流す</span>
-              <button
-                type="button"
-                className={`mini-window__toggle-btn${
-                  isFlowing ? " mini-window__toggle-btn--on" : ""
-                }`}
-                onClick={handleFlowToggle}
-                disabled={isFlowChanging || (!isRunning && threadUrl == null)}
-                aria-busy={isFlowChanging}
-                title={flowLabel}
-                aria-label={flowLabel}
-              >
-                {isFlowing ? "ON" : "OFF"}
-              </button>
-            </div>
-            <p className="mini-window__note">表示中のスレッドの新着レスをOverlayへ流します</p>
-          </div>
+          <MiniWindowSection>
+            <MiniWindowToggle
+              label="コメントを画面に流す"
+              checked={isFlowing}
+              onToggle={handleFlowToggle}
+              disabled={isFlowChanging || (!isRunning && threadUrl == null)}
+              busy={isFlowChanging}
+              buttonLabel={flowLabel}
+            />
+            <MiniWindowNote>表示中のスレッドの新着レスをOverlayへ流します</MiniWindowNote>
+          </MiniWindowSection>
 
-          <div className="mini-window__separator" />
+          <MiniWindowSeparator />
 
-          <div className="mini-window__section">
+          <MiniWindowSection>
             <button
               type="button"
               className="mini-window__action-btn"
@@ -200,11 +193,11 @@ export const CommentOverlayStatusItem: React.FC<CommentOverlayStatusItemProps> =
             >
               {isControlPanelOpen ? "表示領域パネルを閉じる" : "表示領域を調整"}
             </button>
-          </div>
+          </MiniWindowSection>
 
           {isControlPanelOpen && (
             <>
-              <div className="mini-window__separator" />
+              <MiniWindowSeparator />
               {commentOverlayWindowPlatform.attachment && (
                 <WindowAttachmentControl attachment={commentOverlayWindowPlatform.attachment} />
               )}
@@ -221,10 +214,10 @@ export const CommentOverlayStatusItem: React.FC<CommentOverlayStatusItemProps> =
 
           {errorLabel && (
             <>
-              <div className="mini-window__separator" />
-              <div className="mini-window__section">
-                <p className="mini-window__note">{errorLabel}</p>
-              </div>
+              <MiniWindowSeparator />
+              <MiniWindowSection>
+                <MiniWindowNote>{errorLabel}</MiniWindowNote>
+              </MiniWindowSection>
             </>
           )}
         </MiniWindow>

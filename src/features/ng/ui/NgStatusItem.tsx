@@ -1,40 +1,38 @@
 import { Ban, Settings2 } from "lucide-react";
-import React, { useCallback, useEffect, useRef, useState } from "react";
+import React, { useCallback } from "react";
 import { useNgStatus } from "src/features/ng/browser/use-ng-status";
 import { tabActions } from "src/features/tabs/browser/tab-store-actions";
 import { useTabStore } from "src/features/tabs/browser/use-tab-store";
 import { MiniWindow } from "src/view/browser/components/MiniWindow";
+import {
+  MiniWindowNote,
+  MiniWindowSection,
+  MiniWindowSeparator,
+  MiniWindowToggle,
+} from "src/view/browser/components/MiniWindowControls";
 import { STATUS_BAR_PRIORITY } from "src/view/browser/components/status-bar-priority";
 import { StatusBarItem } from "src/view/browser/components/StatusBar";
+import { useMiniWindowTrigger } from "src/view/browser/hooks/use-mini-window-trigger";
 import { createSettingsPage } from "src/view/browser/utils/tab-pages";
 
 export const NgStatusItem: React.FC = () => {
   const { viewPage, dispatch } = useTabStore();
   const { isNgTemporarilyDisabled, toggleNgTemporarilyDisabled, threadListStats, threadStats } =
     useNgStatus();
-  const [isWindowOpen, setIsWindowOpen] = useState(false);
-  const [anchorRect, setAnchorRect] = useState<DOMRect | null>(null);
-  const btnRef = useRef<HTMLButtonElement>(null);
 
   const panelKind =
     viewPage.type === "thread" ? "thread" : viewPage.type === "threadList" ? "threadList" : null;
 
-  useEffect(() => {
-    setIsWindowOpen(false);
-  }, [panelKind]);
-
-  const handleClick = useCallback(() => {
-    if (btnRef.current) {
-      setAnchorRect(btnRef.current.getBoundingClientRect());
-    }
-    setIsWindowOpen((prev) => !prev);
-  }, []);
-
-  const closeWindow = useCallback(() => setIsWindowOpen(false), []);
+  const {
+    triggerRef: miniWindowTriggerRef,
+    anchor: miniWindowAnchor,
+    toggle: toggleMiniWindow,
+    close: closeMiniWindow,
+  } = useMiniWindowTrigger(panelKind);
   const handleEditNg = useCallback(() => {
-    setIsWindowOpen(false);
+    closeMiniWindow();
     dispatch(tabActions.navigate(createSettingsPage("ng")));
-  }, [dispatch]);
+  }, [closeMiniWindow, dispatch]);
 
   if (panelKind == null) {
     return null;
@@ -56,46 +54,42 @@ export const NgStatusItem: React.FC = () => {
         title={itemTitle}
         interactive
       >
-        <button ref={btnRef} className={buttonClassName} onClick={handleClick}>
+        <button ref={miniWindowTriggerRef} className={buttonClassName} onClick={toggleMiniWindow}>
           <Ban size={12} />
           <span>{itemLabel}</span>
         </button>
       </StatusBarItem>
 
-      {isWindowOpen && anchorRect && (
-        <MiniWindow title="NG設定" anchor={anchorRect} onClose={closeWindow} triggerRef={btnRef}>
-          <div className="mini-window__section">
+      {miniWindowAnchor && (
+        <MiniWindow
+          title="NG設定"
+          anchor={miniWindowAnchor}
+          onClose={closeMiniWindow}
+          triggerRef={miniWindowTriggerRef}
+        >
+          <MiniWindowSection>
             <button className="mini-window__action-btn" onClick={handleEditNg}>
               <Settings2 size={14} />
               <span>NGワード設定を編集</span>
             </button>
-          </div>
+          </MiniWindowSection>
 
-          <div className="mini-window__section">
-            <div className="mini-window__section-header">現在の件数</div>
-            <p className="mini-window__note">NG: {activeStats.ngCount}件</p>
-            <p className="mini-window__note">ハイライト: {activeStats.highlightCount}件</p>
-          </div>
+          <MiniWindowSection title="現在の件数">
+            <MiniWindowNote>NG: {activeStats.ngCount}件</MiniWindowNote>
+            <MiniWindowNote>ハイライト: {activeStats.highlightCount}件</MiniWindowNote>
+          </MiniWindowSection>
 
-          <div className="mini-window__separator" />
+          <MiniWindowSeparator />
 
-          <div className="mini-window__separator" />
-
-          <div className="mini-window__section">
+          <MiniWindowSection>
             {/* 一時解除はUI表示の切り替えだけに限定し、既存NG定義は保持する。 */}
-            <div className="mini-window__toggle-row">
-              <span className="mini-window__toggle-label">一時的にNGを解除</span>
-              <button
-                className={`mini-window__toggle-btn${
-                  isNgTemporarilyDisabled ? " mini-window__toggle-btn--on" : ""
-                }`}
-                onClick={toggleNgTemporarilyDisabled}
-              >
-                {isNgTemporarilyDisabled ? "ON" : "OFF"}
-              </button>
-            </div>
-            <p className="mini-window__note">ハイライト表示はこの切り替えの対象外です</p>
-          </div>
+            <MiniWindowToggle
+              label="一時的にNGを解除"
+              checked={isNgTemporarilyDisabled}
+              onToggle={toggleNgTemporarilyDisabled}
+            />
+            <MiniWindowNote>ハイライト表示はこの切り替えの対象外です</MiniWindowNote>
+          </MiniWindowSection>
         </MiniWindow>
       )}
     </>

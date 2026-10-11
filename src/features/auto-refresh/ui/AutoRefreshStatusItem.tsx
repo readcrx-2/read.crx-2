@@ -63,11 +63,15 @@ const THREAD_DISPLAY_MODE_OPTIONS: readonly MiniWindowSelectOption<ThreadDisplay
   { value: "live-chat", label: "ライブチャット風" },
 ];
 
-// 変更理由: 判定モードの違いを別の注記で説明すると縦に長くなるため、選択肢名に含める。
 const AUTO_NEXT_THREAD_MODE_OPTIONS: readonly MiniWindowSelectOption<AutoNextThreadMode>[] = [
-  { value: "balanced", label: "標準（精度重視）" },
-  { value: "aggressive", label: "積極（スレタイ変化を許容）" },
+  { value: "balanced", label: "標準" },
+  { value: "aggressive", label: "積極" },
 ];
+
+// 変更理由: 選択肢名に説明を含めるとセレクトが横に広がり、注記にすると縦に長くなるため、
+// 判定モードの違いはホバーで読めるツールチップに置く。
+const AUTO_NEXT_THREAD_MODE_DESCRIPTION =
+  "標準: 精度と追従性のバランスを取ります / 積極: スレタイの変化を広く許容します";
 
 const THREAD_ONLY_REASON = "スレッドを開いているときに有効です";
 
@@ -139,6 +143,7 @@ const ThreadAutoRefreshPanelContent: React.FC<ThreadAutoRefreshPanelContentProps
             id={`${idPrefix}-next-thread-mode`}
             value={autoNextThreadMode}
             options={AUTO_NEXT_THREAD_MODE_OPTIONS}
+            title={AUTO_NEXT_THREAD_MODE_DESCRIPTION}
             onChange={onAutoNextThreadModeChange}
             disabled={!isOnThread}
           />

@@ -83,6 +83,8 @@ export interface MiniWindowSelectOption<T extends string> {
 interface MiniWindowSelectProps<T extends string> {
   id?: string;
   ariaLabel?: string;
+  /** 選択肢の違いなど、行に置くと長くなる補足をホバーで示す。 */
+  title?: string;
   value: T;
   options: readonly MiniWindowSelectOption<T>[];
   onChange: (value: T) => void;
@@ -92,6 +94,7 @@ interface MiniWindowSelectProps<T extends string> {
 export function MiniWindowSelect<T extends string>({
   id,
   ariaLabel,
+  title,
   value,
   options,
   onChange,
@@ -103,6 +106,7 @@ export function MiniWindowSelect<T extends string>({
         id={id}
         className="mini-window__select"
         aria-label={ariaLabel}
+        title={title}
         value={value}
         // optionsに渡した値しか選べないため、T へ戻してよい。
         onChange={(event) => onChange(event.target.value as T)}

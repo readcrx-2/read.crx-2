@@ -259,6 +259,47 @@ describe("AutoRefreshStatusItem", () => {
     expect(screen.getByText("30 s")).toBeInTheDocument();
   });
 
+  it.each([false, true])(
+    "ポップアップの一時停止と再開では色を変えずアイコンだけ切り替える（追従=%s）",
+    (canAutoScroll) => {
+      mocks.autoRefreshPanel.isEnabled = true;
+      mocks.canAutoScroll = canAutoScroll;
+      const view = renderItem();
+      const statusBar = view.container.querySelector(".status-bar");
+      const appearance = canAutoScroll ? "status-bar--active" : "status-bar--default";
+      expect(statusBar).toHaveClass(appearance);
+
+      // 連続した開閉でも、追従状態に対応する色を維持する。
+      for (let attempt = 0; attempt < 10; attempt++) {
+        mocks.isPaused = true;
+        view.rerender(
+          <StatusBarProvider>
+            <AutoRefreshStatusItem />
+            <StatusBar />
+          </StatusBarProvider>,
+        );
+        expect(statusBar).toHaveClass(appearance);
+        const pausedButton = screen.getByRole("button", { name: /一時停止中/ });
+        expect(pausedButton.querySelector(".lucide-pause")).toBeInTheDocument();
+        expect(pausedButton.querySelector(".icon--spinning")).toBeNull();
+
+        mocks.isPaused = false;
+        view.rerender(
+          <StatusBarProvider>
+            <AutoRefreshStatusItem />
+            <StatusBar />
+          </StatusBarProvider>,
+        );
+        expect(statusBar).toHaveClass(appearance);
+        const resumedButton = screen.getByRole("button", { name: /自動更新/ });
+        expect(resumedButton.querySelector(".lucide-pause")).toBeNull();
+        expect(
+          resumedButton.querySelector(canAutoScroll ? ".icon--spinning" : ".lucide-clock-3"),
+        ).toBeInTheDocument();
+      }
+    },
+  );
+
   it("スレ一覧では一覧用の更新間隔をアイコン横に表示する", () => {
     mocks.viewPage = {
       type: "threadList",

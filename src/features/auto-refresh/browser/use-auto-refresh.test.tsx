@@ -1678,6 +1678,65 @@ describe("useAutoRefresh", () => {
     expect(screen.getByTestId("is-auto-scrolling")).toHaveTextContent("idle");
   });
 
+  it.each([false, true])(
+    "ポップアップの一時停止と再開を連続しても取得を増やさず通信中は重複させない（ライブ=%s）",
+    (liveChatMode) => {
+      const onRequestRefresh = vi.fn();
+      const view = render(
+        <AutoRefreshHarness liveChatMode={liveChatMode} onRequestRefresh={onRequestRefresh} />,
+      );
+      const scrollContainer = screen.getByTestId("scroll-container");
+      scrollContainer.scrollBy = vi.fn();
+
+      const togglePopupRepeatedly = () => {
+        // 各変更を別の描画として確定し、Reactの一括更新で連続操作が省略されないようにする。
+        for (let attempt = 0; attempt < 20; attempt++) {
+          view.rerender(
+            <AutoRefreshHarness
+              liveChatMode={liveChatMode}
+              onRequestRefresh={onRequestRefresh}
+              pauseAutoScroll={attempt % 2 === 0}
+            />,
+          );
+          act(() => {
+            vi.advanceTimersByTime(50);
+          });
+        }
+      };
+
+      togglePopupRepeatedly();
+      togglePopupRepeatedly();
+      expect(onRequestRefresh).not.toHaveBeenCalled();
+      act(() => {
+        vi.advanceTimersByTime(999);
+      });
+      expect(onRequestRefresh).not.toHaveBeenCalled();
+      act(() => {
+        vi.advanceTimersByTime(1);
+      });
+      expect(onRequestRefresh).toHaveBeenCalledOnce();
+
+      // 取得が長引いても、一時停止の切替や次の周期でリクエストを重ねない。
+      togglePopupRepeatedly();
+      act(() => {
+        vi.advanceTimersByTime(8000);
+      });
+      expect(onRequestRefresh).toHaveBeenCalledOnce();
+
+      fireEvent.click(screen.getByText("新着なしで完了"));
+      togglePopupRepeatedly();
+      expect(onRequestRefresh).toHaveBeenCalledOnce();
+      act(() => {
+        vi.advanceTimersByTime(1999);
+      });
+      expect(onRequestRefresh).toHaveBeenCalledOnce();
+      act(() => {
+        vi.advanceTimersByTime(1);
+      });
+      expect(onRequestRefresh).toHaveBeenCalledTimes(2);
+    },
+  );
+
   it("新着が連続で来ない更新が一定回数に達したら自動停止する", () => {
     const onRequestRefresh = vi.fn();
     const onAutoStop = vi.fn();

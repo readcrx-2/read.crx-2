@@ -109,6 +109,7 @@ function AutoRefreshHarness({
     isAutoRefreshEnabled: enabled,
     isFetching: isLoading,
     intervalMs: 3000,
+    paused: pauseAutoScroll,
   });
   const scrollContainerRef = React.useCallback(
     (element: HTMLDivElement | null) => {

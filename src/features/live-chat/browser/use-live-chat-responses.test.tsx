@@ -11,6 +11,7 @@ const initial = {
   isAutoRefreshEnabled: true,
   isFetching: false,
   intervalMs: 20000,
+  paused: false,
 };
 const advance = (ms: number) => {
   act(() => {
@@ -49,6 +50,76 @@ describe("ライブチャットの新着表示", () => {
     });
     rerender({ ...initial, responses: rows(1, 2, 3) });
     expect(result.current.responses).toEqual(rows(1, 2, 3));
+    expect(result.current.pendingCount).toBe(0);
+  });
+
+  it("一時停止中の新着はキューに残し、再開すると未表示の先頭から順に流す", () => {
+    const { result, rerender } = renderHook(useLiveChatResponses, { initialProps: initial });
+    const batch = { ...initial, responses: rows(1, 2, 3, 4, 5) };
+    rerender(batch);
+    advance(600);
+    expect(result.current.responses).toEqual(rows(1, 2, 3));
+    advance(300);
+    rerender({ ...batch, paused: true });
+    rerender({ ...batch, responses: rows(1, 2, 3, 4, 5, 6), paused: true });
+    advance(60_000);
+
+    expect(result.current.responses).toEqual(rows(1, 2, 3));
+    expect(result.current.pendingCount).toBe(3);
+    // 未表示分を残すので、満了停止や次スレ移動も再生完了までは待つ。
+    expect(result.current.isDraining).toBe(true);
+    expect(result.current.isFlowing).toBe(true);
+
+    rerender({ ...batch, responses: rows(1, 2, 3, 4, 5, 6) });
+    advance(599);
+    expect(result.current.responses).toEqual(rows(1, 2, 3));
+    advance(1);
+    expect(result.current.responses).toEqual(rows(1, 2, 3, 4));
+    advance(600);
+    expect(result.current.responses).toEqual(rows(1, 2, 3, 4, 5));
+    advance(600);
+    expect(result.current.responses).toEqual(rows(1, 2, 3, 4, 5, 6));
+    advance(50);
+    expect(result.current.isDraining).toBe(false);
+  });
+
+  it("一時停止中に上限を超えても表示を進めず、再開時に末尾だけを流して追いつく", () => {
+    const { result, rerender } = renderHook(useLiveChatResponses, { initialProps: initial });
+    const responses = rows(...Array.from({ length: 102 }, (_, i) => i + 1));
+    rerender({ ...initial, paused: true });
+    rerender({ ...initial, paused: true, responses });
+    advance(60_000);
+    expect(result.current.responses).toEqual(rows(1, 2));
+    expect(result.current.pendingCount).toBe(100);
+    expect(result.current.baseline).toBe(2);
+
+    rerender({ ...initial, responses });
+    expect(result.current.responses).toEqual(responses.slice(0, 92));
+    expect(result.current.pendingCount).toBe(10);
+    expect(result.current.baseline).toBe(92);
+    for (let i = 0; i < 10; i++) advance(600);
+    expect(result.current.responses).toEqual(responses);
+    expect(result.current.pendingCount).toBe(0);
+  });
+
+  it("一時停止と再開を短時間で繰り返しても未表示のレスを飛ばしたり重ねたりしない", () => {
+    const { result, rerender } = renderHook(useLiveChatResponses, { initialProps: initial });
+    const batch = { ...initial, responses: rows(1, 2, 3, 4) };
+    rerender(batch);
+    for (let i = 0; i < 20; i++) {
+      advance(50);
+      rerender({ ...batch, paused: true });
+      advance(50);
+      rerender(batch);
+    }
+    expect(result.current.responses).toEqual(rows(1, 2));
+    expect(result.current.pendingCount).toBe(2);
+    advance(599);
+    expect(result.current.responses).toEqual(rows(1, 2));
+    advance(1);
+    expect(result.current.responses).toEqual(rows(1, 2, 3));
+    advance(600);
+    expect(result.current.responses).toEqual(batch.responses);
     expect(result.current.pendingCount).toBe(0);
   });
 

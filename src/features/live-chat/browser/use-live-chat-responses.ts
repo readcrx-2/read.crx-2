@@ -1,5 +1,6 @@
 import { useEffect, useState } from "react";
 import { useViewSurface } from "src/features/auxiliary-window/browser/use-view-surface";
+import { useLatestRef } from "src/view/browser/hooks/use-latest-ref";
 
 interface ResponseNumber {
   num: number;
@@ -52,6 +53,7 @@ export function useLiveChatResponses<T extends ResponseNumber>({
   isAutoRefreshEnabled,
   isFetching,
   intervalMs,
+  paused = false,
 }: {
   responses: T[];
   scopeKey: string;
@@ -60,8 +62,12 @@ export function useLiveChatResponses<T extends ResponseNumber>({
   isAutoRefreshEnabled: boolean;
   isFetching: boolean;
   intervalMs: number;
+  /** ポップアップを読んでいる間など、保留した新着を残して再生だけを止める。 */
+  paused?: boolean;
 }) {
   const { window: viewWindow } = useViewSurface();
+  // タイマーのcleanup前に予約済みのcallbackが届いても、一時停止後の行を表示しない。
+  const pausedRef = useLatestRef(paused);
   // 流すのは自動更新で追いかけている最中だけ。手動更新やdat落ち後の取得、非表示の間に
   // 届いた分は利用者が待つ理由がないため、scopeを切り替えてその場で全件表示する。
   const isFlowing = enabled && isActive && isAutoRefreshEnabled;
@@ -103,8 +109,13 @@ export function useLiveChatResponses<T extends ResponseNumber>({
     delay: getLiveChatDelay(pending.length, intervalMs),
   });
   let delay = pace.delay;
-  if (pace.scope !== scope || pace.lastNum !== lastNum) {
-    if (pending.length > LIVE_CHAT_MAX_PENDING) {
+  if (
+    pace.scope !== scope ||
+    pace.lastNum !== lastNum ||
+    (!paused && pending.length > LIVE_CHAT_MAX_PENDING)
+  ) {
+    // 一時停止中は新着が上限を超えても表示を進めず、再開時に通常の追いつき処理へ渡す。
+    if (!paused && pending.length > LIVE_CHAT_MAX_PENDING) {
       // 読み飛ばす分は入場動作も付けず、末尾だけを新着として流す。
       const skippedNum = pending[pending.length - LIVE_CHAT_TAIL_COUNT - 1].num;
       playback = { ...playback, baseline: skippedNum, released: skippedNum };
@@ -119,15 +130,15 @@ export function useLiveChatResponses<T extends ResponseNumber>({
   const nextNum = pending[0]?.num;
 
   useEffect(() => {
-    if (!isFlowing || nextNum === undefined) return;
+    if (!isFlowing || paused || nextNum === undefined) return;
     const timer = viewWindow.setTimeout(() => {
       setPlayback((current) =>
-        current.scope === scope ? { ...current, released: nextNum } : current,
+        !pausedRef.current && current.scope === scope ? { ...current, released: nextNum } : current,
       );
     }, delay);
     // 非表示化・通常表示への切り替え・次スレ移動で予約を破棄し、旧スレのレスを混ぜない。
     return () => viewWindow.clearTimeout(timer);
-  }, [delay, isFlowing, nextNum, scope, viewWindow]);
+  }, [delay, isFlowing, nextNum, paused, pausedRef, scope, viewWindow]);
 
   useEffect(() => {
     // 最後の行の高さをResizeObserverが追従させてから、満了停止や次スレ移動を許可する。

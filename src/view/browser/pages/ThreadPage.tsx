@@ -183,17 +183,6 @@ export const ThreadPage: React.FC<ThreadPageProps> = ({
   const { mode: threadDisplayMode } = useThreadDisplayModeSetting();
   const isLiveChat = threadDisplayMode === "live-chat";
   const isFilterEnabled = filter !== "all" || searchQuery.trim() !== "";
-  const liveChat = useLiveChatResponses({
-    responses: filteredResponses,
-    scopeKey: `${tabId}\u0000${page.threadUrl}`,
-    // 検索・絞り込み中は結果をすぐ見せ、保留中の新着が検索結果から欠落するのを防ぐ。
-    enabled: isLiveChat && !isFilterEnabled,
-    isActive,
-    isAutoRefreshEnabled,
-    isFetching: loading,
-    intervalMs: readThreadAutoRefreshIntervalSec(page.threadUrl) * 1000,
-  });
-  const displayedResponses = liveChat.responses;
   const isCommentOverlayTarget =
     commentOverlaySnapshot.state.status === "running" &&
     commentOverlaySnapshot.state.targetThreadUrl === page.threadUrl;
@@ -367,6 +356,22 @@ export const ThreadPage: React.FC<ThreadPageProps> = ({
     stopped: isAutoRefreshStopped,
   });
   const { enabled: pauseAutoScrollOnPopup } = usePopupAutoScrollPauseSetting();
+  // ポップアップを読んでいる間は、追従スクロールと新着のキュー再生を同じ条件で止める。
+  // コメント実況中は従来どおり止めず、Overlayへの配信と自動次スレ判定を維持する。
+  const isThreadDisplayPaused =
+    !isCommentOverlayFlowing && pauseAutoScrollOnPopup && popups.length > 0;
+  const liveChat = useLiveChatResponses({
+    responses: filteredResponses,
+    scopeKey: `${tabId}\u0000${page.threadUrl}`,
+    // 検索・絞り込み中は結果をすぐ見せ、保留中の新着が検索結果から欠落するのを防ぐ。
+    enabled: isLiveChat && !isFilterEnabled,
+    isActive,
+    isAutoRefreshEnabled,
+    isFetching: loading,
+    intervalMs: readThreadAutoRefreshIntervalSec(page.threadUrl) * 1000,
+    paused: isThreadDisplayPaused,
+  });
+  const displayedResponses = liveChat.responses;
 
   // 変更理由: 停止理由が増えても、タブ状態の解除と利用者への通知を同じ経路で行い、
   // 一方だけ実行される不整合を防ぐ。
@@ -443,11 +448,7 @@ export const ThreadPage: React.FC<ThreadPageProps> = ({
     refreshController,
     expired: shouldStopFetching,
     loading,
-    // 変更理由: ポップアップを読みながら新着へ流されない従来動作を、
-    // ユーザーが用途に合わせて無効化できるようにする。
-    // 変更理由: コメント実況中はポップアップを開いても新着追従を止めず、
-    // Overlayへ送る取得周期と自動次スレ判定を維持する。
-    pauseAutoScroll: !isCommentOverlayFlowing && pauseAutoScrollOnPopup && popups.length > 0,
+    pauseAutoScroll: isThreadDisplayPaused,
     responseCount: responses.length,
     lastResponseNum: responses.at(-1)?.num ?? null,
     rootRef,
@@ -560,6 +561,7 @@ export const ThreadPage: React.FC<ThreadPageProps> = ({
     canAutoScroll,
     isAutoScrolling,
     isLiveChat,
+    isThreadDisplayPaused,
     liveChatPendingCount: liveChat.pendingCount,
     liveChatIsDraining: liveChat.isDraining,
     isCommentOverlayTarget,

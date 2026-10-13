@@ -143,6 +143,19 @@ describe("ReplyTreePopup", () => {
     expect(sourceCard).toHaveClass("res--highlighted-persistent");
   });
 
+  it("ライブチャットで入場が完了していない返信はツリーと返信数へ先出ししない", () => {
+    const { rerender } = render(
+      <ReplyTreePopup {...BASE_PROPS} replySourceNums={new Set([1, 2])} />,
+    );
+    expect(screen.getByText("reply message")).toBeInTheDocument();
+    expect(screen.queryByText("sibling reply message")).not.toBeInTheDocument();
+    expect(screen.queryByText("nested reply message")).not.toBeInTheDocument();
+    expect(screen.queryByText("返信(2)")).not.toBeInTheDocument();
+    rerender(<ReplyTreePopup {...BASE_PROPS} replySourceNums={new Set([1, 2, 3])} />);
+    expect(screen.getByText("sibling reply message")).toBeInTheDocument();
+    expect(screen.queryByText("nested reply message")).not.toBeInTheDocument();
+  });
+
   it("入れ子の返信にも自分のレスと自分への返信の印を付ける", () => {
     // 2階層目以降の再帰描画でも、1階層目と同じ判定集合を引き継ぐことを確かめる。
     render(

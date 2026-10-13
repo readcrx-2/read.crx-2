@@ -24,6 +24,7 @@ interface PopupRendererProps {
   contextMenuHeader?: (menu: ContextMenuPopupItem) => React.ReactNode;
   messageProtocol: string;
   repIndex: Map<number, Set<number>>;
+  replySourceNums?: ReadonlySet<number>;
   idIndex: Map<string, Set<number>>;
   resMap: Map<number, IRes>;
   hasAnchorPreviews: boolean;
@@ -99,6 +100,7 @@ export const PopupRenderer: React.FC<PopupRendererProps> = ({
   contextMenuHeader,
   messageProtocol,
   repIndex,
+  replySourceNums,
   idIndex,
   resMap,
   hasAnchorPreviews,
@@ -291,6 +293,7 @@ export const PopupRenderer: React.FC<PopupRendererProps> = ({
           y={treePopup.y}
           resNum={treePopup.payload.resNum}
           repIndex={repIndex}
+          replySourceNums={replySourceNums}
           idIndex={idIndex}
           resMap={resMap}
           messageProtocol={messageProtocol}

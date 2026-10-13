@@ -74,6 +74,7 @@ export const ResItem: React.FC<ResItemProps> = React.memo(
     searchQuery = "",
     searchTarget = "all",
     animateEntry = false,
+    onEntryDisplayed,
   }) => {
     const { window: viewWindow } = useViewSurface();
     const isNgTemporarilyDisabled = useIsNgTemporarilyDisabled();
@@ -92,6 +93,16 @@ export const ResItem: React.FC<ResItemProps> = React.memo(
         setIsNgRevealed(false);
       }
     }, [isNgRevealed, ngDisplayMode]);
+    const isEntryAnimated =
+      animateEntry &&
+      !(
+        isNgActive &&
+        (ngDisplayMode === "hard-ng" || (ngDisplayMode === "soft-ng" && !isNgRevealed))
+      );
+    useEffect(() => {
+      // NGのプレースホルダーには入場動作がないため、描画確定時点で表示済みにする。
+      if (animateEntry && !isEntryAnimated) onEntryDisplayed?.(res.num);
+    }, [animateEntry, isEntryAnimated, onEntryDisplayed, res.num]);
     const decoded = useMemo(() => decodeResponseHtml(res, messageProtocol), [messageProtocol, res]);
     // 検索判定と同じ語を表示層へ渡し、本文・名前・IDのどこでレスが一致したかを追えるようにする。
     // 本文と名前のHTMLはテキストノードだけを変換し、リンクやアンカーの操作対象を保つ。
@@ -165,6 +176,16 @@ export const ResItem: React.FC<ResItemProps> = React.memo(
       <article
         data-res-num={res.num}
         className={articleClassName}
+        onAnimationEnd={(event) => {
+          // 本文内のメディア等のアニメーションでは返信数を進めず、レス自身の入場完了だけを通知する。
+          if (
+            isEntryAnimated &&
+            event.target === event.currentTarget &&
+            event.animationName === "live-chat-enter"
+          ) {
+            onEntryDisplayed?.(res.num);
+          }
+        }}
         onContextMenu={(e) => {
           const target = getEventTargetElement(e.target, viewWindow);
           if (target?.closest("a, .res__link, .res__thumb, .res__media-embed")) {
@@ -255,6 +276,8 @@ ResItem.displayName = "ResItem"; // --- 個別レス表示 ---
 export interface ResItemProps {
   /** ライブチャットの新着だけに入場動作を付け、既存の本文・NG処理を共用する。 */
   animateEntry?: boolean;
+  /** ライブチャットの入場完了を返信数などの表示へ反映する。 */
+  onEntryDisplayed?: (responseNum: number) => void;
   res: IRes;
   idPos: number;
   idCount: number;

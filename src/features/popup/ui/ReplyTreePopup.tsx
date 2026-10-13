@@ -17,6 +17,8 @@ export const ReplyTreePopup: React.FC<{
   y: number;
   resNum: number;
   repIndex: Map<number, Set<number>>;
+  /** ライブチャットでは入場が完了したレスだけを返信ツリーへ反映する。 */
+  replySourceNums?: ReadonlySet<number>;
   idIndex?: Map<string, Set<number>>;
   resMap: Map<number, IRes>;
   messageProtocol: string;
@@ -61,6 +63,7 @@ export const ReplyTreePopup: React.FC<{
   y,
   resNum,
   repIndex,
+  replySourceNums,
   idIndex,
   resMap,
   messageProtocol,
@@ -94,9 +97,15 @@ export const ReplyTreePopup: React.FC<{
 }) => {
   // hard-ngの通常索引は非表示レスを除外するため、返信ツリーでは全レスから専用索引を作り、
   // NGレスもクリック式プレースホルダーとして辿れるようにする。
+  // ライブチャットの未表示分は専用索引にも混ぜず、返信数とツリーの先出しを防ぐ。
   const treeRepIndex = useMemo(
-    () => buildReplyIndexes(Array.from(resMap.values())).repIndex,
-    [resMap],
+    () =>
+      buildReplyIndexes(
+        Array.from(resMap.values()).filter(
+          (res) => replySourceNums == null || replySourceNums.has(res.num),
+        ),
+      ).repIndex,
+    [replySourceNums, resMap],
   );
   const { menuButtonRef, menuPosition, handleMenuClick, closeMenu } = usePopupHeaderMenu();
   const { treeMenuItems, subTreeMenu, subTreeMenuItems, handleSubTreeMenuClick, closeSubTreeMenu } =

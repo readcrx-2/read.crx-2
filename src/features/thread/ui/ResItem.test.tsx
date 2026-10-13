@@ -2,7 +2,7 @@ import "@testing-library/jest-dom/vitest";
 
 import { act, cleanup, fireEvent, render, screen } from "@testing-library/react";
 import { NgStatusProvider } from "src/features/ng/browser/use-ng-status";
-import { ResItem } from "src/features/thread/ui/ResItem";
+import { ResItem, type ResItemProps } from "src/features/thread/ui/ResItem";
 import type { IRes } from "src/service-container/interfaces";
 import { afterEach, describe, expect, it, vi } from "vite-plus/test";
 
@@ -70,6 +70,35 @@ const BASE_RES: IRes = {
 };
 
 describe("ResItem", () => {
+  it("レス自身の入場アニメーションが完了したときだけ表示完了を通知する", () => {
+    const onEntryDisplayed = vi.fn();
+    const { container } = renderNgRes(BASE_RES, { animateEntry: true, onEntryDisplayed });
+    const article = container.querySelector("article")!;
+    const body = container.querySelector(".res__body")!;
+    const endAnimation = (target: Element, animationName: string) => {
+      // jsdomにAnimationEventがない場合はReactがWebKit名へ切り替えるため、同じイベント名を使う。
+      const event = new Event("AnimationEvent" in window ? "animationend" : "webkitAnimationEnd", {
+        bubbles: true,
+      });
+      Object.defineProperty(event, "animationName", { value: animationName });
+      fireEvent(target, event);
+    };
+    expect(onEntryDisplayed).not.toHaveBeenCalled();
+    endAnimation(body, "live-chat-enter");
+    endAnimation(article, "別のアニメーション");
+    expect(onEntryDisplayed).not.toHaveBeenCalled();
+    endAnimation(article, "live-chat-enter");
+    expect(onEntryDisplayed).toHaveBeenCalledWith(1);
+    expect(onEntryDisplayed).toHaveBeenCalledOnce();
+  });
+
+  it("入場しないNGプレースホルダーも描画後に表示完了を通知する", () => {
+    const onEntryDisplayed = vi.fn();
+    renderNgRes({ ...BASE_RES, ng: { type: "Body" } }, { animateEntry: true, onEntryDisplayed });
+    expect(screen.getByRole("button", { name: "レス1の内容を表示" })).toBeInTheDocument();
+    expect(onEntryDisplayed).toHaveBeenCalledWith(1);
+  });
+
   it("soft-ngではNGレスを表示・再非表示・再表示できる", () => {
     const ngRes: IRes = {
       ...BASE_RES,
@@ -458,10 +487,14 @@ function containerQueryByClass(className: string): HTMLElement {
   return el;
 }
 
-function renderNgRes(res: IRes) {
+function renderNgRes(
+  res: IRes,
+  entryProps: Pick<ResItemProps, "animateEntry" | "onEntryDisplayed"> = {},
+) {
   return render(
     <NgStatusProvider>
       <ResItem
+        {...entryProps}
         res={res}
         idPos={0}
         idCount={0}

@@ -19,6 +19,7 @@ import {
 import { usePopupAutoScrollPauseSetting } from "src/features/auto-refresh/browser/use-popup-auto-scroll-pause-setting";
 import { useThreadAutoRefresh } from "src/features/auto-refresh/browser/use-thread-auto-refresh";
 import { useCommentOverlay } from "src/features/comment-overlay/application/use-comment-overlay";
+import { useLiveChatReplyIndex } from "src/features/live-chat/browser/use-live-chat-reply-index";
 import { useLiveChatResponses } from "src/features/live-chat/browser/use-live-chat-responses";
 import { useThreadDisplayModeSetting } from "src/features/live-chat/browser/use-thread-display-mode-setting";
 import { useMediaViewerStore } from "src/features/media/browser/use-media-viewer-store";
@@ -372,6 +373,13 @@ export const ThreadPage: React.FC<ThreadPageProps> = ({
     paused: isThreadDisplayPaused,
   });
   const displayedResponses = liveChat.responses;
+  const liveChatReplies = useLiveChatReplyIndex({
+    scopeKey: `${tabId}\u0000${page.threadUrl}`,
+    isFlowing: liveChat.isFlowing,
+    baseline: liveChat.baseline,
+    responses,
+    repIndex: indexes.repIndex,
+  });
 
   // 変更理由: 停止理由が増えても、タブ状態の解除と利用者への通知を同じ経路で行い、
   // 一方だけ実行される不整合を防ぐ。
@@ -834,7 +842,7 @@ export const ThreadPage: React.FC<ThreadPageProps> = ({
             {displayedResponses.map((res, index) => {
               const idCount = res.id ? (indexes.idIndex.get(res.id)?.size ?? 0) : 0;
               const idPos = res.id ? (idPositions.get(res.num) ?? 0) : 0;
-              const repCount = indexes.repIndex.get(res.num)?.size ?? 0;
+              const repCount = liveChatReplies.repIndex.get(res.num)?.size ?? 0;
               return (
                 <React.Fragment key={res.num}>
                   {index === replayBoundary ? replayLine : null}
@@ -842,6 +850,7 @@ export const ThreadPage: React.FC<ThreadPageProps> = ({
                     key={res.num}
                     // 新着だけに入場動作を付け、切り替え時の既存レスを一斉に動かさない。
                     animateEntry={liveChat.isFlowing && res.num > liveChat.baseline}
+                    onEntryDisplayed={liveChatReplies.onEntryDisplayed}
                     res={res}
                     idPos={idPos}
                     idCount={idCount}
@@ -903,7 +912,8 @@ export const ThreadPage: React.FC<ThreadPageProps> = ({
             contextMenuItems={contextMenuItems}
             contextMenuHeader={contextMenuHeader}
             messageProtocol={messageProtocol}
-            repIndex={indexes.repIndex}
+            repIndex={liveChatReplies.repIndex}
+            replySourceNums={liveChatReplies.replySourceNums}
             idIndex={indexes.idIndex}
             resMap={indexes.resMap}
             hasAnchorPreviews={hasAnchorPreviews}
@@ -935,7 +945,7 @@ export const ThreadPage: React.FC<ThreadPageProps> = ({
           />
           <ThreadMinimap
             rootRef={rootRef}
-            repIndex={indexes.repIndex}
+            repIndex={liveChatReplies.repIndex}
             responseCount={displayedResponses.length}
             activeTopBar={activeTopBar}
             onMarkerClick={handleMinimapMarkerClick}

@@ -36,12 +36,13 @@ function renderMessageTokens(tokens: readonly MessageToken[]): string {
               ? "指定されたレスの量が極端に多いため、ポップアップを表示しません"
               : "指定されたレスが存在しません";
 
-          return `<a href="javascript:undefined;" class="anchor ${disabled ? "disabled" : ""}" ${
+          // hrefの擬似JavaScript URLはホバー時にWebViewのリンク先表示へ出るため、操作はResBodyの委譲イベントに任せる。
+          return `<a role="link" tabindex="0" class="anchor ${disabled ? "disabled" : ""}" ${
             disabled ? `data-disabled-reason="${disabledReason}"` : ""
           }>${token.value}</a>`;
         }
         case "id":
-          return `<a href="javascript:undefined;" class="anchor_id">${token.value}</a>`;
+          return `<a role="link" tabindex="0" class="anchor_id">${token.value}</a>`;
         case "url":
           // 意図: URLの意味解析はchlibに任せ、リンク属性やCSSクラスはアプリ表示層で決める。
           return `<a href="${token.href}" target="_blank" rel="noopener noreferrer">${token.value}</a>`;

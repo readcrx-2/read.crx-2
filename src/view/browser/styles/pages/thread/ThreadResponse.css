@@ -164,6 +164,12 @@
   color: var(--sys-color-table-link);
 }
 
+.res__body a.anchor,
+.res__body a.anchor_id {
+  cursor: pointer;
+  text-decoration: underline;
+}
+
 .res__body a:visited {
   color: var(--sys-color-link-visited);
 }

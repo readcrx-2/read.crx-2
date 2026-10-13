@@ -19,7 +19,13 @@ type EventConsumer = Pick<React.SyntheticEvent, "preventDefault" | "stopPropagat
 
 type ResBodyInteractionHandlers = Pick<
   React.HTMLAttributes<HTMLDivElement>,
-  "onMouseOver" | "onMouseLeave" | "onMouseDown" | "onClick" | "onAuxClick" | "onContextMenu"
+  | "onMouseOver"
+  | "onMouseLeave"
+  | "onMouseDown"
+  | "onClick"
+  | "onAuxClick"
+  | "onContextMenu"
+  | "onKeyDown"
 >;
 
 interface MiddleClickState {
@@ -286,6 +292,24 @@ function useResBodyInteractionHandlers({
     [onAnchorClick, onIdLinkClick, onUrlClick, viewWindow],
   );
 
+  const handleKeyDown = useCallback(
+    (e: React.KeyboardEvent<HTMLDivElement>) => {
+      if (e.key !== "Enter" || e.repeat) {
+        return;
+      }
+
+      const anchor = getAnchorElement(e.target, viewWindow);
+      if (!anchor || !isManagedAnchor(anchor)) {
+        return;
+      }
+
+      // hrefなしのリンクも従来のアンカーと同じくEnterで有効化する。
+      e.preventDefault();
+      anchor.click();
+    },
+    [viewWindow],
+  );
+
   const handleAuxClick = useCallback(
     (e: React.MouseEvent<HTMLDivElement>) => {
       const anchor = getAnchorElement(e.target, viewWindow);
@@ -344,6 +368,7 @@ function useResBodyInteractionHandlers({
     onMouseLeave: handleMouseLeave,
     onMouseDown: handleMouseDown,
     onClick: handleClick,
+    onKeyDown: handleKeyDown,
     onAuxClick: handleAuxClick,
     onContextMenu: handleContextMenu,
   };

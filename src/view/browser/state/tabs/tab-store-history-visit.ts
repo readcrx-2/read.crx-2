@@ -1,3 +1,4 @@
+import { container } from "src/service-container/index";
 import { readConfigValue } from "src/view/browser/state/tabs/tab-store-config";
 import { resolveBoardUrlForBrowser } from "src/view/browser/utils/link-routing";
 
@@ -33,21 +34,17 @@ export function reportHistoryPersistenceError(context: string, error: unknown): 
   const message = error instanceof Error ? error.message : String(error);
   console.error(`${context}: ${message}`, error);
 
-  const appMessage = (
-    window as Window &
-      typeof globalThis & {
-        app?: {
-          message?: {
-            send?: (type: string, payload?: unknown) => void;
-          };
-        };
-      }
-  ).app?.message;
-
-  appMessage?.send?.("notify", {
-    message: `${context}: ${message}`,
-    background_color: "red",
-  });
+  // 変更理由: 以前は window.app.message へ送っていた。view から window.app を参照しないよう lint で
+  // 塞いだため（legacy-window-app-plan の Phase 3）、同じ Message の実体を持つ container.message へ送る。
+  // 知らせる処理の失敗で保存エラーの報告そのものを止めないよう、失敗はログに残して続ける。
+  try {
+    container.message.send("notify", {
+      message: `${context}: ${message}`,
+      background_color: "red",
+    });
+  } catch (notifyError) {
+    console.error("閲覧履歴の保存エラーを画面に知らせられませんでした", notifyError);
+  }
 }
 
 export function clearThreadVisitsForTab(

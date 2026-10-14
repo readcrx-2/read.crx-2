@@ -1,6 +1,6 @@
 # window.app 互換層の整理計画
 
-- 状態: Phase 2 完了（2026-10-15 作成。Phase 0 と Phase 3 以降は未着手）
+- 状態: Phase 3 完了（2026-10-15 作成。Phase 0 と Phase 4 以降は未着手）
 - 前提: [モジュール境界の明確化計画](module-boundaries-plan.md) の Phase A〜F が完了していること
 - 作業ブランチ: 未定（`develop` から作る）
 
@@ -102,6 +102,17 @@
 
 - `legacy-app.ts` を削除する。
 - `view`・`features` から `window.app` を参照できないようにする。`no-restricted-imports` では検出できないため、`no-restricted-globals` か `no-restricted-properties`（`window.app`）を検討する。
+
+結果（2026-10-15）: `legacy-app.ts` は Phase 2 で削除済み。`src/view/**`・`src/features/**`（テストを含む）に次の 2 つの規則をかけた（`vite.config.ts` の `WINDOW_APP_OWNERS`・`WINDOW_APP_MESSAGE`）。
+
+- `no-restricted-globals`: グローバルの `app`（`global.d.ts` の `app` 名前空間を含む）。
+- `no-restricted-properties`: `window.app`・`globalThis.app`・`self.app`。oxlint は `(window as ...).app` のような型の付け替え、`window["app"]`、`const { app } = window` も検出する（作業時に確かめた）。
+- 抜け道として残るもの: ファイル内で `declare const app` と宣言して使う書き方（ローカルの変数として扱われる）と、`window.parent.app` のように別のウィンドウを経由する参照。どちらも今は使われていない。
+
+規則を入れる前に、残っていた 2 か所を付け替えた。
+
+- `src/view/browser/index.tsx`: `declare const app` で宣言したグローバルの `app.boot` を呼んでいた。`src/app` から `boot` を import して呼ぶ形にした。`window.app` を作る副作用はこの import で起きるため、外の利用者への影響はない（Phase 4 で調べるまで残す）。
+- `src/view/browser/state/tabs/tab-store-history-visit.ts`: 閲覧履歴の保存の失敗を `window.app.message` の `notify` で画面へ知らせていた。同じ `Message` の実体を持つ `container.message` へ送る形にした。知らせる処理が失敗しても保存エラーの報告を止めないよう、失敗はログに残して続ける。
 
 ### Phase 4: `window.app` の外の利用者を調べる
 

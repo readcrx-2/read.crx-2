@@ -290,8 +290,94 @@ const FEATURE_PUBLIC_MODULES: Readonly<Record<string, readonly string[]>> = {
   thread: ["browser/use-thread-refresh-controller", "ui/ResBody", "ui/thread-context-menu-items"],
 };
 
+interface RestrictedImportPattern {
+  group: string[];
+  message: string;
+  allowTypeImports?: boolean;
+}
+
+/**
+ * view・features から直接 import してよい core のモジュール（src/core/ からの相対パス、拡張子なし）。
+ * 入力から結果を返すだけで、保存・通信・共有の状態を持たないものだけを載せる（計画書 §3.6）。
+ * 状態や保存を伴うもの（履歴・ログ・設定への書き込み・キャッシュを持つ解決処理など）は、
+ * サービスコンテナ（src/service-container）に載せて container から使う。
+ */
+const CORE_DIRECT_MODULES: readonly string[] = [
+  "board/BoardUrlNormalizer",
+  "board/opened-board-entries",
+  "network/url-utils",
+  "ng/ThreadNgEvaluator",
+  "ng/ngDsl",
+  "ng/rules/catalog",
+  "thread/MessageProcessor",
+  "thread/reply-index",
+  "util/external-media",
+  "util/map-with-concurrency",
+  "util/strip-html",
+  "util/url-media",
+];
+
+// 型の import は実装を読み込まないため、どの core のモジュールからでも認める。
+const CORE_DIRECT_PATTERN: RestrictedImportPattern = {
+  group: ["**/core/**", ...CORE_DIRECT_MODULES.map((modulePath) => `!**/core/${modulePath}`)],
+  allowTypeImports: true,
+  message:
+    "状態や保存を伴う core のモジュールは、サービスコンテナ（container）経由で使う。純粋なモジュールなら vite.config.ts の CORE_DIRECT_MODULES に追加する（計画書 §3.6）。",
+};
+
+// テストは本物の core の実装を組み合わせて確かめることがあるため、core の直接 import の制限から外す。
+const TEST_FILE_GLOBS = ["**/*.test.ts", "**/*.test.tsx", "**/*.stories.tsx"];
+
+/**
+ * files に、patterns と core の直接 import の制限をかける override を作る。
+ * テストと Story には、core の制限を除いた patterns だけをかける。
+ * no-restricted-imports は後の override が前の設定を置き換えるため、範囲の広いものから順に並べる。
+ */
+function restrictImports(files: string[], patterns: RestrictedImportPattern[]) {
+  // oxlint の設定型はタプルを要求するため、配列リテラルが広がらないよう型を明示する。
+  const rule = (
+    rulePatterns: RestrictedImportPattern[],
+  ): ["error", { patterns: RestrictedImportPattern[] }] => ["error", { patterns: rulePatterns }];
+  const testFiles = files
+    .filter((glob) => glob.endsWith("/**"))
+    .flatMap((glob) => TEST_FILE_GLOBS.map((testGlob) => `${glob.slice(0, -3)}/${testGlob}`));
+  return [
+    {
+      files,
+      excludeFiles: TEST_FILE_GLOBS,
+      rules: { "eslint/no-restricted-imports": rule([...patterns, CORE_DIRECT_PATTERN]) },
+    },
+    ...(patterns.length > 0 && testFiles.length > 0
+      ? [{ files: testFiles, rules: { "eslint/no-restricted-imports": rule(patterns) } }]
+      : []),
+  ];
+}
+
+// view/browser の UI 部品層は features と組み立て層（App・pages・shell）を import しない
+// （計画: docs/plans/module-boundaries-plan.md §3 のルール 4、Phase D-3）。
+// features から UI 部品層への参照は認めるため、逆向きを禁止して循環を防ぐ。
+const UI_LAYER_FILES = [
+  "src/view/browser/ui/**",
+  "src/view/browser/hooks/**",
+  "src/view/browser/utils/**",
+  "src/view/browser/components/**",
+  "src/view/browser/commands/**",
+  "src/view/browser/state/**",
+  "src/view/browser/types.ts",
+];
+const UI_LAYER_PATTERN: RestrictedImportPattern = {
+  group: [
+    "**/features/**",
+    "**/view/browser/pages/**",
+    "**/view/browser/shell/**",
+    "**/view/browser/App",
+  ],
+  message:
+    "view/browser の UI 部品層は features と組み立て層（App・pages・shell）を import しない。機能を組み合わせる部品は view/browser/shell に置く。",
+};
+
 // features は組み立て層（App・pages・shell）を import しない（計画書 §3 のルール 5）。
-const FEATURE_TO_COMPOSITION_PATTERN: { group: string[]; message: string } = {
+const FEATURE_TO_COMPOSITION_PATTERN: RestrictedImportPattern = {
   group: ["**/view/browser/pages/**", "**/view/browser/shell/**", "**/view/browser/App"],
   message:
     "features は組み立て層（App・pages・shell）を import しない。組み立て層から props・context で受け取るか、部品を UI 部品層へ移す。",
@@ -314,36 +400,27 @@ function createFeatureBoundaryOverrides() {
     // 機能の名前を変えたのに一覧が古いままだと、検査が黙って緩くなるため設定の読み込みで止める。
     throw new Error(`FEATURE_PUBLIC_MODULES に存在しない機能があります: ${unknown.join(", ")}`);
   }
-  return featureNames.map((feature) => {
-    // oxlint の設定型はタプルを要求するため、配列リテラルが広がらないよう型を明示する。
-    const rule: ["error", { patterns: { group: string[]; message: string }[] }] = [
-      "error",
-      {
-        patterns: [
-          FEATURE_TO_COMPOSITION_PATTERN,
-          {
-            group: [
-              "**/features/*/**",
-              `!**/features/${feature}/**`,
-              ...Object.entries(FEATURE_PUBLIC_MODULES)
-                .filter(([owner]) => owner !== feature)
-                .flatMap(([owner, modules]) =>
-                  modules.map((modulePath) => `!**/features/${owner}/${modulePath}`),
-                ),
-            ],
-            message:
-              "他の機能の内部を import しない。公開してよいファイルなら vite.config.ts の FEATURE_PUBLIC_MODULES に追加する（計画書 §3.5）。",
-          },
-        ],
-      },
-    ];
-    return {
-      files: [`src/features/${feature}/**`],
-      rules: {
-        "eslint/no-restricted-imports": rule,
-      },
-    };
-  });
+  return featureNames.flatMap((feature) =>
+    restrictImports(
+      [`src/features/${feature}/**`],
+      [
+        FEATURE_TO_COMPOSITION_PATTERN,
+        {
+          group: [
+            "**/features/*/**",
+            `!**/features/${feature}/**`,
+            ...Object.entries(FEATURE_PUBLIC_MODULES)
+              .filter(([owner]) => owner !== feature)
+              .flatMap(([owner, modules]) =>
+                modules.map((modulePath) => `!**/features/${owner}/${modulePath}`),
+              ),
+          ],
+          message:
+            "他の機能の内部を import しない。公開してよいファイルなら vite.config.ts の FEATURE_PUBLIC_MODULES に追加する（計画書 §3.5）。",
+        },
+      ],
+    ),
+  );
 }
 
 export default defineConfig(async ({ mode }) => {
@@ -442,39 +519,10 @@ export default defineConfig(async ({ mode }) => {
             ],
           },
         },
-        // view/browser の UI 部品層は features と組み立て層（App・pages・shell）を import しない
-        // （計画: docs/plans/module-boundaries-plan.md §3 のルール 4、Phase D-3）。
-        // features から UI 部品層への参照は認めるため、逆向きを禁止して循環を防ぐ。
-        {
-          files: [
-            "src/view/browser/ui/**",
-            "src/view/browser/hooks/**",
-            "src/view/browser/utils/**",
-            "src/view/browser/components/**",
-            "src/view/browser/commands/**",
-            "src/view/browser/state/**",
-            "src/view/browser/types.ts",
-          ],
-          rules: {
-            "eslint/no-restricted-imports": [
-              "error",
-              {
-                patterns: [
-                  {
-                    group: [
-                      "**/features/**",
-                      "**/view/browser/pages/**",
-                      "**/view/browser/shell/**",
-                      "**/view/browser/App",
-                    ],
-                    message:
-                      "view/browser の UI 部品層は features と組み立て層（App・pages・shell）を import しない。機能を組み合わせる部品は view/browser/shell に置く。",
-                  },
-                ],
-              },
-            ],
-          },
-        },
+        // view 全体（組み立て層や overlay・replay の画面を含む）: core の直接 import だけを制限する（§3.6）。
+        ...restrictImports(["src/view/**"], []),
+        // UI 部品層: features・組み立て層への import と、core の直接 import を制限する（§3 のルール 4・6）。
+        ...restrictImports(UI_LAYER_FILES, [UI_LAYER_PATTERN]),
         // 機能ごとの境界（組み立て層と、他の機能の内部への import を禁止）。
         ...createFeatureBoundaryOverrides(),
       ],

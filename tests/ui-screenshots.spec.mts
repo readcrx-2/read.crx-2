@@ -34,17 +34,26 @@ async function capture(page: Page, name: string): Promise<void> {
 
 async function captureMiniWindows(page: Page, prefix: string): Promise<void> {
   const statusButtons = page.locator(".status-bar button");
-  const statusButtonCount = await statusButtons.count();
+  // 小窓を開くとステータスバー配下のDOMが更新されるため、nth()を使い回さず
+  // 最初に撮影対象の名前を控えて、各回でボタンを取り直す。
+  const labels = await statusButtons.evaluateAll((buttons) =>
+    buttons
+      .map((button) =>
+        button.getAttribute("aria-label") ??
+        button.getAttribute("title") ??
+        button.textContent?.trim() ??
+        "",
+      )
+      .filter((label) => label.length > 0),
+  );
   let miniWindowIndex = 1;
-  for (let index = 0; index < statusButtonCount; index += 1) {
-    const button = statusButtons.nth(index);
-    const label =
-      (await button.getAttribute("aria-label")) ??
-      (await button.getAttribute("title")) ??
-      (await button.innerText()).trim();
+  for (const label of labels) {
     if (await page.locator(".mini-window").count()) {
       await page.locator(".mini-window__close").click();
     }
+    const button = page.locator(".status-bar").getByRole("button", { name: label, exact: true }).first();
+    // ページ遷移などで対象が消えた場合は、存在しないnth()を待たず次へ進む。
+    if ((await button.count()) === 0) continue;
     await button.click();
     const miniWindow = page.locator(".mini-window");
     if (await miniWindow.count()) {

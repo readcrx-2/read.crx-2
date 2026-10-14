@@ -16,6 +16,12 @@ export default defineConfig({
     // DOMを使わない純粋なロジックのテストはファイル先頭の `// @vitest-environment node` で node 環境に切り替える。
     // 新しいテストは迷ったら jsdom のままでよく、DOMに触れないと分かっているものだけ node にする。
     environment: "jsdom",
+    // 変更理由: forksプールでは、ファイルごとにjsdomの読み込みと環境構築をやり直していた。
+    // 実行時間の半分以上がこの準備に使われていたため、ワーカーを使い回しつつファイルごとに
+    // VMコンテキストを分ける vmForks にした。vi.mock などのファイル単位の分離は保たれる。
+    // isolate: false はモジュールのキャッシュを共有してしまい、実行順によって vi.mock が
+    // 効かないファイルが出たため採用していない。
+    pool: "vmForks",
     // 変更理由: chlibのテストがincludeに入っておらず、CIで一度も実行されていなかった。
     // bbsmenuの解析テストをchlibへ移したため、共有パッケージのテストも同じ実行に含める。
     include: [

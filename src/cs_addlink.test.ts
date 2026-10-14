@@ -1,3 +1,6 @@
+// vmForksプールのjsdomでは window.location を再定義できないため、vi.stubGlobal ではなく
+// 環境オプションで書き込み結果ページのURLを与える。
+// @vitest-environment-options {"url": "https://example.com/test/bbs.cgi"}
 import { afterEach, describe, expect, it, vi } from "vite-plus/test";
 
 const { runtimeGetUrlMock, sendMessageMock } = vi.hoisted(() => ({
@@ -29,7 +32,6 @@ describe("cs_addlink", () => {
     const { notifyWriteResult } = await import("src/cs_addlink");
     const postMessage = vi.fn();
     vi.stubGlobal("parent", { postMessage });
-    vi.stubGlobal("location", { href: "https://example.com/test/bbs.cgi" });
     document.title = "ＥＲＲＯＲ";
     const meta = document.createElement("meta");
     meta.name = "error_code";

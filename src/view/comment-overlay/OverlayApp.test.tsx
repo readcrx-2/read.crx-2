@@ -428,7 +428,9 @@ describe("OverlayApp", () => {
   });
 
   it("本流確定時は未表示の候補コメントだけをqueueから除外する", async () => {
-    vi.useFakeTimers();
+    // beforeEachでspyしたrequestAnimationFrameを偽タイマーで上書きしない。
+    // vmForksプールではjsdomのrequestAnimationFrameも偽装対象になり、描画フレームを手動で進められなくなるため。
+    vi.useFakeTimers({ toNotFake: ["requestAnimationFrame", "cancelAnimationFrame"] });
     const eventBus = new MemoryCommentOverlayEventBus();
     const platform = createBrowserCommentOverlayPlatform();
 

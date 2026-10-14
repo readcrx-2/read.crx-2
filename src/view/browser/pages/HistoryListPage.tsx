@@ -10,10 +10,6 @@ import { tabActions } from "src/view/browser/state/tabs/tab-store-actions";
 import { useTabDispatch, useTabViewState } from "src/view/browser/state/tabs/use-tab-store";
 import { Spinner } from "src/view/browser/ui/Spinner";
 import { formatCompactDateTime, normalizeLegacyTimestamp } from "src/view/browser/utils/date-time";
-import {
-  getLegacyHistoryService,
-  getLegacyReadStateService,
-} from "src/view/browser/utils/legacy-app";
 import { parseInternalBrowserPage } from "src/view/browser/utils/link-routing";
 
 const PAGE_SIZE = 500;
@@ -108,14 +104,10 @@ function normalizeReadStateLookupUrl(url: string): string {
 }
 
 async function readHistoryUnreadCountIndex(): Promise<Map<string, number>> {
-  const readStateService = getLegacyReadStateService();
-
-  if (!readStateService?.getAll) {
-    return new Map();
-  }
-
   try {
-    const raw = await readStateService.getAll();
+    // 変更理由: window.app 経由の既読情報の取得をやめ、サービスコンテナだけを入口にする
+    // （docs/plans/legacy-window-app-plan.md の Phase 1）。
+    const raw = await container.readState.getAll();
     if (!Array.isArray(raw)) {
       return new Map();
     }
@@ -152,13 +144,8 @@ async function readHistoryEntriesPage(
   count: number,
   unreadCountIndex: ReadonlyMap<string, number>,
 ): Promise<HistoryPageResult> {
-  const historyService = getLegacyHistoryService();
-
-  if (!historyService?.get) {
-    return { entries: [], hasMore: false };
-  }
-
-  const raw = await historyService.get(offset, count);
+  // window.app ではなくサービスコンテナの閲覧履歴から読む（legacy-window-app-plan の Phase 1）。
+  const raw = await container.history.get(offset, count);
   if (!Array.isArray(raw)) {
     return { entries: [], hasMore: false };
   }

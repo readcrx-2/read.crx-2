@@ -140,6 +140,8 @@ describe("NavigationBar", () => {
       bookmarkUpdatedHandler?.({ bookmark: { url } });
     });
 
+    // URLバー候補の閲覧履歴はサービスコンテナから読む（legacy-window-app-plan の Phase 1）。
+    container.history = { get: historyGetMock } as unknown as typeof container.history;
     container.bookmark = {
       promiseFirstScan: Promise.resolve(true),
       get: bookmarkGetMock,
@@ -221,9 +223,6 @@ describe("NavigationBar", () => {
       bookmark: {
         getAllThreads: bookmarkGetAllThreadsMock,
       },
-      History: {
-        get: historyGetMock,
-      },
     };
 
     render(<NavigationBar />);
@@ -250,9 +249,6 @@ describe("NavigationBar", () => {
     mutableWindow.app = {
       bookmark: {
         getAllThreads: bookmarkGetAllThreadsMock,
-      },
-      History: {
-        get: historyGetMock,
       },
     };
 
@@ -404,14 +400,6 @@ describe("NavigationBar", () => {
 
   it("認識したURLを『URLを開く』操作として候補に表示する", async () => {
     historyGetMock.mockResolvedValue([]);
-    const mutableWindow = window as unknown as {
-      app?: unknown;
-    };
-    mutableWindow.app = {
-      History: {
-        get: historyGetMock,
-      },
-    };
 
     render(<NavigationBar />);
 
@@ -439,14 +427,6 @@ describe("NavigationBar", () => {
 
   it("認識したURLに『URLを新しいタブで開く』候補を表示する", async () => {
     historyGetMock.mockResolvedValue([]);
-    const mutableWindow = window as unknown as {
-      app?: unknown;
-    };
-    mutableWindow.app = {
-      History: {
-        get: historyGetMock,
-      },
-    };
 
     render(<NavigationBar />);
 
@@ -523,14 +503,6 @@ describe("NavigationBar", () => {
         viewedDate: 1000,
       },
     ]);
-    const mutableWindow = window as unknown as {
-      app?: unknown;
-    };
-    mutableWindow.app = {
-      History: {
-        get: historyGetMock,
-      },
-    };
 
     render(<NavigationBar />);
 
@@ -893,6 +865,9 @@ describe("NavigationBar titlebar slot", () => {
     paneHolder.panes = [{ id: "pane-1" }];
     paneHolder.activePaneId = "pane-1";
 
+    container.history = {
+      get: vi.fn(async () => []),
+    } as unknown as typeof container.history;
     container.bookmark = {
       promiseFirstScan: Promise.resolve(true),
       get: vi.fn(),

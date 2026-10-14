@@ -30,7 +30,6 @@ import { useTabStore } from "src/view/browser/state/tabs/use-tab-store";
 import type { Tab, ThreadFilter, ThreadPage as ThreadPageType } from "src/view/browser/types";
 import type { ContextMenuItem } from "src/view/browser/ui/ContextMenu";
 import { buildKyodemoUrl } from "src/view/browser/utils/kyodemo-url";
-import { getLegacyWriteHistoryService } from "src/view/browser/utils/legacy-app";
 import { getManualRefreshScopeKey, runManualRefresh } from "src/view/browser/utils/manual-refresh";
 import { formatResForCopy, stripHtml } from "src/view/browser/utils/response-format";
 
@@ -162,17 +161,11 @@ export function useThreadResContextMenu({
 
   const addWriteHistory = useCallback(
     async (res: IRes) => {
-      const writeHistoryService = getLegacyWriteHistoryService();
-
-      if (!writeHistoryService?.add) {
-        toast.info("書込履歴サービスが利用できません");
-        return;
-      }
-
       const name = stripHtml(res.name);
       const message = stripHtml(res.message);
       const baseTime = Date.parse(res.date ?? res.other ?? "");
-      await writeHistoryService.add({
+      // window.app ではなくサービスコンテナの書き込み履歴を使う（legacy-window-app-plan の Phase 1）。
+      await container.writeHistory.add({
         url: page.threadUrl,
         res: res.num,
         title: viewSurface.document.title,
@@ -191,14 +184,7 @@ export function useThreadResContextMenu({
 
   const removeWriteHistory = useCallback(
     async (res: IRes) => {
-      const writeHistoryService = getLegacyWriteHistoryService();
-
-      if (!writeHistoryService?.remove) {
-        toast.info("書込履歴サービスが利用できません");
-        return;
-      }
-
-      await writeHistoryService.remove(page.threadUrl, res.num);
+      await container.writeHistory.remove(page.threadUrl, res.num);
       // 変更理由: 追加時と同様に削除直後も「自分のレス」強調を即時解除し、
       // 再読込しないと強調が残るズレを避ける。
       onWriteHistoryRemoved?.(res.num);

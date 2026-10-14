@@ -80,13 +80,6 @@ interface ReadStateService {
   getAll: () => Promise<unknown[]>;
 }
 
-type AppLikeWindow = {
-  app?: {
-    History?: HistoryService;
-    ReadState?: ReadStateService;
-  };
-};
-
 type MessageListener = (data?: unknown) => void;
 
 let messageListeners = new Map<string, Set<MessageListener>>();
@@ -150,15 +143,9 @@ describe("HistoryListPage", () => {
       },
     });
 
-    // テストで使うレガシーAPIだけを差し替えるため、実アプリのwindow.app型から切り離す。
-    (window as unknown as AppLikeWindow).app = {
-      History: {
-        get: historyGet,
-      },
-      ReadState: {
-        getAll: readStateGetAll,
-      },
-    };
+    // 画面は閲覧履歴と既読情報をサービスコンテナから読むため、テストで使う関数だけを差し替える。
+    container.history = { get: historyGet } as unknown as typeof container.history;
+    container.readState = { getAll: readStateGetAll } as unknown as typeof container.readState;
 
     container.message = {
       send: vi.fn(),

@@ -166,6 +166,7 @@ export function setupContainer(): void {
   const readStateAdapter: IReadStateService = {
     get: async (url: string) => (await ReadState.get(url)) ?? undefined,
     getByBoard: (boardUrl: string) => ReadState.getByBoard(boardUrl),
+    getAll: () => ReadState.getAll(),
     set: async (readState: IReadState) => {
       await ReadState.set(readState);
     },

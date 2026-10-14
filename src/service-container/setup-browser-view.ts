@@ -17,6 +17,7 @@ export function setupBrowserViewServices(): void {
   container.history = {
     add: History.add,
     remove: History.remove,
+    get: History.get,
     getByUrl: History.getByUrl,
     getAll: History.getAll,
     clear: History.clear,
@@ -24,6 +25,8 @@ export function setupBrowserViewServices(): void {
   container.writeHistory = {
     add: WriteHistory.add,
     update: WriteHistory.update,
+    remove: WriteHistory.remove,
+    get: WriteHistory.get,
     getByUrl: WriteHistory.getByUrl,
     getAll: WriteHistory.getAll,
     clear: WriteHistory.clear,

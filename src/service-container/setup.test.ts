@@ -24,6 +24,7 @@ const mocks = vi.hoisted(() => {
       received: 1,
     })),
     readStateGetByBoard: vi.fn(async () => []),
+    readStateGetAll: vi.fn(async () => []),
     readStateSet: vi.fn(async () => undefined),
     isNewerReadState: vi.fn(() => true),
     configSet: vi.fn(async () => undefined),
@@ -31,6 +32,7 @@ const mocks = vi.hoisted(() => {
     history: {
       add: vi.fn(async () => undefined),
       remove: vi.fn(async () => undefined),
+      get: vi.fn(async () => []),
       getByUrl: vi.fn(async () => []),
       getAll: vi.fn(async () => []),
       clear: vi.fn(async () => undefined),
@@ -42,6 +44,8 @@ const mocks = vi.hoisted(() => {
     writeHistory: {
       add: vi.fn(async () => undefined),
       update: vi.fn(async () => undefined),
+      remove: vi.fn(async () => undefined),
+      get: vi.fn(async () => []),
       getByUrl: vi.fn(async () => []),
       getAll: vi.fn(async () => []),
       clear: vi.fn(async () => undefined),
@@ -102,6 +106,7 @@ vi.mock("src/core/bookmark/Bookmark", () => ({
 vi.mock("src/core/bookmark/ReadState", () => ({
   get: mocks.readStateGet,
   getByBoard: mocks.readStateGetByBoard,
+  getAll: mocks.readStateGetAll,
   set: mocks.readStateSet,
 }));
 vi.mock("src/core/bookmark/read-state-compare", () => ({
@@ -197,6 +202,18 @@ describe("サービスコンテナの初期化", () => {
     );
     await container.history.getAll();
     expect(mocks.history.getAll).toHaveBeenCalled();
+    // 履歴の一覧は window.app ではなくここから読む（legacy-window-app-plan の Phase 1）。
+    await container.history.get(0, 500);
+    expect(mocks.history.get).toHaveBeenCalledWith(0, 500);
+    await container.writeHistory.get(undefined, 5000);
+    expect(mocks.writeHistory.get).toHaveBeenCalledWith(undefined, 5000);
+    await container.writeHistory.remove("https://example.com/test/read.cgi/a/1/", 3);
+    expect(mocks.writeHistory.remove).toHaveBeenCalledWith(
+      "https://example.com/test/read.cgi/a/1/",
+      3,
+    );
+    await container.readState.getAll();
+    expect(mocks.readStateGetAll).toHaveBeenCalled();
     await container.writeHistory.getByUrl("https://example.com/test/read.cgi/a/1/");
     expect(mocks.writeHistory.getByUrl).toHaveBeenCalledWith(
       "https://example.com/test/read.cgi/a/1/",

@@ -29,8 +29,22 @@ type MessageHandler = (payload?: unknown) => void;
 
 let messageHandlers = new Map<string, Set<MessageHandler>>();
 
-function setLegacyApp(appValue: unknown): void {
-  (window as unknown as { app?: unknown }).app = appValue;
+function setBookmarkRootState(bookmarkId: string, needReconfigure: boolean): void {
+  // 保存先の設定はサービスコンテナの config から読み書きする（legacy-window-app-plan の Phase 1）。
+  container.config = {
+    get: (key: string) => (key === "bookmark_id" ? bookmarkId : null),
+    set: configSetMock,
+    ready: (callback: () => void) => callback(),
+    getAll: () => ({}),
+  };
+  // 保存先の再設定が必要かどうかは、まだ window.app のブックマーク保存先から読む（Phase 2 で置き換える）。
+  (window as unknown as { app?: unknown }).app = {
+    bookmarkEntryList: {
+      needReconfigureRootNodeId: {
+        wasCalled: needReconfigure,
+      },
+    },
+  };
 }
 
 function setTauriRuntime(enabled: boolean): void {
@@ -122,17 +136,7 @@ describe("BookmarkRootSelectorDialog", () => {
   });
 
   it("bookmark root 未設定時は自動で開き、選択したフォルダを保存する", async () => {
-    setLegacyApp({
-      config: {
-        get: (key: string) => (key === "bookmark_id" ? "" : null),
-        set: configSetMock,
-      },
-      bookmarkEntryList: {
-        needReconfigureRootNodeId: {
-          wasCalled: true,
-        },
-      },
-    });
+    setBookmarkRootState("", true);
 
     render(<BookmarkRootSelectorDialog />);
 
@@ -152,17 +156,7 @@ describe("BookmarkRootSelectorDialog", () => {
   });
 
   it("手動オープン時はキャンセルで閉じられる", async () => {
-    setLegacyApp({
-      config: {
-        get: (key: string) => (key === "bookmark_id" ? "3" : null),
-        set: configSetMock,
-      },
-      bookmarkEntryList: {
-        needReconfigureRootNodeId: {
-          wasCalled: false,
-        },
-      },
-    });
+    setBookmarkRootState("3", false);
 
     render(<BookmarkRootSelectorDialog />);
     expect(screen.queryByRole("dialog")).not.toBeInTheDocument();
@@ -185,17 +179,7 @@ describe("BookmarkRootSelectorDialog", () => {
   it("Tauriランタイムでは保存先選択ダイアログを表示しない", async () => {
     setTauriRuntime(true);
 
-    setLegacyApp({
-      config: {
-        get: (key: string) => (key === "bookmark_id" ? "" : null),
-        set: configSetMock,
-      },
-      bookmarkEntryList: {
-        needReconfigureRootNodeId: {
-          wasCalled: true,
-        },
-      },
-    });
+    setBookmarkRootState("", true);
 
     render(<BookmarkRootSelectorDialog />);
     container.message.send("bookmark_root_selector_open");

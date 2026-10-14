@@ -1,9 +1,6 @@
 import { isTauriRuntime } from "src/app/platform/runtime";
 import { container } from "src/service-container/index";
-import {
-  getLegacyBookmarkEntryList,
-  getLegacyConfigService,
-} from "src/view/browser/utils/legacy-app";
+import { getLegacyBookmarkEntryList } from "src/view/browser/utils/legacy-app";
 import browser from "webextension-polyfill";
 
 export interface BookmarkFolderNode {
@@ -38,7 +35,9 @@ export function supportsBookmarkFolderSelection(): boolean {
 }
 
 export function readConfiguredBookmarkFolderId(): string {
-  const bookmarkId = getLegacyConfigService()?.get?.("bookmark_id");
+  // window.app.config と container.config は同じ Config の実体を見るため、コンテナから読む
+  // （legacy-window-app-plan の Phase 1）。
+  const bookmarkId = container.config.get("bookmark_id");
   return typeof bookmarkId === "string" ? bookmarkId : "";
 }
 
@@ -82,14 +81,9 @@ export async function readBookmarkFolderName(bookmarkId: string): Promise<string
 }
 
 export async function updateBookmarkFolderId(bookmarkId: string): Promise<void> {
-  const configService = getLegacyConfigService();
-
   // 変更理由: bookmark root の切替は app.ts 側の config_updated listener が
   // runtime へ反映するため、UI は config 更新だけを責務にして同期経路を一本化する。
-  if (typeof configService?.set === "function") {
-    await configService.set("bookmark_id", bookmarkId);
-    return;
-  }
-
-  void container.config.set("bookmark_id", bookmarkId);
+  // 以前は window.app.config があればそちらを待ち、なければ container.config へ投げっぱなしにしていた。
+  // 両者は同じ Config の実体なので、コンテナに一本化して保存の完了まで待つ。
+  await container.config.set("bookmark_id", bookmarkId);
 }

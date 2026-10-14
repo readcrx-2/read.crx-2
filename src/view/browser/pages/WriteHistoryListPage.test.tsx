@@ -13,9 +13,10 @@ import {
 import { afterEach, beforeEach, describe, expect, it, vi } from "vite-plus/test";
 
 const mockUseTabStore = vi.fn();
-const { messageOn, messageOff } = vi.hoisted(() => ({
+const { messageOn, messageOff, writeHistoryGet } = vi.hoisted(() => ({
   messageOn: vi.fn(),
   messageOff: vi.fn(),
+  writeHistoryGet: vi.fn<(offset?: number, count?: number) => Promise<unknown[]>>(),
 }));
 const { cacheGetMock, cachePutMock } = vi.hoisted(() => ({
   cacheGetMock: vi.fn(),
@@ -51,16 +52,14 @@ vi.mock("src/service-container/index", () => ({
       on: messageOn,
       off: messageOff,
     },
+    // 画面は書き込み履歴をサービスコンテナから読む。
+    writeHistory: {
+      get: writeHistoryGet,
+    },
   },
 }));
 
-interface WriteHistoryService {
-  get: (offset?: number, count?: number) => Promise<unknown[]>;
-}
-
 describe("WriteHistoryListPage", () => {
-  const writeHistoryGet = vi.fn<WriteHistoryService["get"]>();
-
   afterEach(() => {
     consumePendingThreadResJump("https://egg.5ch.io/test/read.cgi/software/1/");
     cleanup();
@@ -87,19 +86,6 @@ describe("WriteHistoryListPage", () => {
         title: "書き込み履歴",
       },
     });
-
-    // テストで使うレガシーAPIだけを差し替えるため、実アプリのwindow.app型から切り離す。
-    (
-      window as unknown as {
-        app: {
-          WriteHistory: WriteHistoryService;
-        };
-      }
-    ).app = {
-      WriteHistory: {
-        get: writeHistoryGet,
-      },
-    };
   });
 
   it("本文列と短い日時表記を表示する", async () => {

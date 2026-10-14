@@ -22,6 +22,7 @@ export interface ICacheService {
 export interface IReadStateService {
   get(url: string): Promise<IReadState | undefined>;
   getByBoard(boardUrl: string): Promise<IReadState[]>;
+  getAll(): Promise<IReadState[]>;
   set(readState: IReadState): Promise<void>;
 }
 

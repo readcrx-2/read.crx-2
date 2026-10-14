@@ -1,7 +1,6 @@
 import { container } from "src/service-container/index";
 import {
   getLegacyBookmarkService,
-  getLegacyHistoryService,
   waitForLegacyBookmarkReady,
 } from "src/view/browser/utils/legacy-app";
 import {
@@ -123,13 +122,8 @@ async function readBookmarkSources(): Promise<OmnibarBookmarkSource[]> {
 }
 
 async function readHistorySources(): Promise<OmnibarHistorySource[]> {
-  const historyService = getLegacyHistoryService();
-
-  if (!historyService?.get) {
-    return [];
-  }
-
-  const raw = await historyService.get(0, OMNIBAR_HISTORY_FETCH_COUNT);
+  // window.app ではなくサービスコンテナの閲覧履歴から読む（legacy-window-app-plan の Phase 1）。
+  const raw = await container.history.get(0, OMNIBAR_HISTORY_FETCH_COUNT);
   if (!Array.isArray(raw)) {
     return [];
   }

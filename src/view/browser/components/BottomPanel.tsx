@@ -1,7 +1,6 @@
 import { X } from "lucide-react";
 import React, { useCallback, useEffect, useLayoutEffect, useRef } from "react";
 import { useAutoScrollState } from "src/features/auto-refresh/browser/use-auto-scroll-state";
-import { useViewSurface } from "src/features/auxiliary-window/browser/use-view-surface";
 import { useDetachedTabController } from "src/features/tabs/browser/use-detached-tab-controller";
 import { useTabStore } from "src/features/tabs/browser/use-tab-store";
 import { ThreadListPanel } from "src/features/thread-list/ui/ThreadListPanel";
@@ -11,6 +10,7 @@ import {
   BOTTOM_PANEL_WRITE_TAB_ID,
   useBottomPanel,
 } from "src/view/browser/hooks/use-bottom-panel";
+import { useViewSurface } from "src/view/browser/hooks/use-view-surface";
 import { isHTMLElementInWindow } from "src/view/browser/utils/dom";
 
 interface BottomPanelProps {

@@ -14,9 +14,9 @@ import {
 import { useAutoFollowScroll } from "src/features/auto-refresh/browser/use-auto-follow-scroll";
 import { useAutoRefreshTimer } from "src/features/auto-refresh/browser/use-auto-refresh-timer";
 import { useThreadExpiryStop } from "src/features/auto-refresh/browser/use-thread-expiry-stop";
-import { useViewSurface } from "src/features/auxiliary-window/browser/use-view-surface";
 import type { ThreadRefreshController } from "src/features/thread/browser/use-thread-refresh-controller";
 import { useLatestRef } from "src/view/browser/hooks/use-latest-ref";
+import { useViewSurface } from "src/view/browser/hooks/use-view-surface";
 
 type AutoRefreshPhase = "idle" | "scrolling";
 

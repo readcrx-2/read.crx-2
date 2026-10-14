@@ -1,5 +1,5 @@
 import { type RefObject, useEffect } from "react";
-import type { ViewSurface } from "src/features/auxiliary-window/browser/use-view-surface";
+import type { ViewSurface } from "src/view/browser/hooks/use-view-surface";
 import type { GestureDirection, GesturePoint } from "src/view/browser/utils/gesture";
 import {
   GESTURE_CONTEXTMENU_SUPPRESS_MS,

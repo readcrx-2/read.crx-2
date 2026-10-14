@@ -1,6 +1,5 @@
 import type { RefObject } from "react";
 import { useCallback, useEffect, useMemo, useRef } from "react";
-import { useViewSurface } from "src/features/auxiliary-window/browser/use-view-surface";
 import type {
   AnchorPopupItem,
   ContextMenuPopupItem,
@@ -11,6 +10,7 @@ import type {
 } from "src/features/popup/browser/popup-types";
 import { usePopupCore } from "src/features/popup/browser/use-popup-core";
 import type { IRes } from "src/service-container/interfaces";
+import { useViewSurface } from "src/view/browser/hooks/use-view-surface";
 import {
   ANCHOR_PREVIEW_GUTTER,
   ANCHOR_PREVIEW_HIDE_DELAY_MS,

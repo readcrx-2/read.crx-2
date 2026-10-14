@@ -6,10 +6,10 @@ import {
   type AuxiliaryWindowOptions,
   useAuxiliaryWindow,
 } from "src/features/auxiliary-window/browser/use-auxiliary-window";
-import { ViewSurfaceProvider } from "src/features/auxiliary-window/browser/use-view-surface";
 import { commentOverlayWindowPlatform } from "src/features/comment-overlay/platform";
 import { OverlayPlacementPanel } from "src/features/comment-overlay/ui/OverlayPlacementPanel";
 import { useTheme } from "src/view/browser/hooks/use-theme";
+import { ViewSurfaceProvider } from "src/view/browser/hooks/use-view-surface";
 
 const OVERLAY_PLACEMENT_WINDOW_OPTIONS: AuxiliaryWindowOptions = {
   name: "chlens-comment-overlay-placement",

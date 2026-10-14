@@ -6,7 +6,7 @@ import {
   useViewSurface,
   type ViewSurface,
   ViewSurfaceProvider,
-} from "src/features/auxiliary-window/browser/use-view-surface";
+} from "src/view/browser/hooks/use-view-surface";
 import { afterEach, describe, expect, it } from "vite-plus/test";
 
 const Probe: React.FC = () => {

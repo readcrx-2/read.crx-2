@@ -1,9 +1,6 @@
 import { memo, type RefObject, useEffect, useRef, useState } from "react";
 import { isAutoRefreshEnabledForPage } from "src/features/auto-refresh/browser/auto-refresh-pages";
-import {
-  type ViewSurface,
-  ViewSurfaceProvider,
-} from "src/features/auxiliary-window/browser/use-view-surface";
+import { type ViewSurface, ViewSurfaceProvider } from "src/view/browser/hooks/use-view-surface";
 import { BoardListPage } from "src/view/browser/pages/BoardListPage";
 import { BookmarkListPage } from "src/view/browser/pages/BookmarkListPage";
 import { HistoryListPage } from "src/view/browser/pages/HistoryListPage";

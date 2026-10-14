@@ -9,7 +9,6 @@ import {
   type AuxiliaryWindowOptions,
   openAuxiliaryWindow,
 } from "src/features/auxiliary-window/browser/use-auxiliary-window";
-import type { ViewSurface } from "src/features/auxiliary-window/browser/use-view-surface";
 import {
   type DetachedTabController,
   DetachedTabControllerContext,
@@ -18,6 +17,7 @@ import { tabActions } from "src/features/tabs/browser/tab-store-actions";
 import { useTabDispatch, useTabPanes, useTabStore } from "src/features/tabs/browser/use-tab-store";
 import { DetachedTabWindowContent } from "src/features/tabs/ui/DetachedTabWindowContent";
 import { useTheme } from "src/view/browser/hooks/use-theme";
+import type { ViewSurface } from "src/view/browser/hooks/use-view-surface";
 import { getCurrentPage, type Page, type Pane, type Tab } from "src/view/browser/types";
 
 interface TabWindowEntry extends AuxiliaryWindowHandle {

@@ -8,8 +8,8 @@ import {
 } from "react";
 import { platformDownloadManager } from "src/app/platform/DownloadManager";
 import { isTauriRuntime } from "src/app/platform/runtime";
-import { useViewSurface } from "src/features/auxiliary-window/browser/use-view-surface";
 import { useToast } from "src/view/browser/hooks/use-toast";
+import { useViewSurface } from "src/view/browser/hooks/use-view-surface";
 
 import type { ViewerState } from "./media-viewer-types";
 import {

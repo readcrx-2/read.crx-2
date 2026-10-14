@@ -1,10 +1,6 @@
 import React, { type ReactNode, useMemo } from "react";
 import { AutoScrollStateProvider } from "src/features/auto-refresh/browser/use-auto-scroll-state";
 import { AutoRefreshStatusItem } from "src/features/auto-refresh/ui/AutoRefreshStatusItem";
-import {
-  type ViewSurface,
-  ViewSurfaceProvider,
-} from "src/features/auxiliary-window/browser/use-view-surface";
 import { CommentOverlayStatusItem } from "src/features/comment-overlay/ui/CommentOverlayStatusItem";
 import { NgStatusProvider } from "src/features/ng/browser/use-ng-status";
 import { NgStatusItem } from "src/features/ng/ui/NgStatusItem";
@@ -22,6 +18,7 @@ import { StatusBar, StatusBarProvider } from "src/view/browser/components/Status
 import { TitleBar } from "src/view/browser/components/TitleBar";
 import { BottomPanelProvider } from "src/view/browser/hooks/use-bottom-panel";
 import { PageCountStatusProvider } from "src/view/browser/hooks/use-page-count-status";
+import { type ViewSurface, ViewSurfaceProvider } from "src/view/browser/hooks/use-view-surface";
 import type { Tab } from "src/view/browser/types";
 import { ToastProvider } from "src/view/browser/ui/Toast";
 

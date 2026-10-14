@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
-import { useViewSurface } from "src/features/auxiliary-window/browser/use-view-surface";
 import { useLatestRef } from "src/view/browser/hooks/use-latest-ref";
+import { useViewSurface } from "src/view/browser/hooks/use-view-surface";
 
 interface ResponseNumber {
   num: number;

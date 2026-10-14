@@ -1,6 +1,5 @@
 import { ExternalLink, List, Pin, PinOff, RotateCcw, X } from "lucide-react";
 import React, { useCallback, useMemo } from "react";
-import { useViewSurface } from "src/features/auxiliary-window/browser/use-view-surface";
 import {
   readBookmarkStatus,
   useBookmarkRevision,
@@ -18,6 +17,7 @@ import { runCommandRequest } from "src/view/browser/commands/command-runtime";
 import { TAB_COMMAND_IDS } from "src/view/browser/commands/tab-command-runtime";
 import { useOptionalBottomPanel } from "src/view/browser/hooks/use-bottom-panel";
 import { useToast } from "src/view/browser/hooks/use-toast";
+import { useViewSurface } from "src/view/browser/hooks/use-view-surface";
 import type { Tab } from "src/view/browser/types";
 import { getCurrentPage } from "src/view/browser/types";
 import { ContextMenu, ContextMenuItem } from "src/view/browser/ui/ContextMenu";

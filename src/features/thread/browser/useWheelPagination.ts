@@ -1,5 +1,5 @@
 import { type RefObject, useCallback, useEffect, useRef, useState } from "react";
-import { useViewSurface } from "src/features/auxiliary-window/browser/use-view-surface";
+import { useViewSurface } from "src/view/browser/hooks/use-view-surface";
 import { getEventTargetElement } from "src/view/browser/utils/dom";
 import {
   isManualRefreshCoolingDown,

@@ -9,7 +9,7 @@ import {
   useViewSurface,
   type ViewSurface,
   ViewSurfaceProvider,
-} from "src/features/auxiliary-window/browser/use-view-surface";
+} from "src/view/browser/hooks/use-view-surface";
 
 import { useMediaViewerStore } from "../browser/use-media-viewer-store";
 import { MediaViewerContent } from "./MediaViewerContent";

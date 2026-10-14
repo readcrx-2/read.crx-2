@@ -1,5 +1,4 @@
 import { useCallback, useEffect, useMemo, useState } from "react";
-import { useViewSurface } from "src/features/auxiliary-window/browser/use-view-surface";
 import { readBookmarkStatus } from "src/features/bookmark/browser/use-bookmark-revision";
 import { container } from "src/service-container/index";
 import {
@@ -7,6 +6,7 @@ import {
   executeCommandRequest,
 } from "src/view/browser/commands/command-runtime";
 import { useToast } from "src/view/browser/hooks/use-toast";
+import { useViewSurface } from "src/view/browser/hooks/use-view-surface";
 import type { Page } from "src/view/browser/types";
 import { waitForLegacyBookmarkReady } from "src/view/browser/utils/legacy-app";
 import { parseInternalBrowserPage } from "src/view/browser/utils/link-routing";

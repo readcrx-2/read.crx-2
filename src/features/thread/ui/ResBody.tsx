@@ -1,5 +1,5 @@
 import React, { useCallback, useMemo, useRef } from "react";
-import { useViewSurface } from "src/features/auxiliary-window/browser/use-view-surface";
+import { useViewSurface } from "src/view/browser/hooks/use-view-surface";
 import type { ThreadSearchTarget } from "src/view/browser/types";
 import { hasMissingAnchorTarget, parseAnchorDisplayTargets } from "src/view/browser/utils/anchor";
 import { ANCHOR_SELECTOR, ID_LINK_SELECTOR } from "src/view/browser/utils/constants";

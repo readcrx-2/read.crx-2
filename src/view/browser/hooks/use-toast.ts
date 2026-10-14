@@ -1,7 +1,7 @@
 import { useMemo } from "react";
-import { useViewSurface } from "src/features/auxiliary-window/browser/use-view-surface";
 import { container } from "src/service-container/index";
 import type { IToastService } from "src/service-container/interfaces";
+import { useViewSurface } from "src/view/browser/hooks/use-view-surface";
 
 /**
  * 表示中のWindowへ通知を送るToastサービスを返す。

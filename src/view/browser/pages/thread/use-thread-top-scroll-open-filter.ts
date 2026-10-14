@@ -1,5 +1,5 @@
 import { useEffect, useRef } from "react";
-import { useViewSurface } from "src/features/auxiliary-window/browser/use-view-surface";
+import { useViewSurface } from "src/view/browser/hooks/use-view-surface";
 import type { TopBarMode } from "src/view/browser/pages/thread/use-thread-top-bar";
 import { getEventTargetElement } from "src/view/browser/utils/dom";
 import { findThreadScrollContainer } from "src/view/browser/utils/thread-read-state";

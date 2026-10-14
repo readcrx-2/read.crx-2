@@ -26,7 +26,6 @@ import {
 import { ChURL } from "packages/chlib/src/index";
 import type { Dispatch } from "react";
 import { isTauriRuntime } from "src/app/platform/runtime";
-import type { ViewSurface } from "src/features/auxiliary-window/browser/use-view-surface";
 import { tabActions } from "src/features/tabs/browser/tab-store-actions";
 import type { ScopedTabAction } from "src/features/tabs/browser/use-tab-store";
 import { container } from "src/service-container";
@@ -47,6 +46,7 @@ import {
   RESPONSE_JUMP_COMMAND_ID,
 } from "src/view/browser/commands/response-jump-command";
 import { TAB_COMMAND_IDS, type TabCommandId } from "src/view/browser/commands/tab-command-runtime";
+import type { ViewSurface } from "src/view/browser/hooks/use-view-surface";
 import type { Page, Tab } from "src/view/browser/types";
 import { getCurrentPage } from "src/view/browser/types";
 import {

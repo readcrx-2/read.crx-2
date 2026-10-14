@@ -22,7 +22,6 @@ import {
 import { platform } from "src/app/platform";
 import { isMissingFromSubject, shouldForceSubjectCheck } from "src/core/board/SubjectPresence";
 import type { CorePorts } from "src/core/ports/registry";
-import { corePorts } from "src/core/ports/registry";
 import type Cache from "src/core/storage/Cache.js";
 import { chServerMoveDetect } from "src/core/util/jsutil.js";
 
@@ -116,7 +115,7 @@ export default class Thread {
 
   constructor(
     url: string | ChURL,
-    private readonly deps: ThreadDeps = corePorts,
+    private readonly deps: ThreadDeps,
   ) {
     this.url = url instanceof ChURL ? url : new ChURL(url);
     this.title = null;
@@ -719,15 +718,15 @@ export default class Thread {
   // Static helpers (変更なし)
   // -------------------------------------------------------------------------
 
-  static _getXhrInfo(url: ChURL, deps: ThreadDeps = corePorts): XhrInfo | null {
+  static _getXhrInfo(url: ChURL, deps: ThreadDeps): XhrInfo | null {
     return getThreadXhrInfo(url, deps.config.get("format_2chnet"));
   }
 
   static parse(
     url: ChURL,
     text: string,
+    deps: ThreadDeps,
     resLength?: number,
-    deps: ThreadDeps = corePorts,
   ): ParsedThread | null {
     return parseThread(url, text, {
       format2chnet: deps.config.get("format_2chnet"),

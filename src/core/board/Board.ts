@@ -11,7 +11,6 @@ import { platform } from "src/app/platform";
 import { runBoardRequest } from "src/core/board/board-request";
 import { Response } from "src/core/network/HTTP";
 import type { CorePorts } from "src/core/ports/registry";
-import { corePorts } from "src/core/ports/registry";
 import { chServerMoveDetect } from "src/core/util/jsutil";
 
 // 変更理由: 5ch/2ch.scのホスト名判定をcoreへ複製せず、通信条件だけを意味分類で選ぶ。
@@ -49,7 +48,7 @@ export default class Board {
 
   constructor(
     url: string | ChURL,
-    private readonly deps: BoardDeps = corePorts,
+    private readonly deps: BoardDeps,
   ) {
     this.url = url instanceof ChURL ? url : new ChURL(url);
   }
@@ -291,7 +290,7 @@ class="open_in_rcrx">${this.deps.util.escapeHtml(newBoardUrl)}
   /**
    * 板のスレ一覧を取得する（静的メソッド）
    */
-  static async get(url: string, deps: BoardDeps = corePorts): Promise<BoardResponse> {
+  static async get(url: string, deps: BoardDeps): Promise<BoardResponse> {
     const board = new Board(url, deps);
     try {
       await board.get();
@@ -308,7 +307,7 @@ class="open_in_rcrx">${this.deps.util.escapeHtml(newBoardUrl)}
   /**
    * 板のテキストをパースして、スレ一覧を取得します
    */
-  static parse(url: ChURL, text: string, deps: BoardDeps = corePorts): BoardThread[] | null {
+  static parse(url: ChURL, text: string, deps: BoardDeps): BoardThread[] | null {
     const scFlg = getBoardNetwork(url.url) === "2ch-sc";
     const threads = BoardParser.parse(url, text);
 
@@ -341,8 +340,8 @@ class="open_in_rcrx">${this.deps.util.escapeHtml(newBoardUrl)}
    */
   static async getCachedResCount(
     threadUrl: string,
+    deps: BoardDeps,
     { forceUpdate = false }: { forceUpdate?: boolean } = {},
-    deps: BoardDeps = corePorts,
   ): Promise<{ resCount: number; modified: number }> {
     // ChURLのメソッドを呼び出すために、threadUrlをChURLに変換
     const chUrl = new ChURL(threadUrl);

@@ -1,4 +1,5 @@
 // @vitest-environment node
+import { corePorts } from "src/core/ports/registry";
 import { beforeEach, describe, expect, it, vi } from "vite-plus/test";
 
 const { fetchMock, cache } = vi.hoisted(() => ({
@@ -67,8 +68,8 @@ describe("Board", () => {
           resolveFetch = resolve;
         }),
     );
-    const first = new Board("https://example.com/board/");
-    const second = new Board("https://example.com/board/");
+    const first = new Board("https://example.com/board/", corePorts);
+    const second = new Board("https://example.com/board/", corePorts);
 
     const firstRequest = first.get(true);
     const secondRequest = second.get(true);
@@ -99,6 +100,7 @@ describe("Board", () => {
 
     const result = await Board.getCachedResCount(
       "https://example.com/test/read.cgi/board/1000000002/",
+      corePorts,
       { forceUpdate: true },
     );
 
@@ -116,7 +118,7 @@ describe("Board", () => {
     });
 
     await expect(
-      Board.getCachedResCount("https://example.com/test/read.cgi/board/1000000002/", {
+      Board.getCachedResCount("https://example.com/test/read.cgi/board/1000000002/", corePorts, {
         forceUpdate: true,
       }),
     ).rejects.toThrow("板のスレ一覧にそのスレが存在しません");
@@ -128,7 +130,7 @@ describe("Board", () => {
     fetchMock.mockRejectedValue(new Error("通信に失敗しました"));
 
     await expect(
-      Board.getCachedResCount("https://example.com/test/read.cgi/board/1000000002/", {
+      Board.getCachedResCount("https://example.com/test/read.cgi/board/1000000002/", corePorts, {
         forceUpdate: true,
       }),
     ).rejects.not.toThrow("板のスレ一覧にそのスレが存在しません");
@@ -146,7 +148,7 @@ describe("Board", () => {
     });
 
     await expect(
-      Board.getCachedResCount("https://example.com/test/read.cgi/board/1000000002/"),
+      Board.getCachedResCount("https://example.com/test/read.cgi/board/1000000002/", corePorts),
     ).rejects.not.toThrow("板のスレ一覧にそのスレが存在しません");
   });
 
@@ -161,7 +163,7 @@ describe("Board", () => {
     });
 
     await expect(
-      Board.getCachedResCount("https://example.com/test/read.cgi/board/1000000002/"),
+      Board.getCachedResCount("https://example.com/test/read.cgi/board/1000000002/", corePorts),
     ).rejects.not.toThrow("板のスレ一覧にそのスレが存在しません");
   });
 
@@ -178,6 +180,7 @@ describe("Board", () => {
     try {
       const result = await Board.getCachedResCount(
         "https://example.com/test/read.cgi/board/1000000002/",
+        corePorts,
       );
       expect(result.resCount).toBe(2);
       expect(fetchMock).toHaveBeenCalledTimes(1);
@@ -196,6 +199,7 @@ describe("Board", () => {
 
     const result = await Board.getCachedResCount(
       "https://egg.5ch.io/test/read.cgi/software/1000000002/",
+      corePorts,
     );
 
     expect(result.resCount).toBe(2);
@@ -211,7 +215,7 @@ describe("Board", () => {
     });
 
     await expect(
-      Board.getCachedResCount("https://egg.5ch.io/test/read.cgi/software/1000000002/"),
+      Board.getCachedResCount("https://egg.5ch.io/test/read.cgi/software/1000000002/", corePorts),
     ).rejects.toThrow("板のスレ一覧にそのスレが存在しません");
   });
 
@@ -227,6 +231,7 @@ describe("Board", () => {
 
     const result = await Board.getCachedResCount(
       "https://egg.5ch.io/test/read.cgi/software/1000000003/",
+      corePorts,
       { forceUpdate: true },
     );
 
@@ -245,7 +250,7 @@ describe("Board", () => {
     });
 
     await expect(
-      Board.getCachedResCount("https://egg.5ch.io/test/read.cgi/software/1000000002/", {
+      Board.getCachedResCount("https://egg.5ch.io/test/read.cgi/software/1000000002/", corePorts, {
         forceUpdate: true,
       }),
     ).rejects.toThrow("板のスレ一覧にそのスレが存在しません");

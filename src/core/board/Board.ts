@@ -9,9 +9,10 @@ import {
 } from "packages/chlib/src/index";
 import { platform } from "src/app/platform";
 import { runBoardRequest } from "src/core/board/board-request";
+// jsutil は Board を import する互換用のまとめ口なので、経由すると Board ↔ jsutil の循環になる。
+import { chServerMoveDetect } from "src/core/board/ch-server-move-detect";
 import { Response } from "src/core/network/HTTP";
 import type { CorePorts } from "src/core/ports/registry";
-import { chServerMoveDetect } from "src/core/util/jsutil";
 
 // 変更理由: 5ch/2ch.scのホスト名判定をcoreへ複製せず、通信条件だけを意味分類で選ぶ。
 

@@ -27,8 +27,18 @@ const mocks = vi.hoisted(() => {
     readStateSet: vi.fn(async () => undefined),
     isNewerReadState: vi.fn(() => true),
     configSet: vi.fn(async () => undefined),
+    // view・features がサービスコンテナ経由で使う core の実装（Phase E）。
+    history: {
+      add: vi.fn(async () => undefined),
+      remove: vi.fn(async () => undefined),
+      getByUrl: vi.fn(async () => []),
+      getAll: vi.fn(async () => []),
+      clear: vi.fn(async () => undefined),
+    },
   };
 });
+
+vi.mock("src/core/history/History", () => mocks.history);
 
 vi.mock("src/service-container/config-instance", () => ({
   configInstance: {
@@ -144,6 +154,24 @@ describe("サービスコンテナの初期化", () => {
       read: 1,
     });
     expect(container.util.isNewerReadState(null, null)).toBe(true);
+  });
+
+  it("view・features が使う core の実装をサービスコンテナへつなぐ", async () => {
+    const { setupContainer } = await import("src/service-container/setup");
+    const { container } = await import("src/service-container/Container");
+    for (const callback of mocks.configReadyCallbacks) callback();
+    setupContainer();
+
+    // 呼び出しを core の実装へそのまま渡していることを、サービスごとに確かめる。
+    await container.history.add("https://example.com/test/read.cgi/a/1/", "スレ", 1, "板");
+    expect(mocks.history.add).toHaveBeenCalledWith(
+      "https://example.com/test/read.cgi/a/1/",
+      "スレ",
+      1,
+      "板",
+    );
+    await container.history.getAll();
+    expect(mocks.history.getAll).toHaveBeenCalled();
   });
 
   it("bookmark_id更新をEntryListへ渡す", async () => {

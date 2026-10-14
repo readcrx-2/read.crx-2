@@ -1,6 +1,9 @@
 import "@testing-library/jest-dom/vitest";
 
 import { cleanup, fireEvent, render, screen } from "@testing-library/react";
+import { container } from "src/service-container/index";
+import type { IHistoryService } from "src/service-container/interfaces";
+import { stubService } from "src/service-container/test-stubs";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vite-plus/test";
 
 vi.mock("src/app/platform", () => ({
@@ -11,10 +14,11 @@ vi.mock("src/app/platform", () => ({
   },
 }));
 
-vi.mock("src/core/history/History", () => ({
+// 実装は src/core/history/History ではなくサービスコンテナの history から使うため、テスト用のサービスを登録する。
+container.history = stubService<IHistoryService>("history", {
   add: vi.fn().mockResolvedValue(undefined),
   remove: vi.fn().mockResolvedValue(undefined),
-}));
+});
 
 // webextension-polyfill は拡張機能環境以外では import 時に例外を投げるため最小モックに差し替える。
 vi.mock("webextension-polyfill", () => ({

@@ -18,7 +18,6 @@ const { historyRecords, favoriteBoards, removeBookmarkMock, copyTextMock, toastE
     favoriteBoards: [{ url: "https://example.com/sample/", title: "サンプル板" }],
   }));
 
-vi.mock("src/core/history/History", () => ({ getAll: vi.fn(async () => historyRecords) }));
 const { openedBoards, askBoardTitleMock, getCachedTitlesMock, listeners } = vi.hoisted(() => ({
   openedBoards: { raw: "[]" },
   askBoardTitleMock: vi.fn(async (_url: string): Promise<string | null> => "表示用の板名"),
@@ -44,6 +43,8 @@ vi.mock("src/view/browser/utils/legacy-app", () => ({
 }));
 vi.mock("src/service-container/index", () => ({
   container: {
+    // src/core/history/History はサービスコンテナの history から使う。
+    history: { getAll: vi.fn(async () => historyRecords) },
     config: { get: vi.fn(() => openedBoards.raw) },
     message: {
       on: vi.fn((type: string, handler: (payload: { key?: string }) => void) => {

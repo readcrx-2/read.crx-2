@@ -2,6 +2,9 @@ import "@testing-library/jest-dom/vitest";
 
 import { act, cleanup, render, screen } from "@testing-library/react";
 import { startTransition } from "react";
+import { container } from "src/service-container/index";
+import type { IHistoryService } from "src/service-container/interfaces";
+import { stubService } from "src/service-container/test-stubs";
 import type { ScopedTabAction, TabStoreState } from "src/view/browser/state/tabs/tab-store-types";
 import { createHomeTab, getCurrentPage } from "src/view/browser/types";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vite-plus/test";
@@ -9,11 +12,12 @@ import { afterEach, beforeEach, describe, expect, it, vi } from "vite-plus/test"
 vi.mock("src/app/platform", () => ({
   platform: { window: { setTitle: vi.fn(async () => undefined) } },
 }));
-vi.mock("src/core/history/History", () => ({
+// 実装は src/core/history/History ではなくサービスコンテナの history から使うため、テスト用のサービスを登録する。
+container.history = stubService<IHistoryService>("history", {
   add: vi.fn(async () => undefined),
   getByUrl: vi.fn(async () => []),
   remove: vi.fn(async () => undefined),
-}));
+});
 vi.mock("webextension-polyfill", () => ({
   default: { runtime: { onMessage: { addListener: vi.fn(), removeListener: vi.fn() } } },
 }));
@@ -152,7 +156,7 @@ describe("タブセッションの操作時保存と再読み込み", () => {
     const url = new URL(window.location.href);
     url.searchParams.set("q", threadUrl);
     window.history.replaceState(null, "", url.href);
-    const { add, remove } = await import("src/core/history/History");
+    const { add, remove } = container.history;
     const dispatch = await renderViewer();
     await vi.waitFor(() =>
       expect(add).toHaveBeenCalledWith(threadUrl, threadUrl, expect.any(Number), "sample"),

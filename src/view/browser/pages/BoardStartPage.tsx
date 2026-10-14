@@ -2,7 +2,6 @@ import React from "react";
 import { getCachedTitles } from "src/core/board/BoardTitleSolver.js";
 import { getBoardUrlKey, normalizeBoardUrl } from "src/core/board/BoardUrlNormalizer";
 import { OPENED_BOARDS_CONFIG_KEY, parseOpenedBoardEntries } from "src/core/board/OpenedBoards";
-import { getAll as getAllHistory } from "src/core/history/History";
 import { container } from "src/service-container/index";
 import { PageTypeIcon } from "src/view/browser/components/PageTypeIcon";
 import { isResolvedBoardTitle } from "src/view/browser/pages/board-list/board-list-utils";
@@ -70,7 +69,7 @@ export const BoardStartPage: React.FC<{ intro: React.ReactNode }> = ({ intro }) 
       const requestRevision = ++revision;
       setError(null);
       try {
-        const records = await getAllHistory();
+        const records = await container.history.getAll();
         // 旧スレ履歴も残しつつ、板だけを開いた日時と解決済みの表示名を板単位で統合する。
         const grouped = new Map<string, RecentBoard>();
         const addBoard = (rawUrl: string, boardTitle: string, date: number) => {

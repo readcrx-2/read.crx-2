@@ -10,6 +10,7 @@ import Bookmark from "src/core/bookmark/Bookmark";
 import type { ComparableReadState } from "src/core/bookmark/read-state-compare";
 import { isNewerReadState } from "src/core/bookmark/read-state-compare";
 import * as ReadState from "src/core/bookmark/ReadState";
+import * as History from "src/core/history/History";
 import * as NG from "src/core/ng/NG";
 import { installCorePorts } from "src/core/ports/registry";
 import Cache from "src/core/storage/Cache";
@@ -266,6 +267,13 @@ export function setupContainer(): void {
   container.toast = toastServiceAdapter;
   container.notification = notificationServiceAdapter;
   container.ng = ngServiceAdapter;
+  container.history = {
+    add: History.add,
+    remove: History.remove,
+    getByUrl: History.getByUrl,
+    getAll: History.getAll,
+    clear: History.clear,
+  };
 
   // core は container を import せず、ここで登録されたサービスだけを使う（Phase C-1）。
   installCorePorts(container);

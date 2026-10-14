@@ -11,11 +11,7 @@ import React, {
 } from "react";
 import { registerDebugStateProvider } from "src/app/debug/debug-api";
 import { platform } from "src/app/platform";
-import {
-  add as addHistoryRecord,
-  getByUrl as getHistoryRecordsByUrl,
-  remove as removeHistoryRecord,
-} from "src/core/history/History";
+import { container } from "src/service-container/index";
 import { tabActions } from "src/view/browser/state/tabs/tab-store-actions";
 import { recordAutoRefreshTransitions } from "src/view/browser/state/tabs/tab-store-debug";
 import {
@@ -162,7 +158,7 @@ export const TabProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
       visit.pending = (async () => {
         if (visit.title === visit.threadUrl) {
           try {
-            const previousRecords = await getHistoryRecordsByUrl(visit.threadUrl);
+            const previousRecords = await container.history.getByUrl(visit.threadUrl);
             const previousTitle = previousRecords.find(
               (record) => record.title.trim() !== "" && record.title !== visit.threadUrl,
             )?.title;
@@ -175,7 +171,7 @@ export const TabProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
             reportHistoryPersistenceError("既存履歴タイトルの取得に失敗しました", error);
           }
         }
-        await addHistoryRecord(visit.threadUrl, visit.title, visit.date, visit.boardTitle);
+        await container.history.add(visit.threadUrl, visit.title, visit.date, visit.boardTitle);
       })().catch((error) => {
         reportHistoryPersistenceError("閲覧履歴の保存に失敗しました", error);
       });
@@ -211,8 +207,8 @@ export const TabProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
 
       visit.pending = visit.pending
         .then(async () => {
-          await removeHistoryRecord(visit.threadUrl, visit.date);
-          await addHistoryRecord(visit.threadUrl, title, visit.date, visit.boardTitle);
+          await container.history.remove(visit.threadUrl, visit.date);
+          await container.history.add(visit.threadUrl, title, visit.date, visit.boardTitle);
           visit.title = title;
         })
         .catch((error) => {

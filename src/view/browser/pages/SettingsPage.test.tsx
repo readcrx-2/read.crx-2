@@ -16,16 +16,17 @@ const { configReady, configSet, toastError } = vi.hoisted(() => ({
 vi.mock("src/app/platform", () => ({
   platform: { window: { setTitle: vi.fn(async () => undefined) } },
 }));
-vi.mock("src/core/history/History", () => ({
-  add: vi.fn(async () => undefined),
-  getByUrl: vi.fn(async () => []),
-  remove: vi.fn(async () => undefined),
-}));
 vi.mock("webextension-polyfill", () => ({
   default: { runtime: { onMessage: { addListener: vi.fn(), removeListener: vi.fn() } } },
 }));
 vi.mock("src/service-container/index", () => ({
   container: {
+    // src/core/history/History はサービスコンテナの history から使う。
+    history: {
+      add: vi.fn(async () => undefined),
+      getByUrl: vi.fn(async () => []),
+      remove: vi.fn(async () => undefined),
+    },
     message: { send: vi.fn() },
     config: { get: () => null, ready: configReady, set: configSet },
     toast: { error: toastError },

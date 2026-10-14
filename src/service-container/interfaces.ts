@@ -1,3 +1,4 @@
+import type * as HistoryModule from "src/core/history/History";
 import type {
   IBBSMenuService,
   IBoardService,
@@ -42,6 +43,15 @@ export interface INotificationService {
   isSupported(targetWindow?: Window): boolean;
 }
 
+/**
+ * 閲覧履歴（Phase E、計画書 §3.6）。view・features は core/history/History を直接使わず、ここから使う。
+ * 関数の形は core の実装から取り、二重に書かない。
+ */
+export type IHistoryService = Pick<
+  typeof HistoryModule,
+  "add" | "remove" | "getByUrl" | "getAll" | "clear"
+>;
+
 export interface IServiceContainer {
   config: IConfig;
   cache: ICacheService;
@@ -55,4 +65,5 @@ export interface IServiceContainer {
   notification: INotificationService;
   thread: IThreadService;
   ng: INGService;
+  history: IHistoryService;
 }

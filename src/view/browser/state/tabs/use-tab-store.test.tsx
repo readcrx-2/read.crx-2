@@ -1,6 +1,9 @@
 import "@testing-library/jest-dom/vitest";
 
 import { cleanup, fireEvent, render, screen, waitFor } from "@testing-library/react";
+import { container } from "src/service-container/index";
+import type { IHistoryService } from "src/service-container/interfaces";
+import { stubService } from "src/service-container/test-stubs";
 import { getAutoRefreshPageKey } from "src/view/browser/state/tabs/auto-refresh-pages";
 import { getCurrentPage, getPageViewStateKey } from "src/view/browser/types";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vite-plus/test";
@@ -21,11 +24,12 @@ vi.mock("src/app/platform", () => ({
   },
 }));
 
-vi.mock("src/core/history/History", () => ({
+// 実装は src/core/history/History ではなくサービスコンテナの history から使うため、テスト用のサービスを登録する。
+container.history = stubService<IHistoryService>("history", {
   add: historyAddMock,
   getByUrl: historyGetByUrlMock,
   remove: historyRemoveMock,
-}));
+});
 
 // webextension-polyfill は拡張機能環境以外では import 時に例外を投げるため、
 // reducer の振る舞い検証に不要な runtime API を最小モックで差し替える。

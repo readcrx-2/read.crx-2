@@ -5,6 +5,7 @@ import {
   IBookmark,
   ICacheService,
   IConfig,
+  IHistoryService,
   IMessage,
   INGService,
   INotificationService,
@@ -34,6 +35,7 @@ interface ServiceContainerImpl extends IServiceContainer {
   _notification: INotificationService | undefined;
   _thread: IThreadService | undefined;
   _ng: INGService | undefined;
+  _history: IHistoryService | undefined;
 }
 
 if (!globalObj.__ServiceContainer) {
@@ -50,6 +52,7 @@ if (!globalObj.__ServiceContainer) {
     _notification: undefined,
     _thread: undefined,
     _ng: undefined,
+    _history: undefined,
 
     get config(): IConfig {
       if (!this._config) throw new Error("Config service not registered");
@@ -145,6 +148,14 @@ if (!globalObj.__ServiceContainer) {
     },
     set ng(value: INGService) {
       this._ng = value;
+    },
+
+    get history(): IHistoryService {
+      if (!this._history) throw new Error("History service not registered");
+      return this._history;
+    },
+    set history(value: IHistoryService) {
+      this._history = value;
     },
   };
   globalObj.__ServiceContainer = impl;

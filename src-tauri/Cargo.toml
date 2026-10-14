@@ -38,9 +38,10 @@ reqwest = { version = "0.12", default-features = false, features = [
 tauri-plugin-sql = { version = "2", features = ["sqlite"] }
 httpdate = "1"
 tokio = { version = "1", features = ["sync", "time"] }
+# 画面プレビューのPNG変換はOSに依存しない純粋関数としてLinuxのCIでも単体テストするため、全OS共通の依存にする。
+png = "0.17"
 
 [target.'cfg(windows)'.dependencies]
-png = "0.17"
 windows-sys = { version = "0.61", features = [
   "Win32_Foundation",
   "Win32_Graphics_Gdi",

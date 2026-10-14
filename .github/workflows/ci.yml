@@ -79,6 +79,11 @@ jobs:
         with:
           tool: cargo-llvm-cov@0.9.1
 
+      # tauri::generate_context!() はコンパイル時に frontendDist の存在を検査する。
+      # Rustの単体テストはフロントの成果物を使わないため、ビルドせず空ディレクトリで満たす。
+      - name: Prepare frontendDist placeholder
+        run: mkdir -p debug/tauri
+
       - name: Run Rust tests and generate coverage
         run: |
           cargo llvm-cov --manifest-path src-tauri/Cargo.toml --lib --summary-only

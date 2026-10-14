@@ -10,7 +10,6 @@ import {
   useState,
 } from "react";
 import { evaluateThreadNg } from "src/core/ng/ThreadNgEvaluator";
-import { corePorts } from "src/core/ports/registry";
 import {
   useIsNgTemporarilyDisabled,
   useNgDisplayMode,
@@ -227,7 +226,8 @@ export function useThreadData(
             title: importedSikiThread.title,
             url: page.threadUrl,
           },
-          corePorts,
+          // corePorts は core の中の受け渡し口なので、画面からは同じ実体のサービスコンテナを渡す。
+          container,
         );
         setResponses(
           importedSikiThread.responses.map((response) => ({
@@ -393,7 +393,7 @@ export function useThreadData(
         const ngResults = evaluateThreadNg(
           prev,
           { title: page.title, url: page.threadUrl },
-          corePorts,
+          container,
         );
         // 判定結果が無いレスは undefined にして、ResItem 側で非NGとして扱わせる。
         return prev.map((res) => ({ ...res, ng: ngResults.get(res.num) }));

@@ -1,6 +1,6 @@
 import { platform } from "src/app/platform";
 import type { ObjectStore } from "src/app/platform/types";
-import { isHttps } from "src/core/network/URL";
+import { isHttps } from "src/core/network/url-protocol";
 import { getTauriRepositories, isTauriRuntime } from "src/core/storage/TauriDrizzleBridge";
 
 /**

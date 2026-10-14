@@ -20,13 +20,8 @@ export function getDomain(urlStr: string): string {
   return new ChURL(urlStr).hostname;
 }
 
-export function getProtocol(urlStr: string): string {
-  return new ChURL(urlStr).protocol;
-}
-
-export function isHttps(urlStr: string): boolean {
-  return getProtocol(urlStr) === "https:";
-}
+// window.app.URL の公開 API を保つため、葉のモジュールへ移したプロトコル判定を再エクスポートする。
+export { getProtocol, isHttps } from "src/core/network/url-protocol";
 
 export function setProtocol(urlStr: string, protocol: string): string {
   const url = new ChURL(urlStr);

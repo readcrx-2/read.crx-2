@@ -86,13 +86,21 @@ core/util
 
 - §3 のルールを確定する。判断が必要な点は §7 にまとめる。
 
-### Phase A: core の container 依存を止める（今ここに注力）
+### Phase A: core の container 依存を止める（実装済み・未コミット）
 
 目的: `core` から `container` の値 import を無くし、違反の増加を止める。
 
-1. `vite.config.ts` の oxlint に `no-restricted-imports` を `warn` で追加する。対象は `src/core/**` から `service-container/index` への値 import。
+実装内容（`vite.config.ts` の `lint`）:
+
+1. `overrides` の `src/core/**` に `eslint/no-restricted-imports`（`warn`）を追加。対象は `service-container/index` への値 import。`allowTypeImports: true` で型 import は許可する。
+2. 既存違反の 14 ファイルを、`overrides` の許可リスト（ルールを `off`）に入れた。
+3. 確認: 許可リスト外の新規 `core` ファイルで警告が出ること、`features` / `view` では警告が増えていないこと（0 件）を確認済み。
+
+作業手順:
+
+1. 上記のルールを追加する（実装済み）。
    - `import type` は許可する（Phase B まで型依存は残すため）。
-2. 既存の違反 15 ファイルを許可リストに入れる（`warn` の対象から外す、または `overrides` で除外する）。
+2. 既存の違反 14 ファイルを許可リストに入れる（実装済み）。
 3. 許可リストから外すのは、そのファイルを触るときだけとする。
 4. `core` からの `container.toast.notify` 呼び出しは、Phase A では触らず、Phase B で移す候補としてメモする。
 

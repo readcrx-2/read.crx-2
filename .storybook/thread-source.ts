@@ -1,3 +1,4 @@
+// Storybook でスレッドを読み込む補助。特定の機能に属さず .storybook の proxy に依存するため、ここに置く。
 import {
   ChFetcher,
   createHttpResponseMetadata,
@@ -7,7 +8,7 @@ import {
   type ThreadData,
 } from "@chlen/chlib";
 
-import { CHLENS_STORYBOOK_THREAD_PROXY_PATH } from "../../../../.storybook/thread-proxy-path.ts";
+import { CHLENS_STORYBOOK_THREAD_PROXY_PATH } from "./thread-proxy-path.ts";
 
 export interface ChLensStorybookSource {
   loadThread(url: string): Promise<ThreadData>;

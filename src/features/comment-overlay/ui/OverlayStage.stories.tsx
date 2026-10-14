@@ -11,6 +11,10 @@ import {
   parseArchiveReplayTimestamp,
 } from "src/features/archive-replay/domain";
 
+import {
+  type ChLensStorybookSource,
+  createChLensStorybookSource,
+} from "../../../../.storybook/thread-source.ts";
 import { projectCommentResponse } from "../domain";
 import type { CommentCandidate } from "../domain/comment-types";
 import {
@@ -18,7 +22,6 @@ import {
   OverlayStage,
   type OverlayStageProps,
 } from "./OverlayStage";
-import { type ChLensStorybookSource, createChLensStorybookSource } from "./storybook-source";
 
 const INITIAL_COMMENTS: readonly CommentCandidate[] = [
   { responseNumber: 1, text: "実況開始", author: "名無し" },

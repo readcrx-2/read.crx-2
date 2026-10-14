@@ -6,7 +6,7 @@ import { afterEach, describe, expect, it, vi } from "vite-plus/test";
 import type { CommentCandidate } from "../domain/comment-types";
 import { PastThreadReplayStory } from "./OverlayStage.stories";
 
-vi.mock("./storybook-source", () => ({
+vi.mock("../../../../.storybook/thread-source.ts", () => ({
   createChLensStorybookSource: () => ({
     loadThread: async () => ({
       title: "架空の実況",

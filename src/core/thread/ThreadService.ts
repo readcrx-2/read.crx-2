@@ -85,7 +85,7 @@ class ThreadServiceImpl implements IThreadService {
   }
 
   private async _fetchThread(url: string, request: PendingRequest): Promise<IThreadDetail> {
-    const thread = new Thread(url);
+    const thread = new Thread(url, corePorts);
     const progress = (): void => {
       const result = this._formatResult(thread);
       request.lastCacheResult = result;

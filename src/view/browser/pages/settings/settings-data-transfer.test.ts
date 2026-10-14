@@ -1,5 +1,5 @@
 // @vitest-environment node
-import JSZip from "jszip";
+import { strFromU8, strToU8, unzipSync, zipSync } from "fflate";
 import { beforeEach, describe, expect, it, vi } from "vite-plus/test";
 
 const mocks = vi.hoisted(() => ({
@@ -126,14 +126,14 @@ describe("settings data transfer", () => {
       includeLogs: true,
       includeSession: true,
     });
-    const zip = await JSZip.loadAsync(blob);
+    const zip = unzipSync(new Uint8Array(await blob.arrayBuffer()));
 
-    expect(zip.file("bookmarks.json")).not.toBeNull();
-    expect(zip.file("logs.json")).not.toBeNull();
-    expect(zip.file("session.json")).not.toBeNull();
-    expect(JSON.parse(await zip.file("bookmarks.json")!.async("string")).items).toEqual([bookmark]);
-    expect(JSON.parse(await zip.file("logs.json")!.async("string")).items).toEqual([log]);
-    expect(JSON.parse(await zip.file("session.json")!.async("string")).state).toEqual({
+    expect(zip["bookmarks.json"]).toBeDefined();
+    expect(zip["logs.json"]).toBeDefined();
+    expect(zip["session.json"]).toBeDefined();
+    expect(JSON.parse(strFromU8(zip["bookmarks.json"]!)).items).toEqual([bookmark]);
+    expect(JSON.parse(strFromU8(zip["logs.json"]!)).items).toEqual([log]);
+    expect(JSON.parse(strFromU8(zip["session.json"]!)).state).toEqual({
       panes: [],
       activePaneId: "pane-1",
     });
@@ -142,12 +142,13 @@ describe("settings data transfer", () => {
   it("restores bookmarks, logs, and session state from the archive", async () => {
     const { importDataArchive } =
       await import("src/view/browser/pages/settings/settings-data-transfer");
-    const zip = new JSZip();
-    zip.file("settings.json", JSON.stringify({ settings: { config_bookmark_id: "folder-1" } }));
-    zip.file("bookmarks.json", JSON.stringify({ items: [bookmark] }));
-    zip.file("logs.json", JSON.stringify({ items: [log] }));
-    zip.file("session.json", JSON.stringify({ state: { panes: [], activePaneId: "pane-1" } }));
-    const blob = await zip.generateAsync({ type: "blob" });
+    const zip = zipSync({
+      "settings.json": strToU8(JSON.stringify({ settings: { config_bookmark_id: "folder-1" } })),
+      "bookmarks.json": strToU8(JSON.stringify({ items: [bookmark] })),
+      "logs.json": strToU8(JSON.stringify({ items: [log] })),
+      "session.json": strToU8(JSON.stringify({ state: { panes: [], activePaneId: "pane-1" } })),
+    });
+    const blob = new Blob([zip], { type: "application/zip" });
     const file = new File([blob], "backup.zip", { type: "application/zip" });
 
     const result = await importDataArchive(file);

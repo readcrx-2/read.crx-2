@@ -1,4 +1,5 @@
-import JSZip from "jszip";
+import type { Unzipped } from "fflate";
+import { strFromU8, strToU8, unzip, zip } from "fflate";
 import type { Entry as BookmarkEntry, ReadState } from "src/core/bookmark/BookmarkEntryList";
 import type { LogArchiveRecord } from "src/core/storage/Cache";
 import { container } from "src/service-container/index";
@@ -304,18 +305,42 @@ function readSessionExportState(): Record<string, unknown> | null {
   }
 }
 
-async function readJsonEntry<T>(zip: JSZip, path: string): Promise<T | null> {
-  const file = zip.file(path);
+function readJsonEntry<T>(files: Record<string, Uint8Array>, path: string): T | null {
+  const file = files[path];
   if (!file) {
     return null;
   }
 
-  const text = await file.async("string");
-  return JSON.parse(text) as T;
+  return JSON.parse(strFromU8(file)) as T;
+}
+
+function createZip(files: Record<string, Uint8Array>): Promise<Uint8Array<ArrayBuffer>> {
+  // 変更理由: ログを含む大きなバックアップでも、圧縮中に画面操作を止めない。
+  return new Promise((resolve, reject) => {
+    zip(files, { level: 6 }, (error, data) => {
+      if (error) {
+        reject(error);
+        return;
+      }
+      resolve(data);
+    });
+  });
+}
+
+function readZip(data: Uint8Array): Promise<Unzipped> {
+  return new Promise((resolve, reject) => {
+    unzip(data, (error, files) => {
+      if (error) {
+        reject(error);
+        return;
+      }
+      resolve(files);
+    });
+  });
 }
 
 export async function exportDataArchive(options: ExportArchiveOptions): Promise<Blob> {
-  const zip = new JSZip();
+  const files: Record<string, Uint8Array> = {};
   const exportedAt = new Date().toISOString();
   const includedFiles: string[] = [SETTINGS_JSON_PATH];
 
@@ -324,7 +349,7 @@ export async function exportDataArchive(options: ExportArchiveOptions): Promise<
     exportedAt,
     settings: container.config.getAll(),
   };
-  zip.file(SETTINGS_JSON_PATH, toJsonString(settingsPayload));
+  files[SETTINGS_JSON_PATH] = strToU8(toJsonString(settingsPayload));
 
   if (options.includeHistory) {
     const rows = await container.history.getAll();
@@ -336,7 +361,7 @@ export async function exportDataArchive(options: ExportArchiveOptions): Promise<
       exportedAt,
       items: normalizedRows,
     };
-    zip.file(HISTORY_JSON_PATH, toJsonString(payload));
+    files[HISTORY_JSON_PATH] = strToU8(toJsonString(payload));
     includedFiles.push(HISTORY_JSON_PATH);
   }
 
@@ -351,7 +376,7 @@ export async function exportDataArchive(options: ExportArchiveOptions): Promise<
       exportedAt,
       items: normalizedRows,
     };
-    zip.file(WRITE_HISTORY_JSON_PATH, toJsonString(payload));
+    files[WRITE_HISTORY_JSON_PATH] = strToU8(toJsonString(payload));
     includedFiles.push(WRITE_HISTORY_JSON_PATH);
   }
 
@@ -367,7 +392,7 @@ export async function exportDataArchive(options: ExportArchiveOptions): Promise<
       exportedAt,
       items: normalizedRows,
     };
-    zip.file(BOOKMARKS_JSON_PATH, toJsonString(payload));
+    files[BOOKMARKS_JSON_PATH] = strToU8(toJsonString(payload));
     includedFiles.push(BOOKMARKS_JSON_PATH);
   }
 
@@ -377,7 +402,7 @@ export async function exportDataArchive(options: ExportArchiveOptions): Promise<
       exportedAt,
       items: await container.threadLog.getLogArchiveRecords(),
     };
-    zip.file(LOGS_JSON_PATH, toJsonString(payload));
+    files[LOGS_JSON_PATH] = strToU8(toJsonString(payload));
     includedFiles.push(LOGS_JSON_PATH);
   }
 
@@ -387,7 +412,7 @@ export async function exportDataArchive(options: ExportArchiveOptions): Promise<
       exportedAt,
       state: readSessionExportState(),
     };
-    zip.file(SESSION_JSON_PATH, toJsonString(payload));
+    files[SESSION_JSON_PATH] = strToU8(toJsonString(payload));
     includedFiles.push(SESSION_JSON_PATH);
   }
 
@@ -397,19 +422,15 @@ export async function exportDataArchive(options: ExportArchiveOptions): Promise<
     exportedAt,
     includedFiles,
   };
-  zip.file(MANIFEST_JSON_PATH, toJsonString(manifest));
+  files[MANIFEST_JSON_PATH] = strToU8(toJsonString(manifest));
 
-  return zip.generateAsync({
-    type: "blob",
-    compression: "DEFLATE",
-    compressionOptions: { level: 6 },
-  });
+  return new Blob([await createZip(files)], { type: "application/zip" });
 }
 
 export async function importDataArchive(archiveFile: File): Promise<ImportArchiveResult> {
-  const zip = await JSZip.loadAsync(archiveFile);
+  const files = await readZip(new Uint8Array(await archiveFile.arrayBuffer()));
 
-  const settingsPayload = await readJsonEntry<SettingsImportPayload>(zip, SETTINGS_JSON_PATH);
+  const settingsPayload = readJsonEntry<SettingsImportPayload>(files, SETTINGS_JSON_PATH);
   const settingsSource =
     settingsPayload && "settings" in settingsPayload ? settingsPayload.settings : settingsPayload;
   const normalizedSettings =
@@ -430,8 +451,8 @@ export async function importDataArchive(archiveFile: File): Promise<ImportArchiv
     await container.bookmarkRoot.setRootNodeId(bookmarkRootNodeId);
   }
 
-  const historyPayload = await readJsonEntry<HistoryExportPayload | { items?: unknown[] }>(
-    zip,
+  const historyPayload = readJsonEntry<HistoryExportPayload | { items?: unknown[] }>(
+    files,
     HISTORY_JSON_PATH,
   );
 
@@ -449,9 +470,10 @@ export async function importDataArchive(archiveFile: File): Promise<ImportArchiv
     }
   }
 
-  const writeHistoryPayload = await readJsonEntry<
-    WriteHistoryExportPayload | { items?: unknown[] }
-  >(zip, WRITE_HISTORY_JSON_PATH);
+  const writeHistoryPayload = readJsonEntry<WriteHistoryExportPayload | { items?: unknown[] }>(
+    files,
+    WRITE_HISTORY_JSON_PATH,
+  );
 
   const writeHistoryItems = Array.isArray(writeHistoryPayload?.items)
     ? writeHistoryPayload.items
@@ -477,8 +499,8 @@ export async function importDataArchive(archiveFile: File): Promise<ImportArchiv
     }
   }
 
-  const bookmarksPayload = await readJsonEntry<BookmarkExportPayload | { items?: unknown[] }>(
-    zip,
+  const bookmarksPayload = readJsonEntry<BookmarkExportPayload | { items?: unknown[] }>(
+    files,
     BOOKMARKS_JSON_PATH,
   );
   const bookmarkItems = Array.isArray(bookmarksPayload?.items)
@@ -499,8 +521,8 @@ export async function importDataArchive(archiveFile: File): Promise<ImportArchiv
     }
   }
 
-  const logsPayload = await readJsonEntry<LogExportPayload | { items?: unknown[] }>(
-    zip,
+  const logsPayload = readJsonEntry<LogExportPayload | { items?: unknown[] }>(
+    files,
     LOGS_JSON_PATH,
   );
   const logItems = Array.isArray(logsPayload?.items)
@@ -514,8 +536,8 @@ export async function importDataArchive(archiveFile: File): Promise<ImportArchiv
     container.message.send("log_updated", { type: "restored" });
   }
 
-  const sessionPayload = await readJsonEntry<SessionExportPayload | { state?: unknown }>(
-    zip,
+  const sessionPayload = readJsonEntry<SessionExportPayload | { state?: unknown }>(
+    files,
     SESSION_JSON_PATH,
   );
   let importedSessionCount = 0;

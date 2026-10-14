@@ -148,7 +148,7 @@ core/util
 
 「既定値・既定のインスタンス」について:
 
-- `Board`・`Thread` のコンストラクタと静的メソッドは、引数を省略すると登録済みのサービスを使う。`window.app.Board`・`window.app.Thread` の既存の公開 API を壊さないためである。
+- `Board`・`Thread` のコンストラクタと静的メソッドは、依存を必須にした。`window.app` 経由の外部利用はないことを確認したため、省略時の既定値は設けていない。
 - 各モジュールの既定のインスタンス（`BoardService`・`NG`・`ThreadService` など）は、`app.ts` の公開 API のために残している。
 - これらの既定値・既定インスタンスが、`corePorts` を参照する唯一の場所になっている。
 

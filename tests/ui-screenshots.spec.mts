@@ -66,7 +66,73 @@ async function captureMiniWindows(page: Page, prefix: string): Promise<void> {
   if (await page.locator(".mini-window").count()) await page.locator(".mini-window__close").click();
 }
 
+async function captureQuickAccessPage(page: Page, label: string, name: string): Promise<void> {
+  await page.getByTitle("メニュー", { exact: true }).click();
+  await page.getByText(label, { exact: true }).click();
+  await page.locator(".thread-list-page, .page-status").waitFor({ state: "visible" });
+  await page.waitForTimeout(300);
+  await page.locator('.page-status [aria-label$="読み込み中"]').waitFor({ state: "hidden" });
+  await capture(page, name);
+}
+
+async function captureSettings(page: Page, prefix = ""): Promise<void> {
+  await page.getByTitle("メニュー", { exact: true }).click();
+  await page.getByTitle("設定を開く", { exact: true }).click();
+  await expect(page.locator(".settings-page__shell")).toBeVisible();
+
+  const captureScrolledSections = async (name: string) => {
+    const main = page.locator(".settings-page__main");
+    await main.evaluate((element) => { element.scrollTop = 0; });
+    const { height, maxScroll } = await main.evaluate((element) => ({
+      height: Math.max(element.clientHeight, 1),
+      maxScroll: Math.max(0, element.scrollHeight - element.clientHeight),
+    }));
+    let index = 1;
+    for (let top = 0; top <= maxScroll; top += Math.max(1, Math.floor(height * 0.8))) {
+      await main.evaluate((element, scrollTop) => { element.scrollTop = scrollTop; }, top);
+      await capture(page, `${prefix}${name}-section-${String(index).padStart(2, "0")}`);
+      index += 1;
+    }
+  };
+
+  for (const [label, file] of SETTINGS) {
+    const section = page.locator(".settings-page__section-btn").filter({ hasText: label }).first();
+    if (!(await section.count())) continue;
+    await section.click();
+    await expect(page.locator(".settings-page__title")).toHaveText(label);
+    await page.locator('[aria-label$="読み込み中"]').waitFor({ state: "hidden" });
+    await page.locator(".settings-page__site-board-loading").waitFor({ state: "hidden" });
+    await page.waitForTimeout(200);
+
+    if (label === "NG") {
+      for (const name of ["NG記法例", "高度なNG設定"]) {
+        const toggle = page.getByRole("button", { name, exact: true });
+        if ((await toggle.getAttribute("aria-expanded")) === "false") await toggle.click();
+      }
+      await captureScrolledSections(`${file}-rules`);
+      await page.getByRole("tab", { name: "文字列置換", exact: true }).click();
+      const replacement = page.getByRole("button", { name: "置換記法例", exact: true });
+      if ((await replacement.getAttribute("aria-expanded")) === "false") await replacement.click();
+      await captureScrolledSections(`${file}-replacement`);
+    } else {
+      // 設定ページ内の折りたたみ項目も開き、隠れたセクションを撮影対象へ含める。
+      await page.locator(".settings-page__main details:not([open]) summary").evaluateAll((summaries) => {
+        for (const summary of summaries) (summary as HTMLElement).click();
+      });
+      await captureScrolledSections(file);
+      if (label === "データ") {
+        await page.getByRole("button", { name: "zipをエクスポート", exact: true }).click();
+        await page.getByRole("dialog", { name: "バックアップ内容を選択" }).waitFor({ state: "visible" });
+        await capture(page, `${prefix}${file}-export-dialog`);
+        await page.getByRole("button", { name: "キャンセル", exact: true }).click();
+      }
+    }
+  }
+}
+
 test("UI画面とステータスバーのミニウィンドウを撮影する", async ({ page, extensionId, localBoard }) => {
+  // 多数の設定セクションを個別に保存する撮影シナリオのため、通常の短いE2E上限を延長する。
+  test.setTimeout(300_000);
   await mkdir(outputDir, { recursive: true });
   localBoard.setThreads([
     {
@@ -125,6 +191,11 @@ test("UI画面とステータスバーのミニウィンドウを撮影する", 
   const responses = page.locator(".thread-page__responses");
   await expect(responses.locator('[data-res-num="24"]')).toBeVisible();
 
+  // 架空スレをブックマークし、履歴・ログと合わせて一覧画面に表示する。
+  await page.getByTitle("メニュー", { exact: true }).click();
+  const addBookmark = page.getByRole("button", { name: "お気に入りに追加", exact: true });
+  if (await addBookmark.count()) await addBookmark.click();
+
   // コメント流し表示は自動更新中に届いた新着だけを順次出すため、先に有効化する。
   await page.locator(".status-bar").getByRole("button", { name: /スレッド自動更新/u }).click();
   const autoRefreshPanel = page.locator(".mini-window");
@@ -149,34 +220,10 @@ test("UI画面とステータスバーのミニウィンドウを撮影する", 
 
   await captureMiniWindows(page, "thread");
 
-  await page.getByTitle("メニュー", { exact: true }).click();
-  await page.getByTitle("設定を開く", { exact: true }).click();
-  await expect(page.locator(".settings-page__shell")).toBeVisible();
-  for (const [label, file] of SETTINGS) {
-    const section = page.locator(".settings-page__section-btn").filter({ hasText: label }).first();
-    if (!(await section.count())) continue;
-    await section.click();
-    await expect(page.locator(".settings-page__title")).toHaveText(label);
-    await capture(page, file);
-  }
+  await captureQuickAccessPage(page, "ブックマークリスト", "06-bookmarks");
+  await captureQuickAccessPage(page, "閲覧履歴", "07-history");
+  await captureQuickAccessPage(page, "ログ検索", "08-logs");
+  await captureQuickAccessPage(page, "書き込み履歴", "09-write-history");
 
-  // 各カテゴリの補助設定はページ下部にあるため、個別にスクロールして撮影する。
-  for (const [label, file] of [
-    ["表示", "settings-display-details"],
-    ["ドメイン共通と各板", "settings-site-board-details"],
-    ["その他", "settings-other-details"],
-    ["データ", "settings-data-details"],
-  ] as const) {
-    const section = page.locator(".settings-page__section-btn").filter({ hasText: label }).first();
-    if (!(await section.count())) continue;
-    await section.click();
-    const main = page.locator(".settings-page__main");
-    await main.evaluate((element) => {
-      element.scrollTop = element.scrollHeight;
-    });
-    await capture(page, file);
-    await main.evaluate((element) => {
-      element.scrollTop = 0;
-    });
-  }
+  await captureSettings(page);
 });

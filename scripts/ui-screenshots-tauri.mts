@@ -40,17 +40,24 @@ async function capture(
 
 async function captureMiniWindows(page: Page): Promise<void> {
   const buttons = page.locator(".status-bar button");
-  const count = await buttons.count();
+  // 小窓を開く操作でボタンDOMが更新されるため、各回のlocatorを名前から取り直す。
+  const labels = await buttons.evaluateAll((items) =>
+    items
+      .map((button) =>
+        button.getAttribute("aria-label") ??
+        button.getAttribute("title") ??
+        button.textContent?.trim() ??
+        "",
+      )
+      .filter((label) => label.length > 0),
+  );
   let index = 1;
-  for (let item = 0; item < count; item += 1) {
-    const button = buttons.nth(item);
-    const label =
-      (await button.getAttribute("aria-label")) ??
-      (await button.getAttribute("title")) ??
-      (await button.innerText()).trim();
+  for (const label of labels) {
     if (await page.locator(".mini-window").count()) {
       await page.locator(".mini-window__close").click();
     }
+    const button = page.locator(".status-bar").getByRole("button", { name: label, exact: true }).first();
+    if ((await button.count()) === 0) continue;
     await button.click();
     const miniWindow = page.locator(".mini-window");
     if (!(await miniWindow.count())) continue;
@@ -60,6 +67,69 @@ async function captureMiniWindows(page: Page): Promise<void> {
     index += 1;
   }
   if (await page.locator(".mini-window").count()) await page.locator(".mini-window__close").click();
+}
+
+async function captureQuickAccessPage(page: Page, label: string, name: string): Promise<void> {
+  await page.getByTitle("メニュー", { exact: true }).click();
+  await page.getByText(label, { exact: true }).click();
+  await page.locator(".thread-list-page, .page-status").waitFor({ state: "visible" });
+  await page.waitForTimeout(300);
+  await page.locator('.page-status [aria-label$="読み込み中"]').waitFor({ state: "hidden" });
+  await capture(page, `tauri-${name}`);
+}
+
+async function captureSettings(page: Page): Promise<void> {
+  await page.getByTitle("メニュー", { exact: true }).click();
+  await page.getByTitle("設定を開く", { exact: true }).click();
+  await page.locator(".settings-page__shell").waitFor({ state: "visible" });
+
+  const captureScrolledSections = async (name: string) => {
+    const main = page.locator(".settings-page__main");
+    await main.evaluate((element) => { element.scrollTop = 0; });
+    const { height, maxScroll } = await main.evaluate((element) => ({
+      height: Math.max(element.clientHeight, 1),
+      maxScroll: Math.max(0, element.scrollHeight - element.clientHeight),
+    }));
+    let index = 1;
+    for (let top = 0; top <= maxScroll; top += Math.max(1, Math.floor(height * 0.8))) {
+      await main.evaluate((element, scrollTop) => { element.scrollTop = scrollTop; }, top);
+      await capture(page, `tauri-${name}-section-${String(index).padStart(2, "0")}`);
+      index += 1;
+    }
+  };
+
+  for (const [label, file] of SETTINGS) {
+    const section = page.locator(".settings-page__section-btn").filter({ hasText: label }).first();
+    if (!(await section.count())) continue;
+    await section.click();
+    await expect(page.getByRole("heading", { name: label, exact: true })).toBeVisible();
+    await page.locator('[aria-label$="読み込み中"]').waitFor({ state: "hidden" });
+    await page.locator(".settings-page__site-board-loading").waitFor({ state: "hidden" });
+    await page.waitForTimeout(200);
+
+    if (label === "NG") {
+      for (const name of ["NG記法例", "高度なNG設定"]) {
+        const toggle = page.getByRole("button", { name, exact: true });
+        if ((await toggle.getAttribute("aria-expanded")) === "false") await toggle.click();
+      }
+      await captureScrolledSections(`${file}-rules`);
+      await page.getByRole("tab", { name: "文字列置換", exact: true }).click();
+      const replacement = page.getByRole("button", { name: "置換記法例", exact: true });
+      if ((await replacement.getAttribute("aria-expanded")) === "false") await replacement.click();
+      await captureScrolledSections(`${file}-replacement`);
+    } else {
+      await page.locator(".settings-page__main details:not([open]) summary").evaluateAll((summaries) => {
+        for (const summary of summaries) (summary as HTMLElement).click();
+      });
+      await captureScrolledSections(file);
+      if (label === "データ") {
+        await page.getByRole("button", { name: "zipをエクスポート", exact: true }).click();
+        await page.getByRole("dialog", { name: "バックアップ内容を選択" }).waitFor({ state: "visible" });
+        await capture(page, `tauri-${file}-export-dialog`);
+        await page.getByRole("button", { name: "キャンセル", exact: true }).click();
+      }
+    }
+  }
 }
 
 async function getTauriPages(page: Page): Promise<Page[]> {
@@ -127,6 +197,11 @@ async function run(): Promise<void> {
     const responses = main.locator(".thread-page__responses");
     await responses.locator('[data-res-num="24"]').waitFor({ state: "visible", timeout: 30_000 });
 
+    // 撮影用スレッドをお気に入りに登録し、履歴・過去ログの一覧にも架空データを表示する。
+    await main.getByTitle("メニュー", { exact: true }).click();
+    const addBookmark = main.getByRole("button", { name: "お気に入りに追加", exact: true });
+    if (await addBookmark.count()) await addBookmark.click();
+
     // コメントを流す再現には自動更新が必要なので、スレッドのミニウィンドウからONにする。
     await main.locator(".status-bar").getByRole("button", { name: /スレッド自動更新/u }).click();
     const refreshPanel = main.locator(".mini-window");
@@ -182,15 +257,12 @@ async function run(): Promise<void> {
     overlayStarted = false;
     if (await main.locator(".mini-window").count()) await main.locator(".mini-window__close").click();
 
-    await main.getByTitle("メニュー", { exact: true }).click();
-    await main.getByTitle("設定を開く", { exact: true }).click();
-    await main.locator(".settings-page__shell").waitFor({ state: "visible" });
-    for (const [label, file] of SETTINGS) {
-      const section = main.locator(".settings-page__section-btn").filter({ hasText: label }).first();
-      await section.click();
-      await main.getByRole("heading", { name: label, exact: true }).waitFor();
-      await capture(main, `tauri-${file}`);
-    }
+    await captureQuickAccessPage(main, "ブックマークリスト", "bookmarks");
+    await captureQuickAccessPage(main, "閲覧履歴", "history");
+    await captureQuickAccessPage(main, "ログ検索", "logs");
+    await captureQuickAccessPage(main, "書き込み履歴", "write-history");
+
+    await captureSettings(main);
     console.info(`[ui:shots:tauri] 保存先: ${outputDir}`);
   } finally {
     try {

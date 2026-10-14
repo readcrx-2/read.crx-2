@@ -16,40 +16,9 @@ interface LegacyBookmarkEntryList {
   needReconfigureRootNodeId?: LegacyCallbacksLike;
 }
 
-interface LegacyConfigService {
-  get?: (key: string) => string | null;
-  set?: (key: string, value: string) => Promise<void> | void;
-}
-
-interface LegacyHistoryService {
-  get?: (offset?: number, count?: number) => unknown;
-}
-
-interface LegacyReadStateService {
-  getAll?: () => unknown;
-}
-
-interface LegacyWriteHistoryService {
-  get?: (offset?: number, count?: number) => unknown;
-  add?: (item: {
-    date: number;
-    mail: string;
-    message: string;
-    name: string;
-    res: number;
-    title: string;
-    url: string;
-  }) => Promise<void> | void;
-  remove?: (url: string, res: number) => Promise<void> | void;
-}
-
 interface LegacyAppShape {
   bookmark?: LegacyBookmarkService;
   bookmarkEntryList?: LegacyBookmarkEntryList;
-  config?: LegacyConfigService;
-  History?: LegacyHistoryService;
-  ReadState?: LegacyReadStateService;
-  WriteHistory?: LegacyWriteHistoryService;
 }
 
 function getLegacyApp(): LegacyAppShape | undefined {
@@ -64,10 +33,6 @@ export function getLegacyBookmarkEntryList(): LegacyBookmarkEntryList | undefine
   return getLegacyApp()?.bookmarkEntryList;
 }
 
-export function getLegacyConfigService(): LegacyConfigService | undefined {
-  return getLegacyApp()?.config;
-}
-
 export async function waitForLegacyBookmarkReady(): Promise<void> {
   try {
     // 変更理由: BrowserBookmarkEntryList は初回 scan 完了前だと空配列を返しうるため、
@@ -76,16 +41,4 @@ export async function waitForLegacyBookmarkReady(): Promise<void> {
   } catch {
     // 初回同期が失敗しても、呼び出し側は利用可能なデータで表示を継続する。
   }
-}
-
-export function getLegacyHistoryService(): LegacyHistoryService | undefined {
-  return getLegacyApp()?.History;
-}
-
-export function getLegacyReadStateService(): LegacyReadStateService | undefined {
-  return getLegacyApp()?.ReadState;
-}
-
-export function getLegacyWriteHistoryService(): LegacyWriteHistoryService | undefined {
-  return getLegacyApp()?.WriteHistory;
 }

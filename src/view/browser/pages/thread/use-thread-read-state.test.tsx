@@ -105,6 +105,7 @@ describe("useThreadReadState Phase 0 contracts", () => {
     container.readState = {
       get: vi.fn(async () => initialReadState),
       getByBoard: vi.fn(async () => []),
+      getAll: vi.fn(async () => []),
       set: readStateSet,
     } as IReadStateService;
     container.util = {

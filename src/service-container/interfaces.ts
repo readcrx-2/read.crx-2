@@ -65,13 +65,13 @@ export interface INotificationService {
  */
 export type IHistoryService = Pick<
   typeof HistoryModule,
-  "add" | "remove" | "getByUrl" | "getAll" | "clear"
+  "add" | "remove" | "get" | "getByUrl" | "getAll" | "clear"
 >;
 
 /** 書き込み履歴（Phase E、計画書 §3.6）。関数の形は core/history/WriteHistory から取る。 */
 export type IWriteHistoryService = Pick<
   typeof WriteHistoryModule,
-  "add" | "update" | "getByUrl" | "getAll" | "clear"
+  "add" | "update" | "remove" | "get" | "getByUrl" | "getAll" | "clear"
 >;
 
 /** スレのログの一覧・検索・削除・書き出し（Phase E、計画書 §3.6）。関数の形は core/storage/Cache の静的メソッドから取る。 */

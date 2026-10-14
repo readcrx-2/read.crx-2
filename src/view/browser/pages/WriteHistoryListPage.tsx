@@ -11,7 +11,6 @@ import {
 } from "src/view/browser/state/tabs/use-tab-store";
 import { Spinner } from "src/view/browser/ui/Spinner";
 import { formatCompactDateTime, normalizeLegacyTimestamp } from "src/view/browser/utils/date-time";
-import { getLegacyWriteHistoryService } from "src/view/browser/utils/legacy-app";
 import { parseInternalBrowserPage } from "src/view/browser/utils/link-routing";
 import { requestThreadResJump } from "src/view/browser/utils/thread-read-state";
 
@@ -93,13 +92,8 @@ function normalizeNumber(value: unknown): number {
 }
 
 async function readWriteHistoryEntries(): Promise<WriteHistoryEntry[]> {
-  const writeHistoryService = getLegacyWriteHistoryService();
-
-  if (!writeHistoryService?.get) {
-    return [];
-  }
-
-  const raw = await writeHistoryService.get(undefined, 5000);
+  // window.app ではなくサービスコンテナの書き込み履歴から読む（legacy-window-app-plan の Phase 1）。
+  const raw = await container.writeHistory.get(undefined, 5000);
   if (!Array.isArray(raw)) {
     return [];
   }

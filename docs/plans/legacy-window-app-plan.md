@@ -1,6 +1,6 @@
 # window.app 互換層の整理計画
 
-- 状態: 未着手（2026-10-15 作成。モジュール境界の作業の次の候補）
+- 状態: Phase 1 完了（2026-10-15 作成。Phase 0 と Phase 2 以降は未着手）
 - 前提: [モジュール境界の明確化計画](module-boundaries-plan.md) の Phase A〜F が完了していること
 - 作業ブランチ: 未定（`develop` から作る）
 
@@ -64,6 +64,13 @@
 - 足りない関数（一覧の取得・削除・件数など）は、`IHistoryService`・`IWriteHistoryService` の `Pick` に足し、`setupBrowserViewServices` で登録する。
 
 完了条件: 上の 4 つの関数の利用が 0 件。`vp test run`・`tsc`・`vp lint src/`・`build:chrome` が通る。
+
+結果（2026-10-15）: 4 つの関数を `legacy-app.ts` から削除し、利用は 0 件になった。
+
+- `IHistoryService` に `get`、`IWriteHistoryService` に `get`・`remove` を足した。
+- `IReadStateService` は `Pick` ではなく `core/ports` の手書きのインターフェースなので、`getAll` を足し、`setupContainer` の既読情報のアダプタで `ReadState.getAll` へつないだ。
+- 画面の挙動の差: 以前は `window.app` にサービスがなければ空の一覧を返す（書込履歴の右クリック操作は「利用できません」と出す）作りだった。サービスコンテナは描画前に必ず登録されるため、この分岐はなくした。
+- `bookmark-root` の保存先の書き込みは、以前は `window.app.config` がなければ `container.config` へ投げっぱなしにしていた。両者は同じ `Config` の実体なので、`container.config.set` を待つ形に一本化した。
 
 ### Phase 2: ブックマークを整理する（山場）
 

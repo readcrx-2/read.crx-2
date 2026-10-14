@@ -635,7 +635,7 @@ export default class Thread {
   }): Promise<string> {
     let message = "";
     try {
-      const newBoardURL = await chServerMoveDetect(this.url.toBoard());
+      const newBoardURL = await chServerMoveDetect(this.url.toBoard(), corePorts);
       const movedUrl = replaceBoardUrlServer(this.url, newBoardURL);
       if (movedUrl === null) throw new Error("移転先のスレッドURLを作成できませんでした");
       const newUrl = new ChURL(movedUrl);

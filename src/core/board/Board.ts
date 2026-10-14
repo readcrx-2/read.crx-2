@@ -200,7 +200,7 @@ export default class Board {
           // サーバー移転の検出試行
           if (newBoardUrl != null && getBoardNetwork(this.url.url) === "5ch") {
             try {
-              newBoardUrl = (await chServerMoveDetect(this.url)).href;
+              newBoardUrl = (await chServerMoveDetect(this.url, corePorts)).href;
               this.message += `\
 サーバーが移転しています
 (<a href="${corePorts.util.escapeHtml(corePorts.util.safeHref(newBoardUrl))}"
@@ -212,7 +212,7 @@ class="open_in_rcrx">${corePorts.util.escapeHtml(newBoardUrl)}
             }
           } else if (getBoardNetwork(this.url.url) === "5ch" && response != null) {
             try {
-              newBoardUrl = (await chServerMoveDetect(this.url)).href;
+              newBoardUrl = (await chServerMoveDetect(this.url, corePorts)).href;
               this.message += `\
 サーバーが移転している可能性が有ります
 (<a href="${corePorts.util.escapeHtml(corePorts.util.safeHref(newBoardUrl))}"

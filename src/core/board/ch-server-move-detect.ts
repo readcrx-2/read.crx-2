@@ -5,11 +5,15 @@ import {
   resolveBoardMoveUrl,
 } from "packages/chlib/src/index";
 import { Request } from "src/core/network/HTTP";
-import { corePorts } from "src/core/ports/registry";
+import type { CorePorts } from "src/core/ports/registry";
+
+/** 移転判定に必要なサービス。呼び出し側が渡す（C-2）。 */
+export type ChServerMoveDeps = Pick<CorePorts, "bbsMenu" | "message">;
 
 /** 2ch系サーバーの移転を調べ、見つかった移転先の板URLを返す。 */
 export async function chServerMoveDetect(
   oldBoardUrl: ChURL | URL | { url?: URL } | null | undefined,
+  deps: ChServerMoveDeps,
   html?: string,
 ): Promise<ChURL> {
   // app URL APIから渡る値もChURLへ揃え、以降の板URL処理を一つの型に統一する。
@@ -55,7 +59,7 @@ export async function chServerMoveDetect(
   }
 
   if (newBoardUrl == null) {
-    const { menu: data } = await corePorts.bbsMenu.get();
+    const { menu: data } = await deps.bbsMenu.get();
     if (data == null) {
       throw new Error("BBSMenuの取得に失敗しました");
     }
@@ -88,7 +92,7 @@ export async function chServerMoveDetect(
     }
   }
 
-  corePorts.message.send("detected_ch_server_move", {
+  deps.message.send("detected_ch_server_move", {
     before: normalizedOldBoardUrl.href,
     after: newBoardUrl.href,
   });

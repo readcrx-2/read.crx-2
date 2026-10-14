@@ -3,10 +3,6 @@ import { beforeEach, describe, expect, it, vi } from "vite-plus/test";
 
 const configStore = new Map<string, string>();
 
-vi.mock("src/core/util/jsutil", () => ({
-  normalize: (value: string) => value.toLowerCase(),
-}));
-
 vi.mock("src/core/ports/registry", () => ({
   corePorts: {
     config: {

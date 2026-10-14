@@ -35,10 +35,6 @@ vi.mock("src/core/network/URL.ts", () => ({
   isHttps: (url: string) => url.startsWith("https://"),
 }));
 
-vi.mock("src/core/util/jsutil.js", () => ({
-  indexedDBRequestToPromise: vi.fn(),
-}));
-
 describe("WriteHistory Tauri branch", () => {
   beforeEach(() => {
     vi.clearAllMocks();

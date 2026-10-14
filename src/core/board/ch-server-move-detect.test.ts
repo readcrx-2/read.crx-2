@@ -1,7 +1,4 @@
 import { ChURL } from "packages/chlib/src/url/ChURL";
-import { Anchor } from "src/core/thread/anchor";
-import { stringToDate } from "src/core/util/date-convert";
-import { normalize } from "src/core/util/string-normalize";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vite-plus/test";
 
 const requestState = vi.hoisted(() => ({ urls: [] as string[] }));
@@ -20,34 +17,7 @@ vi.mock("src/core/network/HTTP.ts", () => {
   return { Request };
 });
 
-describe("jsutil責務別ヘルパー", () => {
-  it("アンカーの全角数字と逆順範囲を解析する", () => {
-    expect(Anchor.parseAnchor("＞＞５-３、８")).toEqual({
-      targetCount: 4,
-      segments: [
-        [3, 5],
-        [8, 8],
-      ],
-    });
-  });
-
-  it("旧対象範囲内の半角カタカナだけを検索表記へ変換する", () => {
-    // 旧正規表現はFF9DまでをNFKC変換し、FF9Eの濁点はそのまま残す。
-    expect(normalize("ｶﾞＡＢＣ　 テスト")).toBe("かﾞabcてすと");
-  });
-
-  it("日時書式を解析し、不正な日時は拒否する", () => {
-    const parsed = stringToDate("2024/2/3(土) 04:05");
-    expect(parsed?.getFullYear()).toBe(2024);
-    expect(parsed?.getMonth()).toBe(1);
-    expect(parsed?.getDate()).toBe(3);
-    expect(parsed?.getHours()).toBe(4);
-    expect(parsed?.getMinutes()).toBe(5);
-    expect(stringToDate("2024/13/3 04:05")).toBeNull();
-  });
-});
-
-describe("chServerMoveDetect互換ファサード", () => {
+describe("chServerMoveDetect", () => {
   afterEach(() => vi.unstubAllGlobals());
 
   beforeEach(() => {
@@ -98,8 +68,8 @@ describe("chServerMoveDetect互換ファサード", () => {
     );
   });
 
-  it("従来のjsutil.js importからChURLのhrefを使って通信する", async () => {
-    const { chServerMoveDetect } = await import("src/core/util/jsutil.js");
+  it("ChURLのhrefを使って板の移転先を問い合わせる", async () => {
+    const { chServerMoveDetect } = await import("src/core/board/ch-server-move-detect");
     const threadUrl = new ChURL("https://example.com/test/read.cgi/bbynamazu/1000000007/");
     const boardUrl = threadUrl.toBoard();
 

@@ -247,6 +247,107 @@ function staticCopyPlugin(
 
 // ─── main config ─────────────────────────────────────────────────────────────
 
+// ─── lint: 機能（src/features）の境界 ──────────────────────────────────────────
+
+/**
+ * 機能ごとの公開モジュール（src/features/<機能>/ からの相対パス、拡張子なし）。
+ * 他の機能は、ここに載せたファイルだけを import できる（計画: docs/plans/module-boundaries-plan.md §3.5）。
+ * npm パッケージの package.json の exports と同じ考え方で、載っていないファイルは機能の内部として扱う。
+ *
+ * index.ts でまとめて再エクスポートしないのは、index.ts が export 先をすべて読み込み、
+ * CSS や読み込み時に window を触るモジュールが、使わないエントリ（overlay・replay）やテストに入るため。
+ * 新しく他の機能から使うときは、ここへ追加してレビューで公開してよいかを確認する。
+ */
+const FEATURE_PUBLIC_MODULES: Readonly<Record<string, readonly string[]>> = {
+  "auto-refresh": ["browser/use-auto-scroll-state"],
+  "auxiliary-window": ["browser/auxiliary-window-watcher", "browser/use-auxiliary-window"],
+  bookmark: ["browser/use-bookmark-revision"],
+  // domain・platform は comment-overlay の中でも使っている入口（index.ts）。
+  "comment-overlay": ["domain", "platform", "ui/OverlayStage"],
+  "live-chat": ["browser/use-live-chat-responses", "browser/use-thread-display-mode-setting"],
+  media: [
+    "application/imgur-album",
+    "application/imgur-upload",
+    "browser/use-media-viewer-store",
+    "ui/ExternalImage",
+    "ui/MediaViewerContainer",
+    "ui/ResMediaGallery",
+  ],
+  "next-thread": [
+    "browser/use-auto-next-thread",
+    "browser/use-auto-next-thread-setting",
+    "domain/auto-next-thread-trigger",
+    "domain/next-thread-search",
+  ],
+  ng: [
+    "browser/use-ng-status",
+    "browser/use-thread-title-ng-dialog",
+    "ui/NgBadge",
+    "ui/NgResponsePlaceholder",
+    "ui/ThreadTitleNgDialog",
+  ],
+  tabs: ["browser/use-detached-tab-controller", "browser/use-tab-command-runner"],
+  thread: ["browser/use-thread-refresh-controller", "ui/ResBody", "ui/thread-context-menu-items"],
+};
+
+// features は組み立て層（App・pages・shell）を import しない（計画書 §3 のルール 5）。
+const FEATURE_TO_COMPOSITION_PATTERN: { group: string[]; message: string } = {
+  group: ["**/view/browser/pages/**", "**/view/browser/shell/**", "**/view/browser/App"],
+  message:
+    "features は組み立て層（App・pages・shell）を import しない。組み立て層から props・context で受け取るか、部品を UI 部品層へ移す。",
+};
+
+/**
+ * 機能ごとに、他の機能の内部（公開モジュール以外）への import を禁止する override を作る。
+ * 新しく作った機能にも自動で適用されるよう、src/features のディレクトリから一覧を作る。
+ */
+function createFeatureBoundaryOverrides() {
+  const featuresDir = path.resolve(__dirname, "src/features");
+  const featureNames = fs
+    .readdirSync(featuresDir, { withFileTypes: true })
+    .filter((entry) => entry.isDirectory())
+    .map((entry) => entry.name);
+  const unknown = Object.keys(FEATURE_PUBLIC_MODULES).filter(
+    (name) => !featureNames.includes(name),
+  );
+  if (unknown.length > 0) {
+    // 機能の名前を変えたのに一覧が古いままだと、検査が黙って緩くなるため設定の読み込みで止める。
+    throw new Error(`FEATURE_PUBLIC_MODULES に存在しない機能があります: ${unknown.join(", ")}`);
+  }
+  return featureNames.map((feature) => {
+    // oxlint の設定型はタプルを要求するため、配列リテラルが広がらないよう型を明示する。
+    const rule: ["error", { patterns: { group: string[]; message: string }[] }] = [
+      "error",
+      {
+        patterns: [
+          FEATURE_TO_COMPOSITION_PATTERN,
+          {
+            group: [
+              "**/features/*/**",
+              `!**/features/${feature}/**`,
+              ...Object.entries(FEATURE_PUBLIC_MODULES)
+                .filter(([owner]) => owner !== feature)
+                .flatMap(([owner, modules]) =>
+                  modules.map((modulePath) => `!**/features/${owner}/${modulePath}`),
+                ),
+            ],
+            message:
+              "他の機能の内部を import しない。公開してよいファイルなら vite.config.ts の FEATURE_PUBLIC_MODULES に追加する（計画書 §3.5）。",
+          },
+        ],
+      },
+    ];
+    return {
+      files: [`src/features/${feature}/**`],
+      rules: {
+        "eslint/no-restricted-imports": rule,
+        // 機能どうしの依存は一方向だけにする（計画書 §3.5）。core などの既存の循環は Phase E で扱う。
+        "import/no-cycle": "error" as const,
+      },
+    };
+  });
+}
+
 export default defineConfig(async ({ mode }) => {
   const platform = process.env.PLATFORM || "chrome";
   const entry = process.env.ENTRY || "browser";
@@ -373,28 +474,8 @@ export default defineConfig(async ({ mode }) => {
             ],
           },
         },
-        // features は組み立て層（App・pages・shell）を import しない（計画書 §3 のルール 5）。
-        {
-          files: ["src/features/**"],
-          rules: {
-            "eslint/no-restricted-imports": [
-              "error",
-              {
-                patterns: [
-                  {
-                    group: [
-                      "**/view/browser/pages/**",
-                      "**/view/browser/shell/**",
-                      "**/view/browser/App",
-                    ],
-                    message:
-                      "features は組み立て層（App・pages・shell）を import しない。組み立て層から props・context で受け取るか、部品を UI 部品層へ移す。",
-                  },
-                ],
-              },
-            ],
-          },
-        },
+        // 機能ごとの境界（組み立て層と、他の機能の内部への import を禁止）。
+        ...createFeatureBoundaryOverrides(),
       ],
       options: {
         typeAware: true,

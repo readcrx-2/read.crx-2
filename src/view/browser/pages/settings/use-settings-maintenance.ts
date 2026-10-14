@@ -1,5 +1,9 @@
 import { fetchHttpsFirst } from "packages/chlib/src/fetcher/https-first";
 import { type MutableRefObject, useCallback, useState } from "react";
+import {
+  mapWithConcurrency,
+  MAX_CONCURRENT_BATCH_REQUESTS,
+} from "src/core/util/map-with-concurrency";
 import { container } from "src/service-container/index";
 import {
   readAllSettings,
@@ -47,8 +51,10 @@ export function useSettingsMaintenanceActions({
 
     setIsBbsMenuChecking(true);
     try {
-      const results = await Promise.all(
-        targets.map(async (targetUrl) => {
+      const results = await mapWithConcurrency(
+        targets,
+        MAX_CONCURRENT_BATCH_REQUESTS,
+        async (targetUrl) => {
           try {
             const response = await fetchHttpsFirst(targetUrl, "GET", (requestUrl) =>
               fetch(requestUrl, {
@@ -68,7 +74,7 @@ export function useSettingsMaintenanceActions({
               url: targetUrl,
             };
           }
-        }),
+        },
       );
 
       const failed = results.filter((result) => !result.ok);

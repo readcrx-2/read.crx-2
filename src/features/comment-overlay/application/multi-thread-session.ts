@@ -1,4 +1,8 @@
 import {
+  mapWithConcurrency,
+  MAX_CONCURRENT_BATCH_REQUESTS,
+} from "src/core/util/map-with-concurrency";
+import {
   calculateTitleSimilarity,
   extractThreadSequenceNumber,
   findMainstreamThreadMatch,
@@ -193,8 +197,10 @@ export class CommentOverlayMultiThreadSession {
 
       // 先に候補の新着を送ることで、同じtickで本流が決まっても、判定中に届いた
       // コメントはOverlayへ流れる。source-filterはその後のqueueだけを整理する。
-      await Promise.all(
-        [...this.candidateStates.values()].map((state) => this.fetchCandidate(state)),
+      await mapWithConcurrency(
+        [...this.candidateStates.values()],
+        MAX_CONCURRENT_BATCH_REQUESTS,
+        (state) => this.fetchCandidate(state),
       );
       if (!this.running) return;
 

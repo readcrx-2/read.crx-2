@@ -3,6 +3,10 @@ import "./ArchiveReplayWindow.css";
 import { Pause, Play, RotateCcw, SkipBack, SkipForward, X } from "lucide-react";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { isTauriRuntime } from "src/app/platform/runtime";
+import {
+  mapWithConcurrency,
+  MAX_CONCURRENT_BATCH_REQUESTS,
+} from "src/core/util/map-with-concurrency";
 import { projectCommentResponse } from "src/features/comment-overlay/domain";
 import type { CommentCandidate } from "src/features/comment-overlay/domain/comment-types";
 import {
@@ -204,8 +208,10 @@ export function ArchiveReplayWindow({
     resetPlayback();
 
     try {
-      const settled = await Promise.all(
-        inputUrls.map(async (threadUrl): Promise<LoadedThreadData | string> => {
+      const settled = await mapWithConcurrency(
+        inputUrls,
+        MAX_CONCURRENT_BATCH_REQUESTS,
+        async (threadUrl): Promise<LoadedThreadData | string> => {
           try {
             const thread = await container.thread.getThread(threadUrl);
             return {
@@ -225,7 +231,7 @@ export function ArchiveReplayWindow({
               loadError instanceof Error ? loadError.message : "取得に失敗しました"
             }`;
           }
-        }),
+        },
       );
       const loadedThreads = settled.filter(
         (result): result is LoadedThreadData => typeof result !== "string",

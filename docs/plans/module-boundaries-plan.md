@@ -1,7 +1,7 @@
 # モジュール境界の明確化計画
 
 - ブランチ: `feature/module-boundaries`（`develop` から作成）
-- 状態: Phase 0・A・B・C-1 完了。C-2 は未着手
+- 状態: Phase 0・A・B・C-1・C-2 完了。Phase D 以降は未着手
 
 ## 1. 目的
 
@@ -120,7 +120,7 @@ core/util
 
 完了条件（C-1）: `src/core` が `service-container` を import しない（達成）。`vp test run`、`tsc`、`build:chrome` が通る（達成）。
 
-### Phase C-2: 依存を引数で注入する（進行中）
+### Phase C-2: 依存を引数で注入する（完了。残りは後述）
 
 目的: `core` の内部で `corePorts` も参照しないようにし、テストを書きやすくする。
 
@@ -139,9 +139,23 @@ core/util
 - 完了: `URL`（`expandShortURL(url, config)`。モジュール外からの呼び出しはない）。
 - 完了: `OpenedBoards`（`createOpenedBoards(deps)`。既定のインスタンスの `upsertOpenedBoardEntry` を export）。
 - 完了: `NG`（`createNG(deps)`。既定のインスタンスの関数を export。`toast` は依存として残す）。テストを追加。
-- 未着手（`corePorts` 参照の残り）: `BBSMenu`、`BBSMenuModel`、`BoardTitleSolver`、`Board`、`Thread`。
-- 次の候補: `BBSMenuModel`（`BBSMenu` の内部で使われる）。`Board` と `Thread` は依存が多いため最後に扱う。
-- 残課題: `NG` の `toast` と、`Board` の `container.toast` 相当の通知は、UI 寄りのため `features` か `app` へ移す（C-2 の後半）。
+- 完了: `BBSMenuModel`（コンストラクタで `cache`・`config`・`toast` を受け取る）。
+- 完了: `BBSMenu`（`createBBSMenuFacade(deps)`。既定のインスタンスを export）。
+- 完了: `BoardTitleSolver`（`createBoardTitleSolver(deps)`。既定のインスタンスを export）。
+- 完了: `Board`（コンストラクタと静的メソッドで `BoardDeps` を受け取る）。
+- 完了: `Thread`（コンストラクタと静的メソッドで `ThreadDeps` を受け取る）。
+- 完了: `ThreadService`（`createThreadService(deps)`。既定のインスタンスを export）。
+
+「既定値・既定のインスタンス」について:
+
+- `Board`・`Thread` のコンストラクタと静的メソッドは、引数を省略すると登録済みのサービスを使う。`window.app.Board`・`window.app.Thread` の既存の公開 API を壊さないためである。
+- 各モジュールの既定のインスタンス（`BoardService`・`NG`・`ThreadService` など）は、`app.ts` の公開 API のために残している。
+- これらの既定値・既定インスタンスが、`corePorts` を参照する唯一の場所になっている。
+
+残課題（C-2 の範囲外）:
+
+- `jsutil.searchNextThread` は `Board.get` に `corePorts` を渡している。`jsutil` は互換用のファサードなので、呼び出し元を含めて別の段階で扱う。
+- `NG` の `toast`、`Board` が通知に使う `message`、`BBSMenuModel` の `toast` は UI 寄りの処理である。`features` か `app` へ移す（後半の作業）。
 
 ### Phase D: features 間の依存を減らす
 

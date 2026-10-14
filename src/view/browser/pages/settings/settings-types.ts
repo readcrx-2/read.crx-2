@@ -3,8 +3,7 @@ import type { ReactNode } from "react";
 import type { SettingsSectionId } from "src/view/browser/types";
 
 // SettingsSectionId と SettingsPageUiState はタブの表示状態（TabViewState）にも保存されるため、
-// UI 部品層の view/browser/types.ts に定義を置く。移行中は既存の import のために再エクスポートする。
-export type { SettingsPageUiState, SettingsSectionId } from "src/view/browser/types";
+// UI 部品層の view/browser/types.ts に定義を置いている。
 
 export type SettingsSupplementaryPanelId =
   | "titleBarButtonSettings"

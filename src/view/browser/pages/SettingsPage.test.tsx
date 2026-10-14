@@ -3,7 +3,7 @@ import "@testing-library/jest-dom/vitest";
 import { act, cleanup, fireEvent, render, screen } from "@testing-library/react";
 import { useEffect } from "react";
 import type { ScopedTabAction, TabStoreState } from "src/features/tabs/browser/tab-store-types";
-import type { SettingsPageUiState } from "src/view/browser/pages/settings/settings-types";
+import type { SettingsPageUiState } from "src/view/browser/types";
 import { createHomeTab } from "src/view/browser/types";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vite-plus/test";
 

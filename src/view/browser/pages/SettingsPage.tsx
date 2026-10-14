@@ -24,9 +24,7 @@ import type {
   SettingsFieldDefinition,
   SettingsFormState,
   SettingsFormValue,
-  SettingsPageUiState,
   SettingsSectionFormData,
-  SettingsSectionId,
   SettingsSectionItem,
 } from "src/view/browser/pages/settings/settings-types";
 import {
@@ -35,7 +33,11 @@ import {
 } from "src/view/browser/pages/settings/settings-types";
 import { SettingsSupplementaryPanels } from "src/view/browser/pages/settings/SettingsSupplementaryPanels";
 import { useSettingsMaintenanceActions } from "src/view/browser/pages/settings/use-settings-maintenance";
-import type { SettingsPage as SettingsPageType } from "src/view/browser/types";
+import type {
+  SettingsPage as SettingsPageType,
+  SettingsPageUiState,
+  SettingsSectionId,
+} from "src/view/browser/types";
 import { Alert } from "src/view/browser/ui/Alert";
 import { Button } from "src/view/browser/ui/Button";
 import {

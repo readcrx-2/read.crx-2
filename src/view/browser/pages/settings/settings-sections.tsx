@@ -24,11 +24,11 @@ import type {
   SettingsOption,
   SettingsSectionDefinition,
   SettingsSectionFormData,
-  SettingsSectionId,
   SettingsSectionItem,
   SettingsSupplementaryPanelId,
 } from "src/view/browser/pages/settings/settings-types";
 import { isSettingsFieldItem } from "src/view/browser/pages/settings/settings-types";
+import type { SettingsSectionId } from "src/view/browser/types";
 import {
   NG_DISPLAY_CONFIG_KEY,
   NG_DISPLAY_MODE_OPTIONS,

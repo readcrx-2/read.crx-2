@@ -55,7 +55,7 @@ core/util
 3. `features/<A>` は `features/<B>` の内部を import しない。`features/<B>` の公開モジュール（`vite.config.ts` の一覧に載せたファイル）だけを import する。機能どうしの依存は一方向にし、循環を作らない（2026-10-15 改定。§3.5）。
 4. **`features` から UI 部品層への依存は認める。** UI 部品層は `features`・`pages`・`shell`・`App` を import しない。
 5. `features` は組み立て層（`pages`・`shell`・`App`）を import しない。
-6. `view/*` は `core/*` を直接 import しない。サービスコンテナ経由にする（段階的に適用）。
+6. `view/*`・`features/*` は、`core` のうち状態や保存を伴うモジュールを直接 import せず、サービスコンテナ経由で使う。入力から結果を返すだけの純粋なモジュールと、型の import は直接使ってよい（2026-10-15 改定。§3.6）。
 7. 循環 import を作らない。
 
 ### 3.1 この形にした理由
@@ -115,6 +115,17 @@ archive-replay, popup, write, thread-list（最上位）
 - `comment-overlay` と `archive-replay`: 実行時の依存は `archive-replay → comment-overlay` の一方向だけである。逆向きは `comment-overlay/ui/OverlayStage.stories.tsx`（再生の時系列でオーバーレイを動かすデモ）だけなので、Story を `archive-replay` 側へ移す。共通層は、第 3 の機能がコメントの型を使うか、オーバーレイが実行時に再生側を必要とするまで作らない。
 - `pages`・`shell` などの組み立て層から機能の中のファイルへの import は、この段階では対象にしない。
 - 検査（`97b686af`）: `vite.config.ts` の `createFeatureBoundaryOverrides` が、`src/features` のディレクトリから機能ごとの override を作る。他の機能の内部への import（`eslint/no-restricted-imports`）、組み立て層への import、循環（`import/no-cycle`）を `error` にする。テストと Story も対象。新しく他の機能から使うファイルは、`FEATURE_PUBLIC_MODULES` へ追加してレビューで確認する。
+
+### 3.6 `view`・`features` から `core` への依存（2026-10-15 決定）
+
+- `core` のモジュールを次の 2 種類に分ける。
+  - **純粋なモジュール**: 入力から結果を返すだけで、保存・通信・共有の状態を持たない（`BoardUrlNormalizer`・`reply-index`・`ngDsl`・`url-media`・`external-media`・`strip-html`・`MessageProcessor` など）。`view`・`features` から直接 import してよい。
+  - **状態や保存を伴うモジュール**: 履歴の DB（`History`・`WriteHistory`）、ログ（`Cache`）、設定への書き込み（`OpenedBoards`・`ReplaceStrTxt`）、キャッシュを持つ解決処理（`BoardTitleSolver`）、`core` の中の受け渡し（`corePorts`）。`view`・`features` からはサービスコンテナ経由で使う。
+- 理由:
+  - 純粋な関数をサービスコンテナに載せても、包むだけのコードが増え、テストも差し替えにくくなるだけで得るものが無い。
+  - 状態や保存を伴うものは、Tauri とブラウザで実装が分かれたり、テストで差し替えたりする必要があるので、サービスコンテナの差し替え口を通す価値がある。
+- 検査: `vite.config.ts` に、`view`・`features` から直接 import してよい `core` のモジュールの一覧（`CORE_DIRECT_MODULES`）を置き、それ以外の値の import を禁止する。型の import（`import type`）はどのモジュールからでも認める。新しく作った `core` のモジュールは、一覧に載せるまで直接 import できない。
+- サービスコンテナに足すサービスの型は、`core` のモジュールの関数の型から `Pick<typeof ...>` で作り、関数の形を二重に書かない。
 
 ### 3.4 検査（D-3 で導入、`36f7219a`）
 
@@ -254,7 +265,9 @@ archive-replay, popup, write, thread-list（最上位）
 ### Phase E: 循環 import と view → core
 
 1. 循環 import の 6 件を解消する（完了）。3 組をそれぞれ葉のモジュールへの切り出しなどで解き、`import/no-cycle` を `src` 全体で `error` にした（`d23dd284`・`171ab420`・`5f2f43d6`・`fbc9c5bd`）。
-2. `view` → `core` の直接 import を、サービスコンテナ経由に段階的に置き換える（方針待ち。純粋な関数の扱いを決める）。
+2. `view`・`features` → `core` の、状態や保存を伴うモジュールの直接 import をサービスコンテナ経由にする（§3.6）。
+   1. サービスを 1 つずつ足し、呼び出し元を付け替える（履歴・書き込み履歴・ログ・開いた板・板名の解決・置換ルール・`corePorts`）。
+   2. 違反が 0 件になったら、`CORE_DIRECT_MODULES` の一覧と検査を入れる。
 
 ### Phase F: 検査を error に上げる
 

@@ -13,6 +13,10 @@ import {
 import type { BridgeThreadResult, ThreadReadParams } from "./protocol.ts";
 import { encodeThreadForMcp } from "./thread-output.ts";
 
+// debate-result.ts は画像出力のために playwright を読み込むが、このテストはHTML生成だけを検証する。
+// vmForksプールのjsdom環境には playwright-core が読み込み時に使う TransformStream がないため、起動しない形に置き換える。
+vi.mock("playwright", () => ({ chromium: {} }));
+
 const DEBATE_INSTRUCTIONS = readDebateInstructions();
 
 const THREAD = {

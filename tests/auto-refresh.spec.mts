@@ -5,9 +5,11 @@ test("スレッドの自動更新をONにすると新着を取得して追従し
   extensionId,
   localBoard,
 }) => {
-  // 既定の20秒では待ち時間が長いため、実行時に許す最短の3秒間隔にする。
+  // 既定の20秒では待ち時間が長いため、設定画面で選べる最短の5秒間隔にする。
+  // 変更理由: 設定は config_ 接頭辞付きのキーで保存される。以前は接頭辞なしで書いていたため
+  // 常に20秒間隔のまま動き、ONにした直後の即時取得が新着の追加より後に走ったときだけ通っていた。
   await page.addInitScript(() => {
-    localStorage.setItem("auto_load_second", "3000");
+    localStorage.setItem("config_auto_load_second", "5000");
   });
   await page.goto(`chrome-extension://${extensionId}/view/index.html`);
   await page.getByTitle("URLバーを表示", { exact: true }).click();
@@ -29,6 +31,8 @@ test("スレッドの自動更新をONにすると新着を取得して追従し
     .getByRole("button");
   await autoRefreshToggle.click();
   await expect(autoRefreshToggle).toHaveText("ON");
+  // 5秒間隔の設定が読まれていることを先に確かめ、上の不具合の再発に気づけるようにする。
+  await expect(page.locator(".mini-window").getByText("5秒", { exact: true })).toBeVisible();
 
   // ON にした時点で最下部へ寄せ、次の tick で届いた新着をそのまま表示する。
   localBoard.appendPost();
@@ -47,6 +51,7 @@ test("スレッドの自動更新をONにすると新着を取得して追従し
   const datRequests = () =>
     localBoard.requests.filter((url) => url === "/local/dat/1000000001.dat").length;
   const requestsAfterOff = datRequests();
-  await page.waitForTimeout(4000);
+  // 更新間隔(5秒)より長く待ち、次のtickが来ないことを確かめる。
+  await page.waitForTimeout(6000);
   expect(datRequests()).toBe(requestsAfterOff);
 });

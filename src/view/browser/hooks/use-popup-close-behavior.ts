@@ -1,15 +1,15 @@
 import type React from "react";
 import type { RefObject } from "react";
 import { useCallback, useEffect, useRef, useState } from "react";
+import { useViewSurface } from "src/view/browser/hooks/use-view-surface";
+import { POPUP_SELECTOR } from "src/view/browser/utils/constants";
+import { getEventTargetElement } from "src/view/browser/utils/dom";
 import {
   getPopupElementId,
   isContextMenuPopupId,
   isPopupBranchTarget as isPopupBranchTargetElement,
   POPUP_KEEP_OPEN_TARGET_SELECTOR,
-} from "src/features/popup/browser/popup-dom";
-import { useViewSurface } from "src/view/browser/hooks/use-view-surface";
-import { POPUP_SELECTOR } from "src/view/browser/utils/constants";
-import { getEventTargetElement } from "src/view/browser/utils/dom";
+} from "src/view/browser/utils/popup-dom";
 
 const POPUP_MOUSELEAVE_SUPPRESS_MS = 250;
 

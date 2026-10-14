@@ -4,8 +4,10 @@ import {
   getReadStateThreadUrl,
 } from "packages/chlib/src/index";
 import Board from "src/core/board/Board.js";
+import type { IBoardResult } from "src/core/ports/board";
+import type { IReadState } from "src/core/ports/read-state";
+import type { IThread } from "src/core/ports/thread";
 import { container } from "src/service-container/index";
-import type { IBoardResult, IReadState, IThread } from "src/service-container/interfaces";
 
 interface BoardGetResult {
   status: "success" | "error";

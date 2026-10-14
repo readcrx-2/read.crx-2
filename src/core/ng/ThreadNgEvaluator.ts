@@ -1,7 +1,8 @@
 import { evaluateAutoNg, isAutoNgEnabled } from "src/core/ng/AutoNgPolicy";
+import type { INGResult } from "src/core/ports/ng";
+import type { IRes } from "src/core/ports/thread";
 import { buildReplyIndexes } from "src/core/thread/reply-index";
 import { container } from "src/service-container/index";
-import type { INGResult, IRes } from "src/service-container/interfaces";
 
 export interface ThreadNgContext {
   title: string;

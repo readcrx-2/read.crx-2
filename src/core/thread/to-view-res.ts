@@ -1,5 +1,5 @@
 import { extractPostDate, type IRes as CanonicalRes } from "packages/chlib/src/index";
-import type { IRes } from "src/service-container/interfaces";
+import type { IRes } from "src/core/ports/thread";
 
 /**
  * chlibの共有レス（CanonicalRes）を、ビューへ渡すIResへ変換する。

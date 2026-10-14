@@ -1,5 +1,5 @@
+import type { IBBSMenuResult } from "src/core/ports/bbs-menu";
 import { container } from "src/service-container/index";
-import type { IBBSMenuResult } from "src/service-container/interfaces";
 
 /**
  * BBSMenu の既存モジュールimport互換用ファサード

@@ -1,6 +1,6 @@
 // @vitest-environment node
 import { BBSMenuFetcher } from "src/core/board/BBSMenuFetcher";
-import type { ICacheItem } from "src/service-container/interfaces";
+import type { ICacheItem } from "src/core/ports/cache";
 import { beforeEach, describe, expect, it, vi } from "vite-plus/test";
 
 const { requestMock, sendMock } = vi.hoisted(() => ({ requestMock: vi.fn(), sendMock: vi.fn() }));

@@ -7,9 +7,9 @@ import { OPENED_BOARDS_CONFIG_KEY, parseOpenedBoardEntries } from "src/core/boar
 import { OtherBoardsCollector } from "src/core/board/OtherBoardsCollector";
 import * as ReadState from "src/core/bookmark/ReadState.js";
 import * as History from "src/core/history/History";
+import type { IBBSMenuResult } from "src/core/ports/bbs-menu";
 import { getTauriRepositories, isTauriRuntime } from "src/core/storage/TauriDrizzleBridge";
 import { container } from "src/service-container/index";
-import type { IBBSMenuResult } from "src/service-container/interfaces";
 
 const logger = createLogger("BBSMenuModel");
 const BBSMENU_CACHE_KEY = "bbsmenu";

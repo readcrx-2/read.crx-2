@@ -9,8 +9,8 @@ import {
   validateRuleDsl,
 } from "@chlen/chlib";
 import { createLogger } from "src/app/logger";
+import type { INGResult } from "src/core/ports/ng";
 import { countReplyAnchorTargets } from "src/core/thread/reply-index";
-import type { INGResult } from "src/service-container/index";
 import { container } from "src/service-container/index";
 
 const CONFIG_STRING_NAME = "ngwords";

@@ -1,4 +1,18 @@
-import type { ParsedBBSMenu } from "packages/chlib/src/index";
+import type { IBBSMenuResult } from "src/core/ports/bbs-menu";
+import type { IBoardResult } from "src/core/ports/board";
+import type { ICacheItem } from "src/core/ports/cache";
+import type { INGResult } from "src/core/ports/ng";
+import type { IReadState } from "src/core/ports/read-state";
+import type { IThreadService } from "src/core/ports/thread";
+
+// Core が使う型は src/core/ports に正本を置く（Phase B）。ここからは互換のために再エクスポートする。
+export type { IBBSMenuResult } from "src/core/ports/bbs-menu";
+export type { IBoardResult } from "src/core/ports/board";
+export type { ICacheItem } from "src/core/ports/cache";
+export type { INGResult } from "src/core/ports/ng";
+export type { IReadState } from "src/core/ports/read-state";
+export type { IRes, IThread, IThreadDetail, IThreadService } from "src/core/ports/thread";
+
 export interface IConfig {
   // 設定ストアは文字列ベース (app.config.get は string | null を返す)。
   // unknown だと利用側で JSON.parse 等に渡せず型エラーになるため実態に合わせる。
@@ -9,42 +23,8 @@ export interface IConfig {
   del?(key: string): Promise<void>;
 }
 
-export interface ICacheItem {
-  get(): Promise<unknown>;
-  // 既存実装では、事前に data/lastUpdated を設定済みなら put() を引数なしで呼べる。
-  // 呼び出し側（Board/Thread/URL 等）との整合を保つため data は optional にする。
-  put(data?: string, options?: { lastModified?: number; etag?: string }): Promise<void>;
-  // Cache 実装 (src/core/storage/Cache.ts) は文字列データを保持する。unknown だと
-  // put() や parse 系に渡せず型エラーになるため実態に合わせる。
-  data: string | null;
-  lastUpdated: number;
-  lastModified?: number;
-  etag?: string;
-  resLength?: number;
-  parsed?: unknown;
-  readcgiVer?: number;
-  datSize?: number;
-  // 確認済みのdat落ちをsubject再取得なしで復元するためのスレッド状態。
-  expired?: boolean | null;
-  // 閲覧ログ用メタ情報
-  title?: string | null;
-  threadUrl?: string | null;
-  boardUrl?: string | null;
-  boardTitle?: string | null;
-  kind?: string | null;
-}
-
 export interface ICacheService {
   getCache(path: string): ICacheItem;
-}
-
-export interface IReadState {
-  url: string;
-  last: number;
-  read: number;
-  received: number;
-  offset?: number | null;
-  date?: number | null;
 }
 
 export interface IReadStateService {
@@ -96,73 +76,9 @@ export interface IUtil {
   guessType(url: string): { bbsType: string; protocol: string };
 }
 
-export interface IThread {
-  url: string;
-  title: string;
-  resCount: number;
-  createdAt: number;
-  ng?: INGResult | null;
-  demoted?: INGResult | null;
-  highlight?: INGResult | null;
-  isNet?: boolean | null;
-  readState?: IReadState;
-  threadNumber?: number;
-}
-
-export interface IRes {
-  num: number;
-  name: string;
-  mail: string;
-  date: string;
-  id?: string;
-  slip?: string;
-  trip?: string;
-  other?: string;
-  be?: string;
-  message: string;
-  isNew?: boolean;
-  ng?: INGResult;
-  isAA?: boolean;
-  class?: string[];
-}
-
-export interface IThreadDetail {
-  url: string;
-  // 取得元によってタイトルが無いケースがあるため、TS移行前のnullを保持する。
-  title: string | null;
-  res: IRes[];
-  message?: string;
-  expired?: boolean;
-  missingFromSubject?: boolean;
-}
-
-export interface IThreadService {
-  getThread(
-    url: string,
-    options?: {
-      forceUpdate?: boolean;
-      /** 自動更新由来の取得では、dat落ち確認のsubject.txt取得を間引く */
-      throttleSubjectCheck?: boolean;
-      onCache?: (thread: IThreadDetail) => void;
-    },
-  ): Promise<IThreadDetail>;
-}
-
-export interface IBoardResult {
-  threads: IThread[];
-  message: string | null;
-}
-
 export interface IBoardService {
   getThreads(url: string): Promise<IBoardResult>;
   getCachedResCount(url: string, options?: { forceUpdate?: boolean }): Promise<unknown>;
-}
-
-export interface IBBSMenuResult {
-  status: "success" | "error";
-  // 取得失敗時は板一覧を持たないため optional にする（実装の BBSMenuModel と同じ形）。
-  menu?: ParsedBBSMenu[];
-  message?: string;
 }
 
 export interface IBBSMenuChangeNotifier {
@@ -195,19 +111,6 @@ export interface INotificationService {
     options?: { message?: string; url?: string; tag?: string; targetWindow?: Window },
   ): Promise<boolean>;
   isSupported(targetWindow?: Window): boolean;
-}
-
-export interface INGResult {
-  type: string;
-  action?: "hide" | "collapse" | "highlight" | "warn";
-  /** 実際に一致した条件だけを抜き出したDSL。NG理由の表示に使用する。 */
-  ruleDescription?: string;
-  /** 設定内のルール位置。表示側で同じルールの一致結果をまとめるために使用する。 */
-  ruleIndex?: number;
-  name?: string;
-  params?: Record<string, string>;
-  /** NG ルールが一時的に無効化されているかどうか */
-  disabled?: boolean;
 }
 
 export interface INGService {

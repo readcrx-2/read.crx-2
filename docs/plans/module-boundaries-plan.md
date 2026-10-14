@@ -106,16 +106,23 @@ core/util
 
 完了条件: 新規の `core` → `container`（値）が `vp lint` の警告として出る。既存の違反は許可リストに固定されている。
 
-### Phase B: core が使うポートを core 側に持つ
+### Phase B: core が使う型を core 側（`src/core/ports/`）に持つ（型の移動まで実装済み）
 
-目的: `core` が `service-container` を型でも参照しない状態にする。
+目的: `core` が使う型の正本を `core` 側に置き、型の import から `service-container` を外す。
 
-1. `core` が必要とするインターフェース（`IConfig`、`ICacheService`、`ICacheItem`、`IBookmark`、`IReadState` など）を `src/core/ports/` へ移す。
-2. `service-container/interfaces.ts` は `core/ports` の型を re-export するか、実装側で `core/ports` を実装する形にする。
-3. `core` の `import type` を `core/ports` に書き換える。
-4. `container.toast`、`container.util` などの UI・アプリ寄りの呼び出しは、`core` の外（`features` か `app`）へ移す。
+実装内容:
 
-完了条件: `core` の `service-container` 参照がゼロになり、Phase A の許可リストが空になる。
+1. `core` が使う型（`ICacheItem`、`IReadState`、`INGResult`、`IThread`、`IRes`、`IThreadDetail`、`IThreadService`、`IBoardResult`、`IBBSMenuResult`）を `src/core/ports/` の 5 ファイルへ移した。
+2. `service-container/interfaces.ts` は、同じ型を `src/core/ports` から import して再エクスポートする（既存の `features` や `service-container` の import は変えずに済む）。
+3. `core` の型 import を `src/core/ports` に書き換えた（12 ファイル。テストを含む）。
+
+残り（Phase C の対象）:
+
+- `core` から `container`（`service-container/index`）を値として呼ぶ箇所 14 ファイルは、まだ残っている。型ではなく値の依存なので、Phase C（引数注入）で扱う。
+- `container.toast`、`container.util` などの UI・アプリ寄りの呼び出しは、`core` の外（`features` か `app`）へ移す。Phase C と合わせて進める。
+
+完了条件（Phase B の範囲）: `core` の型 import が `service-container` を指さない。`vp test run` と `tsc` が通る。
+完了条件（Phase A 許可リストが空になる）: Phase C の完了時。
 
 ### Phase C: 依存を引数で注入する
 

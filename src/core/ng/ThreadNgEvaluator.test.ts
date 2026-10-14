@@ -1,6 +1,7 @@
 // @vitest-environment node
 import { evaluateThreadNg } from "src/core/ng/ThreadNgEvaluator";
-import type { INGResult, IRes } from "src/service-container/interfaces";
+import type { INGResult } from "src/core/ports/ng";
+import type { IRes } from "src/core/ports/thread";
 import { beforeEach, describe, expect, it, vi } from "vite-plus/test";
 
 const mocks = vi.hoisted(() => ({

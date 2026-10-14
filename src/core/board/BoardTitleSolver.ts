@@ -7,8 +7,8 @@ import {
 import { defer } from "src/app/Defer";
 import { getBoardUrlKey } from "src/core/board/BoardUrlNormalizer";
 import { Request } from "src/core/network/HTTP";
+import type { IBBSMenuResult } from "src/core/ports/bbs-menu";
 import { container } from "src/service-container/index";
-import type { IBBSMenuResult } from "src/service-container/interfaces";
 
 const isSavedTitleResolved = (title: string | null, boardUrl: string): title is string => {
   if (!title?.trim()) return false;

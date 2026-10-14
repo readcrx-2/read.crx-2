@@ -6,7 +6,7 @@ import {
 } from "packages/chlib/src/index";
 import { createLogger } from "src/app/logger";
 import { Request } from "src/core/network/HTTP";
-import { ICacheItem } from "src/service-container/interfaces";
+import type { ICacheItem } from "src/core/ports/cache";
 
 const logger = createLogger("BBSMenuFetcher");
 

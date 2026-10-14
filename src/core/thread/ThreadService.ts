@@ -1,10 +1,10 @@
 import { toCanonicalThread } from "packages/chlib/src/index";
 import type { ThreadRes } from "packages/chlib/src/parser/ThreadParser";
 import { evaluateThreadNg } from "src/core/ng/ThreadNgEvaluator";
+import type { IRes, IThreadDetail, IThreadService } from "src/core/ports/thread";
 import { replace as replaceStrTxt } from "src/core/thread/ReplaceStrTxt";
 import Thread from "src/core/thread/Thread";
 import { toViewRes } from "src/core/thread/to-view-res";
-import type { IRes, IThreadDetail, IThreadService } from "src/service-container/interfaces";
 
 // 移行理由: 取得集約と置換処理の既存契約を保ちつつ、要求状態と返却モデルを明示的な型で管理する。
 interface GetThreadOptions {

@@ -21,9 +21,7 @@ import {
   useTabPanes,
   useTabStore,
 } from "src/features/tabs/browser/use-tab-store";
-import { ContentArea } from "src/features/tabs/ui/ContentArea";
 import { TabBar } from "src/features/tabs/ui/TabBar";
-import { TabWindowHost } from "src/features/tabs/ui/TabWindowHost";
 import { WindowNavigationBridge } from "src/features/tabs/ui/WindowNavigationBridge";
 import { IkioiStatusItem } from "src/features/thread/ui/IkioiStatusItem";
 import { PopularFilterStatusItem } from "src/features/thread/ui/PopularFilterStatusItem";
@@ -45,6 +43,8 @@ import {
   UrlBarVisibilityProvider,
   useUrlBarVisibility,
 } from "src/view/browser/hooks/use-url-bar-visibility";
+import { ContentArea } from "src/view/browser/shell/ContentArea";
+import { TabWindowHost } from "src/view/browser/shell/TabWindowHost";
 import { ToastProvider } from "src/view/browser/ui/Toast";
 import { TooltipProvider } from "src/view/browser/ui/Tooltip";
 import { applyBBSMenuToItestServerMap } from "src/view/browser/utils/itest-server-map";

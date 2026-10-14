@@ -11,6 +11,7 @@ import {
   INotificationService,
   IReadStateService,
   IServiceContainer,
+  IThreadLogService,
   IThreadService,
   IToastService,
   IUtil,
@@ -38,6 +39,7 @@ interface ServiceContainerImpl extends IServiceContainer {
   _ng: INGService | undefined;
   _history: IHistoryService | undefined;
   _writeHistory: IWriteHistoryService | undefined;
+  _threadLog: IThreadLogService | undefined;
 }
 
 if (!globalObj.__ServiceContainer) {
@@ -56,6 +58,7 @@ if (!globalObj.__ServiceContainer) {
     _ng: undefined,
     _history: undefined,
     _writeHistory: undefined,
+    _threadLog: undefined,
 
     get config(): IConfig {
       if (!this._config) throw new Error("Config service not registered");
@@ -167,6 +170,14 @@ if (!globalObj.__ServiceContainer) {
     },
     set writeHistory(value: IWriteHistoryService) {
       this._writeHistory = value;
+    },
+
+    get threadLog(): IThreadLogService {
+      if (!this._threadLog) throw new Error("ThreadLog service not registered");
+      return this._threadLog;
+    },
+    set threadLog(value: IThreadLogService) {
+      this._threadLog = value;
     },
   };
   globalObj.__ServiceContainer = impl;

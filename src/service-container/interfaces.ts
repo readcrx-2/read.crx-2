@@ -13,6 +13,7 @@ import type {
   IUtil,
 } from "src/core/ports/services";
 import type { IThreadService } from "src/core/ports/thread";
+import type Cache from "src/core/storage/Cache";
 
 // Core が使う型は src/core/ports に正本を置く（Phase B・C-1）。ここからは互換のために再エクスポートする。
 export type { IBBSMenuResult } from "src/core/ports/bbs-menu";
@@ -59,6 +60,12 @@ export type IWriteHistoryService = Pick<
   "add" | "update" | "getByUrl" | "getAll" | "clear"
 >;
 
+/** スレのログの一覧・検索・削除・書き出し（Phase E、計画書 §3.6）。関数の形は core/storage/Cache の静的メソッドから取る。 */
+export type IThreadLogService = Pick<
+  typeof Cache,
+  "listLogs" | "searchLogsPage" | "deleteLogs" | "getLogArchiveRecords" | "replaceLogArchiveRecords"
+>;
+
 export interface IServiceContainer {
   config: IConfig;
   cache: ICacheService;
@@ -74,4 +81,5 @@ export interface IServiceContainer {
   ng: INGService;
   history: IHistoryService;
   writeHistory: IWriteHistoryService;
+  threadLog: IThreadLogService;
 }

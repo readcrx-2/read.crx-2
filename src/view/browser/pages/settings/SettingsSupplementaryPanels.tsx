@@ -1,6 +1,5 @@
 import { AlertTriangle } from "lucide-react";
 import React, { useCallback, useEffect, useMemo, useRef, useState } from "react";
-import Cache from "src/core/storage/Cache";
 import { container } from "src/service-container/index";
 import {
   buildDataExportFilename,
@@ -209,7 +208,7 @@ export function SettingsSupplementaryPanels({
 
     setIsDeletingLogs(true);
     try {
-      await Cache.deleteLogs();
+      await container.threadLog.deleteLogs();
       container.message.send("log_updated", { type: "cleared" });
       container.toast.success("ログをすべて削除しました");
     } catch (error) {

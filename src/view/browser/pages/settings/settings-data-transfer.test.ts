@@ -24,6 +24,11 @@ const mocks = vi.hoisted(() => ({
 
 vi.mock("src/service-container/index", () => ({
   container: {
+    // core/storage/Cache のログの書き出し・読み込みはサービスコンテナの threadLog から使う。
+    threadLog: {
+      getLogArchiveRecords: mocks.getLogArchiveRecords,
+      replaceLogArchiveRecords: mocks.replaceLogArchiveRecords,
+    },
     // src/core/history/WriteHistory はサービスコンテナの writeHistory から使う。
     writeHistory: {
       getAll: mocks.writeHistoryGetAll,
@@ -39,13 +44,6 @@ vi.mock("src/service-container/index", () => ({
     message: {
       send: mocks.messageSend,
     },
-  },
-}));
-
-vi.mock("src/core/storage/Cache", () => ({
-  default: {
-    getLogArchiveRecords: mocks.getLogArchiveRecords,
-    replaceLogArchiveRecords: mocks.replaceLogArchiveRecords,
   },
 }));
 

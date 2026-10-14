@@ -282,6 +282,14 @@ export function setupContainer(): void {
     getAll: WriteHistory.getAll,
     clear: WriteHistory.clear,
   };
+  // 静的メソッドを切り離して渡すと this が外れるため、Cache を通して呼ぶ関数で包む。
+  container.threadLog = {
+    listLogs: (...args) => Cache.listLogs(...args),
+    searchLogsPage: (...args) => Cache.searchLogsPage(...args),
+    deleteLogs: () => Cache.deleteLogs(),
+    getLogArchiveRecords: () => Cache.getLogArchiveRecords(),
+    replaceLogArchiveRecords: (...args) => Cache.replaceLogArchiveRecords(...args),
+  };
 
   // core は container を import せず、ここで登録されたサービスだけを使う（Phase C-1）。
   installCorePorts(container);

@@ -1,6 +1,6 @@
 import JSZip from "jszip";
 import type { Entry as BookmarkEntry, ReadState } from "src/core/bookmark/BookmarkEntryList";
-import Cache, { type LogArchiveRecord } from "src/core/storage/Cache";
+import type { LogArchiveRecord } from "src/core/storage/Cache";
 import { container } from "src/service-container/index";
 import {
   getBrowserSessionJson,
@@ -379,7 +379,7 @@ export async function exportDataArchive(options: ExportArchiveOptions): Promise<
     const payload: LogExportPayload = {
       schemaVersion: ARCHIVE_SCHEMA_VERSION,
       exportedAt,
-      items: await Cache.getLogArchiveRecords(),
+      items: await container.threadLog.getLogArchiveRecords(),
     };
     zip.file(LOGS_JSON_PATH, toJsonString(payload));
     includedFiles.push(LOGS_JSON_PATH);
@@ -515,7 +515,7 @@ export async function importDataArchive(archiveFile: File): Promise<ImportArchiv
     : [];
 
   if (logsPayload !== null) {
-    await Cache.replaceLogArchiveRecords(logItems);
+    await container.threadLog.replaceLogArchiveRecords(logItems);
     container.message.send("log_updated", { type: "restored" });
   }
 

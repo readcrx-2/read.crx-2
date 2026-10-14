@@ -35,6 +35,8 @@ const mocks = vi.hoisted(() => {
       getAll: vi.fn(async () => []),
       clear: vi.fn(async () => undefined),
     },
+    listLogs: vi.fn(async () => []),
+    deleteLogs: vi.fn(async () => undefined),
     writeHistory: {
       add: vi.fn(async () => undefined),
       update: vi.fn(async () => undefined),
@@ -107,7 +109,12 @@ vi.mock("src/core/board/BBSMenuModel", () => ({
 vi.mock("src/core/board/BoardService", () => ({
   createBoardService: () => ({ getThreads: vi.fn(), getCachedResCount: vi.fn() }),
 }));
-vi.mock("src/core/storage/Cache", () => ({ default: class {} }));
+vi.mock("src/core/storage/Cache", () => ({
+  default: class {
+    static listLogs = mocks.listLogs;
+    static deleteLogs = mocks.deleteLogs;
+  },
+}));
 vi.mock("src/core/ng/NG", () => ({
   validate: vi.fn(),
   apply: vi.fn(),
@@ -184,6 +191,10 @@ describe("サービスコンテナの初期化", () => {
     expect(mocks.writeHistory.getByUrl).toHaveBeenCalledWith(
       "https://example.com/test/read.cgi/a/1/",
     );
+    await container.threadLog.listLogs(0, 10);
+    expect(mocks.listLogs).toHaveBeenCalledWith(0, 10);
+    await container.threadLog.deleteLogs();
+    expect(mocks.deleteLogs).toHaveBeenCalled();
   });
 
   it("bookmark_id更新をEntryListへ渡す", async () => {

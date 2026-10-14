@@ -1,6 +1,6 @@
 # モジュール境界の作業状況（2026-10-15 時点）
 
-- ブランチ: `feature/module-boundaries`（`develop` から作成、未 push）
+- ブランチ: `refactor/module-boundaries`（`develop` から作成。旧名 `feature/module-boundaries`）
 - 全体計画: [モジュール境界の明確化計画](module-boundaries-plan.md)
 - この文書は、作業途中の問題点と判断待ちの事項をまとめたもの。
 
@@ -19,16 +19,23 @@
 
 ## 2. 未完了の作業
 
-### Phase D: `features` 間の依存（停止中）
+### Phase D: `features` 間の依存（方針決定済み）
 
 - 残りは **138 件・41 組**。
 - 主な共有先:
   - タブ状態（`use-tab-store`・`tab-store-actions`）。ほぼ全機能が参照。
   - 媒体の表示部品（`ResMediaGallery`・`ExternalImage`・`url-media`）。
   - NG の状態と表示部品（`use-ng-status`・`NgBadge`）。
-- **判断待ち**: `features` から `view` への依存を認めるかどうか。
-  - 認める場合: `view/browser` の汎用部分（hooks・components・types）を共有層とし、`view/browser/pages` と `App` を最上位とする。`view/browser` が `features` を import しないことを検査で守る。
-  - 認めない場合: 共有の状態・部品を `app` か `core` へ移す。
+- **決定（2026-10-15）**: `features` → `view` の依存は認める。ただし `view/browser` を 2 層に分ける。
+  - UI 部品層（`ui`・`hooks`・`utils`・`types`・`components`・`state`・`commands`）: `features` から参照してよい。`features`・`pages` は import しない。
+  - 組み立て層（`App`・`pages`・`shell`）: `features` を組み合わせる最上位。
+  - 理由と詳細は計画書の §3 を参照。
+- 先に解消する逆向きの依存（計画書の §3.2）:
+  1. `features/tabs/ui/TabView.tsx` → `pages/*`
+  2. `ui/ContextMenu`・`ui/FloatingPopup` → `features/popup` の `usePopupCloseBehavior`
+  3. `utils/utils.ts`・`utils/message-filter.ts` → `features/media/domain`
+  4. `commands/*` → タブストア
+  5. `components/{NavigationBar,BottomPanel,TitleBar,PageCountStatusItem}` → 各機能（`shell/` へ移す）
 
 ### Phase C-2 の残り
 
@@ -51,12 +58,10 @@
 - `features` 間の依存と `view` → `core` の依存には、まだ検査がない。
 - 循環検出（`import/no-cycle`）は計測でのみ使用。`vite.config.ts` には入っていない。
 
-## 3. 計画との食い違い
+## 3. 計画との食い違い（解消済み）
 
-- 計画書 §3 の図では `view` が `features` の上にある。
-- 実際には `tab-store-actions` が `view/browser/types` を参照しており、逆方向の依存が既にある。
-- D-1 で `features` → `view/browser/hooks` の依存が 1 種類増えた。
-- 判断が決まるまで、計画書の図は未確定。
+- 以前の計画書 §3 の図では `view` 全体が `features` の上にあり、`tab-store-actions` → `view/browser/types` や D-1 の依存と食い違っていた。
+- 2026-10-15 の決定で、`view/browser` を UI 部品層と組み立て層に分けた図に改めた。上の 2 つの依存は、`features` → UI 部品層として認められる。
 
 ## 4. 検証の抜け
 
@@ -65,9 +70,11 @@
 
 ## 5. 次に必要なこと
 
-1. `features` → `view` の依存の扱いを決める（上記 2 の判断事項）。
-2. 判断後、Phase D を 1 組ずつ進める。
-3. 判断を待たずにできるもの:
+1. D-2: 逆向きの依存を 1 件ずつ解消する（`usePopupCloseBehavior` の移動から）。
+2. D-3: 逆向きが 0 件になったら、UI 部品層の検査を `error` で入れる。
+3. D-4: タブストアを `view/browser/state/tabs` へ移す。
+4. D-5: NG・媒体の共有部品の扱いを決め、機能間の残りの依存を解消する。
+5. 並行してできるもの:
    - `build:chrome` の再実行
    - `jsutil` の `corePorts` 参照の整理
    - `core` の `toast` 通知の移動計画

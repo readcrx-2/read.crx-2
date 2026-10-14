@@ -1,7 +1,7 @@
 # モジュール境界の明確化計画
 
-- ブランチ: `feature/module-boundaries`（`develop` から作成）
-- 状態: Phase 0・A・B・C-1・C-2 完了。Phase D 以降は未着手
+- ブランチ: `refactor/module-boundaries`（`develop` から作成。旧名 `feature/module-boundaries`）
+- 状態: Phase 0・A・B・C-1・C-2・D-1 完了。Phase D の方針を決定（§3）。D-2 以降は未着手
 
 ## 1. 目的
 
@@ -34,25 +34,64 @@
 - `core` が使う型（`IConfig`、`ICacheItem`、`IBookmark`、`IReadState` など）は `src/service-container/interfaces.ts` に定義されている。
 - `src/service-container/setup.ts` は `core` の実装を import して組み立てる側。`core` → `service-container/index` の向きは、組み立て層への逆向き依存になっている。
 
-## 3. 依存ルール（案）
+## 3. 依存ルール（2026-10-15 確定）
 
-依存は次の向きだけを許可する。
+`view/browser` を「UI 部品層」と「組み立て層」に分け、依存は次の向きだけを許可する。
 
 ```
-view/browser (pages, App)
+view/browser/{App, pages, shell}                     ← 組み立て層（features を import してよい）
    ↓
 features/<機能>   ── 機能同士は互いに依存しない
    ↓
-core/*  ・  app/platform（インターフェース）
+view/browser/{ui, hooks, utils, types, components, state, commands}   ← UI 部品層
+   ↓
+service-container ・ app ・ core/*（app/platform のインターフェースを含む）
    ↓
 core/util
 ```
 
 1. `core/*` は `view/*`、`features/*` を import しない。
-2. `core/*` は `service-container` を値として import しない。型は段階的に `core` 側へ移す（Phase B）。
-3. `features/<A>` は `features/<B>` の内部を import しない。共有が必要なら `core` か `app` に移す。
-4. `view/*` は `core/*` を直接 import しない。サービスコンテナ経由にする（段階的に適用）。
-5. 循環 import を作らない。
+2. `core/*` は `service-container` を値として import しない。型は `core/ports` に置く（Phase B で完了）。
+3. `features/<A>` は `features/<B>` の内部を import しない。共有が必要なものは UI 部品層か `core` に移す。
+4. **`features` から UI 部品層への依存は認める。** UI 部品層は `features`・`pages`・`shell`・`App` を import しない。
+5. `features` は組み立て層（`pages`・`shell`・`App`）を import しない。
+6. `view/*` は `core/*` を直接 import しない。サービスコンテナ経由にする（段階的に適用）。
+7. 循環 import を作らない。
+
+### 3.1 この形にした理由
+
+- `features` → `view/browser` の import は、決定時点で **124 ファイル・約 400 行** ある。主な参照先は `types`（42）、`use-view-surface`（36）、`link-routing`（20）、`StatusBar`（15）、`ContextMenu`（14）、`use-toast`（12）。
+- これを禁止すると、`view/browser` の汎用部分をほぼ丸ごと移すことになり、実質はディレクトリ名の付け替えになる。
+- 移し先の候補だった `app`・`core` は React に依存しない層である。React のフックや部品を置くと、AGENTS.md の層の定義が崩れる。
+- 参考にしている VS Code でも、`workbench/contrib/*`（機能）は `workbench/browser` や `base/browser/ui`（共有 UI）に依存してよい。禁止されているのは逆向きの依存である。
+- そのため、問題は `features` → `view` の数ではなく、**UI 部品層 → `features`・`pages` の逆向きの依存** にあると判断した。
+
+### 3.2 解消が必要な逆向きの依存（決定時点）
+
+| 逆向きの依存 | 対応 |
+| --- | --- |
+| `features/tabs/ui/TabView.tsx` → `pages/*`（9 ページ） | 層をまたぐ循環になっている。ページの一覧を組み立て層（`ContentArea`・`App`）から props か context で渡す |
+| `ui/ContextMenu`・`ui/FloatingPopup` → `features/popup/browser/use-popup-manager`（`usePopupCloseBehavior`） | D-1 と同じく `view/browser/hooks` へ移す |
+| `utils/utils.ts`（`export *`）・`utils/message-filter.ts` → `features/media/domain/*` | 純粋関数なので `core` 側へ移すか、再エクスポートをやめる |
+| `commands/*` → `features/tabs/browser/*`（タブストア） | タブストアを UI 部品層（`view/browser/state/tabs`）へ移して解消する |
+| `components/{NavigationBar,BottomPanel,TitleBar,PageCountStatusItem}` → 各機能 | 機能を組み合わせる枠なので、組み立て層（`view/browser/shell/`）へ移す |
+
+### 3.3 機能間で共有されているものの置き場所
+
+- **タブストア**（`use-tab-store`・`tab-store-actions`・`tab-store-selectors`・`tab-store-types`）は、アプリの外枠の状態として UI 部品層（`view/browser/state/tabs`）へ移す。タブの表示（`TabView`・`TabBar` など）は `features/tabs` に残す。
+  - 機能間の依存の参照先で最も多い（`use-tab-store` 18 ファイル、`tab-store-actions` 7 ファイル）。
+  - `tab-store-actions` → `view/browser/types` の依存も、同じ層の中の依存になる。
+- **NG・媒体の共有部品**（`use-ng-status`・`NgBadge`・`ResMediaGallery`・`ExternalImage`）は、Phase D の中で次のどちらかに決める。
+  - UI 部品層へ移す。
+  - 他の機能からは `features/<x>/index.ts`（公開 API）だけを import してよい、というルールにする。
+
+### 3.4 検査の案
+
+oxlint の `no-restricted-imports` で次を検査する。
+
+- `src/view/browser/{ui,hooks,utils,types,components,state,commands}/**` から `src/features/**`、`src/view/browser/pages/**`、`src/view/browser/shell/**`、`src/view/browser/App` を禁止する。
+- `src/features/**` から `src/view/browser/pages/**`、`src/view/browser/shell/**`、`src/view/browser/App` を禁止する。
+- 逆向きの依存が 0 件になった時点で `error` で入れる。
 
 ## 4. 検査の方法
 
@@ -166,17 +205,16 @@ core/util
 - 完了（D-1）: `useViewSurface` を `features/auxiliary-window` から `view/browser/hooks` へ移した。機能間の依存を 1 組（`auxiliary-window` への依存、9 機能・約 30 箇所）解消した。
 - 残り: 138 件・41 組（2026-10-15 時点）。
 
-判断が必要な点（D の残りの前提）:
+方針（2026-10-15 決定、§3 を参照）:
 
-- 残りの多くは次の 3 種類の共有である。
-  - `tabs` のタブ状態（`use-tab-store`・`tab-store-actions`）。ほぼ全機能が参照する。
-  - `media` の表示部品（`ResMediaGallery`・`ExternalImage`・`url-media`）。
-  - `ng` の状態と表示部品（`use-ng-status`・`NgBadge`）。
-- 計画書の §3 では `view` は `features` の上にあり、`features` から `view` へは依存しない。しかし既存コードでは `tab-store-actions` が `view/browser/types` を参照しており、D-1 でも `features` → `view/browser/hooks` の依存が生じた。
-- 方針の候補:
-  1. `view/browser` の汎用部分（hooks・components・types）は共有層として、`features` からの参照を許す。`view/browser/pages` と `App` だけを最上位とする。循環を避けるため、`view/browser` 配下が `features` を import しないことを検査で守る。
-  2. 共有の状態・部品を `src/app` か `core` へ移し、`features` と `view` の両方から参照させる。タブ状態は `app` に置くと、`core` と `features` の間の依存が増えるため注意する。
-- 方針を決めてから、残りの組を 1 組ずつ進める。
+- `features` から UI 部品層への依存は認める。UI 部品層から `features`・`pages` への逆向きの依存を先に解消する。
+
+進め方:
+
+1. D-2: §3.2 の逆向きの依存を、1 件ずつ別コミットで解消する。最初は D-1 と同じ要領の `usePopupCloseBehavior` の移動。
+2. D-3: 逆向きの依存が 0 件になったら、§3.4 の検査を `error` で入れる。
+3. D-4: タブストアを `view/browser/state/tabs` へ移す。
+4. D-5: NG・媒体の共有部品の扱いを決め、機能間の残りの依存を 1 組ずつ解消する。
 
 ### Phase E: 循環 import と view → core
 

@@ -1,6 +1,6 @@
 import React, { useEffect, useMemo, useState } from "react";
+import { extractUrlsFromMessage } from "src/core/util/url-media";
 import { useImgurAlbumMedia } from "src/features/media/application/imgur-album";
-import { extractUrlsFromMessage } from "src/features/media/domain/url-media";
 import { ResMediaGallery } from "src/features/media/ui/ResMediaGallery";
 import {
   useIsNgTemporarilyDisabled,

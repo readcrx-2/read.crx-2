@@ -1,6 +1,6 @@
+import { toOriginalImageUrl, toViewerImageUrl } from "src/core/util/url-media";
 import { create } from "zustand";
 
-import { toOriginalImageUrl, toViewerImageUrl } from "../domain/url-media";
 import type { ViewerState } from "./media-viewer-types";
 
 const MIN_VIEWER_SCALE = 0.25;

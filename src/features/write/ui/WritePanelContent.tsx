@@ -1,9 +1,9 @@
 import { Clipboard, ExternalLink, ImagePlus, MoreVertical, Settings } from "lucide-react";
 import React, { useCallback, useEffect, useId, useMemo, useRef, useState } from "react";
 import { createPortal } from "react-dom";
+import { extractUrlsFromMessage, toViewerImageUrl } from "src/core/util/url-media";
 import { uploadImageToImgur } from "src/features/media/application/imgur-upload";
 import { useMediaViewerStore } from "src/features/media/browser/use-media-viewer-store";
-import { extractUrlsFromMessage, toViewerImageUrl } from "src/features/media/domain/url-media";
 import { ExternalImage } from "src/features/media/ui/ExternalImage";
 import { MediaViewerContainer } from "src/features/media/ui/MediaViewerContainer";
 import { useTabStore } from "src/features/tabs/browser/use-tab-store";

@@ -2,7 +2,7 @@ import { ChURL } from "packages/chlib/src/index";
 import type { Dispatch, MouseEvent } from "react";
 import { useCallback } from "react";
 import { platform } from "src/app/platform/index";
-import { toViewerImageUrl } from "src/features/media/domain/url-media";
+import { toViewerImageUrl } from "src/core/util/url-media";
 import { tabActions } from "src/features/tabs/browser/tab-store-actions";
 import type { TabAction } from "src/features/tabs/browser/use-tab-store";
 import { COMMAND_REQUEST_IDS, runCommandRequest } from "src/view/browser/commands/command-runtime";

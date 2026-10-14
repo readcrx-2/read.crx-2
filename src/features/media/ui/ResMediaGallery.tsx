@@ -10,6 +10,7 @@ import {
   toRuntimeVideoEmbedUrl,
   toTwitterPostEmbed,
 } from "src/core/util/external-media";
+import { toViewerImageUrl } from "src/core/util/url-media";
 
 import { imgurVideoResolver, isImgurVideoResolutionCandidate } from "../application/imgur-album";
 import {
@@ -18,7 +19,6 @@ import {
   twitterPostResolver,
   type TwitterVerificationBadgeColor,
 } from "../application/twitter-post";
-import { toViewerImageUrl } from "../domain/url-media";
 import { ExternalImage } from "./ExternalImage";
 
 // ギャラリーはThreadViewやPopupのURLルーティング実装を知らず、クリック時の引数だけを契約にする。

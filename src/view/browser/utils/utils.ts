@@ -2,7 +2,7 @@
  * 既存のimportを壊さないための互換エントリーポイント。
  * 実装は責務別モジュールに置き、新規コードは所有モジュールを直接importできるようにする。
  */
-export * from "src/features/media/domain/url-media";
+export * from "src/core/util/url-media";
 export * from "src/view/browser/utils/anchor";
 export * from "src/view/browser/utils/clipboard";
 export * from "src/view/browser/utils/dom";

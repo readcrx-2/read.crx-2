@@ -1,4 +1,3 @@
-export { extractUrlsFromMessage, toOriginalImageUrl, toViewerImageUrl } from "./url-media";
 export type {
   ExternalMediaEmbed,
   ExternalVideoEmbed,
@@ -15,3 +14,8 @@ export {
   toRuntimeVideoEmbedUrl,
   toTwitterPostEmbed,
 } from "src/core/util/external-media";
+export {
+  extractUrlsFromMessage,
+  toOriginalImageUrl,
+  toViewerImageUrl,
+} from "src/core/util/url-media";

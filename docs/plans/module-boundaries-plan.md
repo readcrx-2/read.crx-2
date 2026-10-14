@@ -1,7 +1,7 @@
 # モジュール境界の明確化計画
 
 - ブランチ: `refactor/module-boundaries`（`develop` から作成。旧名 `feature/module-boundaries`）
-- 状態: Phase 0・A・B・C-1・C-2・D-1 完了。D-2 は一部完了（§3.2 の 2・3 件目を解消）。残りは判断待ち（§7）
+- 状態: Phase 0・A・B・C-1・C-2・D-1 完了。D-2 は一部完了（§3.2 の 1〜3 件目を解消）。残りは 5 件目（`components` → `shell/`）と、新たに見つけた `types.ts` → `pages` の 1 件
 
 ## 1. 目的
 
@@ -70,15 +70,16 @@ core/util
 
 | 逆向きの依存 | 対応 |
 | --- | --- |
-| `features/tabs/ui/TabView.tsx` → `pages/*`（9 ページ） | 層をまたぐ循環になっている。ページの一覧を組み立て層（`ContentArea`・`App`）から props か context で渡す |
+| `features/tabs/ui/TabView.tsx` → `pages/*`（9 ページ） | 解消済み（`cb32daee`、`650c689b`）。`TabView`・`ContentArea`・`TabWindowHost`・`DetachedTabWindowContent` は `App` からしか使われない組み立て部品だったため、まとめて `view/browser/shell/` へ移した。props・context でページ一覧を渡す仕組みは不要になった |
 | `ui/ContextMenu`・`ui/FloatingPopup` → `features/popup/browser/use-popup-manager`（`usePopupCloseBehavior`） | 解消済み（`c90fd1b2`、`56c835ec`）。フックを `view/browser/hooks` へ移した |
 | `utils/utils.ts`（`export *`）・`utils/message-filter.ts` → `features/media/domain/*` | 解消済み（`f6157577`、`8cc79f92`、`5f1dee29`）。純粋関数を `core/util` へ移し、再エクスポートを外した |
 | `commands/*` → `features/tabs/browser/*`（タブストア） | タブストアを UI 部品層（`view/browser/state/tabs`）へ移して解消する |
-| `components/{NavigationBar,BottomPanel,TitleBar,PageCountStatusItem}` → 各機能 | 機能を組み合わせる枠なので、組み立て層（`view/browser/shell/`）へ移す |
+| `components/{NavigationBar,BottomPanel,TitleBar,PageCountStatusItem}` → 各機能 | 機能を組み合わせる枠なので、組み立て層（`view/browser/shell/`）へ移す。利用者は `App` と `shell/DetachedTabWindowContent` だけになったので、ルール 5 とは衝突しない |
+| `types.ts` → `pages/settings/settings-types`（型のみ、D-2 の途中で発見） | `SettingsPageUiState` はタブの履歴に保存される型なので、型定義を UI 部品層（`types.ts` か `view/browser/types/`）へ移し、`pages/settings` 側から参照する |
 
 ### 3.3 機能間で共有されているものの置き場所
 
-- **タブストア**（`use-tab-store`・`tab-store-actions`・`tab-store-selectors`・`tab-store-types`）は、アプリの外枠の状態として UI 部品層（`view/browser/state/tabs`）へ移す。タブの表示（`TabView`・`TabBar` など）は `features/tabs` に残す。
+- **タブストア**（`use-tab-store`・`tab-store-actions`・`tab-store-selectors`・`tab-store-types`）は、アプリの外枠の状態として UI 部品層（`view/browser/state/tabs`）へ移す。タブの機能そのもの（`TabBar`・`TabContextMenu` など）は `features/tabs` に残す。`TabView` などの組み立て部品は D-2 で `shell/` へ移した。
   - 機能間の依存の参照先で最も多い（`use-tab-store` 18 ファイル、`tab-store-actions` 7 ファイル）。
   - `tab-store-actions` → `view/browser/types` の依存も、同じ層の中の依存になる。
 - **NG・媒体の共有部品**（`use-ng-status`・`NgBadge`・`ResMediaGallery`・`ExternalImage`）は、Phase D の中で次のどちらかに決める。
@@ -235,10 +236,14 @@ oxlint の `no-restricted-imports` で次を検査する。
 
 ## 7. 判断が必要な点
 
-- D-2（§3.2 の 5 件目）: `components/{NavigationBar,BottomPanel,TitleBar,PageCountStatusItem}` を `shell/` へ移すと、`features/tabs/ui/DetachedTabWindowContent.tsx` が組み立て層を import することになり、ルール 5 に反する。次のどちらかを選ぶ必要がある。
-  - A: `DetachedTabWindowContent` も組み立て層（`shell/`）へ移す。
-  - B: 4 部品のうち `features` が使う部分を、UI 部品層の部品として分けて残す。
-- D-2（§3.2 の 1 件目）: `TabView` → `pages/*` を解消する方法（ページ一覧を props で渡すか、context で渡すか）。
+決定済み（2026-10-15）:
+
+- D-2 の 5 件目と `TabView` → `pages/*` の扱い: 案 A を広げ、タブ表示の組み立て部品 4 ファイルを `view/browser/shell/` へ移した（§3.2）。
+- 機能間の依存の件数は、**テストを除いた件数を正式な指標** とする。テストを含む件数は参考として併記する。
+- `core/util/url-media.ts` は、`core/network/url-utils`（chlib の再エクスポートだけの互換窓口）を経由せず `@chlen/chlib` を直接参照する（`71e14707`）。chlib は最下層の共有パッケージなので、`util` から参照してよい。
+
+未決:
+
 - Phase B で、`core/ports` の置き場所を `src/core/ports/` とするか。
 - `container.toast` の移動先を `app` にするか `features` にするか。
 - Phase A の許可リストを `vite.config.ts` の `overrides` で持つか、別ファイルで持つか。

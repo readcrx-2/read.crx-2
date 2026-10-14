@@ -16,6 +16,8 @@
 | D-1 | `useViewSurface` を `features/auxiliary-window` から `view/browser/hooks` へ移動 | `f86bb8d9` |
 | D-2（一部） | `usePopupCloseBehavior` と `popup-dom` を `view/browser/hooks`・`view/browser/utils` へ移動し、呼び出し元を付け替える | `c90fd1b2`、`56c835ec` |
 | D-2（一部） | 外部メディア判定（`external-media`）・URL 判定（`url-media`）の純粋関数を `core/util` へ移す。`view/browser/utils` の URL 再エクスポートを外す | `f6157577`、`8cc79f92`、`5f1dee29` |
+| D-2（一部） | `url-media` が `core/network/url-utils` ではなく `@chlen/chlib` を直接参照するようにする | `71e14707` |
+| D-2（一部） | タブ表示の組み立て部品（`ContentArea`・`TabView`・`TabWindowHost`・`DetachedTabWindowContent`）を `features/tabs/ui` から `view/browser/shell/` へ移し、`App` の参照先を付け替える | `cb32daee`、`650c689b` |
 
 検証は、各コミット時点で `tsc` と `vp test run` を通しています。D-2 の完了時点では、`vp test run`（276 ファイル・2157 件）、`tsc`、`build:chrome` がすべて通りました。
 
@@ -33,13 +35,14 @@
   - 組み立て層（`App`・`pages`・`shell`）: `features` を組み合わせる最上位。
   - 理由と詳細は計画書の §3 を参照。
 - 先に解消する逆向きの依存（計画書の §3.2）:
-  1. `features/tabs/ui/TabView.tsx` → `pages/*`（未着手。props か context の設計が要る）
+  1. ~~`features/tabs/ui/TabView.tsx` → `pages/*`~~（解消: `cb32daee`、`650c689b`。`shell/` へ移した）
   2. ~~`ui/ContextMenu`・`ui/FloatingPopup` → `features/popup` の `usePopupCloseBehavior`~~（解消: `c90fd1b2`、`56c835ec`）
   3. ~~`utils/utils.ts`・`utils/message-filter.ts` → `features/media/domain`~~（解消: `f6157577`、`8cc79f92`、`5f1dee29`）
   4. `commands/*` → タブストア（D-4 で解消する）
-  5. `components/{NavigationBar,BottomPanel,TitleBar,PageCountStatusItem}` → 各機能（`shell/` へ移す。下記の注意を参照）
-- 逆向きの依存の残り（2026-10-15）: UI 部品層から `features`・`pages` への import は 25 行・8 ファイル。
-- 項目 5 の注意: `features/tabs/ui/DetachedTabWindowContent.tsx` が `BottomPanel`・`PageCountStatusItem`・`TitleBar` を使っている。`shell/` へ移すと、`features` → 組み立て層の依存が新しく生まれ、計画書 §3 のルール 5 に反する。移し方を決めるまで未着手（計画書 §7 の判断事項）。
+  5. `components/{NavigationBar,BottomPanel,TitleBar,PageCountStatusItem}` → 各機能（`shell/` へ移す。障害は解消済みで、次に着手できる）
+  6. `types.ts` → `pages/settings/settings-types`（型のみ。D-2 の途中で発見。型を UI 部品層へ移す）
+- 逆向きの依存の残り（2026-10-15、`cb32daee` 以降、テストを除く）: UI 部品層から `features`・`pages`・`shell` への import は 23 行・7 ファイル（`commands` 2、`components` 4、`types.ts` 1）。`features` から組み立て層（`pages`・`shell`・`App`）への import は 0 件。
+- 項目 5 の注意（解消済み）: `DetachedTabWindowContent` が `BottomPanel`・`PageCountStatusItem`・`TitleBar` を使っていたため、`shell/` へ移すとルール 5 に反するおそれがあった。`DetachedTabWindowContent` 自体を `shell/` へ移したので、衝突しなくなった。
 
 ### Phase C-2 の残り
 
@@ -69,14 +72,14 @@
 
 ## 4. 検証の抜け
 
-- `build:chrome` は、D-2 の完了時点（2026-10-15）で再実行し、成功した。
+- `build:chrome` は、`650c689b`（タブ表示部品の `shell/` への移動）の後に再実行し、成功した。同じ時点で `vp test run`（276 ファイル・2157 件）、`tsc`、`vp lint`（エラー 0 件）も通った。
 - lint には、この作業と無関係な警告が以前からある（`unicorn`・`react` など）。エラーはない。
 
 ## 5. 次に必要なこと
 
-1. D-2 の残り（判断が必要）:
-   - 項目 5（`components` → `shell/`）は、`DetachedTabWindowContent` の扱いを決めてから進める（計画書 §7）。
-   - 項目 1（`TabView` → `pages/*`）は、ページ一覧を props か context で渡す設計を決めてから進める。
+1. D-2 の残り（判断は済み）:
+   - 項目 5: `NavigationBar`・`BottomPanel`・`TitleBar`・`PageCountStatusItem` を `shell/` へ移す。
+   - 項目 6: `SettingsPageUiState` の型を UI 部品層へ移す。
 2. D-3: 逆向きが 0 件になったら、UI 部品層の検査を `error` で入れる。
 3. D-4: タブストアを `view/browser/state/tabs` へ移す（項目 4 もここで解消する）。
 4. D-5: NG・媒体の共有部品の扱いを決め、機能間の残りの依存を解消する。
@@ -91,7 +94,10 @@
    - `frontendDist`（`../debug/tauri`）が存在せず、`generate_context!()` が失敗していた。
    - PR #163 は draft のまま、`develop` へはまだ入っていない。`refactor/module-boundaries` へは取り込み済み（merge `0e6be0c7`）。
    - 影響: `develop` の CI は、PR #163 がマージされるまで Rust カバレッジが失敗したままになる。
-2. **`components` → `shell/` の移動が計画のルール 5 と衝突する**。`features/tabs/ui/DetachedTabWindowContent.tsx` が組み立て層の部品を使っている（計画書 §7 の判断事項 A/B）。
-3. **`TabView` → `pages/*` の逆向きの依存は、解消方法が未決**。ページ一覧の渡し方（props か context か）を決める必要がある。
-4. **機能間の依存の件数が、計測条件によって食い違う**。前回は 138 件・41 組、今回は 84 件・35 組（テストを除く）。次回の計測は、テストを含むかどうかを揃えてから行う。
-5. **`core/util` が `core/network/url-utils` に依存している**（`url-media.ts`）。`url-utils.ts` は import を持たない純粋モジュールなので循環はないが、`util`（最下層）から `network` を参照する形になっている。`url-media` を `core/network` へ置くほうが層の定義に合うか、判断が必要。
+2. ~~**`components` → `shell/` の移動が計画のルール 5 と衝突する**~~（解消）。`DetachedTabWindowContent` を含むタブ表示の組み立て部品 4 ファイルを `shell/` へ移した（`cb32daee`、`650c689b`）。
+3. ~~**`TabView` → `pages/*` の逆向きの依存は、解消方法が未決**~~（解消）。`TabView` は `App` からしか使われない組み立て部品だったため、`shell/` へ移した。props・context の仕組みは作らない。
+4. **機能間の依存の件数が、計測条件によって食い違う**。前回は 138 件・41 組、今回は 84 件・35 組（テストを除く）。
+   - 決定: テストを除いた件数を正式な指標とし、テストを含む件数は参考として併記する。
+5. **`core/util` が `core/network/url-utils` に依存している**（`url-media.ts`）。`url-utils.ts` は import を持たない純粋モジュールなので循環はないが、`util`（最下層）から `network` を参照する形になっている。
+   - 解消: `url-utils` は chlib の再エクスポートだけの互換窓口だったため、`url-media` が `@chlen/chlib` を直接参照するようにした（`71e14707`）。置き場所は変えない。
+6. **`view/browser/types.ts` が `pages/settings/settings-types` を型として import している**（D-2 の途中で発見）。UI 部品層から組み立て層への逆向きの依存なので、§2 の項目 6 として扱う。

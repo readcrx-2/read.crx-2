@@ -33,3 +33,12 @@ NG・置換のEnter / Tab操作も確認します。
 実際のDATで置換を再現する場合は `CHLENS_E2E_DAT_PATH` にShift_JISのDATファイルを指定し、
 `pnpm exec playwright test tests/replacement.spec.mts` を実行します。DATはローカルのテストサーバーで配信し、
 画像はダミー応答にするため、元の掲示板へのアクセスは不要です。DATの内容をリポジトリへ保存する必要もありません。
+
+## UIスクリーンショット
+
+`pnpm run ui:shots` でChrome拡張版をビルドし、架空の板・スレ・レスを使ってUIを撮影します。
+出力先は `screenshots/ui/<実行日時>/` です。ホーム、板一覧、スレ一覧、レス表示、
+ステータスバーのミニウィンドウ、Chrome版で表示される設定カテゴリを保存します。
+Tauri専用のコメントOverlay設定と実況ミニウィンドウは、このChrome拡張用ランナーの撮影対象外です。
+外部掲示板へのアクセスはありません。
+出力先を変える場合はPowerShellで `$env:UI_SHOT_DIR='V:\temp\chlens-shots'; pnpm run ui:shots` と指定します。

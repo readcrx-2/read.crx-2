@@ -1,10 +1,10 @@
 import "@testing-library/jest-dom/vitest";
 
 import { act, cleanup, fireEvent, render, screen } from "@testing-library/react";
+import type { CommentCandidate } from "src/features/comment-overlay";
 import { afterEach, describe, expect, it, vi } from "vite-plus/test";
 
-import type { CommentCandidate } from "../domain/comment-types";
-import { PastThreadReplayStory } from "./OverlayStage.stories";
+import { PastThreadReplayStory } from "./ArchiveReplayOverlay.stories";
 
 vi.mock("../../../../.storybook/thread-source.ts", () => ({
   createChLensStorybookSource: () => ({
@@ -19,7 +19,7 @@ vi.mock("../../../../.storybook/thread-source.ts", () => ({
 }));
 
 // 描画側の時計を切り離し、利用者が操作する再生時計の巻き戻しを検証する。
-vi.mock("./OverlayStage", () => ({
+vi.mock("src/features/comment-overlay/ui/OverlayStage", () => ({
   DEFAULT_COMMENT_HISTORY_LIMIT: 3000,
   OverlayStage: ({ comments }: { comments: readonly CommentCandidate[] }) => (
     <output data-testid="投入レス">

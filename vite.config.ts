@@ -373,19 +373,6 @@ export default defineConfig(async ({ mode }) => {
             ],
           },
         },
-        // 許可リスト: commands はタブストア（features/tabs/browser）を参照している。
-        // タブストアを UI 部品層（view/browser/state/tabs）へ移す Phase D-4 で解消し、この override を削除する。
-        {
-          files: [
-            "src/view/browser/commands/browser-commands.ts",
-            "src/view/browser/commands/browser-commands.test.ts",
-            "src/view/browser/commands/tab-command-runtime.ts",
-            "src/view/browser/commands/tab-command-runtime.test.ts",
-          ],
-          rules: {
-            "eslint/no-restricted-imports": "off",
-          },
-        },
         // features は組み立て層（App・pages・shell）を import しない（計画書 §3 のルール 5）。
         {
           files: ["src/features/**"],

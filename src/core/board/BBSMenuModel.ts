@@ -3,7 +3,10 @@ import Callbacks from "src/app/Callbacks";
 import { createLogger } from "src/app/logger";
 import { BBSMenuFetcher } from "src/core/board/BBSMenuFetcher";
 import { normalizeBBSMenus } from "src/core/board/BoardUrlNormalizer";
-import { OPENED_BOARDS_CONFIG_KEY, parseOpenedBoardEntries } from "src/core/board/OpenedBoards";
+import {
+  OPENED_BOARDS_CONFIG_KEY,
+  parseOpenedBoardEntries,
+} from "src/core/board/opened-board-entries";
 import { OtherBoardsCollector } from "src/core/board/OtherBoardsCollector";
 import * as ReadState from "src/core/bookmark/ReadState.js";
 import * as History from "src/core/history/History";

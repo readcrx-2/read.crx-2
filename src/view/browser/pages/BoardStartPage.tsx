@@ -1,6 +1,9 @@
 import React from "react";
 import { getBoardUrlKey, normalizeBoardUrl } from "src/core/board/BoardUrlNormalizer";
-import { OPENED_BOARDS_CONFIG_KEY, parseOpenedBoardEntries } from "src/core/board/OpenedBoards";
+import {
+  OPENED_BOARDS_CONFIG_KEY,
+  parseOpenedBoardEntries,
+} from "src/core/board/opened-board-entries";
 import { container } from "src/service-container/index";
 import { PageTypeIcon } from "src/view/browser/components/PageTypeIcon";
 import { isResolvedBoardTitle } from "src/view/browser/pages/board-list/board-list-utils";

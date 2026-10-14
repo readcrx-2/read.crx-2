@@ -4,7 +4,10 @@ import { useCallback, useEffect, useMemo, useState } from "react";
 import { DEFAULT_CONFIG } from "src/app/config-defaults";
 import { platformCookieManager } from "src/app/platform/CookieManager";
 import { getBoardUrlKey } from "src/core/board/BoardUrlNormalizer";
-import { OPENED_BOARDS_CONFIG_KEY, parseOpenedBoardEntries } from "src/core/board/OpenedBoards";
+import {
+  OPENED_BOARDS_CONFIG_KEY,
+  parseOpenedBoardEntries,
+} from "src/core/board/opened-board-entries";
 import {
   MAX_BOARD_AUTO_REFRESH_MS,
   MAX_THREAD_AUTO_REFRESH_MS,

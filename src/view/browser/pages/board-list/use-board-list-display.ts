@@ -1,6 +1,6 @@
 import type { ParsedBBSMenu } from "packages/chlib/src/index";
 import { useEffect, useMemo, useRef, useState } from "react";
-import type { OpenedBoardEntry } from "src/core/board/OpenedBoards";
+import type { OpenedBoardEntry } from "src/core/board/opened-board-entries";
 import {
   buildCategoryId,
   deriveOpenedBoardTitle,

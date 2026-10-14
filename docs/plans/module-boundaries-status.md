@@ -83,3 +83,15 @@
 5. 並行してできるもの:
    - `jsutil` の `corePorts` 参照の整理
    - `core` の `toast` 通知の移動計画
+
+## 6. 発見した問題（2026-10-15 時点）
+
+1. **Rust カバレッジ CI が Linux で失敗していた**（PR #163 で修正）。
+   - `png` が Windows 専用の依存で、Linux でビルドできなかった。
+   - `frontendDist`（`../debug/tauri`）が存在せず、`generate_context!()` が失敗していた。
+   - PR #163 は draft のまま、`develop` へはまだ入っていない。`refactor/module-boundaries` へは取り込み済み（merge `0e6be0c7`）。
+   - 影響: `develop` の CI は、PR #163 がマージされるまで Rust カバレッジが失敗したままになる。
+2. **`components` → `shell/` の移動が計画のルール 5 と衝突する**。`features/tabs/ui/DetachedTabWindowContent.tsx` が組み立て層の部品を使っている（計画書 §7 の判断事項 A/B）。
+3. **`TabView` → `pages/*` の逆向きの依存は、解消方法が未決**。ページ一覧の渡し方（props か context か）を決める必要がある。
+4. **機能間の依存の件数が、計測条件によって食い違う**。前回は 138 件・41 組、今回は 84 件・35 組（テストを除く）。次回の計測は、テストを含むかどうかを揃えてから行う。
+5. **`core/util` が `core/network/url-utils` に依存している**（`url-media.ts`）。`url-utils.ts` は import を持たない純粋モジュールなので循環はないが、`util`（最下層）から `network` を参照する形になっている。`url-media` を `core/network` へ置くほうが層の定義に合うか、判断が必要。

@@ -1,6 +1,6 @@
 import type { CSSProperties, MouseEventHandler, ReactNode } from "react";
 import React, { useRef } from "react";
-import { usePopupCloseBehavior } from "src/features/popup/browser/use-popup-manager";
+import { usePopupCloseBehavior } from "src/view/browser/hooks/use-popup-close-behavior";
 import { useAdjustOverflow } from "src/view/browser/utils/use-adjust-overflow";
 
 export interface FloatingPopupRenderProps {

@@ -1,7 +1,7 @@
 import { ContextMenu as RadixContextMenu } from "radix-ui";
 import type { ReactNode, RefObject } from "react";
 import React, { useLayoutEffect, useMemo, useRef } from "react";
-import { usePopupCloseBehavior } from "src/features/popup/browser/use-popup-manager";
+import { usePopupCloseBehavior } from "src/view/browser/hooks/use-popup-close-behavior";
 import { useViewSurface } from "src/view/browser/hooks/use-view-surface";
 import { getEventTargetElement } from "src/view/browser/utils/dom";
 

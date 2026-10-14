@@ -3,12 +3,9 @@ import "@testing-library/jest-dom/vitest";
 import { act, cleanup, fireEvent, render, renderHook, screen } from "@testing-library/react";
 import type { RefObject } from "react";
 import { useRef } from "react";
-import {
-  usePopupCloseBehavior,
-  usePopupCore,
-  useThreadPopupManager,
-} from "src/features/popup/browser/use-popup-manager";
+import { usePopupCore, useThreadPopupManager } from "src/features/popup/browser/use-popup-manager";
 import type { IRes } from "src/service-container/interfaces";
+import { usePopupCloseBehavior } from "src/view/browser/hooks/use-popup-close-behavior";
 import { ANCHOR_PREVIEW_HIDE_DELAY_MS } from "src/view/browser/utils/constants";
 import { afterEach, describe, expect, it, vi } from "vite-plus/test";
 

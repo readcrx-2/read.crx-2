@@ -87,7 +87,7 @@ vi.mock("src/core/board/BBSMenuModel", () => ({
   },
 }));
 vi.mock("src/core/board/BoardService", () => ({
-  default: { getThreads: vi.fn(), getCachedResCount: vi.fn() },
+  createBoardService: () => ({ getThreads: vi.fn(), getCachedResCount: vi.fn() }),
 }));
 vi.mock("src/core/storage/Cache", () => ({ default: class {} }));
 vi.mock("src/core/ng/NG", () => ({

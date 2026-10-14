@@ -5,7 +5,7 @@ import message from "src/app/Message";
 import Notification from "src/app/Notification";
 import { escapeHtml, safeHref } from "src/app/Util";
 import { BBSMenuModel } from "src/core/board/BBSMenuModel";
-import BoardService from "src/core/board/BoardService";
+import { createBoardService } from "src/core/board/BoardService";
 import Bookmark from "src/core/bookmark/Bookmark";
 import type { ComparableReadState } from "src/core/bookmark/read-state-compare";
 import { isNewerReadState } from "src/core/bookmark/read-state-compare";
@@ -171,10 +171,12 @@ export function setupContainer(): void {
   };
 
   // Board Service Adapter
+  // 依存は登録済みの container から渡す。
+  const boardService = createBoardService(container);
   const boardServiceAdapter: IBoardService = {
-    getThreads: (url: string): Promise<IBoardResult> => BoardService.getThreads(url),
+    getThreads: (url: string): Promise<IBoardResult> => boardService.getThreads(url),
     getCachedResCount: (url: string, options?: { forceUpdate?: boolean }) =>
-      BoardService.getCachedResCount(url, options),
+      boardService.getCachedResCount(url, options),
   };
 
   // BBSMenu Service Adapter

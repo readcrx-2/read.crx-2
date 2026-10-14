@@ -16,21 +16,20 @@ vi.mock("src/core/board/Board.js", () => ({
   },
 }));
 
-vi.mock("src/core/ports/registry", () => ({
-  corePorts: {
-    readState: { getByBoard: mocks.getByBoard },
-    bookmark: { get: mocks.getBookmark },
-    util: { isNewerReadState: mocks.isNewerReadState },
-  },
-}));
-
-import BoardService from "src/core/board/BoardService";
+import { createBoardService } from "src/core/board/BoardService";
 
 // 実在するスレッドを使わず、通信方式と保存キーの違いを検証する。
 vi.mock("packages/chlib/src/url/hosts", async (importOriginal) => {
   const hosts = await importOriginal<typeof import("packages/chlib/src/url/hosts")>();
   return { ...hosts, HOSTNAME: { ...hosts.HOSTNAME, EDDIBB: "edge.example.com" } };
 });
+
+// 依存は引数で渡すため、登録済みのサービスに依存せずに検証できる。
+const BoardService = createBoardService({
+  readState: { getByBoard: mocks.getByBoard },
+  bookmark: { get: mocks.getBookmark },
+  util: { isNewerReadState: mocks.isNewerReadState },
+} as unknown as Parameters<typeof createBoardService>[0]);
 
 describe("BoardService canonical subject adapter", () => {
   it("一覧URLのHTTPSを維持しHTTPの既読キーで既読情報を反映する", async () => {

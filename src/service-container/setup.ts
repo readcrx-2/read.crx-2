@@ -22,6 +22,7 @@ import {
   IBoardService,
   IBookmark,
   IBookmarkItem,
+  IBookmarkRootService,
   ICacheItem,
   ICacheService,
   IConfig,
@@ -170,6 +171,17 @@ export function setupContainer(): void {
     getAllBoards: () => activeBookmark.getAllBoards(),
   };
 
+  // BookmarkRoot Adapter
+  // 保存先の切り替えと選び直しの要否は、画面から window.app.bookmarkEntryList を通さずにここから使う
+  // （legacy-window-app-plan の Phase 2）。保存先の実装（ブラウザのブックマーク・IndexedDB）は Bookmark が選ぶ。
+  const activeEntryList = activeBookmark.bel as BookmarkEntryListRuntime;
+  const bookmarkRootAdapter: IBookmarkRootService = {
+    isReconfigureRequired: () => activeEntryList.needReconfigureRootNodeId?.wasCalled === true,
+    // IndexedDB（Tauri）の保存先には切り替えがないため、何もせず成功として扱う（以前の画面の挙動と同じ）。
+    setRootNodeId: async (rootNodeId) =>
+      (await activeEntryList.setRootNodeId?.(rootNodeId)) ?? true,
+  };
+
   // Cache Adapter
   const cacheServiceAdapter: ICacheService = {
     getCache: (path: string): ICacheItem => {
@@ -292,6 +304,7 @@ export function setupContainer(): void {
   container.config = configAdapter;
   container.message = messageAdapter;
   container.bookmark = bookmarkAdapter;
+  container.bookmarkRoot = bookmarkRootAdapter;
   container.cache = cacheServiceAdapter;
   container.util = utilAdapter;
   container.readState = readStateAdapter;

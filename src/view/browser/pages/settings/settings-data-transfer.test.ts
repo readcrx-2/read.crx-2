@@ -37,12 +37,13 @@ vi.mock("src/service-container/index", () => ({
     },
     // src/core/history/History はサービスコンテナの history から使う。
     history: { getAll: mocks.historyGetAll, clear: mocks.historyClear, add: mocks.historyAdd },
-    // ブックマークは window.app ではなくサービスコンテナから使う（legacy-window-app-plan の Phase 2）。
+    // ブックマークと保存先は window.app ではなくサービスコンテナから使う（legacy-window-app-plan の Phase 2）。
     bookmark: {
       ready: mocks.waitForBookmarkReady,
       getAll: mocks.bookmarkGetAll,
       import: mocks.bookmarkImport,
     },
+    bookmarkRoot: { setRootNodeId: mocks.setRootNodeId },
     config: {
       getAll: mocks.configGetAll,
       set: mocks.configSet,
@@ -51,12 +52,6 @@ vi.mock("src/service-container/index", () => ({
       send: mocks.messageSend,
     },
   },
-}));
-
-vi.mock("src/view/browser/utils/legacy-app", () => ({
-  getLegacyBookmarkEntryList: () => ({
-    setRootNodeId: mocks.setRootNodeId,
-  }),
 }));
 
 vi.mock("src/view/browser/state/tabs/browser-session-storage", () => ({

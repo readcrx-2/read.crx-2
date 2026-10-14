@@ -299,7 +299,7 @@ describe("サービスコンテナの初期化", () => {
       consoleError.mockRestore();
     });
 
-    it("画面が使う一覧・読み込みの操作を Bookmark へつなぐ", async () => {
+    it("画面が使う一覧・読み込み・保存先の操作を Bookmark へつなぐ", async () => {
       const { setupContainer } = await import("src/service-container/setup");
       const { container } = await import("src/service-container/Container");
       for (const callback of mocks.configReadyCallbacks) callback();
@@ -318,6 +318,13 @@ describe("サービスコンテナの初期化", () => {
       };
       await expect(container.bookmark.import(entry)).resolves.toBe(true);
       expect(mocks.bookmarkImport).toHaveBeenCalledWith(entry);
+
+      // 起動前に保存先が見つからなかったことは、画面から選び直しの要否として読める。
+      expect(container.bookmarkRoot.isReconfigureRequired()).toBe(true);
+      mocks.bookmarkEntryList.needReconfigureRootNodeId.wasCalled = false;
+      expect(container.bookmarkRoot.isReconfigureRequired()).toBe(false);
+      await expect(container.bookmarkRoot.setRootNodeId("root-3")).resolves.toBe(true);
+      expect(mocks.bookmarkEntryList.setRootNodeId).toHaveBeenCalledWith("root-3");
     });
   });
 });

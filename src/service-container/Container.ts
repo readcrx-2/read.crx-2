@@ -4,6 +4,7 @@ import {
   IBoardService,
   IBoardTitleService,
   IBookmark,
+  IBookmarkRootService,
   ICacheService,
   IConfig,
   ICoreNoticeService,
@@ -32,6 +33,7 @@ interface ServiceContainerImpl extends IServiceContainer {
   _config: IConfig | undefined;
   _cache: ICacheService | undefined;
   _bookmark: IBookmark | undefined;
+  _bookmarkRoot: IBookmarkRootService | undefined;
   _message: IMessage | undefined;
   _util: IUtil | undefined;
   _readState: IReadStateService | undefined;
@@ -55,6 +57,7 @@ if (!globalObj.__ServiceContainer) {
     _config: undefined,
     _cache: undefined,
     _bookmark: undefined,
+    _bookmarkRoot: undefined,
     _message: undefined,
     _util: undefined,
     _readState: undefined,
@@ -94,6 +97,14 @@ if (!globalObj.__ServiceContainer) {
     },
     set bookmark(value: IBookmark) {
       this._bookmark = value;
+    },
+
+    get bookmarkRoot(): IBookmarkRootService {
+      if (!this._bookmarkRoot) throw new Error("BookmarkRoot service not registered");
+      return this._bookmarkRoot;
+    },
+    set bookmarkRoot(value: IBookmarkRootService) {
+      this._bookmarkRoot = value;
     },
 
     get message(): IMessage {

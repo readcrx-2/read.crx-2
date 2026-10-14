@@ -1,6 +1,5 @@
 import { isTauriRuntime } from "src/app/platform/runtime";
 import { container } from "src/service-container/index";
-import { getLegacyBookmarkEntryList } from "src/view/browser/utils/legacy-app";
 import browser from "webextension-polyfill";
 
 export interface BookmarkFolderNode {
@@ -42,10 +41,9 @@ export function readConfiguredBookmarkFolderId(): string {
 }
 
 export function isBookmarkRootSelectionRequired(): boolean {
-  const bookmarkEntryList = getLegacyBookmarkEntryList();
+  // 選び直しの要否は window.app.bookmarkEntryList ではなくサービスコンテナから読む（legacy-window-app-plan の Phase 2）。
   return (
-    readConfiguredBookmarkFolderId().length === 0 ||
-    bookmarkEntryList?.needReconfigureRootNodeId?.wasCalled === true
+    readConfiguredBookmarkFolderId().length === 0 || container.bookmarkRoot.isReconfigureRequired()
   );
 }
 

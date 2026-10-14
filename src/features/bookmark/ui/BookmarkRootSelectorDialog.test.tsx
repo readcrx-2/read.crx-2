@@ -37,13 +37,10 @@ function setBookmarkRootState(bookmarkId: string, needReconfigure: boolean): voi
     ready: (callback: () => void) => callback(),
     getAll: () => ({}),
   };
-  // 保存先の再設定が必要かどうかは、まだ window.app のブックマーク保存先から読む（Phase 2 で置き換える）。
-  (window as unknown as { app?: unknown }).app = {
-    bookmarkEntryList: {
-      needReconfigureRootNodeId: {
-        wasCalled: needReconfigure,
-      },
-    },
+  // 保存先の再設定が必要かどうかも、サービスコンテナから読む（legacy-window-app-plan の Phase 2）。
+  container.bookmarkRoot = {
+    isReconfigureRequired: () => needReconfigure,
+    setRootNodeId: vi.fn(async () => true),
   };
 }
 
@@ -131,7 +128,6 @@ describe("BookmarkRootSelectorDialog", () => {
     configSetMock.mockReset();
     toastSuccessMock.mockReset();
     toastErrorMock.mockReset();
-    delete (window as unknown as { app?: unknown }).app;
     setTauriRuntime(false);
   });
 

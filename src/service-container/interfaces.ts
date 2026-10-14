@@ -96,10 +96,22 @@ export type IBoardTitleService = Pick<
 /** 置換ルールの保存（Phase E、計画書 §3.6）。解析済みのルールを持つため、サービスコンテナ経由で使う。 */
 export type IReplaceStrService = Pick<ReturnType<typeof createReplaceStrTxt>, "set">;
 
+/**
+ * ブックマークの保存先（ブラウザのブックマークのフォルダ）の設定（legacy-window-app-plan の Phase 2）。
+ * 画面は window.app.bookmarkEntryList ではなくここから使う。core は使わないため ports には置かない。
+ */
+export interface IBookmarkRootService {
+  /** 保存先のフォルダが見つからず、選び直しが必要だと分かっているか。 */
+  isReconfigureRequired(): boolean;
+  /** 保存先を切り替え、切り替え先の走査が終わるまで待つ。 */
+  setRootNodeId(rootNodeId: string): Promise<boolean>;
+}
+
 export interface IServiceContainer {
   config: IConfig;
   cache: ICacheService;
   bookmark: IBookmark;
+  bookmarkRoot: IBookmarkRootService;
   message: IMessage;
   util: IUtil;
   readState: IReadStateService;

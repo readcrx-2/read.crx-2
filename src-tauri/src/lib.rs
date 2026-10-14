@@ -1,7 +1,9 @@
 mod download;
+mod download_path;
 mod http_transport;
 mod monitor_preview;
 mod overlay_attachment;
+mod preview_image;
 mod write_cookies;
 mod write_transport;
 
@@ -35,7 +37,10 @@ fn create_requested_window<R: Runtime>(
   // 別窓側からさらに書き込み窓やタブ窓を開けるよう、子窓にも同じハンドラを登録する。
   let child_app = app.clone();
   let child_next_label = Arc::clone(next_label);
-  let label = format!("chlens-popup-{}", next_label.fetch_add(1, Ordering::Relaxed));
+  let label = format!(
+    "chlens-popup-{}",
+    next_label.fetch_add(1, Ordering::Relaxed)
+  );
 
   let builder = WebviewWindowBuilder::new(
     app,

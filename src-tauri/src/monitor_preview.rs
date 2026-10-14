@@ -13,10 +13,18 @@ pub async fn capture_comment_overlay_monitor_preview(
       .map_err(|error| error.to_string())?;
     // フロントエンドの座標を任意領域の撮影へ流用せず、現在の実ディスプレイと照合する。
     if !monitors.iter().any(|monitor| {
-      monitor.position().x == x
-        && monitor.position().y == y
-        && monitor.size().width == width
-        && monitor.size().height == height
+      let position = monitor.position();
+      let size = monitor.size();
+      monitor_matches_bounds(
+        position.x,
+        position.y,
+        size.width,
+        size.height,
+        x,
+        y,
+        width,
+        height,
+      )
     }) {
       return Err("撮影対象のディスプレイが見つかりません。パネルを開き直してください。".into());
     }
@@ -39,7 +47,7 @@ fn capture(_x: i32, _y: i32, _width: u32, _height: u32) -> Result<Option<String>
 
 #[cfg(windows)]
 fn capture(x: i32, y: i32, width: u32, height: u32) -> Result<Option<String>, String> {
-  use base64::{engine::general_purpose::STANDARD, Engine};
+  use crate::preview_image::{bgrx_to_rgb, preview_dimensions, to_png_data_url};
   use std::{ffi::c_void, mem::size_of, ptr::null_mut};
   use windows_sys::Win32::Graphics::Gdi::*;
 
@@ -69,13 +77,8 @@ fn capture(x: i32, y: i32, width: u32, height: u32) -> Result<Option<String>, St
     }
   }
 
-  if width == 0 || height == 0 || width > i32::MAX as u32 || height > i32::MAX as u32 {
-    return Err("ディスプレイのサイズが不正です".into());
-  }
+  let (preview_width, preview_height) = preview_dimensions(width, height)?;
   // 長辺640pxの静止画へ直接縮小し、4K画面のフルサイズ画像を保持・転送しない。
-  let scale = (640.0 / f64::from(width.max(height))).min(1.0);
-  let preview_width = (f64::from(width) * scale).round().max(1.0) as u32;
-  let preview_height = (f64::from(height) * scale).round().max(1.0) as u32;
   let rgb = unsafe {
     let mut resources = CaptureResources {
       screen: GetDC(null_mut()),
@@ -157,27 +160,30 @@ fn capture(x: i32, y: i32, width: u32, height: u32) -> Result<Option<String>, St
       return Err("画面の撮影結果の同期に失敗しました".into());
     }
     // DIBのBGR成分をPNGのRGBへ変換する。未定義のalphaを使うと透明な画像になる。
-    std::slice::from_raw_parts(
+    bgrx_to_rgb(std::slice::from_raw_parts(
       pixels.cast::<u8>(),
       (preview_width * preview_height * 4) as usize,
-    )
-    .chunks_exact(4)
-    .flat_map(|pixel| [pixel[2], pixel[1], pixel[0]])
-    .collect::<Vec<u8>>()
+    ))?
   };
-  let mut bytes = Vec::new();
-  {
-    let mut encoder = png::Encoder::new(&mut bytes, preview_width, preview_height);
-    encoder.set_color(png::ColorType::Rgb);
-    encoder.set_depth(png::BitDepth::Eight);
-    encoder.set_compression(png::Compression::Fast);
-    let mut writer = encoder.write_header().map_err(|error| error.to_string())?;
-    writer
-      .write_image_data(&rgb)
-      .map_err(|error| error.to_string())?;
-  }
-  Ok(Some(format!(
-    "data:image/png;base64,{}",
-    STANDARD.encode(bytes)
-  )))
+  Ok(Some(to_png_data_url(preview_width, preview_height, &rgb)?))
 }
+
+fn monitor_matches_bounds(
+  monitor_x: i32,
+  monitor_y: i32,
+  monitor_width: u32,
+  monitor_height: u32,
+  requested_x: i32,
+  requested_y: i32,
+  requested_width: u32,
+  requested_height: u32,
+) -> bool {
+  monitor_x == requested_x
+    && monitor_y == requested_y
+    && monitor_width == requested_width
+    && monitor_height == requested_height
+}
+
+#[cfg(test)]
+#[path = "monitor_preview_tests.rs"]
+mod tests;

@@ -179,11 +179,13 @@ describe("サービスコンテナの初期化", () => {
     expect(container.util.isNewerReadState(null, null)).toBe(true);
   });
 
-  it("view・features が使う core の実装をサービスコンテナへつなぐ", async () => {
+  it("メインの画面が使う core の実装をサービスコンテナへつなぐ", async () => {
     const { setupContainer } = await import("src/service-container/setup");
+    const { setupBrowserViewServices } = await import("src/service-container/setup-browser-view");
     const { container } = await import("src/service-container/Container");
     for (const callback of mocks.configReadyCallbacks) callback();
     setupContainer();
+    setupBrowserViewServices();
 
     // 呼び出しを core の実装へそのまま渡していることを、サービスごとに確かめる。
     await container.history.add("https://example.com/test/read.cgi/a/1/", "スレ", 1, "板");

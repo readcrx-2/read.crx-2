@@ -6,18 +6,13 @@ import Notification from "src/app/Notification";
 import { escapeHtml, safeHref } from "src/app/Util";
 import { BBSMenuModel } from "src/core/board/BBSMenuModel";
 import { createBoardService } from "src/core/board/BoardService";
-import * as BoardTitleSolver from "src/core/board/BoardTitleSolver";
-import { createOpenedBoards } from "src/core/board/OpenedBoards";
 import Bookmark from "src/core/bookmark/Bookmark";
 import type { ComparableReadState } from "src/core/bookmark/read-state-compare";
 import { isNewerReadState } from "src/core/bookmark/read-state-compare";
 import * as ReadState from "src/core/bookmark/ReadState";
-import * as History from "src/core/history/History";
-import * as WriteHistory from "src/core/history/WriteHistory";
 import * as NG from "src/core/ng/NG";
 import { installCorePorts } from "src/core/ports/registry";
 import Cache from "src/core/storage/Cache";
-import * as ReplaceStrTxt from "src/core/thread/ReplaceStrTxt";
 import { createThreadService } from "src/core/thread/ThreadService";
 import { configInstance } from "src/service-container/config-instance";
 import { container } from "src/service-container/Container";
@@ -271,39 +266,6 @@ export function setupContainer(): void {
   container.toast = toastServiceAdapter;
   container.notification = notificationServiceAdapter;
   container.ng = ngServiceAdapter;
-  container.history = {
-    add: History.add,
-    remove: History.remove,
-    getByUrl: History.getByUrl,
-    getAll: History.getAll,
-    clear: History.clear,
-  };
-  container.writeHistory = {
-    add: WriteHistory.add,
-    update: WriteHistory.update,
-    getByUrl: WriteHistory.getByUrl,
-    getAll: WriteHistory.getAll,
-    clear: WriteHistory.clear,
-  };
-  // config は上で登録した container.config を使う（core の既定のインスタンスと同じ設定を見る）。
-  container.openedBoards = createOpenedBoards(container);
-  // 板名の解決結果のキャッシュを core の ThreadSearch や window.app と共有するため、
-  // 新しく作らず core の既定のインスタンスを登録する。
-  container.boardTitle = {
-    ask: BoardTitleSolver.ask,
-    askByUrl: BoardTitleSolver.askByUrl,
-    getCachedTitles: BoardTitleSolver.getCachedTitles,
-  };
-  // 解析済みの置換ルールを、レスの表示で使う core の既定のインスタンスと共有する。
-  container.replaceStr = { set: ReplaceStrTxt.set };
-  // 静的メソッドを切り離して渡すと this が外れるため、Cache を通して呼ぶ関数で包む。
-  container.threadLog = {
-    listLogs: (...args) => Cache.listLogs(...args),
-    searchLogsPage: (...args) => Cache.searchLogsPage(...args),
-    deleteLogs: () => Cache.deleteLogs(),
-    getLogArchiveRecords: () => Cache.getLogArchiveRecords(),
-    replaceLogArchiveRecords: (...args) => Cache.replaceLogArchiveRecords(...args),
-  };
 
   // core は container を import せず、ここで登録されたサービスだけを使う（Phase C-1）。
   installCorePorts(container);

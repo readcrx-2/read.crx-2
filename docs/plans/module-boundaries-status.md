@@ -21,6 +21,7 @@
 | D-2（一部） | 画面の外枠の部品（`NavigationBar`・`BottomPanel`・`TitleBar`・`PageCountStatusItem`）を `components` から `shell/` へ移し、参照先を付け替える | `257a23a0`、`6204bc2b` |
 | D-2（一部） | `SettingsSectionId`・`SettingsPageUiState` の型を `pages/settings/settings-types` から `view/browser/types.ts` へ移し、参照先を付け替える | `52f6bcfd`、`75d54cdf` |
 | D-3 | UI 部品層 → `features`・組み立て層、`features` → 組み立て層の import を oxlint で `error` にする。`commands` の 2 ファイルとそのテストは許可リスト | `36f7219a` |
+| D-4 | タブストア（`tab-store-*`・`use-tab-store`・`use-tab-view-scope`・`browser-session-storage`）と `auto-refresh-pages` を `view/browser/state/tabs` へ移し、参照先を付け替える（80 ファイル）。D-3 の許可リストを削除する | `8496ef14`、`73cd33d3`、`f2651140` |
 
 検証は、各コミット時点で `tsc` と `vp test run` を通しています。D-2 の完了時点では、`vp test run`（276 ファイル・2157 件）、`tsc`、`build:chrome` がすべて通りました。
 
@@ -28,10 +29,10 @@
 
 ### Phase D: `features` 間の依存（方針決定済み）
 
-- 残りは **84 件・35 組**（2026-10-15、テストを除いて数えた値。以前の 138 件・41 組とは計測条件が違うため、単純には比べられない）。
+- 残りは **45 行・24 組**（D-4 の後、テストを除く。テストを含めると 61 行・24 組）。D-4 の前は 84 件・35 組だった。
 - 主な共有先:
-  - タブ状態（`use-tab-store`・`tab-store-actions`）。ほぼ全機能が参照。
-  - 媒体の表示部品（`ResMediaGallery`・`ExternalImage`・`url-media`）。
+  - 媒体の表示部品（`ResMediaGallery`・`ExternalImage`・`imgur-album`）。
+  - `comment-overlay` と `archive-replay` の相互参照（`archive-replay → comment-overlay` 6 行、`comment-overlay → archive-replay` 2 行）。機能どうしの循環になっている。
   - NG の状態と表示部品（`use-ng-status`・`NgBadge`）。
 - **決定（2026-10-15）**: `features` → `view` の依存は認める。ただし `view/browser` を 2 層に分ける。
   - UI 部品層（`ui`・`hooks`・`utils`・`types`・`components`・`state`・`commands`）: `features` から参照してよい。`features`・`pages` は import しない。
@@ -41,10 +42,10 @@
   1. ~~`features/tabs/ui/TabView.tsx` → `pages/*`~~（解消: `cb32daee`、`650c689b`。`shell/` へ移した）
   2. ~~`ui/ContextMenu`・`ui/FloatingPopup` → `features/popup` の `usePopupCloseBehavior`~~（解消: `c90fd1b2`、`56c835ec`）
   3. ~~`utils/utils.ts`・`utils/message-filter.ts` → `features/media/domain`~~（解消: `f6157577`、`8cc79f92`、`5f1dee29`）
-  4. `commands/*` → タブストア（D-4 で解消する）
+  4. ~~`commands/*` → タブストア~~（解消: D-4。タブストアを `view/browser/state/tabs` へ移した）
   5. ~~`components/{NavigationBar,BottomPanel,TitleBar,PageCountStatusItem}` → 各機能~~（解消: `257a23a0`、`6204bc2b`。`shell/` へ移した）
   6. ~~`types.ts` → `pages/settings/settings-types`~~（解消: `52f6bcfd`、`75d54cdf`。型を `types.ts` へ移した）
-- 逆向きの依存の残り（2026-10-15、`75d54cdf` 以降、テストを除く）: UI 部品層から `features`・`pages`・`shell` への import は 5 行・2 ファイル（`commands/browser-commands.ts`・`commands/tab-command-runtime.ts` → タブストア）。項目 4 として D-4 で解消する。テストを含めると、さらに `commands` のテスト 2 ファイル・3 行がある。`features` から組み立て層（`pages`・`shell`・`App`）への import は 0 件。
+- 逆向きの依存の残り（D-4 の後）: UI 部品層から `features`・組み立て層への import も、`features` から組み立て層への import も、テストを含めて 0 件。
 - 項目 5 の注意（解消済み）: `DetachedTabWindowContent` が `BottomPanel`・`PageCountStatusItem`・`TitleBar` を使っていたため、`shell/` へ移すとルール 5 に反するおそれがあった。`DetachedTabWindowContent` 自体を `shell/` へ移したので、衝突しなくなった。
 
 ### Phase C-2 の残り
@@ -66,7 +67,7 @@
 
 - 禁止ルール（`error`）は次の 3 つ。
   - `core` → `service-container`
-  - UI 部品層 → `features`・組み立て層（`commands` の 2 ファイルは許可リスト。D-3）
+  - UI 部品層 → `features`・組み立て層（D-3。許可リストは D-4 で削除）
   - `features` → 組み立て層（D-3）
 - `features` 間の依存と `view` → `core` の依存には、まだ検査がない。
 - 循環検出（`import/no-cycle`）は計測でのみ使用。`vite.config.ts` には入っていない。
@@ -80,13 +81,16 @@
 
 - `build:chrome` は、`75d54cdf`（D-2 の最後のコミット）の後に再実行し、成功した。
 - `36f7219a`（D-3）の時点で、`vp test run`（276 ファイル・2157 件）、`tsc`、`vp lint src/`（エラー 0 件）が通った。D-3 の検査は、許可リストを外すと `commands` の 4 ファイル・8 行だけを検出すること、`features` のファイルに `shell` の import を一時的に足すと検出することを確認した。
+- `f2651140`（D-4）の時点で、`vp test run`（276 ファイル・2157 件）、`tsc`、`vp lint src/`（エラー 0 件）、`build:chrome` が通った。参照先の付け替えのコミットは、import の行以外を変えていないことを差分で確認した。
 - lint には、この作業と無関係な警告が以前からある（`unicorn`・`react` など）。エラーはない。
 
 ## 5. 次に必要なこと
 
-1. D-2 は、D-4 で扱う項目 4（`commands` → タブストア）を除いて完了した。D-3（検査の導入）も完了した。
-2. D-4: タブストアを `view/browser/state/tabs` へ移す（項目 4 もここで解消する）。終わったら `vite.config.ts` の許可リストの override を削除する。
-3. D-5: NG・媒体の共有部品の扱いを決め、機能間の残りの依存を解消する。
+1. D-2〜D-4 は完了した。`view/browser` の層の境界は、許可リストなしで検査されている。
+2. D-5: 機能間の残りの依存（45 行・24 組）を解消する。先に決めること:
+   - NG・媒体の共有部品を UI 部品層へ移すか、`features/<x>/index.ts` の公開 API だけを許すか（計画書 §3.3）。
+   - `comment-overlay` と `archive-replay` の相互参照をどちらの向きにそろえるか。
+3. 機能間の件数の計測方法（テストを除く、`from`・動的 `import()`・`vi.mock` を数える）を、スクリプトにしてリポジトリに置くかどうか。
 4. 並行してできるもの:
    - `jsutil` の `corePorts` 参照の整理
    - `core` の `toast` 通知の移動計画

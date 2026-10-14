@@ -1,7 +1,7 @@
 # モジュール境界の明確化計画
 
 - ブランチ: `refactor/module-boundaries`（`develop` から作成。旧名 `feature/module-boundaries`）
-- 状態: Phase 0・A・B・C-1・C-2・D-1・D-2 完了（§3.2 のうち、D-4 で扱う `commands` → タブストアを除く）。D-3 完了（§3.4 の検査を `error` で導入）。次は D-4（タブストアの移動）
+- 状態: Phase 0・A・B・C-1・C-2・D-1〜D-4 完了（§3.2 の逆向きの依存はすべて解消し、§3.4 の検査を許可リストなしの `error` で導入）。次は D-5（機能間の残りの依存）
 
 ## 1. 目的
 
@@ -73,13 +73,13 @@ core/util
 | `features/tabs/ui/TabView.tsx` → `pages/*`（9 ページ） | 解消済み（`cb32daee`、`650c689b`）。`TabView`・`ContentArea`・`TabWindowHost`・`DetachedTabWindowContent` は `App` からしか使われない組み立て部品だったため、まとめて `view/browser/shell/` へ移した。props・context でページ一覧を渡す仕組みは不要になった |
 | `ui/ContextMenu`・`ui/FloatingPopup` → `features/popup/browser/use-popup-manager`（`usePopupCloseBehavior`） | 解消済み（`c90fd1b2`、`56c835ec`）。フックを `view/browser/hooks` へ移した |
 | `utils/utils.ts`（`export *`）・`utils/message-filter.ts` → `features/media/domain/*` | 解消済み（`f6157577`、`8cc79f92`、`5f1dee29`）。純粋関数を `core/util` へ移し、再エクスポートを外した |
-| `commands/*` → `features/tabs/browser/*`（タブストア） | タブストアを UI 部品層（`view/browser/state/tabs`）へ移して解消する |
+| `commands/*` → `features/tabs/browser/*`（タブストア） | 解消済み（D-4: `8496ef14`、`73cd33d3`）。タブストアを UI 部品層（`view/browser/state/tabs`）へ移した |
 | `components/{NavigationBar,BottomPanel,TitleBar,PageCountStatusItem}` → 各機能 | 解消済み（`257a23a0`、`6204bc2b`）。機能を組み合わせる枠なので、組み立て層（`view/browser/shell/`）へ移した。利用者は `App` と `shell/DetachedTabWindowContent` だけなので、ルール 5 とは衝突しない |
 | `types.ts` → `pages/settings/settings-types`（型のみ、D-2 の途中で発見） | 解消済み（`52f6bcfd`、`75d54cdf`）。`SettingsPageUiState` はタブの表示状態に保存される型なので、参照する `SettingsSectionId` と一緒に `view/browser/types.ts` へ定義を移し、`pages/settings` 側から参照する |
 
 ### 3.3 機能間で共有されているものの置き場所
 
-- **タブストア**（`use-tab-store`・`tab-store-actions`・`tab-store-selectors`・`tab-store-types`）は、アプリの外枠の状態として UI 部品層（`view/browser/state/tabs`）へ移す。タブの機能そのもの（`TabBar`・`TabContextMenu` など）は `features/tabs` に残す。`TabView` などの組み立て部品は D-2 で `shell/` へ移した。
+- **タブストア**（`use-tab-store`・`tab-store-actions`・`tab-store-selectors`・`tab-store-types`）は、アプリの外枠の状態として UI 部品層（`view/browser/state/tabs`）へ移した（D-4）。`tab-store-*` の全モジュール・`use-tab-view-scope`・`browser-session-storage` と、タブの自動更新フィールドを扱う純粋関数 `auto-refresh-pages`（元は `features/auto-refresh`）を一緒に移した。タブの機能そのもの（`TabBar`・`TabContextMenu` など）は `features/tabs` に残す。`TabView` などの組み立て部品は D-2 で `shell/` へ移した。
   - 機能間の依存の参照先で最も多い（`use-tab-store` 18 ファイル、`tab-store-actions` 7 ファイル）。
   - `tab-store-actions` → `view/browser/types` の依存も、同じ層の中の依存になる。
 - **NG・媒体の共有部品**（`use-ng-status`・`NgBadge`・`ResMediaGallery`・`ExternalImage`）は、Phase D の中で次のどちらかに決める。
@@ -92,7 +92,7 @@ core/util
 
 - `src/view/browser/{ui,hooks,utils,types,components,state,commands}/**` から `src/features/**`、`src/view/browser/pages/**`、`src/view/browser/shell/**`、`src/view/browser/App` を禁止する。
 - `src/features/**` から `src/view/browser/pages/**`、`src/view/browser/shell/**`、`src/view/browser/App` を禁止する。
-- `src/view/browser/commands/` の 2 ファイル（`browser-commands.ts`・`tab-command-runtime.ts`）とそのテストは、タブストアを参照しているため許可リストの override で除外している。D-4 で override を削除する。
+- 導入時は `src/view/browser/commands/` の 2 ファイルとそのテストを許可リストで除外していたが、D-4 でタブストアを移したため削除した（`f2651140`）。現在は許可リストなし。
 - 注意: CI（`.github/workflows/ci.yml`）は `scripts/check-changed-files.mjs` で、変更したファイルだけに `vp check` を実行する。新しく違反する import を足したファイルは必ず変更ファイルに含まれるので検出できるが、既存の違反を一覧したいときは `vp lint src/` を手元で実行する。
 
 ## 4. 検査の方法
@@ -205,7 +205,7 @@ core/util
 進捗:
 
 - 完了（D-1）: `useViewSurface` を `features/auxiliary-window` から `view/browser/hooks` へ移した。機能間の依存を 1 組（`auxiliary-window` への依存、9 機能・約 30 箇所）解消した。
-- 残り: 138 件・41 組（2026-10-15 時点）。
+- 残り: 45 行・24 組（D-4 の後、テストを除く。テストを含めると 61 行・24 組）。
 
 方針（2026-10-15 決定、§3 を参照）:
 
@@ -215,7 +215,7 @@ core/util
 
 1. D-2: §3.2 の逆向きの依存を、1 件ずつ別コミットで解消する。最初は D-1 と同じ要領の `usePopupCloseBehavior` の移動。
 2. D-3（完了、`36f7219a`）: §3.4 の検査を `error` で入れた。D-2 の後に残る `commands` の 2 ファイル（タブストアへの依存）は許可リストに入れ、D-4 で外す。
-3. D-4: タブストアを `view/browser/state/tabs` へ移す。
+3. D-4（完了）: タブストアを `view/browser/state/tabs` へ移し（`8496ef14`、`73cd33d3`）、§3.4 の許可リストを削除した（`f2651140`）。
 4. D-5: NG・媒体の共有部品の扱いを決め、機能間の残りの依存を 1 組ずつ解消する。
 
 ### Phase E: 循環 import と view → core

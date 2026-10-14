@@ -14,6 +14,7 @@
 - [Popup manager リファクタリング計画](plans/popup-manager-refactoring-plan.md)
 - [類似画像NG 実装計画](plans/similar-image-ng-plan.md)
 - [Browser UI / CSS の Radix UI 統一・分割計画](plans/ui-radix-refactoring-plan.md)
+- [モジュール境界の明確化計画](plans/module-boundaries-plan.md)
 
 ### Specs
 

@@ -41,7 +41,7 @@
 ```
 view/browser/{App, pages, shell}                     ← 組み立て層（features を import してよい）
    ↓
-features/<機能>   ── 機能どうしは一方向だけ、公開 API（index.ts）経由で依存してよい
+features/<機能>   ── 機能どうしは一方向だけ、公開モジュール経由で依存してよい
    ↓
 view/browser/{ui, hooks, utils, types, components, state, commands}   ← UI 部品層
    ↓
@@ -52,7 +52,7 @@ core/util
 
 1. `core/*` は `view/*`、`features/*` を import しない。
 2. `core/*` は `service-container` を値として import しない。型は `core/ports` に置く（Phase B で完了）。
-3. `features/<A>` は `features/<B>` の内部を import しない。`features/<B>` の公開 API（`src/features/<B>/index.ts`）だけを import する。機能どうしの依存は一方向にし、循環を作らない（2026-10-15 改定。§3.5）。
+3. `features/<A>` は `features/<B>` の内部を import しない。`features/<B>` の公開モジュール（`vite.config.ts` の一覧に載せたファイル）だけを import する。機能どうしの依存は一方向にし、循環を作らない（2026-10-15 改定。§3.5）。
 4. **`features` から UI 部品層への依存は認める。** UI 部品層は `features`・`pages`・`shell`・`App` を import しない。
 5. `features` は組み立て層（`pages`・`shell`・`App`）を import しない。
 6. `view/*` は `core/*` を直接 import しない。サービスコンテナ経由にする（段階的に適用）。
@@ -82,13 +82,20 @@ core/util
 - **タブストア**（`use-tab-store`・`tab-store-actions`・`tab-store-selectors`・`tab-store-types`）は、アプリの外枠の状態として UI 部品層（`view/browser/state/tabs`）へ移した（D-4）。`tab-store-*` の全モジュール・`use-tab-view-scope`・`browser-session-storage` と、タブの自動更新フィールドを扱う純粋関数 `auto-refresh-pages`（元は `features/auto-refresh`）を一緒に移した。タブの機能そのもの（`TabBar`・`TabContextMenu` など）は `features/tabs` に残す。`TabView` などの組み立て部品は D-2 で `shell/` へ移した。
   - 機能間の依存の参照先で最も多い（`use-tab-store` 18 ファイル、`tab-store-actions` 7 ファイル）。
   - `tab-store-actions` → `view/browser/types` の依存も、同じ層の中の依存になる。
-- **NG・媒体の共有部品**（`use-ng-status`・`NgBadge`・`ResMediaGallery`・`ExternalImage` など）は、UI 部品層へ移さず、各機能の公開 API（`index.ts`）から出す（2026-10-15 決定。§3.5）。
+- **NG・媒体の共有部品**（`use-ng-status`・`NgBadge`・`ResMediaGallery`・`ExternalImage` など）は、UI 部品層へ移さず、各機能の公開モジュールとして一覧に載せる（2026-10-15 決定。§3.5）。
 
 ### 3.5 機能どうしの依存（2026-10-15 決定）
 
 - 機能どうしの依存は認める。ただし次の 2 つを守る。
   - **一方向だけ**: 機能どうしの循環を作らない。
-  - **公開 API だけ**: 他の機能は `src/features/<x>`（`index.ts`）からだけ import する。`index.ts` は他の機能が使うものだけを出す。機能の中のファイルは、自分の `index.ts` を経由せず直接 import する（自己循環を避けるため）。
+  - **公開モジュールだけ**: 他の機能は、`vite.config.ts` の一覧（`FEATURE_PUBLIC_MODULES`）に載せたファイルだけを import する。npm パッケージの `package.json` の `exports` と同じ考え方で、一覧に無いファイルは機能の内部として扱い、lint で禁止する。
+- 公開 API を `index.ts`（まとめて再エクスポートするファイル）にしなかった理由（最初は `index.ts` で進め、次の問題が出たため 2026-10-15 に改めた）:
+  - `index.ts` は、export しているファイルをすべて読み込む。副作用を持つファイル（CSS の import、読み込み時に `window` を触る `service-container`、ブラウザ拡張でしか動かない `webextension-polyfill`）が混ざると、使わない側にも入る。
+  - 実際に起きたこと:
+    - `comment-overlay` の index から `OverlayStage` を出すと、その CSS が replay・browser の CSS にそれぞれ約 20KB 入った。
+    - `next-thread` の index を経由すると、純粋な関数だけを使う `comment-overlay` のテストが `window is not defined` で落ちた。
+    - `media` の index を経由すると、overlay.js が約 46KB 増え、テストが 7 ファイル落ちた。
+  - このプロジェクトには overlay・replay という別のエントリがあり、副作用を持つファイルも多いため、ファイル単位で読み込む今の形を保つ。
 - UI 部品層へ移さなかった理由:
   - 他の機能が使っているのは、見た目の部品だけではない。`media` の Imgur アップロード・アルバム取得・ビューアの状態、`ng` の状態のフックやスレタイ NG のダイアログなど、機能の中身そのものである。
   - UI 部品層へ移すと、`view/browser` に機能のロジックが集まり、`features/media`・`features/ng` がほぼ空になる。
@@ -240,8 +247,8 @@ archive-replay, popup, write, thread-list（最上位）
 3. D-4（完了）: タブストアを `view/browser/state/tabs` へ移し（`8496ef14`、`73cd33d3`）、§3.4 の許可リストを削除した（`f2651140`）。
 4. D-5: 機能どうしの依存を公開 API 経由にする（§3.5）。
    1. `OverlayStage.stories.tsx` を `archive-replay` 側へ移す。
-   2. 使われる側の機能ごとに `index.ts` を作り、他の機能からの import を付け替える（機能ごとに 1 コミット）。
-   3. 他の機能の中のファイルへの import を禁止する検査と、循環の検査を入れる。
+   2. 公開モジュールの一覧を `vite.config.ts` に置き、一覧に無いファイルへの import を禁止する検査を入れる。最初に作った `index.ts` は取り消す。
+   3. 循環の検査を入れる。
 
 ### Phase E: 循環 import と view → core
 

@@ -195,6 +195,11 @@ describe("サービスコンテナの初期化", () => {
     expect(mocks.listLogs).toHaveBeenCalledWith(0, 10);
     await container.threadLog.deleteLogs();
     expect(mocks.deleteLogs).toHaveBeenCalled();
+    // 開いた板の記録は、登録した config へ書き込む（取得確認済みの独自ホストとして保存させる）。
+    container.openedBoards.upsertOpenedBoardEntry("https://example.com/board/", "板", 1, true);
+    await vi.waitFor(() =>
+      expect(mocks.configSet).toHaveBeenCalledWith("opened_board_entries", expect.any(String)),
+    );
   });
 
   it("bookmark_id更新をEntryListへ渡す", async () => {

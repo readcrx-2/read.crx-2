@@ -1,3 +1,4 @@
+import type { createOpenedBoards } from "src/core/board/OpenedBoards";
 import type * as HistoryModule from "src/core/history/History";
 import type * as WriteHistoryModule from "src/core/history/WriteHistory";
 import type {
@@ -66,6 +67,12 @@ export type IThreadLogService = Pick<
   "listLogs" | "searchLogsPage" | "deleteLogs" | "getLogArchiveRecords" | "replaceLogArchiveRecords"
 >;
 
+/** 開いた板の記録への書き込み（Phase E、計画書 §3.6）。読み取り用の parseOpenedBoardEntries は純粋なので直接使う。 */
+export type IOpenedBoardsService = Pick<
+  ReturnType<typeof createOpenedBoards>,
+  "upsertOpenedBoardEntry"
+>;
+
 export interface IServiceContainer {
   config: IConfig;
   cache: ICacheService;
@@ -82,4 +89,5 @@ export interface IServiceContainer {
   history: IHistoryService;
   writeHistory: IWriteHistoryService;
   threadLog: IThreadLogService;
+  openedBoards: IOpenedBoardsService;
 }

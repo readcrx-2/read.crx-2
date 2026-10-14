@@ -6,6 +6,7 @@ import Notification from "src/app/Notification";
 import { escapeHtml, safeHref } from "src/app/Util";
 import { BBSMenuModel } from "src/core/board/BBSMenuModel";
 import { createBoardService } from "src/core/board/BoardService";
+import { createOpenedBoards } from "src/core/board/OpenedBoards";
 import Bookmark from "src/core/bookmark/Bookmark";
 import type { ComparableReadState } from "src/core/bookmark/read-state-compare";
 import { isNewerReadState } from "src/core/bookmark/read-state-compare";
@@ -282,6 +283,8 @@ export function setupContainer(): void {
     getAll: WriteHistory.getAll,
     clear: WriteHistory.clear,
   };
+  // config は上で登録した container.config を使う（core の既定のインスタンスと同じ設定を見る）。
+  container.openedBoards = createOpenedBoards(container);
   // 静的メソッドを切り離して渡すと this が外れるため、Cache を通して呼ぶ関数で包む。
   container.threadLog = {
     listLogs: (...args) => Cache.listLogs(...args),

@@ -1,6 +1,5 @@
 import type { MutableRefObject } from "react";
 import { useCallback, useEffect, useRef, useState } from "react";
-import { upsertOpenedBoardEntry } from "src/core/board/OpenedBoards";
 import {
   getThreadListCache,
   setThreadListCache,
@@ -59,7 +58,7 @@ export function useThreadListData({
           visitedBoardRef.current?.url === boardUrl
             ? visitedBoardRef.current.lastVisited
             : startedAt;
-        upsertOpenedBoardEntry(
+        container.openedBoards.upsertOpenedBoardEntry(
           boardUrl,
           resolvedBoardTitlesRef.current.get(boardUrl) ?? null,
           visitedAt,

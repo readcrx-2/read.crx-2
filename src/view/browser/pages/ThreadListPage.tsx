@@ -1,7 +1,6 @@
 import { ChURL } from "packages/chlib/src/index";
 import React, { type RefObject, useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { ask as askBoardTitle } from "src/core/board/BoardTitleSolver.js";
-import { upsertOpenedBoardEntry } from "src/core/board/OpenedBoards";
 import {
   BOARD_AUTO_REFRESH_CONFIG_KEY,
   MIN_BOARD_AUTO_REFRESH_MS,
@@ -257,14 +256,18 @@ export const ThreadListPage: React.FC<Props> = ({
   }, [page.boardUrl, sortPreference]);
 
   useEffect(() => {
-    upsertOpenedBoardEntry(page.boardUrl, initialBoardTitle);
+    container.openedBoards.upsertOpenedBoardEntry(page.boardUrl, initialBoardTitle);
   }, [initialBoardTitle, page.boardUrl]);
 
   useEffect(() => {
     // スレを開かず板だけを開いた場合や既存タブの再選択も記録する。板名解決では日時を進めない。
     if (visitedBoardRef.current?.url !== page.boardUrl || isActive) {
       visitedBoardRef.current = { url: page.boardUrl, lastVisited: Date.now() };
-      upsertOpenedBoardEntry(page.boardUrl, null, visitedBoardRef.current.lastVisited);
+      container.openedBoards.upsertOpenedBoardEntry(
+        page.boardUrl,
+        null,
+        visitedBoardRef.current.lastVisited,
+      );
     }
   }, [isActive, page.boardUrl]);
 
@@ -286,7 +289,7 @@ export const ThreadListPage: React.FC<Props> = ({
           resolvedBoardTitlesRef.current.set(page.boardUrl, title);
           // タブの再描画を保存の前提にせず、遷移後に届いた名前も元の板へ残す。
           // 板名解決の遅延では閲覧日時を進めず、板を開いた時刻をそのまま保つ。
-          upsertOpenedBoardEntry(page.boardUrl, title);
+          container.openedBoards.upsertOpenedBoardEntry(page.boardUrl, title);
         }
         if (!cancelled && title) {
           dispatch(tabActions.updateTitleForTab(tabId, title, page.boardUrl));

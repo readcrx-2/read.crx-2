@@ -3,6 +3,7 @@ import "@testing-library/jest-dom/vitest";
 import { act, cleanup, fireEvent, render, screen, waitFor } from "@testing-library/react";
 import { createRef } from "react";
 import { ask as askBoardTitle } from "src/core/board/BoardTitleSolver.js";
+import { createOpenedBoards } from "src/core/board/OpenedBoards";
 import {
   type DisplayThread,
   THREAD_LIST_COLUMNS,
@@ -260,6 +261,8 @@ describe("ThreadListPage", () => {
       ready: (callback: () => void) => callback(),
     };
     // ジェネリックな実サービスに対し、このテストで扱うconfig更新イベントだけに限定する。
+    // 開いた板の保存は、テストごとに差し替える config をそのまま読む本物の実装で確かめる。
+    serviceContainer.openedBoards = createOpenedBoards(serviceContainer);
     serviceContainer.message = {
       send: vi.fn(),
       on: vi.fn((type: string, handler: (payload: { key?: string }) => void) => {

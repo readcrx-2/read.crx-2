@@ -9,6 +9,7 @@ import {
   IMessage,
   INGService,
   INotificationService,
+  IOpenedBoardsService,
   IReadStateService,
   IServiceContainer,
   IThreadLogService,
@@ -40,6 +41,7 @@ interface ServiceContainerImpl extends IServiceContainer {
   _history: IHistoryService | undefined;
   _writeHistory: IWriteHistoryService | undefined;
   _threadLog: IThreadLogService | undefined;
+  _openedBoards: IOpenedBoardsService | undefined;
 }
 
 if (!globalObj.__ServiceContainer) {
@@ -59,6 +61,7 @@ if (!globalObj.__ServiceContainer) {
     _history: undefined,
     _writeHistory: undefined,
     _threadLog: undefined,
+    _openedBoards: undefined,
 
     get config(): IConfig {
       if (!this._config) throw new Error("Config service not registered");
@@ -178,6 +181,14 @@ if (!globalObj.__ServiceContainer) {
     },
     set threadLog(value: IThreadLogService) {
       this._threadLog = value;
+    },
+
+    get openedBoards(): IOpenedBoardsService {
+      if (!this._openedBoards) throw new Error("OpenedBoards service not registered");
+      return this._openedBoards;
+    },
+    set openedBoards(value: IOpenedBoardsService) {
+      this._openedBoards = value;
     },
   };
   globalObj.__ServiceContainer = impl;

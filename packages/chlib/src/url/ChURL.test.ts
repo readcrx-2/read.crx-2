@@ -1,4 +1,5 @@
 // @vitest-environment node
+import { fc, test as propertyTest } from "@fast-check/vitest";
 import { describe, expect, it } from "vite-plus/test";
 
 import { ChURL } from "./ChURL";
@@ -10,7 +11,33 @@ function urlWithHost(hostname: string, path: string): string {
   return url.href;
 }
 
+const pathSegmentArbitrary = fc
+  .array(fc.constantFrom("a", "z", "0", "9", "_", "-"), { minLength: 1, maxLength: 16 })
+  .map((characters) => characters.join(""));
+
 describe("ChURL", () => {
+  propertyTest.prop([
+    fc.constantFrom("bbs.example.test", HOSTNAME.NEW_5CH, HOSTNAME.OLD_2CH, HOSTNAME.EDDIBB),
+    pathSegmentArbitrary,
+    fc.integer({ min: 1, max: 9_999_999_999 }).map(String),
+    fc.integer({ min: 1, max: 1000 }),
+    fc.boolean(),
+  ])(
+    "正規化済みスレッドURLを再解析しても結果が変わらない",
+    (hostname, boardKey, threadId, resNumber, isDatLink) => {
+      const path = isDatLink
+        ? `/${boardKey}/dat/${threadId}.dat`
+        : `/test/read.cgi/${boardKey}/${threadId}/${resNumber}`;
+      const normalized = new ChURL(`https://${hostname}${path}?view=compact#res=${resNumber}`);
+      const reparsed = new ChURL(normalized.href);
+
+      expect(reparsed.href).toBe(normalized.href);
+      expect(reparsed.type).toBe("thread");
+      expect(reparsed.getBoardName()).toBe(boardKey);
+      expect(reparsed.getThreadId()).toBe(threadId);
+    },
+  );
+
   it("任意ドメインのdat直リンクをスレッドURLとして正規化する", () => {
     const url = new ChURL("https://bbs.example.test/flaming/dat/1000000001.dat");
 

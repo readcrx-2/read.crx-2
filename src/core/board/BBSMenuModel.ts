@@ -8,7 +8,7 @@ import { OtherBoardsCollector } from "src/core/board/OtherBoardsCollector";
 import * as ReadState from "src/core/bookmark/ReadState.js";
 import * as History from "src/core/history/History";
 import type { IBBSMenuResult } from "src/core/ports/bbs-menu";
-import { corePorts } from "src/core/ports/registry";
+import type { CorePorts } from "src/core/ports/registry";
 import { getTauriRepositories, isTauriRuntime } from "src/core/storage/TauriDrizzleBridge";
 
 const logger = createLogger("BBSMenuModel");
@@ -25,6 +25,9 @@ export type BBSMenuData = IBBSMenuResult;
  * HTTP通信・キャッシュ管理は BBSMenuFetcher、
  * 未登録板の収集は OtherBoardsCollector が担当する。
  */
+/** 板一覧の取得に必要なサービス。呼び出し側が渡す（C-2）。 */
+export type BBSMenuModelDeps = Pick<CorePorts, "cache" | "config" | "toast">;
+
 export class BBSMenuModel {
   private _bbsmenuOption: Set<string> | null = null;
   private _updatingPromise: Promise<BBSMenuData> | null = null;
@@ -36,9 +39,9 @@ export class BBSMenuModel {
   private _fetcher: BBSMenuFetcher;
   private _collector: OtherBoardsCollector;
 
-  constructor() {
+  constructor(private readonly deps: BBSMenuModelDeps) {
     this._fetcher = new BBSMenuFetcher({
-      getCache: (url) => corePorts.cache.getCache(url),
+      getCache: (url) => this.deps.cache.getCache(url),
       getExcludeTslds: () => this._getExcludeTslds(),
     });
 
@@ -50,7 +53,7 @@ export class BBSMenuModel {
         // 外部サイトの旧記録は除き、スレ一覧の取得確認済みの板はホストを列挙せずに残す。
         // 板一覧はURLと板名だけを使うが、同じ保存レコードには閲覧日時なども含まれる。
         // 読み取り用の射影を書き戻すとF5後に日時が消えるため、ここでは永続データを変更しない。
-        parseOpenedBoardEntries(corePorts.config.get(OPENED_BOARDS_CONFIG_KEY)).map(
+        parseOpenedBoardEntries(this.deps.config.get(OPENED_BOARDS_CONFIG_KEY)).map(
           ({ url, title, subjectVerified }) => ({
             url,
             ...(title !== undefined ? { title } : {}),
@@ -60,7 +63,7 @@ export class BBSMenuModel {
       getAllReadStates: () => ReadState.getAll(),
       getUniqueHistory: () => History.getUnique(),
       getCachedBoardTitles: () => {
-        const str = corePorts.config.get("other_board_titles");
+        const str = this.deps.config.get("other_board_titles");
         return str ? (JSON.parse(str) as Record<string, string>) : {};
       },
     });
@@ -72,7 +75,7 @@ export class BBSMenuModel {
    */
   private _getExcludeTslds(forceReload = false): Set<string> {
     if (!this._bbsmenuOption || forceReload) {
-      const optionStr = corePorts.config.get("bbsmenu_option") ?? "";
+      const optionStr = this.deps.config.get("bbsmenu_option") ?? "";
       this._bbsmenuOption = BBSMenuHtmlParser.parseExcludeOptions(optionStr);
     }
     return this._bbsmenuOption;
@@ -92,7 +95,7 @@ export class BBSMenuModel {
       const cached = await this._loadFromSQLite();
       if (cached) return cached;
     }
-    const urls = (corePorts.config.get("bbsmenu") ?? "")
+    const urls = (this.deps.config.get("bbsmenu") ?? "")
       .split("\n")
       .map((url) => url.trim())
       .filter((url) => url !== "" && !url.startsWith("//"));
@@ -125,7 +128,7 @@ export class BBSMenuModel {
 
     const menus: ParsedBBSMenu[] = [];
     // 設定未保存時 (null) は URL なしとして扱う。
-    const bbsmenuUrls = (corePorts.config.get("bbsmenu") ?? "").split("\n");
+    const bbsmenuUrls = (this.deps.config.get("bbsmenu") ?? "").split("\n");
 
     for (const url of bbsmenuUrls) {
       if (url === "" || url.startsWith("//")) continue;
@@ -134,7 +137,7 @@ export class BBSMenuModel {
         menus.push(menu);
       } catch (error) {
         console.error(error);
-        corePorts.toast.notify(
+        this.deps.toast.notify(
           `板一覧の取得に失敗しました。(<a href="${url}" target="_blank">${url}</a>)`,
           { html: true, backgroundColor: "red" },
         );

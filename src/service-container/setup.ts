@@ -182,7 +182,7 @@ export function setupContainer(): void {
   // BBSMenu Service Adapter
   // 変更理由: 以前は src/core/board/BBSMenu.js のシングルトンを各所が直接 import しており、
   // container.bbsMenu と入口が分かれていた。板一覧の状態はここで作る1つのモデルだけが持つ。
-  const bbsMenuModel = new BBSMenuModel();
+  const bbsMenuModel = new BBSMenuModel(container);
   const bbsMenuServiceAdapter: IBBSMenuService = {
     get: (forceReload?: boolean) => bbsMenuModel.get(forceReload),
     getCached: () => bbsMenuModel.getCached(),

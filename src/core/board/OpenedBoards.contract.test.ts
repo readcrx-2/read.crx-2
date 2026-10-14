@@ -1,5 +1,6 @@
 import { BBSMenuModel } from "src/core/board/BBSMenuModel";
 import { parseOpenedBoardEntries } from "src/core/board/OpenedBoards";
+import { corePorts } from "src/core/ports/registry";
 import { beforeEach, describe, expect, it, vi } from "vite-plus/test";
 
 const { config } = vi.hoisted(() => ({ config: new Map<string, string>() }));
@@ -25,7 +26,7 @@ describe("独自ホストの取得確認と板履歴の読み取り", () => {
     config.set("opened_board_entries", saved);
     for (let restart = 0; restart < 2; restart += 1) {
       expect(parseOpenedBoardEntries(saved)).toEqual([board]);
-      const menus = await new BBSMenuModel().fetchAll();
+      const menus = await new BBSMenuModel(corePorts).fetchAll();
       expect(menus[0].categories[0].boards).toEqual([
         { url: board.url, name: board.title, subjectVerified: true },
       ]);
@@ -41,7 +42,7 @@ describe("独自ホストの取得確認と板履歴の読み取り", () => {
       ]);
       config.set("opened_board_entries", saved);
       expect(parseOpenedBoardEntries(saved)).toEqual([]);
-      expect(await new BBSMenuModel().fetchAll()).toEqual([]);
+      expect(await new BBSMenuModel(corePorts).fetchAll()).toEqual([]);
     },
   );
 });

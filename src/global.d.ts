@@ -2,6 +2,8 @@
 export {};
 
 declare global {
+  const __CHLENS_TAURI_BUILD__: boolean;
+
   interface Window {
     container: import("./service-container/interfaces").IServiceContainer;
   }

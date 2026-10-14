@@ -460,7 +460,7 @@ export function useWrite(threadUrl: string, options: UseWriteOptions = {}): UseW
 
       setStatus("submitting");
       setStatusText("書き込み中...");
-      const useTauriHttp = isTauriRuntime();
+      const useTauriHttp = __CHLENS_TAURI_BUILD__ && isTauriRuntime();
       if (!useTauriHttp) {
         armSubmitWatchdog();
       }
@@ -476,7 +476,7 @@ export function useWrite(threadUrl: string, options: UseWriteOptions = {}): UseW
         return;
       }
 
-      if (useTauriHttp) {
+      if (__CHLENS_TAURI_BUILD__ && useTauriHttp) {
         try {
           const { getWriteFormFields } = await import("src/app/platform/tauri/WriteForm");
           handleWriteResult(
@@ -573,23 +573,31 @@ export function useWrite(threadUrl: string, options: UseWriteOptions = {}): UseW
       setStatus("submitting");
       setStatusText("確認ページを送信中...");
 
-      try {
-        handleWriteResult(
-          await submitTauriWrite(
-            {
-              action: form.action,
-              charset: page.charset,
-              fields: submission.fields,
-              referer: page.sourceUrl,
-            },
-            page.expectedAction,
-          ),
-        );
-      } catch (error) {
-        console.error("Tauri版の確認ページ送信に失敗しました:", error);
+      if (__CHLENS_TAURI_BUILD__) {
+        try {
+          handleWriteResult(
+            await submitTauriWrite(
+              {
+                action: form.action,
+                charset: page.charset,
+                fields: submission.fields,
+                referer: page.sourceUrl,
+              },
+              page.expectedAction,
+            ),
+          );
+        } catch (error) {
+          console.error("Tauri版の確認ページ送信に失敗しました:", error);
+          handleWriteResult({
+            type: "error",
+            message: error instanceof Error ? error.message : String(error),
+          });
+        }
+      } else {
+        console.error("Chrome版ではTauri専用の確認送信を実行できません");
         handleWriteResult({
           type: "error",
-          message: error instanceof Error ? error.message : String(error),
+          message: "確認ページの送信に失敗しました",
         });
       }
     },

@@ -157,13 +157,26 @@ core/util
 - `jsutil.searchNextThread` は `Board.get` に `corePorts` を渡している。`jsutil` は互換用のファサードなので、呼び出し元を含めて別の段階で扱う。
 - `NG` の `toast`、`Board` が通知に使う `message`、`BBSMenuModel` の `toast` は UI 寄りの処理である。`features` か `app` へ移す（後半の作業）。
 
-### Phase D: features 間の依存を減らす
+### Phase D: features 間の依存を減らす（進行中）
 
 目的: `features` 同士の直接 import を 0 にする。
 
-1. 計測結果の件数が多い組から着手する（`tabs → auto-refresh`、`archive-replay → comment-overlay`、`tabs → auxiliary-window` など）。
-2. 共有が必要な部分は `core` か `app` へ移す。UI の共有が必要なら `view/browser/components` に置く。
-3. 1 組ずつ別コミットにする。
+進捗:
+
+- 完了（D-1）: `useViewSurface` を `features/auxiliary-window` から `view/browser/hooks` へ移した。機能間の依存を 1 組（`auxiliary-window` への依存、9 機能・約 30 箇所）解消した。
+- 残り: 138 件・41 組（2026-10-15 時点）。
+
+判断が必要な点（D の残りの前提）:
+
+- 残りの多くは次の 3 種類の共有である。
+  - `tabs` のタブ状態（`use-tab-store`・`tab-store-actions`）。ほぼ全機能が参照する。
+  - `media` の表示部品（`ResMediaGallery`・`ExternalImage`・`url-media`）。
+  - `ng` の状態と表示部品（`use-ng-status`・`NgBadge`）。
+- 計画書の §3 では `view` は `features` の上にあり、`features` から `view` へは依存しない。しかし既存コードでは `tab-store-actions` が `view/browser/types` を参照しており、D-1 でも `features` → `view/browser/hooks` の依存が生じた。
+- 方針の候補:
+  1. `view/browser` の汎用部分（hooks・components・types）は共有層として、`features` からの参照を許す。`view/browser/pages` と `App` だけを最上位とする。循環を避けるため、`view/browser` 配下が `features` を import しないことを検査で守る。
+  2. 共有の状態・部品を `src/app` か `core` へ移し、`features` と `view` の両方から参照させる。タブ状態は `app` に置くと、`core` と `features` の間の依存が増えるため注意する。
+- 方針を決めてから、残りの組を 1 組ずつ進める。
 
 ### Phase E: 循環 import と view → core
 

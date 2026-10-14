@@ -1,10 +1,72 @@
 // @vitest-environment node
+import { fc, test as propertyTest } from "@fast-check/vitest";
 import { describe, expect, it } from "vite-plus/test";
 
 import { ThreadParser } from "../parser/ThreadParser";
 import { ChURL } from "../url/ChURL";
 
+const datFieldCharacters = ["a", "Z", "あ", "猫", "0", " ", "_", "-"] as const;
+const datFieldArbitrary = fc
+  .array(fc.constantFrom(...datFieldCharacters), { maxLength: 16 })
+  .map((characters) => characters.join(""));
+const datRowArbitrary = fc.record({
+  name: datFieldArbitrary,
+  mail: datFieldArbitrary,
+  other: datFieldArbitrary,
+  message: datFieldArbitrary,
+  title: datFieldArbitrary,
+});
+
+type DatRow = {
+  name: string;
+  mail: string;
+  other: string;
+  message: string;
+  title: string;
+};
+
+function createDatText(rows: DatRow[]): string {
+  return rows
+    .map(
+      ({ name, mail, other, message, title }) =>
+        `${name}<>${mail}<>${other}<>${message}<>${title}<>`,
+    )
+    .join("\n");
+}
+
 describe("ThreadParser", () => {
+  propertyTest.prop([fc.array(datRowArbitrary, { minLength: 1, maxLength: 8 })])(
+    "生成したdatレスの内容と順序を保つ",
+    (rows) => {
+      const url = new ChURL("https://egg.5ch.io/test/read.cgi/software/1000000001/");
+      const result = ThreadParser.parse(url, createDatText(rows));
+
+      expect(result.title).toBe(rows[0].title);
+      expect(result.posts).toHaveLength(rows.length);
+      rows.forEach((row, index) => {
+        expect(result.posts[index]).toMatchObject({
+          number: index + 1,
+          name: row.name.trim() ? row.name : "名無し",
+          mail: row.mail,
+          other: row.other,
+          message: row.message,
+        });
+      });
+    },
+  );
+
+  propertyTest.prop([
+    fc.array(datRowArbitrary, { minLength: 1, maxLength: 8 }),
+    fc.integer({ min: 0, max: 3 }),
+  ])("先頭の空行数が変わっても解析結果を保つ", (rows, leadingBlankLines) => {
+    const url = new ChURL("https://egg.5ch.io/test/read.cgi/software/1000000001/");
+    const dat = createDatText(rows);
+
+    expect(ThreadParser.parse(url, "\n".repeat(leadingBlankLines) + dat)).toEqual(
+      ThreadParser.parse(url, dat),
+    );
+  });
+
   it("メタデータ付きの2ch形式datを解析する", () => {
     const url = new ChURL("https://egg.5ch.io/test/read.cgi/software/1000000001/");
     const dat =

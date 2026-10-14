@@ -348,7 +348,8 @@ export const parseChThread = (text: string): ParsedThread | null => {
 
     const sp = line.split("<>");
     if (sp.length >= 4) {
-      if (key === 0) {
+      // 先頭の空行は読み飛ばすため、実際に解析する最初のレスからスレタイを取る。
+      if (thread.res.length === 0) {
         thread.title = decodeCharReference(sp[4]);
       }
 

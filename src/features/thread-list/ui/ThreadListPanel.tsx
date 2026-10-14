@@ -4,9 +4,9 @@ import {
   readBookmarkStatus,
   useBookmarkRevision,
 } from "src/features/bookmark/browser/use-bookmark-revision";
-import { useNgStatus } from "src/features/ng/browser/use-ng-status";
-import { useThreadTitleNgDialog } from "src/features/ng/browser/use-thread-title-ng-dialog";
-import { ThreadTitleNgDialog } from "src/features/ng/ui/ThreadTitleNgDialog";
+import { useNgStatus } from "src/features/ng";
+import { useThreadTitleNgDialog } from "src/features/ng";
+import { ThreadTitleNgDialog } from "src/features/ng";
 import { useTabCommandRunner } from "src/features/tabs/browser/use-tab-command-runner";
 import { createThreadContextMenuItems } from "src/features/thread/ui/thread-context-menu-items";
 import {

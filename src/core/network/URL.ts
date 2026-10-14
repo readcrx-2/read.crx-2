@@ -3,9 +3,6 @@ import { Request } from "src/core/network/HTTP";
 import type { IConfig } from "src/core/ports/services";
 import Cache from "src/core/storage/Cache.js";
 
-// 旧来のapp.URL.URL公開APIだけは同じ実装を指す別名として保ち、新しい呼び出しはChURLを直接使う。
-export { ChURL as URL };
-
 export function fix(urlStr: string): string {
   const url = new ChURL(urlStr);
   url.hash = "";
@@ -19,9 +16,6 @@ export function tsld(urlStr: string): string {
 export function getDomain(urlStr: string): string {
   return new ChURL(urlStr).hostname;
 }
-
-// window.app.URL の公開 API を保つため、葉のモジュールへ移したプロトコル判定を再エクスポートする。
-export { getProtocol, isHttps } from "src/core/network/url-protocol";
 
 export function setProtocol(urlStr: string, protocol: string): string {
   const url = new ChURL(urlStr);

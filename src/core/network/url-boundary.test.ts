@@ -39,8 +39,10 @@ describe("掲示板URLの依存境界", () => {
   it("coreのURLモジュールに独自URLクラスを定義しない", () => {
     const source = readFileSync(resolve(sourceRoot, "core/network/URL.ts"), "utf8");
 
-    // 旧window.app公開APIはChURLの別名で保ち、二重実装による仕様差を防ぐ。
+    // URL の型は ChURL だけにし、二重実装による仕様差を防ぐ。
+    // 以前は window.app.URL のために ChURL を URL という別名でも公開していたが、
+    // legacy-window-app-plan の Phase 4 で window.app をなくしたため別名も外した。
     expect(source).not.toMatch(/\bclass\s+URL\b/);
-    expect(source).toMatch(/export\s*\{\s*ChURL\s+as\s+URL\s*\}/);
+    expect(source).not.toMatch(/\bas\s+URL\b/);
   });
 });

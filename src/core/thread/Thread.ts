@@ -21,9 +21,9 @@ import {
 } from "packages/chlib/src/index";
 import { platform } from "src/app/platform";
 import { isMissingFromSubject, shouldForceSubjectCheck } from "src/core/board/SubjectPresence";
+import { corePorts } from "src/core/ports/registry";
 import type Cache from "src/core/storage/Cache.js";
 import { chServerMoveDetect } from "src/core/util/jsutil.js";
-import { container } from "src/service-container/index";
 
 // ---------------------------------------------------------------------------
 // Internal types
@@ -126,7 +126,7 @@ export default class Thread {
     progress: () => void = () => {},
     { throttleSubjectCheck = false }: { throttleSubjectCheck?: boolean } = {},
   ): Promise<void> {
-    const format2chnet = container.config.get("format_2chnet") as string | null | undefined;
+    const format2chnet = corePorts.config.get("format_2chnet") as string | null | undefined;
     const xhrInfo = getThreadXhrInfo(this.url, format2chnet);
 
     if (!xhrInfo) {
@@ -136,7 +136,7 @@ export default class Thread {
 
     const { path: xhrBasePath, charset: xhrCharset } = xhrInfo;
     const isHtml = isHtmlThread(this.url, format2chnet);
-    const cache = container.cache.getCache(xhrBasePath) as Cache;
+    const cache = corePorts.cache.getCache(xhrBasePath) as Cache;
 
     const { hasCache, needFetch } = await this._prepareCache(
       cache,
@@ -156,7 +156,7 @@ export default class Thread {
     // 新着判定の基準。キャッシュがない初回取得は比較対象がないため0件として扱う。
     const previousResCount = hasCache ? (cacheParsed?.res.length ?? cache.resLength ?? 0) : 0;
     // Bookmark.expiredも既存データとして残っているため、古いキャッシュからも復元する。
-    this.expired = this.expired || container.bookmark.get(this.url.url.href)?.expired === true;
+    this.expired = this.expired || corePorts.bookmark.get(this.url.url.href)?.expired === true;
 
     try {
       // --- フェッチ ---
@@ -308,11 +308,11 @@ export default class Thread {
       }
       // ブックマーク更新は成否に関わらず実行する
       if (thread != null) {
-        container.bookmark.updateResCount(this.url.url.href, thread.res.length);
+        corePorts.bookmark.updateResCount(this.url.url.href, thread.res.length);
       }
       // サーバーシグナル(203) に加え、スレ一覧不在による dat 落ち判定でも expired 更新を行う
       if (response?.status === 203 || this.expired) {
-        container.bookmark.updateExpired(this.url.url.href, true);
+        corePorts.bookmark.updateExpired(this.url.url.href, true);
       }
     }
 
@@ -333,7 +333,7 @@ export default class Thread {
     try {
       // getCachedResCount は文字列URLを受け取る契約。ChURL は toString() を持たないため、
       // インスタンスをそのまま渡すと "[object Object]" が URL として解釈され常に失敗していた。
-      const cachedInfo = (await container.board.getCachedResCount(this.url.url.href, {
+      const cachedInfo = (await corePorts.board.getCachedResCount(this.url.url.href, {
         forceUpdate,
       })) as CachedResCount;
       return { status: "success", cachedInfo };
@@ -358,7 +358,7 @@ export default class Thread {
     forceUpdate: boolean | undefined,
     progress: () => void,
   ): Promise<PrepareResult> {
-    this.expired = container.bookmark.get(this.url.url.href)?.expired === true;
+    this.expired = corePorts.bookmark.get(this.url.url.href)?.expired === true;
     try {
       await cache.get();
       const cachedParsed = cache.parsed as Partial<ParsedThread> | null;
@@ -375,7 +375,7 @@ export default class Thread {
         return { hasCache: true, needFetch: false };
       }
       // キャッシュはあるが期限切れ: 現在のキャッシュをまず表示する
-      await container.util.defer();
+      await corePorts.util.defer();
       const tmp =
         cache.parsed != null
           ? this._getCachedParsedThread(cache)
@@ -489,7 +489,7 @@ export default class Thread {
         readcgiVer = detectedVer ?? readcgiVer;
 
         if (thread.expired) {
-          container.bookmark.updateExpired(this.url.url.href, true);
+          corePorts.bookmark.updateExpired(this.url.url.href, true);
         }
       }
 
@@ -578,7 +578,7 @@ export default class Thread {
 
   /** ログ一覧へ更新を通知する（一覧側で再読込させる）。 */
   private _notifyLogUpdated(): void {
-    container.message.send("log_updated", { url: this.url.url.href });
+    corePorts.message.send("log_updated", { url: this.url.url.href });
   }
 
   /**
@@ -641,8 +641,8 @@ export default class Thread {
       const newUrl = new ChURL(movedUrl);
       // 変更理由: 旧表示URLは移転先ホストだけを差し替え、元の通信schemeを維持していた。
       newUrl.protocol = this.url.protocol;
-      const href = container.util.escapeHtml(container.util.safeHref(newUrl.href));
-      const label = container.util.escapeHtml(newUrl.href);
+      const href = corePorts.util.escapeHtml(corePorts.util.safeHref(newUrl.href));
+      const label = corePorts.util.escapeHtml(newUrl.href);
       message += `スレッドの読み込みに失敗しました。\nサーバーが移転している可能性が有ります\n(<a href="${href}" class="open_in_rcrx">${label}</a>)`;
     } catch {
       if (response.status === 203) {
@@ -681,8 +681,8 @@ export default class Thread {
       case "STORAGE IN": {
         // 変更理由: 過去ログURLのパス形式はchlibで一元管理し、表示側は変換結果だけを使う。
         const newUrl = toArchiveThreadUrl(this.url.url.href) ?? this.url.url.href;
-        const href = container.util.escapeHtml(container.util.safeHref(newUrl));
-        const label = container.util.escapeHtml(newUrl);
+        const href = corePorts.util.escapeHtml(corePorts.util.safeHref(newUrl));
+        const label = corePorts.util.escapeHtml(newUrl);
         message += `\n過去ログが存在します\n(<a href="${href}" class="open_in_rcrx">${label}</a>)`;
         break;
       }
@@ -710,12 +710,12 @@ export default class Thread {
   // -------------------------------------------------------------------------
 
   static _getXhrInfo(url: ChURL): XhrInfo | null {
-    return getThreadXhrInfo(url, container.config.get("format_2chnet"));
+    return getThreadXhrInfo(url, corePorts.config.get("format_2chnet"));
   }
 
   static parse(url: ChURL, text: string, resLength?: number): ParsedThread | null {
     return parseThread(url, text, {
-      format2chnet: container.config.get("format_2chnet"),
+      format2chnet: corePorts.config.get("format_2chnet"),
       resLength,
     });
   }

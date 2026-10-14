@@ -11,6 +11,7 @@ import type { ComparableReadState } from "src/core/bookmark/read-state-compare";
 import { isNewerReadState } from "src/core/bookmark/read-state-compare";
 import * as ReadState from "src/core/bookmark/ReadState";
 import * as NG from "src/core/ng/NG";
+import { installCorePorts } from "src/core/ports/registry";
 import Cache from "src/core/storage/Cache";
 import ThreadService from "src/core/thread/ThreadService";
 import { configInstance } from "src/service-container/config-instance";
@@ -261,4 +262,7 @@ export function setupContainer(): void {
   container.toast = toastServiceAdapter;
   container.notification = notificationServiceAdapter;
   container.ng = ngServiceAdapter;
+
+  // core は container を import せず、ここで登録されたサービスだけを使う（Phase C-1）。
+  installCorePorts(container);
 }

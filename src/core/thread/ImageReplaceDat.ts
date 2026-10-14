@@ -1,4 +1,4 @@
-import { container } from "src/service-container/index";
+import { corePorts } from "src/core/ports/registry";
 
 // 移行理由: 設定の保存形式と処理順を保ったまま、実行時エントリと返却値の形を型で固定する。
 interface DatEntry {
@@ -34,7 +34,7 @@ const _setupReg = (dat: Set<DatEntry>): void => {
       entry.baseUrlReg = new RegExp(entry.baseUrl, "i");
     } catch (error) {
       console.error("[ImageReplaceDat] 正規表現の読み込みに失敗しました:", error);
-      container.message.send("notify", {
+      corePorts.message.send("notify", {
         message: `\
 ImageViewURLReplace.datの一致URLの正規表現(${entry.baseUrl})を読み込むのに失敗しました
 この行は無効化されます\
@@ -49,22 +49,22 @@ ImageViewURLReplace.datの一致URLの正規表現(${entry.baseUrl})を読み込
 const _config = {
   get(): unknown {
     // 設定未保存時 (null) は従来の JSON.parse(null) と同じく null を返す。
-    return JSON.parse(container.config.get(_CONFIG_NAME) ?? "null") as unknown;
+    return JSON.parse(corePorts.config.get(_CONFIG_NAME) ?? "null") as unknown;
   },
   set(value: unknown): void {
-    void container.config.set(_CONFIG_NAME, JSON.stringify(value));
+    void corePorts.config.set(_CONFIG_NAME, JSON.stringify(value));
   },
   getString(): string | null {
-    return container.config.get(_CONFIG_STRING_NAME);
+    return corePorts.config.get(_CONFIG_STRING_NAME);
   },
   setString(value: string): void {
-    void container.config.set(_CONFIG_STRING_NAME, value);
+    void corePorts.config.set(_CONFIG_STRING_NAME, value);
   },
 };
 
 export function get(): Set<DatEntry> {
   if (_dat == null) {
-    if (container.config.get(_CONFIG_NAME) === "") {
+    if (corePorts.config.get(_CONFIG_NAME) === "") {
       // 設定文字列も未保存 (null) の場合は空文字として「エントリなし」で初期化する。
       set(_config.getString() ?? "");
     }

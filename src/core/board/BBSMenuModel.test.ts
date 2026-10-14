@@ -8,8 +8,8 @@ const { configSet, cachedMenuMock, fetchMenuMock, askMock } = vi.hoisted(() => (
   fetchMenuMock: vi.fn(),
   askMock: vi.fn(),
 }));
-vi.mock("src/service-container/index", () => ({
-  container: {
+vi.mock("src/core/ports/registry", () => ({
+  corePorts: {
     config: { get: (key: string) => getStore2String(`config_${key}`), set: configSet },
   },
 }));

@@ -9,8 +9,8 @@ const mocks = vi.hoisted(() => ({
   isNGThread: vi.fn(),
 }));
 
-vi.mock("src/service-container/index", () => ({
-  container: {
+vi.mock("src/core/ports/registry", () => ({
+  corePorts: {
     config: { get: (key: string) => mocks.config.get(key) ?? null },
     ng: { isNGThread: mocks.isNGThread },
   },

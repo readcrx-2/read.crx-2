@@ -11,8 +11,8 @@ const { store, setMock } = vi.hoisted(() => {
   };
 });
 
-vi.mock("src/service-container/index", () => ({
-  container: { config: { get: (key: string) => store.get(key) ?? null, set: setMock } },
+vi.mock("src/core/ports/registry", () => ({
+  corePorts: { config: { get: (key: string) => store.get(key) ?? null, set: setMock } },
 }));
 
 vi.mock("src/core/board/BoardUrlNormalizer", async (importOriginal) => {

@@ -1,7 +1,7 @@
 import { ChURL } from "packages/chlib/src/index";
 import { Request } from "src/core/network/HTTP";
+import { corePorts } from "src/core/ports/registry";
 import Cache from "src/core/storage/Cache.js";
-import { container } from "src/service-container/index";
 
 // 旧来のapp.URL.URL公開APIだけは同じ実装を指す別名として保ち、新しい呼び出しはChURLを直接使う。
 export { ChURL as URL };
@@ -115,7 +115,7 @@ export async function expandShortURL(shortUrl: string): Promise<string> {
       return { data: cache.data, url: null };
     } catch {
       const req = new Request("HEAD", shortUrl, {
-        timeout: parseInt(container.config.get("expand_short_url_timeout")!),
+        timeout: parseInt(corePorts.config.get("expand_short_url_timeout")!),
       });
 
       let { status, responseURL: resUrl } = await req.send();

@@ -5,7 +5,7 @@ import {
   type ReplacementRule,
   type ReplacementTarget,
 } from "@chlen/chlib";
-import { container } from "src/service-container/index";
+import { corePorts } from "src/core/ports/registry";
 
 const CONFIG_NAME = "replace_str_txt";
 let cachedSource: string | null = null;
@@ -13,7 +13,7 @@ let rules: readonly ReplacementRule[] = [];
 let engine = createReplacementEngine(rules);
 
 export function get(): readonly ReplacementRule[] {
-  const source = container.config.get(CONFIG_NAME) ?? "";
+  const source = corePorts.config.get(CONFIG_NAME) ?? "";
   // 設定フォーム・インポート・別ウィンドウからの更新も、保存文字列の変化で検出する。
   if (source !== cachedSource) {
     const parsed = parseReplacementDsl(source);
@@ -36,7 +36,7 @@ export async function set(value: string): Promise<ReplacementDslParseResult> {
   const parsed = parseReplacementDsl(value);
   if (parsed.diagnostics.length > 0) return parsed;
   try {
-    await container.config.set(CONFIG_NAME, value);
+    await corePorts.config.set(CONFIG_NAME, value);
   } catch (error) {
     console.error("[ReplaceStrTxt] 置換設定の保存に失敗しました", error);
     throw error;

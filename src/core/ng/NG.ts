@@ -10,8 +10,8 @@ import {
 } from "@chlen/chlib";
 import { createLogger } from "src/app/logger";
 import type { INGResult } from "src/core/ports/ng";
+import { corePorts } from "src/core/ports/registry";
 import { countReplyAnchorTargets } from "src/core/thread/reply-index";
-import { container } from "src/service-container/index";
 
 const CONFIG_STRING_NAME = "ngwords";
 const GENERAL_DEBUG_CONFIG_KEY = "debug_log";
@@ -22,8 +22,8 @@ let rulesCache: readonly Rule[] | null = null;
 // Chlensの既存設定を壊さないため、保存キーだけはconfigの`ngwords`を維持し、
 // DSLの読み書き処理からconfig singletonへの依存をadapter内へ閉じ込める。
 const chlensRuleRepository: RuleRepository = {
-  load: () => container.config.get(CONFIG_STRING_NAME),
-  save: (source) => container.config.set(CONFIG_STRING_NAME, source),
+  load: () => corePorts.config.get(CONFIG_STRING_NAME),
+  save: (source) => corePorts.config.set(CONFIG_STRING_NAME, source),
 };
 
 function isCommentOrWhitespace(line: string): boolean {
@@ -144,19 +144,19 @@ async function commitRules(rules: readonly Rule[]): Promise<void> {
   const nextSource = formatRuleDsl(rules);
   await chlensRuleRepository.save(nextSource);
   updateRulesCache(rules);
-  container.message.send("ng_changed");
+  corePorts.message.send("ng_changed");
 }
 
 function onRegexError(source: string, error: unknown): void {
   logger.error("NG機能の正規表現を読み込めません", { source, error });
-  container.toast.notify(
+  corePorts.toast.notify(
     `NG機能の正規表現(${source})を読み込むのに失敗しました\nこの条件は無効化されます`,
     { backgroundColor: "red" },
   );
 }
 
 function getNgDebugTargetResNum(): number | null {
-  const value = Number(container.config.get(GENERAL_DEBUG_CONFIG_KEY) ?? 0);
+  const value = Number(corePorts.config.get(GENERAL_DEBUG_CONFIG_KEY) ?? 0);
   return Number.isInteger(value) && value > 0 ? value : null;
 }
 

@@ -8,7 +8,7 @@ import { defer } from "src/app/Defer";
 import { getBoardUrlKey } from "src/core/board/BoardUrlNormalizer";
 import { Request } from "src/core/network/HTTP";
 import type { IBBSMenuResult } from "src/core/ports/bbs-menu";
-import { container } from "src/service-container/index";
+import { corePorts } from "src/core/ports/registry";
 
 const isSavedTitleResolved = (title: string | null, boardUrl: string): title is string => {
   if (!title?.trim()) return false;
@@ -26,13 +26,13 @@ export const getCachedTitles = async (): Promise<Map<string, string>> => {
     const key = getBoardUrlKey(url);
     if (key && isSavedTitleResolved(title, url)) titles.set(key, title);
   };
-  const cached = await container.bbsMenu.getCached();
+  const cached = await corePorts.bbsMenu.getCached();
   for (const menu of cached.menu ?? []) {
     for (const category of menu.categories) {
       for (const board of category.boards) addTitle(board.url, board.name);
     }
   }
-  const rawTitles = container.config.get("other_board_titles");
+  const rawTitles = corePorts.config.get("other_board_titles");
   if (rawTitles) {
     try {
       const parsed: unknown = JSON.parse(rawTitles);
@@ -45,10 +45,10 @@ export const getCachedTitles = async (): Promise<Map<string, string>> => {
       console.error("保存済みの板名を読み込めませんでした", error);
     }
   }
-  // 変更理由: container.bookmark は未登録時に値を返さず例外を投げるため、存在確認の if は
+  // 変更理由: corePorts.bookmark は未登録時に値を返さず例外を投げるため、存在確認の if は
   // 常に真か例外のどちらかにしかならない。呼び出し元は app.boot 後の画面だけなので、
   // 登録済みを前提に直接参照し、誤解を招く判定を置かない。
-  const bookmark = container.bookmark;
+  const bookmark = corePorts.bookmark;
   // 初回のローカル読み取りを待ち、起動直後も保存済みのお気に入り名を使う。
   try {
     await bookmark.promiseFirstScan;
@@ -71,7 +71,7 @@ const _generateBBSMenu = ({ status, menu, message }: IBBSMenuResult): void => {
   if (status === "error") {
     void (async () => {
       await defer();
-      container.message.send("notify", {
+      corePorts.message.send("notify", {
         message,
         background_color: "red",
       });
@@ -94,10 +94,10 @@ const _generateBBSMenu = ({ status, menu, message }: IBBSMenuResult): void => {
 };
 
 const _setBBSMenu = async (): Promise<void> => {
-  const obj = await container.bbsMenu.get();
+  const obj = await corePorts.bbsMenu.get();
   _generateBBSMenu(obj);
   // 意図: 板一覧の更新通知を購読してキャッシュMapを常に最新に保つ。
-  container.bbsMenu.onChange.add((updatedObj) => {
+  corePorts.bbsMenu.onChange.add((updatedObj) => {
     _generateBBSMenu(updatedObj);
   });
 };
@@ -137,7 +137,7 @@ const _formatBoardTitle = (title: string, url: ChURL): string => {
 
 const searchFromBookmark = (url: ChURL): string | null => {
   const url2 = url.createProtocolToggled();
-  const bookmark = container.bookmark.get(url.href) ?? container.bookmark.get(url2.href);
+  const bookmark = corePorts.bookmark.get(url.href) ?? corePorts.bookmark.get(url2.href);
   if (bookmark == null) {
     return null;
   }

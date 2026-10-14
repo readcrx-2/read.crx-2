@@ -1,5 +1,5 @@
 import { getBoardUrlKey, normalizeBoardUrl } from "src/core/board/BoardUrlNormalizer";
-import { container } from "src/service-container/index";
+import { corePorts } from "src/core/ports/registry";
 
 // 変更理由: 「一度開いた板」の保存キーと読み書きが画面・BBSMenuModel・設定画面へ散らばり、
 // 正規化や重複排除の規則が実装ごとにずれていたため、保存形式の責務をここへ集約する。
@@ -101,7 +101,7 @@ export function parseOpenedBoardEntries(raw: string | null): OpenedBoardEntry[] 
 }
 
 function readOpenedBoardEntriesForUpsert(): OpenedBoardEntry[] {
-  const raw = container.config.get(OPENED_BOARDS_CONFIG_KEY);
+  const raw = corePorts.config.get(OPENED_BOARDS_CONFIG_KEY);
   if (!raw) {
     return [];
   }
@@ -163,7 +163,7 @@ export function upsertOpenedBoardEntry(
         updated,
         ...entries.filter((entry) => getBoardUrlKey(entry.url) !== key),
       ];
-      await container.config.set(
+      await corePorts.config.set(
         OPENED_BOARDS_CONFIG_KEY,
         JSON.stringify(nextEntries.slice(0, MAX_OPENED_BOARD_ENTRIES)),
       );

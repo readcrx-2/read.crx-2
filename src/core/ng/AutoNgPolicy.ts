@@ -1,4 +1,4 @@
-import { container } from "src/service-container/index";
+import { corePorts } from "src/core/ports/registry";
 
 export const AUTO_NG_CONFIG_KEYS = {
   chain: "chain_ng",
@@ -38,17 +38,17 @@ export interface AutoNgEvaluationContext {
 export function isAutoNgEnabled(policy: AutoNgToggle): boolean {
   // 変更理由: 真偽設定は "on"/"off" の文字列で保存される。Boolean()で変換すると
   // 既定値の "off" まで有効扱いになり、自動NGを全スレへ誤って適用してしまう。
-  return container.config.get(AUTO_NG_CONFIG_KEYS[policy]) === "on";
+  return corePorts.config.get(AUTO_NG_CONFIG_KEYS[policy]) === "on";
 }
 
 export function getIdentityJudgment(): IdentityJudgment {
-  const value = container.config.get(AUTO_NG_CONFIG_KEYS.identityJudgment);
+  const value = corePorts.config.get(AUTO_NG_CONFIG_KEYS.identityJudgment);
   return value === "first_res" || value === "exists_once" ? value : "disabled";
 }
 
 export function getRepeatMessageThreshold(): number {
   const value = Number.parseInt(
-    container.config.get(AUTO_NG_CONFIG_KEYS.repeatMessageCount) ?? "",
+    corePorts.config.get(AUTO_NG_CONFIG_KEYS.repeatMessageCount) ?? "",
     10,
   );
   return Number.isFinite(value) && value > 1 ? value : 0;

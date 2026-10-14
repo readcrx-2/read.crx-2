@@ -25,8 +25,8 @@ vi.mock("src/core/util/jsutil", () => ({
   chServerMoveDetect: vi.fn(),
 }));
 
-vi.mock("src/service-container/index", () => ({
-  container: {
+vi.mock("src/core/ports/registry", () => ({
+  corePorts: {
     bookmark: {
       getByBoard: vi.fn(() => []),
       updateExpired: vi.fn(),

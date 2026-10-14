@@ -8,8 +8,8 @@ const mocks = vi.hoisted(() => ({
   config: new Map<string, string>(),
 }));
 
-vi.mock("src/service-container/index", () => ({
-  container: {
+vi.mock("src/core/ports/registry", () => ({
+  corePorts: {
     ng: {
       isNGThread: mocks.isNGThread,
     },

@@ -1,7 +1,7 @@
 # モジュール境界の明確化計画
 
 - ブランチ: `feature/module-boundaries`（`develop` から作成）
-- 状態: 計画確定・Phase 0 完了・Phase 1 は本文書で確定、Phase A 着手前
+- 状態: Phase 0・A・B・C-1 完了。C-2 は未着手
 
 ## 1. 目的
 
@@ -86,51 +86,48 @@ core/util
 
 - §3 のルールを確定する。判断が必要な点は §7 にまとめる。
 
-### Phase A: core の container 依存を止める（実装済み・未コミット）
+### Phase A: core の container 依存を止める（完了）
 
 目的: `core` から `container` の値 import を無くし、違反の増加を止める。
 
-実装内容（`vite.config.ts` の `lint`）:
+- 最初は `src/core/**` に `no-restricted-imports`（`warn`）を入れ、既存違反 14 ファイルを許可リストに入れた。
+- 許可リストは Phase C-1 で空になり、禁止ルールは `error` に上げた（違反 0 件の状態で上げたため）。
 
-1. `overrides` の `src/core/**` に `eslint/no-restricted-imports`（`warn`）を追加。対象は `service-container/index` への値 import。`allowTypeImports: true` で型 import は許可する。
-2. 既存違反の 14 ファイルを、`overrides` の許可リスト（ルールを `off`）に入れた。
-3. 確認: 許可リスト外の新規 `core` ファイルで警告が出ること、`features` / `view` では警告が増えていないこと（0 件）を確認済み。
-
-作業手順:
-
-1. 上記のルールを追加する（実装済み）。
-   - `import type` は許可する（Phase B まで型依存は残すため）。
-2. 既存の違反 14 ファイルを許可リストに入れる（実装済み）。
-3. 許可リストから外すのは、そのファイルを触るときだけとする。
-4. `core` からの `container.toast.notify` 呼び出しは、Phase A では触らず、Phase B で移す候補としてメモする。
-
-完了条件: 新規の `core` → `container`（値）が `vp lint` の警告として出る。既存の違反は許可リストに固定されている。
-
-### Phase B: core が使う型を core 側（`src/core/ports/`）に持つ（型の移動まで実装済み）
+### Phase B: core が使う型を core 側（`src/core/ports/`）に持つ（完了）
 
 目的: `core` が使う型の正本を `core` 側に置き、型の import から `service-container` を外す。
 
+1. `src/core/ports/` へ移した型: `ICacheItem`、`IReadState`、`INGResult`、`IThread`、`IRes`、`IThreadDetail`、`IThreadService`、`IBoardResult`、`IBBSMenuResult`（5 ファイル）。
+2. `service-container/interfaces.ts` は、`src/core/ports` から import して再エクスポートする。既存の `features` や `view` の import は変えていない。
+3. 続けて、サービスのインターフェース（`IConfig`、`IBookmark`、`IUtil`、`IBoardService`、`IBBSMenuService`、`INGService` など）を `src/core/ports/services.ts` へ移した（同じく再エクスポート）。
+
+### Phase C-1: core のサービス参照を `corePorts` に置き換える（完了）
+
+目的: `core` が `service-container` を import しない状態にする。
+
 実装内容:
 
-1. `core` が使う型（`ICacheItem`、`IReadState`、`INGResult`、`IThread`、`IRes`、`IThreadDetail`、`IThreadService`、`IBoardResult`、`IBBSMenuResult`）を `src/core/ports/` の 5 ファイルへ移した。
-2. `service-container/interfaces.ts` は、同じ型を `src/core/ports` から import して再エクスポートする（既存の `features` や `service-container` の import は変えずに済む）。
-3. `core` の型 import を `src/core/ports` に書き換えた（12 ファイル。テストを含む）。
+1. `src/core/ports/registry.ts` に `corePorts` を置いた。`CorePorts` は core が使うサービスの型だけを持つ。
+   - 未登録のまま使うと、どのサービスを参照したかを含めて例外にする（`undefined` による原因不明の `TypeError` を避けるため）。
+2. `service-container/Container.ts` で、global の container と同じ実体を `installCorePorts` で登録する。`setup.ts` の末尾でも登録する（同じ実体のため冪等）。
+3. core の 14 ファイルの `container.` を `corePorts.` に置き換え、テストの `vi.mock` も `src/core/ports/registry` へ移した。
+4. 禁止ルールを `error` にした（`src/core/**` から `**/service-container/**` への import）。
 
-残り（Phase C の対象）:
+注意（C-1 の限界）:
 
-- `core` から `container`（`service-container/index`）を値として呼ぶ箇所 14 ファイルは、まだ残っている。型ではなく値の依存なので、Phase C（引数注入）で扱う。
-- `container.toast`、`container.util` などの UI・アプリ寄りの呼び出しは、`core` の外（`features` か `app`）へ移す。Phase C と合わせて進める。
+- `corePorts` は登録されたサービスを引き回すだけで、まだグローバルな参照である。依存を引数で受け取る形（Phase C-2）には至っていない。
+- `features` / `view` 側のテストで service-container をモックしていた箇所は、core に届く経路が変わったため、`corePorts` も同じ実体へ差し替えた（4 ファイル）。
 
-完了条件（Phase B の範囲）: `core` の型 import が `service-container` を指さない。`vp test run` と `tsc` が通る。
-完了条件（Phase A 許可リストが空になる）: Phase C の完了時。
+完了条件（C-1）: `src/core` が `service-container` を import しない（達成）。`vp test run`、`tsc`、`build:chrome` が通る（達成）。
 
-### Phase C: 依存を引数で注入する
+### Phase C-2: 依存を引数で注入する（未着手）
 
-目的: `core` の内部で `container` を参照しないようにし、テストを書きやすくする。
+目的: `core` の内部で `corePorts` も参照しないようにし、テストを書きやすくする。
 
 1. `Board`、`BoardService`、`BBSMenuModel` など影響範囲の小さいものから、必要なポートをコンストラクタや引数で受け取る形にする。
 2. 組み立ては `service-container/setup.ts` が担当する。
 3. 一度に全部は変えず、1 クラスずつ別コミットにする。
+4. `core` からの `container.toast.notify` の呼び出しは、この段階で `features` か `app` へ移す。
 
 ### Phase D: features 間の依存を減らす
 

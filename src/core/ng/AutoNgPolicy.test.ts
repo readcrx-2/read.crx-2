@@ -3,8 +3,8 @@ import { evaluateAutoNg, isAutoNgEnabled } from "src/core/ng/AutoNgPolicy";
 import { beforeEach, describe, expect, it, vi } from "vite-plus/test";
 
 const config = new Map<string, string>();
-vi.mock("src/service-container/index", () => ({
-  container: { config: { get: (key: string) => config.get(key) ?? null } },
+vi.mock("src/core/ports/registry", () => ({
+  corePorts: { config: { get: (key: string) => config.get(key) ?? null } },
 }));
 
 describe("AutoNgPolicy", () => {

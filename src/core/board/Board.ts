@@ -10,8 +10,8 @@ import {
 import { platform } from "src/app/platform";
 import { runBoardRequest } from "src/core/board/board-request";
 import { Response } from "src/core/network/HTTP";
+import { corePorts } from "src/core/ports/registry";
 import { chServerMoveDetect } from "src/core/util/jsutil";
-import { container } from "src/service-container/index";
 
 // 変更理由: 5ch/2ch.scのホスト名判定をcoreへ複製せず、通信条件だけを意味分類で選ぶ。
 
@@ -65,7 +65,7 @@ export default class Board {
         let hasCache = false;
 
         // キャッシュ取得
-        const cache = container.cache.getCache(xhrPath);
+        const cache = corePorts.cache.getCache(xhrPath);
 
         let needFetch = false;
         try {
@@ -179,7 +179,7 @@ export default class Board {
 
             // ブックマークのレス数を更新
             for (thread of threadList) {
-              container.bookmark.updateResCount(thread.url, thread.resCount);
+              corePorts.bookmark.updateResCount(thread.url, thread.resCount);
             }
           } else if (hasCache && response?.status === 304) {
             // 304 Not Modifiedの場合、最終更新時刻のみ更新
@@ -203,8 +203,8 @@ export default class Board {
               newBoardUrl = (await chServerMoveDetect(this.url)).href;
               this.message += `\
 サーバーが移転しています
-(<a href="${container.util.escapeHtml(container.util.safeHref(newBoardUrl))}"
-class="open_in_rcrx">${container.util.escapeHtml(newBoardUrl)}
+(<a href="${corePorts.util.escapeHtml(corePorts.util.safeHref(newBoardUrl))}"
+class="open_in_rcrx">${corePorts.util.escapeHtml(newBoardUrl)}
 </a>)\
 `;
             } catch {
@@ -215,8 +215,8 @@ class="open_in_rcrx">${container.util.escapeHtml(newBoardUrl)}
               newBoardUrl = (await chServerMoveDetect(this.url)).href;
               this.message += `\
 サーバーが移転している可能性が有ります
-(<a href="${container.util.escapeHtml(container.util.safeHref(newBoardUrl))}"
-class="open_in_rcrx">${container.util.escapeHtml(newBoardUrl)}
+(<a href="${corePorts.util.escapeHtml(corePorts.util.safeHref(newBoardUrl))}"
+class="open_in_rcrx">${corePorts.util.escapeHtml(newBoardUrl)}
 </a>)\
 `;
             } catch {
@@ -252,7 +252,7 @@ class="open_in_rcrx">${container.util.escapeHtml(newBoardUrl)}
         }
 
         const dict: Record<string, boolean> = {};
-        const bookmarks = container.bookmark.getByBoard(this.url.url.href) ?? [];
+        const bookmarks = corePorts.bookmark.getByBoard(this.url.url.href) ?? [];
         for (bookmark of bookmarks) {
           if (bookmark.type === "thread") {
             dict[bookmark.url] = true;
@@ -263,7 +263,7 @@ class="open_in_rcrx">${container.util.escapeHtml(newBoardUrl)}
         for (thread of threadList) {
           if (thread.url in dict) {
             dict[thread.url] = false;
-            container.bookmark.updateExpired(thread.url, false);
+            corePorts.bookmark.updateExpired(thread.url, false);
           }
         }
 
@@ -271,7 +271,7 @@ class="open_in_rcrx">${container.util.escapeHtml(newBoardUrl)}
         for (const threadUrl in dict) {
           const val = dict[threadUrl];
           if (val) {
-            container.bookmark.updateExpired(threadUrl, true);
+            corePorts.bookmark.updateExpired(threadUrl, true);
           }
         }
       })();
@@ -308,7 +308,7 @@ class="open_in_rcrx">${container.util.escapeHtml(newBoardUrl)}
     }
 
     return threads.map((thread: BoardThread) => {
-      const ngResult = container.ng.isNGBoard(thread.title, url.url.href, thread.resCount);
+      const ngResult = corePorts.ng.isNGBoard(thread.title, url.url.href, thread.resCount);
       // 変更理由: hide / collapse / highlight を型名の推測ではなくDSL actionで分離する。
       const highlight =
         ngResult?.action === "highlight" ||
@@ -345,7 +345,7 @@ class="open_in_rcrx">${container.util.escapeHtml(newBoardUrl)}
       throw new Error("その板の取得方法の情報が存在しません");
     }
 
-    const cache = container.cache.getCache(xhrInfo.path);
+    const cache = corePorts.cache.getCache(xhrInfo.path);
     let cachedThreads: BoardThread[] | null = null;
     try {
       await cache.get();

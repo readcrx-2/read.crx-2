@@ -6,8 +6,8 @@ import {
 import Board from "src/core/board/Board.js";
 import type { IBoardResult } from "src/core/ports/board";
 import type { IReadState } from "src/core/ports/read-state";
+import { corePorts } from "src/core/ports/registry";
 import type { IThread } from "src/core/ports/thread";
-import { container } from "src/service-container/index";
 
 interface BoardGetResult {
   status: "success" | "error";
@@ -31,7 +31,7 @@ const BoardService = {
 
     const threads = data || [];
 
-    const readStates = await container.readState.getByBoard(getReadStateBoardUrl(urlStr));
+    const readStates = await corePorts.readState.getByBoard(getReadStateBoardUrl(urlStr));
     const readStateMap = new Map<string, IReadState>();
     for (const rs of readStates) {
       readStateMap.set(getReadStateThreadUrl(rs.url), rs);
@@ -40,11 +40,11 @@ const BoardService = {
     const processedThreads = threads.map((thread, index) => {
       const threadUrl = getReadStateThreadUrl(thread.url);
       let readState = readStateMap.get(threadUrl);
-      const bookmark = container.bookmark.get(threadUrl);
+      const bookmark = corePorts.bookmark.get(threadUrl);
 
       if (bookmark && bookmark.readState) {
         // 意図: readState は bookmark 側の方が新しい場合があるため、比較して新しい方を採用する。
-        if (!readState || container.util.isNewerReadState(readState, bookmark.readState)) {
+        if (!readState || corePorts.util.isNewerReadState(readState, bookmark.readState)) {
           readState = bookmark.readState;
         }
       }

@@ -5,7 +5,7 @@ import {
   resolveBoardMoveUrl,
 } from "packages/chlib/src/index";
 import { Request } from "src/core/network/HTTP";
-import { container } from "src/service-container/index";
+import { corePorts } from "src/core/ports/registry";
 
 /** 2ch系サーバーの移転を調べ、見つかった移転先の板URLを返す。 */
 export async function chServerMoveDetect(
@@ -55,7 +55,7 @@ export async function chServerMoveDetect(
   }
 
   if (newBoardUrl == null) {
-    const { menu: data } = await container.bbsMenu.get();
+    const { menu: data } = await corePorts.bbsMenu.get();
     if (data == null) {
       throw new Error("BBSMenuの取得に失敗しました");
     }
@@ -88,7 +88,7 @@ export async function chServerMoveDetect(
     }
   }
 
-  container.message.send("detected_ch_server_move", {
+  corePorts.message.send("detected_ch_server_move", {
     before: normalizedOldBoardUrl.href,
     after: newBoardUrl.href,
   });

@@ -16,6 +16,11 @@ vi.mock("src/service-container/index", () => ({
   },
 }));
 
+// core の処理が使うサービスは、上の service-container のモックと同じものを渡す。
+vi.mock("src/core/ports/registry", async () => ({
+  corePorts: (await import("src/service-container/index")).container,
+}));
+
 vi.mock("src/features/ng/ui/NGEditor", () => ({
   NGEditor: () => null,
 }));

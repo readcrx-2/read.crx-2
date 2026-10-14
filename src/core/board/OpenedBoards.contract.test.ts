@@ -3,8 +3,8 @@ import { parseOpenedBoardEntries } from "src/core/board/OpenedBoards";
 import { beforeEach, describe, expect, it, vi } from "vite-plus/test";
 
 const { config } = vi.hoisted(() => ({ config: new Map<string, string>() }));
-vi.mock("src/service-container/index", () => ({
-  container: { config: { get: (key: string) => config.get(key) ?? null } },
+vi.mock("src/core/ports/registry", () => ({
+  corePorts: { config: { get: (key: string) => config.get(key) ?? null } },
 }));
 vi.mock("src/core/board/BBSMenuFetcher", () => ({ BBSMenuFetcher: class {} }));
 vi.mock("src/core/network/URL", () => ({ URL: class {} }));

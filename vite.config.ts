@@ -320,48 +320,24 @@ export default defineConfig(async ({ mode }) => {
         "simple-import-sort/imports": "error",
         "simple-import-sort/exports": "error",
       },
-      // core は service-container を値として使わない（計画: docs/plans/module-boundaries-plan.md Phase A）。
-      // 型の import は Phase B まで残すため allowTypeImports で許可する。
-      // 既存違反のファイルは許可リストに入れ、触るたびに外す。
+      // core は service-container に依存しない（計画: docs/plans/module-boundaries-plan.md Phase C-1）。
+      // 依存は core/ports（型と registry）だけにする。service-container は setup で registry に登録する。
       overrides: [
         {
           files: ["src/core/**"],
           rules: {
             "eslint/no-restricted-imports": [
-              "warn",
+              "error",
               {
                 patterns: [
                   {
-                    group: ["**/service-container/index"],
-                    allowTypeImports: true,
+                    group: ["**/service-container/**"],
                     message:
-                      "core は service-container を値として import しない。依存は core/ports 経由にする（Phase B）。",
+                      "core は service-container を import しない。型は src/core/ports、サービスは corePorts（src/core/ports/registry）を使う。",
                   },
                 ],
               },
             ],
-          },
-        },
-        {
-          // Phase A の許可リスト（既存違反）。ファイルを触るときに外す。
-          files: [
-            "src/core/board/BBSMenu.ts",
-            "src/core/board/BBSMenuModel.ts",
-            "src/core/board/Board.ts",
-            "src/core/board/BoardService.ts",
-            "src/core/board/BoardTitleSolver.ts",
-            "src/core/board/OpenedBoards.ts",
-            "src/core/board/ch-server-move-detect.ts",
-            "src/core/network/URL.ts",
-            "src/core/ng/AutoNgPolicy.ts",
-            "src/core/ng/NG.ts",
-            "src/core/ng/ThreadNgEvaluator.ts",
-            "src/core/thread/ImageReplaceDat.ts",
-            "src/core/thread/ReplaceStrTxt.ts",
-            "src/core/thread/Thread.ts",
-          ],
-          rules: {
-            "eslint/no-restricted-imports": "off",
           },
         },
       ],

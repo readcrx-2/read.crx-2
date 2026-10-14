@@ -16,8 +16,8 @@ vi.mock("src/app/platform", () => ({
   platform: { http: { fetch: mocks.fetch } },
 }));
 
-vi.mock("src/service-container/index", () => ({
-  container: {
+vi.mock("src/core/ports/registry", () => ({
+  corePorts: {
     config: { get: mocks.getConfig },
     cache: { getCache: mocks.getCache },
     bookmark: {

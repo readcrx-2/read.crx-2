@@ -1,8 +1,8 @@
 import { evaluateAutoNg, isAutoNgEnabled } from "src/core/ng/AutoNgPolicy";
 import type { INGResult } from "src/core/ports/ng";
+import { corePorts } from "src/core/ports/registry";
 import type { IRes } from "src/core/ports/thread";
 import { buildReplyIndexes } from "src/core/thread/reply-index";
-import { container } from "src/service-container/index";
 
 export interface ThreadNgContext {
   title: string;
@@ -26,7 +26,7 @@ export function evaluateThreadNg(
   responses: readonly IRes[],
   { title, url }: ThreadNgContext,
 ): Map<number, INGResult> {
-  const bbsType = container.util?.guessType?.(url).bbsType ?? "2ch";
+  const bbsType = corePorts.util?.guessType?.(url).bbsType ?? "2ch";
   // 返信数NGは後続レスの安価も数えるため、判定前に全レスから索引化する。
   const { repIndex, ancIndex } = buildReplyIndexes(responses);
 
@@ -75,7 +75,7 @@ export function evaluateThreadNg(
     if (res.slip) seenSlips.add(res.slip);
     if (isOverThousand(res.num)) continue;
 
-    const ruleNg = container.ng.isNGThread(
+    const ruleNg = corePorts.ng.isNGThread(
       {
         ...res,
         replyCount: repIndex.get(res.num)?.size ?? 0,

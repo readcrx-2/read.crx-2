@@ -16,8 +16,8 @@ vi.mock("src/core/board/Board.js", () => ({
   },
 }));
 
-vi.mock("src/service-container/index", () => ({
-  container: {
+vi.mock("src/core/ports/registry", () => ({
+  corePorts: {
     readState: { getByBoard: mocks.getByBoard },
     bookmark: { get: mocks.getBookmark },
     util: { isNewerReadState: mocks.isNewerReadState },

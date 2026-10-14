@@ -1,11 +1,9 @@
 // @vitest-environment node
 import { evaluateAutoNg, isAutoNgEnabled } from "src/core/ng/AutoNgPolicy";
-import { beforeEach, describe, expect, it, vi } from "vite-plus/test";
+import { beforeEach, describe, expect, it } from "vite-plus/test";
 
 const config = new Map<string, string>();
-vi.mock("src/core/ports/registry", () => ({
-  corePorts: { config: { get: (key: string) => config.get(key) ?? null } },
-}));
+const cfg = { get: (key: string) => config.get(key) ?? null };
 
 describe("AutoNgPolicy", () => {
   beforeEach(() => config.clear());
@@ -15,6 +13,7 @@ describe("AutoNgPolicy", () => {
     config.set("how_to_judgment_id", "first_res");
     expect(
       evaluateAutoNg({
+        config: cfg,
         response: { num: 2, message: "body" },
         bbsType: "2ch",
         existsIdAtFirstResponse: true,
@@ -43,16 +42,26 @@ describe("AutoNgPolicy", () => {
       repeatedMessages,
       canApply: () => true,
     };
-    expect(evaluateAutoNg({ ...base, response: { num: 1, message: "same" } })).toBeNull();
-    expect(evaluateAutoNg({ ...base, response: { num: 2, message: "same" } })).toBe(
-      "RepeatMessage",
-    );
+    expect(
+      evaluateAutoNg({
+        config: cfg,
+        ...base,
+        response: { num: 1, message: "same" },
+      }),
+    ).toBeNull();
+    expect(
+      evaluateAutoNg({
+        config: cfg,
+        ...base,
+        response: { num: 2, message: "same" },
+      }),
+    ).toBe("RepeatMessage");
   });
 
   it("真偽設定は on のときだけ有効とみなし、既定値の off は無効にする", () => {
     config.set("chain_ng", "off");
-    expect(isAutoNgEnabled("chain")).toBe(false);
+    expect(isAutoNgEnabled(cfg, "chain")).toBe(false);
     config.set("chain_ng", "on");
-    expect(isAutoNgEnabled("chain")).toBe(true);
+    expect(isAutoNgEnabled(cfg, "chain")).toBe(true);
   });
 });

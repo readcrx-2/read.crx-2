@@ -10,6 +10,7 @@ import {
   useState,
 } from "react";
 import { evaluateThreadNg } from "src/core/ng/ThreadNgEvaluator";
+import { corePorts } from "src/core/ports/registry";
 import {
   useIsNgTemporarilyDisabled,
   useNgDisplayMode,
@@ -220,10 +221,14 @@ export function useThreadData(
         // 変更理由: Sikiログには再取得先の通信がないため、登録済み本文を使い、
         // 通常スレと同じ検索・NG・アンカー処理へそのまま流す。
         // 通常スレと同じく、自動NG（連鎖・ID無し等）を含む判定を全レスへ一括適用する。
-        const importedNgResults = evaluateThreadNg(importedSikiThread.responses, {
-          title: importedSikiThread.title,
-          url: page.threadUrl,
-        });
+        const importedNgResults = evaluateThreadNg(
+          importedSikiThread.responses,
+          {
+            title: importedSikiThread.title,
+            url: page.threadUrl,
+          },
+          corePorts,
+        );
         setResponses(
           importedSikiThread.responses.map((response) => ({
             ...response,
@@ -385,7 +390,11 @@ export function useThreadData(
       setResponses((prev) => {
         // 返信数NGや連鎖NGは表示対象だけで数えると他のNGルールとの適用順に依存するため、
         // NG判定前の全レスを対象に、自動NGを含めて再判定する。
-        const ngResults = evaluateThreadNg(prev, { title: page.title, url: page.threadUrl });
+        const ngResults = evaluateThreadNg(
+          prev,
+          { title: page.title, url: page.threadUrl },
+          corePorts,
+        );
         // 判定結果が無いレスは undefined にして、ResItem 側で非NGとして扱わせる。
         return prev.map((res) => ({ ...res, ng: ngResults.get(res.num) }));
       });

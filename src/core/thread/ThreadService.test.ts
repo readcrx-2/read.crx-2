@@ -10,6 +10,9 @@ const mocks = vi.hoisted(() => ({
 
 vi.mock("src/core/ports/registry", () => ({
   corePorts: {
+    util: {
+      guessType: () => ({ bbsType: "2ch", protocol: "https:" }),
+    },
     ng: {
       isNGThread: mocks.isNGThread,
     },

@@ -1,12 +1,19 @@
-import { evaluateAutoNg, isAutoNgEnabled } from "src/core/ng/AutoNgPolicy";
+import { type AutoNgConfig, evaluateAutoNg, isAutoNgEnabled } from "src/core/ng/AutoNgPolicy";
 import type { INGResult } from "src/core/ports/ng";
-import { corePorts } from "src/core/ports/registry";
+import type { INGService, IUtil } from "src/core/ports/services";
 import type { IRes } from "src/core/ports/thread";
 import { buildReplyIndexes } from "src/core/thread/reply-index";
 
 export interface ThreadNgContext {
   title: string;
   url: string;
+}
+
+/** スレ判定に必要なサービス。呼び出し側が渡す（C-2）。 */
+export interface ThreadNgDeps {
+  config: AutoNgConfig;
+  util: Pick<IUtil, "guessType">;
+  ng: Pick<INGService, "isNGThread">;
 }
 
 const addToIndex = <K>(index: Map<K, Set<number>>, key: K, num: number): void => {
@@ -25,8 +32,9 @@ const addToIndex = <K>(index: Map<K, Set<number>>, key: K, num: number): void =>
 export function evaluateThreadNg(
   responses: readonly IRes[],
   { title, url }: ThreadNgContext,
+  deps: ThreadNgDeps,
 ): Map<number, INGResult> {
-  const bbsType = corePorts.util?.guessType?.(url).bbsType ?? "2ch";
+  const bbsType = deps.util.guessType(url).bbsType;
   // 返信数NGは後続レスの安価も数えるため、判定前に全レスから索引化する。
   const { repIndex, ancIndex } = buildReplyIndexes(responses);
 
@@ -57,10 +65,14 @@ export function evaluateThreadNg(
   // NGになったレスのID/Slipは、同じ投稿者の他レスを連鎖NGにする材料として集める。
   const recordNg = (res: IRes, ng: INGResult): void => {
     results.set(res.num, ng);
-    if (isAutoNgEnabled("chainId") && res.id && !["ID", "ChainID"].includes(ng.type)) {
+    if (isAutoNgEnabled(deps.config, "chainId") && res.id && !["ID", "ChainID"].includes(ng.type)) {
       chainedIds.add(res.id);
     }
-    if (isAutoNgEnabled("chainSlip") && res.slip && !["Slip", "ChainSLIP"].includes(ng.type)) {
+    if (
+      isAutoNgEnabled(deps.config, "chainSlip") &&
+      res.slip &&
+      !["Slip", "ChainSLIP"].includes(ng.type)
+    ) {
       chainedSlips.add(res.slip);
     }
   };
@@ -75,7 +87,7 @@ export function evaluateThreadNg(
     if (res.slip) seenSlips.add(res.slip);
     if (isOverThousand(res.num)) continue;
 
-    const ruleNg = corePorts.ng.isNGThread(
+    const ruleNg = deps.ng.isNGThread(
       {
         ...res,
         replyCount: repIndex.get(res.num)?.size ?? 0,
@@ -90,6 +102,7 @@ export function evaluateThreadNg(
     }
 
     const autoNgType = evaluateAutoNg({
+      config: deps.config,
       response: res,
       bbsType,
       existsIdAtFirstResponse,
@@ -114,21 +127,21 @@ export function evaluateThreadNg(
   let changed = true;
   while (changed) {
     changed = false;
-    if (isAutoNgEnabled("chainId")) {
+    if (isAutoNgEnabled(deps.config, "chainId")) {
       for (const id of [...chainedIds]) {
         for (const num of idIndex.get(id) ?? []) {
           changed = markChain(num, { type: "ChainID" }) || changed;
         }
       }
     }
-    if (isAutoNgEnabled("chainSlip")) {
+    if (isAutoNgEnabled(deps.config, "chainSlip")) {
       for (const slip of [...chainedSlips]) {
         for (const num of slipIndex.get(slip) ?? []) {
           changed = markChain(num, { type: "ChainSLIP" }) || changed;
         }
       }
     }
-    if (isAutoNgEnabled("chain")) {
+    if (isAutoNgEnabled(deps.config, "chain")) {
       for (const ngNum of [...results.keys()]) {
         for (const replyNum of repIndex.get(ngNum) ?? []) {
           // 未来のレスへの安価は連鎖の対象にしない（過去レスを巻き込まない）。

@@ -1,6 +1,7 @@
 import { toCanonicalThread } from "packages/chlib/src/index";
 import type { ThreadRes } from "packages/chlib/src/parser/ThreadParser";
 import { evaluateThreadNg } from "src/core/ng/ThreadNgEvaluator";
+import { corePorts } from "src/core/ports/registry";
 import type { IRes, IThreadDetail, IThreadService } from "src/core/ports/thread";
 import { replace as replaceStrTxt } from "src/core/thread/ReplaceStrTxt";
 import Thread from "src/core/thread/Thread";
@@ -128,7 +129,7 @@ class ThreadServiceImpl implements IThreadService {
     });
     const parsedResponses = canonicalThread.posts.map(toViewRes);
     // 自動NG（連鎖・ID無し等）は、全レスを見渡せるこの時点で一括して行う。
-    const ngResults = evaluateThreadNg(parsedResponses, { title, url });
+    const ngResults = evaluateThreadNg(parsedResponses, { title, url }, corePorts);
 
     return {
       url,

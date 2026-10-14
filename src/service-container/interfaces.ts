@@ -8,6 +8,7 @@ import type {
   IBookmark,
   ICacheService,
   IConfig,
+  ICoreNoticeService,
   IMessage,
   INGService,
   IReadStateService,
@@ -32,6 +33,7 @@ export type {
   IBookmarkItem,
   ICacheService,
   IConfig,
+  ICoreNoticeService,
   IMessage,
   INGService,
   IReadStateService,
@@ -103,4 +105,5 @@ export interface IServiceContainer {
   openedBoards: IOpenedBoardsService;
   boardTitle: IBoardTitleService;
   replaceStr: IReplaceStrService;
+  notice: ICoreNoticeService;
 }

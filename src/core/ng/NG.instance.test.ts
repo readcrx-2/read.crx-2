@@ -14,7 +14,7 @@ const createDeps = () => {
       },
     },
     message: { send: vi.fn() },
-    toast: { notify: vi.fn() },
+    notice: { ngRuleRegexInvalid: vi.fn(), bbsMenuFetchFailed: vi.fn() },
   };
   return deps as unknown as NGDeps;
 };

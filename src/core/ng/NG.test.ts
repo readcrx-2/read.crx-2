@@ -16,7 +16,7 @@ vi.mock("src/core/ports/registry", () => ({
         return Promise.resolve();
       },
     },
-    toast: { notify: vi.fn() },
+    notice: { ngRuleRegexInvalid: vi.fn(), bbsMenuFetchFailed: vi.fn() },
     message: { send: vi.fn() },
   },
 }));

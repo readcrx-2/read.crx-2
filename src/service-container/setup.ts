@@ -25,6 +25,7 @@ import {
   ICacheItem,
   ICacheService,
   IConfig,
+  ICoreNoticeService,
   IMessage,
   INGService,
   INotificationService,
@@ -212,6 +213,24 @@ export function setupContainer(): void {
     },
   };
 
+  // core から届く出来事を、これまでと同じ文言のトーストで知らせる。
+  const coreNoticeAdapter: ICoreNoticeService = {
+    ngRuleRegexInvalid: (source) => {
+      toastStore.notify(
+        `NG機能の正規表現(${source})を読み込むのに失敗しました\nこの条件は無効化されます`,
+        { backgroundColor: "red" },
+      );
+    },
+    bbsMenuFetchFailed: (url) => {
+      // HTML として表示するため、設定に書かれた URL も文字として埋め込む。
+      const escapedUrl = escapeHtml(url);
+      toastStore.notify(
+        `板一覧の取得に失敗しました。(<a href="${escapedUrl}" target="_blank">${escapedUrl}</a>)`,
+        { html: true, backgroundColor: "red" },
+      );
+    },
+  };
+
   // Notification Service Adapter
   const notificationServiceAdapter: INotificationService = {
     notify: async (title, options) => {
@@ -266,6 +285,7 @@ export function setupContainer(): void {
   container.toast = toastServiceAdapter;
   container.notification = notificationServiceAdapter;
   container.ng = ngServiceAdapter;
+  container.notice = coreNoticeAdapter;
 
   // core は container を import せず、ここで登録されたサービスだけを使う（Phase C-1）。
   installCorePorts(container);

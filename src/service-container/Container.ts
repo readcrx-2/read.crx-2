@@ -6,6 +6,7 @@ import {
   IBookmark,
   ICacheService,
   IConfig,
+  ICoreNoticeService,
   IHistoryService,
   IMessage,
   INGService,
@@ -46,6 +47,7 @@ interface ServiceContainerImpl extends IServiceContainer {
   _openedBoards: IOpenedBoardsService | undefined;
   _boardTitle: IBoardTitleService | undefined;
   _replaceStr: IReplaceStrService | undefined;
+  _notice: ICoreNoticeService | undefined;
 }
 
 if (!globalObj.__ServiceContainer) {
@@ -68,6 +70,7 @@ if (!globalObj.__ServiceContainer) {
     _openedBoards: undefined,
     _boardTitle: undefined,
     _replaceStr: undefined,
+    _notice: undefined,
 
     get config(): IConfig {
       if (!this._config) throw new Error("Config service not registered");
@@ -211,6 +214,14 @@ if (!globalObj.__ServiceContainer) {
     },
     set replaceStr(value: IReplaceStrService) {
       this._replaceStr = value;
+    },
+
+    get notice(): ICoreNoticeService {
+      if (!this._notice) throw new Error("CoreNotice service not registered");
+      return this._notice;
+    },
+    set notice(value: ICoreNoticeService) {
+      this._notice = value;
     },
   };
   globalObj.__ServiceContainer = impl;

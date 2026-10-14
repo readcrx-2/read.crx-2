@@ -19,7 +19,7 @@ const GENERAL_DEBUG_CONFIG_KEY = "debug_log";
 const logger = createLogger("NG");
 
 /** NG 判定と設定の読み書きに必要なサービス。呼び出し側が渡す（C-2）。 */
-export type NGDeps = Pick<CorePorts, "config" | "message" | "toast">;
+export type NGDeps = Pick<CorePorts, "config" | "message" | "notice">;
 
 /** NG の状態（判定用の規則キャッシュ）を持つインスタンスを作る。状態はインスタンスごとに分かれる。 */
 export function createNG(deps: NGDeps) {
@@ -155,10 +155,8 @@ export function createNG(deps: NGDeps) {
 
   function onRegexError(source: string, error: unknown): void {
     logger.error("NG機能の正規表現を読み込めません", { source, error });
-    deps.toast.notify(
-      `NG機能の正規表現(${source})を読み込むのに失敗しました\nこの条件は無効化されます`,
-      { backgroundColor: "red" },
-    );
+    // 利用者への見せ方は service-container の setup が決める（core はトーストに依存しない）。
+    deps.notice.ngRuleRegexInvalid(source);
   }
 
   function getNgDebugTargetResNum(): number | null {

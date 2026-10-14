@@ -4,6 +4,7 @@ import type {
   IBookmark,
   ICacheService,
   IConfig,
+  ICoreNoticeService,
   IMessage,
   INGService,
   IReadStateService,
@@ -28,6 +29,7 @@ export interface CorePorts {
   bbsMenu: IBBSMenuService;
   toast: IToastService;
   ng: INGService;
+  notice: ICoreNoticeService;
 }
 
 let installed: CorePorts | null = null;

@@ -87,6 +87,18 @@ export interface IBBSMenuService {
   readonly onChange: IBBSMenuChangeNotifier;
 }
 
+/**
+ * core が利用者へ知らせたい出来事（Phase C-2 の残り）。
+ * core は「何が起きたか」だけを伝え、文言・トースト・HTML などの見せ方は service-container の setup が決める。
+ * core が IToastService（画面の部品）に直接依存しないようにするため。
+ */
+export interface ICoreNoticeService {
+  /** NG ルールの正規表現を読み込めず、その条件を無効にした。source は問題のある正規表現。 */
+  ngRuleRegexInvalid(source: string): void;
+  /** 板一覧（bbsmenu）の取得に失敗した。url は取得しようとした板一覧の URL。 */
+  bbsMenuFetchFailed(url: string): void;
+}
+
 export interface IToastService {
   notify(
     message: string,

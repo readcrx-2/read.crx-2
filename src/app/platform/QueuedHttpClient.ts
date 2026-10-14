@@ -93,21 +93,24 @@ export class QueuedHttpClient implements HttpClient {
         ({ host }) => host == null || (this.hostCooldownUntil.get(host) ?? 0) <= now,
       );
       if (nextIndex < 0) {
+        // nextIndex < 0ならキュー内は全件ホスト待機中なので、hostと期限は必ず存在する。
         const nextAllowedAt = Math.min(
-          ...this.queue.map(({ host }) =>
-            host == null ? now : (this.hostCooldownUntil.get(host) ?? now),
-          ),
+          ...this.queue.map(({ host }) => this.hostCooldownUntil.get(host!)!),
         );
         this.scheduleDrain(nextAllowedAt);
         return;
       }
 
-      const [request] = this.queue.splice(nextIndex, 1);
-      if (!request) continue;
+      const request = this.queue.splice(nextIndex, 1)[0]!;
 
       this.activeCount += 1;
-      void request
-        .run()
+      let result: Promise<unknown>;
+      try {
+        result = request.run();
+      } catch (error: unknown) {
+        result = Promise.reject(error);
+      }
+      void Promise.resolve(result)
         .then(
           (value) => {
             this.recordResponse(request.host, value);

@@ -1,9 +1,6 @@
 import { Check, RotateCw, Search } from "lucide-react";
 import React, { useCallback, useEffect, useMemo, useRef, useState } from "react";
-import {
-  readBookmarkStatus,
-  useBookmarkRevision,
-} from "src/features/bookmark/browser/use-bookmark-revision";
+import { readBookmarkStatus, useBookmarkRevision } from "src/features/bookmark";
 import { useNgStatus } from "src/features/ng";
 import { useThreadTitleNgDialog } from "src/features/ng";
 import { ThreadTitleNgDialog } from "src/features/ng";

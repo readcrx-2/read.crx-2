@@ -1,9 +1,6 @@
 import { ExternalLink, List, Pin, PinOff, RotateCcw, X } from "lucide-react";
 import React, { useCallback, useMemo } from "react";
-import {
-  readBookmarkStatus,
-  useBookmarkRevision,
-} from "src/features/bookmark/browser/use-bookmark-revision";
+import { readBookmarkStatus, useBookmarkRevision } from "src/features/bookmark";
 import { useDetachedTabController } from "src/features/tabs/browser/use-detached-tab-controller";
 import { useTabCommandRunner } from "src/features/tabs/browser/use-tab-command-runner";
 import {

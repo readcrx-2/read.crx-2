@@ -2,10 +2,7 @@ import "./OverlayPlacementWindow.css";
 
 import React, { createContext, useContext, useEffect, useMemo } from "react";
 import { createPortal } from "react-dom";
-import {
-  type AuxiliaryWindowOptions,
-  useAuxiliaryWindow,
-} from "src/features/auxiliary-window/browser/use-auxiliary-window";
+import { type AuxiliaryWindowOptions, useAuxiliaryWindow } from "src/features/auxiliary-window";
 import { commentOverlayWindowPlatform } from "src/features/comment-overlay/platform";
 import { OverlayPlacementPanel } from "src/features/comment-overlay/ui/OverlayPlacementPanel";
 import { useTheme } from "src/view/browser/hooks/use-theme";

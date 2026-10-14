@@ -1,10 +1,7 @@
 import { useCallback, useEffect, useRef, useState } from "react";
-import type { AuxiliaryWindowOptions } from "src/features/auxiliary-window/browser/auxiliary-window-root";
-import {
-  type AuxiliaryWindowWatcher,
-  watchAuxiliaryWindow,
-} from "src/features/auxiliary-window/browser/auxiliary-window-watcher";
-import { openAuxiliaryWindow } from "src/features/auxiliary-window/browser/use-auxiliary-window";
+import type { AuxiliaryWindowOptions } from "src/features/auxiliary-window";
+import { type AuxiliaryWindowWatcher, watchAuxiliaryWindow } from "src/features/auxiliary-window";
+import { openAuxiliaryWindow } from "src/features/auxiliary-window";
 import {
   useViewSurface,
   type ViewSurface,

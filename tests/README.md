@@ -39,6 +39,19 @@ NG・置換のEnter / Tab操作も確認します。
 `pnpm run ui:shots` でChrome拡張版をビルドし、架空の板・スレ・レスを使ってUIを撮影します。
 出力先は `screenshots/ui/<実行日時>/` です。ホーム、板一覧、スレ一覧、レス表示、
 ステータスバーのミニウィンドウ、Chrome版で表示される設定カテゴリを保存します。
-Tauri専用のコメントOverlay設定と実況ミニウィンドウは、このChrome拡張用ランナーの撮影対象外です。
-外部掲示板へのアクセスはありません。
 出力先を変える場合はPowerShellで `$env:UI_SHOT_DIR='V:\temp\chlens-shots'; pnpm run ui:shots` と指定します。
+
+Tauri版はリモートデバッグを有効にして起動し、別のターミナルで撮影します。
+
+```powershell
+# ターミナル1
+pnpm run dev:tauri:debug
+
+# ターミナル2
+pnpm run ui:shots:tauri
+```
+
+Tauri側も架空の板・スレ・レスを使い、コメントOverlayの操作窓と流れている状態、
+Tauri版の設定全カテゴリを保存します。接続先は既定で `127.0.0.1:9222` です。
+撮影には一時タブを使い、テーマ・表示形式・bbsmenuの設定は終了時に復元します。
+別ポートを使う場合は `$env:CHLENS_CDP_URL='http://127.0.0.1:9333'` を指定します。

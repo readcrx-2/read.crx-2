@@ -132,12 +132,11 @@ test("UI画面とステータスバーのミニウィンドウを撮影する", 
   await expect(responses.locator('[data-res-num="25"]')).toContainText("更新で追加された日本語レス");
   await capture(page, "05-thread-new-comments");
 
-  // 人気フィルタは有効時だけステータスバー項目が現れるため、先に表示状態へ切り替える。
-  const popularFilter = page.locator(".thread-page__filter-btn").filter({ hasText: "多レス" });
-  if (await popularFilter.isVisible()) {
-    await popularFilter.click();
-    await expect(page.locator(".status-bar").getByRole("button", { name: /人気レス/u })).toBeVisible();
-  }
+  // 人気フィルタの小窓は多レス表示中だけ現れるため、メニューから状態を切り替える。
+  await page.getByTitle("メニュー", { exact: true }).click();
+  await page.getByText("フィルター", { exact: true }).click();
+  await page.getByRole("button", { name: "多レス", exact: true }).click();
+  await expect(page.locator(".status-bar").getByRole("button", { name: /人気レス/u })).toBeVisible();
 
   await captureMiniWindows(page, "thread");
 

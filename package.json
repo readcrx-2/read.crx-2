@@ -48,6 +48,7 @@
     "test:e2e:coverage": "node scripts/e2e-coverage.mjs",
     "test:e2e:ui": "pnpm run build:chrome && playwright test --ui",
     "ui:shots": "pnpm run build:chrome && playwright test tests/ui-screenshots.spec.mts --workers=1",
+    "ui:shots:tauri": "node --no-warnings --experimental-strip-types scripts/ui-screenshots-tauri.mts",
     "triage:todo": "node --no-warnings --experimental-strip-types scripts/triage-todo.ts",
     "release": "release-it",
     "release:build": "pnpm build:extensions && node scripts/package-release.mjs",

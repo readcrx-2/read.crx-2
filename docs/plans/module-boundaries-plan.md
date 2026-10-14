@@ -136,8 +136,12 @@ core/util
 - 完了: `ch-server-move-detect`（`chServerMoveDetect(url, deps, html?)`）。
 - 完了: `ImageReplaceDat`（`createImageReplaceDat(deps)`。既定のインスタンスの `get`・`set`・`replace` を export）。テストを追加。
 - 完了: `ReplaceStrTxt`（`createReplaceStrTxt(deps)`。既定のインスタンスの `get`・`set`・`replace` を export）。
-- 未着手（`corePorts` 参照の残り）: `URL`、`OpenedBoards`、`NG`、`BBSMenu`、`BBSMenuModel`、`BoardTitleSolver`、`Board`、`Thread`。
-- 次の候補: `URL`（`expandShortURL` の設定参照のみ）、`OpenedBoards`。`Board` と `Thread` は依存が多いため最後に扱う。
+- 完了: `URL`（`expandShortURL(url, config)`。モジュール外からの呼び出しはない）。
+- 完了: `OpenedBoards`（`createOpenedBoards(deps)`。既定のインスタンスの `upsertOpenedBoardEntry` を export）。
+- 完了: `NG`（`createNG(deps)`。既定のインスタンスの関数を export。`toast` は依存として残す）。テストを追加。
+- 未着手（`corePorts` 参照の残り）: `BBSMenu`、`BBSMenuModel`、`BoardTitleSolver`、`Board`、`Thread`。
+- 次の候補: `BBSMenuModel`（`BBSMenu` の内部で使われる）。`Board` と `Thread` は依存が多いため最後に扱う。
+- 残課題: `NG` の `toast` と、`Board` の `container.toast` 相当の通知は、UI 寄りのため `features` か `app` へ移す（C-2 の後半）。
 
 ### Phase D: features 間の依存を減らす
 

@@ -1,6 +1,6 @@
 import { getStore2String, setStore2String } from "src/app/Store2Storage";
+import type { BBSMenuModelDeps } from "src/core/board/BBSMenuModel";
 import { BBSMenuModel } from "src/core/board/BBSMenuModel";
-import { corePorts } from "src/core/ports/registry";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vite-plus/test";
 
 const { configSet, cachedMenuMock, fetchMenuMock, askMock } = vi.hoisted(() => ({
@@ -9,11 +9,10 @@ const { configSet, cachedMenuMock, fetchMenuMock, askMock } = vi.hoisted(() => (
   fetchMenuMock: vi.fn(),
   askMock: vi.fn(),
 }));
-vi.mock("src/core/ports/registry", () => ({
-  corePorts: {
-    config: { get: (key: string) => getStore2String(`config_${key}`), set: configSet },
-  },
-}));
+// 依存は登録済みのサービス（corePorts）に頼らず、テスト用の値をコンストラクタや関数へ直接渡す。
+const deps = {
+  config: { get: (key: string) => getStore2String(`config_${key}`), set: configSet },
+} as unknown as BBSMenuModelDeps;
 vi.mock("src/core/board/BoardTitleSolver.js", () => ({ ask: askMock }));
 vi.mock("src/core/history/History", () => ({ getUnique: vi.fn() }));
 vi.mock("src/core/bookmark/ReadState.js", () => ({ getAll: vi.fn() }));
@@ -70,7 +69,7 @@ describe("板一覧の読み取りと開いた板の永続データ", () => {
     ]);
     await setStore2String("config_opened_board_entries", raw);
     for (let restart = 0; restart < 2; restart += 1) {
-      const menus = await new BBSMenuModel(corePorts).fetchAll();
+      const menus = await new BBSMenuModel(deps).fetchAll();
       expect(menus[0].categories[0].boards).toEqual([
         { url: "https://example.com/sample/", name: "サンプル板" },
       ]);
@@ -92,7 +91,7 @@ describe("板一覧の読み取りと開いた板の永続データ", () => {
       ],
     };
     cachedMenuMock.mockResolvedValue(menu);
-    expect(await new BBSMenuModel(corePorts).getCached()).toEqual({
+    expect(await new BBSMenuModel(deps).getCached()).toEqual({
       status: "success",
       menu: [menu],
     });
@@ -120,7 +119,7 @@ describe("板一覧の読み取りと開いた板の永続データ", () => {
 
   it("キャッシュ欠落を通常取得の結果に固定せず、後から板一覧を取得できる", async () => {
     await setStore2String("config_bbsmenu", "https://example.com/bbsmenu.html");
-    const model = new BBSMenuModel(corePorts);
+    const model = new BBSMenuModel(deps);
     expect(await model.getCached()).toEqual({ status: "success", menu: [] });
     expect((await model.get()).menu?.[0].name).toBe("保存済み板一覧");
     expect(fetchMenuMock).toHaveBeenCalledTimes(1);
@@ -131,7 +130,7 @@ describe("板一覧の読み取りと開いた板の永続データ", () => {
       url: `https://example.com/board${index}/`,
     }));
     await setStore2String("config_opened_board_entries", JSON.stringify(entries));
-    const result = await new BBSMenuModel(corePorts).get();
+    const result = await new BBSMenuModel(deps).get();
     expect(result.menu?.[0].categories[0].boards).toHaveLength(100);
     expect(askMock).not.toHaveBeenCalled();
     expect(configSet).not.toHaveBeenCalled();

@@ -10,10 +10,7 @@ import {
 } from "src/features/auto-refresh/browser/use-auto-refresh-panel";
 import { useAutoScrollState } from "src/features/auto-refresh/browser/use-auto-scroll-state";
 import { usePopupAutoScrollPauseSetting } from "src/features/auto-refresh/browser/use-popup-auto-scroll-pause-setting";
-import {
-  type ThreadDisplayMode,
-  useThreadDisplayModeSetting,
-} from "src/features/live-chat/browser/use-thread-display-mode-setting";
+import { type ThreadDisplayMode, useThreadDisplayModeSetting } from "src/features/live-chat";
 import type { AutoNextThreadMode } from "src/features/next-thread/browser/next-thread-search";
 import { useAutoNextThreadSetting } from "src/features/next-thread/browser/use-auto-next-thread-setting";
 import { MiniWindow } from "src/view/browser/components/MiniWindow";

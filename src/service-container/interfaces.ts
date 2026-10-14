@@ -16,6 +16,7 @@ import type {
 } from "src/core/ports/services";
 import type { IThreadService } from "src/core/ports/thread";
 import type Cache from "src/core/storage/Cache";
+import type { createReplaceStrTxt } from "src/core/thread/ReplaceStrTxt";
 
 // Core が使う型は src/core/ports に正本を置く（Phase B・C-1）。ここからは互換のために再エクスポートする。
 export type { IBBSMenuResult } from "src/core/ports/bbs-menu";
@@ -80,6 +81,9 @@ export type IBoardTitleService = Pick<
   "ask" | "askByUrl" | "getCachedTitles"
 >;
 
+/** 置換ルールの保存（Phase E、計画書 §3.6）。解析済みのルールを持つため、サービスコンテナ経由で使う。 */
+export type IReplaceStrService = Pick<ReturnType<typeof createReplaceStrTxt>, "set">;
+
 export interface IServiceContainer {
   config: IConfig;
   cache: ICacheService;
@@ -98,4 +102,5 @@ export interface IServiceContainer {
   threadLog: IThreadLogService;
   openedBoards: IOpenedBoardsService;
   boardTitle: IBoardTitleService;
+  replaceStr: IReplaceStrService;
 }

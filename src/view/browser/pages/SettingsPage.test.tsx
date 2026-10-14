@@ -2,6 +2,7 @@ import "@testing-library/jest-dom/vitest";
 
 import { act, cleanup, fireEvent, render, screen } from "@testing-library/react";
 import { useEffect } from "react";
+import { set as setReplacementDsl } from "src/core/thread/ReplaceStrTxt";
 import type { ScopedTabAction, TabStoreState } from "src/view/browser/state/tabs/tab-store-types";
 import type { SettingsPageUiState } from "src/view/browser/types";
 import { createHomeTab } from "src/view/browser/types";
@@ -21,6 +22,11 @@ vi.mock("webextension-polyfill", () => ({
 }));
 vi.mock("src/service-container/index", () => ({
   container: {
+    // 置換ルールの解析と保存は、下の corePorts のモック（同じ container）を使う本物の実装で確かめる。
+    replaceStr: {
+      // モックの組み立て時ではなく呼び出し時に参照するため、静的 import の関数を使える。
+      set: (value: string) => setReplacementDsl(value),
+    },
     // src/core/history/History はサービスコンテナの history から使う。
     history: {
       add: vi.fn(async () => undefined),

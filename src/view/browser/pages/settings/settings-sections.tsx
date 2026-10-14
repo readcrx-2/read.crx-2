@@ -11,7 +11,6 @@ import {
 } from "lucide-react";
 import { DEFAULT_CONFIG } from "src/app/config-defaults";
 import { isTauriRuntime } from "src/app/platform/runtime";
-import { set as setReplacementDsl } from "src/core/thread/ReplaceStrTxt";
 import { container } from "src/service-container/index";
 import {
   buildFieldSchema,
@@ -541,7 +540,7 @@ export async function saveSectionFormData(
   }
   // 置換設定は通常のconfig.setを通す前に検証し、不正な文字列を永続化しない。
   if (section.fields.some((field) => "key" in field && field.key === "replace_str_txt")) {
-    const result = await setReplacementDsl(String(formData.replace_str_txt ?? ""));
+    const result = await container.replaceStr.set(String(formData.replace_str_txt ?? ""));
     if (result.diagnostics.length > 0) {
       throw new Error(
         result.diagnostics

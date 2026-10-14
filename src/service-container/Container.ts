@@ -12,6 +12,7 @@ import {
   INotificationService,
   IOpenedBoardsService,
   IReadStateService,
+  IReplaceStrService,
   IServiceContainer,
   IThreadLogService,
   IThreadService,
@@ -44,6 +45,7 @@ interface ServiceContainerImpl extends IServiceContainer {
   _threadLog: IThreadLogService | undefined;
   _openedBoards: IOpenedBoardsService | undefined;
   _boardTitle: IBoardTitleService | undefined;
+  _replaceStr: IReplaceStrService | undefined;
 }
 
 if (!globalObj.__ServiceContainer) {
@@ -65,6 +67,7 @@ if (!globalObj.__ServiceContainer) {
     _threadLog: undefined,
     _openedBoards: undefined,
     _boardTitle: undefined,
+    _replaceStr: undefined,
 
     get config(): IConfig {
       if (!this._config) throw new Error("Config service not registered");
@@ -200,6 +203,14 @@ if (!globalObj.__ServiceContainer) {
     },
     set boardTitle(value: IBoardTitleService) {
       this._boardTitle = value;
+    },
+
+    get replaceStr(): IReplaceStrService {
+      if (!this._replaceStr) throw new Error("ReplaceStr service not registered");
+      return this._replaceStr;
+    },
+    set replaceStr(value: IReplaceStrService) {
+      this._replaceStr = value;
     },
   };
   globalObj.__ServiceContainer = impl;

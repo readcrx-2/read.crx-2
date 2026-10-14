@@ -5,7 +5,7 @@ import React, { useEffect, useState } from "react";
 import { THREAD_AUTO_REFRESH_IDLE_STOP_COUNT } from "src/features/auto-refresh/browser/auto-refresh-config";
 import { shouldDeferExpiredAutoRefreshStop } from "src/features/auto-refresh/browser/auto-refresh-stop";
 import { useAutoRefresh } from "src/features/auto-refresh/browser/use-auto-refresh";
-import { useLiveChatResponses } from "src/features/live-chat";
+import { useLiveChatResponses } from "src/features/live-chat/browser/use-live-chat-responses";
 import { useThreadRefreshController } from "src/features/thread/browser/use-thread-refresh-controller";
 import { container } from "src/service-container/index";
 import type { IConfig, IMessage } from "src/service-container/interfaces";

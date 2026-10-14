@@ -1,7 +1,7 @@
 import "@testing-library/jest-dom/vitest";
 
 import { act, cleanup, fireEvent, render } from "@testing-library/react";
-import { NgStatusProvider, useNgStatus } from "src/features/ng";
+import { NgStatusProvider, useNgStatus } from "src/features/ng/browser/use-ng-status";
 import { PopupResCard } from "src/features/popup/ui/PopupResCard";
 import type { IRes } from "src/service-container/interfaces";
 import { afterEach, describe, expect, it, vi } from "vite-plus/test";

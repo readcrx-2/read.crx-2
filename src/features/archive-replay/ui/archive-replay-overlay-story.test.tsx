@@ -1,7 +1,7 @@
 import "@testing-library/jest-dom/vitest";
 
 import { act, cleanup, fireEvent, render, screen } from "@testing-library/react";
-import type { CommentCandidate } from "src/features/comment-overlay";
+import type { CommentCandidate } from "src/features/comment-overlay/domain";
 import { afterEach, describe, expect, it, vi } from "vite-plus/test";
 
 import { PastThreadReplayStory } from "./ArchiveReplayOverlay.stories";

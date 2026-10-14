@@ -2,8 +2,11 @@ import React, { useEffect, useMemo, useState } from "react";
 import { extractUrlsFromMessage } from "src/core/util/url-media";
 import { useImgurAlbumMedia } from "src/features/media/application/imgur-album";
 import { ResMediaGallery } from "src/features/media/ui/ResMediaGallery";
-import { useIsNgTemporarilyDisabled, useNgDisplayMode } from "src/features/ng";
-import { NgBadge } from "src/features/ng";
+import {
+  useIsNgTemporarilyDisabled,
+  useNgDisplayMode,
+} from "src/features/ng/browser/use-ng-status";
+import { NgBadge } from "src/features/ng/ui/NgBadge";
 import { ResBody } from "src/features/thread/ui/ResBody";
 import type { IRes } from "src/service-container";
 import { useViewSurface } from "src/view/browser/hooks/use-view-surface";

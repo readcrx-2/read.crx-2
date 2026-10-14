@@ -4,7 +4,7 @@ import { act, cleanup, render, screen } from "@testing-library/react";
 import { useRef, useState } from "react";
 import { resolveThreadAutoRefreshStop } from "src/features/auto-refresh/browser/auto-refresh-stop";
 import { useAutoRefresh } from "src/features/auto-refresh/browser/use-auto-refresh";
-import { useAutoNextThread } from "src/features/next-thread";
+import { useAutoNextThread } from "src/features/next-thread/browser/use-auto-next-thread";
 import { useThreadRefreshController } from "src/features/thread/browser/use-thread-refresh-controller";
 import { container } from "src/service-container/index";
 import type { IConfig } from "src/service-container/interfaces";

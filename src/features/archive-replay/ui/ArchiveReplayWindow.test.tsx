@@ -1,7 +1,7 @@
 import "@testing-library/jest-dom/vitest";
 
 import { cleanup, fireEvent, render, screen, waitFor } from "@testing-library/react";
-import type { CommentOverlayWindowPlatform } from "src/features/comment-overlay";
+import type { CommentOverlayWindowPlatform } from "src/features/comment-overlay/platform";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vite-plus/test";
 
 import { MemoryArchiveReplayOverlayEventBus } from "../platform";

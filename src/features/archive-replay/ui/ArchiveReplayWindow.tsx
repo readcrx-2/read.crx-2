@@ -7,12 +7,12 @@ import {
   mapWithConcurrency,
   MAX_CONCURRENT_BATCH_REQUESTS,
 } from "src/core/util/map-with-concurrency";
-import type { CommentCandidate } from "src/features/comment-overlay";
-import { projectCommentResponse } from "src/features/comment-overlay";
+import type { CommentCandidate } from "src/features/comment-overlay/domain";
+import { projectCommentResponse } from "src/features/comment-overlay/domain";
 import {
   type CommentOverlayWindowPlatform,
   commentOverlayWindowPlatform,
-} from "src/features/comment-overlay";
+} from "src/features/comment-overlay/platform";
 import { container } from "src/service-container";
 import type { IThreadDetail } from "src/service-container/interfaces";
 import { useTheme } from "src/view/browser/hooks/use-theme";

@@ -9,7 +9,10 @@ import React, {
   useState,
 } from "react";
 import { getStore2String, setStore2String } from "src/app/Store2Storage";
-import { type AuxiliaryWindowOptions, useAuxiliaryWindow } from "src/features/auxiliary-window";
+import {
+  type AuxiliaryWindowOptions,
+  useAuxiliaryWindow,
+} from "src/features/auxiliary-window/browser/use-auxiliary-window";
 import { useTabPanes, useTabStore } from "src/view/browser/state/tabs/use-tab-store";
 import type { Page, Tab } from "src/view/browser/types";
 import { getCurrentPage } from "src/view/browser/types";

@@ -11,7 +11,10 @@ import {
 } from "react";
 import { evaluateThreadNg } from "src/core/ng/ThreadNgEvaluator";
 import { corePorts } from "src/core/ports/registry";
-import { useIsNgTemporarilyDisabled, useNgDisplayMode } from "src/features/ng";
+import {
+  useIsNgTemporarilyDisabled,
+  useNgDisplayMode,
+} from "src/features/ng/browser/use-ng-status";
 import type { ThreadRefreshController } from "src/features/thread/browser/use-thread-refresh-controller";
 import { container } from "src/service-container/index";
 import type { IRes, IThreadDetail } from "src/service-container/interfaces";

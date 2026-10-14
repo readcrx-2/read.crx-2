@@ -1,4 +1,4 @@
-import type { CommentCandidate } from "src/features/comment-overlay";
+import type { CommentCandidate } from "src/features/comment-overlay/domain";
 import { describe, expect, it } from "vite-plus/test";
 
 import {

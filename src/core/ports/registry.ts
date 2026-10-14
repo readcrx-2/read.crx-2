@@ -8,7 +8,6 @@ import type {
   IMessage,
   INGService,
   IReadStateService,
-  IToastService,
   IUtil,
 } from "src/core/ports/services";
 
@@ -27,7 +26,6 @@ export interface CorePorts {
   readState: IReadStateService;
   board: IBoardService;
   bbsMenu: IBBSMenuService;
-  toast: IToastService;
   ng: INGService;
   notice: ICoreNoticeService;
 }

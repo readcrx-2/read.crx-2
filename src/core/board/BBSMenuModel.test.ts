@@ -101,6 +101,23 @@ describe("板一覧の読み取りと開いた板の永続データ", () => {
     expect(configSet).not.toHaveBeenCalled();
   });
 
+  it("板一覧の取得に失敗したら、その URL を core の出来事として知らせる", async () => {
+    const bbsmenuUrl = "https://example.com/bbsmenu.html";
+    fetchMenuMock.mockRejectedValue(new Error("通信に失敗しました"));
+    vi.spyOn(console, "error").mockImplementation(() => undefined);
+    // 登録済みのサービスに頼らず、必要な依存だけをコンストラクタへ渡す。
+    const notice = { ngRuleRegexInvalid: vi.fn(), bbsMenuFetchFailed: vi.fn() };
+    const model = new BBSMenuModel({
+      cache: { getCache: vi.fn() },
+      config: { get: (key: string) => (key === "bbsmenu" ? bbsmenuUrl : null), set: configSet },
+      notice,
+    } as unknown as ConstructorParameters<typeof BBSMenuModel>[0]);
+
+    await model.fetchAll();
+
+    expect(notice.bbsMenuFetchFailed).toHaveBeenCalledWith(bbsmenuUrl);
+  });
+
   it("キャッシュ欠落を通常取得の結果に固定せず、後から板一覧を取得できる", async () => {
     await setStore2String("config_bbsmenu", "https://example.com/bbsmenu.html");
     const model = new BBSMenuModel(corePorts);

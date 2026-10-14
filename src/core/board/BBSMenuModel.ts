@@ -29,7 +29,7 @@ export type BBSMenuData = IBBSMenuResult;
  * 未登録板の収集は OtherBoardsCollector が担当する。
  */
 /** 板一覧の取得に必要なサービス。呼び出し側が渡す（C-2）。 */
-export type BBSMenuModelDeps = Pick<CorePorts, "cache" | "config" | "toast">;
+export type BBSMenuModelDeps = Pick<CorePorts, "cache" | "config" | "notice">;
 
 export class BBSMenuModel {
   private _bbsmenuOption: Set<string> | null = null;
@@ -140,10 +140,8 @@ export class BBSMenuModel {
         menus.push(menu);
       } catch (error) {
         console.error(error);
-        this.deps.toast.notify(
-          `板一覧の取得に失敗しました。(<a href="${url}" target="_blank">${url}</a>)`,
-          { html: true, backgroundColor: "red" },
-        );
+        // 利用者への見せ方（リンク付きのトーストなど）は service-container の setup が決める。
+        this.deps.notice.bbsMenuFetchFailed(url);
       }
     }
 

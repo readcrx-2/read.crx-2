@@ -12,7 +12,6 @@ import type {
   IMessage,
   INGService,
   IReadStateService,
-  IToastService,
   IUtil,
 } from "src/core/ports/services";
 import type { IThreadService } from "src/core/ports/thread";
@@ -37,10 +36,20 @@ export type {
   IMessage,
   INGService,
   IReadStateService,
-  IToastService,
   IUtil,
 } from "src/core/ports/services";
 export type { IRes, IThread, IThreadDetail, IThreadService } from "src/core/ports/thread";
+
+/** 画面のトースト。core は使わない（core からの知らせは ICoreNoticeService を通す）。 */
+export interface IToastService {
+  notify(
+    message: string,
+    options?: { html?: boolean; backgroundColor?: string; targetWindow?: Window },
+  ): void;
+  success(message: string, options?: { targetWindow?: Window }): void;
+  error(message: string, options?: { targetWindow?: Window }): void;
+  info(message: string, options?: { targetWindow?: Window }): void;
+}
 
 export interface INotificationService {
   notify(

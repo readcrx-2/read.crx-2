@@ -1,4 +1,4 @@
-import type { CommentCandidate } from "src/features/comment-overlay/domain/comment-types";
+import type { CommentCandidate } from "src/features/comment-overlay";
 
 /** 実況ログの日時は掲示板にタイムゾーンが含まれないため、日本時間として解釈する。 */
 export const ARCHIVE_REPLAY_TIME_ZONE_OFFSET_MINUTES = 9 * 60;

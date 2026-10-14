@@ -1,7 +1,7 @@
 # モジュール境界の明確化計画
 
 - ブランチ: `refactor/module-boundaries`（`develop` から作成。旧名 `feature/module-boundaries`）
-- 状態: Phase 0・A・B・C-1・C-2・D-1・D-2 完了（§3.2 のうち、D-4 で扱う `commands` → タブストアを除く）。次は D-3（検査の導入）
+- 状態: Phase 0・A・B・C-1・C-2・D-1・D-2 完了（§3.2 のうち、D-4 で扱う `commands` → タブストアを除く）。D-3 完了（§3.4 の検査を `error` で導入）。次は D-4（タブストアの移動）
 
 ## 1. 目的
 
@@ -86,13 +86,14 @@ core/util
   - UI 部品層へ移す。
   - 他の機能からは `features/<x>/index.ts`（公開 API）だけを import してよい、というルールにする。
 
-### 3.4 検査の案
+### 3.4 検査（D-3 で導入、`36f7219a`）
 
-oxlint の `no-restricted-imports` で次を検査する。
+`vite.config.ts` の oxlint の `overrides` で、`eslint/no-restricted-imports` により次を `error` として検査する。
 
 - `src/view/browser/{ui,hooks,utils,types,components,state,commands}/**` から `src/features/**`、`src/view/browser/pages/**`、`src/view/browser/shell/**`、`src/view/browser/App` を禁止する。
 - `src/features/**` から `src/view/browser/pages/**`、`src/view/browser/shell/**`、`src/view/browser/App` を禁止する。
-- 逆向きの依存が 0 件になった時点で `error` で入れる。
+- `src/view/browser/commands/` の 2 ファイル（`browser-commands.ts`・`tab-command-runtime.ts`）とそのテストは、タブストアを参照しているため許可リストの override で除外している。D-4 で override を削除する。
+- 注意: CI（`.github/workflows/ci.yml`）は `scripts/check-changed-files.mjs` で、変更したファイルだけに `vp check` を実行する。新しく違反する import を足したファイルは必ず変更ファイルに含まれるので検出できるが、既存の違反を一覧したいときは `vp lint src/` を手元で実行する。
 
 ## 4. 検査の方法
 
@@ -213,7 +214,7 @@ oxlint の `no-restricted-imports` で次を検査する。
 進め方:
 
 1. D-2: §3.2 の逆向きの依存を、1 件ずつ別コミットで解消する。最初は D-1 と同じ要領の `usePopupCloseBehavior` の移動。
-2. D-3: §3.4 の検査を `error` で入れる。D-2 の後に残る `commands` の 2 ファイル（タブストアへの依存）は許可リストに入れ、D-4 で外す。
+2. D-3（完了、`36f7219a`）: §3.4 の検査を `error` で入れた。D-2 の後に残る `commands` の 2 ファイル（タブストアへの依存）は許可リストに入れ、D-4 で外す。
 3. D-4: タブストアを `view/browser/state/tabs` へ移す。
 4. D-5: NG・媒体の共有部品の扱いを決め、機能間の残りの依存を 1 組ずつ解消する。
 

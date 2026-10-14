@@ -20,6 +20,7 @@
 | D-2（一部） | タブ表示の組み立て部品（`ContentArea`・`TabView`・`TabWindowHost`・`DetachedTabWindowContent`）を `features/tabs/ui` から `view/browser/shell/` へ移し、`App` の参照先を付け替える | `cb32daee`、`650c689b` |
 | D-2（一部） | 画面の外枠の部品（`NavigationBar`・`BottomPanel`・`TitleBar`・`PageCountStatusItem`）を `components` から `shell/` へ移し、参照先を付け替える | `257a23a0`、`6204bc2b` |
 | D-2（一部） | `SettingsSectionId`・`SettingsPageUiState` の型を `pages/settings/settings-types` から `view/browser/types.ts` へ移し、参照先を付け替える | `52f6bcfd`、`75d54cdf` |
+| D-3 | UI 部品層 → `features`・組み立て層、`features` → 組み立て層の import を oxlint で `error` にする。`commands` の 2 ファイルとそのテストは許可リスト | `36f7219a` |
 
 検証は、各コミット時点で `tsc` と `vp test run` を通しています。D-2 の完了時点では、`vp test run`（276 ファイル・2157 件）、`tsc`、`build:chrome` がすべて通りました。
 
@@ -63,7 +64,10 @@
 
 ### Phase F: 検査を `error` にする（未着手）
 
-- 禁止ルールは `core` → `service-container` のみ（`error`）。
+- 禁止ルール（`error`）は次の 3 つ。
+  - `core` → `service-container`
+  - UI 部品層 → `features`・組み立て層（`commands` の 2 ファイルは許可リスト。D-3）
+  - `features` → 組み立て層（D-3）
 - `features` 間の依存と `view` → `core` の依存には、まだ検査がない。
 - 循環検出（`import/no-cycle`）は計測でのみ使用。`vite.config.ts` には入っていない。
 
@@ -74,16 +78,16 @@
 
 ## 4. 検証の抜け
 
-- `build:chrome` は、`75d54cdf`（D-2 の最後のコミット）の後に再実行し、成功した。同じ時点で `vp test run`（276 ファイル・2157 件）、`tsc`、`vp lint`（エラー 0 件）も通った。
+- `build:chrome` は、`75d54cdf`（D-2 の最後のコミット）の後に再実行し、成功した。
+- `36f7219a`（D-3）の時点で、`vp test run`（276 ファイル・2157 件）、`tsc`、`vp lint src/`（エラー 0 件）が通った。D-3 の検査は、許可リストを外すと `commands` の 4 ファイル・8 行だけを検出すること、`features` のファイルに `shell` の import を一時的に足すと検出することを確認した。
 - lint には、この作業と無関係な警告が以前からある（`unicorn`・`react` など）。エラーはない。
 
 ## 5. 次に必要なこと
 
-1. D-2 は、D-4 で扱う項目 4（`commands` → タブストア）を除いて完了した。
-2. D-3: UI 部品層の検査を入れる。残りは `commands` の 2 ファイルだけなので、Phase A と同じく許可リストに入れて `error` で導入し、D-4 で許可リストを空にする。
-3. D-4: タブストアを `view/browser/state/tabs` へ移す（項目 4 もここで解消する）。
-4. D-5: NG・媒体の共有部品の扱いを決め、機能間の残りの依存を解消する。
-5. 並行してできるもの:
+1. D-2 は、D-4 で扱う項目 4（`commands` → タブストア）を除いて完了した。D-3（検査の導入）も完了した。
+2. D-4: タブストアを `view/browser/state/tabs` へ移す（項目 4 もここで解消する）。終わったら `vite.config.ts` の許可リストの override を削除する。
+3. D-5: NG・媒体の共有部品の扱いを決め、機能間の残りの依存を解消する。
+4. 並行してできるもの:
    - `jsutil` の `corePorts` 参照の整理
    - `core` の `toast` 通知の移動計画
 

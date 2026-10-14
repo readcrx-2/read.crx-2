@@ -93,7 +93,7 @@ describe("画像ビューアのズームアニメーション", () => {
     return { x: Number(match[1]), y: Number(match[2]), scale: Number(match[3]) };
   }
 
-  it("倍率と位置を時間に応じて補間し、カーソルを基準にした目標へ収束する", () => {
+  it("倍率を時間に応じて補間し、補間中もカーソル下の点を固定したまま目標へ収束する", () => {
     const { stage, canvas } = mountViewer();
     const initial = canvas.style.transform;
     fireEvent.wheel(stage, { deltaY: -100, clientX: 200, clientY: 150 });
@@ -104,8 +104,9 @@ describe("画像ビューアのズームアニメーション", () => {
     const progress = 1 - Math.exp(-1);
     const targetScale = Math.exp(0.18);
     expect(intermediate.scale).toBeCloseTo(Math.exp(0.18 * progress), 10);
-    expect(intermediate.x).toBeCloseTo(100 + (100 - 100 * targetScale) * progress, 10);
-    expect(intermediate.y).toBeCloseTo(100 + (50 - 50 * targetScale) * progress, 10);
+    // 位置を倍率と別の曲線で補間すると途中でカーソル下の点が流れるため、途中でも固定されていることを確かめる。
+    expect((200 - intermediate.x) / intermediate.scale).toBeCloseTo(100, 10);
+    expect((150 - intermediate.y) / intermediate.scale).toBeCloseTo(50, 10);
 
     advanceFrame(1000);
     const final = getTransform(canvas);

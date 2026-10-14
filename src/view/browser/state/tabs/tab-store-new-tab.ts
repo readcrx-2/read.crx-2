@@ -1,5 +1,4 @@
 import { DEFAULT_CONFIG } from "src/app/config-defaults";
-import { getAutoRefreshPageKey } from "src/view/browser/state/tabs/auto-refresh-pages";
 import { readConfigValue } from "src/view/browser/state/tabs/tab-store-config";
 import { deriveBoardUrlFromThreadUrl } from "src/view/browser/state/tabs/tab-store-state-helpers";
 import {
@@ -33,34 +32,6 @@ export function shouldFocusNewTabOnOpen(): boolean {
     return DEFAULT_CONFIG.focus_new_tab_on_open === "on";
   }
   return rawValue === "on";
-}
-
-export function getPageIdentity(page: Page): string {
-  switch (page.type) {
-    case "home":
-    case "newTab":
-      return page.type;
-    case "boardList":
-      return "boardList";
-    case "settings":
-      return "settings";
-    // クイックアクセス3種を別IDとして扱い、
-    // 「既に開いている判定」で相互に潰し合って遷移不能になる回帰を防ぐ。
-    case "bookmarkList":
-      return "bookmarkList";
-    case "historyList":
-      return "historyList";
-    case "writeHistoryList":
-      return "writeHistoryList";
-    case "logList":
-      return "logList";
-    case "threadList":
-      return getAutoRefreshPageKey(page) ?? "threadList";
-    case "thread":
-      return getAutoRefreshPageKey(page) ?? "thread";
-  }
-
-  throw new Error("Unsupported page type");
 }
 
 function createThreadListPageFromBoardUrl(boardUrl: string): Extract<Page, { type: "threadList" }> {

@@ -30,9 +30,9 @@ import {
   createPane,
   createTab,
   createTabFromPage,
-  getPageIdentity,
   readInitialPageFromLocation,
 } from "src/view/browser/state/tabs/tab-store-new-tab";
+import { getPageIdentity } from "src/view/browser/state/tabs/tab-store-page-identity";
 import { tabReducer } from "src/view/browser/state/tabs/tab-store-reducer";
 import { findTabAcrossPanes } from "src/view/browser/state/tabs/tab-store-selectors";
 import {

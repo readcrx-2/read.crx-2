@@ -6,9 +6,9 @@ import {
   createPane,
   createTab,
   createTabFromPage,
-  getPageIdentity,
   shouldFocusNewTabOnOpen,
 } from "src/view/browser/state/tabs/tab-store-new-tab";
+import { getPageIdentity } from "src/view/browser/state/tabs/tab-store-page-identity";
 import {
   canCloseTab,
   canOpenInRightPane,

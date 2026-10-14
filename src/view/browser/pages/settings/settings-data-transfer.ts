@@ -6,11 +6,6 @@ import {
   getBrowserSessionJson,
   setBrowserSessionJson,
 } from "src/view/browser/state/tabs/browser-session-storage";
-import {
-  getLegacyBookmarkEntryList,
-  getLegacyBookmarkService,
-  waitForLegacyBookmarkReady,
-} from "src/view/browser/utils/legacy-app";
 
 const ARCHIVE_SCHEMA_VERSION = 2;
 
@@ -361,9 +356,10 @@ export async function exportDataArchive(options: ExportArchiveOptions): Promise<
   }
 
   if (options.includeBookmarks) {
-    await waitForLegacyBookmarkReady();
-    const bookmarkRows = getLegacyBookmarkService()?.getAll?.();
-    const normalizedRows = (Array.isArray(bookmarkRows) ? bookmarkRows : [])
+    // window.app ではなくサービスコンテナから読む（legacy-window-app-plan の Phase 2）。
+    await container.bookmark.ready();
+    const normalizedRows = container.bookmark
+      .getAll()
       .map((row) => toBookmarkExportRecord(row))
       .filter((row): row is BookmarkEntry => row != null);
     const payload: BookmarkExportPayload = {
@@ -431,7 +427,7 @@ export async function importDataArchive(archiveFile: File): Promise<ImportArchiv
   // 設定内のブックマーク保存先を復元した場合、Chrome側の再スキャン完了を待ってから項目を追加する。
   const bookmarkRootNodeId = normalizedSettings.bookmark_id;
   if (bookmarkRootNodeId) {
-    await getLegacyBookmarkEntryList()?.setRootNodeId?.(bookmarkRootNodeId);
+    await container.bookmarkRoot.setRootNodeId(bookmarkRootNodeId);
   }
 
   const historyPayload = await readJsonEntry<HistoryExportPayload | { items?: unknown[] }>(
@@ -493,13 +489,12 @@ export async function importDataArchive(archiveFile: File): Promise<ImportArchiv
 
   let importedBookmarkCount = 0;
   if (bookmarksPayload !== null) {
-    await waitForLegacyBookmarkReady();
-    const bookmarkService = getLegacyBookmarkService();
-    if (bookmarkService?.import) {
-      for (const row of bookmarkItems) {
-        if (await bookmarkService.import(row)) {
-          importedBookmarkCount += 1;
-        }
+    // 以前は window.app にブックマークがなければ何も戻さなかった。サービスコンテナは描画前に
+    // 必ず登録されるため、この分岐はなくした（legacy-window-app-plan の Phase 2）。
+    await container.bookmark.ready();
+    for (const row of bookmarkItems) {
+      if (await container.bookmark.import(row)) {
+        importedBookmarkCount += 1;
       }
     }
   }

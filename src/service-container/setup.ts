@@ -22,6 +22,7 @@ import {
   IBoardService,
   IBookmark,
   IBookmarkItem,
+  IBookmarkRootService,
   ICacheItem,
   ICacheService,
   IConfig,
@@ -36,6 +37,14 @@ import {
   IUtil,
 } from "src/service-container/interfaces";
 import { toastStore } from "src/service-container/toast-store";
+
+type BookmarkEntryListRuntime = Bookmark["bel"] & {
+  needReconfigureRootNodeId?: {
+    add: (callback: () => void) => void;
+    wasCalled: boolean;
+  };
+  setRootNodeId?: (rootNodeId: string) => Promise<boolean>;
+};
 
 let bookmarkRuntime: Bookmark | undefined;
 
@@ -52,13 +61,7 @@ function initializeBookmarkRuntime(): void {
       ? configuredBookmarkId
       : "dummy";
   bookmarkRuntime = new Bookmark(rootNodeId);
-  const entryList = bookmarkRuntime.bel as Bookmark["bel"] & {
-    needReconfigureRootNodeId?: {
-      add: (callback: () => void) => void;
-      wasCalled: boolean;
-    };
-    setRootNodeId?: (rootNodeId: string) => Promise<boolean>;
-  };
+  const entryList = bookmarkRuntime.bel as BookmarkEntryListRuntime;
   const notifyRootSelectionRequired = () => {
     message.send("bookmark_root_reconfigure_required");
   };
@@ -144,6 +147,19 @@ export function setupContainer(): void {
   }
   const bookmarkAdapter: IBookmark = {
     promiseFirstScan: activeBookmark.promiseFirstScan,
+    ready: async () => {
+      try {
+        // 変更理由: BrowserBookmarkEntryList は初回の走査が終わる前だと空の一覧を返しうるため、
+        // 画面は読む前にここで待つ。以前は view の legacy-app.ts が window.app から同じ Promise を待っていた
+        // （legacy-window-app-plan の Phase 2）。
+        await activeBookmark.promiseFirstScan;
+      } catch (error) {
+        // 初回の走査に失敗しても、画面は読めるデータで表示を続ける。握りつぶさずに原因を残す。
+        console.error("[Bookmark] 初回の走査の完了待ちに失敗しました:", error);
+      }
+    },
+    getAll: () => activeBookmark.getAll(),
+    import: (entry) => activeBookmark.import(entry),
     get: (url: string) => activeBookmark.get(url),
     // nullはBookmark.addの数値チェックで未指定と同じ扱いなのでundefinedへ揃える。
     add: (item: IBookmarkItem) =>
@@ -153,6 +169,17 @@ export function setupContainer(): void {
     updateExpired: (url: string, expired: boolean) => activeBookmark.updateExpired(url, expired),
     getByBoard: (url: string) => activeBookmark.getByBoard(url),
     getAllBoards: () => activeBookmark.getAllBoards(),
+  };
+
+  // BookmarkRoot Adapter
+  // 保存先の切り替えと選び直しの要否は、画面から window.app.bookmarkEntryList を通さずにここから使う
+  // （legacy-window-app-plan の Phase 2）。保存先の実装（ブラウザのブックマーク・IndexedDB）は Bookmark が選ぶ。
+  const activeEntryList = activeBookmark.bel as BookmarkEntryListRuntime;
+  const bookmarkRootAdapter: IBookmarkRootService = {
+    isReconfigureRequired: () => activeEntryList.needReconfigureRootNodeId?.wasCalled === true,
+    // IndexedDB（Tauri）の保存先には切り替えがないため、何もせず成功として扱う（以前の画面の挙動と同じ）。
+    setRootNodeId: async (rootNodeId) =>
+      (await activeEntryList.setRootNodeId?.(rootNodeId)) ?? true,
   };
 
   // Cache Adapter
@@ -277,6 +304,7 @@ export function setupContainer(): void {
   container.config = configAdapter;
   container.message = messageAdapter;
   container.bookmark = bookmarkAdapter;
+  container.bookmarkRoot = bookmarkRootAdapter;
   container.cache = cacheServiceAdapter;
   container.util = utilAdapter;
   container.readState = readStateAdapter;

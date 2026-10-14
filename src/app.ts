@@ -162,7 +162,8 @@ export async function boot(
     const localApp = (window as unknown as { app: LegacyAppObject }).app;
     const bookmarkRuntime = getBookmarkRuntime();
     if (bookmarkRuntime) {
-      // ブックマーク移行中の旧画面とroot設定UIが参照する互換APIを維持する。
+      // 画面は legacy-window-app-plan の Phase 2 でサービスコンテナへ移ったため使っていない。
+      // リポジトリの外の利用者を Phase 4 で調べるまで、window.app の互換APIとして残す。
       localApp.bookmark = bookmarkRuntime;
       localApp.bookmarkEntryList = bookmarkRuntime.bel;
     }

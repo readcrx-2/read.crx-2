@@ -9,10 +9,6 @@ import { useTabStore } from "src/view/browser/state/tabs/use-tab-store";
 import { Alert } from "src/view/browser/ui/Alert";
 import { Button } from "src/view/browser/ui/Button";
 import { Spinner } from "src/view/browser/ui/Spinner";
-import {
-  getLegacyBookmarkService,
-  waitForLegacyBookmarkReady,
-} from "src/view/browser/utils/legacy-app";
 
 interface FavoriteBoard {
   url: string;
@@ -30,13 +26,10 @@ function normalizeString(value: unknown, fallback = ""): string {
 }
 
 async function readFavoriteBoards(): Promise<FavoriteBoard[]> {
-  await waitForLegacyBookmarkReady();
-
-  const bookmarkService = getLegacyBookmarkService();
-  const rawBoards = bookmarkService?.getAllBoards?.();
-  if (!Array.isArray(rawBoards)) {
-    return [];
-  }
+  // window.app ではなくサービスコンテナから読む（legacy-window-app-plan の Phase 2）。
+  await container.bookmark.ready();
+  // 保存されている値の形は信用せず、下で1件ずつ確かめるため unknown として扱う。
+  const rawBoards: unknown[] = container.bookmark.getAllBoards();
 
   const seenUrls = new Set<string>();
   const favorites: FavoriteBoard[] = [];

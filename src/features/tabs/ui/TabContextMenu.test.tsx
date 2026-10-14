@@ -70,6 +70,9 @@ describe("TabContextMenu", () => {
     copyTextMock.mockResolvedValue();
     container.bookmark = {
       promiseFirstScan: Promise.resolve(true),
+      ready: vi.fn(async () => undefined),
+      getAll: vi.fn(() => []),
+      import: vi.fn(async () => true),
       get: vi.fn(),
       add: vi.fn(),
       remove: vi.fn(),

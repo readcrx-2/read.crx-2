@@ -61,8 +61,8 @@ const { viewTab, defaultHistory, dispatchMock, longTitle } = vi.hoisted(() => {
   };
 });
 
-const { bookmarkGetAllThreadsMock, historyGetMock } = vi.hoisted(() => ({
-  bookmarkGetAllThreadsMock: vi.fn(),
+const { bookmarkGetAllMock, historyGetMock } = vi.hoisted(() => ({
+  bookmarkGetAllMock: vi.fn(),
   historyGetMock: vi.fn(),
 }));
 
@@ -140,10 +140,15 @@ describe("NavigationBar", () => {
       bookmarkUpdatedHandler?.({ bookmark: { url } });
     });
 
+    bookmarkGetAllMock.mockReturnValue([]);
     // URLバー候補の閲覧履歴はサービスコンテナから読む（legacy-window-app-plan の Phase 1）。
     container.history = { get: historyGetMock } as unknown as typeof container.history;
     container.bookmark = {
       promiseFirstScan: Promise.resolve(true),
+      ready: vi.fn(async () => undefined),
+      // URLバー候補のブックマークは window.app ではなくサービスコンテナから読む（legacy-window-app-plan の Phase 2）。
+      getAll: bookmarkGetAllMock,
+      import: vi.fn(async () => true),
       get: bookmarkGetMock,
       add: bookmarkAddMock,
       remove: bookmarkRemoveMock,
@@ -178,7 +183,7 @@ describe("NavigationBar", () => {
     commandPalette.close();
     commandPaletteStore.updateState((current) => ({ ...current, selected: -1 }));
     dispatchMock.mockReset();
-    bookmarkGetAllThreadsMock.mockReset();
+    bookmarkGetAllMock.mockReset();
     historyGetMock.mockReset();
     bookmarkGetMock.mockReset();
     bookmarkAddMock.mockReset();
@@ -190,17 +195,12 @@ describe("NavigationBar", () => {
     saveRecentCommandIdsMock.mockReset();
     bookmarkUpdatedHandler = null;
     bookmarkedUrls = new Set<string>();
-    // テストでは必要なレガシーAPIだけを差し替えるため、実アプリのwindow.app型から切り離す。
-    const mutableWindow = window as unknown as {
-      app?: unknown;
-    };
-    delete mutableWindow.app;
     viewTab.history = [...defaultHistory];
     viewTab.currentIndex = 1;
   });
 
   it("URLバー候補は『タイトル URL』の並びで表示し、お気に入りを優先する", async () => {
-    bookmarkGetAllThreadsMock.mockReturnValue([
+    bookmarkGetAllMock.mockReturnValue([
       {
         url: "https://egg.5ch.io/test/read.cgi/software/111/",
         title: "openai bookmark",
@@ -214,16 +214,6 @@ describe("NavigationBar", () => {
         viewedDate: 1000000001000,
       },
     ]);
-
-    // テストでは必要なレガシーAPIだけを差し替えるため、実アプリのwindow.app型から切り離す。
-    const mutableWindow = window as unknown as {
-      app?: unknown;
-    };
-    mutableWindow.app = {
-      bookmark: {
-        getAllThreads: bookmarkGetAllThreadsMock,
-      },
-    };
 
     render(<NavigationBar />);
 
@@ -240,17 +230,8 @@ describe("NavigationBar", () => {
 
   it("URLバー候補は同じ項目の複数の出典をアイコンで示す", async () => {
     const url = "https://egg.5ch.io/test/read.cgi/software/111/";
-    bookmarkGetAllThreadsMock.mockReturnValue([{ url, title: "openai bookmark" }]);
+    bookmarkGetAllMock.mockReturnValue([{ url, title: "openai bookmark" }]);
     historyGetMock.mockResolvedValue([{ url, title: "openai history" }]);
-
-    const mutableWindow = window as unknown as {
-      app?: unknown;
-    };
-    mutableWindow.app = {
-      bookmark: {
-        getAllThreads: bookmarkGetAllThreadsMock,
-      },
-    };
 
     render(<NavigationBar />);
 
@@ -870,6 +851,9 @@ describe("NavigationBar titlebar slot", () => {
     } as unknown as typeof container.history;
     container.bookmark = {
       promiseFirstScan: Promise.resolve(true),
+      ready: vi.fn(async () => undefined),
+      getAll: vi.fn(() => []),
+      import: vi.fn(async () => true),
       get: vi.fn(),
       add: vi.fn(),
       remove: vi.fn(),

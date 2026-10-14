@@ -1,6 +1,6 @@
 # window.app 互換層の整理計画
 
-- 状態: Phase 1 完了（2026-10-15 作成。Phase 0 と Phase 2 以降は未着手）
+- 状態: Phase 2 完了（2026-10-15 作成。Phase 0 と Phase 3 以降は未着手）
 - 前提: [モジュール境界の明確化計画](module-boundaries-plan.md) の Phase A〜F が完了していること
 - 作業ブランチ: 未定（`develop` から作る）
 
@@ -83,6 +83,20 @@
 - 注意: ブックマークの保存先（ブラウザのブックマーク・IndexedDB・Tauri）の切り替えは、プラットフォーム抽象化（`src/app/platform/`）と重なるため、境界をここで決め直す。
 
 完了条件: `legacy-app.ts` の関数の利用が 0 件。
+
+結果（2026-10-15）: 6 ファイルの利用をサービスコンテナへ付け替え、利用は 0 件になった。中身が空になった `legacy-app.ts` も削除した（Phase 3 の最初の項目を前倒しで済ませた。lint で塞ぐ作業は Phase 3 に残る）。
+
+- 起動の順番（`setup.test.ts` の「ブックマークの起動の順番」で固定した）:
+  1. 設定の読み込み（`Config.ready`）が終わった時点で `Bookmark` を作り、最初の走査を始める（`setup.ts` の `initializeBookmarkRuntime`）。この前に `setupContainer` を呼ぶと例外になる。
+  2. `bootView` が DOM の準備を待ち、`setupContainer` と（メインの画面では）`setupBrowserViewServices` を呼んでから描画する。
+  3. 画面は `container.bookmark.ready()` で最初の走査の完了を待ってから一覧を読む。走査が失敗しても `ready()` は reject せず、原因を `console.error` に残す（以前の `waitForLegacyBookmarkReady` は何も残さず握りつぶしていた）。
+- §5 の判断: 「準備完了を待つ」約束は `container.bookmark.ready()` として `IBookmark` に足した。同じ実体の初回の走査を待つだけで、別のサービスに分ける理由がないため。
+- `IBookmark`（`core/ports` の手書きのインターフェース）に `ready`・`getAll`・`import` を足した。書き出し・読み込みで使う保存形式の型として `IBookmarkEntry` を足した（ports は core の実装を import しないため、`Entry` と同じ形をここに書いた）。
+- 保存先のフォルダの操作（選び直しの要否・切り替え）は、`container.bookmarkRoot`（`IBookmarkRootService`、新設）にした。core は使わないため `service-container/interfaces.ts` に置いた。IndexedDB（Tauri）の保存先には切り替えがないので、`setRootNodeId` は何もせず成功を返す（以前の画面の挙動と同じ）。
+- 画面の挙動の差: 一覧の読み込みで `getAll` がない場合に `getAllThreads`・`getAllBoards` をつなげる分岐と、`window.app` にブックマークがない場合に空の一覧を返す分岐をなくした（Phase 1 と同じ理由で、サービスコンテナは描画前に必ず登録される）。
+- 保存先の切り替え（ブラウザのブックマーク・IndexedDB）とプラットフォーム抽象化の境界: 今回は動かさず、`core/bookmark/Bookmark` が `isTauriRuntime()` で選ぶ形のままにした。画面からは `bookmarkRoot` だけが見えるため、`src/app/platform/` へ移すかは画面に影響なく後で決められる（提案にとどめる）。
+- `app.ts` の `window.app.bookmark`・`bookmarkEntryList` は画面からは使わなくなったが、外の利用者を Phase 4 で調べるまで残す。
+- 大きさ（Tauri のビルド）: `replay.js` が約 0.5KB、`browser.js` が約 0.1KB 増えた（`setupContainer` のブックマークのアダプタに足した関数の分）。`overlay.js` は変わらない。
 
 ### Phase 3: lint で塞ぐ
 

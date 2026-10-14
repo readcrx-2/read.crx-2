@@ -37,6 +37,9 @@ describe("command-runtime", () => {
     copyTextMock.mockResolvedValue(undefined);
     container.bookmark = {
       promiseFirstScan: Promise.resolve(true),
+      ready: vi.fn(async () => undefined),
+      getAll: vi.fn(() => []),
+      import: vi.fn(async () => true),
       get: vi.fn(),
       add: vi.fn(),
       remove: vi.fn(),
@@ -109,6 +112,9 @@ describe("command-runtime", () => {
     const get = vi.fn().mockReturnValue(undefined);
     container.bookmark = {
       promiseFirstScan: Promise.resolve(true),
+      ready: vi.fn(async () => undefined),
+      getAll: vi.fn(() => []),
+      import: vi.fn(async () => true),
       get,
       add,
       remove,

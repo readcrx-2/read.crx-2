@@ -2,6 +2,7 @@ import "@testing-library/jest-dom/vitest";
 
 import { act, cleanup, fireEvent, render, screen, waitFor } from "@testing-library/react";
 import { container } from "src/service-container";
+import type { IBookmarkEntry } from "src/service-container/interfaces";
 import { BookmarkListPage } from "src/view/browser/pages/BookmarkListPage";
 import { QUICK_ACCESS_FILTER_TOGGLE_EVENT_BY_PAGE_TYPE } from "src/view/browser/utils/filter-toolbar-events";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vite-plus/test";
@@ -25,12 +26,6 @@ vi.mock("src/view/browser/state/tabs/use-tab-store", () => ({
   useTabDispatch: () => dispatchMock,
   useTabViewState: () => ({ state: {}, update: vi.fn() }),
 }));
-
-interface BookmarkService {
-  getAll?: () => unknown[];
-  getAllThreads?: () => unknown[];
-  promiseFirstScan?: Promise<boolean>;
-}
 
 describe("BookmarkListPage", () => {
   const getAllBookmarks = vi.fn<() => unknown[]>();
@@ -58,12 +53,6 @@ describe("BookmarkListPage", () => {
       },
     });
 
-    (window as unknown as { app?: { bookmark?: BookmarkService } }).app = {
-      bookmark: {
-        getAll: getAllBookmarks,
-      },
-    };
-
     container.message = {
       send: vi.fn(),
       on: (type, callback) => {
@@ -85,6 +74,11 @@ describe("BookmarkListPage", () => {
     };
     container.bookmark = {
       promiseFirstScan: Promise.resolve(true),
+      ready: vi.fn(async () => undefined),
+      // 一覧は window.app ではなくサービスコンテナから読む（legacy-window-app-plan の Phase 2）。
+      // 画面は保存された値を1件ずつ確かめるため、テストでは欠けた形の値もそのまま返す。
+      getAll: getAllBookmarks as unknown as () => IBookmarkEntry[],
+      import: vi.fn(async () => true),
       get: vi.fn(),
       add: vi.fn(),
       remove: removeBookmarkMock,
@@ -267,10 +261,11 @@ describe("BookmarkListPage", () => {
       },
     ]);
 
-    (window as unknown as { app?: { bookmark?: BookmarkService } }).app = {
-      bookmark: {
-        getAll: getAllBookmarks,
-        promiseFirstScan: readyPromise,
+    // 初回の走査の完了は window.app ではなくサービスコンテナで待つ（legacy-window-app-plan の Phase 2）。
+    container.bookmark = {
+      ...container.bookmark,
+      ready: async () => {
+        await readyPromise;
       },
     };
 

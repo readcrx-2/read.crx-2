@@ -11,8 +11,10 @@ const mocks = vi.hoisted(() => {
     configReadyCallbacks: [] as Array<() => void>,
     bookmarkEntryList,
     bookmarkRoots: [] as string[],
-    promiseFirstScan: Promise.resolve(true),
+    promiseFirstScan: Promise.resolve(true) as Promise<boolean>,
     bookmarkGet: vi.fn(() => null),
+    bookmarkGetAll: vi.fn(() => []),
+    bookmarkImport: vi.fn(async () => true),
     bookmarkGetByBoard: vi.fn(() => []),
     bookmarkGetAllBoards: vi.fn(() => []),
     messageSend: vi.fn(),
@@ -97,6 +99,8 @@ vi.mock("src/core/bookmark/Bookmark", () => ({
     get = mocks.bookmarkGet;
     getByBoard = mocks.bookmarkGetByBoard;
     getAllBoards = mocks.bookmarkGetAllBoards;
+    getAll = mocks.bookmarkGetAll;
+    import = mocks.bookmarkImport;
     add = vi.fn(async () => true);
     remove = vi.fn(async () => true);
     updateResCount = vi.fn(async () => true);
@@ -161,6 +165,7 @@ describe("サービスコンテナの初期化", () => {
     mocks.messageSend.mockClear();
     mocks.configValues.bookmark_id = "root-1";
     mocks.configValues.debug_log = "off";
+    mocks.promiseFirstScan = Promise.resolve(true);
     mocks.readStateGet.mockClear();
     mocks.isNewerReadState.mockClear();
   });
@@ -242,5 +247,84 @@ describe("サービスコンテナの初期化", () => {
     }
 
     expect(mocks.bookmarkEntryList.setRootNodeId).toHaveBeenCalledWith("root-2");
+  });
+
+  describe("ブックマークの起動の順番（legacy-window-app-plan の Phase 2）", () => {
+    // 起動の順番: 設定の読み込み（Config.ready）→ ブックマークの初期化（走査の開始）→ setupContainer → 描画。
+    // 画面は描画のあと container.bookmark.ready() で最初の走査の完了を待ってから読む。
+    it("設定の読み込みより前にはブックマークを作らず、setupContainer も始められない", async () => {
+      const { setupContainer } = await import("src/service-container/setup");
+
+      expect(mocks.bookmarkRoots).toEqual([]);
+      expect(() => setupContainer()).toThrow(
+        "Bookmark runtime is not initialized before Config.ready",
+      );
+    });
+
+    it("ready は最初の走査が終わるまで解決しない", async () => {
+      let finishScan: ((value: boolean) => void) | undefined;
+      mocks.promiseFirstScan = new Promise<boolean>((resolve) => {
+        finishScan = resolve;
+      });
+      const { setupContainer } = await import("src/service-container/setup");
+      const { container } = await import("src/service-container/Container");
+      for (const callback of mocks.configReadyCallbacks) callback();
+      setupContainer();
+
+      let isReady = false;
+      const ready = container.bookmark.ready().then(() => {
+        isReady = true;
+      });
+      await Promise.resolve();
+      expect(isReady).toBe(false);
+
+      finishScan?.(true);
+      await ready;
+      expect(isReady).toBe(true);
+    });
+
+    it("最初の走査が失敗しても ready は reject せず、原因をログに残す", async () => {
+      const scanError = new Error("走査の失敗");
+      mocks.promiseFirstScan = Promise.reject(scanError);
+      // 未処理の reject として扱われないよう、テスト側でも受けておく。
+      mocks.promiseFirstScan.catch(() => undefined);
+      const consoleError = vi.spyOn(console, "error").mockImplementation(() => undefined);
+      const { setupContainer } = await import("src/service-container/setup");
+      const { container } = await import("src/service-container/Container");
+      for (const callback of mocks.configReadyCallbacks) callback();
+      setupContainer();
+
+      await expect(container.bookmark.ready()).resolves.toBeUndefined();
+      expect(consoleError).toHaveBeenCalledWith(expect.stringContaining("[Bookmark]"), scanError);
+      consoleError.mockRestore();
+    });
+
+    it("画面が使う一覧・読み込み・保存先の操作を Bookmark へつなぐ", async () => {
+      const { setupContainer } = await import("src/service-container/setup");
+      const { container } = await import("src/service-container/Container");
+      for (const callback of mocks.configReadyCallbacks) callback();
+      setupContainer();
+
+      container.bookmark.getAll();
+      expect(mocks.bookmarkGetAll).toHaveBeenCalled();
+      const entry = {
+        url: "https://example.com/test/read.cgi/a/1/",
+        title: "スレ",
+        type: "thread",
+        bbsType: "2ch",
+        resCount: null,
+        readState: null,
+        expired: false,
+      };
+      await expect(container.bookmark.import(entry)).resolves.toBe(true);
+      expect(mocks.bookmarkImport).toHaveBeenCalledWith(entry);
+
+      // 起動前に保存先が見つからなかったことは、画面から選び直しの要否として読める。
+      expect(container.bookmarkRoot.isReconfigureRequired()).toBe(true);
+      mocks.bookmarkEntryList.needReconfigureRootNodeId.wasCalled = false;
+      expect(container.bookmarkRoot.isReconfigureRequired()).toBe(false);
+      await expect(container.bookmarkRoot.setRootNodeId("root-3")).resolves.toBe(true);
+      expect(mocks.bookmarkEntryList.setRootNodeId).toHaveBeenCalledWith("root-3");
+    });
   });
 });

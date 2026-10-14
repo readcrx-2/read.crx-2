@@ -1,4 +1,5 @@
-import { normalizeObfuscatedUrl, URL_LIKE_PATTERN } from "src/core/network/url-utils";
+// core/util は最下層なので、core/network の互換窓口（url-utils）を経由せず chlib を直接参照する。
+import { normalizeObfuscatedUrl, URL_LIKE_PATTERN } from "@chlen/chlib";
 
 /**
  * レス本文からのURL抽出と画像ビューア向けURL変換をまとめる。

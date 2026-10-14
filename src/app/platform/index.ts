@@ -3,6 +3,7 @@ import { BrowserStorageManager } from "src/app/platform/browser/StorageManager";
 import { BrowserWindowManager } from "src/app/platform/browser/WindowManager";
 import { platformCookieManager } from "src/app/platform/CookieManager";
 import { platformDownloadManager } from "src/app/platform/DownloadManager";
+import { MAX_CONCURRENT_HTTP_REQUESTS, QueuedHttpClient } from "src/app/platform/QueuedHttpClient";
 import { inheritTauriInternalsFromTopWindow, isTauriRuntime } from "src/app/platform/runtime";
 import { TauriHttpClient } from "src/app/platform/tauri/HttpClient";
 import { TauriStorageManager } from "src/app/platform/tauri/StorageManager";
@@ -14,18 +15,22 @@ import { Platform } from "src/app/platform/types";
 inheritTauriInternalsFromTopWindow();
 
 const isTauri = isTauriRuntime();
+const httpClient = new QueuedHttpClient(
+  isTauri ? TauriHttpClient : BrowserHttpClient,
+  MAX_CONCURRENT_HTTP_REQUESTS,
+);
 
 export const platform: Platform = isTauri
   ? {
       window: TauriWindowManager,
-      http: TauriHttpClient,
+      http: httpClient,
       download: platformDownloadManager,
       cookies: platformCookieManager,
       storage: TauriStorageManager,
     }
   : {
       window: BrowserWindowManager,
-      http: BrowserHttpClient,
+      http: httpClient,
       download: platformDownloadManager,
       cookies: platformCookieManager,
       storage: BrowserStorageManager,

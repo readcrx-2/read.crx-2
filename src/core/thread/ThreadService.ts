@@ -2,7 +2,6 @@ import { toCanonicalThread } from "packages/chlib/src/index";
 import type { ThreadRes } from "packages/chlib/src/parser/ThreadParser";
 import { evaluateThreadNg } from "src/core/ng/ThreadNgEvaluator";
 import type { CorePorts } from "src/core/ports/registry";
-import { corePorts } from "src/core/ports/registry";
 import type { IRes, IThreadDetail, IThreadService } from "src/core/ports/thread";
 import { replace as replaceStrTxt } from "src/core/thread/ReplaceStrTxt";
 import Thread from "src/core/thread/Thread";
@@ -159,8 +158,3 @@ class ThreadServiceImpl implements IThreadService {
 export function createThreadService(deps: ThreadServiceDeps): IThreadService {
   return new ThreadServiceImpl(deps);
 }
-
-// 既存の import 先（app.ts の公開 API）を維持するため、登録済みのサービスで組み立てた既定のインスタンスを公開する。
-// 依存は関数が呼ばれた時点で参照されるため、ここでの組み立てで未登録の例外は出ない。
-const threadService: IThreadService = createThreadService(corePorts);
-export default threadService;

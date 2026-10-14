@@ -31,23 +31,14 @@ vi.mock("src/core/storage/TauriDrizzleBridge", () => ({
   }),
 }));
 
-vi.mock("src/core/network/URL.ts", () => ({
+vi.mock("src/core/network/url-protocol", () => ({
   isHttps: (url: string) => url.startsWith("https://"),
-}));
-
-vi.mock("src/core/util/jsutil.js", () => ({
-  indexedDBRequestToPromise: vi.fn(),
 }));
 
 describe("WriteHistory Tauri branch", () => {
   beforeEach(() => {
     vi.clearAllMocks();
     messageSend.mockClear();
-
-    globalThis.app = {
-      assertArg: () => false,
-      log: vi.fn(),
-    } as unknown as typeof globalThis.app;
   });
 
   it("add delegates with fallback input_name/input_mail", async () => {

@@ -1,6 +1,6 @@
 # window.app 互換層の整理計画
 
-- 状態: Phase 3 完了（2026-10-15 作成。Phase 0 と Phase 4 以降は未着手）
+- 状態: Phase 4 完了（2026-10-15 作成。Phase 0 と Phase 5 は未着手）
 - 前提: [モジュール境界の明確化計画](module-boundaries-plan.md) の Phase A〜F が完了していること
 - 作業ブランチ: 未定（`develop` から作る）
 
@@ -123,6 +123,25 @@
   - 利用者のユーザースクリプトなど、リポジトリの外の利用
 - 利用者がいなければ: `app.ts` の公開 API、`jsutil`、既定のインスタンス、`URL.ts` の互換の再エクスポートをまとめて減らす。
 - 利用者がいれば: 必要な名前だけを残し、残す理由を `app.ts` に書く。
+
+結果（2026-10-15）: 利用者は見つからなかったため、`window.app` そのものをなくし、互換コードをまとめて減らした。
+
+- 調べた結果:
+  - `src/cs_addlink.ts`・`src/background.ts`・`src/mcp/`・`src/app/debug/`（`pnpm debug:tauri` は `window.__chlensDebug` だけを読む）・`tests/`・`scripts/`・`src-tauri/`・`packages/` に、`window.app` やグローバルの `app` を読む箇所はなかった。`parent.app`・`opener.app` のような別のウィンドウからの参照もなかった。
+  - テストでは、History・WriteHistory の Tauri 向けテストが `globalThis.app` に代入していたが、対象のモジュールはすでに `src/app/Log` を直接 import しており、使われていなかった。
+  - リポジトリの外: 拡張機能のページは拡張機能のオリジンで動き、ユーザースクリプト（Tampermonkey など）はウェブページにしか入れず、コンテンツスクリプトも拡張機能のページの `window` には触れられない。Tauri の WebView にも外からスクリプトを入れる仕組みはない。DevTools から手で触る以外の利用経路はないと判断した。
+- §5 の判断: 外の利用経路がないため、告知期間は設けない。`window.app` を残さないので、正式な公開 API として扱う名前もない。
+- 減らしたもの:
+  - `app.ts`: `window.app` の組み立てと、`core` のモジュール約 30 個の再エクスポートを削除し、画面が import している `boot` と `platform` だけを残した。`boot` の `requirements`（モジュール名で `window.app` から取り出す引数）は使われていなかったため、`bootView` と同じ `(path, onReady)` の形にした。`global.d.ts` の `app` 名前空間も削除した。
+  - `core/util/jsutil.ts`: 削除した。テストは定義元のモジュールごとのファイルへ移し、core から jsutil を経由させない lint の制限も外した。
+  - `URL.ts`: `ChURL` の別名の `URL` と、`getProtocol`・`isHttps` の再エクスポートを外した。`History`・`WriteHistory` は `url-protocol` から import する。
+  - 既定のインスタンス: `app.ts` だけが使っていた `ThreadService`・`BoardService`・`ImageReplaceDat` のものを削除し、委譲だけのファサードだった `BBSMenu.ts` はファイルごと削除した。`NG`・`ReplaceStrTxt`・`BoardTitleSolver` のものは、サービスコンテナのセットアップが使っているため残した。
+- Phase 3 の lint（`WINDOW_APP_OWNERS`）は、`window.app` を作り直さないための見張りとして残した。
+- 大きさ: Chrome の `browser.js` が約 25KB（2,244KB → 2,219KB）、Tauri の `browser.js` も約 25KB 減った。`overlay.js`・`replay.js` は変わらない。外れたモジュールに、読み込むだけで動く処理（リスナーの登録など）がないことを確かめた。
+- 範囲外として残したもの（提案。どこからも使われなくなった、またはもともと使われていなかったモジュール）:
+  - `app.ts` の再エクスポートだけが参照していたもの: `src/app/$Q.ts`・`src/app/BrowserDetect.ts`・`src/app/ImageExt.ts`・`src/core/thread/SikiGuard.ts`・`src/core/thread/ThreadSearch.ts`・`src/core/util/Util.ts`・`src/core/thread/ImageReplaceDat.ts`（画像置換の設定 `image_replace_dat` を読む処理も画面から呼ばれていない）。
+  - jsutil だけが参照していたもの: `src/core/board/next-thread-candidates.ts`、`src/core/thread/anchor.ts`、`src/core/util/date-convert.ts`・`string-normalize.ts`・`char-reference.ts`（`ThreadSearch` と `next-thread-candidates` からの参照を除く）。いずれもテストだけが使っている。
+  - `OpenedBoards` の既定のインスタンス（画面はサービスコンテナの `openedBoards` へ移っており、テストだけが使っている）。
 
 ### Phase 5（任意）: サービスコンテナのグローバルを見直す
 

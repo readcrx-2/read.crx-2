@@ -13,10 +13,6 @@ const mocks = vi.hoisted(() => ({
   ngRuleRegexInvalid: vi.fn(),
 }));
 
-vi.mock("src/core/util/jsutil", () => ({
-  normalize: (value: string) => value.toLowerCase(),
-}));
-
 vi.mock("src/core/ports/registry", () => ({
   corePorts: {
     config: {

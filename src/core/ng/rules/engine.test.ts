@@ -3,8 +3,6 @@ import { matchRules } from "src/core/ng/rules/engine";
 import type { Rule } from "src/core/ng/rules/model";
 import { describe, expect, it, vi } from "vite-plus/test";
 
-vi.mock("src/core/util/jsutil", () => ({ normalize: (value: string) => value.toLowerCase() }));
-
 const HIDE = new Set<Rule["action"]>(["hide"]);
 const HIGHLIGHT = new Set<Rule["action"]>(["highlight"]);
 const BOARD_TARGETS = new Set<Rule["target"]>(["all", "title", "url", "res-count"]);

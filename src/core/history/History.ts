@@ -1,7 +1,7 @@
 import { type DBSchema, type IDBPDatabase, openDB } from "idb";
 import { assertArg, log } from "src/app/Log";
 import message from "src/app/Message";
-import { isHttps } from "src/core/network/URL";
+import { isHttps } from "src/core/network/url-protocol";
 import { getTauriRepositories, isTauriRuntime } from "src/core/storage/TauriDrizzleBridge";
 
 const DB_NAME = "History";

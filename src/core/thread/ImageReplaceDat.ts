@@ -1,5 +1,4 @@
 import type { CorePorts } from "src/core/ports/registry";
-import { corePorts } from "src/core/ports/registry";
 
 /** 画像置換の設定の読み書きと通知に必要なサービス。呼び出し側が渡す（C-2）。 */
 export type ImageReplaceDeps = Pick<CorePorts, "config" | "message">;
@@ -180,9 +179,3 @@ export function createImageReplaceDat(deps: ImageReplaceDeps) {
 
   return { get, set, replace };
 }
-
-// 既存の import 先（app.ts の公開 API）を維持するため、登録済みのサービスで組み立てた既定のインスタンスを公開する。
-// 依存は関数が呼ばれた時点で参照されるため、ここでの組み立てで未登録の例外は出ない。
-const defaultImageReplaceDat = createImageReplaceDat(corePorts);
-
-export const { get, set, replace } = defaultImageReplaceDat;

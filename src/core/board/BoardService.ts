@@ -7,7 +7,6 @@ import Board from "src/core/board/Board.js";
 import type { IBoardResult } from "src/core/ports/board";
 import type { IReadState } from "src/core/ports/read-state";
 import type { CorePorts } from "src/core/ports/registry";
-import { corePorts } from "src/core/ports/registry";
 import type { IThread } from "src/core/ports/thread";
 
 interface BoardGetResult {
@@ -85,9 +84,3 @@ export function createBoardService(deps: BoardServiceDeps) {
     },
   };
 }
-
-// 既存の import 先（app.ts の公開 API）を維持するため、登録済みのサービスで組み立てた既定値を残す。
-// 依存は関数が呼ばれた時点で参照されるため、ここでの組み立てで未登録の例外は出ない。
-const BoardService = createBoardService(corePorts);
-
-export default BoardService;

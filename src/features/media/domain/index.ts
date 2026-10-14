@@ -1,9 +1,10 @@
+export { extractUrlsFromMessage, toOriginalImageUrl, toViewerImageUrl } from "./url-media";
 export type {
   ExternalMediaEmbed,
   ExternalVideoEmbed,
   ExternalVideoProvider,
   TwitterPostEmbed,
-} from "./external-media";
+} from "src/core/util/external-media";
 export {
   getDirectVideoFallbackThumbnailUrl,
   getDirectVideoLabel,
@@ -13,5 +14,4 @@ export {
   toInlineVideoEmbed,
   toRuntimeVideoEmbedUrl,
   toTwitterPostEmbed,
-} from "./external-media";
-export { extractUrlsFromMessage, toOriginalImageUrl, toViewerImageUrl } from "./url-media";
+} from "src/core/util/external-media";

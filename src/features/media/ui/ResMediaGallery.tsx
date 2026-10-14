@@ -1,13 +1,5 @@
 import { parseMessage } from "@chlen/chlib";
 import React, { useEffect, useMemo, useRef, useState } from "react";
-
-import { imgurVideoResolver, isImgurVideoResolutionCandidate } from "../application/imgur-album";
-import {
-  type TwitterPost,
-  type TwitterPostMetrics,
-  twitterPostResolver,
-  type TwitterVerificationBadgeColor,
-} from "../application/twitter-post";
 import {
   type ExternalMediaEmbed,
   getDirectVideoFallbackThumbnailUrl,
@@ -17,7 +9,15 @@ import {
   toInlineVideoEmbed,
   toRuntimeVideoEmbedUrl,
   toTwitterPostEmbed,
-} from "../domain/external-media";
+} from "src/core/util/external-media";
+
+import { imgurVideoResolver, isImgurVideoResolutionCandidate } from "../application/imgur-album";
+import {
+  type TwitterPost,
+  type TwitterPostMetrics,
+  twitterPostResolver,
+  type TwitterVerificationBadgeColor,
+} from "../application/twitter-post";
 import { toViewerImageUrl } from "../domain/url-media";
 import { ExternalImage } from "./ExternalImage";
 

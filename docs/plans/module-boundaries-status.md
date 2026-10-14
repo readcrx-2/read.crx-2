@@ -56,10 +56,16 @@
   - `Board` の `message` による通知
 - 一部のテスト（`ReplaceStrTxt.test` など）は、登録済みサービスのモックに頼ったまま。工場関数に依存を直接渡す形にはしていない。
 
-### Phase E: 循環 import と `view` → `core`（未着手）
+### Phase E: 循環 import と `view` → `core`（循環は完了、`view` → `core` は方針待ち）
 
-- 循環 import は計測時 6 件。C-2 の後の件数は未計測。
-- `view` → `core` の直接 import は 21 ファイル（計測時）。サービスコンテナ経由への置き換えは未着手。
+- 循環 import: 3 組（両端から数えて 6 件）をすべて解消し、`import/no-cycle` を `src` 全体で `error` にした（`fbc9c5bd`）。
+  - `Board` ↔ `jsutil`: `Board` が `jsutil` の再エクスポート経由で移転判定を import していた。定義元を直接参照する（`d23dd284`）。
+  - `URL` ↔ `Cache`: `getProtocol`・`isHttps` を `core/network/url-protocol.ts` へ分けた。`URL.ts` は `window.app.URL` のために再エクスポートする（`171ab420`）。
+  - `tab-store-new-tab` ↔ `tab-store-state-helpers`: `getPageIdentity` を `tab-store-page-identity.ts` へ分けた（`5f2f43d6`）。
+- `view` → `core` の直接 import（テスト・Story を除く）: 21 ファイル・31 行（値の import）。`features` → `core` も 15 ファイル・19 行ある。
+  - 純粋な関数（`BoardUrlNormalizer`・`reply-index`・`ngDsl`・`url-media`・`external-media`・`strip-html`・`MessageProcessor` など）と、状態や保存を伴うもの（`History`・`WriteHistory`・`Cache`・`OpenedBoards` の書き込み・`BoardTitleSolver`・`ReplaceStrTxt.set`・`corePorts`）が混ざっている。
+  - サービスコンテナには、`History`・`WriteHistory`・`OpenedBoards`・`BoardTitleSolver`・`ReplaceStrTxt` に当たるサービスがまだ無い。
+  - 計画書のルール 6（`view` は `core` を直接 import しない）をそのまま当てはめるか、純粋な関数は直接の import を認めるかを決める必要がある。
 
 ### Phase F: 検査を `error` にする（未着手）
 
@@ -69,7 +75,7 @@
   - `features` → 組み立て層（D-3）
   - `features` → 他の機能の内部（公開モジュール以外）と、`src/features` の中の循環（D-5）
 - `view` → `core` の依存には、まだ検査がない。
-- 循環検出（`import/no-cycle`）は `src/features` にだけ入れた。全体では 6 件ある（`core` の 4 件、`view/browser/state/tabs` の `tab-store-new-tab` ↔ `tab-store-state-helpers`。後者は D-4 で移す前から `features/tabs` にあった循環）。
+- 循環検出（`import/no-cycle`）は、Phase E で循環を 0 件にしたうえで `src` 全体に入れた（`fbc9c5bd`）。
 
 ## 3. 計画との食い違い（解消済み）
 
@@ -82,12 +88,13 @@
 - `36f7219a`（D-3）の時点で、`vp test run`（276 ファイル・2157 件）、`tsc`、`vp lint src/`（エラー 0 件）が通った。D-3 の検査は、許可リストを外すと `commands` の 4 ファイル・8 行だけを検出すること、`features` のファイルに `shell` の import を一時的に足すと検出することを確認した。
 - `f2651140`（D-4）の時点で、`vp test run`（276 ファイル・2157 件）、`tsc`、`vp lint src/`（エラー 0 件）、`build:chrome` が通った。参照先の付け替えのコミットは、import の行以外を変えていないことを差分で確認した。
 - `97b686af`（D-5）の時点で、`vp test run`（276 ファイル・2157 件）、`tsc`、`vp lint src/`（エラー 0 件）、`build:chrome` が通った。Tauri の overlay・replay・browser の各エントリの JS・CSS の大きさは、D-5 の前と同じ。D-5 の検査は、一覧に無いファイル・公開した入口の下のファイル・組み立て層・循環を一時的に足すとそれぞれ検出し、一覧から外すと利用箇所を検出することを確認した。
+- `fbc9c5bd`（Phase E の循環）の時点で、`vp test run`（276 ファイル・2157 件）、`tsc`、`vp lint src/`（エラー 0 件）が通った。`core` と `features` に循環を一時的に足すと検出されることを確認した。
 - lint には、この作業と無関係な警告が以前からある（`unicorn`・`react` など）。エラーはない。
 
 ## 5. 次に必要なこと
 
 1. Phase D は完了した。`view/browser` の層の境界と、機能どうしの境界（公開モジュール・循環なし）は、許可リストなしで検査されている。
-2. Phase E: 循環 6 件（`core` の 4 件、`tab-store-new-tab` ↔ `tab-store-state-helpers`）を解消し、`import/no-cycle` を全体へ広げる。`view` → `core` の直接 import（21 ファイル）の扱いを決める。
+2. Phase E の残り: `view`・`features` → `core` の直接 import の扱いを決める（上の Phase E を参照）。
 3. 機能間の件数の計測方法（テストを除く、`from`・動的 `import()`・`vi.mock` を数える）を、スクリプトにしてリポジトリに置くかどうか。
 4. 並行してできるもの:
    - `jsutil` の `corePorts` 参照の整理
@@ -113,4 +120,5 @@
    - `next-thread` の index を経由すると、`comment-overlay` のテストが `window is not defined`（`service-container` の読み込み）で落ちた。
    - `media` の index を経由すると、overlay.js が約 46KB 増え、テストが 7 ファイル落ちた（`webextension-polyfill` の読み込み）。
    - 解消: `index.ts` をやめ、公開モジュールの一覧で公開 API を表す方針に改めた（計画書 §3.5）。今後も、まとめて再エクスポートするファイルを機能の入口にしない。
-8. **`view/browser/state/tabs` の `tab-store-new-tab` と `tab-store-state-helpers` が互いに import している**（D-5 で循環を計測して発見）。D-4 で移す前から `features/tabs` にあった循環。Phase E で扱う。
+8. **`view/browser/state/tabs` の `tab-store-new-tab` と `tab-store-state-helpers` が互いに import している**（D-5 で循環を計測して発見）。D-4 で移す前から `features/tabs` にあった循環。
+   - 解消: `getPageIdentity` を `tab-store-page-identity.ts` へ分けた（`5f2f43d6`）。

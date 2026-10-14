@@ -1,7 +1,7 @@
 # モジュール境界の明確化計画
 
 - ブランチ: `refactor/module-boundaries`（`develop` から作成。旧名 `feature/module-boundaries`）
-- 状態: Phase 0・A・B・C-1・C-2・D 完了（`view/browser` の層の境界と、機能どうしの境界（公開モジュール・循環なし）を `error` で検査）。次は Phase E（`core` などの循環と `view` → `core`）
+- 状態: Phase 0・A・B・C-1・C-2・D 完了。Phase E は循環 import の解消まで完了（`src` 全体で `import/no-cycle` を `error`）。`view` → `core` の扱いは方針待ち
 
 ## 1. 目的
 
@@ -253,8 +253,8 @@ archive-replay, popup, write, thread-list（最上位）
 
 ### Phase E: 循環 import と view → core
 
-1. 循環 import の 6 件を解消する（`core/util` の抽出など）。
-2. `view` → `core` の直接 import を、サービスコンテナ経由に段階的に置き換える。
+1. 循環 import の 6 件を解消する（完了）。3 組をそれぞれ葉のモジュールへの切り出しなどで解き、`import/no-cycle` を `src` 全体で `error` にした（`d23dd284`・`171ab420`・`5f2f43d6`・`fbc9c5bd`）。
+2. `view` → `core` の直接 import を、サービスコンテナ経由に段階的に置き換える（方針待ち。純粋な関数の扱いを決める）。
 
 ### Phase F: 検査を error に上げる
 

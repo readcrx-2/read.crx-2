@@ -441,10 +441,11 @@ function createFeatureBoundaryOverrides() {
   );
 }
 
-export default defineConfig(async ({ mode }) => {
+export default defineConfig(async ({ mode, command }) => {
   const platform = process.env.PLATFORM || "chrome";
   const entry = process.env.ENTRY || "browser";
   const outputDir = `./debug/${platform}`;
+  const analyzeBundle = process.env.ANALYZE === "true";
   // const buildCopyDestination = resolveBuildCopyDestination(mode);
   const isWatchMode = process.argv.includes("--watch");
   const isWatchDev =
@@ -477,6 +478,9 @@ export default defineConfig(async ({ mode }) => {
           forceBuildInstrument: true,
         })
       : null;
+  const visualizerPlugin = analyzeBundle
+    ? (await import("rollup-plugin-visualizer")).visualizer
+    : undefined;
 
   return {
     staged: {
@@ -559,6 +563,8 @@ export default defineConfig(async ({ mode }) => {
     define: {
       // watch/dev でも production が注入されると分岐が壊れるため、Vite の mode を正として注入する。
       "process.env.NODE_ENV": JSON.stringify(mode),
+      // 本番のChrome/FirefoxビルドではTauri専用の動的importを除去し、開発・テストでは実行時判定を保つ。
+      __CHLENS_TAURI_BUILD__: JSON.stringify(command !== "build" || platform === "tauri"),
     },
     plugins: lazyPlugins(() => [
       react(),
@@ -569,6 +575,17 @@ export default defineConfig(async ({ mode }) => {
       manifestPlugin(platform, outputDir),
       staticCopyPlugin(platform, outputDir, minifyOutput, entry),
       // buildOutputCopyPlugin(outputDir, buildCopyDestination),
+      ...(visualizerPlugin
+        ? [
+            // 解析時だけソースマップから minify 前のモジュール構成を metadata.json に出す。
+            visualizerPlugin({
+              filename: path.resolve(outputDir, "metadata.json"),
+              template: "raw-data",
+              projectRoot: process.cwd(),
+              sourcemap: true,
+            }),
+          ]
+        : []),
     ]),
     resolve: {
       alias: {
@@ -590,7 +607,11 @@ export default defineConfig(async ({ mode }) => {
       outDir: outputDir,
       emptyOutDir: false,
       minify: minifyOutput,
-      sourcemap: process.env.VITE_COVERAGE === "true" ? "inline" : false,
+      sourcemap: analyzeBundle
+        ? true
+        : process.env.VITE_COVERAGE === "true"
+          ? "inline"
+          : false,
       lib: {
         entry: path.resolve(__dirname, file),
         formats: ["iife"],

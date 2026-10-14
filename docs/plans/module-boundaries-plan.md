@@ -1,7 +1,7 @@
 # モジュール境界の明確化計画
 
 - ブランチ: `refactor/module-boundaries`（`develop` から作成。旧名 `feature/module-boundaries`）
-- 状態: Phase 0・A・B・C-1・C-2・D 完了。Phase E は循環 import の解消まで完了（`src` 全体で `import/no-cycle` を `error`）。`view` → `core` の扱いは方針待ち
+- 状態: Phase 0・A・B・C・D・E 完了。`view/browser` の層、機能どうし（公開モジュール・循環なし）、`view`・`features` → `core`（状態を持つモジュールはサービスコンテナ経由）、`src` 全体の循環を、許可リストなしの `error` で検査している。残りは Phase F（検査の見直しと CI での確認）
 
 ## 1. 目的
 
@@ -266,8 +266,10 @@ archive-replay, popup, write, thread-list（最上位）
 
 1. 循環 import の 6 件を解消する（完了）。3 組をそれぞれ葉のモジュールへの切り出しなどで解き、`import/no-cycle` を `src` 全体で `error` にした（`d23dd284`・`171ab420`・`5f2f43d6`・`fbc9c5bd`）。
 2. `view`・`features` → `core` の、状態や保存を伴うモジュールの直接 import をサービスコンテナ経由にする（§3.6）。
-   1. サービスを 1 つずつ足し、呼び出し元を付け替える（履歴・書き込み履歴・ログ・開いた板・板名の解決・置換ルール・`corePorts`）。
-   2. 違反が 0 件になったら、`CORE_DIRECT_MODULES` の一覧と検査を入れる。
+   1. サービスを 1 つずつ足し、呼び出し元を付け替えた（完了）。`history`（`a73c62e8`）・`writeHistory`（`962a8bf3`）・`threadLog`（`6027e7ba`）・`openedBoards`（`38294d68`）・`boardTitle`（`0816a151`）・`replaceStr`（`9b0f70a7`）。`use-thread-data` は `corePorts` の代わりに同じ実体の `container` を渡す（`1d3ffe10`）。
+   2. `OpenedBoards` の純粋な部分（保存形式と読み取り）を `opened-board-entries.ts` へ分けた（`0c9c9aa2`）。モジュール単位の一覧で、読み取りだけを認めるため。
+   3. `CORE_DIRECT_MODULES`（12 モジュール）と検査を入れた（`adaa6ab2`）。テストと Story は core の制限からだけ外す。
+   4. 6 つのサービスは、メインの画面だけが使うため `setupBrowserViewServices`（`service-container/setup-browser-view.ts`）で登録する（`f76323ac`）。`setupContainer` に入れると、replay.js に使わない core の実装が約 12KB 入ったため。
 
 ### Phase F: 検査を error に上げる
 

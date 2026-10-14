@@ -56,25 +56,29 @@
   - `Board` の `message` による通知
 - 一部のテスト（`ReplaceStrTxt.test` など）は、登録済みサービスのモックに頼ったまま。工場関数に依存を直接渡す形にはしていない。
 
-### Phase E: 循環 import と `view` → `core`（循環は完了、`view` → `core` は方針待ち）
+### Phase E: 循環 import と `view` → `core`（完了）
 
 - 循環 import: 3 組（両端から数えて 6 件）をすべて解消し、`import/no-cycle` を `src` 全体で `error` にした（`fbc9c5bd`）。
   - `Board` ↔ `jsutil`: `Board` が `jsutil` の再エクスポート経由で移転判定を import していた。定義元を直接参照する（`d23dd284`）。
   - `URL` ↔ `Cache`: `getProtocol`・`isHttps` を `core/network/url-protocol.ts` へ分けた。`URL.ts` は `window.app.URL` のために再エクスポートする（`171ab420`）。
   - `tab-store-new-tab` ↔ `tab-store-state-helpers`: `getPageIdentity` を `tab-store-page-identity.ts` へ分けた（`5f2f43d6`）。
-- `view` → `core` の直接 import（テスト・Story を除く）: 21 ファイル・31 行（値の import）。`features` → `core` も 15 ファイル・19 行ある。
-  - 純粋な関数（`BoardUrlNormalizer`・`reply-index`・`ngDsl`・`url-media`・`external-media`・`strip-html`・`MessageProcessor` など）と、状態や保存を伴うもの（`History`・`WriteHistory`・`Cache`・`OpenedBoards` の書き込み・`BoardTitleSolver`・`ReplaceStrTxt.set`・`corePorts`）が混ざっている。
-  - サービスコンテナには、`History`・`WriteHistory`・`OpenedBoards`・`BoardTitleSolver`・`ReplaceStrTxt` に当たるサービスがまだ無い。
-  - 計画書のルール 6（`view` は `core` を直接 import しない）をそのまま当てはめるか、純粋な関数は直接の import を認めるかを決める必要がある。
+- `view`・`features` → `core`: 計画書のルール 6 を「状態や保存を伴うモジュールはサービスコンテナ経由、純粋なモジュールと型は直接」に改めた（§3.6、`7e723d3c`）。
+  - サービスを 6 つ足し、呼び出し元を付け替えた（`history`・`writeHistory`・`threadLog`・`openedBoards`・`boardTitle`・`replaceStr`）。型は `Pick<typeof ...>` で core の関数から取る。
+  - `use-thread-data` は `corePorts` の代わりに `container` を渡す。
+  - `OpenedBoards` の保存形式と読み取りを `opened-board-entries.ts` へ分けた。
+  - 6 つのサービスは `setupBrowserViewServices` で、メインの画面の起動時だけ登録する（replay.js の約 12KB の増加を避けるため）。
+  - テストは、core のモジュールの `vi.mock` を、サービスコンテナへのテスト用サービスの登録（`service-container/test-stubs.ts` の `stubService`）か、モックしたサービスコンテナへ移した。
+  - 検査（`adaa6ab2`）: `CORE_DIRECT_MODULES` に載せた 12 の純粋なモジュール以外の値の import を禁止する。型の import は認め、テストと Story は core の制限から外す。
 
-### Phase F: 検査を `error` にする（未着手）
+### Phase F: 検査を `error` にする（ほぼ完了）
 
 - 禁止ルール（`error`）は次の 4 つ。
   - `core` → `service-container`
   - UI 部品層 → `features`・組み立て層（D-3。許可リストは D-4 で削除）
   - `features` → 組み立て層（D-3）
-  - `features` → 他の機能の内部（公開モジュール以外）と、`src/features` の中の循環（D-5）
-- `view` → `core` の依存には、まだ検査がない。
+  - `features` → 他の機能の内部（公開モジュール以外）（D-5）
+  - `view`・`features` → 状態を持つ `core` のモジュール（Phase E）
+- 残り: CI は変更したファイルだけに lint をかけるため、既存の違反をまとめて見る手段がない。今は違反 0 件なので実害はないが、全体の lint を CI で一度流すかを決める。
 - 循環検出（`import/no-cycle`）は、Phase E で循環を 0 件にしたうえで `src` 全体に入れた（`fbc9c5bd`）。
 
 ## 3. 計画との食い違い（解消済み）
@@ -89,12 +93,14 @@
 - `f2651140`（D-4）の時点で、`vp test run`（276 ファイル・2157 件）、`tsc`、`vp lint src/`（エラー 0 件）、`build:chrome` が通った。参照先の付け替えのコミットは、import の行以外を変えていないことを差分で確認した。
 - `97b686af`（D-5）の時点で、`vp test run`（276 ファイル・2157 件）、`tsc`、`vp lint src/`（エラー 0 件）、`build:chrome` が通った。Tauri の overlay・replay・browser の各エントリの JS・CSS の大きさは、D-5 の前と同じ。D-5 の検査は、一覧に無いファイル・公開した入口の下のファイル・組み立て層・循環を一時的に足すとそれぞれ検出し、一覧から外すと利用箇所を検出することを確認した。
 - `fbc9c5bd`（Phase E の循環）の時点で、`vp test run`（276 ファイル・2157 件）、`tsc`、`vp lint src/`（エラー 0 件）が通った。`core` と `features` に循環を一時的に足すと検出されることを確認した。
+- `f76323ac`（Phase E の完了）の時点で、`vp test run`（276 ファイル・2158 件）、`tsc`、`vp lint src/`（エラー 0 件）、`build:chrome`、Storybook のビルドが通った。Tauri の各エントリの大きさは、overlay・replay が作業前と同じ（コンテナの枠の約 100 バイトを除く）、browser.js が約 1.9KB 増（サービスの登録分）。
+- 同じ時点で E2E（Playwright）を、この環境にある Chromium（`CHLENS_E2E_CHROMIUM_PATH`）で実行し、18 件中 13 件が通った（閲覧履歴の保存、置換、NG、ローカル板、起動と設定画面など）。失敗した 5 件（`status-bar`・`theme-startup`）は、拡張機能を読み込まない既定のブラウザ（headless shell 1243）がこの環境に無いため起動できなかったもので、画面の不具合ではない。
 - lint には、この作業と無関係な警告が以前からある（`unicorn`・`react` など）。エラーはない。
 
 ## 5. 次に必要なこと
 
 1. Phase D は完了した。`view/browser` の層の境界と、機能どうしの境界（公開モジュール・循環なし）は、許可リストなしで検査されている。
-2. Phase E の残り: `view`・`features` → `core` の直接 import の扱いを決める（上の Phase E を参照）。
+2. Phase F: 全体の lint を CI で流すかを決める。画面での動作確認（タブ、履歴、ログ、設定の書き出し・読み込み、置換ルール、板名の再取得）。
 3. 機能間の件数の計測方法（テストを除く、`from`・動的 `import()`・`vi.mock` を数える）を、スクリプトにしてリポジトリに置くかどうか。
 4. 並行してできるもの:
    - `jsutil` の `corePorts` 参照の整理

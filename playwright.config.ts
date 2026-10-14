@@ -2,6 +2,9 @@ import { defineConfig, devices } from "@playwright/test";
 
 export default defineConfig({
   testDir: "./tests",
+  // UIスクリーンショットは画面の検証ではなく撮影用で、1件で通常のE2E全体の約4割の時間を使う。
+  // そのため通常の実行からは外し、pnpm run ui:shots（CHLENS_UI_SHOTS=true）のときだけ実行する。
+  testIgnore: process.env.CHLENS_UI_SHOTS === "true" ? [] : ["**/ui-screenshots.spec.mts"],
   fullyParallel: true,
   forbidOnly: !!process.env.CI,
   retries: process.env.CI ? 2 : 0,

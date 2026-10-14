@@ -1,7 +1,6 @@
 import "src/view/browser/styles/index.css";
 
 import { createRoot } from "react-dom/client";
-// 旧互換の window.app を作る副作用も、この import で起きる（外の利用者は Phase 4 で調べる）。
 import { boot } from "src/app";
 import { installDebugApi } from "src/app/debug/debug-api";
 import { installConsoleCapture } from "src/app/debug/debug-log";

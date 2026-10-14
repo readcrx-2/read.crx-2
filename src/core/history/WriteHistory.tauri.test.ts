@@ -43,11 +43,6 @@ describe("WriteHistory Tauri branch", () => {
   beforeEach(() => {
     vi.clearAllMocks();
     messageSend.mockClear();
-
-    globalThis.app = {
-      assertArg: () => false,
-      log: vi.fn(),
-    } as unknown as typeof globalThis.app;
   });
 
   it("add delegates with fallback input_name/input_mail", async () => {

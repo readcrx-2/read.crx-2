@@ -39,11 +39,6 @@ describe("History Tauri branch", () => {
   beforeEach(() => {
     vi.clearAllMocks();
     vi.useRealTimers();
-
-    globalThis.app = {
-      assertArg: () => false,
-      log: vi.fn(),
-    } as unknown as typeof globalThis.app;
   });
 
   it("add delegates to tauriHistoryRepository", async () => {

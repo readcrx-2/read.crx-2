@@ -1,11 +1,15 @@
 import browser from "webextension-polyfill";
 
+import { handleSharedHttpRequest } from "./app/platform/browser/background-http";
 import { createReadyViewerTab } from "./app/platform/browser/ready-viewer-tab";
 import { startMcpWorker } from "./mcp/worker-bridge";
 
 const NEW_UI_URL_PREFIX = browser.runtime.getURL("view/index.html");
 const NEW_UI_URL_QUERY = `${browser.runtime.getURL("view/index.html")}*`;
 let newUiPrimaryTabId: number | null = null;
+
+// 切り離しウィンドウも同じバックグラウンド側のキューを通す。
+browser.runtime.onMessage.addListener((message: unknown) => handleSharedHttpRequest(message));
 
 type OpenNewUiMessage = {
   type: "open-new-ui";

@@ -18,6 +18,7 @@ crate-type = ["staticlib", "cdylib", "rlib"]
 tauri-build = { version = "2.6.0", features = [] }
 
 [dependencies]
+base64 = "0.22"
 serde_json = "1.0"
 serde = { version = "1.0", features = ["derive"] }
 log = "0.4"
@@ -26,19 +27,19 @@ cookie_store = "0.22"
 # releaseビルドでもDevToolsを開けるようにするため有効化
 tauri = { version = "2.11.0", features = ["devtools"] }
 tauri-plugin-log = "2"
-# 書き込み先が要求するOriginを直接POSTへ設定するため、HTTPプラグインの安全な既定値による
-# TauriアプリOriginの自動付与を上書きできるようにする。
-tauri-plugin-http = { version = "2", features = ["unsafe-headers"] }
 # Tauri版の書き込みはJSのHeaders制約を避け、Cookieを同じClientで確認POSTまで保持する。
 reqwest = { version = "0.12", default-features = false, features = [
   "cookies",
+  "http2",
   "rustls-tls",
   "charset",
+  "system-proxy",
 ] }
 tauri-plugin-sql = { version = "2", features = ["sqlite"] }
+httpdate = "1"
+tokio = { version = "1", features = ["sync", "time"] }
 
 [target.'cfg(windows)'.dependencies]
-base64 = "0.22"
 png = "0.17"
 windows-sys = { version = "0.61", features = [
   "Win32_Graphics_Gdi",

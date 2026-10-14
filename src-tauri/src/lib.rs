@@ -1,4 +1,5 @@
 mod download;
+mod http_transport;
 mod monitor_preview;
 mod overlay_attachment;
 mod write_cookies;
@@ -72,10 +73,10 @@ fn new_window_handler<R: Runtime>(
 pub fn run() {
   // Overlayは起動直後から背後のMain操作を受け取れるよう、native側で常時クリック透過にする。
   tauri::Builder::default()
-    .plugin(tauri_plugin_http::init())
     .plugin(tauri_plugin_sql::Builder::default().build())
     .invoke_handler(tauri::generate_handler![
       download::save_download_file,
+      http_transport::shared_http_request,
       monitor_preview::capture_comment_overlay_monitor_preview,
       overlay_attachment::list_comment_overlay_windows,
       overlay_attachment::read_comment_overlay_target,
@@ -107,6 +108,7 @@ pub fn run() {
       app.manage(write_transport::WriteTransportState::new(
         app.path().app_data_dir()?.join("write-cookies.json"),
       ));
+      app.manage(http_transport::HttpTransportState::new()?);
 
       // Tauriの自動生成では新規ウィンドウのハンドラを登録できないため、Mainだけは
       // 設定の `create` を無効にし、同じ設定からハンドラ付きで生成する。

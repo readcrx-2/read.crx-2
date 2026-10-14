@@ -10,6 +10,7 @@ export const MAX_QUEUED_HTTP_REQUESTS = 10;
 
 const FAILURE_BACKOFF_BASE_MS = 500;
 const FAILURE_BACKOFF_MAX_MS = 30_000;
+const MAX_RETRY_AFTER_MS = 2_147_000_000;
 
 interface QueuedRequest {
   run: () => Promise<unknown>;
@@ -182,8 +183,12 @@ export class QueuedHttpClient implements HttpClient {
     )?.[1];
     if (!retryAfter) return null;
 
-    if (/^\d+$/.test(retryAfter.trim())) return Number(retryAfter.trim()) * 1_000;
+    if (/^\d+$/.test(retryAfter.trim())) {
+      return Math.min(Number(retryAfter.trim()) * 1_000, MAX_RETRY_AFTER_MS);
+    }
     const retryAt = Date.parse(retryAfter);
-    return Number.isNaN(retryAt) ? null : Math.max(0, retryAt - Date.now());
+    return Number.isNaN(retryAt)
+      ? null
+      : Math.min(Math.max(0, retryAt - Date.now()), MAX_RETRY_AFTER_MS);
   }
 }

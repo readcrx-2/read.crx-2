@@ -1,10 +1,13 @@
 // @vitest-environment node
 import { beforeEach, describe, expect, it, vi } from "vite-plus/test";
 
-const cookieApi = vi.hoisted(() => ({ set: vi.fn() }));
+const browserApi = vi.hoisted(() => ({
+  cookies: { set: vi.fn() },
+  runtime: { sendMessage: vi.fn() },
+}));
 
 vi.mock("webextension-polyfill", () => ({
-  default: { cookies: cookieApi },
+  default: browserApi,
 }));
 
 vi.mock("packages/chlib/src/url/hosts", async (importOriginal) => {
@@ -27,9 +30,10 @@ const TOKEN = "0123456789abcdef0123456789abcdef";
 
 describe("拡張機能版の書き込み認証", () => {
   beforeEach(() => {
-    cookieApi.set.mockReset();
+    browserApi.cookies.set.mockReset();
+    browserApi.runtime.sendMessage.mockReset();
     // 認証Cookieの手動設定を復活させず、ブラウザ標準の送信に委ねることを確認する。
-    cookieApi.set.mockRejectedValue(new Error("認証Cookieを手動設定しないでください"));
+    browserApi.cookies.set.mockRejectedValue(new Error("認証Cookieを手動設定しないでください"));
     vi.spyOn(console, "warn").mockImplementation(() => {});
   });
 
@@ -49,7 +53,7 @@ describe("拡張機能版の書き込み認証", () => {
       expect(form?.input.mail).toBe(`#${TOKEN}`);
 
       await BrowserHttpClient.setupWriteHeaders(form!.action);
-      expect(cookieApi.set).not.toHaveBeenCalled();
+      expect(browserApi.cookies.set).not.toHaveBeenCalled();
     },
   );
 
@@ -61,6 +65,42 @@ describe("拡張機能版の書き込み認証", () => {
         message: "本文",
       })?.action,
     ).toBe("http://other.example.com/test/bbs.cgi");
+  });
+
+  it("HTTP要求を共有バックグラウンドへ送り、バイナリ本文をシリアライズする", async () => {
+    browserApi.runtime.sendMessage.mockResolvedValue({
+      ok: true,
+      response: {
+        status: 200,
+        headers: {},
+        body: "ok",
+        url: "https://example.com/result",
+      },
+    });
+    const body = new Uint8Array([1, 2, 3]).buffer;
+
+    await expect(
+      BrowserHttpClient.fetch("https://example.com/request", { method: "POST", body }),
+    ).resolves.toMatchObject({ status: 200, body: "ok" });
+
+    expect(browserApi.runtime.sendMessage).toHaveBeenCalledWith(
+      expect.objectContaining({
+        type: "shared-http-request",
+        url: "https://example.com/request",
+        options: expect.objectContaining({ method: "POST", bodyBase64: "AQID" }),
+      }),
+    );
+  });
+
+  it("共有バックグラウンドからの失敗を呼び出し元へ返す", async () => {
+    browserApi.runtime.sendMessage.mockResolvedValue({
+      ok: false,
+      error: "HTTP待ち行列が上限に達しました",
+    });
+
+    await expect(BrowserHttpClient.fetch("https://example.com/request")).rejects.toThrow(
+      "HTTP待ち行列が上限に達しました",
+    );
   });
 
   it.each(["http:", "https:"])("短縮URLの%sを内部遷移から投稿まで維持する", (protocol) => {

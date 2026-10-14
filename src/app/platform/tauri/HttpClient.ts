@@ -1,51 +1,58 @@
-import { fetch as tauriFetch } from "@tauri-apps/plugin-http";
-import { fetchHttpsFirst } from "packages/chlib/src/fetcher/https-first";
-import {
-  type BinaryHttpResponse,
-  type HttpClient,
-  type HttpRequestOptions,
-  type HttpResponse,
+import { invoke } from "@tauri-apps/api/core";
+import { decodeBase64, decodeBase64ArrayBuffer, encodeBase64 } from "src/app/platform/binary";
+import type {
+  BinaryHttpResponse,
+  HttpClient,
+  HttpRequestOptions,
+  HttpResponse,
 } from "src/app/platform/types";
 
-function extractCharset(mimeType: string): string | null {
-  const match = /charset=([^\s;]+)/i.exec(mimeType);
-  return match ? match[1] : null;
+interface SharedHttpResponse {
+  status: number;
+  headers: Record<string, string>;
+  bodyBase64: string;
+  url: string;
 }
 
-// webviewのXHRはCORSに制限されるため、Rust側でHTTPリクエストを行うプラグインを使用する
+function extractCharset(mimeType: string | undefined): string | null {
+  const charset = /charset=([^\s;]+)/i.exec(mimeType ?? "")?.[1];
+  return charset?.toLowerCase() === "x-sjis" ? "Shift_JIS" : (charset ?? null);
+}
+
+function decodeText(bytes: Uint8Array, mimeType: string | undefined): string {
+  try {
+    return new TextDecoder(extractCharset(mimeType) ?? "utf-8").decode(bytes);
+  } catch (error) {
+    console.error("Tauri共有HTTP応答のデコードに失敗しました:", error);
+    return new TextDecoder().decode(bytes);
+  }
+}
+
+async function request(url: string, options: HttpRequestOptions = {}): Promise<SharedHttpResponse> {
+  return invoke<SharedHttpResponse>("shared_http_request", {
+    request: {
+      url,
+      method: options.method,
+      headers: options.headers,
+      body: typeof options.body === "string" ? options.body : undefined,
+      bodyBase64:
+        options.body instanceof ArrayBuffer
+          ? encodeBase64(new Uint8Array(options.body))
+          : undefined,
+      timeout: options.timeout,
+      mimeType: options.mimeType,
+    },
+  });
+}
+
 export async function fetchTauriBinary(
   url: string,
   options: HttpRequestOptions = {},
 ): Promise<BinaryHttpResponse> {
-  const response = await fetchHttpsFirst(
-    url,
-    options.method,
-    (requestUrl) =>
-      tauriFetch(requestUrl, {
-        method: options.method || "GET",
-        headers: options.headers,
-        body: options.body,
-        ...(options.timeout ? { connectTimeout: options.timeout } : {}),
-      }),
-    options.headers,
-  );
-
-  const headers: Record<string, string> = {};
-  response.headers.forEach((value: string, key: string) => {
-    headers[key] = value;
-  });
-
-  const body = await response.arrayBuffer();
-  console.log(`[TauriHttpClient] Binary response: ${response.status} ${url}`, {
-    byteLength: body.byteLength,
-    contentType: headers["content-type"],
-  });
-
+  const response = await request(url, options);
   return {
-    status: response.status,
-    headers,
-    body,
-    url: response.url,
+    ...response,
+    body: decodeBase64ArrayBuffer(response.bodyBase64),
   };
 }
 
@@ -65,56 +72,16 @@ export const TauriHttpClient: HttpClient = {
             ),
           }
         : {}),
-      // 変更理由: 書き込み本文には利用者の投稿内容が含まれるため、
-      // Authorization/Cookieと同様にTauriのデバッグログへ出さない。
       ...(options.body != null ? { body: "[redacted]" } : {}),
     };
-    // ImgurのBearer tokenなどの秘密情報をTauriのデバッグログへ出さない。
-    console.log(`[TauriHttpClient] Fetching: ${url}`, safeOptions);
-
-    const response = await fetchHttpsFirst(
-      url,
-      options.method,
-      (requestUrl) =>
-        tauriFetch(requestUrl, {
-          method: options.method || "GET",
-          headers: options.headers,
-          body: options.body,
-          // 変更理由: ブラウザー版XHRと同じく、アップロード要求が接続待ちのまま残らないようにする。
-          ...(options.timeout ? { connectTimeout: options.timeout } : {}),
-        }),
-      options.headers,
-    );
-
-    console.log(`[TauriHttpClient] Response status: ${response.status}`);
-
-    const headers: Record<string, string> = {};
-    response.headers.forEach((value: string, key: string) => {
-      headers[key] = value;
-    });
-    // XHRのoverrideMimeTypeと同様に、mimeTypeのcharsetを優先してデコードする
-    const charset = options.mimeType ? extractCharset(options.mimeType) : null;
-    let body: string;
-
-    try {
-      if (charset) {
-        // Shift_JISなどのレガシーエンコーディングをサポート
-        console.log(`[TauriHttpClient] Decoding with charset: ${charset}`);
-        body = new TextDecoder(charset).decode(await response.arrayBuffer());
-      } else {
-        body = await response.text();
-      }
-      console.log(`[TauriHttpClient] Body length: ${body.length}`);
-    } catch (e) {
-      console.error(`[TauriHttpClient] Failed to decode response with charset ${charset}:`, e);
-      // フォールバック: UTF-8として読み込む
-      body = await response.text();
-    }
+    console.log("[TauriHttpClient] Fetching: " + url, safeOptions);
+    const response = await request(url, options);
+    console.log("[TauriHttpClient] Response status: " + response.status);
 
     return {
       status: response.status,
-      headers,
-      body,
+      headers: response.headers,
+      body: decodeText(decodeBase64(response.bodyBase64), options.mimeType),
       url: response.url,
     };
   },

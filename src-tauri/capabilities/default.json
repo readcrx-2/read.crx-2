@@ -21,10 +21,6 @@
     "sql:allow-execute",
     "sql:allow-load",
     "sql:allow-select",
-    "sql:default",
-    {
-      "identifier": "http:default",
-      "allow": [{ "url": "http://**" }, { "url": "https://**" }]
-    }
+    "sql:default"
   ]
 }

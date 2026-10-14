@@ -322,6 +322,30 @@ describe("QueuedHttpClient", () => {
     }
   });
 
+  it("極端なRetry-Afterをタイマーが扱える上限へ丸める", async () => {
+    vi.useFakeTimers();
+    try {
+      const fetch = vi
+        .fn<HttpClient["fetch"]>()
+        .mockResolvedValueOnce({
+          ...response,
+          status: 429,
+          headers: { "Retry-After": "18446744073709551615" },
+        })
+        .mockResolvedValueOnce(response);
+      const queuedClient = new QueuedHttpClient(createClient(fetch), 1);
+
+      await queuedClient.fetch("https://example.com/limited");
+      const nextRequest = queuedClient.fetch("https://example.com/later");
+      await vi.advanceTimersByTimeAsync(2_147_000_000 - 1);
+      expect(fetch).toHaveBeenCalledOnce();
+      await vi.advanceTimersByTimeAsync(1);
+      await expect(nextRequest).resolves.toEqual(response);
+    } finally {
+      vi.useRealTimers();
+    }
+  });
+
   it("不正なURLで失敗した場合はホスト待機を設定しない", async () => {
     const fetch = vi
       .fn<HttpClient["fetch"]>()

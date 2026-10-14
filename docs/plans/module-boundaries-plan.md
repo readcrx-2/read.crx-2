@@ -1,7 +1,7 @@
 # モジュール境界の明確化計画
 
 - ブランチ: `refactor/module-boundaries`（`develop` から作成。旧名 `feature/module-boundaries`）
-- 状態: Phase 0・A・B・C-1・C-2・D-1〜D-4 完了（§3.2 の逆向きの依存はすべて解消し、§3.4 の検査を許可リストなしの `error` で導入）。次は D-5（機能間の残りの依存）
+- 状態: Phase 0・A・B・C-1・C-2・D 完了（`view/browser` の層の境界と、機能どうしの境界（公開モジュール・循環なし）を `error` で検査）。次は Phase E（`core` などの循環と `view` → `core`）
 
 ## 1. 目的
 
@@ -114,6 +114,7 @@ archive-replay, popup, write, thread-list（最上位）
 
 - `comment-overlay` と `archive-replay`: 実行時の依存は `archive-replay → comment-overlay` の一方向だけである。逆向きは `comment-overlay/ui/OverlayStage.stories.tsx`（再生の時系列でオーバーレイを動かすデモ）だけなので、Story を `archive-replay` 側へ移す。共通層は、第 3 の機能がコメントの型を使うか、オーバーレイが実行時に再生側を必要とするまで作らない。
 - `pages`・`shell` などの組み立て層から機能の中のファイルへの import は、この段階では対象にしない。
+- 検査（`97b686af`）: `vite.config.ts` の `createFeatureBoundaryOverrides` が、`src/features` のディレクトリから機能ごとの override を作る。他の機能の内部への import（`eslint/no-restricted-imports`）、組み立て層への import、循環（`import/no-cycle`）を `error` にする。テストと Story も対象。新しく他の機能から使うファイルは、`FEATURE_PUBLIC_MODULES` へ追加してレビューで確認する。
 
 ### 3.4 検査（D-3 で導入、`36f7219a`）
 
@@ -227,14 +228,14 @@ archive-replay, popup, write, thread-list（最上位）
 - `jsutil.searchNextThread` は `Board.get` に `corePorts` を渡している。`jsutil` は互換用のファサードなので、呼び出し元を含めて別の段階で扱う。
 - `NG` の `toast`、`Board` が通知に使う `message`、`BBSMenuModel` の `toast` は UI 寄りの処理である。`features` か `app` へ移す（後半の作業）。
 
-### Phase D: features 間の依存を減らす（進行中）
+### Phase D: features 間の依存を整理する（完了）
 
-目的: `features` 同士の直接 import を 0 にする。
+目的: `features` どうしと `view` との依存の向きをそろえ、検査で守る（当初の「`features` 同士の直接 import を 0 にする」は、§3.5 の決定で「一方向・公開モジュール経由なら認める」に改めた）。
 
 進捗:
 
 - 完了（D-1）: `useViewSurface` を `features/auxiliary-window` から `view/browser/hooks` へ移した。機能間の依存を 1 組（`auxiliary-window` への依存、9 機能・約 30 箇所）解消した。
-- 残り: 45 行・24 組（D-4 の後、テストを除く。テストを含めると 61 行・24 組）。
+- 機能どうしの依存: 45 行・24 組（D-4 の後、テストを除く）。すべて公開モジュール経由で、循環は無い。
 
 方針（2026-10-15 決定、§3 を参照）:
 
@@ -245,10 +246,10 @@ archive-replay, popup, write, thread-list（最上位）
 1. D-2: §3.2 の逆向きの依存を、1 件ずつ別コミットで解消する。最初は D-1 と同じ要領の `usePopupCloseBehavior` の移動。
 2. D-3（完了、`36f7219a`）: §3.4 の検査を `error` で入れた。D-2 の後に残る `commands` の 2 ファイル（タブストアへの依存）は許可リストに入れ、D-4 で外す。
 3. D-4（完了）: タブストアを `view/browser/state/tabs` へ移し（`8496ef14`、`73cd33d3`）、§3.4 の許可リストを削除した（`f2651140`）。
-4. D-5: 機能どうしの依存を公開 API 経由にする（§3.5）。
-   1. `OverlayStage.stories.tsx` を `archive-replay` 側へ移す。
-   2. 公開モジュールの一覧を `vite.config.ts` に置き、一覧に無いファイルへの import を禁止する検査を入れる。最初に作った `index.ts` は取り消す。
-   3. 循環の検査を入れる。
+4. D-5（完了）: 機能どうしの依存を公開モジュール経由にした（§3.5）。
+   1. Storybook のスレッド読み込み補助を `.storybook/thread-source.ts` へ移し（`29271136`）、過去スレ再生の Story を `archive-replay` へ分けた（`59f9a085`）。
+   2. いったん機能ごとの `index.ts` で進めたが（`018f77d9` など）、副作用の問題が出たため取り消した（`34ee041a`、`4ef928da`）。次スレの判定処理を `next-thread/domain` へ分けた移動（`275de136`）は残した。
+   3. `vite.config.ts` に公開モジュールの一覧（`FEATURE_PUBLIC_MODULES`、10 機能・30 ファイル）を置き、一覧に無いファイルへの import と、機能どうしの循環（`import/no-cycle`）を `error` で検査する（`97b686af`）。
 
 ### Phase E: 循環 import と view → core
 

@@ -22,18 +22,16 @@
 | D-2（一部） | `SettingsSectionId`・`SettingsPageUiState` の型を `pages/settings/settings-types` から `view/browser/types.ts` へ移し、参照先を付け替える | `52f6bcfd`、`75d54cdf` |
 | D-3 | UI 部品層 → `features`・組み立て層、`features` → 組み立て層の import を oxlint で `error` にする。`commands` の 2 ファイルとそのテストは許可リスト | `36f7219a` |
 | D-4 | タブストア（`tab-store-*`・`use-tab-store`・`use-tab-view-scope`・`browser-session-storage`）と `auto-refresh-pages` を `view/browser/state/tabs` へ移し、参照先を付け替える（80 ファイル）。D-3 の許可リストを削除する | `8496ef14`、`73cd33d3`、`f2651140` |
+| D-5 | Story の分割（`29271136`、`59f9a085`）、次スレの判定処理の `next-thread/domain` への移動（`275de136`）、公開モジュールの一覧と機能どうしの境界・循環の検査（`97b686af`）。途中で作った `index.ts` は取り消した（`34ee041a`、`4ef928da`） | 上記 |
 
 検証は、各コミット時点で `tsc` と `vp test run` を通しています。D-2 の完了時点では、`vp test run`（276 ファイル・2157 件）、`tsc`、`build:chrome` がすべて通りました。
 
 ## 2. 未完了の作業
 
-### Phase D: `features` 間の依存（方針決定済み）
+### Phase D: `features` の依存（完了）
 
-- 残りは **45 行・24 組**（D-4 の後、テストを除く。テストを含めると 61 行・24 組）。D-4 の前は 84 件・35 組だった。
-- 主な共有先:
-  - 媒体の表示部品（`ResMediaGallery`・`ExternalImage`・`imgur-album`）。
-  - `comment-overlay` と `archive-replay` の相互参照（`archive-replay → comment-overlay` 6 行、`comment-overlay → archive-replay` 2 行）。機能どうしの循環になっている。
-  - NG の状態と表示部品（`use-ng-status`・`NgBadge`）。
+- 機能どうしの依存は **45 行・24 組**（テストを除く）。D-4 の前は 84 件・35 組だった。すべて公開モジュール（`vite.config.ts` の `FEATURE_PUBLIC_MODULES`、10 機能・30 ファイル）経由で、循環は無い。
+- `comment-overlay` → `archive-replay` の逆向きは Storybook の Story だけだったので、Story を `archive-replay` 側へ分けた。実行時の依存は `archive-replay → comment-overlay` の一方向。
 - **決定（2026-10-15）**: `features` → `view` の依存は認める。ただし `view/browser` を 2 層に分ける。
   - UI 部品層（`ui`・`hooks`・`utils`・`types`・`components`・`state`・`commands`）: `features` から参照してよい。`features`・`pages` は import しない。
   - 組み立て層（`App`・`pages`・`shell`）: `features` を組み合わせる最上位。
@@ -65,12 +63,13 @@
 
 ### Phase F: 検査を `error` にする（未着手）
 
-- 禁止ルール（`error`）は次の 3 つ。
+- 禁止ルール（`error`）は次の 4 つ。
   - `core` → `service-container`
   - UI 部品層 → `features`・組み立て層（D-3。許可リストは D-4 で削除）
   - `features` → 組み立て層（D-3）
-- `features` 間の依存と `view` → `core` の依存には、まだ検査がない。
-- 循環検出（`import/no-cycle`）は計測でのみ使用。`vite.config.ts` には入っていない。
+  - `features` → 他の機能の内部（公開モジュール以外）と、`src/features` の中の循環（D-5）
+- `view` → `core` の依存には、まだ検査がない。
+- 循環検出（`import/no-cycle`）は `src/features` にだけ入れた。全体では 6 件ある（`core` の 4 件、`view/browser/state/tabs` の `tab-store-new-tab` ↔ `tab-store-state-helpers`。後者は D-4 で移す前から `features/tabs` にあった循環）。
 
 ## 3. 計画との食い違い（解消済み）
 
@@ -82,15 +81,13 @@
 - `build:chrome` は、`75d54cdf`（D-2 の最後のコミット）の後に再実行し、成功した。
 - `36f7219a`（D-3）の時点で、`vp test run`（276 ファイル・2157 件）、`tsc`、`vp lint src/`（エラー 0 件）が通った。D-3 の検査は、許可リストを外すと `commands` の 4 ファイル・8 行だけを検出すること、`features` のファイルに `shell` の import を一時的に足すと検出することを確認した。
 - `f2651140`（D-4）の時点で、`vp test run`（276 ファイル・2157 件）、`tsc`、`vp lint src/`（エラー 0 件）、`build:chrome` が通った。参照先の付け替えのコミットは、import の行以外を変えていないことを差分で確認した。
+- `97b686af`（D-5）の時点で、`vp test run`（276 ファイル・2157 件）、`tsc`、`vp lint src/`（エラー 0 件）、`build:chrome` が通った。Tauri の overlay・replay・browser の各エントリの JS・CSS の大きさは、D-5 の前と同じ。D-5 の検査は、一覧に無いファイル・公開した入口の下のファイル・組み立て層・循環を一時的に足すとそれぞれ検出し、一覧から外すと利用箇所を検出することを確認した。
 - lint には、この作業と無関係な警告が以前からある（`unicorn`・`react` など）。エラーはない。
 
 ## 5. 次に必要なこと
 
-1. D-2〜D-4 は完了した。`view/browser` の層の境界は、許可リストなしで検査されている。
-2. D-5: 機能どうしの依存（45 行・24 組）を公開モジュール経由にする。2026-10-15 に方針を決定（計画書 §3.5）。
-   - 媒体・NG の部品は UI 部品層へ移さず、各機能の公開モジュールとして一覧に載せる。
-   - 公開 API は `index.ts` ではなく、公開してよいファイルの一覧（`vite.config.ts`）で表す（副作用の問題。計画書 §3.5）。
-   - `comment-overlay` が下、`archive-replay` が上。逆向きは Storybook だけなので Story を移す。共通層は作らない。
+1. Phase D は完了した。`view/browser` の層の境界と、機能どうしの境界（公開モジュール・循環なし）は、許可リストなしで検査されている。
+2. Phase E: 循環 6 件（`core` の 4 件、`tab-store-new-tab` ↔ `tab-store-state-helpers`）を解消し、`import/no-cycle` を全体へ広げる。`view` → `core` の直接 import（21 ファイル）の扱いを決める。
 3. 機能間の件数の計測方法（テストを除く、`from`・動的 `import()`・`vi.mock` を数える）を、スクリプトにしてリポジトリに置くかどうか。
 4. 並行してできるもの:
    - `jsutil` の `corePorts` 参照の整理
@@ -111,3 +108,9 @@
    - 解消: `url-utils` は chlib の再エクスポートだけの互換窓口だったため、`url-media` が `@chlen/chlib` を直接参照するようにした（`71e14707`）。置き場所は変えない。
 6. **`view/browser/types.ts` が `pages/settings/settings-types` を型として import している**（D-2 の途中で発見）。UI 部品層から組み立て層への逆向きの依存なので、§2 の項目 6 として扱った。
    - 解消: `SettingsSectionId`・`SettingsPageUiState` の定義を `view/browser/types.ts` へ移した（`52f6bcfd`、`75d54cdf`）。
+7. **機能の `index.ts`（まとめて再エクスポートするファイル）が副作用を広げる**（D-5 の途中で発見）。
+   - `comment-overlay` の index から `OverlayStage` を出すと、その CSS が replay・browser の CSS にそれぞれ約 20KB 入った。
+   - `next-thread` の index を経由すると、`comment-overlay` のテストが `window is not defined`（`service-container` の読み込み）で落ちた。
+   - `media` の index を経由すると、overlay.js が約 46KB 増え、テストが 7 ファイル落ちた（`webextension-polyfill` の読み込み）。
+   - 解消: `index.ts` をやめ、公開モジュールの一覧で公開 API を表す方針に改めた（計画書 §3.5）。今後も、まとめて再エクスポートするファイルを機能の入口にしない。
+8. **`view/browser/state/tabs` の `tab-store-new-tab` と `tab-store-state-helpers` が互いに import している**（D-5 で循環を計測して発見）。D-4 で移す前から `features/tabs` にあった循環。Phase E で扱う。

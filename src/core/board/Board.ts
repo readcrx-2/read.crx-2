@@ -8,6 +8,7 @@ import {
   resolveBoardRedirectUrl,
 } from "packages/chlib/src/index";
 import { platform } from "src/app/platform";
+import { runBoardRequest } from "src/core/board/board-request";
 import { Response } from "src/core/network/HTTP";
 import { chServerMoveDetect } from "src/core/util/jsutil";
 import { container } from "src/service-container/index";
@@ -88,11 +89,13 @@ export default class Board {
               etag: cache.etag,
             });
 
-            const httpResponse = await platform.http.fetch(xhrPath, {
-              method: "GET",
-              mimeType: `text/plain; charset=${xhrCharset}`,
-              headers: headers,
-            });
+            const httpResponse = await runBoardRequest(xhrPath, () =>
+              platform.http.fetch(xhrPath, {
+                method: "GET",
+                mimeType: `text/plain; charset=${xhrCharset}`,
+                headers,
+              }),
+            );
             // HttpResponseをResponseに変換
             response = new Response(
               httpResponse.status,

@@ -43,13 +43,49 @@ vi.mock("src/service-container/index", () => ({
 
 import Board from "src/core/board/Board";
 
-describe("Board.getCachedResCount", () => {
+describe("Board", () => {
   beforeEach(() => {
     cache.data = "1000000001.dat<>古いスレ一覧 (1)\n";
     cache.lastUpdated = 0;
     cache.get.mockReset();
     cache.get.mockResolvedValue(undefined);
     fetchMock.mockReset();
+  });
+
+  it("同じ板を同時に取得してもsubject.txtの通信を共有する", async () => {
+    let resolveFetch:
+      | ((response: {
+          status: number;
+          headers: Record<string, string>;
+          body: string;
+          url: string;
+        }) => void)
+      | undefined;
+    fetchMock.mockImplementation(
+      () =>
+        new Promise((resolve) => {
+          resolveFetch = resolve;
+        }),
+    );
+    const first = new Board("https://example.com/board/");
+    const second = new Board("https://example.com/board/");
+
+    const firstRequest = first.get(true);
+    const secondRequest = second.get(true);
+    await vi.waitFor(() => expect(fetchMock).toHaveBeenCalledOnce());
+    resolveFetch?.({
+      status: 200,
+      headers: {},
+      body: "1000000001.dat<>テストスレッド (1)\n",
+      url: "https://example.com/board/subject.txt",
+    });
+
+    await Promise.all([firstRequest, secondRequest]);
+
+    expect(first.thread).toEqual(second.thread);
+    expect(first.subjectListVerified).toBe(true);
+    expect(second.subjectListVerified).toBe(true);
+    expect(fetchMock).toHaveBeenCalledOnce();
   });
 
   it("板キャッシュがなくても最新一覧からスレッドの存在を確認する", async () => {

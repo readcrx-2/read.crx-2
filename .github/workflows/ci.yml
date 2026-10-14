@@ -51,6 +51,13 @@ jobs:
           GITHUB_BASE_REF: ${{ github.base_ref }}
           CI_DIFF_BASE: ${{ github.event.before }}
 
+      # 層・機能・core への依存の境界と循環 import は、変更していないファイルの import 先が
+      # 動いたり消えたりしても崩れるため、src 全体へ lint をかける（docs/plans/module-boundaries-plan.md）。
+      # フォーマットは上の変更ファイルだけの検査に任せ、ここでは lint のエラーだけで失敗させる。
+      - name: Lint all source files
+        if: ${{ !cancelled() }}
+        run: pnpm exec vp lint src/
+
   rust-coverage:
     name: Rustカバレッジ
     runs-on: ubuntu-latest

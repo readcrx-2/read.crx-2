@@ -10,6 +10,7 @@ import {
 import { platform } from "src/app/platform";
 import { runBoardRequest } from "src/core/board/board-request";
 import { Response } from "src/core/network/HTTP";
+import type { CorePorts } from "src/core/ports/registry";
 import { corePorts } from "src/core/ports/registry";
 import { chServerMoveDetect } from "src/core/util/jsutil";
 
@@ -33,6 +34,12 @@ interface BoardResponse {
 /**
  * 板（スレ一覧）を取得・解析するクラス
  */
+/** 板の取得・解析に必要なサービス。省略時は登録済みのサービスを使う（window.app.Board の互換）。 */
+export type BoardDeps = Pick<
+  CorePorts,
+  "bbsMenu" | "bookmark" | "cache" | "message" | "ng" | "util"
+>;
+
 export default class Board {
   url: ChURL;
   thread: BoardThread[] | null = null;
@@ -40,7 +47,10 @@ export default class Board {
   // subject不在をdat落ちと扱う前に、一覧が正常な取得結果か確認する。
   subjectListVerified = false;
 
-  constructor(url: string | ChURL) {
+  constructor(
+    url: string | ChURL,
+    private readonly deps: BoardDeps = corePorts,
+  ) {
     this.url = url instanceof ChURL ? url : new ChURL(url);
   }
 
@@ -65,7 +75,7 @@ export default class Board {
         let hasCache = false;
 
         // キャッシュ取得
-        const cache = corePorts.cache.getCache(xhrPath);
+        const cache = this.deps.cache.getCache(xhrPath);
 
         let needFetch = false;
         try {
@@ -124,15 +134,15 @@ export default class Board {
             if (response.body == null) {
               // レスポンスボディが空の場合はキャッシュを使用
               if (hasCache && cache.data) {
-                threadList = Board.parse(this.url, cache.data);
+                threadList = Board.parse(this.url, cache.data, this.deps);
               } else {
                 throw new Error("レスポンスボディが空です");
               }
             } else {
-              threadList = Board.parse(this.url, response.body);
+              threadList = Board.parse(this.url, response.body, this.deps);
             }
           } else if (hasCache && cache.data) {
-            threadList = Board.parse(this.url, cache.data);
+            threadList = Board.parse(this.url, cache.data, this.deps);
           }
 
           if (threadList == null) {
@@ -179,7 +189,7 @@ export default class Board {
 
             // ブックマークのレス数を更新
             for (thread of threadList) {
-              corePorts.bookmark.updateResCount(thread.url, thread.resCount);
+              this.deps.bookmark.updateResCount(thread.url, thread.resCount);
             }
           } else if (hasCache && response?.status === 304) {
             // 304 Not Modifiedの場合、最終更新時刻のみ更新
@@ -200,11 +210,11 @@ export default class Board {
           // サーバー移転の検出試行
           if (newBoardUrl != null && getBoardNetwork(this.url.url) === "5ch") {
             try {
-              newBoardUrl = (await chServerMoveDetect(this.url, corePorts)).href;
+              newBoardUrl = (await chServerMoveDetect(this.url, this.deps)).href;
               this.message += `\
 サーバーが移転しています
-(<a href="${corePorts.util.escapeHtml(corePorts.util.safeHref(newBoardUrl))}"
-class="open_in_rcrx">${corePorts.util.escapeHtml(newBoardUrl)}
+(<a href="${this.deps.util.escapeHtml(this.deps.util.safeHref(newBoardUrl))}"
+class="open_in_rcrx">${this.deps.util.escapeHtml(newBoardUrl)}
 </a>)\
 `;
             } catch {
@@ -212,11 +222,11 @@ class="open_in_rcrx">${corePorts.util.escapeHtml(newBoardUrl)}
             }
           } else if (getBoardNetwork(this.url.url) === "5ch" && response != null) {
             try {
-              newBoardUrl = (await chServerMoveDetect(this.url, corePorts)).href;
+              newBoardUrl = (await chServerMoveDetect(this.url, this.deps)).href;
               this.message += `\
 サーバーが移転している可能性が有ります
-(<a href="${corePorts.util.escapeHtml(corePorts.util.safeHref(newBoardUrl))}"
-class="open_in_rcrx">${corePorts.util.escapeHtml(newBoardUrl)}
+(<a href="${this.deps.util.escapeHtml(this.deps.util.safeHref(newBoardUrl))}"
+class="open_in_rcrx">${this.deps.util.escapeHtml(newBoardUrl)}
 </a>)\
 `;
             } catch {
@@ -252,7 +262,7 @@ class="open_in_rcrx">${corePorts.util.escapeHtml(newBoardUrl)}
         }
 
         const dict: Record<string, boolean> = {};
-        const bookmarks = corePorts.bookmark.getByBoard(this.url.url.href) ?? [];
+        const bookmarks = this.deps.bookmark.getByBoard(this.url.url.href) ?? [];
         for (bookmark of bookmarks) {
           if (bookmark.type === "thread") {
             dict[bookmark.url] = true;
@@ -263,7 +273,7 @@ class="open_in_rcrx">${corePorts.util.escapeHtml(newBoardUrl)}
         for (thread of threadList) {
           if (thread.url in dict) {
             dict[thread.url] = false;
-            corePorts.bookmark.updateExpired(thread.url, false);
+            this.deps.bookmark.updateExpired(thread.url, false);
           }
         }
 
@@ -271,7 +281,7 @@ class="open_in_rcrx">${corePorts.util.escapeHtml(newBoardUrl)}
         for (const threadUrl in dict) {
           const val = dict[threadUrl];
           if (val) {
-            corePorts.bookmark.updateExpired(threadUrl, true);
+            this.deps.bookmark.updateExpired(threadUrl, true);
           }
         }
       })();
@@ -281,8 +291,8 @@ class="open_in_rcrx">${corePorts.util.escapeHtml(newBoardUrl)}
   /**
    * 板のスレ一覧を取得する（静的メソッド）
    */
-  static async get(url: string): Promise<BoardResponse> {
-    const board = new Board(url);
+  static async get(url: string, deps: BoardDeps = corePorts): Promise<BoardResponse> {
+    const board = new Board(url, deps);
     try {
       await board.get();
       return { status: "success", data: board.thread };
@@ -298,7 +308,7 @@ class="open_in_rcrx">${corePorts.util.escapeHtml(newBoardUrl)}
   /**
    * 板のテキストをパースして、スレ一覧を取得します
    */
-  static parse(url: ChURL, text: string): BoardThread[] | null {
+  static parse(url: ChURL, text: string, deps: BoardDeps = corePorts): BoardThread[] | null {
     const scFlg = getBoardNetwork(url.url) === "2ch-sc";
     const threads = BoardParser.parse(url, text);
 
@@ -308,7 +318,7 @@ class="open_in_rcrx">${corePorts.util.escapeHtml(newBoardUrl)}
     }
 
     return threads.map((thread: BoardThread) => {
-      const ngResult = corePorts.ng.isNGBoard(thread.title, url.url.href, thread.resCount);
+      const ngResult = deps.ng.isNGBoard(thread.title, url.url.href, thread.resCount);
       // 変更理由: hide / collapse / highlight を型名の推測ではなくDSL actionで分離する。
       const highlight =
         ngResult?.action === "highlight" ||
@@ -332,6 +342,7 @@ class="open_in_rcrx">${corePorts.util.escapeHtml(newBoardUrl)}
   static async getCachedResCount(
     threadUrl: string,
     { forceUpdate = false }: { forceUpdate?: boolean } = {},
+    deps: BoardDeps = corePorts,
   ): Promise<{ resCount: number; modified: number }> {
     // ChURLのメソッドを呼び出すために、threadUrlをChURLに変換
     const chUrl = new ChURL(threadUrl);
@@ -345,11 +356,11 @@ class="open_in_rcrx">${corePorts.util.escapeHtml(newBoardUrl)}
       throw new Error("その板の取得方法の情報が存在しません");
     }
 
-    const cache = corePorts.cache.getCache(xhrInfo.path);
+    const cache = deps.cache.getCache(xhrInfo.path);
     let cachedThreads: BoardThread[] | null = null;
     try {
       await cache.get();
-      cachedThreads = cache.data == null ? null : Board.parse(boardUrl, cache.data);
+      cachedThreads = cache.data == null ? null : Board.parse(boardUrl, cache.data, deps);
     } catch (error) {
       // 変更理由: URLを直接開いた場合などは板キャッシュがない。ここで終了すると
       // subject.txtを一度も確認できず、dat落ちによる自動更新停止を取りこぼす。
@@ -365,7 +376,7 @@ class="open_in_rcrx">${corePorts.util.escapeHtml(newBoardUrl)}
     // 可能性があるため、一覧の存在確認自体を最新subject.txtへ更新してから行う。
     // 通常表示では通信を増やさず、従来どおりキャッシュ上のレス数を利用する。
     if (forceUpdate || !thread) {
-      const board = new Board(boardUrl);
+      const board = new Board(boardUrl, deps);
       // 変更理由: キャッシュが未取得・解析不能なら短時間キャッシュも使わず、
       // 最新一覧の取得に成功してから存在／不在を判断する。
       await board.get(forceUpdate || cachedThreads == null);

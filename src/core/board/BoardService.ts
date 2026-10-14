@@ -21,13 +21,16 @@ interface BoardLikeUrl {
 }
 
 /** 板一覧の組み立てに必要なサービス。呼び出し側が渡す（C-2）。 */
-export type BoardServiceDeps = Pick<CorePorts, "readState" | "bookmark" | "util">;
+export type BoardServiceDeps = Pick<
+  CorePorts,
+  "bbsMenu" | "bookmark" | "cache" | "message" | "ng" | "readState" | "util"
+>;
 
 export function createBoardService(deps: BoardServiceDeps) {
   return {
     async getThreads(url: string | BoardLikeUrl): Promise<IBoardResult> {
       const urlStr = typeof url === "string" ? url : url.href;
-      const result = (await Board.get(urlStr)) as BoardGetResult;
+      const result = (await Board.get(urlStr, deps)) as BoardGetResult;
       const { status, message, data } = result;
 
       if (status === "error" && !data) {
@@ -78,7 +81,7 @@ export function createBoardService(deps: BoardServiceDeps) {
     },
 
     async getCachedResCount(url: string, options?: { forceUpdate?: boolean }): Promise<unknown> {
-      return Board.getCachedResCount(url, options);
+      return Board.getCachedResCount(url, options, deps);
     },
   };
 }

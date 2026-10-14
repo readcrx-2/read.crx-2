@@ -1,5 +1,6 @@
 import { ChURL, getThreadReferenceKeys } from "packages/chlib/src/index";
 import Board from "src/core/board/Board";
+import { corePorts } from "src/core/ports/registry";
 import { normalize } from "src/core/util/string-normalize";
 import { levenshteinDistance } from "src/core/util/Util";
 
@@ -57,7 +58,7 @@ export async function searchNextThread(
   threadTitle = normalize(threadTitle);
 
   // Board.get は文字列URLを受け取る契約なので href で渡す。
-  const { data: threads } = await Board.get(boardUrl.href);
+  const { data: threads } = await Board.get(boardUrl.href, corePorts);
   if (threads == null) {
     throw new Error("板の取得に失敗しました");
   }

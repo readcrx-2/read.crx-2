@@ -105,7 +105,9 @@ vi.mock("src/app/Notification", () => ({
     static isSupported = vi.fn(() => true);
   },
 }));
-vi.mock("src/core/thread/ThreadService", () => ({ default: { getThread: vi.fn() } }));
+vi.mock("src/core/thread/ThreadService", () => ({
+  createThreadService: () => ({ getThread: vi.fn() }),
+}));
 vi.mock("src/app/logger", () => ({ setConsolaLevel: vi.fn() }));
 vi.mock("src/service-container/Container", () => ({ container: {} }));
 vi.mock("src/service-container/toast-store", () => ({ toastStore: {} }));

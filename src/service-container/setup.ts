@@ -13,7 +13,7 @@ import * as ReadState from "src/core/bookmark/ReadState";
 import * as NG from "src/core/ng/NG";
 import { installCorePorts } from "src/core/ports/registry";
 import Cache from "src/core/storage/Cache";
-import ThreadService from "src/core/thread/ThreadService";
+import { createThreadService } from "src/core/thread/ThreadService";
 import { configInstance } from "src/service-container/config-instance";
 import { container } from "src/service-container/Container";
 import {
@@ -190,8 +190,10 @@ export function setupContainer(): void {
   };
 
   // Thread Service Adapter
+  // 依存は登録済みの container から渡す。
+  const threadService = createThreadService(container);
   const threadServiceAdapter: IThreadService = {
-    getThread: (url, options) => ThreadService.getThread(url, options),
+    getThread: (url, options) => threadService.getThread(url, options),
   };
 
   // Toast Service Adapter

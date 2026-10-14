@@ -1,10 +1,10 @@
 import { ArrowLeft, ArrowRight, RotateCw } from "lucide-react";
 import React, { useCallback, useState } from "react";
 import { useTabCommandRunner } from "src/features/tabs/browser/use-tab-command-runner";
-import { useTabStore } from "src/features/tabs/browser/use-tab-store";
 import { TabContextMenu } from "src/features/tabs/ui/TabContextMenu";
 import { TAB_COMMAND_IDS } from "src/view/browser/commands/tab-command-runtime";
 import { useTitleBarButtonSettings } from "src/view/browser/hooks/use-title-bar-navigation-setting";
+import { useTabStore } from "src/view/browser/state/tabs/use-tab-store";
 import { canGoBack, canGoForward } from "src/view/browser/types";
 import {
   getManualRefreshScopeKey,

@@ -1,5 +1,4 @@
 import React from "react";
-import { useTabStore } from "src/features/tabs/browser/use-tab-store";
 import { STATUS_BAR_PRIORITY } from "src/view/browser/components/status-bar-priority";
 import { StatusBarItem } from "src/view/browser/components/StatusBar";
 import {
@@ -8,6 +7,7 @@ import {
   usePageCountStatus,
 } from "src/view/browser/hooks/use-page-count-status";
 import { useViewSurface } from "src/view/browser/hooks/use-view-surface";
+import { useTabStore } from "src/view/browser/state/tabs/use-tab-store";
 import {
   THREAD_FILTER_TOOLBAR_TOGGLE_EVENT,
   type ThreadFilterToolbarToggleDetail,

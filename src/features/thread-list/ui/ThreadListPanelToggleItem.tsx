@@ -1,12 +1,12 @@
 import { List as ListIcon } from "lucide-react";
 import React from "react";
-import { useTabStore } from "src/features/tabs/browser/use-tab-store";
 import { STATUS_BAR_PRIORITY } from "src/view/browser/components/status-bar-priority";
 import { StatusBarItem } from "src/view/browser/components/StatusBar";
 import {
   BOTTOM_PANEL_THREAD_LIST_TAB_ID,
   useBottomPanel,
 } from "src/view/browser/hooks/use-bottom-panel";
+import { useTabStore } from "src/view/browser/state/tabs/use-tab-store";
 
 // ステータスバー右端に表示する下部パネルの直接操作ボタン。
 // 変更理由: パネル種別を先に選ばせると書き込みまでの操作が増えるため、

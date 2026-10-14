@@ -8,7 +8,6 @@ import {
   ReplacementDslHelpSnippet,
   ReplacementEditor,
 } from "src/features/replacement/ui/ReplacementEditor";
-import { useTabViewState } from "src/features/tabs/browser/use-tab-store";
 import { container } from "src/service-container/index";
 import { useMediaQuery } from "src/view/browser/hooks/use-media-query";
 import {
@@ -33,6 +32,7 @@ import {
 } from "src/view/browser/pages/settings/settings-types";
 import { SettingsSupplementaryPanels } from "src/view/browser/pages/settings/SettingsSupplementaryPanels";
 import { useSettingsMaintenanceActions } from "src/view/browser/pages/settings/use-settings-maintenance";
+import { useTabViewState } from "src/view/browser/state/tabs/use-tab-store";
 import type {
   SettingsPage as SettingsPageType,
   SettingsPageUiState,

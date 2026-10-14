@@ -6,7 +6,6 @@ import { uploadImageToImgur } from "src/features/media/application/imgur-upload"
 import { useMediaViewerStore } from "src/features/media/browser/use-media-viewer-store";
 import { ExternalImage } from "src/features/media/ui/ExternalImage";
 import { MediaViewerContainer } from "src/features/media/ui/MediaViewerContainer";
-import { useTabStore } from "src/features/tabs/browser/use-tab-store";
 import { useWrite } from "src/features/write/browser/use-write";
 import {
   useWriteDraft,
@@ -19,6 +18,7 @@ import { useConfigBooleanSetting } from "src/view/browser/hooks/use-config-boole
 import { useScopedConfigBooleanSetting } from "src/view/browser/hooks/use-scoped-config-boolean-setting";
 import { useToast } from "src/view/browser/hooks/use-toast";
 import { useViewSurface } from "src/view/browser/hooks/use-view-surface";
+import { useTabStore } from "src/view/browser/state/tabs/use-tab-store";
 import { Dialog } from "src/view/browser/ui/Dialog";
 import { CheckboxField } from "src/view/browser/ui/FormControls";
 import { copyText, readClipboardImage } from "src/view/browser/utils/clipboard";

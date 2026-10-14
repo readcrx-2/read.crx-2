@@ -3,9 +3,9 @@ import {
   BookmarkContextMenu,
   type BookmarkContextMenuState,
 } from "src/features/bookmark/ui/BookmarkContextMenu";
-import { tabActions } from "src/features/tabs/browser/tab-store-actions";
-import { useTabStore } from "src/features/tabs/browser/use-tab-store";
 import { container } from "src/service-container/index";
+import { tabActions } from "src/view/browser/state/tabs/tab-store-actions";
+import { useTabStore } from "src/view/browser/state/tabs/use-tab-store";
 import { Alert } from "src/view/browser/ui/Alert";
 import { Button } from "src/view/browser/ui/Button";
 import { Spinner } from "src/view/browser/ui/Spinner";

@@ -3,11 +3,11 @@ import type { Dispatch, MouseEvent } from "react";
 import { useCallback } from "react";
 import { platform } from "src/app/platform/index";
 import { toViewerImageUrl } from "src/core/util/url-media";
-import { tabActions } from "src/features/tabs/browser/tab-store-actions";
-import type { TabAction } from "src/features/tabs/browser/use-tab-store";
 import { COMMAND_REQUEST_IDS, runCommandRequest } from "src/view/browser/commands/command-runtime";
 import { useToast } from "src/view/browser/hooks/use-toast";
 import { useViewSurface } from "src/view/browser/hooks/use-view-surface";
+import { tabActions } from "src/view/browser/state/tabs/tab-store-actions";
+import type { TabAction } from "src/view/browser/state/tabs/use-tab-store";
 import type { ContextMenuItem } from "src/view/browser/ui/ContextMenu";
 import {
   parseInternalBrowserPageStrict,

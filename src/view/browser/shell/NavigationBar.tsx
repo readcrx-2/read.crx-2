@@ -25,16 +25,10 @@ import React, {
   useSyncExternalStore,
 } from "react";
 import { createPortal } from "react-dom";
-import {
-  getAutoRefreshPageKey,
-  isAutoRefreshEnabledForPage,
-} from "src/features/auto-refresh/browser/auto-refresh-pages";
 import { usePageBookmark } from "src/features/bookmark/browser/use-page-bookmark";
-import { tabActions } from "src/features/tabs/browser/tab-store-actions";
 import { useNavHistoryMenuItems } from "src/features/tabs/browser/use-nav-history-menu-items";
 import { useTabBarOrientation } from "src/features/tabs/browser/use-tab-bar-orientation";
 import { useTabCommandRunner } from "src/features/tabs/browser/use-tab-command-runner";
-import { useTabPanes, useTabStore } from "src/features/tabs/browser/use-tab-store";
 import { useResponseJumpDialog } from "src/features/thread/browser/use-response-jump-dialog";
 import {
   type BrowserCommandContext,
@@ -56,6 +50,12 @@ import { useOmnibar } from "src/view/browser/hooks/use-omnibar";
 import { useToast } from "src/view/browser/hooks/use-toast";
 import { useUrlBarVisibility } from "src/view/browser/hooks/use-url-bar-visibility";
 import { useViewSurface } from "src/view/browser/hooks/use-view-surface";
+import {
+  getAutoRefreshPageKey,
+  isAutoRefreshEnabledForPage,
+} from "src/view/browser/state/tabs/auto-refresh-pages";
+import { tabActions } from "src/view/browser/state/tabs/tab-store-actions";
+import { useTabPanes, useTabStore } from "src/view/browser/state/tabs/use-tab-store";
 import { canGoBack, canGoForward, getCurrentPage, getDisplayUrl } from "src/view/browser/types";
 import { Button } from "src/view/browser/ui/Button";
 import { ContextMenu } from "src/view/browser/ui/ContextMenu";

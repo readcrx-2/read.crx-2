@@ -1,7 +1,7 @@
 import { type FC } from "react";
 import { useDetachedTabController } from "src/features/tabs/browser/use-detached-tab-controller";
-import { useTabStore } from "src/features/tabs/browser/use-tab-store";
 import { TabPanel } from "src/view/browser/shell/TabView";
+import { useTabStore } from "src/view/browser/state/tabs/use-tab-store";
 
 interface ContentAreaProps {
   isOverlayTarget?: boolean;

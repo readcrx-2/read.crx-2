@@ -13,11 +13,15 @@ import {
   type DetachedTabController,
   DetachedTabControllerContext,
 } from "src/features/tabs/browser/detached-tab-controller";
-import { tabActions } from "src/features/tabs/browser/tab-store-actions";
-import { useTabDispatch, useTabPanes, useTabStore } from "src/features/tabs/browser/use-tab-store";
 import { useTheme } from "src/view/browser/hooks/use-theme";
 import type { ViewSurface } from "src/view/browser/hooks/use-view-surface";
 import { DetachedTabWindowContent } from "src/view/browser/shell/DetachedTabWindowContent";
+import { tabActions } from "src/view/browser/state/tabs/tab-store-actions";
+import {
+  useTabDispatch,
+  useTabPanes,
+  useTabStore,
+} from "src/view/browser/state/tabs/use-tab-store";
 import { getCurrentPage, type Page, type Pane, type Tab } from "src/view/browser/types";
 
 interface TabWindowEntry extends AuxiliaryWindowHandle {

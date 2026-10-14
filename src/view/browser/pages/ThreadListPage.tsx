@@ -14,9 +14,7 @@ import {
 import { useNgStatus } from "src/features/ng/browser/use-ng-status";
 import { useThreadTitleNgDialog } from "src/features/ng/browser/use-thread-title-ng-dialog";
 import { ThreadTitleNgDialog } from "src/features/ng/ui/ThreadTitleNgDialog";
-import { tabActions } from "src/features/tabs/browser/tab-store-actions";
 import { useTabCommandRunner } from "src/features/tabs/browser/use-tab-command-runner";
-import { useTabStore, useTabViewState } from "src/features/tabs/browser/use-tab-store";
 import { useTabViewRuntime } from "src/features/tabs/browser/use-tab-view-runtime";
 import { createThreadContextMenuItems } from "src/features/thread/ui/thread-context-menu-items";
 import {
@@ -56,6 +54,8 @@ import { useQuickAccessFilterToolbar } from "src/view/browser/hooks/use-quick-ac
 import { isResolvedBoardTitle } from "src/view/browser/pages/board-list/board-list-utils";
 import { useThreadListData } from "src/view/browser/pages/thread-list/use-thread-list-data";
 import { useThreadListReadStateSync } from "src/view/browser/pages/thread-list/use-thread-list-read-state-sync";
+import { tabActions } from "src/view/browser/state/tabs/tab-store-actions";
+import { useTabStore, useTabViewState } from "src/view/browser/state/tabs/use-tab-store";
 import {
   canGoBack,
   canGoForward,

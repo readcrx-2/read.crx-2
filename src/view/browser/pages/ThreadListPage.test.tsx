@@ -3,7 +3,6 @@ import "@testing-library/jest-dom/vitest";
 import { act, cleanup, fireEvent, render, screen, waitFor } from "@testing-library/react";
 import { createRef } from "react";
 import { ask as askBoardTitle } from "src/core/board/BoardTitleSolver.js";
-import { getAutoRefreshThreadPageKey } from "src/features/auto-refresh/browser/auto-refresh-pages";
 import {
   type DisplayThread,
   THREAD_LIST_COLUMNS,
@@ -11,6 +10,7 @@ import {
 import { container as serviceContainer } from "src/service-container/index";
 import type { IBoardService, IBookmark, IThread } from "src/service-container/interfaces";
 import { ThreadListPage } from "src/view/browser/pages/ThreadListPage";
+import { getAutoRefreshThreadPageKey } from "src/view/browser/state/tabs/auto-refresh-pages";
 import { QUICK_ACCESS_FILTER_TOGGLE_EVENT_BY_PAGE_TYPE } from "src/view/browser/utils/filter-toolbar-events";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vite-plus/test";
 
@@ -65,7 +65,7 @@ vi.mock("src/core/board/BoardUrlNormalizer", async (importOriginal) => {
   };
 });
 
-vi.mock("src/features/tabs/browser/use-tab-store", () => ({
+vi.mock("src/view/browser/state/tabs/use-tab-store", () => ({
   useTabStore: () => ({
     dispatch: dispatchMock,
     state: { selectedTabId: selectedTabIdRef.current },

@@ -16,9 +16,9 @@ import {
 import {
   getAutoRefreshPageKey,
   isAutoRefreshEnabledForPage,
-} from "src/features/auto-refresh/browser/auto-refresh-pages";
-import { tabActions } from "src/features/tabs/browser/tab-store-actions";
-import { useTabStore } from "src/features/tabs/browser/use-tab-store";
+} from "src/view/browser/state/tabs/auto-refresh-pages";
+import { tabActions } from "src/view/browser/state/tabs/tab-store-actions";
+import { useTabStore } from "src/view/browser/state/tabs/use-tab-store";
 import { persistConfigValue, subscribeConfigKeys } from "src/view/browser/utils/config-setting";
 import {
   persistScopedSettingForUrl,

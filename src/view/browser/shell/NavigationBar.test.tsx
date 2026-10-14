@@ -86,7 +86,7 @@ const { orientationHolder } = vi.hoisted(() => ({
   orientationHolder: { value: "horizontal" },
 }));
 
-vi.mock("src/features/tabs/browser/use-tab-store", () => ({
+vi.mock("src/view/browser/state/tabs/use-tab-store", () => ({
   useTabStore: () => ({
     state: { tabs: [viewTab], closedTabs: [] },
     viewTab,

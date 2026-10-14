@@ -9,10 +9,6 @@ import {
 } from "src/features/archive-replay/ui/ArchiveReplayPositionLine";
 import { readThreadAutoRefreshIntervalSec } from "src/features/auto-refresh/browser/auto-refresh-config";
 import {
-  getAutoRefreshPageKey,
-  isAutoRefreshStoppedForPage,
-} from "src/features/auto-refresh/browser/auto-refresh-pages";
-import {
   resolveThreadAutoRefreshStop,
   shouldDeferExpiredAutoRefreshStop,
 } from "src/features/auto-refresh/browser/auto-refresh-stop";
@@ -31,9 +27,7 @@ import { useNgStatus } from "src/features/ng/browser/use-ng-status";
 import type { ContextMenuPopupItem } from "src/features/popup/browser/popup-types";
 import { useThreadPopupManager } from "src/features/popup/browser/use-popup-manager";
 import { PopupRenderer } from "src/features/popup/ui/PopupRenderer";
-import { tabActions } from "src/features/tabs/browser/tab-store-actions";
 import { useTabCommandRunner } from "src/features/tabs/browser/use-tab-command-runner";
-import { useTabStore } from "src/features/tabs/browser/use-tab-store";
 import { useTabViewRuntime } from "src/features/tabs/browser/use-tab-view-runtime";
 import { useThreadData } from "src/features/thread/browser/use-thread-data";
 import { useThreadRefreshController } from "src/features/thread/browser/use-thread-refresh-controller";
@@ -66,6 +60,12 @@ import { useThreadResContextMenu } from "src/view/browser/pages/thread/use-threa
 import { useThreadTopBar } from "src/view/browser/pages/thread/use-thread-top-bar";
 import { useThreadTopScrollOpenFilter } from "src/view/browser/pages/thread/use-thread-top-scroll-open-filter";
 import { useUrlHandlers } from "src/view/browser/pages/thread/use-url-handlers";
+import {
+  getAutoRefreshPageKey,
+  isAutoRefreshStoppedForPage,
+} from "src/view/browser/state/tabs/auto-refresh-pages";
+import { tabActions } from "src/view/browser/state/tabs/tab-store-actions";
+import { useTabStore } from "src/view/browser/state/tabs/use-tab-store";
 import {
   canGoBack,
   canGoForward,

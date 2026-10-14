@@ -1,9 +1,9 @@
 import { type Dispatch, useMemo } from "react";
-import type { ScopedTabAction } from "src/features/tabs/browser/tab-store-types";
-import { useTabDispatchForTab } from "src/features/tabs/browser/use-tab-store";
 import type { IToastService } from "src/service-container/interfaces";
 import { useToast } from "src/view/browser/hooks/use-toast";
 import { useViewSurface, type ViewSurface } from "src/view/browser/hooks/use-view-surface";
+import type { ScopedTabAction } from "src/view/browser/state/tabs/tab-store-types";
+import { useTabDispatchForTab } from "src/view/browser/state/tabs/use-tab-store";
 
 export interface TabViewRuntime {
   tabId: string;

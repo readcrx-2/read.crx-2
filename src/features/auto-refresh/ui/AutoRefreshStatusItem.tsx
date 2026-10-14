@@ -16,7 +16,6 @@ import {
 } from "src/features/live-chat/browser/use-thread-display-mode-setting";
 import type { AutoNextThreadMode } from "src/features/next-thread/browser/next-thread-search";
 import { useAutoNextThreadSetting } from "src/features/next-thread/browser/use-auto-next-thread-setting";
-import { useTabStore } from "src/features/tabs/browser/use-tab-store";
 import { MiniWindow } from "src/view/browser/components/MiniWindow";
 import {
   MiniWindowDetails,
@@ -32,6 +31,7 @@ import {
 import { STATUS_BAR_PRIORITY } from "src/view/browser/components/status-bar-priority";
 import { StatusBarItem, StatusBarMode } from "src/view/browser/components/StatusBar";
 import { useMiniWindowTrigger } from "src/view/browser/hooks/use-mini-window-trigger";
+import { useTabStore } from "src/view/browser/state/tabs/use-tab-store";
 
 // -----------------------------------------------------------------------
 // ミニウィンドウの中身（UI のみ、ロジックは props 経由）

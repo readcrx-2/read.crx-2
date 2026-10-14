@@ -1,10 +1,10 @@
 import { PenLine } from "lucide-react";
 import React from "react";
-import { useTabStore } from "src/features/tabs/browser/use-tab-store";
 import { useWriteSessionControls } from "src/features/write/browser/use-write-session";
 import { STATUS_BAR_PRIORITY } from "src/view/browser/components/status-bar-priority";
 import { StatusBarItem } from "src/view/browser/components/StatusBar";
 import { BOTTOM_PANEL_WRITE_TAB_ID, useBottomPanel } from "src/view/browser/hooks/use-bottom-panel";
+import { useTabStore } from "src/view/browser/state/tabs/use-tab-store";
 
 export const WritePanelToggleItem: React.FC = () => {
   const { isOpen, activePanelTabId, togglePanel, requestWritePanelFocus } = useBottomPanel();

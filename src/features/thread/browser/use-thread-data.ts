@@ -15,12 +15,12 @@ import {
   useIsNgTemporarilyDisabled,
   useNgDisplayMode,
 } from "src/features/ng/browser/use-ng-status";
-import { tabActions } from "src/features/tabs/browser/tab-store-actions";
-import { useTabDispatch, useTabViewState } from "src/features/tabs/browser/use-tab-store";
 import type { ThreadRefreshController } from "src/features/thread/browser/use-thread-refresh-controller";
 import { container } from "src/service-container/index";
 import type { IRes, IThreadDetail } from "src/service-container/interfaces";
 import { useToast } from "src/view/browser/hooks/use-toast";
+import { tabActions } from "src/view/browser/state/tabs/tab-store-actions";
+import { useTabDispatch, useTabViewState } from "src/view/browser/state/tabs/use-tab-store";
 import type {
   ThreadFilter,
   ThreadPage as ThreadPageType,

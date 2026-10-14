@@ -3,11 +3,11 @@ import type { Entry as BookmarkEntry, ReadState } from "src/core/bookmark/Bookma
 import * as History from "src/core/history/History";
 import * as WriteHistory from "src/core/history/WriteHistory";
 import Cache, { type LogArchiveRecord } from "src/core/storage/Cache";
+import { container } from "src/service-container/index";
 import {
   getBrowserSessionJson,
   setBrowserSessionJson,
-} from "src/features/tabs/browser/browser-session-storage";
-import { container } from "src/service-container/index";
+} from "src/view/browser/state/tabs/browser-session-storage";
 import {
   getLegacyBookmarkEntryList,
   getLegacyBookmarkService,

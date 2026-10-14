@@ -28,7 +28,7 @@ vi.mock("src/app/platform", () => ({
   },
 }));
 
-vi.mock("src/features/tabs/browser/use-tab-store", () => ({
+vi.mock("src/view/browser/state/tabs/use-tab-store", () => ({
   useTabPanes: () => tabState,
   useTabStore: () => ({ viewPage }),
 }));

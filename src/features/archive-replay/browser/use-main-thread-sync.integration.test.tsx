@@ -73,7 +73,7 @@ describe("過去実況Main同期のTabProvider統合", () => {
 
   it("新規専用タブをMainへフォーカスしてもTabProviderの状態を壊さない", async () => {
     vi.resetModules();
-    const { TabProvider, useTabStore } = await import("src/features/tabs/browser/use-tab-store");
+    const { TabProvider, useTabStore } = await import("src/view/browser/state/tabs/use-tab-store");
     const { useArchiveReplayMainThreadSync } = await import("./use-main-thread-sync");
 
     function Harness() {

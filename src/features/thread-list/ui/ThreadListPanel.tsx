@@ -7,9 +7,7 @@ import {
 import { useNgStatus } from "src/features/ng/browser/use-ng-status";
 import { useThreadTitleNgDialog } from "src/features/ng/browser/use-thread-title-ng-dialog";
 import { ThreadTitleNgDialog } from "src/features/ng/ui/ThreadTitleNgDialog";
-import { tabActions } from "src/features/tabs/browser/tab-store-actions";
 import { useTabCommandRunner } from "src/features/tabs/browser/use-tab-command-runner";
-import { useTabStore, useTabViewState } from "src/features/tabs/browser/use-tab-store";
 import { createThreadContextMenuItems } from "src/features/thread/ui/thread-context-menu-items";
 import {
   calcHeat,
@@ -45,6 +43,8 @@ import {
 } from "src/view/browser/hooks/use-bottom-panel";
 import { useToast } from "src/view/browser/hooks/use-toast";
 import { useViewSurface } from "src/view/browser/hooks/use-view-surface";
+import { tabActions } from "src/view/browser/state/tabs/tab-store-actions";
+import { useTabStore, useTabViewState } from "src/view/browser/state/tabs/use-tab-store";
 import { ContextMenu, type ContextMenuItem } from "src/view/browser/ui/ContextMenu";
 import {
   getBoardUrlFromThreadUrl,

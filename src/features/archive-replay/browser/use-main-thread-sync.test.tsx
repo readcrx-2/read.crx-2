@@ -1,5 +1,5 @@
 import { act, cleanup, renderHook } from "@testing-library/react";
-import type { ScopedTabAction, TabStoreState } from "src/features/tabs/browser/use-tab-store";
+import type { ScopedTabAction, TabStoreState } from "src/view/browser/state/tabs/use-tab-store";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vite-plus/test";
 
 import type { ArchiveReplayMainThreadRequest } from "../platform";
@@ -16,7 +16,7 @@ vi.mock("../platform", () => ({
   subscribeArchiveReplayMainThreadRequests: mocks.subscribe,
 }));
 
-vi.mock("src/features/tabs/browser/use-tab-store", () => ({
+vi.mock("src/view/browser/state/tabs/use-tab-store", () => ({
   useTabDispatch: () => mocks.dispatch,
   useTabStore: () => ({ stateRef: mocks.stateRef }),
 }));

@@ -5,9 +5,9 @@ import {
   findSimilarThreadCandidates,
   type ThreadSearchCandidate,
 } from "src/features/next-thread/browser/next-thread-search";
-import { tabActions } from "src/features/tabs/browser/tab-store-actions";
-import type { ScopedTabAction } from "src/features/tabs/browser/use-tab-store";
 import { container } from "src/service-container/index";
+import { tabActions } from "src/view/browser/state/tabs/tab-store-actions";
+import type { ScopedTabAction } from "src/view/browser/state/tabs/use-tab-store";
 import type { Page } from "src/view/browser/types";
 import { getBoardUrlFromThreadUrl } from "src/view/browser/utils/link-routing";
 

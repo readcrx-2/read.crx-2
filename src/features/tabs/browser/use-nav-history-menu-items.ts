@@ -1,7 +1,7 @@
 import type { Dispatch } from "react";
 import { useMemo } from "react";
-import { tabActions } from "src/features/tabs/browser/tab-store-actions";
-import type { ScopedTabAction } from "src/features/tabs/browser/tab-store-types";
+import { tabActions } from "src/view/browser/state/tabs/tab-store-actions";
+import type { ScopedTabAction } from "src/view/browser/state/tabs/tab-store-types";
 import type { Tab } from "src/view/browser/types";
 
 /**

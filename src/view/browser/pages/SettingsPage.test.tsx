@@ -2,7 +2,7 @@ import "@testing-library/jest-dom/vitest";
 
 import { act, cleanup, fireEvent, render, screen } from "@testing-library/react";
 import { useEffect } from "react";
-import type { ScopedTabAction, TabStoreState } from "src/features/tabs/browser/tab-store-types";
+import type { ScopedTabAction, TabStoreState } from "src/view/browser/state/tabs/tab-store-types";
 import type { SettingsPageUiState } from "src/view/browser/types";
 import { createHomeTab } from "src/view/browser/types";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vite-plus/test";
@@ -86,7 +86,7 @@ function settingsUiState(tabId = "settings-tab"): SettingsPageUiState | undefine
 async function renderViewer() {
   // タブストアはモジュール読込時に復元するため、Chromeの再読み込みと同様に読み直す。
   vi.resetModules();
-  const { TabProvider, useTabStore } = await import("src/features/tabs/browser/use-tab-store");
+  const { TabProvider, useTabStore } = await import("src/view/browser/state/tabs/use-tab-store");
   const { SettingsPage } = await import("src/view/browser/pages/SettingsPage");
   let dispatchForTest: (action: ScopedTabAction) => void = () => {
     throw new Error("未マウントです");

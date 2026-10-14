@@ -3,7 +3,6 @@ import React, { useCallback, useRef, useState } from "react";
 import { isTauriRuntime } from "src/app/platform/runtime";
 import { useCommentOverlay } from "src/features/comment-overlay/application/use-comment-overlay";
 import { useOpenOverlayPlacementWindow } from "src/features/comment-overlay/ui/OverlayPlacementWindow";
-import { useTabStore } from "src/features/tabs/browser/use-tab-store";
 import { MiniWindow } from "src/view/browser/components/MiniWindow";
 import {
   MiniWindowNote,
@@ -14,6 +13,7 @@ import {
 import { STATUS_BAR_PRIORITY } from "src/view/browser/components/status-bar-priority";
 import { StatusBarItem } from "src/view/browser/components/StatusBar";
 import { useMiniWindowTrigger } from "src/view/browser/hooks/use-mini-window-trigger";
+import { useTabStore } from "src/view/browser/state/tabs/use-tab-store";
 
 interface CommentOverlayStatusItemProps {
   isActive: boolean;

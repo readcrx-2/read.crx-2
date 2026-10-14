@@ -127,7 +127,7 @@ describe("ホームの板項目のミドルクリック", () => {
 
   async function renderPage(newTab = false) {
     vi.resetModules();
-    const { TabProvider, useTabStore } = await import("src/features/tabs/browser/use-tab-store");
+    const { TabProvider, useTabStore } = await import("src/view/browser/state/tabs/use-tab-store");
     const { HomeTabPage } = await import("src/view/browser/pages/HomeTabPage");
     function StartPage() {
       return <HomeTabPage />;

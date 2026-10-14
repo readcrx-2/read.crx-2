@@ -4,8 +4,6 @@ import { AutoRefreshStatusItem } from "src/features/auto-refresh/ui/AutoRefreshS
 import { CommentOverlayStatusItem } from "src/features/comment-overlay/ui/CommentOverlayStatusItem";
 import { NgStatusProvider } from "src/features/ng/browser/use-ng-status";
 import { NgStatusItem } from "src/features/ng/ui/NgStatusItem";
-import { PaneProvider } from "src/features/tabs/browser/use-tab-store";
-import { TabViewScopeProvider } from "src/features/tabs/browser/use-tab-view-scope";
 import { WindowNavigationBridge } from "src/features/tabs/ui/WindowNavigationBridge";
 import { IkioiStatusItem } from "src/features/thread/ui/IkioiStatusItem";
 import { PopularFilterStatusItem } from "src/features/thread/ui/PopularFilterStatusItem";
@@ -19,6 +17,8 @@ import { BottomPanel } from "src/view/browser/shell/BottomPanel";
 import { PageCountStatusItem } from "src/view/browser/shell/PageCountStatusItem";
 import { TabPanel } from "src/view/browser/shell/TabView";
 import { TitleBar } from "src/view/browser/shell/TitleBar";
+import { PaneProvider } from "src/view/browser/state/tabs/use-tab-store";
+import { TabViewScopeProvider } from "src/view/browser/state/tabs/use-tab-view-scope";
 import type { Tab } from "src/view/browser/types";
 import { ToastProvider } from "src/view/browser/ui/Toast";
 

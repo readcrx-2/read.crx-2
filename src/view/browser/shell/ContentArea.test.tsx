@@ -14,7 +14,7 @@ const threadPageLifecycle = vi.hoisted(() => ({
 }));
 const detachedTabIds = vi.hoisted(() => new Set<string>());
 
-vi.mock("src/features/tabs/browser/use-tab-store", () => ({
+vi.mock("src/view/browser/state/tabs/use-tab-store", () => ({
   useTabStore: () => mockUseTabStore(),
 }));
 

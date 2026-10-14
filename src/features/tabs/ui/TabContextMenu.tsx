@@ -4,10 +4,8 @@ import {
   readBookmarkStatus,
   useBookmarkRevision,
 } from "src/features/bookmark/browser/use-bookmark-revision";
-import { tabActions } from "src/features/tabs/browser/tab-store-actions";
 import { useDetachedTabController } from "src/features/tabs/browser/use-detached-tab-controller";
 import { useTabCommandRunner } from "src/features/tabs/browser/use-tab-command-runner";
-import { useTabStore } from "src/features/tabs/browser/use-tab-store";
 import {
   createThreadBookmarkMenuItem,
   createThreadCopyMenuItems,
@@ -18,6 +16,8 @@ import { TAB_COMMAND_IDS } from "src/view/browser/commands/tab-command-runtime";
 import { useOptionalBottomPanel } from "src/view/browser/hooks/use-bottom-panel";
 import { useToast } from "src/view/browser/hooks/use-toast";
 import { useViewSurface } from "src/view/browser/hooks/use-view-surface";
+import { tabActions } from "src/view/browser/state/tabs/tab-store-actions";
+import { useTabStore } from "src/view/browser/state/tabs/use-tab-store";
 import type { Tab } from "src/view/browser/types";
 import { getCurrentPage } from "src/view/browser/types";
 import { ContextMenu, ContextMenuItem } from "src/view/browser/ui/ContextMenu";

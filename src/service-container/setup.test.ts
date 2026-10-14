@@ -35,10 +35,18 @@ const mocks = vi.hoisted(() => {
       getAll: vi.fn(async () => []),
       clear: vi.fn(async () => undefined),
     },
+    writeHistory: {
+      add: vi.fn(async () => undefined),
+      update: vi.fn(async () => undefined),
+      getByUrl: vi.fn(async () => []),
+      getAll: vi.fn(async () => []),
+      clear: vi.fn(async () => undefined),
+    },
   };
 });
 
 vi.mock("src/core/history/History", () => mocks.history);
+vi.mock("src/core/history/WriteHistory", () => mocks.writeHistory);
 
 vi.mock("src/service-container/config-instance", () => ({
   configInstance: {
@@ -172,6 +180,10 @@ describe("サービスコンテナの初期化", () => {
     );
     await container.history.getAll();
     expect(mocks.history.getAll).toHaveBeenCalled();
+    await container.writeHistory.getByUrl("https://example.com/test/read.cgi/a/1/");
+    expect(mocks.writeHistory.getByUrl).toHaveBeenCalledWith(
+      "https://example.com/test/read.cgi/a/1/",
+    );
   });
 
   it("bookmark_id更新をEntryListへ渡す", async () => {

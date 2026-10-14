@@ -24,6 +24,12 @@ const mocks = vi.hoisted(() => ({
 
 vi.mock("src/service-container/index", () => ({
   container: {
+    // src/core/history/WriteHistory はサービスコンテナの writeHistory から使う。
+    writeHistory: {
+      getAll: mocks.writeHistoryGetAll,
+      clear: mocks.writeHistoryClear,
+      add: mocks.writeHistoryAdd,
+    },
     // src/core/history/History はサービスコンテナの history から使う。
     history: { getAll: mocks.historyGetAll, clear: mocks.historyClear, add: mocks.historyAdd },
     config: {
@@ -34,12 +40,6 @@ vi.mock("src/service-container/index", () => ({
       send: mocks.messageSend,
     },
   },
-}));
-
-vi.mock("src/core/history/WriteHistory", () => ({
-  getAll: mocks.writeHistoryGetAll,
-  clear: mocks.writeHistoryClear,
-  add: mocks.writeHistoryAdd,
 }));
 
 vi.mock("src/core/storage/Cache", () => ({

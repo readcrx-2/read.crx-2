@@ -14,6 +14,7 @@ import {
   IThreadService,
   IToastService,
   IUtil,
+  IWriteHistoryService,
 } from "src/service-container/interfaces";
 
 const globalObj = window as unknown as Record<string, unknown>;
@@ -36,6 +37,7 @@ interface ServiceContainerImpl extends IServiceContainer {
   _thread: IThreadService | undefined;
   _ng: INGService | undefined;
   _history: IHistoryService | undefined;
+  _writeHistory: IWriteHistoryService | undefined;
 }
 
 if (!globalObj.__ServiceContainer) {
@@ -53,6 +55,7 @@ if (!globalObj.__ServiceContainer) {
     _thread: undefined,
     _ng: undefined,
     _history: undefined,
+    _writeHistory: undefined,
 
     get config(): IConfig {
       if (!this._config) throw new Error("Config service not registered");
@@ -156,6 +159,14 @@ if (!globalObj.__ServiceContainer) {
     },
     set history(value: IHistoryService) {
       this._history = value;
+    },
+
+    get writeHistory(): IWriteHistoryService {
+      if (!this._writeHistory) throw new Error("WriteHistory service not registered");
+      return this._writeHistory;
+    },
+    set writeHistory(value: IWriteHistoryService) {
+      this._writeHistory = value;
     },
   };
   globalObj.__ServiceContainer = impl;

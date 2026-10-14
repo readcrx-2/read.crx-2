@@ -1,9 +1,4 @@
 import { useCallback, useEffect, useLayoutEffect, useRef, useState } from "react";
-import {
-  add as addWriteHistoryRecord,
-  getByUrl as getWriteHistoryByUrl,
-  update as updateWriteHistoryRecord,
-} from "src/core/history/WriteHistory";
 import { container } from "src/service-container/index";
 import type { IRes } from "src/service-container/interfaces";
 import { stripHtml } from "src/view/browser/utils/response-format";
@@ -66,7 +61,7 @@ export function useOwnResTracking({
     let alive = true;
     const loadOwnResNums = async () => {
       try {
-        const rows = await getWriteHistoryByUrl(threadUrl);
+        const rows = await container.writeHistory.getByUrl(threadUrl);
         if (!alive) return;
         setOwnResNums(buildWrittenResSet(rows));
       } catch (error) {
@@ -123,7 +118,7 @@ export function useOwnResTracking({
 
       const historyPromise = (async () => {
         try {
-          return await addWriteHistoryRecord({
+          return await container.writeHistory.add({
             url: threadUrl,
             res: 0,
             title: threadTitle,
@@ -206,12 +201,12 @@ export function useOwnResTracking({
           }
 
           if (provisionalHistoryId != null) {
-            await updateWriteHistoryRecord({
+            await container.writeHistory.update({
               id: provisionalHistoryId,
               ...finalizedRecord,
             });
           } else {
-            await addWriteHistoryRecord(finalizedRecord);
+            await container.writeHistory.add(finalizedRecord);
           }
         } catch (error) {
           console.error("[useOwnResTracking] 書込履歴の確定に失敗しました", { threadUrl, error });

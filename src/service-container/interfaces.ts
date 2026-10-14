@@ -1,4 +1,5 @@
 import type * as HistoryModule from "src/core/history/History";
+import type * as WriteHistoryModule from "src/core/history/WriteHistory";
 import type {
   IBBSMenuService,
   IBoardService,
@@ -52,6 +53,12 @@ export type IHistoryService = Pick<
   "add" | "remove" | "getByUrl" | "getAll" | "clear"
 >;
 
+/** 書き込み履歴（Phase E、計画書 §3.6）。関数の形は core/history/WriteHistory から取る。 */
+export type IWriteHistoryService = Pick<
+  typeof WriteHistoryModule,
+  "add" | "update" | "getByUrl" | "getAll" | "clear"
+>;
+
 export interface IServiceContainer {
   config: IConfig;
   cache: ICacheService;
@@ -66,4 +73,5 @@ export interface IServiceContainer {
   thread: IThreadService;
   ng: INGService;
   history: IHistoryService;
+  writeHistory: IWriteHistoryService;
 }

@@ -1,6 +1,5 @@
 import JSZip from "jszip";
 import type { Entry as BookmarkEntry, ReadState } from "src/core/bookmark/BookmarkEntryList";
-import * as WriteHistory from "src/core/history/WriteHistory";
 import Cache, { type LogArchiveRecord } from "src/core/storage/Cache";
 import { container } from "src/service-container/index";
 import {
@@ -347,7 +346,7 @@ export async function exportDataArchive(options: ExportArchiveOptions): Promise<
   }
 
   if (options.includeWriteHistory) {
-    const rows = await WriteHistory.getAll();
+    const rows = await container.writeHistory.getAll();
     const normalizedRows = rows
       .map((row) => toWriteHistoryExportRecord(row))
       .filter((row): row is WriteHistoryExportRecord => row != null);
@@ -466,9 +465,9 @@ export async function importDataArchive(archiveFile: File): Promise<ImportArchiv
 
   if (writeHistoryPayload !== null) {
     // 変更理由: 空の履歴も含め、既存データへ単純追加せず完全置換する。
-    await WriteHistory.clear();
+    await container.writeHistory.clear();
     for (const row of writeHistoryItems) {
-      await WriteHistory.add({
+      await container.writeHistory.add({
         url: row.url,
         res: row.res,
         title: row.title,

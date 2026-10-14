@@ -11,6 +11,7 @@ import type { ComparableReadState } from "src/core/bookmark/read-state-compare";
 import { isNewerReadState } from "src/core/bookmark/read-state-compare";
 import * as ReadState from "src/core/bookmark/ReadState";
 import * as History from "src/core/history/History";
+import * as WriteHistory from "src/core/history/WriteHistory";
 import * as NG from "src/core/ng/NG";
 import { installCorePorts } from "src/core/ports/registry";
 import Cache from "src/core/storage/Cache";
@@ -273,6 +274,13 @@ export function setupContainer(): void {
     getByUrl: History.getByUrl,
     getAll: History.getAll,
     clear: History.clear,
+  };
+  container.writeHistory = {
+    add: WriteHistory.add,
+    update: WriteHistory.update,
+    getByUrl: WriteHistory.getByUrl,
+    getAll: WriteHistory.getAll,
+    clear: WriteHistory.clear,
   };
 
   // core は container を import せず、ここで登録されたサービスだけを使う（Phase C-1）。

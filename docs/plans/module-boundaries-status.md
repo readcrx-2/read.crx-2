@@ -46,15 +46,14 @@
 - 逆向きの依存の残り（D-4 の後）: UI 部品層から `features`・組み立て層への import も、`features` から組み立て層への import も、テストを含めて 0 件。
 - 項目 5 の注意（解消済み）: `DetachedTabWindowContent` が `BottomPanel`・`PageCountStatusItem`・`TitleBar` を使っていたため、`shell/` へ移すとルール 5 に反するおそれがあった。`DetachedTabWindowContent` 自体を `shell/` へ移したので、衝突しなくなった。
 
-### Phase C-2 の残り
+### Phase C-2 の残り（完了）
 
-- `jsutil.searchNextThread` が `Board.get(url, corePorts)` を呼んでいる。
-- 各モジュールの既定インスタンス（`NG`・`ThreadService`・`BoardService` など）は、`app.ts` の公開 API のために `corePorts` を参照している。
-- `core` の中で UI 寄りの通知（`toast`）を使う箇所が残っている。
-  - `NG` の `onRegexError`
-  - `BBSMenuModel` の板一覧取得エラー
-  - `Board` の `message` による通知
-- 一部のテスト（`ReplaceStrTxt.test` など）は、登録済みサービスのモックに頼ったまま。工場関数に依存を直接渡す形にはしていない。
+- `jsutil.searchNextThread`: 実装を `core/board/next-thread-candidates.ts` の `searchNextThreadCandidates`（依存を引数で受け取る）へ移した。`jsutil` には `window.app.util` のために `corePorts` を渡すだけの入口を残す（`23f035ff`）。
+- `core` の中で `jsutil` を経由していた `Thread`・`Bookmark` を定義元の参照に変え、`core` から `jsutil` への import を lint で禁止した（`29311151`、`3f3a46f8`）。
+- `core` の `toast`: `NG` の正規表現エラーと `BBSMenuModel` の板一覧取得エラーを、`ICoreNoticeService`（`notice`）の出来事（`ngRuleRegexInvalid`・`bbsMenuFetchFailed`）として伝えるようにした。文言・トースト・HTML は `service-container/setup.ts` が決める。`CorePorts` から `toast` を外し、`IToastService` の定義を `service-container/interfaces.ts` へ移した（`a828c47b`、`2b138518`）。
+  - `Board` の `message` は、取得結果として返す文言で、画面の部品の呼び出しではないため、そのままにした。
+- テスト: `Board`・`Thread`・`BBSMenuModel`・`OpenedBoards.contract` は、registry のモックをやめて依存を直接渡す（`1256ad40`）。`NG`・`ReplaceStrTxt`・`OpenedBoards.upsert`・`BoardTitleSolver`・`ThreadService` のテストは、`window.app` などが使う既定のインスタンスを確かめるものなので、registry のモックのまま残す。
+- 各モジュールの既定のインスタンス（`corePorts` を参照する）は、`app.ts`（`window.app`）の公開 API のための組み立て口として残す。新しいコードは、サービスコンテナか工場関数を使う。
 
 ### Phase E: 循環 import と `view` → `core`（完了）
 
@@ -70,7 +69,7 @@
   - テストは、core のモジュールの `vi.mock` を、サービスコンテナへのテスト用サービスの登録（`service-container/test-stubs.ts` の `stubService`）か、モックしたサービスコンテナへ移した。
   - 検査（`adaa6ab2`）: `CORE_DIRECT_MODULES` に載せた 12 の純粋なモジュール以外の値の import を禁止する。型の import は認め、テストと Story は core の制限から外す。
 
-### Phase F: 検査を `error` にする（ほぼ完了）
+### Phase F: 検査を `error` にする（完了）
 
 - 禁止ルール（`error`）は次の 4 つ。
   - `core` → `service-container`
@@ -78,7 +77,8 @@
   - `features` → 組み立て層（D-3）
   - `features` → 他の機能の内部（公開モジュール以外）（D-5）
   - `view`・`features` → 状態を持つ `core` のモジュール（Phase E）
-- 残り: CI は変更したファイルだけに lint をかけるため、既存の違反をまとめて見る手段がない。今は違反 0 件なので実害はないが、全体の lint を CI で一度流すかを決める。
+  - `core` → `jsutil`（互換用のまとめ口。C-2 の残り）
+- CI: 静的解析のジョブで `vp lint src/` を実行し、変更していないファイルの境界の崩れも検出する（`f27a8c02`）。フォーマットは今までどおり変更ファイルだけで検査する。
 - 循環検出（`import/no-cycle`）は、Phase E で循環を 0 件にしたうえで `src` 全体に入れた（`fbc9c5bd`）。
 
 ## 3. 計画との食い違い（解消済み）
@@ -95,16 +95,18 @@
 - `fbc9c5bd`（Phase E の循環）の時点で、`vp test run`（276 ファイル・2157 件）、`tsc`、`vp lint src/`（エラー 0 件）が通った。`core` と `features` に循環を一時的に足すと検出されることを確認した。
 - `f76323ac`（Phase E の完了）の時点で、`vp test run`（276 ファイル・2158 件）、`tsc`、`vp lint src/`（エラー 0 件）、`build:chrome`、Storybook のビルドが通った。Tauri の各エントリの大きさは、overlay・replay が作業前と同じ（コンテナの枠の約 100 バイトを除く）、browser.js が約 1.9KB 増（サービスの登録分）。
 - 同じ時点で E2E（Playwright）を、この環境にある Chromium（`CHLENS_E2E_CHROMIUM_PATH`）で実行し、18 件中 13 件が通った（閲覧履歴の保存、置換、NG、ローカル板、起動と設定画面など）。失敗した 5 件（`status-bar`・`theme-startup`）は、拡張機能を読み込まない既定のブラウザ（headless shell 1243）がこの環境に無いため起動できなかったもので、画面の不具合ではない。
+- `1256ad40`（C-2 の残りの完了）の時点で、`vp test run`（277 ファイル・2161 件）、`tsc`、`vp lint src/`（エラー 0 件）、`build:chrome` が通った。Tauri の各エントリの大きさは、replay.js が `notice` の分で約 250 バイト増えたほかは変わらない。
+- E2E は、この環境の Chromium で、`status-bar`・`theme-startup` の 5 件（既定のブラウザが無いための起動失敗）を除いて実行した。全体を 2 並列で流すと、`ng-persistence` か `ui` の 1 件が実行ごとに入れ替わって失敗することがある。同じ 2 つは単独で 4 回ずつ流すとすべて通り、C-2 の残りに着手する前のコミット（`f280702a`）でも同じように失敗したため、この作業より前からある負荷時の不安定さと判断した。
 - lint には、この作業と無関係な警告が以前からある（`unicorn`・`react` など）。エラーはない。
 
 ## 5. 次に必要なこと
 
 1. Phase D は完了した。`view/browser` の層の境界と、機能どうしの境界（公開モジュール・循環なし）は、許可リストなしで検査されている。
-2. Phase F: 全体の lint を CI で流すかを決める。画面での動作確認（タブ、履歴、ログ、設定の書き出し・読み込み、置換ルール、板名の再取得）。
-3. 機能間の件数の計測方法（テストを除く、`from`・動的 `import()`・`vi.mock` を数える）を、スクリプトにしてリポジトリに置くかどうか。
-4. 並行してできるもの:
-   - `jsutil` の `corePorts` 参照の整理
-   - `core` の `toast` 通知の移動計画
+2. Phase E・F と C-2 の残りは完了した。画面での動作確認は Phase E の時点で済んでいる（2026-10-15）。
+3. 機能間の件数の計測スクリプトは置かない。境界はすべて lint の error で検査し、CI で `src` 全体に流すようにしたため、件数を追う必要が無くなった。機能どうしの依存の一覧は `vite.config.ts` の `FEATURE_PUBLIC_MODULES` で読める。
+4. 今後の候補（この計画の外）:
+   - E2E の負荷時の不安定さ（`ng-persistence`・`ui` が 2 並列で時々失敗する）の調査。
+   - `jsutil` などの互換用のまとめ口と既定のインスタンスを、`window.app` の利用者がいなくなった時点で減らす。
 
 ## 6. 発見した問題（2026-10-15 時点）
 

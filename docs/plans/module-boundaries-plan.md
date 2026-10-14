@@ -1,7 +1,7 @@
 # モジュール境界の明確化計画
 
 - ブランチ: `refactor/module-boundaries`（`develop` から作成。旧名 `feature/module-boundaries`）
-- 状態: Phase 0・A・B・C・D・E 完了。`view/browser` の層、機能どうし（公開モジュール・循環なし）、`view`・`features` → `core`（状態を持つモジュールはサービスコンテナ経由）、`src` 全体の循環を、許可リストなしの `error` で検査している。残りは Phase F（検査の見直しと CI での確認）
+- 状態: すべての Phase（0・A〜F）と C-2 の残りが完了。境界（`core` → `service-container`・`jsutil`、`view/browser` の層、機能どうしの公開モジュール、`view`・`features` → 状態を持つ `core`、循環 import）は許可リストなしの `error` で、CI でも `src` 全体に検査している
 
 ## 1. 目的
 
@@ -273,8 +273,8 @@ archive-replay, popup, write, thread-list（最上位）
 
 ### Phase F: 検査を error に上げる
 
-1. 違反がゼロになった項目から `warn` を `error` に上げる。
-2. CI（`.github/workflows/ci.yml`）の lint が、その `error` を検出することを確認する。
+1. 違反がゼロになった項目から `warn` を `error` に上げる（完了。すべて `error`）。
+2. CI（`.github/workflows/ci.yml`）の lint が、その `error` を検出することを確認する（完了）。変更ファイルだけでなく `src` 全体へ `vp lint` をかけるステップを足し、違反を足すと終了コード 1 になることを確認した（`f27a8c02`）。
 
 ## 6. 進め方の原則
 

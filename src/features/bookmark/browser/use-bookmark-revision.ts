@@ -1,6 +1,5 @@
 import { useEffect, useState } from "react";
 import { container } from "src/service-container/index";
-import { waitForLegacyBookmarkReady } from "src/view/browser/utils/legacy-app";
 
 export function readBookmarkStatus(url: string): boolean {
   try {
@@ -19,7 +18,8 @@ export function useBookmarkRevision(): number {
   useEffect(() => {
     let cancelled = false;
 
-    void waitForLegacyBookmarkReady().then(() => {
+    // 初回の走査の完了は window.app ではなくサービスコンテナで待つ（legacy-window-app-plan の Phase 2）。
+    void container.bookmark.ready().then(() => {
       if (cancelled) {
         return;
       }

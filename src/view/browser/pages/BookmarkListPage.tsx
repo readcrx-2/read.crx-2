@@ -11,10 +11,6 @@ import { tabActions } from "src/view/browser/state/tabs/tab-store-actions";
 import { useTabDispatch, useTabViewState } from "src/view/browser/state/tabs/use-tab-store";
 import { Spinner } from "src/view/browser/ui/Spinner";
 import {
-  getLegacyBookmarkService,
-  waitForLegacyBookmarkReady,
-} from "src/view/browser/utils/legacy-app";
-import {
   parseInternalBrowserPage,
   resolveBoardUrlForBrowser,
 } from "src/view/browser/utils/link-routing";
@@ -111,19 +107,11 @@ function deriveBoardTitleFromBoardUrl(boardUrl: string): string {
 }
 
 async function readBookmarks(): Promise<BookmarkEntry[]> {
-  await waitForLegacyBookmarkReady();
-
-  const bookmarkService = getLegacyBookmarkService();
-
-  const allThreads = bookmarkService?.getAllThreads?.();
-  const allBoards = bookmarkService?.getAllBoards?.();
-  const rawItems = bookmarkService?.getAll?.() ?? [
-    ...(Array.isArray(allThreads) ? (allThreads as unknown[]) : []),
-    ...(Array.isArray(allBoards) ? (allBoards as unknown[]) : []),
-  ];
-  if (!Array.isArray(rawItems)) {
-    return [];
-  }
+  // window.app ではなくサービスコンテナから読む（legacy-window-app-plan の Phase 2）。
+  // 以前は getAll がない場合に getAllThreads・getAllBoards をつなげていたが、Bookmark は常に getAll を持つ。
+  await container.bookmark.ready();
+  // 保存されている値の形は信用せず、下で1件ずつ確かめるため unknown として扱う。
+  const rawItems: unknown[] = container.bookmark.getAll();
 
   return rawItems
     .map((rawItem, index) => {

@@ -37,9 +37,28 @@ export interface IBookmarkItem {
   expired?: boolean;
 }
 
+/**
+ * 保存形式そのままのブックマーク。設定の書き出し・読み込みでは、型も値もこの形で扱う。
+ * core の Entry と同じ形だが、ports は core の実装を import しないためここに書く。
+ */
+export interface IBookmarkEntry extends IBookmarkItem {
+  bbsType: string;
+  resCount: number | null;
+  readState: IReadState | null;
+  expired: boolean;
+}
+
 export interface IBookmark {
   /** 初回の永続データ読み込みが終わるまで待つ。 */
   readonly promiseFirstScan: Promise<boolean>;
+  /**
+   * 画面がブックマークを読む前に、初回の走査の完了を待つ（legacy-window-app-plan の Phase 2）。
+   * 走査に失敗しても reject せず、画面はその時点で読めるデータで表示を続ける。
+   */
+  ready(): Promise<void>;
+  getAll(): IBookmarkEntry[];
+  /** 書き出したブックマークを戻す。既にあれば、題名と既読位置だけを新しい方へそろえる。 */
+  import(entry: IBookmarkEntry): Promise<boolean>;
   get(url: string): IBookmarkItem | null | undefined;
   add(item: IBookmarkItem): void;
   remove(url: string): void;

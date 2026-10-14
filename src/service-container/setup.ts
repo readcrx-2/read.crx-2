@@ -37,6 +37,14 @@ import {
 } from "src/service-container/interfaces";
 import { toastStore } from "src/service-container/toast-store";
 
+type BookmarkEntryListRuntime = Bookmark["bel"] & {
+  needReconfigureRootNodeId?: {
+    add: (callback: () => void) => void;
+    wasCalled: boolean;
+  };
+  setRootNodeId?: (rootNodeId: string) => Promise<boolean>;
+};
+
 let bookmarkRuntime: Bookmark | undefined;
 
 export function getBookmarkRuntime(): Bookmark | undefined {
@@ -52,13 +60,7 @@ function initializeBookmarkRuntime(): void {
       ? configuredBookmarkId
       : "dummy";
   bookmarkRuntime = new Bookmark(rootNodeId);
-  const entryList = bookmarkRuntime.bel as Bookmark["bel"] & {
-    needReconfigureRootNodeId?: {
-      add: (callback: () => void) => void;
-      wasCalled: boolean;
-    };
-    setRootNodeId?: (rootNodeId: string) => Promise<boolean>;
-  };
+  const entryList = bookmarkRuntime.bel as BookmarkEntryListRuntime;
   const notifyRootSelectionRequired = () => {
     message.send("bookmark_root_reconfigure_required");
   };
@@ -144,6 +146,19 @@ export function setupContainer(): void {
   }
   const bookmarkAdapter: IBookmark = {
     promiseFirstScan: activeBookmark.promiseFirstScan,
+    ready: async () => {
+      try {
+        // 変更理由: BrowserBookmarkEntryList は初回の走査が終わる前だと空の一覧を返しうるため、
+        // 画面は読む前にここで待つ。以前は view の legacy-app.ts が window.app から同じ Promise を待っていた
+        // （legacy-window-app-plan の Phase 2）。
+        await activeBookmark.promiseFirstScan;
+      } catch (error) {
+        // 初回の走査に失敗しても、画面は読めるデータで表示を続ける。握りつぶさずに原因を残す。
+        console.error("[Bookmark] 初回の走査の完了待ちに失敗しました:", error);
+      }
+    },
+    getAll: () => activeBookmark.getAll(),
+    import: (entry) => activeBookmark.import(entry),
     get: (url: string) => activeBookmark.get(url),
     // nullはBookmark.addの数値チェックで未指定と同じ扱いなのでundefinedへ揃える。
     add: (item: IBookmarkItem) =>

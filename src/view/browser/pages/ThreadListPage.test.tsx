@@ -249,6 +249,8 @@ describe("ThreadListPage", () => {
     bookmarkGetMock.mockReset();
     bookmarkGetMock.mockReturnValue(undefined);
     serviceContainer.bookmark = {
+      // 初回の走査の完了はサービスコンテナで待つ（legacy-window-app-plan の Phase 2）。
+      ready: vi.fn(async () => undefined),
       get: bookmarkGetMock,
       add: vi.fn(),
       remove: vi.fn(),

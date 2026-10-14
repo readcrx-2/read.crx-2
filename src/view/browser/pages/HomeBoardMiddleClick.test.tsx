@@ -33,10 +33,6 @@ vi.mock("src/core/board/BoardUrlNormalizer", async (importOriginal) => {
     getBoardUrlKey: (url: string) => actual.getBoardUrlKey(url),
   };
 });
-vi.mock("src/view/browser/utils/legacy-app", () => ({
-  getLegacyBookmarkService: () => ({ getAllBoards: () => favoriteBoards }),
-  waitForLegacyBookmarkReady: vi.fn(async () => undefined),
-}));
 vi.mock("src/service-container/index", () => ({
   container: {
     // src/core/board/BoardTitleSolver.js はサービスコンテナの boardTitle から使う。
@@ -53,7 +49,12 @@ vi.mock("src/service-container/index", () => ({
         listeners.get(type)?.delete(handler),
       ),
     },
-    bookmark: { remove: removeBookmarkMock },
+    // お気に入り板は window.app ではなくサービスコンテナから読む（legacy-window-app-plan の Phase 2）。
+    bookmark: {
+      ready: vi.fn(async () => undefined),
+      getAllBoards: () => favoriteBoards,
+      remove: removeBookmarkMock,
+    },
     toast: { notify: vi.fn(), info: vi.fn(), success: vi.fn(), error: toastErrorMock },
   },
 }));

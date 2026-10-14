@@ -29,6 +29,7 @@ export type {
   IBBSMenuService,
   IBoardService,
   IBookmark,
+  IBookmarkEntry,
   IBookmarkItem,
   ICacheService,
   IConfig,

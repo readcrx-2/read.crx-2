@@ -8,7 +8,6 @@ import {
 import { useToast } from "src/view/browser/hooks/use-toast";
 import { useViewSurface } from "src/view/browser/hooks/use-view-surface";
 import type { Page } from "src/view/browser/types";
-import { waitForLegacyBookmarkReady } from "src/view/browser/utils/legacy-app";
 import { parseInternalBrowserPage } from "src/view/browser/utils/link-routing";
 
 export interface BookmarkTarget {
@@ -94,7 +93,8 @@ export function usePageBookmark(page: Page): PageBookmarkState {
       return;
     }
 
-    void waitForLegacyBookmarkReady().then(() => {
+    // 初回の走査の完了は window.app ではなくサービスコンテナで待つ（legacy-window-app-plan の Phase 2）。
+    void container.bookmark.ready().then(() => {
       if (cancelled) {
         return;
       }

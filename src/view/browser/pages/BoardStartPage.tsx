@@ -1,5 +1,4 @@
 import React from "react";
-import { getCachedTitles } from "src/core/board/BoardTitleSolver.js";
 import { getBoardUrlKey, normalizeBoardUrl } from "src/core/board/BoardUrlNormalizer";
 import { OPENED_BOARDS_CONFIG_KEY, parseOpenedBoardEntries } from "src/core/board/OpenedBoards";
 import { container } from "src/service-container/index";
@@ -116,7 +115,7 @@ export const BoardStartPage: React.FC<{ intro: React.ReactNode }> = ({ intro }) 
         const cachedTitles = recentBoards.some(
           (board) => !isResolvedBoardTitle(board.boardUrl, board.boardTitle),
         )
-          ? await getCachedTitles()
+          ? await container.boardTitle.getCachedTitles()
           : new Map<string, string>();
         const titledBoards = recentBoards.map((board) => {
           if (isResolvedBoardTitle(board.boardUrl, board.boardTitle)) return board;

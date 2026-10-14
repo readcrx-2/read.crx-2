@@ -35,6 +35,7 @@ const mocks = vi.hoisted(() => {
       getAll: vi.fn(async () => []),
       clear: vi.fn(async () => undefined),
     },
+    askBoardTitleByUrl: vi.fn(async () => "板名"),
     listLogs: vi.fn(async () => []),
     deleteLogs: vi.fn(async () => undefined),
     writeHistory: {
@@ -48,6 +49,11 @@ const mocks = vi.hoisted(() => {
 });
 
 vi.mock("src/core/history/History", () => mocks.history);
+vi.mock("src/core/board/BoardTitleSolver", () => ({
+  ask: vi.fn(),
+  askByUrl: mocks.askBoardTitleByUrl,
+  getCachedTitles: vi.fn(),
+}));
 vi.mock("src/core/history/WriteHistory", () => mocks.writeHistory);
 
 vi.mock("src/service-container/config-instance", () => ({
@@ -195,6 +201,7 @@ describe("サービスコンテナの初期化", () => {
     expect(mocks.listLogs).toHaveBeenCalledWith(0, 10);
     await container.threadLog.deleteLogs();
     expect(mocks.deleteLogs).toHaveBeenCalled();
+    await expect(container.boardTitle.askByUrl("https://example.com/board/")).resolves.toBe("板名");
     // 開いた板の記録は、登録した config へ書き込む（取得確認済みの独自ホストとして保存させる）。
     container.openedBoards.upsertOpenedBoardEntry("https://example.com/board/", "板", 1, true);
     await vi.waitFor(() =>

@@ -24,10 +24,6 @@ const { openedBoards, askBoardTitleMock, getCachedTitlesMock, listeners } = vi.h
   getCachedTitlesMock: vi.fn(async () => new Map<string, string>()),
   listeners: new Map<string, Set<(payload: { key?: string }) => void>>(),
 }));
-vi.mock("src/core/board/BoardTitleSolver.js", () => ({
-  askByUrl: askBoardTitleMock,
-  getCachedTitles: getCachedTitlesMock,
-}));
 vi.mock("src/core/board/BoardUrlNormalizer", async (importOriginal) => {
   const actual = await importOriginal<typeof import("src/core/board/BoardUrlNormalizer")>();
   // 架空の掲示板ホストを使い、実在の板URLをテストへ持ち込まず保存データを検証する。
@@ -43,6 +39,8 @@ vi.mock("src/view/browser/utils/legacy-app", () => ({
 }));
 vi.mock("src/service-container/index", () => ({
   container: {
+    // src/core/board/BoardTitleSolver.js はサービスコンテナの boardTitle から使う。
+    boardTitle: { askByUrl: askBoardTitleMock, getCachedTitles: getCachedTitlesMock },
     // src/core/history/History はサービスコンテナの history から使う。
     history: { getAll: vi.fn(async () => historyRecords) },
     config: { get: vi.fn(() => openedBoards.raw) },

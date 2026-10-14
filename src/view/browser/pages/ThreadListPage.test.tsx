@@ -2,14 +2,19 @@ import "@testing-library/jest-dom/vitest";
 
 import { act, cleanup, fireEvent, render, screen, waitFor } from "@testing-library/react";
 import { createRef } from "react";
-import { ask as askBoardTitle } from "src/core/board/BoardTitleSolver.js";
 import { createOpenedBoards } from "src/core/board/OpenedBoards";
 import {
   type DisplayThread,
   THREAD_LIST_COLUMNS,
 } from "src/features/thread-list/ui/thread-list-shared";
 import { container as serviceContainer } from "src/service-container/index";
-import type { IBoardService, IBookmark, IThread } from "src/service-container/interfaces";
+import type {
+  IBoardService,
+  IBoardTitleService,
+  IBookmark,
+  IThread,
+} from "src/service-container/interfaces";
+import { stubService } from "src/service-container/test-stubs";
 import { ThreadListPage } from "src/view/browser/pages/ThreadListPage";
 import { getAutoRefreshThreadPageKey } from "src/view/browser/state/tabs/auto-refresh-pages";
 import { QUICK_ACCESS_FILTER_TOGGLE_EVENT_BY_PAGE_TYPE } from "src/view/browser/utils/filter-toolbar-events";
@@ -51,8 +56,9 @@ vi.mock("src/features/thread-list/ui/thread-list-shared", async (importOriginal)
   };
 });
 
-vi.mock("src/core/board/BoardTitleSolver.js", () => ({
-  ask: vi.fn(async () => null),
+// 板名の解決はサービスコンテナの boardTitle から使うため、テスト用の関数を用意して登録する。
+const { askBoardTitle } = vi.hoisted(() => ({
+  askBoardTitle: vi.fn(async (_url: unknown): Promise<string | null> => null),
 }));
 vi.mock("src/core/board/BoardUrlNormalizer", async (importOriginal) => {
   const actual = await importOriginal<typeof import("src/core/board/BoardUrlNormalizer")>();
@@ -261,6 +267,9 @@ describe("ThreadListPage", () => {
       ready: (callback: () => void) => callback(),
     };
     // ジェネリックな実サービスに対し、このテストで扱うconfig更新イベントだけに限定する。
+    serviceContainer.boardTitle = stubService<IBoardTitleService>("boardTitle", {
+      ask: askBoardTitle,
+    });
     // 開いた板の保存は、テストごとに差し替える config をそのまま読む本物の実装で確かめる。
     serviceContainer.openedBoards = createOpenedBoards(serviceContainer);
     serviceContainer.message = {

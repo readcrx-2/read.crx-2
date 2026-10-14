@@ -1,6 +1,5 @@
 import { ChURL } from "packages/chlib/src/index";
 import React, { type RefObject, useCallback, useEffect, useMemo, useRef, useState } from "react";
-import { ask as askBoardTitle } from "src/core/board/BoardTitleSolver.js";
 import {
   BOARD_AUTO_REFRESH_CONFIG_KEY,
   MIN_BOARD_AUTO_REFRESH_MS,
@@ -283,7 +282,8 @@ export const ThreadListPage: React.FC<Props> = ({
       return;
     }
 
-    askBoardTitle(new ChURL(page.boardUrl))
+    container.boardTitle
+      .ask(new ChURL(page.boardUrl))
       .then((title) => {
         if (title && isResolvedBoardTitle(page.boardUrl, title)) {
           resolvedBoardTitlesRef.current.set(page.boardUrl, title);

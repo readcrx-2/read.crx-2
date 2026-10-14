@@ -1,3 +1,4 @@
+import type { createBoardTitleSolver } from "src/core/board/BoardTitleSolver";
 import type { createOpenedBoards } from "src/core/board/OpenedBoards";
 import type * as HistoryModule from "src/core/history/History";
 import type * as WriteHistoryModule from "src/core/history/WriteHistory";
@@ -73,6 +74,12 @@ export type IOpenedBoardsService = Pick<
   "upsertOpenedBoardEntry"
 >;
 
+/** 板名の解決（Phase E、計画書 §3.6）。解決結果のキャッシュを持つため、サービスコンテナ経由で使う。 */
+export type IBoardTitleService = Pick<
+  ReturnType<typeof createBoardTitleSolver>,
+  "ask" | "askByUrl" | "getCachedTitles"
+>;
+
 export interface IServiceContainer {
   config: IConfig;
   cache: ICacheService;
@@ -90,4 +97,5 @@ export interface IServiceContainer {
   writeHistory: IWriteHistoryService;
   threadLog: IThreadLogService;
   openedBoards: IOpenedBoardsService;
+  boardTitle: IBoardTitleService;
 }

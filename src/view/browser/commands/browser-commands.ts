@@ -404,9 +404,8 @@ async function retryBoardTitle(context: BrowserCommandContext): Promise<void> {
   const page = context.viewPage;
   if (page.type !== "threadList") return;
 
-  // 板名解決系は旧コアと拡張機能APIへ依存するため、コマンド実行時だけ読み込む。
-  const { askByUrl } = await import("src/core/board/BoardTitleSolver.js");
-  const title = await askByUrl(page.boardUrl);
+  // 板名の解決はキャッシュを持つ core の処理なので、サービスコンテナ経由で使う（計画書 §3.6）。
+  const title = await container.boardTitle.askByUrl(page.boardUrl);
   if (!title) {
     throw new Error(`板名を取得できませんでした: ${page.boardUrl}`);
   }

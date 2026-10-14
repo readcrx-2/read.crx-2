@@ -6,6 +6,7 @@ import Notification from "src/app/Notification";
 import { escapeHtml, safeHref } from "src/app/Util";
 import { BBSMenuModel } from "src/core/board/BBSMenuModel";
 import { createBoardService } from "src/core/board/BoardService";
+import * as BoardTitleSolver from "src/core/board/BoardTitleSolver";
 import { createOpenedBoards } from "src/core/board/OpenedBoards";
 import Bookmark from "src/core/bookmark/Bookmark";
 import type { ComparableReadState } from "src/core/bookmark/read-state-compare";
@@ -285,6 +286,13 @@ export function setupContainer(): void {
   };
   // config は上で登録した container.config を使う（core の既定のインスタンスと同じ設定を見る）。
   container.openedBoards = createOpenedBoards(container);
+  // 板名の解決結果のキャッシュを core の ThreadSearch や window.app と共有するため、
+  // 新しく作らず core の既定のインスタンスを登録する。
+  container.boardTitle = {
+    ask: BoardTitleSolver.ask,
+    askByUrl: BoardTitleSolver.askByUrl,
+    getCachedTitles: BoardTitleSolver.getCachedTitles,
+  };
   // 静的メソッドを切り離して渡すと this が外れるため、Cache を通して呼ぶ関数で包む。
   container.threadLog = {
     listLogs: (...args) => Cache.listLogs(...args),

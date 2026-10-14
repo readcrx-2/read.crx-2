@@ -1,4 +1,6 @@
 import { container } from "src/service-container";
+import type { IBoardTitleService } from "src/service-container/interfaces";
+import { stubService } from "src/service-container/test-stubs";
 import {
   type BrowserCommandContext,
   executeBrowserCommand,
@@ -61,9 +63,10 @@ vi.mock("webextension-polyfill", () => ({
   default: browserCommandMocks.extensionBrowserApiMock,
 }));
 
-vi.mock("src/core/board/BoardTitleSolver.js", () => ({
+// 実装は src/core/board/BoardTitleSolver.js ではなくサービスコンテナの boardTitle から使うため、テスト用のサービスを登録する。
+container.boardTitle = stubService<IBoardTitleService>("boardTitle", {
   askByUrl: browserCommandMocks.askBoardTitleByUrlMock,
-}));
+});
 
 vi.mock("src/view/browser/utils/clipboard", async (importOriginal) => {
   const actual = await importOriginal<typeof import("src/view/browser/utils/clipboard")>();

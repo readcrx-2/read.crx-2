@@ -2,6 +2,7 @@ import { installCorePorts } from "src/core/ports/registry";
 import {
   IBBSMenuService,
   IBoardService,
+  IBoardTitleService,
   IBookmark,
   ICacheService,
   IConfig,
@@ -42,6 +43,7 @@ interface ServiceContainerImpl extends IServiceContainer {
   _writeHistory: IWriteHistoryService | undefined;
   _threadLog: IThreadLogService | undefined;
   _openedBoards: IOpenedBoardsService | undefined;
+  _boardTitle: IBoardTitleService | undefined;
 }
 
 if (!globalObj.__ServiceContainer) {
@@ -62,6 +64,7 @@ if (!globalObj.__ServiceContainer) {
     _writeHistory: undefined,
     _threadLog: undefined,
     _openedBoards: undefined,
+    _boardTitle: undefined,
 
     get config(): IConfig {
       if (!this._config) throw new Error("Config service not registered");
@@ -189,6 +192,14 @@ if (!globalObj.__ServiceContainer) {
     },
     set openedBoards(value: IOpenedBoardsService) {
       this._openedBoards = value;
+    },
+
+    get boardTitle(): IBoardTitleService {
+      if (!this._boardTitle) throw new Error("BoardTitle service not registered");
+      return this._boardTitle;
+    },
+    set boardTitle(value: IBoardTitleService) {
+      this._boardTitle = value;
     },
   };
   globalObj.__ServiceContainer = impl;

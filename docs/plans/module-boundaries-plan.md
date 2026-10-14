@@ -120,14 +120,21 @@ core/util
 
 完了条件（C-1）: `src/core` が `service-container` を import しない（達成）。`vp test run`、`tsc`、`build:chrome` が通る（達成）。
 
-### Phase C-2: 依存を引数で注入する（未着手）
+### Phase C-2: 依存を引数で注入する（進行中）
 
 目的: `core` の内部で `corePorts` も参照しないようにし、テストを書きやすくする。
 
 1. `Board`、`BoardService`、`BBSMenuModel` など影響範囲の小さいものから、必要なポートをコンストラクタや引数で受け取る形にする。
 2. 組み立ては `service-container/setup.ts` が担当する。
-3. 一度に全部は変えず、1 クラスずつ別コミットにする。
+3. 一度に全部は変えず、1 モジュールずつ別コミットにする。
 4. `core` からの `container.toast.notify` の呼び出しは、この段階で `features` か `app` へ移す。
+
+進捗:
+
+- 完了: `BoardService`（`createBoardService(deps)`、`setup.ts` が `container` を渡す）。
+- 完了: `AutoNgPolicy` と `ThreadNgEvaluator`（`config` と `ThreadNgDeps` を引数で受け取る）。呼び出し側の `ThreadService` と `use-thread-data` は、まだ `corePorts` を渡している。
+- 未着手（`corePorts` 参照の残り）: `URL`、`ch-server-move-detect`、`OpenedBoards`、`ReplaceStrTxt`、`ImageReplaceDat`、`NG`、`BBSMenu`、`BBSMenuModel`、`BoardTitleSolver`、`Board`、`Thread`。
+- 次の候補: 呼び出し元が少ないものから（`ch-server-move-detect`、`ImageReplaceDat`、`ReplaceStrTxt`）。
 
 ### Phase D: features 間の依存を減らす
 

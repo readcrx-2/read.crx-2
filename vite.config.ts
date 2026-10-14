@@ -296,6 +296,22 @@ interface RestrictedImportPattern {
   allowTypeImports?: boolean;
 }
 
+// core は service-container を import しない（計画書 §3 のルール 2、Phase C-1）。
+const CORE_TO_CONTAINER_PATTERN: RestrictedImportPattern = {
+  group: ["**/service-container/**"],
+  message:
+    "core は service-container を import しない。型は src/core/ports、サービスは corePorts（src/core/ports/registry）を使う。",
+};
+
+// jsutil は window.app.util のための互換用のまとめ口で、旧来の次スレ検索のために Board や corePorts まで
+// 読み込む。core の中から経由すると不要な依存や循環 import を招くため、定義元を直接 import する。
+const CORE_TO_JSUTIL_PATTERN: RestrictedImportPattern = {
+  group: ["**/core/util/jsutil", "**/core/util/jsutil.*"],
+  message:
+    "core の中では jsutil（window.app.util の互換用のまとめ口）を経由せず、定義元のモジュールを import する。",
+};
+const JSUTIL_TEST_FILE = "src/core/util/jsutil.test.ts";
+
 /**
  * view・features から直接 import してよい core のモジュール（src/core/ からの相対パス、拡張子なし）。
  * 入力から結果を返すだけで、保存・通信・共有の状態を持たないものだけを載せる（計画書 §3.6）。
@@ -502,21 +518,22 @@ export default defineConfig(async ({ mode }) => {
       // core は service-container に依存しない（計画: docs/plans/module-boundaries-plan.md Phase C-1）。
       // 依存は core/ports（型と registry）だけにする。service-container は setup で registry に登録する。
       overrides: [
+        // core は service-container を import せず、jsutil（互換用のまとめ口）も経由しない。
         {
           files: ["src/core/**"],
+          excludeFiles: [JSUTIL_TEST_FILE],
           rules: {
             "eslint/no-restricted-imports": [
               "error",
-              {
-                patterns: [
-                  {
-                    group: ["**/service-container/**"],
-                    message:
-                      "core は service-container を import しない。型は src/core/ports、サービスは corePorts（src/core/ports/registry）を使う。",
-                  },
-                ],
-              },
+              { patterns: [CORE_TO_CONTAINER_PATTERN, CORE_TO_JSUTIL_PATTERN] },
             ],
+          },
+        },
+        // jsutil 自身のテストは jsutil を読み込む必要があるため、jsutil の制限だけを外す。
+        {
+          files: [JSUTIL_TEST_FILE],
+          rules: {
+            "eslint/no-restricted-imports": ["error", { patterns: [CORE_TO_CONTAINER_PATTERN] }],
           },
         },
         // view 全体（組み立て層や overlay・replay の画面を含む）: core の直接 import だけを制限する（§3.6）。

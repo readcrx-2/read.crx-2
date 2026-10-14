@@ -247,7 +247,7 @@ function staticCopyPlugin(
 
 // ─── main config ─────────────────────────────────────────────────────────────
 
-export default defineConfig(({ mode }) => {
+export default defineConfig(async ({ mode }) => {
   const platform = process.env.PLATFORM || "chrome";
   const entry = process.env.ENTRY || "browser";
   const outputDir = `./debug/${platform}`;
@@ -268,6 +268,21 @@ export default defineConfig(({ mode }) => {
   };
 
   const { file, name } = entryMap[entry];
+  // Vite+は設定をCommonJSとして束ねるため、ESM専用プラグインは計測時だけ動的に読み込む。
+  const coveragePlugin =
+    process.env.VITE_COVERAGE === "true"
+      ? (await import("vite-plugin-istanbul")).default({
+          include: [
+            "src/**/*.ts",
+            "src/**/*.tsx",
+            "packages/*/src/**/*.ts",
+            "packages/*/src/**/*.tsx",
+          ],
+          exclude: ["**/*.test.ts", "**/*.test.tsx", "**/*.d.ts"],
+          requireEnv: true,
+          forceBuildInstrument: true,
+        })
+      : null;
 
   return {
     staged: {
@@ -316,6 +331,7 @@ export default defineConfig(({ mode }) => {
     },
     plugins: lazyPlugins(() => [
       react(),
+      ...(coveragePlugin ? [coveragePlugin] : []),
       browserHtmlPlugin(outputDir, entry, platform),
       overlayHtmlPlugin(outputDir, entry),
       archiveReplayHtmlPlugin(outputDir, entry),
@@ -343,6 +359,7 @@ export default defineConfig(({ mode }) => {
       outDir: outputDir,
       emptyOutDir: false,
       minify: minifyOutput,
+      sourcemap: process.env.VITE_COVERAGE === "true" ? "inline" : false,
       lib: {
         entry: path.resolve(__dirname, file),
         formats: ["iife"],

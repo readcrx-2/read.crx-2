@@ -28,7 +28,7 @@ onlyBuiltDependencies:
   - spawn-sync
 catalog:
   vite: npm:@voidzero-dev/vite-plus-core@1.0.0
-  vitest: 5.0.3
+  vitest: 5.0.1
   vite-plus: 1.0.0
 # Version 4.0.0 is an intentional direct dependency; keep the release-age
 # protection enabled for every other package.

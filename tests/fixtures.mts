@@ -1,4 +1,6 @@
 import { type BrowserContext, chromium, test as base } from "@playwright/test";
+import { randomUUID } from "node:crypto";
+import { mkdir, writeFile } from "node:fs/promises";
 import path from "path";
 import { fileURLToPath } from "url";
 
@@ -47,7 +49,7 @@ export const test = base.extend<{
     const extensionId = serviceWorker.url().split("/")[2];
     await use(extensionId);
   },
-  page: async ({ context, extensionId, localBoard }, use) => {
+  page: async ({ context, extensionId, localBoard }, use, testInfo) => {
     // 初回画面が設定を読む前に保存し、外部bbsmenuへの通信と初期設定ダイアログを避ける。
     const worker = context.serviceWorkers().find((item) => item.url().includes(extensionId));
     if (!worker) throw new Error("拡張機能のサービスワーカーが見つかりません");
@@ -84,6 +86,17 @@ export const test = base.extend<{
       if (message.type() === "error") console.error("[E2E] コンソールエラー", message.text());
     });
     await use(page);
+    if (process.env.E2E_COVERAGE === "true" && !page.isClosed()) {
+      const coverage = await page.evaluate(() =>
+        (globalThis as typeof globalThis & { __coverage__?: unknown }).__coverage__ ?? null,
+      );
+      if (coverage) {
+        const outputDir = path.resolve(__dirname, "../coverage/e2e/raw");
+        await mkdir(outputDir, { recursive: true });
+        const filename = `${testInfo.workerIndex}-${randomUUID()}.json`;
+        await writeFile(path.join(outputDir, filename), JSON.stringify(coverage));
+      }
+    }
     await page.close();
   },
 });

@@ -9,8 +9,12 @@ export function isTauriRuntime(): boolean {
 }
 
 export async function getTauriRepositories(): Promise<TauriRepositoriesModule> {
-  if (repositoriesPromise == null) {
-    repositoriesPromise = import("src/app/platform/tauri/drizzle/repositories");
+  if (__CHLENS_TAURI_BUILD__) {
+    if (repositoriesPromise == null) {
+      repositoriesPromise = import("src/app/platform/tauri/drizzle/repositories");
+    }
+    return repositoriesPromise;
   }
-  return repositoriesPromise;
+
+  throw new Error("Tauri版のSQLiteリポジトリはTauriビルドでのみ利用できます");
 }

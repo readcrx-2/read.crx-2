@@ -84,6 +84,7 @@
     "monaco-editor": "^0.57.0",
     "normalize-wheel": "^1.0.1",
     "playwright": "^1.63.0",
+    "preact": "^11.0.1",
     "radix-ui": "^1.7.0",
     "react": "^19.3.0",
     "react-dom": "^19.3.0",

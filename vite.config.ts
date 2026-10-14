@@ -589,6 +589,12 @@ export default defineConfig(async ({ mode, command }) => {
     ]),
     resolve: {
       alias: {
+        // Preact互換の実行可否をまとめて検証するため、Reactの実行時 import を差し替える。
+        "react-dom/client": "preact/compat/client",
+        "react-dom": "preact/compat",
+        "react/jsx-runtime": "preact/jsx-runtime",
+        "react/jsx-dev-runtime": "preact/jsx-dev-runtime",
+        react: "preact/compat",
         src: path.resolve(__dirname, "./src"),
         packages: path.resolve(__dirname, "./packages"),
         // 変更理由: Tauri版のShift_JIS/EUC-JPフォームエンコードが使うiconv-liteは

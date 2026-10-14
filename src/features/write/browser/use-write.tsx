@@ -460,7 +460,9 @@ export function useWrite(threadUrl: string, options: UseWriteOptions = {}): UseW
 
       setStatus("submitting");
       setStatusText("書き込み中...");
-      const useTauriHttp = __CHLENS_TAURI_BUILD__ && isTauriRuntime();
+      const useTauriHttp =
+        (typeof __CHLENS_TAURI_BUILD__ === "undefined" || __CHLENS_TAURI_BUILD__) &&
+        isTauriRuntime();
       if (!useTauriHttp) {
         armSubmitWatchdog();
       }
@@ -476,7 +478,10 @@ export function useWrite(threadUrl: string, options: UseWriteOptions = {}): UseW
         return;
       }
 
-      if (__CHLENS_TAURI_BUILD__ && useTauriHttp) {
+      if (
+        (typeof __CHLENS_TAURI_BUILD__ === "undefined" || __CHLENS_TAURI_BUILD__) &&
+        useTauriHttp
+      ) {
         try {
           const { getWriteFormFields } = await import("src/app/platform/tauri/WriteForm");
           handleWriteResult(
@@ -573,7 +578,7 @@ export function useWrite(threadUrl: string, options: UseWriteOptions = {}): UseW
       setStatus("submitting");
       setStatusText("確認ページを送信中...");
 
-      if (__CHLENS_TAURI_BUILD__) {
+      if (typeof __CHLENS_TAURI_BUILD__ === "undefined" || __CHLENS_TAURI_BUILD__) {
         try {
           handleWriteResult(
             await submitTauriWrite(

@@ -31,7 +31,8 @@ vi.mock("src/core/ports/registry", () => ({
   },
 }));
 
-vi.mock("src/core/util/jsutil.js", () => ({
+// Thread は ch-server-move-detect を直接 import するため、そのモジュールを差し替える。
+vi.mock("src/core/board/ch-server-move-detect", () => ({
   chServerMoveDetect: vi.fn(),
 }));
 

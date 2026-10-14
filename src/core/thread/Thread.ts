@@ -20,10 +20,11 @@ import {
   type XhrInfo,
 } from "packages/chlib/src/index";
 import { platform } from "src/app/platform";
+// jsutil は window.app.util の互換用のまとめ口なので、経由せず定義元を参照する。
+import { chServerMoveDetect } from "src/core/board/ch-server-move-detect";
 import { isMissingFromSubject, shouldForceSubjectCheck } from "src/core/board/SubjectPresence";
 import type { CorePorts } from "src/core/ports/registry";
 import type Cache from "src/core/storage/Cache.js";
-import { chServerMoveDetect } from "src/core/util/jsutil.js";
 
 // ---------------------------------------------------------------------------
 // Internal types

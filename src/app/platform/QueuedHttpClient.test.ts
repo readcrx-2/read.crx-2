@@ -1,6 +1,10 @@
 // @vitest-environment node
 import fc from "fast-check";
-import { MAX_QUEUED_HTTP_REQUESTS, QueuedHttpClient } from "src/app/platform/QueuedHttpClient";
+import {
+  MAX_CONCURRENT_HTTP_REQUESTS,
+  MAX_QUEUED_HTTP_REQUESTS,
+  QueuedHttpClient,
+} from "src/app/platform/QueuedHttpClient";
 import type { HttpClient, HttpResponse } from "src/app/platform/types";
 import { describe, expect, it, vi } from "vite-plus/test";
 
@@ -64,6 +68,73 @@ describe("QueuedHttpClient", () => {
         },
       ),
     );
+  });
+
+  it("一度に1000件呼ばれても同時実行数と待ち行列の上限を守る", async () => {
+    let activeCount = 0;
+    let maximumActiveCount = 0;
+    const fetch = vi.fn<HttpClient["fetch"]>(async (url) => {
+      activeCount += 1;
+      maximumActiveCount = Math.max(maximumActiveCount, activeCount);
+      await Promise.resolve();
+      activeCount -= 1;
+      return { ...response, url };
+    });
+    const queuedClient = new QueuedHttpClient(createClient(fetch));
+
+    const results = await Promise.allSettled(
+      Array.from({ length: 1_000 }, (_, index) =>
+        queuedClient.fetch(`https://example.com/${index}`),
+      ),
+    );
+
+    expect(maximumActiveCount).toBeLessThanOrEqual(MAX_CONCURRENT_HTTP_REQUESTS);
+    expect(fetch).toHaveBeenCalledTimes(MAX_CONCURRENT_HTTP_REQUESTS + MAX_QUEUED_HTTP_REQUESTS);
+    expect(results.filter(({ status }) => status === "fulfilled")).toHaveLength(
+      MAX_CONCURRENT_HTTP_REQUESTS + MAX_QUEUED_HTTP_REQUESTS,
+    );
+    expect(results.filter(({ status }) => status === "rejected")).toHaveLength(
+      1_000 - MAX_CONCURRENT_HTTP_REQUESTS - MAX_QUEUED_HTTP_REQUESTS,
+    );
+  });
+
+  it("継続的な大量投入でも上限を保ち、処理可能な要求を順に完了する", async () => {
+    let activeCount = 0;
+    let maximumActiveCount = 0;
+    const fetch = vi.fn<HttpClient["fetch"]>(async (url) => {
+      activeCount += 1;
+      maximumActiveCount = Math.max(maximumActiveCount, activeCount);
+      await Promise.resolve();
+      activeCount -= 1;
+      return { ...response, url };
+    });
+    const queuedClient = new QueuedHttpClient(createClient(fetch));
+    let acceptedCount = 0;
+    let rejectedCount = 0;
+    const batchCount = 20;
+    const requestsPerBatch = 500;
+
+    // 無限入力そのものはテストを終了できないため、連続20バッチ（計1万件）で
+    // 過負荷時の即時拒否と、次のバッチへ進めることを確認する。
+    for (let batch = 0; batch < batchCount; batch += 1) {
+      const results = await Promise.allSettled(
+        Array.from({ length: requestsPerBatch }, (_, index) =>
+          queuedClient.fetch(`https://example.com/${batch}/${index}`),
+        ),
+      );
+      acceptedCount += results.filter(({ status }) => status === "fulfilled").length;
+      rejectedCount += results.filter(({ status }) => status === "rejected").length;
+    }
+
+    expect(acceptedCount + rejectedCount).toBe(batchCount * requestsPerBatch);
+    expect(acceptedCount).toBe(
+      batchCount * (MAX_CONCURRENT_HTTP_REQUESTS + MAX_QUEUED_HTTP_REQUESTS),
+    );
+    expect(rejectedCount).toBe(
+      batchCount * (requestsPerBatch - MAX_CONCURRENT_HTTP_REQUESTS - MAX_QUEUED_HTTP_REQUESTS),
+    );
+    expect(maximumActiveCount).toBeLessThanOrEqual(MAX_CONCURRENT_HTTP_REQUESTS);
+    expect(fetch).toHaveBeenCalledTimes(acceptedCount);
   });
 
   it("失敗した通信の後もキューを進める", async () => {

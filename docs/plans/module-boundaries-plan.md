@@ -41,7 +41,7 @@
 ```
 view/browser/{App, pages, shell}                     ← 組み立て層（features を import してよい）
    ↓
-features/<機能>   ── 機能同士は互いに依存しない
+features/<機能>   ── 機能どうしは一方向だけ、公開 API（index.ts）経由で依存してよい
    ↓
 view/browser/{ui, hooks, utils, types, components, state, commands}   ← UI 部品層
    ↓
@@ -52,7 +52,7 @@ core/util
 
 1. `core/*` は `view/*`、`features/*` を import しない。
 2. `core/*` は `service-container` を値として import しない。型は `core/ports` に置く（Phase B で完了）。
-3. `features/<A>` は `features/<B>` の内部を import しない。共有が必要なものは UI 部品層か `core` に移す。
+3. `features/<A>` は `features/<B>` の内部を import しない。`features/<B>` の公開 API（`src/features/<B>/index.ts`）だけを import する。機能どうしの依存は一方向にし、循環を作らない（2026-10-15 改定。§3.5）。
 4. **`features` から UI 部品層への依存は認める。** UI 部品層は `features`・`pages`・`shell`・`App` を import しない。
 5. `features` は組み立て層（`pages`・`shell`・`App`）を import しない。
 6. `view/*` は `core/*` を直接 import しない。サービスコンテナ経由にする（段階的に適用）。
@@ -82,9 +82,31 @@ core/util
 - **タブストア**（`use-tab-store`・`tab-store-actions`・`tab-store-selectors`・`tab-store-types`）は、アプリの外枠の状態として UI 部品層（`view/browser/state/tabs`）へ移した（D-4）。`tab-store-*` の全モジュール・`use-tab-view-scope`・`browser-session-storage` と、タブの自動更新フィールドを扱う純粋関数 `auto-refresh-pages`（元は `features/auto-refresh`）を一緒に移した。タブの機能そのもの（`TabBar`・`TabContextMenu` など）は `features/tabs` に残す。`TabView` などの組み立て部品は D-2 で `shell/` へ移した。
   - 機能間の依存の参照先で最も多い（`use-tab-store` 18 ファイル、`tab-store-actions` 7 ファイル）。
   - `tab-store-actions` → `view/browser/types` の依存も、同じ層の中の依存になる。
-- **NG・媒体の共有部品**（`use-ng-status`・`NgBadge`・`ResMediaGallery`・`ExternalImage`）は、Phase D の中で次のどちらかに決める。
-  - UI 部品層へ移す。
-  - 他の機能からは `features/<x>/index.ts`（公開 API）だけを import してよい、というルールにする。
+- **NG・媒体の共有部品**（`use-ng-status`・`NgBadge`・`ResMediaGallery`・`ExternalImage` など）は、UI 部品層へ移さず、各機能の公開 API（`index.ts`）から出す（2026-10-15 決定。§3.5）。
+
+### 3.5 機能どうしの依存（2026-10-15 決定）
+
+- 機能どうしの依存は認める。ただし次の 2 つを守る。
+  - **一方向だけ**: 機能どうしの循環を作らない。
+  - **公開 API だけ**: 他の機能は `src/features/<x>`（`index.ts`）からだけ import する。`index.ts` は他の機能が使うものだけを出す。機能の中のファイルは、自分の `index.ts` を経由せず直接 import する（自己循環を避けるため）。
+- UI 部品層へ移さなかった理由:
+  - 他の機能が使っているのは、見た目の部品だけではない。`media` の Imgur アップロード・アルバム取得・ビューアの状態、`ng` の状態のフックやスレタイ NG のダイアログなど、機能の中身そのものである。
+  - UI 部品層へ移すと、`view/browser` に機能のロジックが集まり、`features/media`・`features/ng` がほぼ空になる。
+  - タブストア（D-4）は、`commands`・`shell` を含めてほぼ全体が使うアプリの外枠の状態だったので UI 部品層へ移した。媒体と NG は、特定の機能が別の機能を利用しているだけで、事情が違う。
+- 決定時点（テストと Storybook を除く）で、機能どうしの依存に循環は無かった。下から順に次の並びになる。
+
+```
+auxiliary-window, ng, bookmark, live-chat, next-thread
+media            → auxiliary-window
+thread           → media, ng
+auto-refresh     → thread, live-chat, next-thread
+tabs             → auto-refresh, bookmark, thread
+comment-overlay  → auxiliary-window, media, next-thread, tabs
+archive-replay, popup, write, thread-list（最上位）
+```
+
+- `comment-overlay` と `archive-replay`: 実行時の依存は `archive-replay → comment-overlay` の一方向だけである。逆向きは `comment-overlay/ui/OverlayStage.stories.tsx`（再生の時系列でオーバーレイを動かすデモ）だけなので、Story を `archive-replay` 側へ移す。共通層は、第 3 の機能がコメントの型を使うか、オーバーレイが実行時に再生側を必要とするまで作らない。
+- `pages`・`shell` などの組み立て層から機能の中のファイルへの import は、この段階では対象にしない。
 
 ### 3.4 検査（D-3 で導入、`36f7219a`）
 
@@ -216,7 +238,10 @@ core/util
 1. D-2: §3.2 の逆向きの依存を、1 件ずつ別コミットで解消する。最初は D-1 と同じ要領の `usePopupCloseBehavior` の移動。
 2. D-3（完了、`36f7219a`）: §3.4 の検査を `error` で入れた。D-2 の後に残る `commands` の 2 ファイル（タブストアへの依存）は許可リストに入れ、D-4 で外す。
 3. D-4（完了）: タブストアを `view/browser/state/tabs` へ移し（`8496ef14`、`73cd33d3`）、§3.4 の許可リストを削除した（`f2651140`）。
-4. D-5: NG・媒体の共有部品の扱いを決め、機能間の残りの依存を 1 組ずつ解消する。
+4. D-5: 機能どうしの依存を公開 API 経由にする（§3.5）。
+   1. `OverlayStage.stories.tsx` を `archive-replay` 側へ移す。
+   2. 使われる側の機能ごとに `index.ts` を作り、他の機能からの import を付け替える（機能ごとに 1 コミット）。
+   3. 他の機能の中のファイルへの import を禁止する検査と、循環の検査を入れる。
 
 ### Phase E: 循環 import と view → core
 

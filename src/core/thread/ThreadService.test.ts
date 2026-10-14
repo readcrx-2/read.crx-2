@@ -67,6 +67,14 @@ interface ThreadServiceLike {
   ): Promise<unknown>;
 }
 
+// 既定のインスタンス（app.ts の公開 API のためにあった）は legacy-window-app-plan の Phase 4 で削除したため、
+// モックした corePorts から都度組み立てる。
+async function createService() {
+  const { createThreadService } = await import("src/core/thread/ThreadService");
+  const { corePorts } = await import("src/core/ports/registry");
+  return createThreadService(corePorts);
+}
+
 describe("スレッドサービス", () => {
   beforeEach(() => {
     mocks.isNGThread.mockReset();
@@ -88,7 +96,7 @@ describe("スレッドサービス", () => {
     });
     const firstCache = vi.fn();
     const secondCache = vi.fn();
-    const { default: threadService } = await import("src/core/thread/ThreadService");
+    const threadService = await createService();
     const service = threadService as unknown as ThreadServiceLike;
     const url = "https://example.com/test/read.cgi/board/1000000000/";
 
@@ -112,7 +120,7 @@ describe("スレッドサービス", () => {
 
   it("自動更新の取得だけsubject.txt確認を間引き、手動更新が合流したら間引かない", async () => {
     mocks.threadGet.mockResolvedValue(undefined);
-    const { default: threadService } = await import("src/core/thread/ThreadService");
+    const threadService = await createService();
     const service = threadService as unknown as ThreadServiceLike;
     const url = "https://example.com/test/read.cgi/board/1000000000/";
 
@@ -140,7 +148,7 @@ describe("スレッドサービス", () => {
         }),
     );
     mocks.threadGet.mockResolvedValueOnce(undefined);
-    const { default: threadService } = await import("src/core/thread/ThreadService");
+    const threadService = await createService();
     const service = threadService as unknown as ThreadServiceLike;
     const url = "https://example.com/test/read.cgi/board/2000000000/";
 
@@ -161,7 +169,7 @@ describe("スレッドサービス", () => {
       res.replyCount != null && res.replyCount >= 2 ? { type: "ReplyCount" } : null,
     );
 
-    const { default: threadService } = await import("src/core/thread/ThreadService");
+    const threadService = await createService();
     const service = threadService as unknown as ThreadServiceLike;
     const result = service._formatResult({
       title: "title",
@@ -186,7 +194,7 @@ describe("スレッドサービス", () => {
   });
 
   it("メタ情報と異なるHTMLレス内のIDを保持する", async () => {
-    const { default: threadService } = await import("src/core/thread/ThreadService");
+    const threadService = await createService();
     const service = threadService as unknown as ThreadServiceLike;
     const result = service._formatResult({
       title: "title",
@@ -213,7 +221,7 @@ describe("スレッドサービス", () => {
     }).format(now);
     const timestamp = `${now.getUTCFullYear()}/${String(now.getUTCMonth() + 1).padStart(2, "0")}/${String(now.getUTCDate()).padStart(2, "0")}(${weekday}) ${String(now.getUTCHours()).padStart(2, "0")}:${String(now.getUTCMinutes()).padStart(2, "0")}:${String(now.getUTCSeconds()).padStart(2, "0")}.${String(now.getUTCMilliseconds()).padStart(3, "0")}`;
 
-    const { default: threadService } = await import("src/core/thread/ThreadService");
+    const threadService = await createService();
     const service = threadService as unknown as ThreadServiceLike;
     const result = service._formatResult({
       title: "title",
@@ -232,7 +240,7 @@ describe("スレッドサービス", () => {
         message: res.message.replace("置換前", "置換後"),
       }),
     );
-    const { default: threadService } = await import("src/core/thread/ThreadService");
+    const threadService = await createService();
     const service = threadService as unknown as ThreadServiceLike;
     const result = service._formatResult({
       title: "title",
@@ -255,7 +263,7 @@ describe("スレッドサービス", () => {
     mocks.isNGThread.mockImplementation((res: { anchorCount?: number }) =>
       res.anchorCount === 1 ? { type: "置換後NG" } : null,
     );
-    const { default: threadService } = await import("src/core/thread/ThreadService");
+    const threadService = await createService();
     const service = threadService as unknown as ThreadServiceLike;
     const result = service._formatResult({
       title: "title",
@@ -278,7 +286,7 @@ describe("スレッドサービス", () => {
   it("設定で有効な自動NGを現行の取得結果へ反映する", async () => {
     mocks.config.set("nothing_id_ng", "on");
     mocks.config.set("how_to_judgment_id", "first_res");
-    const { default: threadService } = await import("src/core/thread/ThreadService");
+    const threadService = await createService();
     const service = threadService as unknown as ThreadServiceLike;
     const result = service._formatResult({
       title: "title",
@@ -294,7 +302,7 @@ describe("スレッドサービス", () => {
   });
 
   it("取得結果がない場合も旧契約どおりタイトルのnullを保持する", async () => {
-    const { default: threadService } = await import("src/core/thread/ThreadService");
+    const threadService = await createService();
     const service = threadService as unknown as ThreadServiceLike;
     const result = service._formatResult({
       title: null,

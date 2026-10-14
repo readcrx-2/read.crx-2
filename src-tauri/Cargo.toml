@@ -42,7 +42,10 @@ tokio = { version = "1", features = ["sync", "time"] }
 [target.'cfg(windows)'.dependencies]
 png = "0.17"
 windows-sys = { version = "0.61", features = [
+  "Win32_Foundation",
   "Win32_Graphics_Gdi",
+  # 投稿Cookieの保存ファイルをログオンユーザーの鍵（DPAPI）で暗号化する。
+  "Win32_Security_Cryptography",
   "Win32_UI_WindowsAndMessaging",
 ] }
 

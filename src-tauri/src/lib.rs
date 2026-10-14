@@ -1,3 +1,4 @@
+mod cookie_cipher;
 mod download;
 mod download_path;
 mod http_transport;
@@ -111,7 +112,7 @@ pub fn run() {
 
       // 投稿認証はWebViewと別のRust Clientが扱うため、データディレクトリ確定後に保存Cookieを復元する。
       app.manage(write_transport::WriteTransportState::new(
-        app.path().app_data_dir()?.join("write-cookies.json"),
+        write_cookies::WriteCookies::open_app_data(&app.path().app_data_dir()?),
       ));
       app.manage(http_transport::HttpTransportState::new()?);
 

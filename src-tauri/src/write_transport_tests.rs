@@ -1,18 +1,11 @@
 use super::*;
 use std::io::{Read, Write};
 use std::net::TcpListener;
-use std::path::PathBuf;
-use std::sync::atomic::{AtomicUsize, Ordering};
 use std::time::Duration;
 
-static NEXT_TEST_FILE: AtomicUsize = AtomicUsize::new(0);
-
-fn test_cookie_path() -> PathBuf {
-  std::env::temp_dir().join(format!(
-    "chlens-write-transport-{}-{}.json",
-    std::process::id(),
-    NEXT_TEST_FILE.fetch_add(1, Ordering::Relaxed)
-  ))
+// 保存処理の検証はwrite_cookies_testsで行い、通信の検証では一時ファイルを作らない。
+fn test_state() -> WriteTransportState {
+  WriteTransportState::new(WriteCookies::memory_only())
 }
 
 fn receive_request(stream: &mut std::net::TcpStream) -> String {
@@ -140,7 +133,7 @@ fn cookie削除用のサイト識別子にパスや認証情報を許可しな�
 
 #[test]
 fn cookie状態の確認と削除をサイト単位および全体で行う() {
-  let cookies = WriteCookies::new(test_cookie_path());
+  let cookies = WriteCookies::memory_only();
   assert!(!has_write_cookies_inner(&cookies, "example.com").unwrap());
   assert!(has_write_cookies_inner(&cookies, "https://example.com/path").is_err());
   assert!(!has_any_write_cookies_inner(&cookies).unwrap());
@@ -201,7 +194,7 @@ fn 不正な任意ヘッダーは追加せず有効な値だけを設定する()
 
 #[test]
 fn 書き込みclientをサイトごとに再利用する() {
-  let state = WriteTransportState::new(test_cookie_path());
+  let state = test_state();
   get_or_create_client(&state, "example.com").unwrap();
   get_or_create_client(&state, "example.com").unwrap();
   get_or_create_client(&state, "other.example").unwrap();
@@ -239,8 +232,7 @@ fn 書き込み前に取得した_cookieを除外指定に従って投稿し応�
       .unwrap();
     (bootstrap_request, post_request)
   });
-  let cookie_path = test_cookie_path();
-  let state = WriteTransportState::new(cookie_path.clone());
+  let state = test_state();
   let response = tauri::async_runtime::block_on(write_request_inner(
     &state,
     WriteRequest {
@@ -266,7 +258,6 @@ fn 書き込み前に取得した_cookieを除外指定に従って投稿し応�
   assert_eq!(response.status, 201);
   assert_eq!(response.content_type.as_deref(), Some("text/plain"));
   assert_eq!(response.body, b"accepted");
-  let _ = std::fs::remove_file(&cookie_path);
 }
 
 #[test]
@@ -282,7 +273,7 @@ fn bootstrapが不正でも投稿本体を試す() {
       .unwrap();
     request
   });
-  let state = WriteTransportState::new(test_cookie_path());
+  let state = test_state();
   let response = tauri::async_runtime::block_on(write_request_inner(
     &state,
     WriteRequest {
@@ -315,7 +306,7 @@ fn bootstrap通信に失敗しても投稿本体を試す() {
       .unwrap();
     request
   });
-  let state = WriteTransportState::new(test_cookie_path());
+  let state = test_state();
   let response = tauri::async_runtime::block_on(write_request_inner(
     &state,
     WriteRequest {
@@ -337,7 +328,7 @@ fn 書き込み通信に失敗した場合は通信エラーを返す() {
   let unavailable = TcpListener::bind("127.0.0.1:0").unwrap();
   let address = unavailable.local_addr().unwrap();
   drop(unavailable);
-  let state = WriteTransportState::new(test_cookie_path());
+  let state = test_state();
   let error = tauri::async_runtime::block_on(write_request_inner(
     &state,
     WriteRequest {

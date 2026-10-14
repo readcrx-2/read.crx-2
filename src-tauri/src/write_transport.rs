@@ -4,7 +4,6 @@ use reqwest::header::{HeaderMap, HeaderValue, CONTENT_TYPE, COOKIE, ORIGIN, REFE
 use reqwest::{Client, Url};
 use serde::{Deserialize, Serialize};
 use std::collections::HashMap;
-use std::path::PathBuf;
 use std::sync::{Arc, Mutex};
 use std::time::Duration;
 use tauri::State;
@@ -20,10 +19,10 @@ pub struct WriteTransportState {
 }
 
 impl WriteTransportState {
-  pub fn new(cookie_path: PathBuf) -> Self {
+  pub fn new(cookies: WriteCookies) -> Self {
     Self {
       clients: Mutex::new(HashMap::new()),
-      cookies: Arc::new(WriteCookies::new(cookie_path)),
+      cookies: Arc::new(cookies),
     }
   }
 }

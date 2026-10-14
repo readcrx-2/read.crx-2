@@ -23,5 +23,17 @@ export default defineConfig({
       "packages/*/src/**/*.{test,spec}.{ts,tsx,js,jsx}",
     ],
     exclude: ["node_modules/**", "e2e/**"],
+    coverage: {
+      provider: "v8",
+      include: ["src/**/*.{ts,tsx}", "packages/*/src/**/*.{ts,tsx}"],
+      exclude: [
+        "**/*.{test,spec}.{ts,tsx,js,jsx}",
+        "**/__mocks__/**",
+        "**/*.d.ts",
+        "**/*.stories.{ts,tsx,js,jsx}",
+      ],
+      reportsDirectory: "coverage/unit",
+      reporter: ["text", "html", "lcov", "json"],
+    },
   },
 });

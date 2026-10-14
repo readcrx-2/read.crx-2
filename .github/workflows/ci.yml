@@ -75,7 +75,15 @@ jobs:
         run: pnpm install --frozen-lockfile
 
       - name: Run unit tests
-        run: pnpm run test
+        run: pnpm run test:coverage
+
+      - name: Upload unit coverage
+        if: ${{ !cancelled() }}
+        uses: actions/upload-artifact@v4
+        with:
+          name: coverage-unit
+          path: coverage/unit
+          if-no-files-found: ignore
 
   e2e:
     name: E2Eテスト

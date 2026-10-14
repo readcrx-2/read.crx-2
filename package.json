@@ -40,6 +40,7 @@
     "lint:format": "vp fmt",
     "lint:tokens": "node scripts/check-browser-design-tokens.mjs",
     "test": "vp test run",
+    "test:coverage": "vp test run --coverage",
     "test:e2e": "pnpm run build:chrome && playwright test",
     "test:e2e:ui": "pnpm run build:chrome && playwright test --ui",
     "triage:todo": "node --no-warnings --experimental-strip-types scripts/triage-todo.ts",
@@ -83,6 +84,7 @@
     "zustand": "^5.0.15"
   },
   "devDependencies": {
+    "@vitest/coverage-v8": "5.0.3",
     "@playwright/test": "^1.63.0",
     "@release-it/bumper": "^8.0.1",
     "@storybook/addon-a11y": "^10.6.1",

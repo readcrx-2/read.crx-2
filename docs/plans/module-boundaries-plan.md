@@ -1,7 +1,7 @@
 # モジュール境界の明確化計画
 
 - ブランチ: `refactor/module-boundaries`（`develop` から作成。旧名 `feature/module-boundaries`）
-- 状態: Phase 0・A・B・C-1・C-2・D-1 完了。D-2 は一部完了（§3.2 の 1〜3 件目を解消）。残りは 5 件目（`components` → `shell/`）と、新たに見つけた `types.ts` → `pages` の 1 件
+- 状態: Phase 0・A・B・C-1・C-2・D-1・D-2 完了（§3.2 のうち、D-4 で扱う `commands` → タブストアを除く）。次は D-3（検査の導入）
 
 ## 1. 目的
 
@@ -74,8 +74,8 @@ core/util
 | `ui/ContextMenu`・`ui/FloatingPopup` → `features/popup/browser/use-popup-manager`（`usePopupCloseBehavior`） | 解消済み（`c90fd1b2`、`56c835ec`）。フックを `view/browser/hooks` へ移した |
 | `utils/utils.ts`（`export *`）・`utils/message-filter.ts` → `features/media/domain/*` | 解消済み（`f6157577`、`8cc79f92`、`5f1dee29`）。純粋関数を `core/util` へ移し、再エクスポートを外した |
 | `commands/*` → `features/tabs/browser/*`（タブストア） | タブストアを UI 部品層（`view/browser/state/tabs`）へ移して解消する |
-| `components/{NavigationBar,BottomPanel,TitleBar,PageCountStatusItem}` → 各機能 | 機能を組み合わせる枠なので、組み立て層（`view/browser/shell/`）へ移す。利用者は `App` と `shell/DetachedTabWindowContent` だけになったので、ルール 5 とは衝突しない |
-| `types.ts` → `pages/settings/settings-types`（型のみ、D-2 の途中で発見） | `SettingsPageUiState` はタブの履歴に保存される型なので、型定義を UI 部品層（`types.ts` か `view/browser/types/`）へ移し、`pages/settings` 側から参照する |
+| `components/{NavigationBar,BottomPanel,TitleBar,PageCountStatusItem}` → 各機能 | 解消済み（`257a23a0`、`6204bc2b`）。機能を組み合わせる枠なので、組み立て層（`view/browser/shell/`）へ移した。利用者は `App` と `shell/DetachedTabWindowContent` だけなので、ルール 5 とは衝突しない |
+| `types.ts` → `pages/settings/settings-types`（型のみ、D-2 の途中で発見） | 解消済み（`52f6bcfd`、`75d54cdf`）。`SettingsPageUiState` はタブの表示状態に保存される型なので、参照する `SettingsSectionId` と一緒に `view/browser/types.ts` へ定義を移し、`pages/settings` 側から参照する |
 
 ### 3.3 機能間で共有されているものの置き場所
 
@@ -213,7 +213,7 @@ oxlint の `no-restricted-imports` で次を検査する。
 進め方:
 
 1. D-2: §3.2 の逆向きの依存を、1 件ずつ別コミットで解消する。最初は D-1 と同じ要領の `usePopupCloseBehavior` の移動。
-2. D-3: 逆向きの依存が 0 件になったら、§3.4 の検査を `error` で入れる。
+2. D-3: §3.4 の検査を `error` で入れる。D-2 の後に残る `commands` の 2 ファイル（タブストアへの依存）は許可リストに入れ、D-4 で外す。
 3. D-4: タブストアを `view/browser/state/tabs` へ移す。
 4. D-5: NG・媒体の共有部品の扱いを決め、機能間の残りの依存を 1 組ずつ解消する。
 

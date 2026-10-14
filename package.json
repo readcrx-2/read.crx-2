@@ -41,6 +41,7 @@
     "lint:tokens": "node scripts/check-browser-design-tokens.mjs",
     "test": "vp test run",
     "test:coverage": "vp test run --coverage",
+    "test:rust:coverage": "cargo llvm-cov --manifest-path src-tauri/Cargo.toml --lib --summary-only && cargo llvm-cov report --manifest-path src-tauri/Cargo.toml --html --output-dir coverage/rust",
     "test:coverage:all": "pnpm run test:coverage && pnpm run test:e2e:coverage",
     "test:coverage:merge": "node scripts/merge-coverage.mjs",
     "test:e2e": "pnpm run build:chrome && playwright test",

@@ -51,6 +51,47 @@ jobs:
           GITHUB_BASE_REF: ${{ github.base_ref }}
           CI_DIFF_BASE: ${{ github.event.before }}
 
+  rust-coverage:
+    name: Rustカバレッジ
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v6
+
+      - name: Install Tauri build dependencies
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y libwebkit2gtk-4.1-dev build-essential curl wget file libxdo-dev libssl-dev libayatana-appindicator3-dev librsvg2-dev
+
+      - name: Set up Rust with coverage tools
+        uses: dtolnay/rust-toolchain@stable
+        with:
+          components: llvm-tools-preview
+
+      - name: Cache Rust build artifacts
+        uses: Swatinem/rust-cache@v2
+        with:
+          workspaces: src-tauri -> target
+
+      - name: Install cargo-llvm-cov
+        uses: taiki-e/install-action@v2
+        with:
+          tool: cargo-llvm-cov@0.9.1
+
+      - name: Run Rust tests and generate coverage
+        run: |
+          cargo llvm-cov --manifest-path src-tauri/Cargo.toml --lib --summary-only
+          cargo llvm-cov report --manifest-path src-tauri/Cargo.toml --html --output-dir coverage/rust
+
+      - name: Upload Rust coverage report
+        if: ${{ !cancelled() }}
+        uses: actions/upload-artifact@v4
+        with:
+          name: coverage-rust
+          path: coverage/rust/html
+          if-no-files-found: error
+
   unit:
     name: ユニットテスト
     runs-on: ubuntu-latest

@@ -2,7 +2,7 @@ import "@testing-library/jest-dom/vitest";
 
 import { render } from "@testing-library/react";
 import React from "react";
-import { ContentArea } from "src/features/tabs/ui/ContentArea";
+import { ContentArea } from "src/view/browser/shell/ContentArea";
 import type { Page, Tab } from "src/view/browser/types";
 import { beforeEach, describe, expect, it, vi } from "vite-plus/test";
 

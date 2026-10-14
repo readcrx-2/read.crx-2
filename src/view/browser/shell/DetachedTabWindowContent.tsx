@@ -6,7 +6,6 @@ import { NgStatusProvider } from "src/features/ng/browser/use-ng-status";
 import { NgStatusItem } from "src/features/ng/ui/NgStatusItem";
 import { PaneProvider } from "src/features/tabs/browser/use-tab-store";
 import { TabViewScopeProvider } from "src/features/tabs/browser/use-tab-view-scope";
-import { TabPanel } from "src/features/tabs/ui/TabView";
 import { WindowNavigationBridge } from "src/features/tabs/ui/WindowNavigationBridge";
 import { IkioiStatusItem } from "src/features/thread/ui/IkioiStatusItem";
 import { PopularFilterStatusItem } from "src/features/thread/ui/PopularFilterStatusItem";
@@ -19,6 +18,7 @@ import { TitleBar } from "src/view/browser/components/TitleBar";
 import { BottomPanelProvider } from "src/view/browser/hooks/use-bottom-panel";
 import { PageCountStatusProvider } from "src/view/browser/hooks/use-page-count-status";
 import { type ViewSurface, ViewSurfaceProvider } from "src/view/browser/hooks/use-view-surface";
+import { TabPanel } from "src/view/browser/shell/TabView";
 import type { Tab } from "src/view/browser/types";
 import { ToastProvider } from "src/view/browser/ui/Toast";
 

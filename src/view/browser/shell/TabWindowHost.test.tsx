@@ -3,7 +3,7 @@ import "@testing-library/jest-dom/vitest";
 import { act, cleanup, fireEvent, render, screen } from "@testing-library/react";
 import React from "react";
 import { useDetachedTabController } from "src/features/tabs/browser/use-detached-tab-controller";
-import { TabWindowHost } from "src/features/tabs/ui/TabWindowHost";
+import { TabWindowHost } from "src/view/browser/shell/TabWindowHost";
 import type { Pane, Tab } from "src/view/browser/types";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vite-plus/test";
 
@@ -45,7 +45,7 @@ vi.mock("src/view/browser/hooks/use-theme", () => ({
   useTheme: () => "light",
 }));
 
-vi.mock("src/features/tabs/ui/TabView", () => ({
+vi.mock("src/view/browser/shell/TabView", () => ({
   TabPanel: ({ tab }: { tab: Tab }) => <div data-testid="detached-tab-panel">{tab.id}</div>,
 }));
 

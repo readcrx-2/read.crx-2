@@ -7,7 +7,7 @@ import {
   commandPalette,
   commandPaletteStore,
 } from "src/view/browser/commands/command-palette-store";
-import { NavigationBar } from "src/view/browser/components/NavigationBar";
+import { NavigationBar } from "src/view/browser/shell/NavigationBar";
 import type { Page } from "src/view/browser/types";
 import { QUICK_ACCESS_FILTER_TOGGLE_EVENT_BY_PAGE_TYPE } from "src/view/browser/utils/filter-toolbar-events";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vite-plus/test";

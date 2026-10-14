@@ -340,6 +340,74 @@ export default defineConfig(async ({ mode }) => {
             ],
           },
         },
+        // view/browser の UI 部品層は features と組み立て層（App・pages・shell）を import しない
+        // （計画: docs/plans/module-boundaries-plan.md §3 のルール 4、Phase D-3）。
+        // features から UI 部品層への参照は認めるため、逆向きを禁止して循環を防ぐ。
+        {
+          files: [
+            "src/view/browser/ui/**",
+            "src/view/browser/hooks/**",
+            "src/view/browser/utils/**",
+            "src/view/browser/components/**",
+            "src/view/browser/commands/**",
+            "src/view/browser/state/**",
+            "src/view/browser/types.ts",
+          ],
+          rules: {
+            "eslint/no-restricted-imports": [
+              "error",
+              {
+                patterns: [
+                  {
+                    group: [
+                      "**/features/**",
+                      "**/view/browser/pages/**",
+                      "**/view/browser/shell/**",
+                      "**/view/browser/App",
+                    ],
+                    message:
+                      "view/browser の UI 部品層は features と組み立て層（App・pages・shell）を import しない。機能を組み合わせる部品は view/browser/shell に置く。",
+                  },
+                ],
+              },
+            ],
+          },
+        },
+        // 許可リスト: commands はタブストア（features/tabs/browser）を参照している。
+        // タブストアを UI 部品層（view/browser/state/tabs）へ移す Phase D-4 で解消し、この override を削除する。
+        {
+          files: [
+            "src/view/browser/commands/browser-commands.ts",
+            "src/view/browser/commands/browser-commands.test.ts",
+            "src/view/browser/commands/tab-command-runtime.ts",
+            "src/view/browser/commands/tab-command-runtime.test.ts",
+          ],
+          rules: {
+            "eslint/no-restricted-imports": "off",
+          },
+        },
+        // features は組み立て層（App・pages・shell）を import しない（計画書 §3 のルール 5）。
+        {
+          files: ["src/features/**"],
+          rules: {
+            "eslint/no-restricted-imports": [
+              "error",
+              {
+                patterns: [
+                  {
+                    group: [
+                      "**/view/browser/pages/**",
+                      "**/view/browser/shell/**",
+                      "**/view/browser/App",
+                    ],
+                    message:
+                      "features は組み立て層（App・pages・shell）を import しない。組み立て層から props・context で受け取るか、部品を UI 部品層へ移す。",
+                  },
+                ],
+              },
+            ],
+          },
+        },
       ],
       options: {
         typeAware: true,

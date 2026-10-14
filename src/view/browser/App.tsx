@@ -30,11 +30,7 @@ import { WriteSessionProvider } from "src/features/write/browser/use-write-sessi
 import { WritePanelToggleItem } from "src/features/write/ui/WritePanelToggleItem";
 import { WriteWindowHost } from "src/features/write/ui/WriteWindowHost";
 import { container } from "src/service-container/index";
-import { BottomPanel } from "src/view/browser/components/BottomPanel";
-import { NavigationBar } from "src/view/browser/components/NavigationBar";
-import { PageCountStatusItem } from "src/view/browser/components/PageCountStatusItem";
 import { StatusBar, StatusBarProvider } from "src/view/browser/components/StatusBar";
-import { TitleBar } from "src/view/browser/components/TitleBar";
 import { BottomPanelProvider } from "src/view/browser/hooks/use-bottom-panel";
 import { useNotificationListener } from "src/view/browser/hooks/use-notification-listener";
 import { PageCountStatusProvider } from "src/view/browser/hooks/use-page-count-status";
@@ -43,8 +39,12 @@ import {
   UrlBarVisibilityProvider,
   useUrlBarVisibility,
 } from "src/view/browser/hooks/use-url-bar-visibility";
+import { BottomPanel } from "src/view/browser/shell/BottomPanel";
 import { ContentArea } from "src/view/browser/shell/ContentArea";
+import { NavigationBar } from "src/view/browser/shell/NavigationBar";
+import { PageCountStatusItem } from "src/view/browser/shell/PageCountStatusItem";
 import { TabWindowHost } from "src/view/browser/shell/TabWindowHost";
+import { TitleBar } from "src/view/browser/shell/TitleBar";
 import { ToastProvider } from "src/view/browser/ui/Toast";
 import { TooltipProvider } from "src/view/browser/ui/Tooltip";
 import { applyBBSMenuToItestServerMap } from "src/view/browser/utils/itest-server-map";

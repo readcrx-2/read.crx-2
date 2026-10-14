@@ -59,15 +59,15 @@ vi.mock("src/features/comment-overlay/ui/CommentOverlayStatusItem", () => ({
 }));
 vi.mock("src/features/thread/ui/IkioiStatusItem", () => ({ IkioiStatusItem: () => null }));
 vi.mock("src/features/ng/ui/NgStatusItem", () => ({ NgStatusItem: () => null }));
-vi.mock("src/view/browser/components/PageCountStatusItem", () => ({
+vi.mock("src/view/browser/shell/PageCountStatusItem", () => ({
   PageCountStatusItem: () => null,
 }));
 vi.mock("src/features/thread/ui/PopularFilterStatusItem", () => ({
   PopularFilterStatusItem: () => null,
 }));
-vi.mock("src/view/browser/components/TitleBar", () => ({ TitleBar: () => null }));
+vi.mock("src/view/browser/shell/TitleBar", () => ({ TitleBar: () => null }));
 // 下部パネルとその開閉ボタンも同様に、別窓内への配置だけを確認し中身は対象外にする。
-vi.mock("src/view/browser/components/BottomPanel", () => ({
+vi.mock("src/view/browser/shell/BottomPanel", () => ({
   BottomPanel: ({ hostedInTabWindow }: { hostedInTabWindow?: boolean }) => (
     <div data-testid="detached-bottom-panel" data-hosted={String(Boolean(hostedInTabWindow))} />
   ),

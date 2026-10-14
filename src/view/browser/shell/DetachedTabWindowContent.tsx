@@ -11,14 +11,14 @@ import { IkioiStatusItem } from "src/features/thread/ui/IkioiStatusItem";
 import { PopularFilterStatusItem } from "src/features/thread/ui/PopularFilterStatusItem";
 import { ThreadListPanelToggleItem } from "src/features/thread-list/ui/ThreadListPanelToggleItem";
 import { WritePanelToggleItem } from "src/features/write/ui/WritePanelToggleItem";
-import { BottomPanel } from "src/view/browser/components/BottomPanel";
-import { PageCountStatusItem } from "src/view/browser/components/PageCountStatusItem";
 import { StatusBar, StatusBarProvider } from "src/view/browser/components/StatusBar";
-import { TitleBar } from "src/view/browser/components/TitleBar";
 import { BottomPanelProvider } from "src/view/browser/hooks/use-bottom-panel";
 import { PageCountStatusProvider } from "src/view/browser/hooks/use-page-count-status";
 import { type ViewSurface, ViewSurfaceProvider } from "src/view/browser/hooks/use-view-surface";
+import { BottomPanel } from "src/view/browser/shell/BottomPanel";
+import { PageCountStatusItem } from "src/view/browser/shell/PageCountStatusItem";
 import { TabPanel } from "src/view/browser/shell/TabView";
+import { TitleBar } from "src/view/browser/shell/TitleBar";
 import type { Tab } from "src/view/browser/types";
 import { ToastProvider } from "src/view/browser/ui/Toast";
 

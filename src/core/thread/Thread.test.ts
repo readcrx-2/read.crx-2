@@ -1,5 +1,6 @@
 // @vitest-environment node
 import type { ParsedThread } from "packages/chlib/src/index";
+import type { ThreadDeps } from "src/core/thread/Thread";
 import { beforeEach, describe, expect, it, vi } from "vite-plus/test";
 
 const mocks = vi.hoisted(() => ({
@@ -16,21 +17,21 @@ vi.mock("src/app/platform", () => ({
   platform: { http: { fetch: mocks.fetch } },
 }));
 
-vi.mock("src/service-container/index", () => ({
-  container: {
-    config: { get: mocks.getConfig },
-    cache: { getCache: mocks.getCache },
-    bookmark: {
-      get: mocks.getBookmark,
-      updateResCount: mocks.updateResCount,
-      updateExpired: mocks.updateExpired,
-    },
-    message: { send: mocks.messageSend },
-    util: { defer: vi.fn(() => Promise.resolve()) },
+// 依存は登録済みのサービス（corePorts）に頼らず、テスト用の値をコンストラクタや関数へ直接渡す。
+const deps = {
+  config: { get: mocks.getConfig },
+  cache: { getCache: mocks.getCache },
+  bookmark: {
+    get: mocks.getBookmark,
+    updateResCount: mocks.updateResCount,
+    updateExpired: mocks.updateExpired,
   },
-}));
+  message: { send: mocks.messageSend },
+  util: { defer: vi.fn(() => Promise.resolve()) },
+} as unknown as ThreadDeps;
 
-vi.mock("src/core/util/jsutil.js", () => ({
+// Thread は ch-server-move-detect を直接 import するため、そのモジュールを差し替える。
+vi.mock("src/core/board/ch-server-move-detect", () => ({
   chServerMoveDetect: vi.fn(),
 }));
 
@@ -74,7 +75,7 @@ describe("Thread", () => {
       headers: {},
       url: "https://example.com/test/read.cgi/board/1000000000/",
     });
-    const thread = new Thread("https://example.com/test/read.cgi/board/1000000000/");
+    const thread = new Thread("https://example.com/test/read.cgi/board/1000000000/", deps);
     const testableThread = thread as unknown as ThreadInternals;
     vi.spyOn(testableThread, "_prepareCache").mockResolvedValue({
       hasCache: false,
@@ -96,7 +97,7 @@ describe("Thread", () => {
     mocks.fetch.mockRejectedValue(new Error("通信に失敗しました"));
     const lookups: boolean[] = [];
     const refresh = async (throttleSubjectCheck = true) => {
-      const thread = new Thread("https://example.com/test/read.cgi/board/1000000000/");
+      const thread = new Thread("https://example.com/test/read.cgi/board/1000000000/", deps);
       const testableThread = thread as unknown as ThreadInternals;
       vi.spyOn(testableThread, "_prepareCache").mockResolvedValue({
         hasCache: true,
@@ -124,7 +125,7 @@ describe("Thread", () => {
   });
 
   it("本文取得が失敗しても板一覧から消えていればsubject不在を返す", async () => {
-    const thread = new Thread("https://example.com/test/read.cgi/board/1000000000/");
+    const thread = new Thread("https://example.com/test/read.cgi/board/1000000000/", deps);
     const testableThread = thread as unknown as ThreadInternals;
 
     vi.spyOn(testableThread, "_prepareCache").mockResolvedValue({
@@ -157,7 +158,7 @@ describe("Thread", () => {
       url: "https://example.com/test/read.cgi/board/1000000000/",
     });
 
-    const thread = new Thread("https://example.com/test/read.cgi/board/1000000000/");
+    const thread = new Thread("https://example.com/test/read.cgi/board/1000000000/", deps);
     const testableThread = thread as unknown as ThreadInternals;
     vi.spyOn(testableThread, "_prepareCache").mockResolvedValue({
       hasCache: true,
@@ -192,7 +193,7 @@ describe("Thread", () => {
       url: "https://example.com/test/read.cgi/board/1000000000/",
     });
 
-    const thread = new Thread("https://example.com/test/read.cgi/board/1000000000/");
+    const thread = new Thread("https://example.com/test/read.cgi/board/1000000000/", deps);
     const testableThread = thread as unknown as ThreadInternals;
     vi.spyOn(testableThread, "_prepareCache").mockResolvedValue({
       hasCache: false,
@@ -209,7 +210,7 @@ describe("Thread", () => {
     expect(cache.lastUpdated).toEqual(expect.any(Number));
     expect(cache.put).toHaveBeenCalledOnce();
 
-    const reopenedThread = new Thread("https://example.com/test/read.cgi/board/1000000000/");
+    const reopenedThread = new Thread("https://example.com/test/read.cgi/board/1000000000/", deps);
     const reopenedInternals = reopenedThread as unknown as ThreadInternals;
     const reopenedSubjectLookup = vi.spyOn(reopenedInternals, "_fetchCachedResCount");
     await expect(reopenedThread.get()).rejects.toBeUndefined();
@@ -229,7 +230,7 @@ describe("Thread", () => {
     mocks.getCache.mockReturnValue(cache);
     mocks.fetch.mockRejectedValue(new Error("通信に失敗しました"));
 
-    const thread = new Thread("https://example.com/test/read.cgi/board/1000000000/");
+    const thread = new Thread("https://example.com/test/read.cgi/board/1000000000/", deps);
     const testableThread = thread as unknown as ThreadInternals;
     vi.spyOn(testableThread, "_prepareCache").mockResolvedValue({
       hasCache: true,
@@ -246,7 +247,7 @@ describe("Thread", () => {
   });
 
   it("キャッシュ済みのdat落ち状態をsubject通信より前に復元する", async () => {
-    const thread = new Thread("https://example.com/test/read.cgi/board/1000000000/");
+    const thread = new Thread("https://example.com/test/read.cgi/board/1000000000/", deps);
     const testableThread = thread as unknown as ThreadInternals;
     const cache = {
       expired: true,
@@ -282,7 +283,7 @@ describe("Thread", () => {
       url: "https://example.com/test/read.cgi/board/1000000000/",
     });
 
-    const firstThread = new Thread("https://example.com/test/read.cgi/board/1000000000/");
+    const firstThread = new Thread("https://example.com/test/read.cgi/board/1000000000/", deps);
     const firstInternals = firstThread as unknown as ThreadInternals;
     vi.spyOn(firstInternals, "_prepareCache").mockResolvedValue({
       hasCache: false,
@@ -293,7 +294,7 @@ describe("Thread", () => {
     expect(firstThread.expired).toBe(true);
     expect(cache.expired).toBe(true);
 
-    const forceRefresh200 = new Thread("https://example.com/test/read.cgi/board/1000000000/");
+    const forceRefresh200 = new Thread("https://example.com/test/read.cgi/board/1000000000/", deps);
     const forceRefresh200Internals = forceRefresh200 as unknown as ThreadInternals;
     const subjectLookupAfter200 = vi.spyOn(forceRefresh200Internals, "_fetchCachedResCount");
     await forceRefresh200.get(true);
@@ -306,14 +307,14 @@ describe("Thread", () => {
       headers: {},
       url: "https://example.com/test/read.cgi/board/1000000000/",
     });
-    const forceRefresh304 = new Thread("https://example.com/test/read.cgi/board/1000000000/");
+    const forceRefresh304 = new Thread("https://example.com/test/read.cgi/board/1000000000/", deps);
     const forceRefresh304Internals = forceRefresh304 as unknown as ThreadInternals;
     const subjectLookupAfter304 = vi.spyOn(forceRefresh304Internals, "_fetchCachedResCount");
     await forceRefresh304.get(true);
     expect(forceRefresh304.expired).toBe(true);
     expect(subjectLookupAfter304).not.toHaveBeenCalled();
 
-    const reopenedThread = new Thread("https://example.com/test/read.cgi/board/1000000000/");
+    const reopenedThread = new Thread("https://example.com/test/read.cgi/board/1000000000/", deps);
     const reopenedInternals = reopenedThread as unknown as ThreadInternals;
     const subjectLookupAfterReopen = vi.spyOn(reopenedInternals, "_fetchCachedResCount");
     await reopenedThread.get();
@@ -324,7 +325,7 @@ describe("Thread", () => {
   });
 
   it("subjectの件数補填を表示用コピーへ限定し、実データを変更しない", () => {
-    const thread = new Thread("https://example.com/test/read.cgi/board/1000000000/");
+    const thread = new Thread("https://example.com/test/read.cgi/board/1000000000/", deps);
     // 実在の板URLをテストへ固定しないため、予約済みドメイン上でBBS種別だけを差し替える。
     Object.defineProperty(thread.url, "bbsType", { configurable: true, value: "jbbs" });
     const testableThread = thread as unknown as ThreadInternals;
@@ -364,7 +365,7 @@ describe("Thread", () => {
   });
 
   it("2ch系ではsubjectの先行更新を「あぼーん」補填に使わない", () => {
-    const thread = new Thread("https://example.com/test/read.cgi/board/1000000000/");
+    const thread = new Thread("https://example.com/test/read.cgi/board/1000000000/", deps);
     const testableThread = thread as unknown as ThreadInternals;
     const parsedThread: ParsedThread = {
       title: "テストスレッド",

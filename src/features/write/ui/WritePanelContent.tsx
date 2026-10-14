@@ -1,13 +1,11 @@
 import { Clipboard, ExternalLink, ImagePlus, MoreVertical, Settings } from "lucide-react";
 import React, { useCallback, useEffect, useId, useMemo, useRef, useState } from "react";
 import { createPortal } from "react-dom";
-import { useViewSurface } from "src/features/auxiliary-window/browser/use-view-surface";
+import { extractUrlsFromMessage, toViewerImageUrl } from "src/core/util/url-media";
 import { uploadImageToImgur } from "src/features/media/application/imgur-upload";
 import { useMediaViewerStore } from "src/features/media/browser/use-media-viewer-store";
-import { extractUrlsFromMessage, toViewerImageUrl } from "src/features/media/domain/url-media";
 import { ExternalImage } from "src/features/media/ui/ExternalImage";
 import { MediaViewerContainer } from "src/features/media/ui/MediaViewerContainer";
-import { useTabStore } from "src/features/tabs/browser/use-tab-store";
 import { useWrite } from "src/features/write/browser/use-write";
 import {
   useWriteDraft,
@@ -19,6 +17,8 @@ import { useOptionalBottomPanel } from "src/view/browser/hooks/use-bottom-panel"
 import { useConfigBooleanSetting } from "src/view/browser/hooks/use-config-boolean-setting";
 import { useScopedConfigBooleanSetting } from "src/view/browser/hooks/use-scoped-config-boolean-setting";
 import { useToast } from "src/view/browser/hooks/use-toast";
+import { useViewSurface } from "src/view/browser/hooks/use-view-surface";
+import { useTabStore } from "src/view/browser/state/tabs/use-tab-store";
 import { Dialog } from "src/view/browser/ui/Dialog";
 import { CheckboxField } from "src/view/browser/ui/FormControls";
 import { copyText, readClipboardImage } from "src/view/browser/utils/clipboard";

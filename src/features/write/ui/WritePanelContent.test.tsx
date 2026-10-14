@@ -1,12 +1,12 @@
 import "@testing-library/jest-dom/vitest";
 
 import { cleanup, fireEvent, render, screen, waitFor, within } from "@testing-library/react";
-import { ViewSurfaceProvider } from "src/features/auxiliary-window/browser/use-view-surface";
 import { useMediaViewerStore } from "src/features/media/browser/use-media-viewer-store";
 import { WritePanelContent } from "src/features/write/ui/WritePanelContent";
 import { container } from "src/service-container/index";
 import type { IConfig, IMessage } from "src/service-container/interfaces";
 import { StatusBar, StatusBarProvider } from "src/view/browser/components/StatusBar";
+import { ViewSurfaceProvider } from "src/view/browser/hooks/use-view-surface";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vite-plus/test";
 
 const mocks = vi.hoisted(() => ({
@@ -61,7 +61,7 @@ function renderWritePanel(standalone = false) {
   );
 }
 
-vi.mock("src/features/tabs/browser/use-tab-store", () => ({
+vi.mock("src/view/browser/state/tabs/use-tab-store", () => ({
   useTabStore: () => ({
     viewPage: {
       type: "thread",

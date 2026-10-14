@@ -1,6 +1,5 @@
 import { ListFilter } from "lucide-react";
 import React, { useCallback } from "react";
-import { useTabStore, useTabViewState } from "src/features/tabs/browser/use-tab-store";
 import { MiniWindow } from "src/view/browser/components/MiniWindow";
 import {
   MiniWindowNote,
@@ -10,6 +9,7 @@ import {
 import { STATUS_BAR_PRIORITY } from "src/view/browser/components/status-bar-priority";
 import { StatusBarItem } from "src/view/browser/components/StatusBar";
 import { useMiniWindowTrigger } from "src/view/browser/hooks/use-mini-window-trigger";
+import { useTabStore, useTabViewState } from "src/view/browser/state/tabs/use-tab-store";
 import {
   DEFAULT_POPULAR_REPLY_THRESHOLD,
   MAX_POPULAR_REPLY_THRESHOLD,

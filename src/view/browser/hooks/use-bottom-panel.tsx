@@ -7,7 +7,7 @@ import React, {
   useState,
 } from "react";
 import { getStore2String, setStore2String } from "src/app/Store2Storage";
-import { useViewSurface } from "src/features/auxiliary-window/browser/use-view-surface";
+import { useViewSurface } from "src/view/browser/hooks/use-view-surface";
 
 export interface PanelTab {
   id: string;

@@ -1,6 +1,6 @@
 import { isTauriRuntime } from "src/app/platform/runtime";
 import { defineTauriEventChannel } from "src/app/platform/tauri/typed-event";
-import type { CommentCandidate } from "src/features/comment-overlay/domain/comment-types";
+import type { CommentCandidate } from "src/features/comment-overlay/domain";
 import { COMMENT_OVERLAY_WINDOW_LABEL } from "src/features/comment-overlay/platform";
 
 import { ARCHIVE_REPLAY_WINDOW_LABEL, openArchiveReplayWindow } from "./archive-replay-window";

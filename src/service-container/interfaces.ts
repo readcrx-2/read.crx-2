@@ -1,184 +1,46 @@
-import type { ParsedBBSMenu } from "packages/chlib/src/index";
-export interface IConfig {
-  // 設定ストアは文字列ベース (app.config.get は string | null を返す)。
-  // unknown だと利用側で JSON.parse 等に渡せず型エラーになるため実態に合わせる。
-  get(key: string): string | null;
-  set(key: string, value: unknown): Promise<void> | void;
-  ready(callback: () => void): void;
-  getAll(): Record<string, string>;
-  del?(key: string): Promise<void>;
-}
+import type { createBoardTitleSolver } from "src/core/board/BoardTitleSolver";
+import type { createOpenedBoards } from "src/core/board/OpenedBoards";
+import type * as HistoryModule from "src/core/history/History";
+import type * as WriteHistoryModule from "src/core/history/WriteHistory";
+import type {
+  IBBSMenuService,
+  IBoardService,
+  IBookmark,
+  ICacheService,
+  IConfig,
+  ICoreNoticeService,
+  IMessage,
+  INGService,
+  IReadStateService,
+  IUtil,
+} from "src/core/ports/services";
+import type { IThreadService } from "src/core/ports/thread";
+import type Cache from "src/core/storage/Cache";
+import type { createReplaceStrTxt } from "src/core/thread/ReplaceStrTxt";
 
-export interface ICacheItem {
-  get(): Promise<unknown>;
-  // 既存実装では、事前に data/lastUpdated を設定済みなら put() を引数なしで呼べる。
-  // 呼び出し側（Board/Thread/URL 等）との整合を保つため data は optional にする。
-  put(data?: string, options?: { lastModified?: number; etag?: string }): Promise<void>;
-  // Cache 実装 (src/core/storage/Cache.ts) は文字列データを保持する。unknown だと
-  // put() や parse 系に渡せず型エラーになるため実態に合わせる。
-  data: string | null;
-  lastUpdated: number;
-  lastModified?: number;
-  etag?: string;
-  resLength?: number;
-  parsed?: unknown;
-  readcgiVer?: number;
-  datSize?: number;
-  // 確認済みのdat落ちをsubject再取得なしで復元するためのスレッド状態。
-  expired?: boolean | null;
-  // 閲覧ログ用メタ情報
-  title?: string | null;
-  threadUrl?: string | null;
-  boardUrl?: string | null;
-  boardTitle?: string | null;
-  kind?: string | null;
-}
+// Core が使う型は src/core/ports に正本を置く（Phase B・C-1）。ここからは互換のために再エクスポートする。
+export type { IBBSMenuResult } from "src/core/ports/bbs-menu";
+export type { IBoardResult } from "src/core/ports/board";
+export type { ICacheItem } from "src/core/ports/cache";
+export type { INGResult } from "src/core/ports/ng";
+export type { IReadState } from "src/core/ports/read-state";
+export type {
+  IBBSMenuChangeNotifier,
+  IBBSMenuService,
+  IBoardService,
+  IBookmark,
+  IBookmarkItem,
+  ICacheService,
+  IConfig,
+  ICoreNoticeService,
+  IMessage,
+  INGService,
+  IReadStateService,
+  IUtil,
+} from "src/core/ports/services";
+export type { IRes, IThread, IThreadDetail, IThreadService } from "src/core/ports/thread";
 
-export interface ICacheService {
-  getCache(path: string): ICacheItem;
-}
-
-export interface IReadState {
-  url: string;
-  last: number;
-  read: number;
-  received: number;
-  offset?: number | null;
-  date?: number | null;
-}
-
-export interface IReadStateService {
-  get(url: string): Promise<IReadState | undefined>;
-  getByBoard(boardUrl: string): Promise<IReadState[]>;
-  set(readState: IReadState): Promise<void>;
-}
-
-export interface IBookmarkItem {
-  url: string;
-  title: string;
-  // CoreのEntryは保存形式をそのまま公開するため、typeは将来値も含めたstringで受ける。
-  type: string;
-  // Coreの保存形式では未設定値をnullで保持するため、境界で値を置き換えない。
-  resCount?: number | null;
-  readState?: IReadState | null;
-  expired?: boolean;
-}
-
-export interface IBookmark {
-  /** 初回の永続データ読み込みが終わるまで待つ。 */
-  readonly promiseFirstScan: Promise<boolean>;
-  get(url: string): IBookmarkItem | null | undefined;
-  add(item: IBookmarkItem): void;
-  remove(url: string): void;
-  updateResCount(url: string, count: number): void;
-  updateExpired(url: string, expired: boolean): void;
-  getByBoard(boardUrl: string): IBookmarkItem[];
-  getAllBoards(): IBookmarkItem[];
-}
-
-export interface IMessage {
-  send(type: string, data?: unknown): void;
-  // 購読側は `({ key }: { key?: string }) => void` のような狭い型のコールバックを渡すため、
-  // 引数を `unknown` 固定にすると全呼び出し箇所で型エラーになる。
-  // メソッド構文の bivariance を利用し、ジェネリクスでコールバック側の型を推論させる。
-  on<T = unknown>(type: string, callback: (data: T) => void): void;
-  off<T = unknown>(type: string, callback: (data: T) => void): void;
-}
-
-export interface IUtil {
-  escapeHtml(str: string): string;
-  safeHref(url: string): string;
-  defer(): Promise<void>;
-  isNewerReadState(
-    a: import("src/core/bookmark/read-state-compare").ComparableReadState | null | undefined,
-    b: import("src/core/bookmark/read-state-compare").ComparableReadState | null | undefined,
-  ): boolean;
-  guessType(url: string): { bbsType: string; protocol: string };
-}
-
-export interface IThread {
-  url: string;
-  title: string;
-  resCount: number;
-  createdAt: number;
-  ng?: INGResult | null;
-  demoted?: INGResult | null;
-  highlight?: INGResult | null;
-  isNet?: boolean | null;
-  readState?: IReadState;
-  threadNumber?: number;
-}
-
-export interface IRes {
-  num: number;
-  name: string;
-  mail: string;
-  date: string;
-  id?: string;
-  slip?: string;
-  trip?: string;
-  other?: string;
-  be?: string;
-  message: string;
-  isNew?: boolean;
-  ng?: INGResult;
-  isAA?: boolean;
-  class?: string[];
-}
-
-export interface IThreadDetail {
-  url: string;
-  // 取得元によってタイトルが無いケースがあるため、TS移行前のnullを保持する。
-  title: string | null;
-  res: IRes[];
-  message?: string;
-  expired?: boolean;
-  missingFromSubject?: boolean;
-}
-
-export interface IThreadService {
-  getThread(
-    url: string,
-    options?: {
-      forceUpdate?: boolean;
-      /** 自動更新由来の取得では、dat落ち確認のsubject.txt取得を間引く */
-      throttleSubjectCheck?: boolean;
-      onCache?: (thread: IThreadDetail) => void;
-    },
-  ): Promise<IThreadDetail>;
-}
-
-export interface IBoardResult {
-  threads: IThread[];
-  message: string | null;
-}
-
-export interface IBoardService {
-  getThreads(url: string): Promise<IBoardResult>;
-  getCachedResCount(url: string, options?: { forceUpdate?: boolean }): Promise<unknown>;
-}
-
-export interface IBBSMenuResult {
-  status: "success" | "error";
-  // 取得失敗時は板一覧を持たないため optional にする（実装の BBSMenuModel と同じ形）。
-  menu?: ParsedBBSMenu[];
-  message?: string;
-}
-
-export interface IBBSMenuChangeNotifier {
-  add(callback: (result: IBBSMenuResult) => void): void;
-  remove(callback: (result: IBBSMenuResult) => void): void;
-}
-
-export interface IBBSMenuService {
-  /** 板一覧を取得する。forceReload 時は通信して onChange へ通知する。 */
-  get(forceReload?: boolean): Promise<IBBSMenuResult>;
-  /** 通信せず、保存済みの板一覧だけを返す。 */
-  getCached(): Promise<IBBSMenuResult>;
-  /** 強制更新で板一覧が変わったときの通知。 */
-  readonly onChange: IBBSMenuChangeNotifier;
-}
-
+/** 画面のトースト。core は使わない（core からの知らせは ICoreNoticeService を通す）。 */
 export interface IToastService {
   notify(
     message: string,
@@ -197,26 +59,41 @@ export interface INotificationService {
   isSupported(targetWindow?: Window): boolean;
 }
 
-export interface INGResult {
-  type: string;
-  action?: "hide" | "collapse" | "highlight" | "warn";
-  /** 実際に一致した条件だけを抜き出したDSL。NG理由の表示に使用する。 */
-  ruleDescription?: string;
-  /** 設定内のルール位置。表示側で同じルールの一致結果をまとめるために使用する。 */
-  ruleIndex?: number;
-  name?: string;
-  params?: Record<string, string>;
-  /** NG ルールが一時的に無効化されているかどうか */
-  disabled?: boolean;
-}
+/**
+ * 閲覧履歴（Phase E、計画書 §3.6）。view・features は core/history/History を直接使わず、ここから使う。
+ * 関数の形は core の実装から取り、二重に書かない。
+ */
+export type IHistoryService = Pick<
+  typeof HistoryModule,
+  "add" | "remove" | "getByUrl" | "getAll" | "clear"
+>;
 
-export interface INGService {
-  isNGBoard(title: string, url: string, resCount: number): INGResult | null;
-  isNGThread(res: unknown, title: string, url: string): INGResult | null;
-  add(ruleDsl: string): Promise<void> | void;
-  invalidateCache(): void;
-  execExpire(): void;
-}
+/** 書き込み履歴（Phase E、計画書 §3.6）。関数の形は core/history/WriteHistory から取る。 */
+export type IWriteHistoryService = Pick<
+  typeof WriteHistoryModule,
+  "add" | "update" | "getByUrl" | "getAll" | "clear"
+>;
+
+/** スレのログの一覧・検索・削除・書き出し（Phase E、計画書 §3.6）。関数の形は core/storage/Cache の静的メソッドから取る。 */
+export type IThreadLogService = Pick<
+  typeof Cache,
+  "listLogs" | "searchLogsPage" | "deleteLogs" | "getLogArchiveRecords" | "replaceLogArchiveRecords"
+>;
+
+/** 開いた板の記録への書き込み（Phase E、計画書 §3.6）。読み取り用の parseOpenedBoardEntries は純粋なので直接使う。 */
+export type IOpenedBoardsService = Pick<
+  ReturnType<typeof createOpenedBoards>,
+  "upsertOpenedBoardEntry"
+>;
+
+/** 板名の解決（Phase E、計画書 §3.6）。解決結果のキャッシュを持つため、サービスコンテナ経由で使う。 */
+export type IBoardTitleService = Pick<
+  ReturnType<typeof createBoardTitleSolver>,
+  "ask" | "askByUrl" | "getCachedTitles"
+>;
+
+/** 置換ルールの保存（Phase E、計画書 §3.6）。解析済みのルールを持つため、サービスコンテナ経由で使う。 */
+export type IReplaceStrService = Pick<ReturnType<typeof createReplaceStrTxt>, "set">;
 
 export interface IServiceContainer {
   config: IConfig;
@@ -231,4 +108,11 @@ export interface IServiceContainer {
   notification: INotificationService;
   thread: IThreadService;
   ng: INGService;
+  history: IHistoryService;
+  writeHistory: IWriteHistoryService;
+  threadLog: IThreadLogService;
+  openedBoards: IOpenedBoardsService;
+  boardTitle: IBoardTitleService;
+  replaceStr: IReplaceStrService;
+  notice: ICoreNoticeService;
 }

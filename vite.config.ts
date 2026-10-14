@@ -247,6 +247,198 @@ function staticCopyPlugin(
 
 // ─── main config ─────────────────────────────────────────────────────────────
 
+// ─── lint: 機能（src/features）の境界 ──────────────────────────────────────────
+
+/**
+ * 機能ごとの公開モジュール（src/features/<機能>/ からの相対パス、拡張子なし）。
+ * 他の機能は、ここに載せたファイルだけを import できる（計画: docs/plans/module-boundaries-plan.md §3.5）。
+ * npm パッケージの package.json の exports と同じ考え方で、載っていないファイルは機能の内部として扱う。
+ *
+ * index.ts でまとめて再エクスポートしないのは、index.ts が export 先をすべて読み込み、
+ * CSS や読み込み時に window を触るモジュールが、使わないエントリ（overlay・replay）やテストに入るため。
+ * 新しく他の機能から使うときは、ここへ追加してレビューで公開してよいかを確認する。
+ */
+const FEATURE_PUBLIC_MODULES: Readonly<Record<string, readonly string[]>> = {
+  "auto-refresh": ["browser/use-auto-scroll-state"],
+  "auxiliary-window": ["browser/auxiliary-window-watcher", "browser/use-auxiliary-window"],
+  bookmark: ["browser/use-bookmark-revision"],
+  // domain・platform は comment-overlay の中でも使っている入口（index.ts）。
+  "comment-overlay": ["domain", "platform", "ui/OverlayStage"],
+  "live-chat": ["browser/use-live-chat-responses", "browser/use-thread-display-mode-setting"],
+  media: [
+    "application/imgur-album",
+    "application/imgur-upload",
+    "browser/use-media-viewer-store",
+    "ui/ExternalImage",
+    "ui/MediaViewerContainer",
+    "ui/ResMediaGallery",
+  ],
+  "next-thread": [
+    "browser/use-auto-next-thread",
+    "browser/use-auto-next-thread-setting",
+    "domain/auto-next-thread-trigger",
+    "domain/next-thread-search",
+  ],
+  ng: [
+    "browser/use-ng-status",
+    "browser/use-thread-title-ng-dialog",
+    "ui/NgBadge",
+    "ui/NgResponsePlaceholder",
+    "ui/ThreadTitleNgDialog",
+  ],
+  tabs: ["browser/use-detached-tab-controller", "browser/use-tab-command-runner"],
+  thread: ["browser/use-thread-refresh-controller", "ui/ResBody", "ui/thread-context-menu-items"],
+};
+
+interface RestrictedImportPattern {
+  group: string[];
+  message: string;
+  allowTypeImports?: boolean;
+}
+
+// core は service-container を import しない（計画書 §3 のルール 2、Phase C-1）。
+const CORE_TO_CONTAINER_PATTERN: RestrictedImportPattern = {
+  group: ["**/service-container/**"],
+  message:
+    "core は service-container を import しない。型は src/core/ports、サービスは corePorts（src/core/ports/registry）を使う。",
+};
+
+// jsutil は window.app.util のための互換用のまとめ口で、旧来の次スレ検索のために Board や corePorts まで
+// 読み込む。core の中から経由すると不要な依存や循環 import を招くため、定義元を直接 import する。
+const CORE_TO_JSUTIL_PATTERN: RestrictedImportPattern = {
+  group: ["**/core/util/jsutil", "**/core/util/jsutil.*"],
+  message:
+    "core の中では jsutil（window.app.util の互換用のまとめ口）を経由せず、定義元のモジュールを import する。",
+};
+const JSUTIL_TEST_FILE = "src/core/util/jsutil.test.ts";
+
+/**
+ * view・features から直接 import してよい core のモジュール（src/core/ からの相対パス、拡張子なし）。
+ * 入力から結果を返すだけで、保存・通信・共有の状態を持たないものだけを載せる（計画書 §3.6）。
+ * 状態や保存を伴うもの（履歴・ログ・設定への書き込み・キャッシュを持つ解決処理など）は、
+ * サービスコンテナ（src/service-container）に載せて container から使う。
+ */
+const CORE_DIRECT_MODULES: readonly string[] = [
+  "board/BoardUrlNormalizer",
+  "board/opened-board-entries",
+  "network/url-utils",
+  "ng/ThreadNgEvaluator",
+  "ng/ngDsl",
+  "ng/rules/catalog",
+  "thread/MessageProcessor",
+  "thread/reply-index",
+  "util/external-media",
+  "util/map-with-concurrency",
+  "util/strip-html",
+  "util/url-media",
+];
+
+// 型の import は実装を読み込まないため、どの core のモジュールからでも認める。
+const CORE_DIRECT_PATTERN: RestrictedImportPattern = {
+  group: ["**/core/**", ...CORE_DIRECT_MODULES.map((modulePath) => `!**/core/${modulePath}`)],
+  allowTypeImports: true,
+  message:
+    "状態や保存を伴う core のモジュールは、サービスコンテナ（container）経由で使う。純粋なモジュールなら vite.config.ts の CORE_DIRECT_MODULES に追加する（計画書 §3.6）。",
+};
+
+// テストは本物の core の実装を組み合わせて確かめることがあるため、core の直接 import の制限から外す。
+const TEST_FILE_GLOBS = ["**/*.test.ts", "**/*.test.tsx", "**/*.stories.tsx"];
+
+/**
+ * files に、patterns と core の直接 import の制限をかける override を作る。
+ * テストと Story には、core の制限を除いた patterns だけをかける。
+ * no-restricted-imports は後の override が前の設定を置き換えるため、範囲の広いものから順に並べる。
+ */
+function restrictImports(files: string[], patterns: RestrictedImportPattern[]) {
+  // oxlint の設定型はタプルを要求するため、配列リテラルが広がらないよう型を明示する。
+  const rule = (
+    rulePatterns: RestrictedImportPattern[],
+  ): ["error", { patterns: RestrictedImportPattern[] }] => ["error", { patterns: rulePatterns }];
+  const testFiles = files
+    .filter((glob) => glob.endsWith("/**"))
+    .flatMap((glob) => TEST_FILE_GLOBS.map((testGlob) => `${glob.slice(0, -3)}/${testGlob}`));
+  return [
+    {
+      files,
+      excludeFiles: TEST_FILE_GLOBS,
+      rules: { "eslint/no-restricted-imports": rule([...patterns, CORE_DIRECT_PATTERN]) },
+    },
+    ...(patterns.length > 0 && testFiles.length > 0
+      ? [{ files: testFiles, rules: { "eslint/no-restricted-imports": rule(patterns) } }]
+      : []),
+  ];
+}
+
+// view/browser の UI 部品層は features と組み立て層（App・pages・shell）を import しない
+// （計画: docs/plans/module-boundaries-plan.md §3 のルール 4、Phase D-3）。
+// features から UI 部品層への参照は認めるため、逆向きを禁止して循環を防ぐ。
+const UI_LAYER_FILES = [
+  "src/view/browser/ui/**",
+  "src/view/browser/hooks/**",
+  "src/view/browser/utils/**",
+  "src/view/browser/components/**",
+  "src/view/browser/commands/**",
+  "src/view/browser/state/**",
+  "src/view/browser/types.ts",
+];
+const UI_LAYER_PATTERN: RestrictedImportPattern = {
+  group: [
+    "**/features/**",
+    "**/view/browser/pages/**",
+    "**/view/browser/shell/**",
+    "**/view/browser/App",
+  ],
+  message:
+    "view/browser の UI 部品層は features と組み立て層（App・pages・shell）を import しない。機能を組み合わせる部品は view/browser/shell に置く。",
+};
+
+// features は組み立て層（App・pages・shell）を import しない（計画書 §3 のルール 5）。
+const FEATURE_TO_COMPOSITION_PATTERN: RestrictedImportPattern = {
+  group: ["**/view/browser/pages/**", "**/view/browser/shell/**", "**/view/browser/App"],
+  message:
+    "features は組み立て層（App・pages・shell）を import しない。組み立て層から props・context で受け取るか、部品を UI 部品層へ移す。",
+};
+
+/**
+ * 機能ごとに、他の機能の内部（公開モジュール以外）への import を禁止する override を作る。
+ * 新しく作った機能にも自動で適用されるよう、src/features のディレクトリから一覧を作る。
+ */
+function createFeatureBoundaryOverrides() {
+  const featuresDir = path.resolve(__dirname, "src/features");
+  const featureNames = fs
+    .readdirSync(featuresDir, { withFileTypes: true })
+    .filter((entry) => entry.isDirectory())
+    .map((entry) => entry.name);
+  const unknown = Object.keys(FEATURE_PUBLIC_MODULES).filter(
+    (name) => !featureNames.includes(name),
+  );
+  if (unknown.length > 0) {
+    // 機能の名前を変えたのに一覧が古いままだと、検査が黙って緩くなるため設定の読み込みで止める。
+    throw new Error(`FEATURE_PUBLIC_MODULES に存在しない機能があります: ${unknown.join(", ")}`);
+  }
+  return featureNames.flatMap((feature) =>
+    restrictImports(
+      [`src/features/${feature}/**`],
+      [
+        FEATURE_TO_COMPOSITION_PATTERN,
+        {
+          group: [
+            "**/features/*/**",
+            `!**/features/${feature}/**`,
+            ...Object.entries(FEATURE_PUBLIC_MODULES)
+              .filter(([owner]) => owner !== feature)
+              .flatMap(([owner, modules]) =>
+                modules.map((modulePath) => `!**/features/${owner}/${modulePath}`),
+              ),
+          ],
+          message:
+            "他の機能の内部を import しない。公開してよいファイルなら vite.config.ts の FEATURE_PUBLIC_MODULES に追加する（計画書 §3.5）。",
+        },
+      ],
+    ),
+  );
+}
+
 export default defineConfig(async ({ mode }) => {
   const platform = process.env.PLATFORM || "chrome";
   const entry = process.env.ENTRY || "browser";
@@ -319,7 +511,38 @@ export default defineConfig(async ({ mode }) => {
         "vite-plus/prefer-vite-plus-imports": "error",
         "simple-import-sort/imports": "error",
         "simple-import-sort/exports": "error",
+        // 循環 import を作らない（計画: docs/plans/module-boundaries-plan.md §3 のルール 7、Phase E）。
+        // 循環は読み込み順によって値が undefined になる不具合や、層の境界の崩れにつながるため。
+        "import/no-cycle": "error",
       },
+      // core は service-container に依存しない（計画: docs/plans/module-boundaries-plan.md Phase C-1）。
+      // 依存は core/ports（型と registry）だけにする。service-container は setup で registry に登録する。
+      overrides: [
+        // core は service-container を import せず、jsutil（互換用のまとめ口）も経由しない。
+        {
+          files: ["src/core/**"],
+          excludeFiles: [JSUTIL_TEST_FILE],
+          rules: {
+            "eslint/no-restricted-imports": [
+              "error",
+              { patterns: [CORE_TO_CONTAINER_PATTERN, CORE_TO_JSUTIL_PATTERN] },
+            ],
+          },
+        },
+        // jsutil 自身のテストは jsutil を読み込む必要があるため、jsutil の制限だけを外す。
+        {
+          files: [JSUTIL_TEST_FILE],
+          rules: {
+            "eslint/no-restricted-imports": ["error", { patterns: [CORE_TO_CONTAINER_PATTERN] }],
+          },
+        },
+        // view 全体（組み立て層や overlay・replay の画面を含む）: core の直接 import だけを制限する（§3.6）。
+        ...restrictImports(["src/view/**"], []),
+        // UI 部品層: features・組み立て層への import と、core の直接 import を制限する（§3 のルール 4・6）。
+        ...restrictImports(UI_LAYER_FILES, [UI_LAYER_PATTERN]),
+        // 機能ごとの境界（組み立て層と、他の機能の内部への import を禁止）。
+        ...createFeatureBoundaryOverrides(),
+      ],
       options: {
         typeAware: true,
         typeCheck: true,

@@ -12,9 +12,7 @@ import {
 } from "lucide-react";
 import normalizeWheel from "normalize-wheel";
 import React, { useCallback, useEffect, useMemo, useRef, useState } from "react";
-import { isAutoRefreshEnabledForPage } from "src/features/auto-refresh/browser/auto-refresh-pages";
 import { useAutoScrollState } from "src/features/auto-refresh/browser/use-auto-scroll-state";
-import { tabActions } from "src/features/tabs/browser/tab-store-actions";
 import { useDetachedTabController } from "src/features/tabs/browser/use-detached-tab-controller";
 import {
   clampTabBarWidth,
@@ -25,12 +23,14 @@ import {
   useVerticalTabBarLayout,
 } from "src/features/tabs/browser/use-tab-bar-orientation";
 import { useTabCommandRunner } from "src/features/tabs/browser/use-tab-command-runner";
-import { useTabStore } from "src/features/tabs/browser/use-tab-store";
 import { TabContextMenu } from "src/features/tabs/ui/TabContextMenu";
 import { container } from "src/service-container/index";
 import { TAB_COMMAND_IDS } from "src/view/browser/commands/tab-command-runtime";
 import { useCursorTooltip } from "src/view/browser/components/CursorTooltip";
 import { PageTypeIcon } from "src/view/browser/components/PageTypeIcon";
+import { isAutoRefreshEnabledForPage } from "src/view/browser/state/tabs/auto-refresh-pages";
+import { tabActions } from "src/view/browser/state/tabs/tab-store-actions";
+import { useTabStore } from "src/view/browser/state/tabs/use-tab-store";
 import type { Tab } from "src/view/browser/types";
 import { getCurrentPage } from "src/view/browser/types";
 import { ContextMenu } from "src/view/browser/ui/ContextMenu";

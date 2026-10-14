@@ -5,14 +5,15 @@ import message from "src/app/Message";
 import Notification from "src/app/Notification";
 import { escapeHtml, safeHref } from "src/app/Util";
 import { BBSMenuModel } from "src/core/board/BBSMenuModel";
-import BoardService from "src/core/board/BoardService";
+import { createBoardService } from "src/core/board/BoardService";
 import Bookmark from "src/core/bookmark/Bookmark";
 import type { ComparableReadState } from "src/core/bookmark/read-state-compare";
 import { isNewerReadState } from "src/core/bookmark/read-state-compare";
 import * as ReadState from "src/core/bookmark/ReadState";
 import * as NG from "src/core/ng/NG";
+import { installCorePorts } from "src/core/ports/registry";
 import Cache from "src/core/storage/Cache";
-import ThreadService from "src/core/thread/ThreadService";
+import { createThreadService } from "src/core/thread/ThreadService";
 import { configInstance } from "src/service-container/config-instance";
 import { container } from "src/service-container/Container";
 import {
@@ -24,6 +25,7 @@ import {
   ICacheItem,
   ICacheService,
   IConfig,
+  ICoreNoticeService,
   IMessage,
   INGService,
   INotificationService,
@@ -170,16 +172,18 @@ export function setupContainer(): void {
   };
 
   // Board Service Adapter
+  // 依存は登録済みの container から渡す。
+  const boardService = createBoardService(container);
   const boardServiceAdapter: IBoardService = {
-    getThreads: (url: string): Promise<IBoardResult> => BoardService.getThreads(url),
+    getThreads: (url: string): Promise<IBoardResult> => boardService.getThreads(url),
     getCachedResCount: (url: string, options?: { forceUpdate?: boolean }) =>
-      BoardService.getCachedResCount(url, options),
+      boardService.getCachedResCount(url, options),
   };
 
   // BBSMenu Service Adapter
   // 変更理由: 以前は src/core/board/BBSMenu.js のシングルトンを各所が直接 import しており、
   // container.bbsMenu と入口が分かれていた。板一覧の状態はここで作る1つのモデルだけが持つ。
-  const bbsMenuModel = new BBSMenuModel();
+  const bbsMenuModel = new BBSMenuModel(container);
   const bbsMenuServiceAdapter: IBBSMenuService = {
     get: (forceReload?: boolean) => bbsMenuModel.get(forceReload),
     getCached: () => bbsMenuModel.getCached(),
@@ -187,8 +191,10 @@ export function setupContainer(): void {
   };
 
   // Thread Service Adapter
+  // 依存は登録済みの container から渡す。
+  const threadService = createThreadService(container);
   const threadServiceAdapter: IThreadService = {
-    getThread: (url, options) => ThreadService.getThread(url, options),
+    getThread: (url, options) => threadService.getThread(url, options),
   };
 
   // Toast Service Adapter
@@ -204,6 +210,24 @@ export function setupContainer(): void {
     },
     info: (message, options) => {
       toastStore.info(message, options);
+    },
+  };
+
+  // core から届く出来事を、これまでと同じ文言のトーストで知らせる。
+  const coreNoticeAdapter: ICoreNoticeService = {
+    ngRuleRegexInvalid: (source) => {
+      toastStore.notify(
+        `NG機能の正規表現(${source})を読み込むのに失敗しました\nこの条件は無効化されます`,
+        { backgroundColor: "red" },
+      );
+    },
+    bbsMenuFetchFailed: (url) => {
+      // HTML として表示するため、設定に書かれた URL も文字として埋め込む。
+      const escapedUrl = escapeHtml(url);
+      toastStore.notify(
+        `板一覧の取得に失敗しました。(<a href="${escapedUrl}" target="_blank">${escapedUrl}</a>)`,
+        { html: true, backgroundColor: "red" },
+      );
     },
   };
 
@@ -261,4 +285,8 @@ export function setupContainer(): void {
   container.toast = toastServiceAdapter;
   container.notification = notificationServiceAdapter;
   container.ng = ngServiceAdapter;
+  container.notice = coreNoticeAdapter;
+
+  // core は container を import せず、ここで登録されたサービスだけを使う（Phase C-1）。
+  installCorePorts(container);
 }

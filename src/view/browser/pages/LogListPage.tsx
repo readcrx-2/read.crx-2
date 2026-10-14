@@ -1,12 +1,12 @@
 import React, { useCallback, useEffect, useMemo, useRef, useState } from "react";
-import Cache, { type LogRecord } from "src/core/storage/Cache";
-import { tabActions } from "src/features/tabs/browser/tab-store-actions";
-import { useTabDispatch, useTabViewState } from "src/features/tabs/browser/use-tab-store";
+import type { LogRecord } from "src/core/storage/Cache";
 import { container } from "src/service-container/index";
 import { SearchBar } from "src/view/browser/components/SearchBar";
 import { ColumnDef } from "src/view/browser/components/SimpleDataTable";
 import { VirtualizedDataTable } from "src/view/browser/components/VirtualizedDataTable";
 import { useQuickAccessFilterToolbar } from "src/view/browser/hooks/use-quick-access-filter-toolbar";
+import { tabActions } from "src/view/browser/state/tabs/tab-store-actions";
+import { useTabDispatch, useTabViewState } from "src/view/browser/state/tabs/use-tab-store";
 import { Spinner } from "src/view/browser/ui/Spinner";
 import { formatCompactDateTime } from "src/view/browser/utils/date-time";
 import { parseInternalBrowserPage } from "src/view/browser/utils/link-routing";
@@ -168,7 +168,7 @@ export const LogListPage: React.FC<LogListPageProps> = ({ tabId, isActive, refre
     setError(null);
     try {
       // 変更理由: 保存本文を含むログ全件の一括展開を避け、画面表示に必要な分だけ読む。
-      const logs = await Cache.listLogs(nextOffsetRef.current, PAGE_SIZE + 1);
+      const logs = await container.threadLog.listLogs(nextOffsetRef.current, PAGE_SIZE + 1);
       const pageLogs = logs.slice(0, PAGE_SIZE);
       nextOffsetRef.current += pageLogs.length;
       setHasMore(logs.length > PAGE_SIZE);
@@ -219,7 +219,7 @@ export const LogListPage: React.FC<LogListPageProps> = ({ tabId, isActive, refre
         const matchedEntries: LogEntry[] = [];
         try {
           while (!cancelled) {
-            const page = await Cache.searchLogsPage(query, offset, SEARCH_CHUNK_SIZE);
+            const page = await container.threadLog.searchLogsPage(query, offset, SEARCH_CHUNK_SIZE);
             offset = page.nextOffset;
             for (const result of page.logs) {
               matchedEntries.push(toLogEntry(result));

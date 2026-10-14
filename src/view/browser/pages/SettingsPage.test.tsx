@@ -2,8 +2,9 @@ import "@testing-library/jest-dom/vitest";
 
 import { act, cleanup, fireEvent, render, screen } from "@testing-library/react";
 import { useEffect } from "react";
-import type { ScopedTabAction, TabStoreState } from "src/features/tabs/browser/tab-store-types";
-import type { SettingsPageUiState } from "src/view/browser/pages/settings/settings-types";
+import { set as setReplacementDsl } from "src/core/thread/ReplaceStrTxt";
+import type { ScopedTabAction, TabStoreState } from "src/view/browser/state/tabs/tab-store-types";
+import type { SettingsPageUiState } from "src/view/browser/types";
 import { createHomeTab } from "src/view/browser/types";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vite-plus/test";
 
@@ -16,20 +17,31 @@ const { configReady, configSet, toastError } = vi.hoisted(() => ({
 vi.mock("src/app/platform", () => ({
   platform: { window: { setTitle: vi.fn(async () => undefined) } },
 }));
-vi.mock("src/core/history/History", () => ({
-  add: vi.fn(async () => undefined),
-  getByUrl: vi.fn(async () => []),
-  remove: vi.fn(async () => undefined),
-}));
 vi.mock("webextension-polyfill", () => ({
   default: { runtime: { onMessage: { addListener: vi.fn(), removeListener: vi.fn() } } },
 }));
 vi.mock("src/service-container/index", () => ({
   container: {
+    // 置換ルールの解析と保存は、下の corePorts のモック（同じ container）を使う本物の実装で確かめる。
+    replaceStr: {
+      // モックの組み立て時ではなく呼び出し時に参照するため、静的 import の関数を使える。
+      set: (value: string) => setReplacementDsl(value),
+    },
+    // src/core/history/History はサービスコンテナの history から使う。
+    history: {
+      add: vi.fn(async () => undefined),
+      getByUrl: vi.fn(async () => []),
+      remove: vi.fn(async () => undefined),
+    },
     message: { send: vi.fn() },
     config: { get: () => null, ready: configReady, set: configSet },
     toast: { error: toastError },
   },
+}));
+
+// core の処理が使うサービスは、上の service-container のモックと同じものを渡す。
+vi.mock("src/core/ports/registry", async () => ({
+  corePorts: (await import("src/service-container/index")).container,
 }));
 vi.mock("src/view/browser/hooks/use-media-query", () => ({ useMediaQuery: () => false }));
 vi.mock("src/features/ng/ui/NGEditor", () => ({
@@ -81,7 +93,7 @@ function settingsUiState(tabId = "settings-tab"): SettingsPageUiState | undefine
 async function renderViewer() {
   // タブストアはモジュール読込時に復元するため、Chromeの再読み込みと同様に読み直す。
   vi.resetModules();
-  const { TabProvider, useTabStore } = await import("src/features/tabs/browser/use-tab-store");
+  const { TabProvider, useTabStore } = await import("src/view/browser/state/tabs/use-tab-store");
   const { SettingsPage } = await import("src/view/browser/pages/SettingsPage");
   let dispatchForTest: (action: ScopedTabAction) => void = () => {
     throw new Error("未マウントです");

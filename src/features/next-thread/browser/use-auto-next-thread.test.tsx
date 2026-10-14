@@ -1,8 +1,8 @@
 import "@testing-library/jest-dom/vitest";
 
 import { act, cleanup, render, screen } from "@testing-library/react";
-import type { AutoNextThreadMode } from "src/features/next-thread/browser/next-thread-search";
 import { useAutoNextThread } from "src/features/next-thread/browser/use-auto-next-thread";
+import type { AutoNextThreadMode } from "src/features/next-thread/domain/next-thread-search";
 import { container } from "src/service-container/index";
 import type { IThread } from "src/service-container/interfaces";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vite-plus/test";

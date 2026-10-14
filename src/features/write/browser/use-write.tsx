@@ -9,11 +9,11 @@ import { wait } from "src/app/Defer";
 import { isTauriRuntime } from "src/app/platform/runtime";
 import type { HttpResponse, WriteFormData, WriteFormField } from "src/app/platform/types";
 import { getStore2String, setStore2String } from "src/app/Store2Storage";
-import { useViewSurface } from "src/features/auxiliary-window/browser/use-view-surface";
-import { tabActions } from "src/features/tabs/browser/tab-store-actions";
-import { useTabStore } from "src/features/tabs/browser/use-tab-store";
 import { container } from "src/service-container/index";
 import { useScopedConfigBooleanSetting } from "src/view/browser/hooks/use-scoped-config-boolean-setting";
+import { useViewSurface } from "src/view/browser/hooks/use-view-surface";
+import { tabActions } from "src/view/browser/state/tabs/tab-store-actions";
+import { useTabStore } from "src/view/browser/state/tabs/use-tab-store";
 import {
   notifyThreadWriteCompleted,
   notifyThreadWriteStarted,

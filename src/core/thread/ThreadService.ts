@@ -1,10 +1,12 @@
 import { toCanonicalThread } from "packages/chlib/src/index";
 import type { ThreadRes } from "packages/chlib/src/parser/ThreadParser";
 import { evaluateThreadNg } from "src/core/ng/ThreadNgEvaluator";
+import type { CorePorts } from "src/core/ports/registry";
+import { corePorts } from "src/core/ports/registry";
+import type { IRes, IThreadDetail, IThreadService } from "src/core/ports/thread";
 import { replace as replaceStrTxt } from "src/core/thread/ReplaceStrTxt";
 import Thread from "src/core/thread/Thread";
 import { toViewRes } from "src/core/thread/to-view-res";
-import type { IRes, IThreadDetail, IThreadService } from "src/service-container/interfaces";
 
 // 移行理由: 取得集約と置換処理の既存契約を保ちつつ、要求状態と返却モデルを明示的な型で管理する。
 interface GetThreadOptions {
@@ -26,8 +28,16 @@ interface PendingRequest {
 const isManualForceUpdate = (options: GetThreadOptions): boolean =>
   options.forceUpdate === true && options.throttleSubjectCheck !== true;
 
+/** スレ取得の集約と判定に必要なサービス。呼び出し側が渡す（C-2）。 */
+export type ThreadServiceDeps = Pick<
+  CorePorts,
+  "board" | "bbsMenu" | "bookmark" | "cache" | "config" | "message" | "ng" | "util"
+>;
+
 class ThreadServiceImpl implements IThreadService {
   private pendingRequests = new Map<string, PendingRequest>();
+
+  constructor(private readonly deps: ThreadServiceDeps) {}
 
   async getThread(url: string, options: GetThreadOptions = {}): Promise<IThreadDetail> {
     const existingRequest = this.pendingRequests.get(url);
@@ -84,7 +94,7 @@ class ThreadServiceImpl implements IThreadService {
   }
 
   private async _fetchThread(url: string, request: PendingRequest): Promise<IThreadDetail> {
-    const thread = new Thread(url);
+    const thread = new Thread(url, this.deps);
     const progress = (): void => {
       const result = this._formatResult(thread);
       request.lastCacheResult = result;
@@ -128,7 +138,7 @@ class ThreadServiceImpl implements IThreadService {
     });
     const parsedResponses = canonicalThread.posts.map(toViewRes);
     // 自動NG（連鎖・ID無し等）は、全レスを見渡せるこの時点で一括して行う。
-    const ngResults = evaluateThreadNg(parsedResponses, { title, url });
+    const ngResults = evaluateThreadNg(parsedResponses, { title, url }, this.deps);
 
     return {
       url,
@@ -145,5 +155,12 @@ class ThreadServiceImpl implements IThreadService {
   }
 }
 
-const threadService: IThreadService = new ThreadServiceImpl();
+/** 取得集約の状態を持つ、スレ取得サービスを作る。状態は作成したインスタンスごとに分かれる。 */
+export function createThreadService(deps: ThreadServiceDeps): IThreadService {
+  return new ThreadServiceImpl(deps);
+}
+
+// 既存の import 先（app.ts の公開 API）を維持するため、登録済みのサービスで組み立てた既定のインスタンスを公開する。
+// 依存は関数が呼ばれた時点で参照されるため、ここでの組み立てで未登録の例外は出ない。
+const threadService: IThreadService = createThreadService(corePorts);
 export default threadService;

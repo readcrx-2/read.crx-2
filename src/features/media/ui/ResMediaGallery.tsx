@@ -1,13 +1,5 @@
 import { parseMessage } from "@chlen/chlib";
 import React, { useEffect, useMemo, useRef, useState } from "react";
-
-import { imgurVideoResolver, isImgurVideoResolutionCandidate } from "../application/imgur-album";
-import {
-  type TwitterPost,
-  type TwitterPostMetrics,
-  twitterPostResolver,
-  type TwitterVerificationBadgeColor,
-} from "../application/twitter-post";
 import {
   type ExternalMediaEmbed,
   getDirectVideoFallbackThumbnailUrl,
@@ -17,8 +9,16 @@ import {
   toInlineVideoEmbed,
   toRuntimeVideoEmbedUrl,
   toTwitterPostEmbed,
-} from "../domain/external-media";
-import { toViewerImageUrl } from "../domain/url-media";
+} from "src/core/util/external-media";
+import { toViewerImageUrl } from "src/core/util/url-media";
+
+import { imgurVideoResolver, isImgurVideoResolutionCandidate } from "../application/imgur-album";
+import {
+  type TwitterPost,
+  type TwitterPostMetrics,
+  twitterPostResolver,
+  type TwitterVerificationBadgeColor,
+} from "../application/twitter-post";
 import { ExternalImage } from "./ExternalImage";
 
 // ギャラリーはThreadViewやPopupのURLルーティング実装を知らず、クリック時の引数だけを契約にする。

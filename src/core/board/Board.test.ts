@@ -1,4 +1,5 @@
 // @vitest-environment node
+import type { BoardDeps } from "src/core/board/Board";
 import { beforeEach, describe, expect, it, vi } from "vite-plus/test";
 
 const { fetchMock, cache } = vi.hoisted(() => ({
@@ -21,25 +22,25 @@ vi.mock("src/app/platform", () => ({
   },
 }));
 
-vi.mock("src/core/util/jsutil", () => ({
+// Board は ch-server-move-detect を直接 import するため、そのモジュールを差し替える。
+vi.mock("src/core/board/ch-server-move-detect", () => ({
   chServerMoveDetect: vi.fn(),
 }));
 
-vi.mock("src/service-container/index", () => ({
-  container: {
-    bookmark: {
-      getByBoard: vi.fn(() => []),
-      updateExpired: vi.fn(),
-      updateResCount: vi.fn(),
-    },
-    cache: {
-      getCache: vi.fn(() => cache),
-    },
-    ng: {
-      isNGBoard: vi.fn(() => null),
-    },
+// 依存は登録済みのサービス（corePorts）に頼らず、テスト用の値をコンストラクタや関数へ直接渡す。
+const deps = {
+  bookmark: {
+    getByBoard: vi.fn(() => []),
+    updateExpired: vi.fn(),
+    updateResCount: vi.fn(),
   },
-}));
+  cache: {
+    getCache: vi.fn(() => cache),
+  },
+  ng: {
+    isNGBoard: vi.fn(() => null),
+  },
+} as unknown as BoardDeps;
 
 import Board from "src/core/board/Board";
 
@@ -67,8 +68,8 @@ describe("Board", () => {
           resolveFetch = resolve;
         }),
     );
-    const first = new Board("https://example.com/board/");
-    const second = new Board("https://example.com/board/");
+    const first = new Board("https://example.com/board/", deps);
+    const second = new Board("https://example.com/board/", deps);
 
     const firstRequest = first.get(true);
     const secondRequest = second.get(true);
@@ -99,6 +100,7 @@ describe("Board", () => {
 
     const result = await Board.getCachedResCount(
       "https://example.com/test/read.cgi/board/1000000002/",
+      deps,
       { forceUpdate: true },
     );
 
@@ -116,7 +118,7 @@ describe("Board", () => {
     });
 
     await expect(
-      Board.getCachedResCount("https://example.com/test/read.cgi/board/1000000002/", {
+      Board.getCachedResCount("https://example.com/test/read.cgi/board/1000000002/", deps, {
         forceUpdate: true,
       }),
     ).rejects.toThrow("板のスレ一覧にそのスレが存在しません");
@@ -128,7 +130,7 @@ describe("Board", () => {
     fetchMock.mockRejectedValue(new Error("通信に失敗しました"));
 
     await expect(
-      Board.getCachedResCount("https://example.com/test/read.cgi/board/1000000002/", {
+      Board.getCachedResCount("https://example.com/test/read.cgi/board/1000000002/", deps, {
         forceUpdate: true,
       }),
     ).rejects.not.toThrow("板のスレ一覧にそのスレが存在しません");
@@ -146,7 +148,7 @@ describe("Board", () => {
     });
 
     await expect(
-      Board.getCachedResCount("https://example.com/test/read.cgi/board/1000000002/"),
+      Board.getCachedResCount("https://example.com/test/read.cgi/board/1000000002/", deps),
     ).rejects.not.toThrow("板のスレ一覧にそのスレが存在しません");
   });
 
@@ -161,7 +163,7 @@ describe("Board", () => {
     });
 
     await expect(
-      Board.getCachedResCount("https://example.com/test/read.cgi/board/1000000002/"),
+      Board.getCachedResCount("https://example.com/test/read.cgi/board/1000000002/", deps),
     ).rejects.not.toThrow("板のスレ一覧にそのスレが存在しません");
   });
 
@@ -178,6 +180,7 @@ describe("Board", () => {
     try {
       const result = await Board.getCachedResCount(
         "https://example.com/test/read.cgi/board/1000000002/",
+        deps,
       );
       expect(result.resCount).toBe(2);
       expect(fetchMock).toHaveBeenCalledTimes(1);
@@ -196,6 +199,7 @@ describe("Board", () => {
 
     const result = await Board.getCachedResCount(
       "https://egg.5ch.io/test/read.cgi/software/1000000002/",
+      deps,
     );
 
     expect(result.resCount).toBe(2);
@@ -211,7 +215,7 @@ describe("Board", () => {
     });
 
     await expect(
-      Board.getCachedResCount("https://egg.5ch.io/test/read.cgi/software/1000000002/"),
+      Board.getCachedResCount("https://egg.5ch.io/test/read.cgi/software/1000000002/", deps),
     ).rejects.toThrow("板のスレ一覧にそのスレが存在しません");
   });
 
@@ -227,6 +231,7 @@ describe("Board", () => {
 
     const result = await Board.getCachedResCount(
       "https://egg.5ch.io/test/read.cgi/software/1000000003/",
+      deps,
       { forceUpdate: true },
     );
 
@@ -245,7 +250,7 @@ describe("Board", () => {
     });
 
     await expect(
-      Board.getCachedResCount("https://egg.5ch.io/test/read.cgi/software/1000000002/", {
+      Board.getCachedResCount("https://egg.5ch.io/test/read.cgi/software/1000000002/", deps, {
         forceUpdate: true,
       }),
     ).rejects.toThrow("板のスレ一覧にそのスレが存在しません");

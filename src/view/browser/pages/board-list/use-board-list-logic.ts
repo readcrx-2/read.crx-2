@@ -5,7 +5,7 @@ import {
   OPENED_BOARDS_CONFIG_KEY,
   type OpenedBoardEntry,
   parseOpenedBoardEntries,
-} from "src/core/board/OpenedBoards";
+} from "src/core/board/opened-board-entries";
 import { container } from "src/service-container/index";
 import { normalizeBoardUrlForRemove } from "src/view/browser/pages/board-list/board-list-utils";
 

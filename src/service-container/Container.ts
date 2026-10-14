@@ -1,17 +1,25 @@
+import { installCorePorts } from "src/core/ports/registry";
 import {
   IBBSMenuService,
   IBoardService,
+  IBoardTitleService,
   IBookmark,
   ICacheService,
   IConfig,
+  ICoreNoticeService,
+  IHistoryService,
   IMessage,
   INGService,
   INotificationService,
+  IOpenedBoardsService,
   IReadStateService,
+  IReplaceStrService,
   IServiceContainer,
+  IThreadLogService,
   IThreadService,
   IToastService,
   IUtil,
+  IWriteHistoryService,
 } from "src/service-container/interfaces";
 
 const globalObj = window as unknown as Record<string, unknown>;
@@ -33,6 +41,13 @@ interface ServiceContainerImpl extends IServiceContainer {
   _notification: INotificationService | undefined;
   _thread: IThreadService | undefined;
   _ng: INGService | undefined;
+  _history: IHistoryService | undefined;
+  _writeHistory: IWriteHistoryService | undefined;
+  _threadLog: IThreadLogService | undefined;
+  _openedBoards: IOpenedBoardsService | undefined;
+  _boardTitle: IBoardTitleService | undefined;
+  _replaceStr: IReplaceStrService | undefined;
+  _notice: ICoreNoticeService | undefined;
 }
 
 if (!globalObj.__ServiceContainer) {
@@ -49,6 +64,13 @@ if (!globalObj.__ServiceContainer) {
     _notification: undefined,
     _thread: undefined,
     _ng: undefined,
+    _history: undefined,
+    _writeHistory: undefined,
+    _threadLog: undefined,
+    _openedBoards: undefined,
+    _boardTitle: undefined,
+    _replaceStr: undefined,
+    _notice: undefined,
 
     get config(): IConfig {
       if (!this._config) throw new Error("Config service not registered");
@@ -145,6 +167,62 @@ if (!globalObj.__ServiceContainer) {
     set ng(value: INGService) {
       this._ng = value;
     },
+
+    get history(): IHistoryService {
+      if (!this._history) throw new Error("History service not registered");
+      return this._history;
+    },
+    set history(value: IHistoryService) {
+      this._history = value;
+    },
+
+    get writeHistory(): IWriteHistoryService {
+      if (!this._writeHistory) throw new Error("WriteHistory service not registered");
+      return this._writeHistory;
+    },
+    set writeHistory(value: IWriteHistoryService) {
+      this._writeHistory = value;
+    },
+
+    get threadLog(): IThreadLogService {
+      if (!this._threadLog) throw new Error("ThreadLog service not registered");
+      return this._threadLog;
+    },
+    set threadLog(value: IThreadLogService) {
+      this._threadLog = value;
+    },
+
+    get openedBoards(): IOpenedBoardsService {
+      if (!this._openedBoards) throw new Error("OpenedBoards service not registered");
+      return this._openedBoards;
+    },
+    set openedBoards(value: IOpenedBoardsService) {
+      this._openedBoards = value;
+    },
+
+    get boardTitle(): IBoardTitleService {
+      if (!this._boardTitle) throw new Error("BoardTitle service not registered");
+      return this._boardTitle;
+    },
+    set boardTitle(value: IBoardTitleService) {
+      this._boardTitle = value;
+    },
+
+    get replaceStr(): IReplaceStrService {
+      if (!this._replaceStr) throw new Error("ReplaceStr service not registered");
+      return this._replaceStr;
+    },
+    set replaceStr(value: IReplaceStrService) {
+      this._replaceStr = value;
+    },
+
+    get notice(): ICoreNoticeService {
+      if (!this._notice) throw new Error("CoreNotice service not registered");
+      return this._notice;
+    },
+    set notice(value: ICoreNoticeService) {
+      this._notice = value;
+    },
   };
   globalObj.__ServiceContainer = impl;
 }
@@ -152,6 +230,9 @@ if (!globalObj.__ServiceContainer) {
 // window 上のプロパティは unknown なので、上で登録した実体の型へ戻すキャストが必要。
 export const container: IServiceContainer = globalObj.__ServiceContainer as IServiceContainer;
 globalObj.container = container;
+// core が参照するサービスの登録先を、この global と同じ実体にする。
+// 登録後の代入もそのまま見えるため、setupContainer の前後どちらでも同じ値を使える。
+installCorePorts(container);
 
 // import { IServiceContainer, IConfig, ICacheService, IBookmark, IMessage, IUtil } from "src/service-container/interfaces";
 

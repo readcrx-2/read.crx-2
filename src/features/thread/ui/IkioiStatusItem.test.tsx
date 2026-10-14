@@ -17,7 +17,7 @@ const mocks = vi.hoisted(() => ({
   },
 }));
 
-vi.mock("src/features/tabs/browser/use-tab-store", () => ({
+vi.mock("src/view/browser/state/tabs/use-tab-store", () => ({
   useTabStore: () => ({
     viewTab: mocks.viewTab,
     viewPage: mocks.viewPage,

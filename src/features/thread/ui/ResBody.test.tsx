@@ -2,8 +2,8 @@ import "@testing-library/jest-dom/vitest";
 
 import { fireEvent, render } from "@testing-library/react";
 import { useState } from "react";
-import { ViewSurfaceProvider } from "src/features/auxiliary-window/browser/use-view-surface";
 import { ResBody } from "src/features/thread/ui/ResBody";
+import { ViewSurfaceProvider } from "src/view/browser/hooks/use-view-surface";
 import { RESPECT_DEFAULT_EXTERNAL } from "src/view/browser/utils/link-routing";
 import { describe, expect, it, vi } from "vite-plus/test";
 

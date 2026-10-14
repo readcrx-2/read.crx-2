@@ -2,7 +2,7 @@ import "./OverlayStage.css";
 
 import type { CSSProperties } from "react";
 import { useEffect, useLayoutEffect, useMemo, useRef, useState } from "react";
-import { toViewerImageUrl } from "src/features/media/domain/url-media";
+import { toViewerImageUrl } from "src/core/util/url-media";
 import { ExternalImage } from "src/features/media/ui/ExternalImage";
 import { copyText } from "src/view/browser/utils/clipboard";
 

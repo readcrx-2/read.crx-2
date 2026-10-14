@@ -1,5 +1,6 @@
-import type { ScopedTabAction } from "src/features/tabs/browser/use-tab-store";
 import { container } from "src/service-container";
+import type { IBoardTitleService } from "src/service-container/interfaces";
+import { stubService } from "src/service-container/test-stubs";
 import {
   type BrowserCommandContext,
   executeBrowserCommand,
@@ -8,6 +9,7 @@ import {
   resolveBrowserCommands,
 } from "src/view/browser/commands/browser-commands";
 import { TAB_COMMAND_IDS } from "src/view/browser/commands/tab-command-runtime";
+import type { ScopedTabAction } from "src/view/browser/state/tabs/use-tab-store";
 import type { Page, Tab } from "src/view/browser/types";
 import { setItestServerMapForTesting } from "src/view/browser/utils/itest-server-map";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vite-plus/test";
@@ -61,9 +63,10 @@ vi.mock("webextension-polyfill", () => ({
   default: browserCommandMocks.extensionBrowserApiMock,
 }));
 
-vi.mock("src/core/board/BoardTitleSolver.js", () => ({
+// 実装は src/core/board/BoardTitleSolver.js ではなくサービスコンテナの boardTitle から使うため、テスト用のサービスを登録する。
+container.boardTitle = stubService<IBoardTitleService>("boardTitle", {
   askByUrl: browserCommandMocks.askBoardTitleByUrlMock,
-}));
+});
 
 vi.mock("src/view/browser/utils/clipboard", async (importOriginal) => {
   const actual = await importOriginal<typeof import("src/view/browser/utils/clipboard")>();

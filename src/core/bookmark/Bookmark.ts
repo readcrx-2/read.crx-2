@@ -4,8 +4,8 @@ import { isTauriRuntime } from "src/app/platform/runtime";
 import { Entry, ReadState, SyncableEntryList } from "src/core/bookmark/BookmarkEntryList";
 import BrowserBookmarkEntryList from "src/core/bookmark/BrowserBookmarkEntryList";
 import IDBBookmarkEntryList from "src/core/bookmark/IDBBookmarkEntryList";
+import { isNewerReadState } from "src/core/bookmark/read-state-compare";
 import { get as getReadState } from "src/core/bookmark/ReadState.js";
-import { isNewerReadState } from "src/core/util/jsutil";
 
 export default class Bookmark {
   readonly bel: SyncableEntryList & {

@@ -1,7 +1,5 @@
 import { ChURL } from "packages/chlib/src/index";
 import React, { type RefObject, useCallback, useEffect, useMemo, useRef, useState } from "react";
-import { ask as askBoardTitle } from "src/core/board/BoardTitleSolver.js";
-import { upsertOpenedBoardEntry } from "src/core/board/OpenedBoards";
 import {
   BOARD_AUTO_REFRESH_CONFIG_KEY,
   MIN_BOARD_AUTO_REFRESH_MS,
@@ -14,9 +12,7 @@ import {
 import { useNgStatus } from "src/features/ng/browser/use-ng-status";
 import { useThreadTitleNgDialog } from "src/features/ng/browser/use-thread-title-ng-dialog";
 import { ThreadTitleNgDialog } from "src/features/ng/ui/ThreadTitleNgDialog";
-import { tabActions } from "src/features/tabs/browser/tab-store-actions";
 import { useTabCommandRunner } from "src/features/tabs/browser/use-tab-command-runner";
-import { useTabStore, useTabViewState } from "src/features/tabs/browser/use-tab-store";
 import { useTabViewRuntime } from "src/features/tabs/browser/use-tab-view-runtime";
 import { createThreadContextMenuItems } from "src/features/thread/ui/thread-context-menu-items";
 import {
@@ -56,6 +52,8 @@ import { useQuickAccessFilterToolbar } from "src/view/browser/hooks/use-quick-ac
 import { isResolvedBoardTitle } from "src/view/browser/pages/board-list/board-list-utils";
 import { useThreadListData } from "src/view/browser/pages/thread-list/use-thread-list-data";
 import { useThreadListReadStateSync } from "src/view/browser/pages/thread-list/use-thread-list-read-state-sync";
+import { tabActions } from "src/view/browser/state/tabs/tab-store-actions";
+import { useTabStore, useTabViewState } from "src/view/browser/state/tabs/use-tab-store";
 import {
   canGoBack,
   canGoForward,
@@ -257,14 +255,18 @@ export const ThreadListPage: React.FC<Props> = ({
   }, [page.boardUrl, sortPreference]);
 
   useEffect(() => {
-    upsertOpenedBoardEntry(page.boardUrl, initialBoardTitle);
+    container.openedBoards.upsertOpenedBoardEntry(page.boardUrl, initialBoardTitle);
   }, [initialBoardTitle, page.boardUrl]);
 
   useEffect(() => {
     // スレを開かず板だけを開いた場合や既存タブの再選択も記録する。板名解決では日時を進めない。
     if (visitedBoardRef.current?.url !== page.boardUrl || isActive) {
       visitedBoardRef.current = { url: page.boardUrl, lastVisited: Date.now() };
-      upsertOpenedBoardEntry(page.boardUrl, null, visitedBoardRef.current.lastVisited);
+      container.openedBoards.upsertOpenedBoardEntry(
+        page.boardUrl,
+        null,
+        visitedBoardRef.current.lastVisited,
+      );
     }
   }, [isActive, page.boardUrl]);
 
@@ -280,13 +282,14 @@ export const ThreadListPage: React.FC<Props> = ({
       return;
     }
 
-    askBoardTitle(new ChURL(page.boardUrl))
+    container.boardTitle
+      .ask(new ChURL(page.boardUrl))
       .then((title) => {
         if (title && isResolvedBoardTitle(page.boardUrl, title)) {
           resolvedBoardTitlesRef.current.set(page.boardUrl, title);
           // タブの再描画を保存の前提にせず、遷移後に届いた名前も元の板へ残す。
           // 板名解決の遅延では閲覧日時を進めず、板を開いた時刻をそのまま保つ。
-          upsertOpenedBoardEntry(page.boardUrl, title);
+          container.openedBoards.upsertOpenedBoardEntry(page.boardUrl, title);
         }
         if (!cancelled && title) {
           dispatch(tabActions.updateTitleForTab(tabId, title, page.boardUrl));

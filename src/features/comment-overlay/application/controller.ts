@@ -1,5 +1,5 @@
 import { recordDebugEvent } from "src/app/debug/debug-log";
-import { extractUrlsFromMessage, toViewerImageUrl } from "src/features/media/domain/url-media";
+import { extractUrlsFromMessage, toViewerImageUrl } from "src/core/util/url-media";
 import type { IRes } from "src/service-container/interfaces";
 
 import type { CommentOverlaySettings } from "../domain";

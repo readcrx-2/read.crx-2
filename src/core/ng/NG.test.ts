@@ -7,8 +7,8 @@ vi.mock("src/core/util/jsutil", () => ({
   normalize: (value: string) => value.toLowerCase(),
 }));
 
-vi.mock("src/service-container/index", () => ({
-  container: {
+vi.mock("src/core/ports/registry", () => ({
+  corePorts: {
     config: {
       get: (key: string) => configStore.get(key) ?? null,
       set: (key: string, value: string) => {
@@ -16,7 +16,7 @@ vi.mock("src/service-container/index", () => ({
         return Promise.resolve();
       },
     },
-    toast: { notify: vi.fn() },
+    notice: { ngRuleRegexInvalid: vi.fn(), bbsMenuFetchFailed: vi.fn() },
     message: { send: vi.fn() },
   },
 }));

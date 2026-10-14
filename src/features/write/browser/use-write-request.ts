@@ -1,8 +1,8 @@
 import { useCallback } from "react";
-import { useViewSurface } from "src/features/auxiliary-window/browser/use-view-surface";
 import { useWriteSessionControls } from "src/features/write/browser/use-write-session";
 import { useOptionalBottomPanel } from "src/view/browser/hooks/use-bottom-panel";
 import { useToast } from "src/view/browser/hooks/use-toast";
+import { useViewSurface } from "src/view/browser/hooks/use-view-surface";
 
 export type WriteRequest = (text: string, threadUrl?: string) => void;
 

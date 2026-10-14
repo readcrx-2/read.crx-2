@@ -3,7 +3,7 @@ import { useBoardListDisplay } from "src/view/browser/pages/board-list/use-board
 import { afterEach, describe, expect, it, vi } from "vite-plus/test";
 
 const { updateViewState } = vi.hoisted(() => ({ updateViewState: vi.fn() }));
-vi.mock("src/features/tabs/browser/use-tab-store", () => ({
+vi.mock("src/view/browser/state/tabs/use-tab-store", () => ({
   useTabViewState: () => ({ state: {}, update: updateViewState }),
 }));
 

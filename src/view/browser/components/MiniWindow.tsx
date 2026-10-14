@@ -1,6 +1,6 @@
 import { X } from "lucide-react";
 import React, { useEffect } from "react";
-import { useViewSurface } from "src/features/auxiliary-window/browser/use-view-surface";
+import { useViewSurface } from "src/view/browser/hooks/use-view-surface";
 import { Popover } from "src/view/browser/ui/Popover";
 
 export interface MiniWindowProps {

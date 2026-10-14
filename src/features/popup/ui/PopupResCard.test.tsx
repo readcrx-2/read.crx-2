@@ -48,10 +48,9 @@ vi.mock("src/view/browser/utils/response-format", async () => {
   };
 });
 
-vi.mock("src/features/media/domain/url-media", async () => {
-  const actual = await vi.importActual<typeof import("src/features/media/domain/url-media")>(
-    "src/features/media/domain/url-media",
-  );
+vi.mock("src/core/util/url-media", async () => {
+  const actual =
+    await vi.importActual<typeof import("src/core/util/url-media")>("src/core/util/url-media");
   return {
     ...actual,
     extractUrlsFromMessage: () => ["https://example.com/image.jpg"],

@@ -7,8 +7,8 @@ import {
   mapWithConcurrency,
   MAX_CONCURRENT_BATCH_REQUESTS,
 } from "src/core/util/map-with-concurrency";
+import type { CommentCandidate } from "src/features/comment-overlay/domain";
 import { projectCommentResponse } from "src/features/comment-overlay/domain";
-import type { CommentCandidate } from "src/features/comment-overlay/domain/comment-types";
 import {
   type CommentOverlayWindowPlatform,
   commentOverlayWindowPlatform,

@@ -26,9 +26,6 @@ import {
 import { ChURL } from "packages/chlib/src/index";
 import type { Dispatch } from "react";
 import { isTauriRuntime } from "src/app/platform/runtime";
-import type { ViewSurface } from "src/features/auxiliary-window/browser/use-view-surface";
-import { tabActions } from "src/features/tabs/browser/tab-store-actions";
-import type { ScopedTabAction } from "src/features/tabs/browser/use-tab-store";
 import { container } from "src/service-container";
 import type { IToastService } from "src/service-container/interfaces";
 import {
@@ -47,6 +44,9 @@ import {
   RESPONSE_JUMP_COMMAND_ID,
 } from "src/view/browser/commands/response-jump-command";
 import { TAB_COMMAND_IDS, type TabCommandId } from "src/view/browser/commands/tab-command-runtime";
+import type { ViewSurface } from "src/view/browser/hooks/use-view-surface";
+import { tabActions } from "src/view/browser/state/tabs/tab-store-actions";
+import type { ScopedTabAction } from "src/view/browser/state/tabs/use-tab-store";
 import type { Page, Tab } from "src/view/browser/types";
 import { getCurrentPage } from "src/view/browser/types";
 import {
@@ -404,9 +404,8 @@ async function retryBoardTitle(context: BrowserCommandContext): Promise<void> {
   const page = context.viewPage;
   if (page.type !== "threadList") return;
 
-  // 板名解決系は旧コアと拡張機能APIへ依存するため、コマンド実行時だけ読み込む。
-  const { askByUrl } = await import("src/core/board/BoardTitleSolver.js");
-  const title = await askByUrl(page.boardUrl);
+  // 板名の解決はキャッシュを持つ core の処理なので、サービスコンテナ経由で使う（計画書 §3.6）。
+  const title = await container.boardTitle.askByUrl(page.boardUrl);
   if (!title) {
     throw new Error(`板名を取得できませんでした: ${page.boardUrl}`);
   }

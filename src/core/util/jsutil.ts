@@ -1,7 +1,8 @@
-import { ChURL, getThreadReferenceKeys } from "packages/chlib/src/index";
-import Board from "src/core/board/Board";
-import { normalize } from "src/core/util/string-normalize";
-import { levenshteinDistance } from "src/core/util/Util";
+import {
+  type NextThreadCandidate,
+  searchNextThreadCandidates,
+} from "src/core/board/next-thread-candidates";
+import { corePorts } from "src/core/ports/registry";
 
 // 既存利用箇所のimport互換を保ちつつ、責務別の実装を直接利用できるよう再公開する。
 export { chServerMoveDetect } from "src/core/board/ch-server-move-detect";
@@ -47,33 +48,14 @@ export function getHowToOpen({
   return defaultOpenHowTo;
 }
 
-export async function searchNextThread(
+// window.app.util の公開 API を保つため、登録済みのサービス（corePorts）で板を取得する入口を残す。
+// 実装は依存を引数で受け取る core/board/next-thread-candidates にある。
+export function searchNextThread(
   threadUrlStr: string,
   threadTitle: string,
   resString: string,
-): Promise<{ score: number; title: string; url: string }[]> {
-  const threadUrl = new ChURL(threadUrlStr);
-  const boardUrl = threadUrl.toBoard();
-  threadTitle = normalize(threadTitle);
-
-  // Board.get は文字列URLを受け取る契約なので href で渡す。
-  const { data: threads } = await Board.get(boardUrl.href);
-  if (threads == null) {
-    throw new Error("板の取得に失敗しました");
-  }
-  const candidates = threads
-    .filter(({ url, resCount }) => url !== threadUrl.href && resCount < 1001)
-    .map(function ({ title, url }) {
-      let score = levenshteinDistance(threadTitle, normalize(title), false);
-      // 投稿本文内のURL照合でホスト別の省略規則を重複させない。
-      const referenceKeys = getThreadReferenceKeys(url);
-      if (referenceKeys.some((key) => resString.includes(key))) {
-        score -= 3;
-      }
-      return { score, title, url };
-    })
-    .sort((a, b) => a.score - b.score);
-  return candidates.slice(0, 5);
+): Promise<NextThreadCandidate[]> {
+  return searchNextThreadCandidates(threadUrlStr, threadTitle, resString, corePorts);
 }
 
 export const stripTags = (str: string): string => str.replace(/<[^>]+>/gi, "");

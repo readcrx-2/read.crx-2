@@ -4,7 +4,7 @@ import {
   type TabStoreState,
   useTabDispatch,
   useTabStore,
-} from "src/features/tabs/browser/use-tab-store";
+} from "src/view/browser/state/tabs/use-tab-store";
 
 import { normalizeArchiveReplayThreadUrl } from "../domain";
 import {

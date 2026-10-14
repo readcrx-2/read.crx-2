@@ -1,14 +1,14 @@
 import React, { useCallback, useEffect, useMemo, useState } from "react";
 import { platform } from "src/app";
-import {
-  type TabAction,
-  useTabDispatch,
-  useTabViewState,
-} from "src/features/tabs/browser/use-tab-store";
 import { container } from "src/service-container/index";
 import { SearchBar } from "src/view/browser/components/SearchBar";
 import { ColumnDef, SimpleDataTable } from "src/view/browser/components/SimpleDataTable";
 import { useQuickAccessFilterToolbar } from "src/view/browser/hooks/use-quick-access-filter-toolbar";
+import {
+  type TabAction,
+  useTabDispatch,
+  useTabViewState,
+} from "src/view/browser/state/tabs/use-tab-store";
 import { Spinner } from "src/view/browser/ui/Spinner";
 import { formatCompactDateTime, normalizeLegacyTimestamp } from "src/view/browser/utils/date-time";
 import { getLegacyWriteHistoryService } from "src/view/browser/utils/legacy-app";

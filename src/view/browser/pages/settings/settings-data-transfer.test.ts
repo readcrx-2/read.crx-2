@@ -24,6 +24,19 @@ const mocks = vi.hoisted(() => ({
 
 vi.mock("src/service-container/index", () => ({
   container: {
+    // core/storage/Cache のログの書き出し・読み込みはサービスコンテナの threadLog から使う。
+    threadLog: {
+      getLogArchiveRecords: mocks.getLogArchiveRecords,
+      replaceLogArchiveRecords: mocks.replaceLogArchiveRecords,
+    },
+    // src/core/history/WriteHistory はサービスコンテナの writeHistory から使う。
+    writeHistory: {
+      getAll: mocks.writeHistoryGetAll,
+      clear: mocks.writeHistoryClear,
+      add: mocks.writeHistoryAdd,
+    },
+    // src/core/history/History はサービスコンテナの history から使う。
+    history: { getAll: mocks.historyGetAll, clear: mocks.historyClear, add: mocks.historyAdd },
     config: {
       getAll: mocks.configGetAll,
       set: mocks.configSet,
@@ -31,25 +44,6 @@ vi.mock("src/service-container/index", () => ({
     message: {
       send: mocks.messageSend,
     },
-  },
-}));
-
-vi.mock("src/core/history/History", () => ({
-  getAll: mocks.historyGetAll,
-  clear: mocks.historyClear,
-  add: mocks.historyAdd,
-}));
-
-vi.mock("src/core/history/WriteHistory", () => ({
-  getAll: mocks.writeHistoryGetAll,
-  clear: mocks.writeHistoryClear,
-  add: mocks.writeHistoryAdd,
-}));
-
-vi.mock("src/core/storage/Cache", () => ({
-  default: {
-    getLogArchiveRecords: mocks.getLogArchiveRecords,
-    replaceLogArchiveRecords: mocks.replaceLogArchiveRecords,
   },
 }));
 
@@ -64,7 +58,7 @@ vi.mock("src/view/browser/utils/legacy-app", () => ({
   waitForLegacyBookmarkReady: mocks.waitForBookmarkReady,
 }));
 
-vi.mock("src/features/tabs/browser/browser-session-storage", () => ({
+vi.mock("src/view/browser/state/tabs/browser-session-storage", () => ({
   getBrowserSessionJson: mocks.getBrowserSessionJson,
   setBrowserSessionJson: mocks.setBrowserSessionJson,
 }));

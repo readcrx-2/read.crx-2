@@ -12,18 +12,8 @@ import { useNextThreadSearch } from "src/features/next-thread/browser/use-next-t
 import { NextThreadSearchDialog } from "src/features/next-thread/ui/NextThreadSearchDialog";
 import { NgStatusProvider } from "src/features/ng/browser/use-ng-status";
 import { NgStatusItem } from "src/features/ng/ui/NgStatusItem";
-import { tabActions } from "src/features/tabs/browser/tab-store-actions";
 import { useTabBarOrientation } from "src/features/tabs/browser/use-tab-bar-orientation";
-import {
-  PaneProvider,
-  TabProvider,
-  useTabDispatch,
-  useTabPanes,
-  useTabStore,
-} from "src/features/tabs/browser/use-tab-store";
-import { ContentArea } from "src/features/tabs/ui/ContentArea";
 import { TabBar } from "src/features/tabs/ui/TabBar";
-import { TabWindowHost } from "src/features/tabs/ui/TabWindowHost";
 import { WindowNavigationBridge } from "src/features/tabs/ui/WindowNavigationBridge";
 import { IkioiStatusItem } from "src/features/thread/ui/IkioiStatusItem";
 import { PopularFilterStatusItem } from "src/features/thread/ui/PopularFilterStatusItem";
@@ -32,11 +22,7 @@ import { WriteSessionProvider } from "src/features/write/browser/use-write-sessi
 import { WritePanelToggleItem } from "src/features/write/ui/WritePanelToggleItem";
 import { WriteWindowHost } from "src/features/write/ui/WriteWindowHost";
 import { container } from "src/service-container/index";
-import { BottomPanel } from "src/view/browser/components/BottomPanel";
-import { NavigationBar } from "src/view/browser/components/NavigationBar";
-import { PageCountStatusItem } from "src/view/browser/components/PageCountStatusItem";
 import { StatusBar, StatusBarProvider } from "src/view/browser/components/StatusBar";
-import { TitleBar } from "src/view/browser/components/TitleBar";
 import { BottomPanelProvider } from "src/view/browser/hooks/use-bottom-panel";
 import { useNotificationListener } from "src/view/browser/hooks/use-notification-listener";
 import { PageCountStatusProvider } from "src/view/browser/hooks/use-page-count-status";
@@ -45,6 +31,20 @@ import {
   UrlBarVisibilityProvider,
   useUrlBarVisibility,
 } from "src/view/browser/hooks/use-url-bar-visibility";
+import { BottomPanel } from "src/view/browser/shell/BottomPanel";
+import { ContentArea } from "src/view/browser/shell/ContentArea";
+import { NavigationBar } from "src/view/browser/shell/NavigationBar";
+import { PageCountStatusItem } from "src/view/browser/shell/PageCountStatusItem";
+import { TabWindowHost } from "src/view/browser/shell/TabWindowHost";
+import { TitleBar } from "src/view/browser/shell/TitleBar";
+import { tabActions } from "src/view/browser/state/tabs/tab-store-actions";
+import {
+  PaneProvider,
+  TabProvider,
+  useTabDispatch,
+  useTabPanes,
+  useTabStore,
+} from "src/view/browser/state/tabs/use-tab-store";
 import { ToastProvider } from "src/view/browser/ui/Toast";
 import { TooltipProvider } from "src/view/browser/ui/Tooltip";
 import { applyBBSMenuToItestServerMap } from "src/view/browser/utils/itest-server-map";

@@ -1,10 +1,10 @@
 import { useCallback, useRef } from "react";
-import { useTabStore } from "src/features/tabs/browser/use-tab-store";
 import {
   executeTabCommandRequest,
   TAB_COMMAND_IDS,
   type TabCommandId,
 } from "src/view/browser/commands/tab-command-runtime";
+import { useTabStore } from "src/view/browser/state/tabs/use-tab-store";
 
 export interface TabCommandRunnerOptions {
   /** 一覧から任意のタブを操作する時だけ指定する。 */

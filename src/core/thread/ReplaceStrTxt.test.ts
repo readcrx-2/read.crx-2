@@ -10,8 +10,8 @@ const { config, save } = vi.hoisted(() => {
     }),
   };
 });
-vi.mock("src/service-container/index", () => ({
-  container: { config: { get: (key: string) => config.get(key) ?? null, set: save } },
+vi.mock("src/core/ports/registry", () => ({
+  corePorts: { config: { get: (key: string) => config.get(key) ?? null, set: save } },
 }));
 
 const response = { name: "a", mail: "a", other: "a", message: "a", number: 1 };

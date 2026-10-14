@@ -1,6 +1,6 @@
 import { useCallback, useEffect, useState } from "react";
 import { DEFAULT_CONFIG } from "src/app/config-defaults";
-import type { AutoNextThreadMode } from "src/features/next-thread/browser/next-thread-search";
+import type { AutoNextThreadMode } from "src/features/next-thread/domain/next-thread-search";
 import { useConfigBooleanSetting } from "src/view/browser/hooks/use-config-boolean-setting";
 import {
   persistConfigValue,

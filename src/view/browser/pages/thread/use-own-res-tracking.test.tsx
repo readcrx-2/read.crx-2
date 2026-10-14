@@ -11,13 +11,12 @@ const { addHistory, updateHistory } = vi.hoisted(() => ({
   addHistory: vi.fn(),
   updateHistory: vi.fn(),
 }));
-vi.mock("src/core/history/WriteHistory", () => ({
-  getByUrl: async () => [],
-  add: addHistory,
-  update: updateHistory,
-}));
 vi.mock("src/service-container/index", () => ({
-  container: { config: { get: () => "" } },
+  container: {
+    config: { get: () => "" },
+    // core/history/WriteHistory はサービスコンテナの writeHistory から使う。
+    writeHistory: { getByUrl: async () => [], add: addHistory, update: updateHistory },
+  },
 }));
 
 const threadUrl = "https://example.com/test/read.cgi/board/123/";

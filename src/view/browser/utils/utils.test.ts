@@ -1,7 +1,7 @@
 import "@testing-library/jest-dom/vitest";
 
+import { extractUrlsFromMessage, toViewerImageUrl } from "src/core/util/url-media";
 import {
-  extractUrlsFromMessage,
   formatIdForCopy,
   formatMarkdownLink,
   formatResForCopy,
@@ -11,7 +11,6 @@ import {
   normalizeIdLinkText,
   parseAnchorDisplayTargets,
   stripHtml,
-  toViewerImageUrl,
 } from "src/view/browser/utils/utils";
 import { describe, expect, it } from "vite-plus/test";
 

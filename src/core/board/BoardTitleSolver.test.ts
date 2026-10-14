@@ -33,8 +33,8 @@ vi.mock("src/core/network/URL", () => ({
     }
   },
 }));
-vi.mock("src/service-container/index", () => ({
-  container: {
+vi.mock("src/core/ports/registry", () => ({
+  corePorts: {
     config: { get: () => titlesConfig.raw },
     bookmark: {
       promiseFirstScan: Promise.resolve(true),

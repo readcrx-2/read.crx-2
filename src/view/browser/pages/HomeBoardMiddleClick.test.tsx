@@ -18,16 +18,11 @@ const { historyRecords, favoriteBoards, removeBookmarkMock, copyTextMock, toastE
     favoriteBoards: [{ url: "https://example.com/sample/", title: "サンプル板" }],
   }));
 
-vi.mock("src/core/history/History", () => ({ getAll: vi.fn(async () => historyRecords) }));
 const { openedBoards, askBoardTitleMock, getCachedTitlesMock, listeners } = vi.hoisted(() => ({
   openedBoards: { raw: "[]" },
   askBoardTitleMock: vi.fn(async (_url: string): Promise<string | null> => "表示用の板名"),
   getCachedTitlesMock: vi.fn(async () => new Map<string, string>()),
   listeners: new Map<string, Set<(payload: { key?: string }) => void>>(),
-}));
-vi.mock("src/core/board/BoardTitleSolver.js", () => ({
-  askByUrl: askBoardTitleMock,
-  getCachedTitles: getCachedTitlesMock,
 }));
 vi.mock("src/core/board/BoardUrlNormalizer", async (importOriginal) => {
   const actual = await importOriginal<typeof import("src/core/board/BoardUrlNormalizer")>();
@@ -44,6 +39,10 @@ vi.mock("src/view/browser/utils/legacy-app", () => ({
 }));
 vi.mock("src/service-container/index", () => ({
   container: {
+    // src/core/board/BoardTitleSolver.js はサービスコンテナの boardTitle から使う。
+    boardTitle: { askByUrl: askBoardTitleMock, getCachedTitles: getCachedTitlesMock },
+    // src/core/history/History はサービスコンテナの history から使う。
+    history: { getAll: vi.fn(async () => historyRecords) },
     config: { get: vi.fn(() => openedBoards.raw) },
     message: {
       on: vi.fn((type: string, handler: (payload: { key?: string }) => void) => {
@@ -127,7 +126,7 @@ describe("ホームの板項目のミドルクリック", () => {
 
   async function renderPage(newTab = false) {
     vi.resetModules();
-    const { TabProvider, useTabStore } = await import("src/features/tabs/browser/use-tab-store");
+    const { TabProvider, useTabStore } = await import("src/view/browser/state/tabs/use-tab-store");
     const { HomeTabPage } = await import("src/view/browser/pages/HomeTabPage");
     function StartPage() {
       return <HomeTabPage />;

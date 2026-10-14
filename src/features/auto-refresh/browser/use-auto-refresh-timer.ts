@@ -4,7 +4,7 @@ import {
   readThreadAutoRefreshIntervalMs,
   THREAD_AUTO_REFRESH_CONFIG_KEY,
 } from "src/features/auto-refresh/browser/auto-refresh-config";
-import { useViewSurface } from "src/features/auxiliary-window/browser/use-view-surface";
+import { useViewSurface } from "src/view/browser/hooks/use-view-surface";
 import { subscribeConfigKeys } from "src/view/browser/utils/config-setting";
 import { SCOPED_SETTINGS_CONFIG_KEY } from "src/view/browser/utils/scoped-settings";
 

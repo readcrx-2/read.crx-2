@@ -8,12 +8,22 @@ const { saveConfig, sendMessage } = vi.hoisted(() => ({
 
 vi.mock("src/service-container/index", () => ({
   container: {
+    // 置換ルールの解析と保存は、下の corePorts のモック（同じ container）を使う本物の実装で確かめる。
+    replaceStr: {
+      // モックの組み立て時ではなく呼び出し時に参照するため、静的 import の関数を使える。
+      set: (value: string) => setReplacementDsl(value),
+    },
     message: { send: sendMessage },
     config: {
       get: () => null,
       set: saveConfig,
     },
   },
+}));
+
+// core の処理が使うサービスは、上の service-container のモックと同じものを渡す。
+vi.mock("src/core/ports/registry", async () => ({
+  corePorts: (await import("src/service-container/index")).container,
 }));
 
 vi.mock("src/features/ng/ui/NGEditor", () => ({
@@ -25,6 +35,7 @@ import {
   CONFIG_KEYS_OUTSIDE_SETTINGS_FORM,
   DEFAULT_CONFIG,
 } from "src/app/config-defaults";
+import { set as setReplacementDsl } from "src/core/thread/ReplaceStrTxt";
 
 import { getSettingsSections, readAllSettings, saveSectionFormData } from "./settings-sections";
 

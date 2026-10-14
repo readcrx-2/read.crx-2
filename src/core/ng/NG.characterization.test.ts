@@ -3,8 +3,8 @@ import { beforeEach, describe, expect, it, vi } from "vite-plus/test";
 
 const configStore = new Map<string, string>();
 
-vi.mock("src/service-container/index", () => ({
-  container: {
+vi.mock("src/core/ports/registry", () => ({
+  corePorts: {
     config: {
       get: (key: string) => configStore.get(key) ?? null,
       set: (key: string, value: string) => {
@@ -12,7 +12,7 @@ vi.mock("src/service-container/index", () => ({
         return Promise.resolve();
       },
     },
-    toast: { notify: vi.fn() },
+    notice: { ngRuleRegexInvalid: vi.fn(), bbsMenuFetchFailed: vi.fn() },
     message: { send: vi.fn() },
   },
 }));

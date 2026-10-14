@@ -2,9 +2,9 @@ import { Window } from "@tauri-apps/api/window";
 import { useEffect } from "react";
 import { isTauriRuntime } from "src/app/platform/runtime";
 import { subscribeCommentOverlayJump } from "src/features/comment-overlay/platform/jump-events";
-import { tabActions } from "src/features/tabs/browser/tab-store-actions";
 import { useDetachedTabController } from "src/features/tabs/browser/use-detached-tab-controller";
-import { useTabDispatch, useTabStore } from "src/features/tabs/browser/use-tab-store";
+import { tabActions } from "src/view/browser/state/tabs/tab-store-actions";
+import { useTabDispatch, useTabStore } from "src/view/browser/state/tabs/use-tab-store";
 import { getCurrentPage, getPageViewStateKey } from "src/view/browser/types";
 import { requestThreadResJump } from "src/view/browser/utils/thread-read-state";
 

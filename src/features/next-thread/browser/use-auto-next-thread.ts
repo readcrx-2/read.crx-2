@@ -1,8 +1,7 @@
 import { useCallback, useEffect, useRef, useState } from "react";
 import { DEFAULT_CONFIG } from "src/app/config-defaults";
 import { log } from "src/app/Log";
-import { useViewSurface } from "src/features/auxiliary-window/browser/use-view-surface";
-import { isNextThreadSearchTriggered } from "src/features/next-thread/browser/auto-next-thread-trigger";
+import { isNextThreadSearchTriggered } from "src/features/next-thread/domain/auto-next-thread-trigger";
 import {
   type AutoNextThreadMode,
   findMainstreamThreadMatch,
@@ -10,9 +9,10 @@ import {
   findNextThreadMatch,
   type NextThreadMatch,
   type ThreadSearchCandidate,
-} from "src/features/next-thread/browser/next-thread-search";
+} from "src/features/next-thread/domain/next-thread-search";
 import { container } from "src/service-container/index";
 import type { IThread, IToastService } from "src/service-container/interfaces";
+import { useViewSurface } from "src/view/browser/hooks/use-view-surface";
 import { getBoardUrlFromThreadUrl } from "src/view/browser/utils/link-routing";
 
 const NEXT_THREAD_SEARCH_FAST_RETRY_MS = 3_000;

@@ -1,4 +1,3 @@
-import type { SettingsPageUiState } from "src/view/browser/pages/settings/settings-types";
 import { getBoardUrlFromThreadUrl } from "src/view/browser/utils/link-routing";
 import { normalizePageLocation } from "src/view/browser/utils/page-location";
 
@@ -90,6 +89,29 @@ export type Page =
   | HistoryListPage
   | WriteHistoryListPage
   | LogListPage;
+
+// 設定画面のセクションの種類。タブの表示状態に保存されるため、設定画面ではなくここに置く。
+export type SettingsSectionId =
+  | "general"
+  | "display"
+  | "site-board"
+  | "reload"
+  | "overlay"
+  | "ng"
+  | "other"
+  | "data";
+
+// 設定画面の表示状態。TabViewState.settingsPage としてタブ単位で保存・復元される。
+export interface SettingsPageUiState {
+  activeSectionId?: SettingsSectionId | "thumbnail";
+  // 再読み込みと別カテゴリへの明示的なリンク遷移を区別するため、直前のリンク先を残す。
+  linkedSectionId?: string;
+  mainScrollTop?: number;
+  ngSettingsTab?: "ng" | "replacement";
+  replacementExamplesOpen?: boolean;
+  ngExamplesOpen?: boolean;
+  ngAdvancedOpen?: boolean;
+}
 
 export interface TabViewState {
   // 設定画面の表示状態をタブ単位で保持し、再読み込みや閉じたタブの復元で引き継ぐ。

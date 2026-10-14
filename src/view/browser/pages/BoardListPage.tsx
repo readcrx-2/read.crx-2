@@ -1,7 +1,5 @@
 import React, { useCallback, useState } from "react";
-import { tabActions } from "src/features/tabs/browser/tab-store-actions";
 import { useTabCommandRunner } from "src/features/tabs/browser/use-tab-command-runner";
-import { useTabStore } from "src/features/tabs/browser/use-tab-store";
 import { TAB_COMMAND_IDS } from "src/view/browser/commands/tab-command-runtime";
 import { ContextMenuNavigationActions } from "src/view/browser/components/ContextMenuNavigationActions";
 import { useQuickAccessFilterToolbar } from "src/view/browser/hooks/use-quick-access-filter-toolbar";
@@ -11,6 +9,8 @@ import { ContextMenuHandler } from "src/view/browser/pages/board-list/ContextMen
 import { SearchBarSection } from "src/view/browser/pages/board-list/SearchBarSection";
 import { useBoardListDisplay } from "src/view/browser/pages/board-list/use-board-list-display";
 import { useBoardListLogic } from "src/view/browser/pages/board-list/use-board-list-logic";
+import { tabActions } from "src/view/browser/state/tabs/tab-store-actions";
+import { useTabStore } from "src/view/browser/state/tabs/use-tab-store";
 import { canGoBack, canGoForward } from "src/view/browser/types";
 import { isPageRefreshable } from "src/view/browser/utils/refreshable-pages";
 

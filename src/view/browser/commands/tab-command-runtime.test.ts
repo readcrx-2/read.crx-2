@@ -1,10 +1,10 @@
-import { tabActions } from "src/features/tabs/browser/tab-store-actions";
-import type { TabStoreState } from "src/features/tabs/browser/tab-store-types";
 import {
   executeTabCommandRequest,
   TAB_COMMAND_IDS,
   type TabCommandRuntime,
 } from "src/view/browser/commands/tab-command-runtime";
+import { tabActions } from "src/view/browser/state/tabs/tab-store-actions";
+import type { TabStoreState } from "src/view/browser/state/tabs/tab-store-types";
 import type { Tab } from "src/view/browser/types";
 import { describe, expect, it, vi } from "vite-plus/test";
 

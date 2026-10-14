@@ -53,7 +53,7 @@ vi.mock("src/service-container/index", () => ({
   },
 }));
 
-vi.mock("src/features/tabs/browser/use-tab-store", () => ({
+vi.mock("src/view/browser/state/tabs/use-tab-store", () => ({
   useTabStore: () => ({ dispatch: dispatchMock }),
 }));
 

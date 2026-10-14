@@ -10,15 +10,15 @@ const mocks = vi.hoisted(() => ({
     resolve: () => void;
   }>,
   messageSend: vi.fn(),
-  toastNotify: vi.fn(),
+  ngRuleRegexInvalid: vi.fn(),
 }));
 
 vi.mock("src/core/util/jsutil", () => ({
   normalize: (value: string) => value.toLowerCase(),
 }));
 
-vi.mock("src/service-container/index", () => ({
-  container: {
+vi.mock("src/core/ports/registry", () => ({
+  corePorts: {
     config: {
       get: (key: string) => mocks.configStore.get(key) ?? null,
       set: (key: string, value: string) => {
@@ -38,7 +38,7 @@ vi.mock("src/service-container/index", () => ({
         });
       },
     },
-    toast: { notify: mocks.toastNotify },
+    notice: { ngRuleRegexInvalid: mocks.ngRuleRegexInvalid, bbsMenuFetchFailed: vi.fn() },
     message: { send: mocks.messageSend },
   },
 }));
@@ -49,7 +49,7 @@ describe("NG Rule persistence", () => {
     mocks.holdWrites = false;
     mocks.pendingWrites.length = 0;
     mocks.messageSend.mockReset();
-    mocks.toastNotify.mockReset();
+    mocks.ngRuleRegexInvalid.mockReset();
   });
 
   it("waits for the DSL write and restores the Rule after reload", async () => {

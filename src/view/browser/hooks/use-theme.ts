@@ -1,6 +1,6 @@
 import { useEffect, useLayoutEffect, useState } from "react";
-import { useViewSurface } from "src/features/auxiliary-window/browser/use-view-surface";
 import { container } from "src/service-container/index";
+import { useViewSurface } from "src/view/browser/hooks/use-view-surface";
 
 type ThemeId = "default" | "dark" | "system";
 export type ResolvedTheme = "light" | "dark";

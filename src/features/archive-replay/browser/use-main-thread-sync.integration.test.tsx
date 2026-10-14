@@ -1,6 +1,9 @@
 import "@testing-library/jest-dom/vitest";
 
 import { act, cleanup, render, screen } from "@testing-library/react";
+import { container } from "src/service-container/index";
+import type { IHistoryService } from "src/service-container/interfaces";
+import { stubService } from "src/service-container/test-stubs";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vite-plus/test";
 
 const mocks = vi.hoisted(() => ({
@@ -20,10 +23,11 @@ vi.mock("src/app/platform", () => ({
   },
 }));
 
-vi.mock("src/core/history/History", () => ({
+// 実装は src/core/history/History ではなくサービスコンテナの history から使うため、テスト用のサービスを登録する。
+container.history = stubService<IHistoryService>("history", {
   add: vi.fn().mockResolvedValue(undefined),
   remove: vi.fn().mockResolvedValue(undefined),
-}));
+});
 
 vi.mock("webextension-polyfill", () => ({
   default: {
@@ -73,7 +77,7 @@ describe("過去実況Main同期のTabProvider統合", () => {
 
   it("新規専用タブをMainへフォーカスしてもTabProviderの状態を壊さない", async () => {
     vi.resetModules();
-    const { TabProvider, useTabStore } = await import("src/features/tabs/browser/use-tab-store");
+    const { TabProvider, useTabStore } = await import("src/view/browser/state/tabs/use-tab-store");
     const { useArchiveReplayMainThreadSync } = await import("./use-main-thread-sync");
 
     function Harness() {

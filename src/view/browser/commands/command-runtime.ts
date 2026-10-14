@@ -1,6 +1,6 @@
-import type { ViewSurface } from "src/features/auxiliary-window/browser/use-view-surface";
 import { container } from "src/service-container";
 import type { IToastService } from "src/service-container/interfaces";
+import type { ViewSurface } from "src/view/browser/hooks/use-view-surface";
 import { copyText, formatMarkdownLink } from "src/view/browser/utils/clipboard";
 
 /**

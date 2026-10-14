@@ -1,15 +1,15 @@
 import { useCallback, useEffect, useRef, useState } from "react";
-import type { AuxiliaryWindowOptions } from "src/features/auxiliary-window/browser/auxiliary-window-root";
 import {
   type AuxiliaryWindowWatcher,
   watchAuxiliaryWindow,
 } from "src/features/auxiliary-window/browser/auxiliary-window-watcher";
+import type { AuxiliaryWindowOptions } from "src/features/auxiliary-window/browser/use-auxiliary-window";
 import { openAuxiliaryWindow } from "src/features/auxiliary-window/browser/use-auxiliary-window";
 import {
   useViewSurface,
   type ViewSurface,
   ViewSurfaceProvider,
-} from "src/features/auxiliary-window/browser/use-view-surface";
+} from "src/view/browser/hooks/use-view-surface";
 
 import { useMediaViewerStore } from "../browser/use-media-viewer-store";
 import { MediaViewerContent } from "./MediaViewerContent";

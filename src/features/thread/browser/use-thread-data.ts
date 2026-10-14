@@ -14,12 +14,12 @@ import {
   useIsNgTemporarilyDisabled,
   useNgDisplayMode,
 } from "src/features/ng/browser/use-ng-status";
-import { tabActions } from "src/features/tabs/browser/tab-store-actions";
-import { useTabDispatch, useTabViewState } from "src/features/tabs/browser/use-tab-store";
 import type { ThreadRefreshController } from "src/features/thread/browser/use-thread-refresh-controller";
 import { container } from "src/service-container/index";
 import type { IRes, IThreadDetail } from "src/service-container/interfaces";
 import { useToast } from "src/view/browser/hooks/use-toast";
+import { tabActions } from "src/view/browser/state/tabs/tab-store-actions";
+import { useTabDispatch, useTabViewState } from "src/view/browser/state/tabs/use-tab-store";
 import type {
   ThreadFilter,
   ThreadPage as ThreadPageType,
@@ -220,10 +220,15 @@ export function useThreadData(
         // 変更理由: Sikiログには再取得先の通信がないため、登録済み本文を使い、
         // 通常スレと同じ検索・NG・アンカー処理へそのまま流す。
         // 通常スレと同じく、自動NG（連鎖・ID無し等）を含む判定を全レスへ一括適用する。
-        const importedNgResults = evaluateThreadNg(importedSikiThread.responses, {
-          title: importedSikiThread.title,
-          url: page.threadUrl,
-        });
+        const importedNgResults = evaluateThreadNg(
+          importedSikiThread.responses,
+          {
+            title: importedSikiThread.title,
+            url: page.threadUrl,
+          },
+          // corePorts は core の中の受け渡し口なので、画面からは同じ実体のサービスコンテナを渡す。
+          container,
+        );
         setResponses(
           importedSikiThread.responses.map((response) => ({
             ...response,
@@ -385,7 +390,11 @@ export function useThreadData(
       setResponses((prev) => {
         // 返信数NGや連鎖NGは表示対象だけで数えると他のNGルールとの適用順に依存するため、
         // NG判定前の全レスを対象に、自動NGを含めて再判定する。
-        const ngResults = evaluateThreadNg(prev, { title: page.title, url: page.threadUrl });
+        const ngResults = evaluateThreadNg(
+          prev,
+          { title: page.title, url: page.threadUrl },
+          container,
+        );
         // 判定結果が無いレスは undefined にして、ResItem 側で非NGとして扱わせる。
         return prev.map((res) => ({ ...res, ng: ngResults.get(res.num) }));
       });

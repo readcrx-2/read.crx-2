@@ -1,6 +1,5 @@
 import { Copy, Image as ImageIcon, Pin, PinOff } from "lucide-react";
 import React, { useCallback } from "react";
-import { useViewSurface } from "src/features/auxiliary-window/browser/use-view-surface";
 import { usePopupHeaderMenu } from "src/features/popup/browser/use-popup-header-menu";
 import { PopupHeader } from "src/features/popup/ui/PopupHeader";
 import { PopupResCard } from "src/features/popup/ui/PopupResCard";
@@ -8,6 +7,7 @@ import type { IRes } from "src/service-container";
 import { COMMAND_REQUEST_IDS, runCommandRequest } from "src/view/browser/commands/command-runtime";
 import { useTheme } from "src/view/browser/hooks/use-theme";
 import { useToast } from "src/view/browser/hooks/use-toast";
+import { useViewSurface } from "src/view/browser/hooks/use-view-surface";
 import type { ContextMenuItem } from "src/view/browser/ui/ContextMenu";
 import { ContextMenu } from "src/view/browser/ui/ContextMenu";
 import { FloatingPopup } from "src/view/browser/ui/FloatingPopup";

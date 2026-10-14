@@ -103,7 +103,10 @@ describe("chServerMoveDetect互換ファサード", () => {
     const threadUrl = new ChURL("https://example.com/test/read.cgi/bbynamazu/1000000007/");
     const boardUrl = threadUrl.toBoard();
 
-    await expect(chServerMoveDetect(boardUrl)).rejects.toThrow("stop-test-request");
+    const deps = { bbsMenu: { get: vi.fn() }, message: { send: vi.fn() } } as unknown as Parameters<
+      typeof chServerMoveDetect
+    >[1];
+    await expect(chServerMoveDetect(boardUrl, deps)).rejects.toThrow("stop-test-request");
     expect(requestState.urls[0]).toBe("http://example.com/bbynamazu/");
     expect(requestState.urls[0]).not.toBeUndefined();
   }, 15_000);

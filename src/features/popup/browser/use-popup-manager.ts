@@ -1,8 +1,3 @@
-export type {
-  PopupCloseBehaviorParams,
-  PopupCloseBehaviorResult,
-} from "src/features/popup/browser/use-popup-close-behavior";
-export { usePopupCloseBehavior } from "src/features/popup/browser/use-popup-close-behavior";
 export type { PopupCoreResult } from "src/features/popup/browser/use-popup-core";
 export { usePopupCore } from "src/features/popup/browser/use-popup-core";
 export type {
@@ -77,5 +72,5 @@ export { useThreadPopupManager } from "src/features/popup/browser/use-thread-pop
  * - pinしたレスツリーやIDポップアップやアンカーは一番上のpopupとして扱い、通常popupの一括closeから外す。
  * - アンカープレビューは、深さ・元になったpopup・遅延タイマーを使って親子関係を保つ。
  *
- * 呼び出し側は、これまでどおりこのファイルのimport pathとhook/type名を使える。
+ * 画面上の閉じ方を担当する `usePopupCloseBehavior` は、UI 部品層の `view/browser/hooks` へ移した。
  */

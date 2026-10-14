@@ -9,11 +9,11 @@ import {
 } from "lucide-react";
 import type { MouseEvent as ReactMouseEvent } from "react";
 import { useCallback, useEffect, useState } from "react";
-import { useViewSurface } from "src/features/auxiliary-window/browser/use-view-surface";
 import type { IRes } from "src/service-container";
 import { COMMAND_REQUEST_IDS, runCommandRequest } from "src/view/browser/commands/command-runtime";
 import { useTheme } from "src/view/browser/hooks/use-theme";
 import { useToast } from "src/view/browser/hooks/use-toast";
+import { useViewSurface } from "src/view/browser/hooks/use-view-surface";
 import type { ContextMenuItem } from "src/view/browser/ui/ContextMenu";
 import { canCopyImageToClipboard, copyImageWithNotice } from "src/view/browser/utils/clipboard";
 import { getEventTargetElement } from "src/view/browser/utils/dom";

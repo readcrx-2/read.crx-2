@@ -1,14 +1,15 @@
 import React from "react";
-import { getCachedTitles } from "src/core/board/BoardTitleSolver.js";
 import { getBoardUrlKey, normalizeBoardUrl } from "src/core/board/BoardUrlNormalizer";
-import { OPENED_BOARDS_CONFIG_KEY, parseOpenedBoardEntries } from "src/core/board/OpenedBoards";
-import { getAll as getAllHistory } from "src/core/history/History";
-import { tabActions } from "src/features/tabs/browser/tab-store-actions";
-import { useTabStore } from "src/features/tabs/browser/use-tab-store";
+import {
+  OPENED_BOARDS_CONFIG_KEY,
+  parseOpenedBoardEntries,
+} from "src/core/board/opened-board-entries";
 import { container } from "src/service-container/index";
 import { PageTypeIcon } from "src/view/browser/components/PageTypeIcon";
 import { isResolvedBoardTitle } from "src/view/browser/pages/board-list/board-list-utils";
 import { FavoriteBoardsSection } from "src/view/browser/pages/FavoriteBoardsSection";
+import { tabActions } from "src/view/browser/state/tabs/tab-store-actions";
+import { useTabStore } from "src/view/browser/state/tabs/use-tab-store";
 import { Alert } from "src/view/browser/ui/Alert";
 import { Button } from "src/view/browser/ui/Button";
 import { Spinner } from "src/view/browser/ui/Spinner";
@@ -70,7 +71,7 @@ export const BoardStartPage: React.FC<{ intro: React.ReactNode }> = ({ intro }) 
       const requestRevision = ++revision;
       setError(null);
       try {
-        const records = await getAllHistory();
+        const records = await container.history.getAll();
         // 旧スレ履歴も残しつつ、板だけを開いた日時と解決済みの表示名を板単位で統合する。
         const grouped = new Map<string, RecentBoard>();
         const addBoard = (rawUrl: string, boardTitle: string, date: number) => {
@@ -117,7 +118,7 @@ export const BoardStartPage: React.FC<{ intro: React.ReactNode }> = ({ intro }) 
         const cachedTitles = recentBoards.some(
           (board) => !isResolvedBoardTitle(board.boardUrl, board.boardTitle),
         )
-          ? await getCachedTitles()
+          ? await container.boardTitle.getCachedTitles()
           : new Map<string, string>();
         const titledBoards = recentBoards.map((board) => {
           if (isResolvedBoardTitle(board.boardUrl, board.boardTitle)) return board;

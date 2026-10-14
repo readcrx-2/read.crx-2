@@ -1,15 +1,9 @@
 import type { RJSFSchema, UiSchema } from "@rjsf/utils";
 import type { ReactNode } from "react";
+import type { SettingsSectionId } from "src/view/browser/types";
 
-export type SettingsSectionId =
-  | "general"
-  | "display"
-  | "site-board"
-  | "reload"
-  | "overlay"
-  | "ng"
-  | "other"
-  | "data";
+// SettingsSectionId と SettingsPageUiState はタブの表示状態（TabViewState）にも保存されるため、
+// UI 部品層の view/browser/types.ts に定義を置いている。
 
 export type SettingsSupplementaryPanelId =
   | "titleBarButtonSettings"
@@ -84,15 +78,4 @@ export interface SettingsSectionDefinition {
   schema: RJSFSchema;
   uiSchema: UiSchema<SettingsSectionFormData>;
   supplementaryPanelIds?: readonly SettingsSupplementaryPanelId[];
-}
-
-export interface SettingsPageUiState {
-  activeSectionId?: SettingsSectionId | "thumbnail";
-  // 再読み込みと別カテゴリへの明示的なリンク遷移を区別するため、直前のリンク先を残す。
-  linkedSectionId?: string;
-  mainScrollTop?: number;
-  ngSettingsTab?: "ng" | "replacement";
-  replacementExamplesOpen?: boolean;
-  ngExamplesOpen?: boolean;
-  ngAdvancedOpen?: boolean;
 }

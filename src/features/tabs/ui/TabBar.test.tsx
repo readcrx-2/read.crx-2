@@ -68,7 +68,7 @@ vi.mock("src/features/tabs/ui/TabContextMenu", () => ({
   TabContextMenu: () => null,
 }));
 
-vi.mock("src/features/tabs/browser/use-tab-store", () => ({
+vi.mock("src/view/browser/state/tabs/use-tab-store", () => ({
   useTabStore: () => ({
     state: mocks.tabStore.state,
     // 本物同様、ホイールハンドラが常に最新 state を同期参照できる ref を模す。

@@ -1,4 +1,4 @@
-import { container } from "src/service-container/index";
+import type { IConfig } from "src/core/ports/services";
 
 export const AUTO_NG_CONFIG_KEYS = {
   chain: "chain_ng",
@@ -22,6 +22,7 @@ export interface AutoNgResponse {
 }
 
 export interface AutoNgEvaluationContext {
+  readonly config: AutoNgConfig;
   readonly response: AutoNgResponse;
   readonly bbsType: string;
   readonly existsIdAtFirstResponse: boolean;
@@ -35,35 +36,35 @@ export interface AutoNgEvaluationContext {
 }
 
 /** 自動NGの設定キーを判定処理から隠し、設定名の追加・変更を一箇所へ閉じ込める。 */
-export function isAutoNgEnabled(policy: AutoNgToggle): boolean {
+/** 自動NGの判定に必要な設定だけを受け取る（C-2）。 */
+export type AutoNgConfig = Pick<IConfig, "get">;
+
+export function isAutoNgEnabled(config: AutoNgConfig, policy: AutoNgToggle): boolean {
   // 変更理由: 真偽設定は "on"/"off" の文字列で保存される。Boolean()で変換すると
   // 既定値の "off" まで有効扱いになり、自動NGを全スレへ誤って適用してしまう。
-  return container.config.get(AUTO_NG_CONFIG_KEYS[policy]) === "on";
+  return config.get(AUTO_NG_CONFIG_KEYS[policy]) === "on";
 }
 
-export function getIdentityJudgment(): IdentityJudgment {
-  const value = container.config.get(AUTO_NG_CONFIG_KEYS.identityJudgment);
+export function getIdentityJudgment(config: AutoNgConfig): IdentityJudgment {
+  const value = config.get(AUTO_NG_CONFIG_KEYS.identityJudgment);
   return value === "first_res" || value === "exists_once" ? value : "disabled";
 }
 
-export function getRepeatMessageThreshold(): number {
-  const value = Number.parseInt(
-    container.config.get(AUTO_NG_CONFIG_KEYS.repeatMessageCount) ?? "",
-    10,
-  );
+export function getRepeatMessageThreshold(config: AutoNgConfig): number {
+  const value = Number.parseInt(config.get(AUTO_NG_CONFIG_KEYS.repeatMessageCount) ?? "", 10);
   return Number.isFinite(value) && value > 1 ? value : 0;
 }
 
 /** ThreadModelが保持する索引を入力として受け取り、自動NGの種類だけを決定する。 */
 export function evaluateAutoNg(context: AutoNgEvaluationContext): AutoNgType | null {
-  const { response } = context;
+  const { config, response } = context;
   if (context.bbsType === "2ch") {
-    const judgment = getIdentityJudgment();
+    const judgment = getIdentityJudgment(config);
     const idExpected =
       (judgment === "first_res" && context.existsIdAtFirstResponse) ||
       (judgment === "exists_once" && context.hasAnyId);
     if (
-      isAutoNgEnabled("missingId") &&
+      isAutoNgEnabled(config, "missingId") &&
       !response.id &&
       idExpected &&
       context.canApply("NothingID")
@@ -74,7 +75,7 @@ export function evaluateAutoNg(context: AutoNgEvaluationContext): AutoNgType | n
       (judgment === "first_res" && context.existsSlipAtFirstResponse) ||
       (judgment === "exists_once" && context.hasAnySlip);
     if (
-      isAutoNgEnabled("missingSlip") &&
+      isAutoNgEnabled(config, "missingSlip") &&
       !response.slip &&
       slipExpected &&
       context.canApply("NothingSLIP")
@@ -84,7 +85,7 @@ export function evaluateAutoNg(context: AutoNgEvaluationContext): AutoNgType | n
   }
 
   if (
-    isAutoNgEnabled("chainId") &&
+    isAutoNgEnabled(config, "chainId") &&
     response.id &&
     context.chainedIds.has(response.id) &&
     context.canApply("ChainID")
@@ -92,7 +93,7 @@ export function evaluateAutoNg(context: AutoNgEvaluationContext): AutoNgType | n
     return "ChainID";
   }
   if (
-    isAutoNgEnabled("chainSlip") &&
+    isAutoNgEnabled(config, "chainSlip") &&
     response.slip &&
     context.chainedSlips.has(response.slip) &&
     context.canApply("ChainSLIP")
@@ -100,7 +101,7 @@ export function evaluateAutoNg(context: AutoNgEvaluationContext): AutoNgType | n
     return "ChainSLIP";
   }
 
-  const repeatThreshold = getRepeatMessageThreshold();
+  const repeatThreshold = getRepeatMessageThreshold(config);
   if (repeatThreshold <= 1) return null;
   const cleanMessage = response.message.replace(/<[^>]+>/gu, "").trim();
   const responseNumbers = context.repeatedMessages.get(cleanMessage) ?? new Set<number>();

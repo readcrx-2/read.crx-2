@@ -1,8 +1,8 @@
 import type { RefObject } from "react";
 import { useCallback, useEffect, useRef, useState } from "react";
-import { useViewSurface } from "src/features/auxiliary-window/browser/use-view-surface";
 import { container } from "src/service-container/index";
 import type { IReadState, IRes } from "src/service-container/interfaces";
+import { useViewSurface } from "src/view/browser/hooks/use-view-surface";
 import {
   consumePendingThreadResJump,
   findThreadScrollContainer,

@@ -1,8 +1,8 @@
 import { Toast as RadixToast } from "radix-ui";
 import type { CSSProperties } from "react";
 import { useCallback, useSyncExternalStore } from "react";
-import { useViewSurface } from "src/features/auxiliary-window/browser/use-view-surface";
 import { TOAST_DISPLAY_DURATION_MS, toastStore } from "src/service-container/toast-store";
+import { useViewSurface } from "src/view/browser/hooks/use-view-surface";
 
 interface ToastProviderProps {
   topOffset: string;

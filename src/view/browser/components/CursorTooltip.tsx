@@ -1,6 +1,6 @@
 import React, { useCallback, useState } from "react";
 import { createPortal } from "react-dom";
-import { useViewSurface } from "src/features/auxiliary-window/browser/use-view-surface";
+import { useViewSurface } from "src/view/browser/hooks/use-view-surface";
 
 interface CursorTooltipState {
   label: string;

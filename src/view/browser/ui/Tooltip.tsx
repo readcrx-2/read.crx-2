@@ -6,7 +6,7 @@ import {
   type ReactNode,
   useContext,
 } from "react";
-import { useViewSurface } from "src/features/auxiliary-window/browser/use-view-surface";
+import { useViewSurface } from "src/view/browser/hooks/use-view-surface";
 
 type TooltipSide = "top" | "right" | "bottom" | "left";
 

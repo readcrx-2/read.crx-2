@@ -11,7 +11,7 @@ const { config, setConfig, updateViewState, warn, persistedViewState } = vi.hois
   persistedViewState: { searchQuery: "" },
 }));
 vi.mock("src/app/logger", () => ({ createLogger: () => ({ warn, error: vi.fn() }) }));
-vi.mock("src/features/tabs/browser/use-tab-store", () => ({
+vi.mock("src/view/browser/state/tabs/use-tab-store", () => ({
   useTabViewState: () => ({ state: persistedViewState, update: updateViewState }),
 }));
 vi.mock("src/service-container/index", () => ({

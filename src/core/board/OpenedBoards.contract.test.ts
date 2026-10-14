@@ -1,11 +1,13 @@
+import type { BBSMenuModelDeps } from "src/core/board/BBSMenuModel";
 import { BBSMenuModel } from "src/core/board/BBSMenuModel";
 import { parseOpenedBoardEntries } from "src/core/board/OpenedBoards";
 import { beforeEach, describe, expect, it, vi } from "vite-plus/test";
 
 const { config } = vi.hoisted(() => ({ config: new Map<string, string>() }));
-vi.mock("src/service-container/index", () => ({
-  container: { config: { get: (key: string) => config.get(key) ?? null } },
-}));
+// 依存は登録済みのサービス（corePorts）に頼らず、テスト用の値をコンストラクタや関数へ直接渡す。
+const deps = {
+  config: { get: (key: string) => config.get(key) ?? null },
+} as unknown as BBSMenuModelDeps;
 vi.mock("src/core/board/BBSMenuFetcher", () => ({ BBSMenuFetcher: class {} }));
 vi.mock("src/core/network/URL", () => ({ URL: class {} }));
 vi.mock("src/core/history/History", () => ({}));
@@ -25,7 +27,7 @@ describe("独自ホストの取得確認と板履歴の読み取り", () => {
     config.set("opened_board_entries", saved);
     for (let restart = 0; restart < 2; restart += 1) {
       expect(parseOpenedBoardEntries(saved)).toEqual([board]);
-      const menus = await new BBSMenuModel().fetchAll();
+      const menus = await new BBSMenuModel(deps).fetchAll();
       expect(menus[0].categories[0].boards).toEqual([
         { url: board.url, name: board.title, subjectVerified: true },
       ]);
@@ -41,7 +43,7 @@ describe("独自ホストの取得確認と板履歴の読み取り", () => {
       ]);
       config.set("opened_board_entries", saved);
       expect(parseOpenedBoardEntries(saved)).toEqual([]);
-      expect(await new BBSMenuModel().fetchAll()).toEqual([]);
+      expect(await new BBSMenuModel(deps).fetchAll()).toEqual([]);
     },
   );
 });

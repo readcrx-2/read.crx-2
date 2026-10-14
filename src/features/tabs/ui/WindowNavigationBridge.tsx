@@ -1,13 +1,13 @@
 import { type Dispatch, type FC, useEffect, useRef } from "react";
-import { useViewSurface } from "src/features/auxiliary-window/browser/use-view-surface";
-import { tabActions } from "src/features/tabs/browser/tab-store-actions";
+import { useDetachedTabController } from "src/features/tabs/browser/use-detached-tab-controller";
+import { useViewSurface } from "src/view/browser/hooks/use-view-surface";
+import { tabActions } from "src/view/browser/state/tabs/tab-store-actions";
 import {
   type ScopedTabAction,
   TAB_ACTION_TYPES,
   type TabAction,
-} from "src/features/tabs/browser/tab-store-types";
-import { useDetachedTabController } from "src/features/tabs/browser/use-detached-tab-controller";
-import { useTabDispatchForTab, useTabStore } from "src/features/tabs/browser/use-tab-store";
+} from "src/view/browser/state/tabs/tab-store-types";
+import { useTabDispatchForTab, useTabStore } from "src/view/browser/state/tabs/use-tab-store";
 
 interface WindowNavigationBridgeProps {
   /** 別窓では表示対象を固定する。本窓では省略してselectedTabから解決する。 */

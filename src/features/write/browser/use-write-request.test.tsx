@@ -23,7 +23,7 @@ vi.mock("src/view/browser/hooks/use-bottom-panel", () => ({
   useOptionalBottomPanel: () => mocks.bottomPanel,
 }));
 
-vi.mock("src/features/auxiliary-window/browser/use-view-surface", () => ({
+vi.mock("src/view/browser/hooks/use-view-surface", () => ({
   useViewSurface: () => ({
     window: mocks.viewWindow,
     document: mocks.viewWindow?.document ?? document,

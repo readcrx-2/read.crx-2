@@ -45,7 +45,7 @@ vi.mock("src/view/browser/utils/clipboard", async (importOriginal) => {
   return { ...actual, copyText: copyTextMock };
 });
 
-vi.mock("src/features/tabs/browser/use-tab-store", () => ({
+vi.mock("src/view/browser/state/tabs/use-tab-store", () => ({
   useTabStore: () => ({
     state: {
       tabs: [threadTab, secondTab],

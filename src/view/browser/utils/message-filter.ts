@@ -1,5 +1,5 @@
 import { normalizeObfuscatedUrl, URL_LIKE_PATTERN } from "src/core/network/url-utils";
-import { isInlineVideoEmbedUrl } from "src/features/media/domain/external-media";
+import { isInlineVideoEmbedUrl } from "src/core/util/external-media";
 
 /**
  * レス本文のメディア・外部リンク判定をまとめる。

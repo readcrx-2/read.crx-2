@@ -1,13 +1,11 @@
 import JSZip from "jszip";
 import type { Entry as BookmarkEntry, ReadState } from "src/core/bookmark/BookmarkEntryList";
-import * as History from "src/core/history/History";
-import * as WriteHistory from "src/core/history/WriteHistory";
-import Cache, { type LogArchiveRecord } from "src/core/storage/Cache";
+import type { LogArchiveRecord } from "src/core/storage/Cache";
+import { container } from "src/service-container/index";
 import {
   getBrowserSessionJson,
   setBrowserSessionJson,
-} from "src/features/tabs/browser/browser-session-storage";
-import { container } from "src/service-container/index";
+} from "src/view/browser/state/tabs/browser-session-storage";
 import {
   getLegacyBookmarkEntryList,
   getLegacyBookmarkService,
@@ -334,7 +332,7 @@ export async function exportDataArchive(options: ExportArchiveOptions): Promise<
   zip.file(SETTINGS_JSON_PATH, toJsonString(settingsPayload));
 
   if (options.includeHistory) {
-    const rows = await History.getAll();
+    const rows = await container.history.getAll();
     const normalizedRows = rows
       .map((row) => toHistoryExportRecord(row))
       .filter((row): row is HistoryExportRecord => row != null);
@@ -348,7 +346,7 @@ export async function exportDataArchive(options: ExportArchiveOptions): Promise<
   }
 
   if (options.includeWriteHistory) {
-    const rows = await WriteHistory.getAll();
+    const rows = await container.writeHistory.getAll();
     const normalizedRows = rows
       .map((row) => toWriteHistoryExportRecord(row))
       .filter((row): row is WriteHistoryExportRecord => row != null);
@@ -381,7 +379,7 @@ export async function exportDataArchive(options: ExportArchiveOptions): Promise<
     const payload: LogExportPayload = {
       schemaVersion: ARCHIVE_SCHEMA_VERSION,
       exportedAt,
-      items: await Cache.getLogArchiveRecords(),
+      items: await container.threadLog.getLogArchiveRecords(),
     };
     zip.file(LOGS_JSON_PATH, toJsonString(payload));
     includedFiles.push(LOGS_JSON_PATH);
@@ -449,9 +447,9 @@ export async function importDataArchive(archiveFile: File): Promise<ImportArchiv
 
   if (historyPayload !== null) {
     // 変更理由: 空の履歴も含め、エクスポート時点の状態を再現するため既存履歴を置換する。
-    await History.clear();
+    await container.history.clear();
     for (const row of historyItems) {
-      await History.add(row.url, row.title, row.date, row.boardTitle);
+      await container.history.add(row.url, row.title, row.date, row.boardTitle);
     }
   }
 
@@ -467,9 +465,9 @@ export async function importDataArchive(archiveFile: File): Promise<ImportArchiv
 
   if (writeHistoryPayload !== null) {
     // 変更理由: 空の履歴も含め、既存データへ単純追加せず完全置換する。
-    await WriteHistory.clear();
+    await container.writeHistory.clear();
     for (const row of writeHistoryItems) {
-      await WriteHistory.add({
+      await container.writeHistory.add({
         url: row.url,
         res: row.res,
         title: row.title,
@@ -517,7 +515,7 @@ export async function importDataArchive(archiveFile: File): Promise<ImportArchiv
     : [];
 
   if (logsPayload !== null) {
-    await Cache.replaceLogArchiveRecords(logItems);
+    await container.threadLog.replaceLogArchiveRecords(logItems);
     container.message.send("log_updated", { type: "restored" });
   }
 

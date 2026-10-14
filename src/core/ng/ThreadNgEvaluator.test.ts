@@ -1,6 +1,7 @@
 // @vitest-environment node
 import { evaluateThreadNg } from "src/core/ng/ThreadNgEvaluator";
-import type { INGResult, IRes } from "src/service-container/interfaces";
+import type { INGResult } from "src/core/ports/ng";
+import type { IRes } from "src/core/ports/thread";
 import { beforeEach, describe, expect, it, vi } from "vite-plus/test";
 
 const mocks = vi.hoisted(() => ({
@@ -8,14 +9,14 @@ const mocks = vi.hoisted(() => ({
   isNGThread: vi.fn(),
 }));
 
-vi.mock("src/service-container/index", () => ({
-  container: {
-    config: { get: (key: string) => mocks.config.get(key) ?? null },
-    ng: { isNGThread: mocks.isNGThread },
-  },
-}));
-
+// 依存は引数で渡す。ここでは登録済みのサービスに頼らず、必要な最小限だけを用意する。
+const deps = {
+  config: { get: (key: string) => mocks.config.get(key) ?? null },
+  util: { guessType: () => ({ bbsType: "2ch", protocol: "https:" }) },
+  ng: { isNGThread: mocks.isNGThread },
+};
 const context = { title: "title", url: "https://example.com/test/read.cgi/board/1/" };
+const evaluate = (responses: IRes[], ctx = context) => evaluateThreadNg(responses, ctx, deps);
 
 const res = (num: number, patch: Partial<IRes> = {}): IRes => ({
   num,
@@ -37,7 +38,7 @@ describe("evaluateThreadNg", () => {
     const input = [res(1), res(2)];
     const snapshot = structuredClone(input);
 
-    expect(evaluateThreadNg(input, context).size).toBe(0);
+    expect(evaluate(input, context).size).toBe(0);
     expect(input).toEqual(snapshot);
   });
 
@@ -46,7 +47,7 @@ describe("evaluateThreadNg", () => {
       (r.replyCount ?? 0) >= 2 ? ({ type: "ReplyCount" } as INGResult) : null,
     );
 
-    const results = evaluateThreadNg(
+    const results = evaluate(
       [res(1), res(2, { message: "&gt;&gt;1" }), res(3, { message: "&gt;&gt;1" })],
       context,
     );
@@ -59,7 +60,7 @@ describe("evaluateThreadNg", () => {
     mocks.config.set("nothing_id_ng", "on");
     mocks.config.set("how_to_judgment_id", "first_res");
 
-    const results = evaluateThreadNg([res(1, { id: "abc" }), res(2)], context);
+    const results = evaluate([res(1, { id: "abc" }), res(2)], context);
 
     expect(results.has(1)).toBe(false);
     expect(results.get(2)).toEqual({ type: "NothingID" });
@@ -71,7 +72,7 @@ describe("evaluateThreadNg", () => {
       r.num === 2 ? ({ type: "Word" } as INGResult) : null,
     );
 
-    const results = evaluateThreadNg(
+    const results = evaluate(
       [res(1, { id: "abc" }), res(2, { id: "abc" }), res(3, { id: "def" }), res(4, { id: "abc" })],
       context,
     );
@@ -87,7 +88,7 @@ describe("evaluateThreadNg", () => {
       r.num === 2 ? ({ type: "Word" } as INGResult) : null,
     );
 
-    const results = evaluateThreadNg(
+    const results = evaluate(
       [
         res(1),
         res(2),
@@ -107,10 +108,7 @@ describe("evaluateThreadNg", () => {
   it("2chの1000超過以降のレスは判定しない", () => {
     mocks.isNGThread.mockReturnValue({ type: "Word" });
 
-    const results = evaluateThreadNg(
-      [res(1), res(2, { other: "Over 1000 Thread" }), res(3)],
-      context,
-    );
+    const results = evaluate([res(1), res(2, { other: "Over 1000 Thread" }), res(3)], context);
 
     expect([...results.keys()]).toEqual([1]);
   });

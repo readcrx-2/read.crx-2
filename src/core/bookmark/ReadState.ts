@@ -2,9 +2,9 @@ import { ChURL, normalizeReadStateUrl } from "packages/chlib/src/index";
 import { assertArg, criticalError, log } from "src/app/Log";
 import message from "src/app/Message";
 import { deepCopy } from "src/app/Util";
+import type { IReadState } from "src/core/ports/read-state";
 import { indexedDBRequestToPromise } from "src/core/storage/idb-request";
 import { getTauriRepositories, isTauriRuntime } from "src/core/storage/TauriDrizzleBridge";
-import type { IReadState } from "src/service-container/interfaces";
 
 const DB_VERSION = 2;
 

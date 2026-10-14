@@ -6,7 +6,7 @@ import {
   calculateTitleSimilarity,
   extractThreadSequenceNumber,
   findMainstreamThreadMatch,
-} from "src/features/next-thread/browser/next-thread-search";
+} from "src/features/next-thread/domain/next-thread-search";
 import type { IBoardResult, IRes, IThread, IThreadDetail } from "src/service-container/interfaces";
 import { getBoardUrlFromThreadUrl } from "src/view/browser/utils/link-routing";
 

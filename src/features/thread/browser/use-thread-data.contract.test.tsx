@@ -46,7 +46,7 @@ const { toastInfoMock, toastErrorMock } = vi.hoisted(() => ({
 const toastMock = { info: toastInfoMock, error: toastErrorMock };
 vi.mock("src/view/browser/hooks/use-toast", () => ({ useToast: () => toastMock }));
 
-vi.mock("src/features/tabs/browser/use-tab-store", () => ({
+vi.mock("src/view/browser/state/tabs/use-tab-store", () => ({
   useTabDispatch: () => dispatchMock,
   useTabViewState: () => ({ state: viewStateMock, update: updateViewStateMock }),
 }));

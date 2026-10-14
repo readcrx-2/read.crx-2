@@ -27,8 +27,36 @@ const mocks = vi.hoisted(() => {
     readStateSet: vi.fn(async () => undefined),
     isNewerReadState: vi.fn(() => true),
     configSet: vi.fn(async () => undefined),
+    // view・features がサービスコンテナ経由で使う core の実装（Phase E）。
+    history: {
+      add: vi.fn(async () => undefined),
+      remove: vi.fn(async () => undefined),
+      getByUrl: vi.fn(async () => []),
+      getAll: vi.fn(async () => []),
+      clear: vi.fn(async () => undefined),
+    },
+    askBoardTitleByUrl: vi.fn(async () => "板名"),
+    replaceStrSet: vi.fn(async () => ({ ok: true })),
+    listLogs: vi.fn(async () => []),
+    deleteLogs: vi.fn(async () => undefined),
+    writeHistory: {
+      add: vi.fn(async () => undefined),
+      update: vi.fn(async () => undefined),
+      getByUrl: vi.fn(async () => []),
+      getAll: vi.fn(async () => []),
+      clear: vi.fn(async () => undefined),
+    },
   };
 });
+
+vi.mock("src/core/history/History", () => mocks.history);
+vi.mock("src/core/thread/ReplaceStrTxt", () => ({ set: mocks.replaceStrSet }));
+vi.mock("src/core/board/BoardTitleSolver", () => ({
+  ask: vi.fn(),
+  askByUrl: mocks.askBoardTitleByUrl,
+  getCachedTitles: vi.fn(),
+}));
+vi.mock("src/core/history/WriteHistory", () => mocks.writeHistory);
 
 vi.mock("src/service-container/config-instance", () => ({
   configInstance: {
@@ -87,9 +115,14 @@ vi.mock("src/core/board/BBSMenuModel", () => ({
   },
 }));
 vi.mock("src/core/board/BoardService", () => ({
-  default: { getThreads: vi.fn(), getCachedResCount: vi.fn() },
+  createBoardService: () => ({ getThreads: vi.fn(), getCachedResCount: vi.fn() }),
 }));
-vi.mock("src/core/storage/Cache", () => ({ default: class {} }));
+vi.mock("src/core/storage/Cache", () => ({
+  default: class {
+    static listLogs = mocks.listLogs;
+    static deleteLogs = mocks.deleteLogs;
+  },
+}));
 vi.mock("src/core/ng/NG", () => ({
   validate: vi.fn(),
   apply: vi.fn(),
@@ -105,7 +138,9 @@ vi.mock("src/app/Notification", () => ({
     static isSupported = vi.fn(() => true);
   },
 }));
-vi.mock("src/core/thread/ThreadService", () => ({ default: { getThread: vi.fn() } }));
+vi.mock("src/core/thread/ThreadService", () => ({
+  createThreadService: () => ({ getThread: vi.fn() }),
+}));
 vi.mock("src/app/logger", () => ({ setConsolaLevel: vi.fn() }));
 vi.mock("src/service-container/Container", () => ({ container: {} }));
 vi.mock("src/service-container/toast-store", () => ({ toastStore: {} }));
@@ -142,6 +177,42 @@ describe("サービスコンテナの初期化", () => {
       read: 1,
     });
     expect(container.util.isNewerReadState(null, null)).toBe(true);
+  });
+
+  it("メインの画面が使う core の実装をサービスコンテナへつなぐ", async () => {
+    const { setupContainer } = await import("src/service-container/setup");
+    const { setupBrowserViewServices } = await import("src/service-container/setup-browser-view");
+    const { container } = await import("src/service-container/Container");
+    for (const callback of mocks.configReadyCallbacks) callback();
+    setupContainer();
+    setupBrowserViewServices();
+
+    // 呼び出しを core の実装へそのまま渡していることを、サービスごとに確かめる。
+    await container.history.add("https://example.com/test/read.cgi/a/1/", "スレ", 1, "板");
+    expect(mocks.history.add).toHaveBeenCalledWith(
+      "https://example.com/test/read.cgi/a/1/",
+      "スレ",
+      1,
+      "板",
+    );
+    await container.history.getAll();
+    expect(mocks.history.getAll).toHaveBeenCalled();
+    await container.writeHistory.getByUrl("https://example.com/test/read.cgi/a/1/");
+    expect(mocks.writeHistory.getByUrl).toHaveBeenCalledWith(
+      "https://example.com/test/read.cgi/a/1/",
+    );
+    await container.threadLog.listLogs(0, 10);
+    expect(mocks.listLogs).toHaveBeenCalledWith(0, 10);
+    await container.threadLog.deleteLogs();
+    expect(mocks.deleteLogs).toHaveBeenCalled();
+    await expect(container.boardTitle.askByUrl("https://example.com/board/")).resolves.toBe("板名");
+    await container.replaceStr.set("rule");
+    expect(mocks.replaceStrSet).toHaveBeenCalledWith("rule");
+    // 開いた板の記録は、登録した config へ書き込む（取得確認済みの独自ホストとして保存させる）。
+    container.openedBoards.upsertOpenedBoardEntry("https://example.com/board/", "板", 1, true);
+    await vi.waitFor(() =>
+      expect(mocks.configSet).toHaveBeenCalledWith("opened_board_entries", expect.any(String)),
+    );
   });
 
   it("bookmark_id更新をEntryListへ渡す", async () => {

@@ -32,7 +32,7 @@ vi.mock("src/core/storage/TauriDrizzleBridge", () => ({
   }),
 }));
 
-vi.mock("src/core/network/URL", () => ({
+vi.mock("src/core/network/url-protocol", () => ({
   isHttps: (url: string) => url.startsWith("https://"),
 }));
 

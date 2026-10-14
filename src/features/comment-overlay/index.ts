@@ -4,5 +4,5 @@ export type { CommentCandidate } from "./domain";
 export { projectCommentResponse } from "./domain";
 export type { CommentOverlayWindowPlatform } from "./platform";
 export { COMMENT_OVERLAY_WINDOW_LABEL, commentOverlayWindowPlatform } from "./platform";
-export type { OverlayStageProps } from "./ui/OverlayStage";
-export { DEFAULT_COMMENT_HISTORY_LIMIT, OverlayStage } from "./ui/OverlayStage";
+// 注意: CSS を import する UI 部品はここから出さない。index を import した別のエントリ
+// （replay など）や browser.css に、使わない CSS が入るため（OverlayStage で約 20KB 増えた）。

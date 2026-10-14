@@ -1,12 +1,13 @@
 import type { Meta, StoryObj } from "@storybook/react-vite";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import { type CommentCandidate, projectCommentResponse } from "src/features/comment-overlay";
+// Story は開発用でバンドルに入らないため、公開 API に無い表示部品は中のファイルから直接使う
+// （CSS を持つ UI 部品を index から出すと、使わない画面の CSS が増えるため）。
 import {
-  type CommentCandidate,
   DEFAULT_COMMENT_HISTORY_LIMIT,
   OverlayStage,
   type OverlayStageProps,
-  projectCommentResponse,
-} from "src/features/comment-overlay";
+} from "src/features/comment-overlay/ui/OverlayStage";
 
 import { createChLensStorybookSource } from "../../../../.storybook/thread-source.ts";
 import type { ArchiveReplaySource, ArchiveReplayTimeline } from "../domain";

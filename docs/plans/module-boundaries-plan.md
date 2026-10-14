@@ -1,7 +1,7 @@
 # モジュール境界の明確化計画
 
 - ブランチ: `refactor/module-boundaries`（`develop` から作成。旧名 `feature/module-boundaries`）
-- 状態: Phase 0・A・B・C-1・C-2・D-1 完了。Phase D の方針を決定（§3）。D-2 以降は未着手
+- 状態: Phase 0・A・B・C-1・C-2・D-1 完了。D-2 は一部完了（§3.2 の 2・3 件目を解消）。残りは判断待ち（§7）
 
 ## 1. 目的
 
@@ -71,8 +71,8 @@ core/util
 | 逆向きの依存 | 対応 |
 | --- | --- |
 | `features/tabs/ui/TabView.tsx` → `pages/*`（9 ページ） | 層をまたぐ循環になっている。ページの一覧を組み立て層（`ContentArea`・`App`）から props か context で渡す |
-| `ui/ContextMenu`・`ui/FloatingPopup` → `features/popup/browser/use-popup-manager`（`usePopupCloseBehavior`） | D-1 と同じく `view/browser/hooks` へ移す |
-| `utils/utils.ts`（`export *`）・`utils/message-filter.ts` → `features/media/domain/*` | 純粋関数なので `core` 側へ移すか、再エクスポートをやめる |
+| `ui/ContextMenu`・`ui/FloatingPopup` → `features/popup/browser/use-popup-manager`（`usePopupCloseBehavior`） | 解消済み（`c90fd1b2`、`56c835ec`）。フックを `view/browser/hooks` へ移した |
+| `utils/utils.ts`（`export *`）・`utils/message-filter.ts` → `features/media/domain/*` | 解消済み（`f6157577`、`8cc79f92`、`5f1dee29`）。純粋関数を `core/util` へ移し、再エクスポートを外した |
 | `commands/*` → `features/tabs/browser/*`（タブストア） | タブストアを UI 部品層（`view/browser/state/tabs`）へ移して解消する |
 | `components/{NavigationBar,BottomPanel,TitleBar,PageCountStatusItem}` → 各機能 | 機能を組み合わせる枠なので、組み立て層（`view/browser/shell/`）へ移す |
 
@@ -235,6 +235,10 @@ oxlint の `no-restricted-imports` で次を検査する。
 
 ## 7. 判断が必要な点
 
+- D-2（§3.2 の 5 件目）: `components/{NavigationBar,BottomPanel,TitleBar,PageCountStatusItem}` を `shell/` へ移すと、`features/tabs/ui/DetachedTabWindowContent.tsx` が組み立て層を import することになり、ルール 5 に反する。次のどちらかを選ぶ必要がある。
+  - A: `DetachedTabWindowContent` も組み立て層（`shell/`）へ移す。
+  - B: 4 部品のうち `features` が使う部分を、UI 部品層の部品として分けて残す。
+- D-2（§3.2 の 1 件目）: `TabView` → `pages/*` を解消する方法（ページ一覧を props で渡すか、context で渡すか）。
 - Phase B で、`core/ports` の置き場所を `src/core/ports/` とするか。
 - `container.toast` の移動先を `app` にするか `features` にするか。
 - Phase A の許可リストを `vite.config.ts` の `overrides` で持つか、別ファイルで持つか。

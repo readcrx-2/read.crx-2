@@ -14,14 +14,16 @@
 | C-1 | `core` のサービス参照を `corePorts`（`registry.ts`）へ置き換え。禁止ルールを `error` に | `13f77d40` |
 | C-2 | `core` の各モジュールの依存を引数で受け取る形に変更（工場関数・コンストラクタ） | `8c4dcd21` 〜 `bcd44aa5`、`9db8c344` |
 | D-1 | `useViewSurface` を `features/auxiliary-window` から `view/browser/hooks` へ移動 | `f86bb8d9` |
+| D-2（一部） | `usePopupCloseBehavior` と `popup-dom` を `view/browser/hooks`・`view/browser/utils` へ移動し、呼び出し元を付け替える | `c90fd1b2`、`56c835ec` |
+| D-2（一部） | 外部メディア判定（`external-media`）・URL 判定（`url-media`）の純粋関数を `core/util` へ移す。`view/browser/utils` の URL 再エクスポートを外す | `f6157577`、`8cc79f92`、`5f1dee29` |
 
-検証は、各コミット時点で `tsc` と `vp test run`（276 ファイル・2157 件）を通しています。
+検証は、各コミット時点で `tsc` と `vp test run` を通しています。D-2 の完了時点では、`vp test run`（276 ファイル・2157 件）、`tsc`、`build:chrome` がすべて通りました。
 
 ## 2. 未完了の作業
 
 ### Phase D: `features` 間の依存（方針決定済み）
 
-- 残りは **138 件・41 組**。
+- 残りは **84 件・35 組**（2026-10-15、テストを除いて数えた値。以前の 138 件・41 組とは計測条件が違うため、単純には比べられない）。
 - 主な共有先:
   - タブ状態（`use-tab-store`・`tab-store-actions`）。ほぼ全機能が参照。
   - 媒体の表示部品（`ResMediaGallery`・`ExternalImage`・`url-media`）。
@@ -31,11 +33,13 @@
   - 組み立て層（`App`・`pages`・`shell`）: `features` を組み合わせる最上位。
   - 理由と詳細は計画書の §3 を参照。
 - 先に解消する逆向きの依存（計画書の §3.2）:
-  1. `features/tabs/ui/TabView.tsx` → `pages/*`
-  2. `ui/ContextMenu`・`ui/FloatingPopup` → `features/popup` の `usePopupCloseBehavior`
-  3. `utils/utils.ts`・`utils/message-filter.ts` → `features/media/domain`
-  4. `commands/*` → タブストア
-  5. `components/{NavigationBar,BottomPanel,TitleBar,PageCountStatusItem}` → 各機能（`shell/` へ移す）
+  1. `features/tabs/ui/TabView.tsx` → `pages/*`（未着手。props か context の設計が要る）
+  2. ~~`ui/ContextMenu`・`ui/FloatingPopup` → `features/popup` の `usePopupCloseBehavior`~~（解消: `c90fd1b2`、`56c835ec`）
+  3. ~~`utils/utils.ts`・`utils/message-filter.ts` → `features/media/domain`~~（解消: `f6157577`、`8cc79f92`、`5f1dee29`）
+  4. `commands/*` → タブストア（D-4 で解消する）
+  5. `components/{NavigationBar,BottomPanel,TitleBar,PageCountStatusItem}` → 各機能（`shell/` へ移す。下記の注意を参照）
+- 逆向きの依存の残り（2026-10-15）: UI 部品層から `features`・`pages` への import は 25 行・8 ファイル。
+- 項目 5 の注意: `features/tabs/ui/DetachedTabWindowContent.tsx` が `BottomPanel`・`PageCountStatusItem`・`TitleBar` を使っている。`shell/` へ移すと、`features` → 組み立て層の依存が新しく生まれ、計画書 §3 のルール 5 に反する。移し方を決めるまで未着手（計画書 §7 の判断事項）。
 
 ### Phase C-2 の残り
 
@@ -65,16 +69,17 @@
 
 ## 4. 検証の抜け
 
-- `build:chrome` は、C-2 の途中までは通している。D-1 の移動と「Board・Thread の依存を必須にする」変更の後は再実行していない。
+- `build:chrome` は、D-2 の完了時点（2026-10-15）で再実行し、成功した。
 - lint には、この作業と無関係な警告が以前からある（`unicorn`・`react` など）。エラーはない。
 
 ## 5. 次に必要なこと
 
-1. D-2: 逆向きの依存を 1 件ずつ解消する（`usePopupCloseBehavior` の移動から）。
+1. D-2 の残り（判断が必要）:
+   - 項目 5（`components` → `shell/`）は、`DetachedTabWindowContent` の扱いを決めてから進める（計画書 §7）。
+   - 項目 1（`TabView` → `pages/*`）は、ページ一覧を props か context で渡す設計を決めてから進める。
 2. D-3: 逆向きが 0 件になったら、UI 部品層の検査を `error` で入れる。
-3. D-4: タブストアを `view/browser/state/tabs` へ移す。
+3. D-4: タブストアを `view/browser/state/tabs` へ移す（項目 4 もここで解消する）。
 4. D-5: NG・媒体の共有部品の扱いを決め、機能間の残りの依存を解消する。
 5. 並行してできるもの:
-   - `build:chrome` の再実行
    - `jsutil` の `corePorts` 参照の整理
    - `core` の `toast` 通知の移動計画

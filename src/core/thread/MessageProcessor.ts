@@ -86,8 +86,6 @@ export default class MessageProcessor {
         } else {
           if (otherHtml.includes(normalizedId)) {
             otherHtml = otherHtml.replace(normalizedId, idHtml);
-          } else if (otherHtml.includes(res.id)) {
-            otherHtml = otherHtml.replace(res.id, idHtml);
           }
           if (!otherHtml.includes(slipHtml)) {
             otherHtml += slipHtml;
@@ -99,8 +97,6 @@ export default class MessageProcessor {
           otherHtml = otherHtml.replace(searchId, idHtml);
         } else if (otherHtml.includes(normalizedId)) {
           otherHtml = otherHtml.replace(normalizedId, idHtml);
-        } else if (otherHtml.includes(res.id)) {
-          otherHtml = otherHtml.replace(res.id, idHtml);
         }
       }
     } else if (res.slip) {

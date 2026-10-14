@@ -163,5 +163,129 @@ describe("レス本文の表示処理", () => {
       expect(result.nameHtml).toContain('&lt;span onclick="alert(1)">');
       expect(result.nameHtml).not.toContain('<span onclick="alert(1)">');
     });
+
+    it("名前欄のアンカー・トリップと返信先判定を処理する", () => {
+      const result = MessageProcessor.decode(
+        {
+          name: "  ＞＞１２-１４,１６ ",
+          mail: "<b>sage</b>",
+          other: "",
+        },
+        "https:",
+      );
+
+      expect(result.isNameAnchor).toBe(true);
+      expect(result.mailHtml).toBe("sage");
+    });
+
+    it("トリップが名前になくても返信先でない名前を処理する", () => {
+      const result = MessageProcessor.decode(
+        { name: "通常の名無しさん #trip", mail: "", trip: "#trip" },
+        "https:",
+      );
+
+      expect(result.nameHtml).toBe('通常の名無しさん <span class="trip">#trip</span>');
+      expect(result.isNameAnchor).toBe(false);
+    });
+
+    it("ID・SLIP・日付の有無と表記揺れを処理する", () => {
+      const withIdAndSlip = MessageProcessor.decode(
+        {
+          name: "名無し",
+          mail: "",
+          other: "投稿者 abc123",
+          id: "abc123",
+          slip: "L20 xyz",
+          date: "投稿者",
+        },
+        "https:",
+      );
+      expect(withIdAndSlip.otherHtml).toContain('<span class="id">ID:abc123</span>');
+      expect(withIdAndSlip.otherHtml).toContain('<span class="slip">SLIP:L20 xyz</span>');
+      expect(withIdAndSlip.otherHtml).toContain('<time class="date">投稿者</time>');
+
+      const slipOnly = MessageProcessor.decode(
+        { name: "名無し", mail: "", other: "情報", slip: "L1" },
+        "https:",
+      );
+      expect(slipOnly.otherHtml).toBe('情報<span class="slip">SLIP:L1</span>');
+
+      const prefixedId = MessageProcessor.decode(
+        { name: "名無し", mail: "", other: "ID:xyz", id: "ID:xyz" },
+        "https:",
+      );
+      expect(prefixedId.otherHtml).toBe('<span class="id">ID:xyz</span>');
+
+      const existingSlip = MessageProcessor.decode(
+        { name: "名無し", mail: "", other: "ID:abc SLIP:L2", id: "abc", slip: "L2" },
+        "https:",
+      );
+      expect(existingSlip.otherHtml).toBe(
+        '<span class="slip">SLIP:L2</span><span class="id">ID:abc</span> SLIP:L2',
+      );
+
+      const idWithoutPrefix = MessageProcessor.decode(
+        { name: "名無し", mail: "", other: "abc", id: "abc" },
+        "https:",
+      );
+      expect(idWithoutPrefix.otherHtml).toBe('<span class="id">ID:abc</span>');
+
+      const slipWithUnprefixedId = MessageProcessor.decode(
+        { name: "名無し", mail: "", other: "abc", id: "abc", slip: "L3" },
+        "https:",
+      );
+      expect(slipWithUnprefixedId.otherHtml).toBe(
+        '<span class="id">ID:abc</span><span class="slip">SLIP:L3</span>',
+      );
+
+      const unmatchedId = MessageProcessor.decode(
+        { name: "名無し", mail: "", other: "情報", id: "missing" },
+        "https:",
+      );
+      expect(unmatchedId.otherHtml).toBe("情報");
+    });
+
+    it("本文のレスアンカー・IDと通常タグを描画する", () => {
+      const result = MessageProcessor.decode(
+        {
+          name: "名無し",
+          mail: "",
+          other: "",
+          message: ">>3 >>1-25 id:abc123<br><b>太字</b>",
+        },
+        "https:",
+      );
+
+      expect(result.messageHtml).toContain('class="anchor "');
+      expect(result.messageHtml).toContain('class="anchor disabled"');
+      expect(result.messageHtml).toContain("指定されたレスの量が極端に多いため");
+      expect(result.messageHtml).toContain(
+        '<a role="link" tabindex="0" class="anchor_id">id:abc123</a>',
+      );
+      expect(result.messageHtml).toContain("<br><b>太字</b>");
+    });
+
+    it("存在しないレスへのアンカーを無効化する", () => {
+      const result = MessageProcessor.decode(
+        { name: "名無し", mail: "", message: ">>0" },
+        "https:",
+      );
+
+      expect(result.messageHtml).toContain('class="anchor disabled"');
+      expect(result.messageHtml).toContain("指定されたレスが存在しません");
+    });
+
+    it("空の任意項目を空文字として処理する", () => {
+      const result = MessageProcessor.decode(
+        { name: "", mail: "", other: "", message: "" },
+        "https:",
+      );
+
+      expect(result.nameHtml).toBe("");
+      expect(result.isNameAnchor).toBe(false);
+      expect(result.mailHtml).toBe("");
+      expect(result.otherHtml).toBe("");
+      expect(result.messageHtml).toBe("");
+    });
   });
 });

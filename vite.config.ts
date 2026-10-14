@@ -341,8 +341,6 @@ function createFeatureBoundaryOverrides() {
       files: [`src/features/${feature}/**`],
       rules: {
         "eslint/no-restricted-imports": rule,
-        // 機能どうしの依存は一方向だけにする（計画書 §3.5）。core などの既存の循環は Phase E で扱う。
-        "import/no-cycle": "error" as const,
       },
     };
   });
@@ -420,6 +418,9 @@ export default defineConfig(async ({ mode }) => {
         "vite-plus/prefer-vite-plus-imports": "error",
         "simple-import-sort/imports": "error",
         "simple-import-sort/exports": "error",
+        // 循環 import を作らない（計画: docs/plans/module-boundaries-plan.md §3 のルール 7、Phase E）。
+        // 循環は読み込み順によって値が undefined になる不具合や、層の境界の崩れにつながるため。
+        "import/no-cycle": "error",
       },
       // core は service-container に依存しない（計画: docs/plans/module-boundaries-plan.md Phase C-1）。
       // 依存は core/ports（型と registry）だけにする。service-container は setup で registry に登録する。

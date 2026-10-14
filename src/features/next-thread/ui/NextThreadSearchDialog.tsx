@@ -1,9 +1,9 @@
 import React, { useEffect, useRef, useState } from "react";
+import type { NextThreadSearchState } from "src/features/next-thread/browser/use-next-thread-search";
 import type {
   NextThreadEvidence,
   ThreadSearchCandidate,
-} from "src/features/next-thread/browser/next-thread-search";
-import type { NextThreadSearchState } from "src/features/next-thread/browser/use-next-thread-search";
+} from "src/features/next-thread/domain/next-thread-search";
 import { Dialog } from "src/view/browser/ui/Dialog";
 import { Spinner } from "src/view/browser/ui/Spinner";
 

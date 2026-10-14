@@ -4,7 +4,7 @@ import {
   findNextThreadCandidates,
   findSimilarThreadCandidates,
   type ThreadSearchCandidate,
-} from "src/features/next-thread/browser/next-thread-search";
+} from "src/features/next-thread/domain/next-thread-search";
 import { container } from "src/service-container/index";
 import { tabActions } from "src/view/browser/state/tabs/tab-store-actions";
 import type { ScopedTabAction } from "src/view/browser/state/tabs/use-tab-store";

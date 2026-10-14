@@ -11,8 +11,8 @@ import {
 import { useAutoScrollState } from "src/features/auto-refresh/browser/use-auto-scroll-state";
 import { usePopupAutoScrollPauseSetting } from "src/features/auto-refresh/browser/use-popup-auto-scroll-pause-setting";
 import { type ThreadDisplayMode, useThreadDisplayModeSetting } from "src/features/live-chat";
-import type { AutoNextThreadMode } from "src/features/next-thread/browser/next-thread-search";
-import { useAutoNextThreadSetting } from "src/features/next-thread/browser/use-auto-next-thread-setting";
+import type { AutoNextThreadMode } from "src/features/next-thread";
+import { useAutoNextThreadSetting } from "src/features/next-thread";
 import { MiniWindow } from "src/view/browser/components/MiniWindow";
 import {
   MiniWindowDetails,

@@ -1,7 +1,7 @@
 import {
   isNextThreadSearchTriggered,
   NEXT_THREAD_TRIGGER_RES_COUNT,
-} from "src/features/next-thread/browser/auto-next-thread-trigger";
+} from "src/features/next-thread/domain";
 
 export function shouldDeferExpiredAutoRefreshStop({
   shouldDeferNextThreadStop,

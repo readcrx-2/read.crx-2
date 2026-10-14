@@ -1,7 +1,7 @@
 import { useCallback, useEffect, useRef, useState } from "react";
 import { DEFAULT_CONFIG } from "src/app/config-defaults";
 import { log } from "src/app/Log";
-import { isNextThreadSearchTriggered } from "src/features/next-thread/browser/auto-next-thread-trigger";
+import { isNextThreadSearchTriggered } from "src/features/next-thread/domain/auto-next-thread-trigger";
 import {
   type AutoNextThreadMode,
   findMainstreamThreadMatch,
@@ -9,7 +9,7 @@ import {
   findNextThreadMatch,
   type NextThreadMatch,
   type ThreadSearchCandidate,
-} from "src/features/next-thread/browser/next-thread-search";
+} from "src/features/next-thread/domain/next-thread-search";
 import { container } from "src/service-container/index";
 import type { IThread, IToastService } from "src/service-container/interfaces";
 import { useViewSurface } from "src/view/browser/hooks/use-view-surface";

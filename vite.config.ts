@@ -400,6 +400,17 @@ const FEATURE_TO_COMPOSITION_PATTERN: RestrictedImportPattern = {
 };
 
 /**
+ * view・features から window.app（旧互換の入口）を参照させない（docs/plans/legacy-window-app-plan.md の Phase 3）。
+ * window.app 経由の参照は no-restricted-imports にかからず、CORE_DIRECT_MODULES の検査を横から抜けるため、
+ * グローバルの `app` と、`window.app` などのプロパティ参照の両方を塞ぐ。
+ * `(window as ...).app` のような型の付け替えや `window["app"]`、分割代入も検出される。
+ * 抜け道として残るのは、ファイル内で `declare const app` と宣言して使う書き方（ローカルの変数として扱われる）。
+ */
+const WINDOW_APP_OWNERS = ["window", "globalThis", "self"];
+const WINDOW_APP_MESSAGE =
+  "view・features は window.app を使わない。core の機能はサービスコンテナ（container）から使う（docs/plans/legacy-window-app-plan.md）。";
+
+/**
  * 機能ごとに、他の機能の内部（公開モジュール以外）への import を禁止する override を作る。
  * 新しく作った機能にも自動で適用されるよう、src/features のディレクトリから一覧を作る。
  */
@@ -542,6 +553,21 @@ export default defineConfig(async ({ mode }) => {
         ...restrictImports(UI_LAYER_FILES, [UI_LAYER_PATTERN]),
         // 機能ごとの境界（組み立て層と、他の機能の内部への import を禁止）。
         ...createFeatureBoundaryOverrides(),
+        // view・features は window.app を参照しない（docs/plans/legacy-window-app-plan.md の Phase 3）。
+        {
+          files: ["src/view/**", "src/features/**"],
+          rules: {
+            "eslint/no-restricted-globals": ["error", { name: "app", message: WINDOW_APP_MESSAGE }],
+            "eslint/no-restricted-properties": [
+              "error",
+              ...WINDOW_APP_OWNERS.map((object) => ({
+                object,
+                property: "app",
+                message: WINDOW_APP_MESSAGE,
+              })),
+            ],
+          },
+        },
       ],
       options: {
         typeAware: true,

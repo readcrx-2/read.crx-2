@@ -16,8 +16,8 @@ import {
   getByUrl as getHistoryRecordsByUrl,
   remove as removeHistoryRecord,
 } from "src/core/history/History";
-import { tabActions } from "src/features/tabs/browser/tab-store-actions";
-import { recordAutoRefreshTransitions } from "src/features/tabs/browser/tab-store-debug";
+import { tabActions } from "src/view/browser/state/tabs/tab-store-actions";
+import { recordAutoRefreshTransitions } from "src/view/browser/state/tabs/tab-store-debug";
 import {
   clearThreadVisitsForTab,
   deriveHistoryBoardTitle,
@@ -25,20 +25,20 @@ import {
   isHistoryDisabled,
   reportHistoryPersistenceError,
   type ThreadHistoryVisit,
-} from "src/features/tabs/browser/tab-store-history-visit";
+} from "src/view/browser/state/tabs/tab-store-history-visit";
 import {
   createPane,
   createTab,
   createTabFromPage,
   getPageIdentity,
   readInitialPageFromLocation,
-} from "src/features/tabs/browser/tab-store-new-tab";
-import { tabReducer } from "src/features/tabs/browser/tab-store-reducer";
-import { findTabAcrossPanes } from "src/features/tabs/browser/tab-store-selectors";
+} from "src/view/browser/state/tabs/tab-store-new-tab";
+import { tabReducer } from "src/view/browser/state/tabs/tab-store-reducer";
+import { findTabAcrossPanes } from "src/view/browser/state/tabs/tab-store-selectors";
 import {
   loadTabStoreSession,
   saveTabStoreSession,
-} from "src/features/tabs/browser/tab-store-session";
+} from "src/view/browser/state/tabs/tab-store-session";
 import {
   getActivePane,
   getActivePaneActiveTab,
@@ -46,15 +46,15 @@ import {
   getPaneActiveTab,
   resolvePaneId,
   updatePane,
-} from "src/features/tabs/browser/tab-store-state-helpers";
+} from "src/view/browser/state/tabs/tab-store-state-helpers";
 import {
   type PaneScopedState,
   type PaneScopedTabStore,
   type ScopedTabAction,
   TAB_ACTION_TYPES,
   type TabStoreState,
-} from "src/features/tabs/browser/tab-store-types";
-import { useTabViewScope } from "src/features/tabs/browser/use-tab-view-scope";
+} from "src/view/browser/state/tabs/tab-store-types";
+import { useTabViewScope } from "src/view/browser/state/tabs/use-tab-view-scope";
 import {
   getCurrentPage,
   getPageViewStateKey,
@@ -65,16 +65,16 @@ import {
 import { parseInternalBrowserPage } from "src/view/browser/utils/link-routing";
 import browser from "webextension-polyfill";
 
-export type { TabActionCreators } from "src/features/tabs/browser/tab-store-actions";
-export { tabActions } from "src/features/tabs/browser/tab-store-actions";
+export type { TabActionCreators } from "src/view/browser/state/tabs/tab-store-actions";
+export { tabActions } from "src/view/browser/state/tabs/tab-store-actions";
 export type {
   PaneScopedState,
   PaneScopedTabStore,
   ScopedTabAction,
   TabAction,
   TabStoreState,
-} from "src/features/tabs/browser/tab-store-types";
-export { TAB_ACTION_TYPES } from "src/features/tabs/browser/tab-store-types";
+} from "src/view/browser/state/tabs/tab-store-types";
+export { TAB_ACTION_TYPES } from "src/view/browser/state/tabs/tab-store-types";
 
 const initialPageFromLocation = readInitialPageFromLocation();
 const restoredSession = loadTabStoreSession();

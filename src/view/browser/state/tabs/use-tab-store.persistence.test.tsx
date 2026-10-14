@@ -2,7 +2,7 @@ import "@testing-library/jest-dom/vitest";
 
 import { act, cleanup, render, screen } from "@testing-library/react";
 import { startTransition } from "react";
-import type { ScopedTabAction, TabStoreState } from "src/features/tabs/browser/tab-store-types";
+import type { ScopedTabAction, TabStoreState } from "src/view/browser/state/tabs/tab-store-types";
 import { createHomeTab, getCurrentPage } from "src/view/browser/types";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vite-plus/test";
 
@@ -49,7 +49,7 @@ function savedState(): TabStoreState {
 
 async function renderViewer() {
   const { TabProvider, useTabStore, useTabPanes } =
-    await import("src/features/tabs/browser/use-tab-store");
+    await import("src/view/browser/state/tabs/use-tab-store");
   let dispatchForTest: (action: ScopedTabAction) => void = () => {
     throw new Error("未マウントです");
   };

@@ -1,5 +1,5 @@
 // @vitest-environment node
-import { tabActions } from "src/features/tabs/browser/tab-store-actions";
+import { tabActions } from "src/view/browser/state/tabs/tab-store-actions";
 import { describe, expect, it } from "vite-plus/test";
 
 describe("tabActions", () => {

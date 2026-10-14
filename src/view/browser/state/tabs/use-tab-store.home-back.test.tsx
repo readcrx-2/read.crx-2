@@ -2,7 +2,7 @@ import "@testing-library/jest-dom/vitest";
 
 import { act, cleanup, render, screen } from "@testing-library/react";
 import type { Dispatch } from "react";
-import type { ScopedTabAction, TabStoreState } from "src/features/tabs/browser/tab-store-types";
+import type { ScopedTabAction, TabStoreState } from "src/view/browser/state/tabs/tab-store-types";
 import { canGoBack, createHomeTab, getCurrentPage, type Tab } from "src/view/browser/types";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vite-plus/test";
 
@@ -54,7 +54,7 @@ afterEach(() => {
 
 async function mount(saved?: TabStoreState) {
   if (saved) localStorage.setItem("chlens_browser_session", JSON.stringify(saved));
-  const { TabProvider, useTabStore } = await import("src/features/tabs/browser/use-tab-store");
+  const { TabProvider, useTabStore } = await import("src/view/browser/state/tabs/use-tab-store");
   function Harness() {
     const store = useTabStore();
     dispatch = store.dispatch;

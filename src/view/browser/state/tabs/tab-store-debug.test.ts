@@ -1,10 +1,10 @@
 import { queryDebugLogs, resetDebugLogForTest } from "src/app/debug/debug-log";
-import { getAutoRefreshPageKey } from "src/features/auto-refresh/browser/auto-refresh-pages";
-import { tabActions } from "src/features/tabs/browser/tab-store-actions";
-import { recordAutoRefreshTransitions } from "src/features/tabs/browser/tab-store-debug";
-import { createPane, createTabFromPage } from "src/features/tabs/browser/tab-store-new-tab";
-import { tabReducer } from "src/features/tabs/browser/tab-store-reducer";
-import type { TabStoreState } from "src/features/tabs/browser/tab-store-types";
+import { getAutoRefreshPageKey } from "src/view/browser/state/tabs/auto-refresh-pages";
+import { tabActions } from "src/view/browser/state/tabs/tab-store-actions";
+import { recordAutoRefreshTransitions } from "src/view/browser/state/tabs/tab-store-debug";
+import { createPane, createTabFromPage } from "src/view/browser/state/tabs/tab-store-new-tab";
+import { tabReducer } from "src/view/browser/state/tabs/tab-store-reducer";
+import type { TabStoreState } from "src/view/browser/state/tabs/tab-store-types";
 import type { Page } from "src/view/browser/types";
 import { afterEach, describe, expect, it } from "vite-plus/test";
 

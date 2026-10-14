@@ -1,9 +1,9 @@
-import { loadTabStoreSession } from "src/features/tabs/browser/tab-store-session";
+import { loadTabStoreSession } from "src/view/browser/state/tabs/tab-store-session";
 import { createHomeTab, getCurrentPage, type Tab } from "src/view/browser/types";
 import { beforeEach, describe, expect, it, vi } from "vite-plus/test";
 
 const storage = vi.hoisted(() => ({ json: "" }));
-vi.mock("src/features/tabs/browser/browser-session-storage", () => ({
+vi.mock("src/view/browser/state/tabs/browser-session-storage", () => ({
   getBrowserSessionJson: () => storage.json,
   setBrowserSessionJson: vi.fn(async () => undefined),
 }));
@@ -120,7 +120,7 @@ describe("ホーム統合後のセッション移行", () => {
 
 describe("セッション保存形式", () => {
   it("一時状態を書き出さず、履歴から外れたページの表示状態を切り捨てる", async () => {
-    const { toPersistedTab } = await import("src/features/tabs/browser/tab-store-session");
+    const { toPersistedTab } = await import("src/view/browser/state/tabs/tab-store-session");
     const threadPage = {
       type: "thread" as const,
       title: "サンプルスレ",

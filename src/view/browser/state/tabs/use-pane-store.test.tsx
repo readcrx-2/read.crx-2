@@ -98,7 +98,7 @@ describe("ペイン（横分割）", () => {
   async function setup() {
     vi.resetModules();
     const { TabProvider, PaneProvider, useTabPanes, useTabStore, useTabDispatch } =
-      await import("src/features/tabs/browser/use-tab-store");
+      await import("src/view/browser/state/tabs/use-tab-store");
 
     // グローバルな dispatch（paneId 注入なし）= アクティブペインに作用。
     function GlobalControls() {

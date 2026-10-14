@@ -4,7 +4,7 @@ import {
   findMainstreamThreadMatch,
   findNextThreadCandidates,
   findNextThreadMatch,
-} from "src/features/next-thread/browser/next-thread-search";
+} from "src/features/next-thread/domain/next-thread-search";
 import type { IThread } from "src/service-container/interfaces";
 import { describe, expect, it } from "vite-plus/test";
 

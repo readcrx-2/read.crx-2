@@ -38,7 +38,10 @@ if (exitCode === 0) {
   });
 }
 
-const reportExit = await run(process.execPath, ["scripts/merge-coverage.mjs", ...process.argv.slice(2)]);
+const reportExit = await run(process.execPath, [
+  "scripts/merge-coverage.mjs",
+  ...process.argv.slice(2),
+]);
 if (reportExit !== 0) exitCode ||= reportExit;
 
 const restoreExit = await run(process.execPath, [vp, "build"], {

@@ -34,7 +34,8 @@ export async function startLocalBoard() {
         .join("\n")}\n`,
     };
     const datMatch = pathname.match(/^\/local\/dat\/(\d+)\.dat$/u);
-    const datThread = datMatch == null ? undefined : threads.find((item) => item.id === datMatch[1]);
+    const datThread =
+      datMatch == null ? undefined : threads.find((item) => item.id === datMatch[1]);
     const body = datThread == null ? resources[pathname] : `${datThread.posts.join("\n")}\n`;
     if (body === undefined) {
       console.error(`[localboard] 未対応のリクエスト: ${request.method} ${request.url}`);

@@ -1,13 +1,12 @@
 import { mkdir } from "node:fs/promises";
 import path from "node:path";
+
 import type { Page } from "@playwright/test";
 
 import { expect, test } from "./fixtures.mjs";
 
 const stamp = new Date().toISOString().replaceAll(":", "-").replaceAll(".", "-");
-const outputDir = path.resolve(
-  process.env.UI_SHOT_DIR ?? path.join("screenshots", "ui", stamp),
-);
+const outputDir = path.resolve(process.env.UI_SHOT_DIR ?? path.join("screenshots", "ui", stamp));
 const SETTINGS = [
   ["一般", "settings-general"],
   ["表示", "settings-display"],
@@ -38,11 +37,12 @@ async function captureMiniWindows(page: Page, prefix: string): Promise<void> {
   // 最初に撮影対象の名前を控えて、各回でボタンを取り直す。
   const labels = await statusButtons.evaluateAll((buttons) =>
     buttons
-      .map((button) =>
-        button.getAttribute("aria-label") ??
-        button.getAttribute("title") ??
-        button.textContent?.trim() ??
-        "",
+      .map(
+        (button) =>
+          button.getAttribute("aria-label") ??
+          button.getAttribute("title") ??
+          button.textContent?.trim() ??
+          "",
       )
       .filter((label) => label.length > 0),
   );
@@ -51,7 +51,10 @@ async function captureMiniWindows(page: Page, prefix: string): Promise<void> {
     if (await page.locator(".mini-window").count()) {
       await page.locator(".mini-window__close").click();
     }
-    const button = page.locator(".status-bar").getByRole("button", { name: label, exact: true }).first();
+    const button = page
+      .locator(".status-bar")
+      .getByRole("button", { name: label, exact: true })
+      .first();
     // ページ遷移などで対象が消えた場合は、存在しないnth()を待たず次へ進む。
     if ((await button.count()) === 0) continue;
     await button.click();
@@ -59,7 +62,10 @@ async function captureMiniWindows(page: Page, prefix: string): Promise<void> {
     if (await miniWindow.count()) {
       await expect(miniWindow).toBeVisible();
       const title = (await miniWindow.locator(".mini-window__title").innerText()).trim();
-      await capture(page, `${prefix}-mini-${String(miniWindowIndex).padStart(2, "0")}-${fileName(title || label)}`);
+      await capture(
+        page,
+        `${prefix}-mini-${String(miniWindowIndex).padStart(2, "0")}-${fileName(title || label)}`,
+      );
       miniWindowIndex += 1;
     }
   }
@@ -82,14 +88,18 @@ async function captureSettings(page: Page, prefix = ""): Promise<void> {
 
   const captureScrolledSections = async (name: string) => {
     const main = page.locator(".settings-page__main");
-    await main.evaluate((element) => { element.scrollTop = 0; });
+    await main.evaluate((element) => {
+      element.scrollTop = 0;
+    });
     const { height, maxScroll } = await main.evaluate((element) => ({
       height: Math.max(element.clientHeight, 1),
       maxScroll: Math.max(0, element.scrollHeight - element.clientHeight),
     }));
     let index = 1;
     for (let top = 0; top <= maxScroll; top += Math.max(1, Math.floor(height * 0.8))) {
-      await main.evaluate((element, scrollTop) => { element.scrollTop = scrollTop; }, top);
+      await main.evaluate((element, scrollTop) => {
+        element.scrollTop = scrollTop;
+      }, top);
       await capture(page, `${prefix}${name}-section-${String(index).padStart(2, "0")}`);
       index += 1;
     }
@@ -116,13 +126,17 @@ async function captureSettings(page: Page, prefix = ""): Promise<void> {
       await captureScrolledSections(`${file}-replacement`);
     } else {
       // 設定ページ内の折りたたみ項目も開き、隠れたセクションを撮影対象へ含める。
-      await page.locator(".settings-page__main details:not([open]) summary").evaluateAll((summaries) => {
-        for (const summary of summaries) (summary as HTMLElement).click();
-      });
+      await page
+        .locator(".settings-page__main details:not([open]) summary")
+        .evaluateAll((summaries) => {
+          for (const summary of summaries) (summary as HTMLElement).click();
+        });
       await captureScrolledSections(file);
       if (label === "データ") {
         await page.getByRole("button", { name: "zipをエクスポート", exact: true }).click();
-        await page.getByRole("dialog", { name: "バックアップ内容を選択" }).waitFor({ state: "visible" });
+        await page
+          .getByRole("dialog", { name: "バックアップ内容を選択" })
+          .waitFor({ state: "visible" });
         await capture(page, `${prefix}${file}-export-dialog`);
         await page.getByRole("button", { name: "キャンセル", exact: true }).click();
       }
@@ -130,7 +144,11 @@ async function captureSettings(page: Page, prefix = ""): Promise<void> {
   }
 }
 
-test("UI画面とステータスバーのミニウィンドウを撮影する", async ({ page, extensionId, localBoard }) => {
+test("UI画面とステータスバーのミニウィンドウを撮影する", async ({
+  page,
+  extensionId,
+  localBoard,
+}) => {
   // 多数の設定セクションを個別に保存する撮影シナリオのため、通常の短いE2E上限を延長する。
   test.setTimeout(300_000);
   await mkdir(outputDir, { recursive: true });
@@ -197,26 +215,40 @@ test("UI画面とステータスバーのミニウィンドウを撮影する", 
   if (await addBookmark.count()) await addBookmark.click();
 
   // コメント流し表示は自動更新中に届いた新着だけを順次出すため、先に有効化する。
-  await page.locator(".status-bar").getByRole("button", { name: /スレッド自動更新/u }).click();
+  await page
+    .locator(".status-bar")
+    .getByRole("button", { name: /スレッド自動更新/u })
+    .click();
   const autoRefreshPanel = page.locator(".mini-window");
   await expect(autoRefreshPanel).toBeVisible();
-  await autoRefreshPanel.locator(".mini-window__toggle-row").filter({ hasText: "自動更新" }).locator(".mini-window__switch").click();
+  await autoRefreshPanel
+    .locator(".mini-window__toggle-row")
+    .filter({ hasText: "自動更新" })
+    .locator(".mini-window__switch")
+    .click();
   await expect(
-    autoRefreshPanel.locator(".mini-window__toggle-row").filter({ hasText: "自動更新" }).locator(".mini-window__switch"),
+    autoRefreshPanel
+      .locator(".mini-window__toggle-row")
+      .filter({ hasText: "自動更新" })
+      .locator(".mini-window__switch"),
   ).toHaveAttribute("aria-pressed", "true");
   await autoRefreshPanel.locator(".mini-window__close").click();
   await capture(page, "04-thread-live-chat");
 
   localBoard.appendPost();
   await page.getByRole("button", { name: "更新", exact: true }).click();
-  await expect(responses.locator('[data-res-num="25"]')).toContainText("更新で追加された日本語レス");
+  await expect(responses.locator('[data-res-num="25"]')).toContainText(
+    "更新で追加された日本語レス",
+  );
   await capture(page, "05-thread-new-comments");
 
   // 人気フィルタの小窓は多レス表示中だけ現れるため、メニューから状態を切り替える。
   await page.getByTitle("メニュー", { exact: true }).click();
   await page.getByText("フィルター", { exact: true }).click();
   await page.getByRole("button", { name: "多レス", exact: true }).click();
-  await expect(page.locator(".status-bar").getByRole("button", { name: /人気レス/u })).toBeVisible();
+  await expect(
+    page.locator(".status-bar").getByRole("button", { name: /人気レス/u }),
+  ).toBeVisible();
 
   await captureMiniWindows(page, "thread");
 

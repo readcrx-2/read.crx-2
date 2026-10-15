@@ -613,11 +613,7 @@ export default defineConfig(async ({ mode, command }) => {
       outDir: outputDir,
       emptyOutDir: false,
       minify: minifyOutput,
-      sourcemap: analyzeBundle
-        ? true
-        : process.env.VITE_COVERAGE === "true"
-          ? "inline"
-          : false,
+      sourcemap: analyzeBundle ? true : process.env.VITE_COVERAGE === "true" ? "inline" : false,
       lib: {
         entry: path.resolve(__dirname, file),
         formats: ["iife"],

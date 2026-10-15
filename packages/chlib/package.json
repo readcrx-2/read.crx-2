@@ -9,14 +9,14 @@
   "module": "dist/index.mjs",
   "types": "dist/index.d.ts",
   "scripts": {
-    "build": "tsup src/index.ts --format cjs,esm --dts",
+    "build": "tsdown src/index.ts --format cjs,esm --dts",
     "test": "vp test",
-    "dev": "tsup src/index.ts --format cjs,esm --watch --dts",
+    "dev": "tsdown src/index.ts --format cjs,esm --watch --dts",
     "generate:dsl": "peggy --format es --dts --allowed-start-rules Document,Scalar,OptionList,ReplacementDocument --return-types '{\"Document\":\"import(\\\"./dsl-ast\\\").DslLine[]\",\"Scalar\":\"import(\\\"./dsl-ast\\\").DslValue\",\"OptionList\":\"string[]\",\"ReplacementDocument\":\"import(\\\"./dsl-ast\\\").ReplacementDslLine[]\"}' -o src/rules/dsl-grammar.js src/rules/dsl.peggy"
   },
   "devDependencies": {
     "peggy": "^5.1.0",
-    "tsup": "^8.5.1",
+    "tsdown": "^0.23.1",
     "typescript": "^7.0.2",
     "vite": "catalog:",
     "vite-plus": "catalog:"

@@ -240,7 +240,8 @@ if (!globalObj.__ServiceContainer) {
 
 // window 上のプロパティは unknown なので、上で登録した実体の型へ戻すキャストが必要。
 export const container: IServiceContainer = globalObj.__ServiceContainer as IServiceContainer;
-globalObj.container = container;
+// 変更理由: 以前は window.container にも載せていたが、どこからも読まれていなかったため外した
+// （legacy-window-app-plan の Phase 5）。__ServiceContainer は vi.resetModules() の後も同じ実体を保つために残す。
 // core が参照するサービスの登録先を、この global と同じ実体にする。
 // 登録後の代入もそのまま見えるため、setupContainer の前後どちらでも同じ値を使える。
 installCorePorts(container);

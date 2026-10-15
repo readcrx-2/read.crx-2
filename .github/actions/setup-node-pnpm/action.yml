@@ -1,0 +1,19 @@
+name: Setup pnpm project
+description: pnpmとNode.jsを設定して依存関係をインストールする
+runs:
+  using: composite
+  steps:
+    - name: Set up pnpm
+      uses: pnpm/action-setup@v6
+      with:
+        version: 12.9.0
+
+    - name: Set up Node.js
+      uses: actions/setup-node@v6
+      with:
+        node-version: 25
+        cache: pnpm
+
+    - name: Install dependencies
+      run: pnpm install --frozen-lockfile
+      shell: bash

@@ -25,10 +25,7 @@
     "declarativeNetRequest",
     "contextMenus"
   ],
-  "host_permissions": [
-    "http://*/",
-    "https://*/"
-  ],
+  "host_permissions": ["http://*/", "https://*/"],
   "declarative_net_request": {
     "rule_resources": [
       {
@@ -39,9 +36,7 @@
     ]
   },
   "background": {
-    "scripts": [
-      "background.js"
-    ],
+    "scripts": ["background.js"],
     "service_worker": "background.js"
   },
   "action": {
@@ -73,9 +68,7 @@
         "*://*.bbspink.com/*",
         "*://bbs.eddibb.cc/*"
       ],
-      "js": [
-        "./cs_addlink.js"
-      ]
+      "js": ["./cs_addlink.js"]
     },
     {
       "matches": [
@@ -86,17 +79,12 @@
       ],
       "run_at": "document_end",
       "all_frames": true,
-      "js": [
-        "./cs_addlink.js"
-      ]
+      "js": ["./cs_addlink.js"]
     }
   ],
   "web_accessible_resources": [
     {
-      "resources": [
-        "/view/index.html",
-        "/lib/monaco/vs/**/*"
-      ],
+      "resources": ["/view/index.html", "/lib/monaco/vs/**/*"],
       "matches": [
         "*://*.2ch.net/*",
         "*://*.5ch.net/*",

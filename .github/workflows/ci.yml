@@ -21,23 +21,12 @@ jobs:
     timeout-minutes: 20
     steps:
       - name: Check out repository
-        uses: actions/checkout@v6
+        uses: actions/checkout@v7
         with:
           fetch-depth: 0
 
-      - name: Set up pnpm
-        uses: pnpm/action-setup@v6
-        with:
-          version: 12.9.0
-
-      - name: Set up Node.js
-        uses: actions/setup-node@v6
-        with:
-          node-version: 25
-          cache: pnpm
-
-      - name: Install dependencies
-        run: pnpm install --frozen-lockfile
+      - name: Set up Node.js and install dependencies
+        uses: ./.github/actions/setup-node-pnpm
 
       - name: Type check
         run: pnpm exec tsc --noEmit -p .
@@ -64,7 +53,7 @@ jobs:
     timeout-minutes: 30
     steps:
       - name: Check out repository
-        uses: actions/checkout@v6
+        uses: actions/checkout@v7
 
       - name: Install Tauri build dependencies
         run: |
@@ -98,7 +87,7 @@ jobs:
 
       - name: Upload Rust coverage report
         if: ${{ !cancelled() }}
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v7
         with:
           name: coverage-rust
           path: coverage/rust/html
@@ -110,29 +99,17 @@ jobs:
     timeout-minutes: 20
     steps:
       - name: Check out repository
-        uses: actions/checkout@v6
+        uses: actions/checkout@v7
 
-      # package.json の devEngines が pnpm 12.9.0 / Node 25 以上を要求しているため合わせる。
-      - name: Set up pnpm
-        uses: pnpm/action-setup@v6
-        with:
-          version: 12.9.0
-
-      - name: Set up Node.js
-        uses: actions/setup-node@v6
-        with:
-          node-version: 25
-          cache: pnpm
-
-      - name: Install dependencies
-        run: pnpm install --frozen-lockfile
+      - name: Set up Node.js and install dependencies
+        uses: ./.github/actions/setup-node-pnpm
 
       - name: Run unit tests
         run: pnpm run test:coverage
 
       - name: Upload unit coverage
         if: ${{ !cancelled() }}
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v7
         with:
           name: coverage-unit
           path: coverage/unit
@@ -140,66 +117,75 @@ jobs:
 
   e2e:
     name: E2Eテスト
-    needs: unit
     runs-on: ubuntu-latest
     timeout-minutes: 30
     steps:
       - name: Check out repository
-        uses: actions/checkout@v6
+        uses: actions/checkout@v7
 
-      - name: Set up pnpm
-        uses: pnpm/action-setup@v6
-        with:
-          version: 12.9.0
-
-      - name: Set up Node.js
-        uses: actions/setup-node@v6
-        with:
-          node-version: 25
-          cache: pnpm
-
-      - name: Install dependencies
-        run: pnpm install --frozen-lockfile
-
-      - name: Download unit coverage
-        uses: actions/download-artifact@v4
-        with:
-          name: coverage-unit
-          path: coverage/unit
+      - name: Set up Node.js and install dependencies
+        uses: ./.github/actions/setup-node-pnpm
 
       # tests/fixtures.mts は channel: "chromium" で拡張機能を読み込むため、
       # Playwright同梱のChromiumとOS依存ライブラリを入れる。
       - name: Install Playwright Chromium
         run: pnpm exec playwright install --with-deps chromium
 
-      # カバレッジ用ビルドを使ってE2Eを実行し、ユニットテストの結果と統合する。
-      - name: Run E2E tests and combine coverage
+      # ユニットテストとは独立してE2Eを実行し、E2E単体のカバレッジを生成する。
+      - name: Run E2E tests and generate coverage
         run: pnpm run test:e2e:coverage
 
+      # 統合ジョブが各レポートを取得できるようにする。
       - name: Upload E2E coverage
         if: ${{ !cancelled() }}
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v7
         with:
           name: coverage-e2e
           path: coverage/e2e
           if-no-files-found: ignore
 
-      - name: Upload combined coverage
-        if: ${{ !cancelled() }}
-        uses: actions/upload-artifact@v4
-        with:
-          name: coverage-combined
-          path: coverage/combined
-          if-no-files-found: ignore
-
       # 失敗時にトレースとスクリーンショットから原因を追えるよう、結果を残す。
       - name: Upload Playwright report
         if: ${{ !cancelled() }}
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v7
         with:
           name: playwright-report
           path: |
             playwright-report/
             test-results/
           retention-days: 14
+          if-no-files-found: ignore
+
+  combined-coverage:
+    name: カバレッジ統合
+    needs: [unit, e2e]
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v7
+
+      - name: Set up Node.js and install dependencies
+        uses: ./.github/actions/setup-node-pnpm
+
+      - name: Download unit coverage
+        uses: actions/download-artifact@v8
+        with:
+          name: coverage-unit
+          path: coverage/unit
+
+      - name: Download E2E coverage
+        uses: actions/download-artifact@v8
+        with:
+          name: coverage-e2e
+          path: coverage/e2e
+
+      - name: Combine coverage
+        run: pnpm run test:coverage:merge
+
+      - name: Upload combined coverage
+        if: ${{ !cancelled() }}
+        uses: actions/upload-artifact@v7
+        with:
+          name: coverage-combined
+          path: coverage/combined
           if-no-files-found: ignore

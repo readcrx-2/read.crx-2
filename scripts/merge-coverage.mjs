@@ -1,6 +1,7 @@
-import { readFile, readdir, writeFile } from "node:fs/promises";
+import { readdir, readFile, writeFile } from "node:fs/promises";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
+
 import libCoverage from "istanbul-lib-coverage";
 import libReport from "istanbul-lib-report";
 import reports from "istanbul-reports";
@@ -23,7 +24,9 @@ function mergeCoverage(inputs) {
       const target = files.get(file) ?? libCoverage.createFileCoverage(file).data;
       files.set(file, target);
 
-      const statements = new Map(Object.entries(target.statementMap).map(([id, loc]) => [locationKey(loc), id]));
+      const statements = new Map(
+        Object.entries(target.statementMap).map(([id, loc]) => [locationKey(loc), id]),
+      );
       for (const [sourceId, loc] of Object.entries(source.statementMap)) {
         const key = locationKey(loc);
         let id = statements.get(key);
@@ -36,7 +39,9 @@ function mergeCoverage(inputs) {
         target.s[id] += source.s[sourceId];
       }
 
-      const functions = new Map(Object.entries(target.fnMap).map(([id, fn]) => [locationKey(fn.loc), id]));
+      const functions = new Map(
+        Object.entries(target.fnMap).map(([id, fn]) => [locationKey(fn.loc), id]),
+      );
       for (const [sourceId, fn] of Object.entries(source.fnMap)) {
         const key = locationKey(fn.loc);
         let id = functions.get(key);
@@ -49,8 +54,11 @@ function mergeCoverage(inputs) {
         target.f[id] += source.f[sourceId];
       }
 
-      const branchKey = (branch) => JSON.stringify([branch.type, branch.locations.map(locationKey)]);
-      const branches = new Map(Object.entries(target.branchMap).map(([id, branch]) => [branchKey(branch), id]));
+      const branchKey = (branch) =>
+        JSON.stringify([branch.type, branch.locations.map(locationKey)]);
+      const branches = new Map(
+        Object.entries(target.branchMap).map(([id, branch]) => [branchKey(branch), id]),
+      );
       for (const [sourceId, branch] of Object.entries(source.branchMap)) {
         const key = branchKey(branch);
         let id = branches.get(key);
@@ -87,17 +95,27 @@ async function writeReport(coverageMap, outputDirectory) {
 const rawDirectory = path.join(root, "coverage/e2e/raw");
 const rawFiles = (await readdir(rawDirectory)).filter((filename) => filename.endsWith(".json"));
 if (!rawFiles.length) {
-  throw new Error("E2Eカバレッジを取得できませんでした。ページ上で計測コードが実行されたか確認してください。");
+  throw new Error(
+    "E2Eカバレッジを取得できませんでした。ページ上で計測コードが実行されたか確認してください。",
+  );
 }
 
-const e2eInputs = await Promise.all(rawFiles.map((filename) => readReport(path.join(rawDirectory, filename))));
+const e2eInputs = await Promise.all(
+  rawFiles.map((filename) => readReport(path.join(rawDirectory, filename))),
+);
 const e2eMap = mergeCoverage(e2eInputs);
 await writeReport(e2eMap, path.join(root, "coverage/e2e"));
-await writeFile(path.join(root, "coverage/e2e/coverage-final.json"), JSON.stringify(e2eMap.toJSON()));
+await writeFile(
+  path.join(root, "coverage/e2e/coverage-final.json"),
+  JSON.stringify(e2eMap.toJSON()),
+);
 
 if (!process.argv.includes("--e2e-only")) {
   const unit = await readReport(path.join(root, "coverage/unit/coverage-final.json"));
   const combinedMap = mergeCoverage([unit, ...e2eInputs]);
   await writeReport(combinedMap, path.join(root, "coverage/combined"));
-  await writeFile(path.join(root, "coverage/combined/coverage-final.json"), JSON.stringify(combinedMap.toJSON()));
+  await writeFile(
+    path.join(root, "coverage/combined/coverage-final.json"),
+    JSON.stringify(combinedMap.toJSON()),
+  );
 }

@@ -1,7 +1,10 @@
+/// <reference types="node" />
+
 import { mkdir } from "node:fs/promises";
 import path from "node:path";
+
 import { expect } from "@playwright/test";
-import { chromium, type Browser, type Page } from "playwright";
+import { type Browser, chromium, type Page } from "playwright";
 
 import { startLocalBoard } from "../tests/localboard.mts";
 
@@ -43,11 +46,12 @@ async function captureMiniWindows(page: Page): Promise<void> {
   // 小窓を開く操作でボタンDOMが更新されるため、各回のlocatorを名前から取り直す。
   const labels = await buttons.evaluateAll((items) =>
     items
-      .map((button) =>
-        button.getAttribute("aria-label") ??
-        button.getAttribute("title") ??
-        button.textContent?.trim() ??
-        "",
+      .map(
+        (button) =>
+          button.getAttribute("aria-label") ??
+          button.getAttribute("title") ??
+          button.textContent?.trim() ??
+          "",
       )
       .filter((label) => label.length > 0),
   );
@@ -56,14 +60,20 @@ async function captureMiniWindows(page: Page): Promise<void> {
     if (await page.locator(".mini-window").count()) {
       await page.locator(".mini-window__close").click();
     }
-    const button = page.locator(".status-bar").getByRole("button", { name: label, exact: true }).first();
+    const button = page
+      .locator(".status-bar")
+      .getByRole("button", { name: label, exact: true })
+      .first();
     if ((await button.count()) === 0) continue;
     await button.click();
     const miniWindow = page.locator(".mini-window");
     if (!(await miniWindow.count())) continue;
     await miniWindow.waitFor({ state: "visible" });
     const title = (await miniWindow.locator(".mini-window__title").innerText()).trim();
-    await capture(page, `tauri-thread-mini-${String(index).padStart(2, "0")}-${fileName(title || label)}`);
+    await capture(
+      page,
+      `tauri-thread-mini-${String(index).padStart(2, "0")}-${fileName(title || label)}`,
+    );
     index += 1;
   }
   if (await page.locator(".mini-window").count()) await page.locator(".mini-window__close").click();
@@ -85,14 +95,18 @@ async function captureSettings(page: Page): Promise<void> {
 
   const captureScrolledSections = async (name: string) => {
     const main = page.locator(".settings-page__main");
-    await main.evaluate((element) => { element.scrollTop = 0; });
+    await main.evaluate((element) => {
+      element.scrollTop = 0;
+    });
     const { height, maxScroll } = await main.evaluate((element) => ({
       height: Math.max(element.clientHeight, 1),
       maxScroll: Math.max(0, element.scrollHeight - element.clientHeight),
     }));
     let index = 1;
     for (let top = 0; top <= maxScroll; top += Math.max(1, Math.floor(height * 0.8))) {
-      await main.evaluate((element, scrollTop) => { element.scrollTop = scrollTop; }, top);
+      await main.evaluate((element, scrollTop) => {
+        element.scrollTop = scrollTop;
+      }, top);
       await capture(page, `tauri-${name}-section-${String(index).padStart(2, "0")}`);
       index += 1;
     }
@@ -118,13 +132,17 @@ async function captureSettings(page: Page): Promise<void> {
       if ((await replacement.getAttribute("aria-expanded")) === "false") await replacement.click();
       await captureScrolledSections(`${file}-replacement`);
     } else {
-      await page.locator(".settings-page__main details:not([open]) summary").evaluateAll((summaries) => {
-        for (const summary of summaries) (summary as HTMLElement).click();
-      });
+      await page
+        .locator(".settings-page__main details:not([open]) summary")
+        .evaluateAll((summaries) => {
+          for (const summary of summaries) (summary as HTMLElement).click();
+        });
       await captureScrolledSections(file);
       if (label === "データ") {
         await page.getByRole("button", { name: "zipをエクスポート", exact: true }).click();
-        await page.getByRole("dialog", { name: "バックアップ内容を選択" }).waitFor({ state: "visible" });
+        await page
+          .getByRole("dialog", { name: "バックアップ内容を選択" })
+          .waitFor({ state: "visible" });
         await capture(page, `tauri-${file}-export-dialog`);
         await page.getByRole("button", { name: "キャンセル", exact: true }).click();
       }
@@ -145,7 +163,12 @@ async function run(): Promise<void> {
       title: "架空番組実況スレッド ★1",
       posts: Array.from({ length: 24 }, (_, index) => {
         const number = String(index + 1).padStart(3, "0");
-        const messages = ["番組始まった！", "この演出いいね", "次の展開が気になる", "実況テスト用のレスです"];
+        const messages = [
+          "番組始まった！",
+          "この演出いいね",
+          "次の展開が気になる",
+          "実況テスト用のレスです",
+        ];
         return `視聴者${number}<>sage<>2026/10/02(金) 12:${String(index).padStart(2, "0")}:00 ID:sample${String(index % 7).padStart(3, "0")}<>${messages[index % messages.length]}<>架空番組実況スレッド ★1`;
       }),
     },
@@ -161,7 +184,7 @@ async function run(): Promise<void> {
     browser = await chromium.connectOverCDP(cdpUrl);
     const context = browser.contexts()[0];
     if (!context) throw new Error("TauriのCDPにブラウザーコンテキストがありません");
-    let pages = await context.pages();
+    let pages = context.pages();
     main = pages.find((page) => page.url().includes("/view/index.html"));
     if (!main) {
       throw new Error("Main画面が見つかりません。pnpm dev:tauri:debug で起動してください");
@@ -203,9 +226,16 @@ async function run(): Promise<void> {
     if (await addBookmark.count()) await addBookmark.click();
 
     // コメントを流す再現には自動更新が必要なので、スレッドのミニウィンドウからONにする。
-    await main.locator(".status-bar").getByRole("button", { name: /スレッド自動更新/u }).click();
+    await main
+      .locator(".status-bar")
+      .getByRole("button", { name: /スレッド自動更新/u })
+      .click();
     const refreshPanel = main.locator(".mini-window");
-    await refreshPanel.locator(".mini-window__toggle-row").filter({ hasText: "自動更新" }).locator(".mini-window__switch").click();
+    await refreshPanel
+      .locator(".mini-window__toggle-row")
+      .filter({ hasText: "自動更新" })
+      .locator(".mini-window__switch")
+      .click();
     await refreshPanel.locator(".mini-window__close").click();
     await capture(main, "tauri-thread-live-chat");
     await captureMiniWindows(main);
@@ -222,7 +252,8 @@ async function run(): Promise<void> {
     const overlayPanel = main.locator(".mini-window");
     await overlayPanel.waitFor({ state: "visible" });
     await capture(main, "tauri-comment-overlay-controls");
-    await overlayPanel.locator(".mini-window__toggle-row")
+    await overlayPanel
+      .locator(".mini-window__toggle-row")
       .filter({ hasText: "コメントを画面に流す" })
       .locator(".mini-window__switch")
       .click();
@@ -231,7 +262,10 @@ async function run(): Promise<void> {
     pages = await getTauriPages(main);
     let overlay = pages.find((page) => page.url().includes("/view/comment-overlay.html"));
     if (!overlay) {
-      await main.context().waitForEvent("page", { timeout: 15_000 }).catch(() => undefined);
+      await main
+        .context()
+        .waitForEvent("page", { timeout: 15_000 })
+        .catch(() => undefined);
       pages = await getTauriPages(main);
       overlay = pages.find((page) => page.url().includes("/view/comment-overlay.html"));
     }
@@ -244,7 +278,9 @@ async function run(): Promise<void> {
     await main.getByRole("button", { name: "更新", exact: true }).click();
     await responses.locator('[data-res-num="25"]').waitFor({ state: "visible", timeout: 15_000 });
     await main.waitForTimeout(1_000);
-    await overlay.locator(".comment-overlay-stage__comment").waitFor({ state: "visible", timeout: 15_000 });
+    await overlay
+      .locator(".comment-overlay-stage__comment")
+      .waitFor({ state: "visible", timeout: 15_000 });
     await capture(overlay, "tauri-comment-overlay-flowing", "allow");
 
     await overlayControl.click();
@@ -255,7 +291,8 @@ async function run(): Promise<void> {
     await stopSwitch.click();
     await expect(stopSwitch).toHaveAttribute("aria-pressed", "false");
     overlayStarted = false;
-    if (await main.locator(".mini-window").count()) await main.locator(".mini-window__close").click();
+    if (await main.locator(".mini-window").count())
+      await main.locator(".mini-window__close").click();
 
     await captureQuickAccessPage(main, "ブックマークリスト", "bookmarks");
     await captureQuickAccessPage(main, "閲覧履歴", "history");
@@ -289,7 +326,9 @@ async function run(): Promise<void> {
           }
         }, savedConfig);
         if (temporaryTabId) {
-          const closeTemporaryTab = main.locator(`.tab[data-tab-id="${temporaryTabId}"] .tab__close`);
+          const closeTemporaryTab = main.locator(
+            `.tab[data-tab-id="${temporaryTabId}"] .tab__close`,
+          );
           if (await closeTemporaryTab.count()) await closeTemporaryTab.click();
         }
         // 変更したテーマ・設定を、元のタブにも即時反映して利用者の状態へ戻す。

@@ -50,28 +50,10 @@ interface WriteHistoryExportRecord {
   date: number;
 }
 
-interface HistoryExportPayload {
+interface ItemsExportPayload<T> {
   schemaVersion: number;
   exportedAt: string;
-  items: HistoryExportRecord[];
-}
-
-interface WriteHistoryExportPayload {
-  schemaVersion: number;
-  exportedAt: string;
-  items: WriteHistoryExportRecord[];
-}
-
-interface BookmarkExportPayload {
-  schemaVersion: number;
-  exportedAt: string;
-  items: BookmarkEntry[];
-}
-
-interface LogExportPayload {
-  schemaVersion: number;
-  exportedAt: string;
-  items: LogArchiveRecord[];
+  items: T[];
 }
 
 interface SessionExportPayload {
@@ -127,17 +109,26 @@ function normalizeConfigEntries(source: Record<string, unknown>): Record<string,
   return normalized;
 }
 
-function toHistoryExportRecord(value: unknown): HistoryExportRecord | null {
-  if (!value || typeof value !== "object") {
-    return null;
-  }
+function isFiniteNumber(value: unknown): value is number {
+  return typeof value === "number" && Number.isFinite(value);
+}
 
-  const record = value as Record<string, unknown>;
+function toRecord(value: unknown): Record<string, unknown> | null {
+  return value && typeof value === "object" ? (value as Record<string, unknown>) : null;
+}
+
+// 不正な行は捨て、変換できた行だけを返す。
+function convertValidItems<T>(rows: unknown[], convert: (row: unknown) => T | null): T[] {
+  return rows.map(convert).filter((row): row is T => row != null);
+}
+
+function toHistoryExportRecord(value: unknown): HistoryExportRecord | null {
+  const record = toRecord(value);
   if (
+    !record ||
     typeof record.url !== "string" ||
     typeof record.title !== "string" ||
-    typeof record.date !== "number" ||
-    !Number.isFinite(record.date)
+    !isFiniteNumber(record.date)
   ) {
     return null;
   }
@@ -151,21 +142,16 @@ function toHistoryExportRecord(value: unknown): HistoryExportRecord | null {
 }
 
 function toWriteHistoryExportRecord(value: unknown): WriteHistoryExportRecord | null {
-  if (!value || typeof value !== "object") {
-    return null;
-  }
-
-  const record = value as Record<string, unknown>;
+  const record = toRecord(value);
   if (
+    !record ||
     typeof record.url !== "string" ||
-    typeof record.res !== "number" ||
-    !Number.isFinite(record.res) ||
+    !isFiniteNumber(record.res) ||
     typeof record.title !== "string" ||
     typeof record.name !== "string" ||
     typeof record.mail !== "string" ||
     typeof record.message !== "string" ||
-    typeof record.date !== "number" ||
-    !Number.isFinite(record.date)
+    !isFiniteNumber(record.date)
   ) {
     return null;
   }
@@ -184,23 +170,17 @@ function toWriteHistoryExportRecord(value: unknown): WriteHistoryExportRecord | 
 }
 
 function toFiniteNumberOrNull(value: unknown): number | null {
-  return typeof value === "number" && Number.isFinite(value) ? value : null;
+  return isFiniteNumber(value) ? value : null;
 }
 
 function toBookmarkReadState(value: unknown): ReadState | null {
-  if (!value || typeof value !== "object") {
-    return null;
-  }
-
-  const record = value as Record<string, unknown>;
+  const record = toRecord(value);
   if (
+    !record ||
     typeof record.url !== "string" ||
-    typeof record.received !== "number" ||
-    !Number.isFinite(record.received) ||
-    typeof record.read !== "number" ||
-    !Number.isFinite(record.read) ||
-    typeof record.last !== "number" ||
-    !Number.isFinite(record.last)
+    !isFiniteNumber(record.received) ||
+    !isFiniteNumber(record.read) ||
+    !isFiniteNumber(record.last)
   ) {
     return null;
   }
@@ -216,22 +196,19 @@ function toBookmarkReadState(value: unknown): ReadState | null {
 }
 
 function toBookmarkExportRecord(value: unknown): BookmarkEntry | null {
-  if (!value || typeof value !== "object") {
-    return null;
-  }
-
-  const record = value as Record<string, unknown>;
-  const resCount = record.resCount === null ? null : toFiniteNumberOrNull(record.resCount);
+  const record = toRecord(value);
   if (
+    !record ||
     typeof record.url !== "string" ||
     typeof record.title !== "string" ||
     typeof record.type !== "string" ||
     typeof record.bbsType !== "string" ||
-    resCount === undefined ||
     typeof record.expired !== "boolean"
   ) {
     return null;
   }
+
+  const resCount = toFiniteNumberOrNull(record.resCount);
 
   return {
     url: record.url,
@@ -245,17 +222,16 @@ function toBookmarkExportRecord(value: unknown): BookmarkEntry | null {
 }
 
 function toLogArchiveRecord(value: unknown): LogArchiveRecord | null {
-  if (!value || typeof value !== "object") {
+  const record = toRecord(value);
+  if (!record) {
     return null;
   }
 
-  const record = value as Record<string, unknown>;
-  const data = record.data === null ? null : typeof record.data === "string" ? record.data : null;
+  const data = typeof record.data === "string" ? record.data : null;
   const parsed = record.parsed ?? null;
   if (
     typeof record.url !== "string" ||
-    typeof record.lastUpdated !== "number" ||
-    !Number.isFinite(record.lastUpdated) ||
+    !isFiniteNumber(record.lastUpdated) ||
     (data === null && (parsed === null || typeof parsed !== "object"))
   ) {
     return null;
@@ -342,68 +318,49 @@ function readZip(data: Uint8Array): Promise<Unzipped> {
 export async function exportDataArchive(options: ExportArchiveOptions): Promise<Blob> {
   const files: Record<string, Uint8Array> = {};
   const exportedAt = new Date().toISOString();
-  const includedFiles: string[] = [SETTINGS_JSON_PATH];
+  const includedFiles: string[] = [];
+
+  const addJsonFile = (path: string, payload: unknown): void => {
+    files[path] = strToU8(toJsonString(payload));
+    includedFiles.push(path);
+  };
+  const addItemsFile = <T>(path: string, items: T[]): void => {
+    const payload: ItemsExportPayload<T> = {
+      schemaVersion: ARCHIVE_SCHEMA_VERSION,
+      exportedAt,
+      items,
+    };
+    addJsonFile(path, payload);
+  };
 
   const settingsPayload: SettingsExportPayload = {
     schemaVersion: ARCHIVE_SCHEMA_VERSION,
     exportedAt,
     settings: container.config.getAll(),
   };
-  files[SETTINGS_JSON_PATH] = strToU8(toJsonString(settingsPayload));
+  addJsonFile(SETTINGS_JSON_PATH, settingsPayload);
 
   if (options.includeHistory) {
     const rows = await container.history.getAll();
-    const normalizedRows = rows
-      .map((row) => toHistoryExportRecord(row))
-      .filter((row): row is HistoryExportRecord => row != null);
-    const payload: HistoryExportPayload = {
-      schemaVersion: ARCHIVE_SCHEMA_VERSION,
-      exportedAt,
-      items: normalizedRows,
-    };
-    files[HISTORY_JSON_PATH] = strToU8(toJsonString(payload));
-    includedFiles.push(HISTORY_JSON_PATH);
+    addItemsFile(HISTORY_JSON_PATH, convertValidItems(rows, toHistoryExportRecord));
   }
 
   if (options.includeWriteHistory) {
     const rows = await container.writeHistory.getAll();
-    const normalizedRows = rows
-      .map((row) => toWriteHistoryExportRecord(row))
-      .filter((row): row is WriteHistoryExportRecord => row != null);
-
-    const payload: WriteHistoryExportPayload = {
-      schemaVersion: ARCHIVE_SCHEMA_VERSION,
-      exportedAt,
-      items: normalizedRows,
-    };
-    files[WRITE_HISTORY_JSON_PATH] = strToU8(toJsonString(payload));
-    includedFiles.push(WRITE_HISTORY_JSON_PATH);
+    addItemsFile(WRITE_HISTORY_JSON_PATH, convertValidItems(rows, toWriteHistoryExportRecord));
   }
 
   if (options.includeBookmarks) {
     // window.app ではなくサービスコンテナから読む（legacy-window-app-plan の Phase 2）。
     await container.bookmark.ready();
-    const normalizedRows = container.bookmark
-      .getAll()
-      .map((row) => toBookmarkExportRecord(row))
-      .filter((row): row is BookmarkEntry => row != null);
-    const payload: BookmarkExportPayload = {
-      schemaVersion: ARCHIVE_SCHEMA_VERSION,
-      exportedAt,
-      items: normalizedRows,
-    };
-    files[BOOKMARKS_JSON_PATH] = strToU8(toJsonString(payload));
-    includedFiles.push(BOOKMARKS_JSON_PATH);
+    addItemsFile(
+      BOOKMARKS_JSON_PATH,
+      convertValidItems(container.bookmark.getAll(), toBookmarkExportRecord),
+    );
   }
 
   if (options.includeLogs) {
-    const payload: LogExportPayload = {
-      schemaVersion: ARCHIVE_SCHEMA_VERSION,
-      exportedAt,
-      items: await container.threadLog.getLogArchiveRecords(),
-    };
-    files[LOGS_JSON_PATH] = strToU8(toJsonString(payload));
-    includedFiles.push(LOGS_JSON_PATH);
+    addItemsFile(LOGS_JSON_PATH, await container.threadLog.getLogArchiveRecords());
   }
 
   if (options.includeSession) {
@@ -412,8 +369,7 @@ export async function exportDataArchive(options: ExportArchiveOptions): Promise<
       exportedAt,
       state: readSessionExportState(),
     };
-    files[SESSION_JSON_PATH] = strToU8(toJsonString(payload));
-    includedFiles.push(SESSION_JSON_PATH);
+    addJsonFile(SESSION_JSON_PATH, payload);
   }
 
   const manifest: ExportManifest = {
@@ -425,6 +381,19 @@ export async function exportDataArchive(options: ExportArchiveOptions): Promise<
   files[MANIFEST_JSON_PATH] = strToU8(toJsonString(manifest));
 
   return new Blob([await createZip(files)], { type: "application/zip" });
+}
+
+// エントリがなければ null（復元対象外）、あれば変換できた行を返す。
+function readItemsEntry<T>(
+  files: Record<string, Uint8Array>,
+  path: string,
+  convert: (row: unknown) => T | null,
+): T[] | null {
+  const payload = readJsonEntry<{ items?: unknown[] }>(files, path);
+  if (payload === null) {
+    return null;
+  }
+  return Array.isArray(payload.items) ? convertValidItems(payload.items, convert) : [];
 }
 
 export async function importDataArchive(archiveFile: File): Promise<ImportArchiveResult> {
@@ -451,18 +420,8 @@ export async function importDataArchive(archiveFile: File): Promise<ImportArchiv
     await container.bookmarkRoot.setRootNodeId(bookmarkRootNodeId);
   }
 
-  const historyPayload = readJsonEntry<HistoryExportPayload | { items?: unknown[] }>(
-    files,
-    HISTORY_JSON_PATH,
-  );
-
-  const historyItems = Array.isArray(historyPayload?.items)
-    ? historyPayload.items
-        .map((row) => toHistoryExportRecord(row))
-        .filter((row): row is HistoryExportRecord => row != null)
-    : [];
-
-  if (historyPayload !== null) {
+  const historyItems = readItemsEntry(files, HISTORY_JSON_PATH, toHistoryExportRecord);
+  if (historyItems !== null) {
     // 変更理由: 空の履歴も含め、エクスポート時点の状態を再現するため既存履歴を置換する。
     await container.history.clear();
     for (const row of historyItems) {
@@ -470,18 +429,12 @@ export async function importDataArchive(archiveFile: File): Promise<ImportArchiv
     }
   }
 
-  const writeHistoryPayload = readJsonEntry<WriteHistoryExportPayload | { items?: unknown[] }>(
+  const writeHistoryItems = readItemsEntry(
     files,
     WRITE_HISTORY_JSON_PATH,
+    toWriteHistoryExportRecord,
   );
-
-  const writeHistoryItems = Array.isArray(writeHistoryPayload?.items)
-    ? writeHistoryPayload.items
-        .map((row) => toWriteHistoryExportRecord(row))
-        .filter((row): row is WriteHistoryExportRecord => row != null)
-    : [];
-
-  if (writeHistoryPayload !== null) {
+  if (writeHistoryItems !== null) {
     // 変更理由: 空の履歴も含め、既存データへ単純追加せず完全置換する。
     await container.writeHistory.clear();
     for (const row of writeHistoryItems) {
@@ -499,18 +452,9 @@ export async function importDataArchive(archiveFile: File): Promise<ImportArchiv
     }
   }
 
-  const bookmarksPayload = readJsonEntry<BookmarkExportPayload | { items?: unknown[] }>(
-    files,
-    BOOKMARKS_JSON_PATH,
-  );
-  const bookmarkItems = Array.isArray(bookmarksPayload?.items)
-    ? bookmarksPayload.items
-        .map((row) => toBookmarkExportRecord(row))
-        .filter((row): row is BookmarkEntry => row != null)
-    : [];
-
+  const bookmarkItems = readItemsEntry(files, BOOKMARKS_JSON_PATH, toBookmarkExportRecord);
   let importedBookmarkCount = 0;
-  if (bookmarksPayload !== null) {
+  if (bookmarkItems !== null) {
     // 以前は window.app にブックマークがなければ何も戻さなかった。サービスコンテナは描画前に
     // 必ず登録されるため、この分岐はなくした（legacy-window-app-plan の Phase 2）。
     await container.bookmark.ready();
@@ -521,17 +465,8 @@ export async function importDataArchive(archiveFile: File): Promise<ImportArchiv
     }
   }
 
-  const logsPayload = readJsonEntry<LogExportPayload | { items?: unknown[] }>(
-    files,
-    LOGS_JSON_PATH,
-  );
-  const logItems = Array.isArray(logsPayload?.items)
-    ? logsPayload.items
-        .map((row) => toLogArchiveRecord(row))
-        .filter((row): row is LogArchiveRecord => row != null)
-    : [];
-
-  if (logsPayload !== null) {
+  const logItems = readItemsEntry(files, LOGS_JSON_PATH, toLogArchiveRecord);
+  if (logItems !== null) {
     await container.threadLog.replaceLogArchiveRecords(logItems);
     container.message.send("log_updated", { type: "restored" });
   }
@@ -552,10 +487,10 @@ export async function importDataArchive(archiveFile: File): Promise<ImportArchiv
 
   return {
     importedSettingsCount: Object.keys(normalizedSettings).length,
-    importedHistoryCount: historyItems.length,
-    importedWriteHistoryCount: writeHistoryItems.length,
+    importedHistoryCount: historyItems?.length ?? 0,
+    importedWriteHistoryCount: writeHistoryItems?.length ?? 0,
     importedBookmarkCount,
-    importedLogCount: logItems.length,
+    importedLogCount: logItems?.length ?? 0,
     importedSessionCount,
   };
 }

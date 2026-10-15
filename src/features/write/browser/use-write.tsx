@@ -291,6 +291,7 @@ export function useWrite(threadUrl: string, options: UseWriteOptions = {}): UseW
     // 変更理由: 別窓で開いたまま同じスレへ返信引用を追加するとthreadUrlは変わらない。
     // URL切替用effectだけで下書きを同期すると、その引用がtextareaへ届かないため、
     // 外部セッションの本文変更を独立して反映する。
+    // oxlint-disable-next-line react/set-state-in-effect -- 呼び出し元が下書きを制御しない場合も入力状態を保持するため、外部更新をローカルstateへ同期する。
     setMessageState((currentMessage) => (currentMessage === draft ? currentMessage : draft));
   }, [draft]);
 

@@ -1,3 +1,5 @@
+/// <reference types="node" />
+
 import { mkdir } from "node:fs/promises";
 import path from "node:path";
 
@@ -182,7 +184,7 @@ async function run(): Promise<void> {
     browser = await chromium.connectOverCDP(cdpUrl);
     const context = browser.contexts()[0];
     if (!context) throw new Error("TauriのCDPにブラウザーコンテキストがありません");
-    let pages = await context.pages();
+    let pages = context.pages();
     main = pages.find((page) => page.url().includes("/view/index.html"));
     if (!main) {
       throw new Error("Main画面が見つかりません。pnpm dev:tauri:debug で起動してください");

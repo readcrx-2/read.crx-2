@@ -1,4 +1,5 @@
 import { Clipboard, ExternalLink, Trash2 } from "lucide-react";
+import { createLogger } from "src/app/logger";
 import { container } from "src/service-container/index";
 import {
   COMMAND_REQUEST_IDS,
@@ -8,6 +9,8 @@ import {
 import { useToast } from "src/view/browser/hooks/use-toast";
 import { useViewSurface } from "src/view/browser/hooks/use-view-surface";
 import { ContextMenu, type ContextMenuItem } from "src/view/browser/ui/ContextMenu";
+
+const logger = createLogger("bookmark");
 
 export interface BookmarkContextMenuState<Entry> {
   entry: Entry;
@@ -49,7 +52,7 @@ export function BookmarkContextMenu({
       onRemoved(target.url);
       toast.info("ブックマークを削除しました");
     } catch (error) {
-      console.error("ブックマークの削除に失敗しました", { target, error });
+      logger.error("ブックマークの削除に失敗しました", { target, error });
       toast.error("ブックマークの削除に失敗しました");
     }
   };

@@ -1,7 +1,10 @@
+import { createLogger } from "src/app/logger";
 import {
   type AuxiliaryWindowOptions,
   createAuxiliaryWindowRoot,
 } from "src/features/auxiliary-window/browser/auxiliary-window-root";
+
+const logger = createLogger("auxiliary-window");
 
 export interface AuxiliaryWindowWatcherParams {
   window: Window;
@@ -63,7 +66,7 @@ export function watchAuxiliaryWindow(params: AuxiliaryWindowWatcherParams): Auxi
       // rootとスタイルを再接続し、状態は呼び出し側に残したまま表示だけを復元する。
       params.onReconnect(createAuxiliaryWindowRoot(params.sourceDocument, targetWindow, options));
     } catch (error) {
-      console.error(`[${options.logLabel}] 再読み込み後の別窓を再接続できませんでした`, error);
+      logger.error(`[${options.logLabel}] 再読み込み後の別窓を再接続できませんでした`, error);
     }
   };
 
@@ -88,7 +91,7 @@ export function watchAuxiliaryWindow(params: AuxiliaryWindowWatcherParams): Auxi
     try {
       release();
     } catch (error) {
-      console.error("[AuxiliaryWindow] 元の窓の終了時に別窓を閉じられませんでした", error);
+      logger.error("元の窓の終了時に別窓を閉じられませんでした", error);
     }
   };
 

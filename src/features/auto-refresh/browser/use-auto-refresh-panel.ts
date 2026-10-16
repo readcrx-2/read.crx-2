@@ -1,4 +1,5 @@
 import { useCallback, useEffect, useMemo, useState } from "react";
+import { createLogger } from "src/app/logger";
 import {
   BOARD_AUTO_REFRESH_CONFIG_KEY,
   findIdleStopTimeoutOption,
@@ -24,6 +25,8 @@ import {
   persistScopedSettingForUrl,
   SCOPED_SETTINGS_CONFIG_KEY,
 } from "src/view/browser/utils/scoped-settings";
+
+const logger = createLogger("auto-refresh");
 
 // パネルの入力値は秒単位なので、ミリ秒を表示境界で秒へ変換する。
 export const MIN_INTERVAL_SEC = MIN_THREAD_AUTO_REFRESH_SETTING_MS / 1000;
@@ -67,7 +70,7 @@ function useConfigIntervalSec(options: {
           scopeUrl,
           String(clamped * 1000),
         ).catch((error: unknown) => {
-          console.error("[AutoRefreshPanel] スコープ設定の保存に失敗しました", error);
+          logger.error("スコープ設定の保存に失敗しました", error);
         });
       } else {
         persistConfigValue(configKey, String(clamped * 1000), "AutoRefreshPanel");

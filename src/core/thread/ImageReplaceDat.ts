@@ -1,4 +1,7 @@
+import { createLogger } from "src/app/logger";
 import type { CorePorts } from "src/core/ports/registry";
+
+const logger = createLogger("core/thread");
 
 /** 画像置換の設定の読み書きと通知に必要なサービス。呼び出し側が渡す（C-2）。 */
 export type ImageReplaceDeps = Pick<CorePorts, "config" | "message">;
@@ -38,7 +41,7 @@ export function createImageReplaceDat(deps: ImageReplaceDeps) {
       try {
         entry.baseUrlReg = new RegExp(entry.baseUrl, "i");
       } catch (error) {
-        console.error("[ImageReplaceDat] 正規表現の読み込みに失敗しました:", error);
+        logger.error("正規表現の読み込みに失敗しました:", error);
         deps.message.send("notify", {
           message: `\
   ImageViewURLReplace.datの一致URLの正規表現(${entry.baseUrl})を読み込むのに失敗しました

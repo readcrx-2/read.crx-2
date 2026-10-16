@@ -1,5 +1,8 @@
 import { ChURL, type ParsedBBSMenu } from "packages/chlib/src/index";
+import { createLogger } from "src/app/logger";
 import { getBoardUrlKey, normalizeBoardUrl } from "src/core/board/BoardUrlNormalizer";
+
+const logger = createLogger("core/board");
 
 export interface ReadStateEntry {
   url: string;
@@ -126,7 +129,7 @@ export class OtherBoardsCollector {
         addIfNew(trimmedUrl, title, opened.subjectVerified === true);
       }
     } catch (e) {
-      console.error("Failed to fetch opened boards for Other category", e);
+      logger.error("Failed to fetch opened boards for Other category", e);
     }
 
     // 既存版との互換用にReadState・履歴からも収集できるが、
@@ -149,7 +152,7 @@ export class OtherBoardsCollector {
           }
         }
       } catch (e) {
-        console.error("Failed to fetch read states for Other category", e);
+        logger.error("Failed to fetch read states for Other category", e);
       }
 
       // 履歴から収集
@@ -166,7 +169,7 @@ export class OtherBoardsCollector {
           }
         }
       } catch (e) {
-        console.error("Failed to fetch history for Other category", e);
+        logger.error("Failed to fetch history for Other category", e);
       }
     }
 

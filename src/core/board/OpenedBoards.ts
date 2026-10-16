@@ -1,3 +1,4 @@
+import { createLogger } from "src/app/logger";
 import { getBoardUrlKey, normalizeBoardUrl } from "src/core/board/BoardUrlNormalizer";
 import {
   MAX_OPENED_BOARD_ENTRIES,
@@ -7,6 +8,8 @@ import {
 } from "src/core/board/opened-board-entries";
 import type { CorePorts } from "src/core/ports/registry";
 import { corePorts } from "src/core/ports/registry";
+
+const logger = createLogger("core/board");
 
 // 保存形式と読み取りは opened-board-entries.ts に置く。既存の import 先のために再エクスポートする。
 export {
@@ -89,7 +92,7 @@ export function createOpenedBoards(deps: OpenedBoardsDeps) {
           JSON.stringify(nextEntries.slice(0, MAX_OPENED_BOARD_ENTRIES)),
         );
       })
-      .catch((error) => console.error("開いた板の保存に失敗しました", { boardUrl, error }));
+      .catch((error) => logger.error("開いた板の保存に失敗しました", { boardUrl, error }));
   }
 
   return { upsertOpenedBoardEntry };

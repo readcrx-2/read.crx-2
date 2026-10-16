@@ -6,8 +6,11 @@ import {
   useRef,
   useState,
 } from "react";
+import { createLogger } from "src/app/logger";
 import { isTauriRuntime } from "src/app/platform/runtime";
 import { fetchTauriBinary } from "src/app/platform/tauri/HttpClient";
+
+const logger = createLogger("media");
 
 const EXTERNAL_IMAGE_TIMEOUT_MS = 30_000;
 
@@ -100,7 +103,7 @@ export const ExternalImage = forwardRef<HTMLImageElement, ExternalImageProps>(
         })
         .catch((error: unknown) => {
           // WebView側とRust側の両方で失敗したURLを記録し、画像だけを黙って消さない。
-          console.error("[ExternalImage] Tauri経由の外部画像取得に失敗しました", {
+          logger.error("Tauri経由の外部画像取得に失敗しました", {
             url: src,
             error,
           });

@@ -1,8 +1,11 @@
 import { ChURL, replaceBoardUrlServer } from "packages/chlib/src/index";
 import Callbacks from "src/app/Callbacks";
+import { createLogger } from "src/app/logger";
 import { deepCopy } from "src/app/Util";
 import { isNewerReadState } from "src/core/bookmark/read-state-compare";
 import { fix as fixUrl } from "src/core/network/URL";
+
+const logger = createLogger("core/bookmark");
 
 export interface ReadState {
   url: string;
@@ -111,7 +114,7 @@ export class EntryList {
       // 変更理由: originの文字列置換でURL末尾のslashやpathを壊さず、移転先への生成をchlibへ委譲する。
       const movedUrl = replaceBoardUrlServer(entry.url, to);
       if (movedUrl === null) {
-        console.error("スレッドのお気に入りを移転できませんでした", { from, to, url: entry.url });
+        logger.error("スレッドのお気に入りを移転できませんでした", { from, to, url: entry.url });
         continue;
       }
       void this.remove(entry.url);

@@ -1,7 +1,10 @@
 import { useCallback, useState } from "react";
+import { createLogger } from "src/app/logger";
 import { stringifyNgDslValue } from "src/core/ng/ngDsl";
 import { container } from "src/service-container";
 import type { IThread, IToastService } from "src/service-container/interfaces";
+
+const logger = createLogger("ng");
 
 export interface ThreadTitleNgDialogController {
   thread: IThread | null;
@@ -62,7 +65,7 @@ export function useThreadTitleNgDialog({
       toast.info(`スレタイをNGに追加しました: ${title}`);
       setThread(null);
     } catch (submitError) {
-      console.error(`[${logLabel}] スレタイNGの登録に失敗しました`, submitError);
+      logger.error(`[${logLabel}] スレタイNGの登録に失敗しました`, submitError);
       const message = submitError instanceof Error ? submitError.message : "NG登録に失敗しました";
       setError(message);
       toast.error(message);

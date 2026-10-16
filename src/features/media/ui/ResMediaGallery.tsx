@@ -1,5 +1,6 @@
 import { parseMessage } from "@chlen/chlib";
 import React, { useEffect, useMemo, useRef, useState } from "react";
+import { createLogger } from "src/app/logger";
 import {
   type ExternalMediaEmbed,
   getDirectVideoFallbackThumbnailUrl,
@@ -20,6 +21,8 @@ import {
   type TwitterVerificationBadgeColor,
 } from "../application/twitter-post";
 import { ExternalImage } from "./ExternalImage";
+
+const logger = createLogger("media");
 
 // ギャラリーはThreadViewやPopupのURLルーティング実装を知らず、クリック時の引数だけを契約にする。
 export type MediaUrlClickHandler = (
@@ -573,7 +576,7 @@ export function ResMediaGallery({
       })
       .catch((error: unknown) => {
         // Resolver内で通常の失敗は吸収するが、予期しない例外も握りつぶさず記録する。
-        console.error("[ResMediaGallery] Twitter投稿の表示に失敗しました", error);
+        logger.error("Twitter投稿の表示に失敗しました", error);
         setTwitterPostStates((current) => new Map(current).set(embed.rawUrl, { status: "error" }));
       });
   };

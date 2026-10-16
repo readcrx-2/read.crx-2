@@ -288,10 +288,7 @@ export class CommentOverlayController {
           // reset送信に失敗した場合も、表示だけが残って操作不能にならないよう戻す。
           await this.applyVisibility(false);
         } catch (rollbackError: unknown) {
-          logger.error(
-            "コメント実況の開始失敗後のOverlay非表示に失敗しました:",
-            rollbackError,
-          );
+          logger.error("コメント実況の開始失敗後のOverlay非表示に失敗しました:", rollbackError);
         }
       }
       this.reportError("[ChLens] コメント実況の開始に失敗しました:", error);

@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
-
 import { createLogger } from "src/app/logger";
+
 import type { CommentOverlayWindowPlatform } from "../platform/types";
 
 const logger = createLogger("comment-overlay");

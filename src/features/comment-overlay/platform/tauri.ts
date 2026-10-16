@@ -9,8 +9,8 @@ import {
   PhysicalSize,
   Window,
 } from "@tauri-apps/api/window";
-
 import { createLogger } from "src/app/logger";
+
 import {
   cloneCommentOverlayGeometry,
   fallbackCommentOverlayGeometry,

@@ -1,4 +1,3 @@
-import { createLogger } from "src/app/logger";
 import "./OverlayControlPanel.css";
 
 import {
@@ -10,6 +9,7 @@ import {
   useRef,
   useState,
 } from "react";
+import { createLogger } from "src/app/logger";
 
 import {
   fitCommentOverlayGeometryToAspectRatio,
@@ -622,9 +622,7 @@ export function OverlayControlPanel({
                       className="overlay-control-panel__screen-preview"
                       onPointerDown={(event) => startDrag(event, "select")}
                       onError={() => {
-                        logger.error(
-                          "ディスプレイのプレビュー画像を表示できませんでした",
-                        );
+                        logger.error("ディスプレイのプレビュー画像を表示できませんでした");
                         setScreenPreview((current) =>
                           current ? { ...current, image: null, error: true } : null,
                         );

@@ -267,10 +267,7 @@ export class CommentOverlayMultiThreadSession {
       state.lastResponseNumber = latestResponseNumber;
       if (additions.length > 0) this.options.onBatch(state.thread.url, additions);
     } catch (error: unknown) {
-      logger.error(
-        `コメントOverlayの候補スレ取得に失敗しました: ${state.thread.url}`,
-        error,
-      );
+      logger.error(`コメントOverlayの候補スレ取得に失敗しました: ${state.thread.url}`, error);
     }
   }
 

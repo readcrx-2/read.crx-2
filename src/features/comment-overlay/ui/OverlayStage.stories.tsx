@@ -1,6 +1,7 @@
 import type { Meta, StoryObj } from "@storybook/react-vite";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 
+import { createLogger } from "src/app/logger";
 import {
   type ChLensStorybookSource,
   createChLensStorybookSource,
@@ -12,6 +13,8 @@ import {
   OverlayStage,
   type OverlayStageProps,
 } from "./OverlayStage";
+
+const logger = createLogger("comment-overlay");
 
 const INITIAL_COMMENTS: readonly CommentCandidate[] = [
   { responseNumber: 1, text: "実況開始", author: "名無し" },
@@ -254,7 +257,7 @@ function CurrentThreadStory(args: OverlayStageProps) {
       setStreaming(true);
       setStageKey((current) => current + 1);
     } catch (loadError: unknown) {
-      console.error("[Storybook] current thread load failed:", loadError);
+      logger.error("current thread load failed:", loadError);
       setError(loadError instanceof Error ? loadError.message : "スレッドの取得に失敗しました");
     } finally {
       requestInFlight.current = false;
@@ -281,7 +284,7 @@ function CurrentThreadStory(args: OverlayStageProps) {
       }
       setLoadedThread(nextThread);
     } catch (refreshError: unknown) {
-      console.error("[Storybook] current thread refresh failed:", refreshError);
+      logger.error("current thread refresh failed:", refreshError);
       setError(
         refreshError instanceof Error ? refreshError.message : "新着レスの取得に失敗しました",
       );

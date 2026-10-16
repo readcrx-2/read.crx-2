@@ -2,6 +2,7 @@ import "./ArchiveReplayWindow.css";
 
 import { Pause, Play, RotateCcw, SkipBack, SkipForward, X } from "lucide-react";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import { createLogger } from "src/app/logger";
 import { isTauriRuntime } from "src/app/platform/runtime";
 import {
   mapWithConcurrency,
@@ -36,6 +37,8 @@ import {
   subscribeArchiveReplaySeekRequests,
   subscribeArchiveReplayWindowClose,
 } from "../platform";
+
+const logger = createLogger("archive-replay");
 
 interface ArchiveReplayWindowProps {
   archiveReplayEventBus?: ArchiveReplayOverlayEventBus;
@@ -124,14 +127,14 @@ export function ArchiveReplayWindow({
     void archiveReplayEventBus
       .publish({ version: 1, type: "stop", sessionId: replaySessionIdRef.current })
       .catch((publishError: unknown) => {
-        console.error("[ArchiveReplay] Overlay停止通知に失敗しました", publishError);
+        logger.error("Overlay停止通知に失敗しました", publishError);
       });
   }, [archiveReplayEventBus]);
 
   const resetPlayback = useCallback(() => {
     stopOverlay();
     void overlayPlatform.hide().catch((hideError: unknown) => {
-      console.error("[ArchiveReplay] コメントOverlayの非表示に失敗しました", hideError);
+      logger.error("コメントOverlayの非表示に失敗しました", hideError);
     });
     replaySessionIdRef.current = createReplaySessionId();
     emittedCommentKeysRef.current.clear();
@@ -174,7 +177,7 @@ export function ArchiveReplayWindow({
         }),
       )
       .catch((publishError: unknown) => {
-        console.error("[ArchiveReplay] コメントOverlayの再接続に失敗しました", publishError);
+        logger.error("コメントOverlayの再接続に失敗しました", publishError);
       });
   }, [archiveReplayEventBus, loadedReplay, overlayPlatform]);
 
@@ -223,7 +226,7 @@ export function ArchiveReplayWindow({
             };
           } catch (loadError: unknown) {
             // URL単位の失敗は他スレの取得を止めず、画面に残して利用者が確認できるようにする。
-            console.error("[ArchiveReplay] スレッドの取得に失敗しました", {
+            logger.error("スレッドの取得に失敗しました", {
               threadUrl,
               error: loadError,
             });
@@ -279,7 +282,7 @@ export function ArchiveReplayWindow({
       });
       setStageKey((current) => current + 1);
     } catch (loadError: unknown) {
-      console.error("[ArchiveReplay] 過去ログの読み込みに失敗しました", loadError);
+      logger.error("過去ログの読み込みに失敗しました", loadError);
       setError(loadError instanceof Error ? loadError.message : "スレッドの取得に失敗しました");
     } finally {
       setLoading(false);
@@ -380,7 +383,7 @@ export function ArchiveReplayWindow({
         if (lastMainThreadUrlRef.current === positionKey) {
           lastMainThreadUrlRef.current = null;
         }
-        console.error("[ArchiveReplay] MainのThreadView同期に失敗しました", publishError);
+        logger.error("MainのThreadView同期に失敗しました", publishError);
       });
     },
     [loadedReplay, mainThreadSyncPublisher, position, syncOffset],
@@ -404,7 +407,7 @@ export function ArchiveReplayWindow({
         unsubscribe = cleanup;
       })
       .catch((subscribeError: unknown) => {
-        console.error("[ArchiveReplay] シーク要求の購読に失敗しました", subscribeError);
+        logger.error("シーク要求の購読に失敗しました", subscribeError);
       });
     return () => {
       disposed = true;
@@ -439,7 +442,7 @@ export function ArchiveReplayWindow({
         playing,
       })
       .catch((publishError: unknown) => {
-        console.error("[ArchiveReplay] コメントOverlayの再生状態通知に失敗しました", publishError);
+        logger.error("コメントOverlayの再生状態通知に失敗しました", publishError);
       });
   }, [archiveReplayEventBus, loadedReplay, playing, resetOverlaySession]);
 
@@ -461,7 +464,7 @@ export function ArchiveReplayWindow({
           comment,
         })
         .catch((publishError: unknown) => {
-          console.error("[ArchiveReplay] コメントOverlayへの投入に失敗しました", publishError);
+          logger.error("コメントOverlayへの投入に失敗しました", publishError);
         });
     }
   }, [archiveReplayEventBus, loadedReplay, position, seekStartPosition, stageKey, syncOffset]);
@@ -470,7 +473,7 @@ export function ArchiveReplayWindow({
     return () => {
       stopOverlay();
       void overlayPlatform.hide().catch((hideError: unknown) => {
-        console.error("[ArchiveReplay] コメントOverlayの非表示に失敗しました", hideError);
+        logger.error("コメントOverlayの非表示に失敗しました", hideError);
       });
     };
   }, [overlayPlatform, stopOverlay]);
@@ -479,10 +482,10 @@ export function ArchiveReplayWindow({
     setPlaying(false);
     stopOverlay();
     void overlayPlatform.hide().catch((hideError: unknown) => {
-      console.error("[ArchiveReplay] コメントOverlayの非表示に失敗しました", hideError);
+      logger.error("コメントOverlayの非表示に失敗しました", hideError);
     });
     void hideArchiveReplayWindow().catch((hideError: unknown) => {
-      console.error("[ArchiveReplay] 再生窓の非表示に失敗しました", hideError);
+      logger.error("再生窓の非表示に失敗しました", hideError);
     });
   }, [overlayPlatform, stopOverlay]);
 
@@ -503,7 +506,7 @@ export function ArchiveReplayWindow({
         unsubscribe = cleanup;
       })
       .catch((subscribeError: unknown) => {
-        console.error("[ArchiveReplay] 再生窓の閉じる操作監視に失敗しました", subscribeError);
+        logger.error("再生窓の閉じる操作監視に失敗しました", subscribeError);
       });
     return () => {
       disposed = true;

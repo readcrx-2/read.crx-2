@@ -1,5 +1,6 @@
 import type { Meta, StoryObj } from "@storybook/react-vite";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import { createLogger } from "src/app/logger";
 import { type CommentCandidate, projectCommentResponse } from "src/features/comment-overlay/domain";
 import {
   DEFAULT_COMMENT_HISTORY_LIMIT,
@@ -15,6 +16,8 @@ import {
   parseArchiveReplayStartInput,
   parseArchiveReplayTimestamp,
 } from "../domain";
+
+const logger = createLogger("archive-replay");
 
 // 過去スレの再生（archive-replay）がコメントをオーバーレイへ流すデモ。
 // 再生側が comment-overlay を利用する向きに合わせ、comment-overlay の Story から分けてここに置く。
@@ -251,7 +254,7 @@ export function PastThreadReplayStory(args: OverlayStageProps) {
               error: null,
             };
           } catch (loadError: unknown) {
-            console.error("[Storybook] archive replay thread load failed:", threadUrl, loadError);
+            logger.error("archive replay thread load failed:", threadUrl, loadError);
             return {
               source: null,
               title: threadUrl,
@@ -296,7 +299,7 @@ export function PastThreadReplayStory(args: OverlayStageProps) {
       });
       setStageKey((current) => current + 1);
     } catch (loadError: unknown) {
-      console.error("[Storybook] past thread load failed:", loadError);
+      logger.error("past thread load failed:", loadError);
       setError(loadError instanceof Error ? loadError.message : "スレッドの取得に失敗しました");
     } finally {
       setLoading(false);

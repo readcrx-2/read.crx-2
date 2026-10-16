@@ -1,8 +1,11 @@
+import { createLogger } from "src/app/logger";
 import {
   COMMENT_OVERLAY_ASPECT_RATIO,
   type CommentOverlayGeometry,
   DEFAULT_COMMENT_OVERLAY_GEOMETRY,
 } from "./types";
+
+const logger = createLogger("comment-overlay");
 
 export const COMMENT_OVERLAY_GEOMETRY_STORAGE_KEY = "chlens:comment-overlay-geometry";
 
@@ -61,7 +64,7 @@ export function parseCommentOverlayGeometry(raw: string | null): CommentOverlayG
     }
     return normalizeCommentOverlayGeometry(parsed as CommentOverlayGeometry);
   } catch (error) {
-    console.error("[ChLens] コメントOverlayのgeometry解析に失敗しました:", error);
+    logger.error("コメントOverlayのgeometry解析に失敗しました:", error);
     return null;
   }
 }
@@ -72,7 +75,7 @@ export function loadStoredCommentOverlayGeometry(): CommentOverlayGeometry | nul
       globalThis.localStorage.getItem(COMMENT_OVERLAY_GEOMETRY_STORAGE_KEY),
     );
   } catch (error) {
-    console.error("[ChLens] コメントOverlayのgeometry読み込みに失敗しました:", error);
+    logger.error("コメントOverlayのgeometry読み込みに失敗しました:", error);
     return null;
   }
 }
@@ -84,7 +87,7 @@ export function saveStoredCommentOverlayGeometry(geometry: CommentOverlayGeometr
       JSON.stringify(normalizeCommentOverlayGeometry(geometry)),
     );
   } catch (error) {
-    console.error("[ChLens] コメントOverlayのgeometry保存に失敗しました:", error);
+    logger.error("コメントOverlayのgeometry保存に失敗しました:", error);
   }
 }
 

@@ -1,4 +1,5 @@
 import { useEffect, useRef } from "react";
+import { createLogger } from "src/app/logger";
 import { isTauriRuntime } from "src/app/platform/runtime";
 import {
   type TabStoreState,
@@ -12,6 +13,8 @@ import {
   subscribeArchiveReplayMainThreadRequests,
 } from "../platform";
 import { useArchiveReplayPositionStore } from "./position-store";
+
+const logger = createLogger("archive-replay");
 
 interface MainThreadSyncTarget {
   sessionId: string;
@@ -73,7 +76,7 @@ export function useArchiveReplayMainThreadSync(): void {
           .flatMap((pane) => pane.tabs.map((tab) => ({ pane, tab })))
           .find(({ tab }) => !beforeTabIds.has(tab.id));
         if (!inserted) {
-          console.error("[ArchiveReplay] Main同期用ThreadViewタブを作成できませんでした", {
+          logger.error("Main同期用ThreadViewタブを作成できませんでした", {
             request,
           });
           return;
@@ -100,7 +103,7 @@ export function useArchiveReplayMainThreadSync(): void {
         unsubscribe = cleanup;
       })
       .catch((error: unknown) => {
-        console.error("[ArchiveReplay] MainのThreadView同期購読に失敗しました", error);
+        logger.error("MainのThreadView同期購読に失敗しました", error);
       });
 
     return () => {

@@ -539,6 +539,13 @@ export default defineConfig(async ({ mode, command }) => {
         ...restrictImports(UI_LAYER_FILES, [UI_LAYER_PATTERN]),
         // 機能ごとの境界（組み立て層と、他の機能の内部への import を禁止）。
         ...createFeatureBoundaryOverrides(),
+        // 生の console を使わず createLogger（src/app/logger）を通す。
+        // レベル切り替えやタグ付けが効かず、後から保存先を足すときに取りこぼすため。
+        // 既存コードを機能単位で置き換えているので、移行済みの範囲から順に対象を広げる。
+        {
+          files: ["src/features/comment-overlay/**", "src/features/archive-replay/**"],
+          rules: { "eslint/no-console": "error" },
+        },
         // view・features は window.app を参照しない（docs/plans/legacy-window-app-plan.md の Phase 3）。
         {
           files: ["src/view/**", "src/features/**"],

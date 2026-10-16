@@ -1,5 +1,13 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from "vite-plus/test";
 
+const loggerMock = vi.hoisted(() => ({
+  error: vi.fn(),
+}));
+
+vi.mock("src/app/logger", () => ({
+  createLogger: () => loggerMock,
+}));
+
 const tauriMocks = vi.hoisted(() => ({
   event: {
     emit: vi.fn(),
@@ -170,7 +178,7 @@ describe("TauriコメントOverlay window platform", () => {
 
   it("対象が閉じたらエラーを残して追従を止め、手動調整でも解除する", async () => {
     vi.useFakeTimers();
-    const errorLog = vi.spyOn(console, "error").mockImplementation(() => {});
+    loggerMock.error.mockClear();
     const platform = createTauriCommentOverlayPlatform();
     tauriMocks.invoke.mockResolvedValue({ x: 0, y: 0, width: 800, height: 600 });
     await platform.attachment!.setTarget("10:20");
@@ -180,7 +188,7 @@ describe("TauriコメントOverlay window platform", () => {
       targetId: null,
       error: "Error: 対象が閉じました",
     });
-    expect(errorLog).toHaveBeenCalled();
+    expect(loggerMock.error).toHaveBeenCalled();
     tauriMocks.invoke.mockResolvedValue({ x: 0, y: 0, width: 800, height: 600 });
     await platform.attachment!.setTarget("10:21");
     await platform.setGeometry({ x: 100, y: 100, width: 640, height: 360 });
@@ -188,7 +196,6 @@ describe("TauriコメントOverlay window platform", () => {
     tauriMocks.invoke.mockClear();
     await vi.advanceTimersByTimeAsync(500);
     expect(tauriMocks.invoke).not.toHaveBeenCalled();
-    errorLog.mockRestore();
   });
 
   it("最小化中に実況を止めて追従を解除しても、次回は手動領域を表示できる", async () => {

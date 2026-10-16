@@ -1,5 +1,6 @@
 import { AlertTriangle, MessagesCircle, Move } from "lucide-react";
 import React, { useCallback, useRef, useState } from "react";
+import { createLogger } from "src/app/logger";
 import { isTauriRuntime } from "src/app/platform/runtime";
 import { useCommentOverlay } from "src/features/comment-overlay/application/use-comment-overlay";
 import { useOpenOverlayPlacementWindow } from "src/features/comment-overlay/ui/OverlayPlacementWindow";
@@ -14,6 +15,8 @@ import { STATUS_BAR_PRIORITY } from "src/view/browser/components/status-bar-prio
 import { StatusBarItem } from "src/view/browser/components/StatusBar";
 import { useMiniWindowTrigger } from "src/view/browser/hooks/use-mini-window-trigger";
 import { useTabStore } from "src/view/browser/state/tabs/use-tab-store";
+
+const logger = createLogger("comment-overlay");
 
 interface CommentOverlayStatusItemProps {
   isActive: boolean;
@@ -55,7 +58,7 @@ export const CommentOverlayStatusItem: React.FC<CommentOverlayStatusItemProps> =
         : controller.start(threadUrl!);
     void operation
       .catch((error: unknown) => {
-        console.error("[ChLens] コメント実況の切り替えに失敗しました:", error);
+        logger.error("コメント実況の切り替えに失敗しました:", error);
       })
       .finally(() => {
         flowChangingRef.current = false;

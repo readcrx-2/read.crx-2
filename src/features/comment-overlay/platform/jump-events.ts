@@ -1,4 +1,7 @@
 import { emit, listen } from "@tauri-apps/api/event";
+import { createLogger } from "src/app/logger";
+
+const logger = createLogger("comment-overlay");
 
 export const COMMENT_OVERLAY_JUMP_EVENT_NAME = "chlens://comment-overlay-jump";
 
@@ -26,7 +29,7 @@ export async function subscribeCommentOverlayJump(
       !Number.isInteger(payload.responseNumber) ||
       payload.responseNumber <= 0
     ) {
-      console.error("[ChLens] コメントOverlayのレスジャンプ要求を検証できません:", payload);
+      logger.error("コメントOverlayのレスジャンプ要求を検証できません:", payload);
       return;
     }
     listener({ threadUrl: payload.threadUrl, responseNumber: payload.responseNumber });

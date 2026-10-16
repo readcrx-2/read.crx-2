@@ -1,6 +1,9 @@
 import { useEffect, useState } from "react";
+import { createLogger } from "src/app/logger";
 
 import type { CommentOverlayWindowPlatform } from "../platform/types";
+
+const logger = createLogger("comment-overlay");
 
 type Attachment = NonNullable<CommentOverlayWindowPlatform["attachment"]>;
 
@@ -15,7 +18,7 @@ export function WindowAttachmentControl({ attachment }: { attachment: Attachment
       setWindows(await attachment.listWindows());
       setError(null);
     } catch (cause: unknown) {
-      console.error("[ChLens] 追従先ウィンドウ一覧の取得に失敗しました:", cause);
+      logger.error("追従先ウィンドウ一覧の取得に失敗しました:", cause);
       setError("一覧を取得できませんでした。一覧を更新してください。");
     } finally {
       setBusy(false);
@@ -30,7 +33,7 @@ export function WindowAttachmentControl({ attachment }: { attachment: Attachment
         if (!disposed) setWindows(nextWindows);
       })
       .catch((cause: unknown) => {
-        console.error("[ChLens] 追従先ウィンドウ一覧の取得に失敗しました:", cause);
+        logger.error("追従先ウィンドウ一覧の取得に失敗しました:", cause);
         if (!disposed) setError("一覧を取得できませんでした。一覧を更新してください。");
       })
       .finally(() => {
@@ -50,7 +53,7 @@ export function WindowAttachmentControl({ attachment }: { attachment: Attachment
       await attachment.setTarget(id);
       setError(null);
     } catch (cause: unknown) {
-      console.error("[ChLens] 追従先ウィンドウの設定に失敗しました:", cause);
+      logger.error("追従先ウィンドウの設定に失敗しました:", cause);
       setError(String(cause));
     } finally {
       setState(attachment.getState());

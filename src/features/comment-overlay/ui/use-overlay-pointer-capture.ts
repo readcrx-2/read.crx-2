@@ -1,6 +1,9 @@
 import { cursorPosition, getCurrentWindow } from "@tauri-apps/api/window";
 import { type RefObject, useEffect } from "react";
+import { createLogger } from "src/app/logger";
 import { isTauriRuntime } from "src/app/platform/runtime";
+
+const logger = createLogger("comment-overlay");
 
 /** 透過中の窓にはmouseenterが届かないため、OSのカーソル座標でコメントを判定する。 */
 export function useOverlayPointerCapture(rootRef: RefObject<HTMLElement | null>): void {
@@ -48,7 +51,7 @@ export function useOverlayPointerCapture(rootRef: RefObject<HTMLElement | null>)
           timer = setTimeout(() => void sample(), 16);
         }
       } catch (error: unknown) {
-        console.error("[ChLens] コメントOverlayのカーソル判定に失敗しました:", error);
+        logger.error("コメントOverlayのカーソル判定に失敗しました:", error);
         if (!disposed) timer = setTimeout(() => void sample(), 1000);
       }
     };
@@ -58,7 +61,7 @@ export function useOverlayPointerCapture(rootRef: RefObject<HTMLElement | null>)
       disposed = true;
       if (timer) clearTimeout(timer);
       void overlay.setIgnoreCursorEvents(true).catch((error: unknown) => {
-        console.error("[ChLens] コメントOverlayのクリック透過復元に失敗しました:", error);
+        logger.error("コメントOverlayのクリック透過復元に失敗しました:", error);
       });
     };
   }, [rootRef]);

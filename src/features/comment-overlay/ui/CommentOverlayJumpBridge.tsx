@@ -1,5 +1,6 @@
 import { Window } from "@tauri-apps/api/window";
 import { useEffect } from "react";
+import { createLogger } from "src/app/logger";
 import { isTauriRuntime } from "src/app/platform/runtime";
 import { subscribeCommentOverlayJump } from "src/features/comment-overlay/platform/jump-events";
 import { useDetachedTabController } from "src/features/tabs/browser/use-detached-tab-controller";
@@ -7,6 +8,8 @@ import { tabActions } from "src/view/browser/state/tabs/tab-store-actions";
 import { useTabDispatch, useTabStore } from "src/view/browser/state/tabs/use-tab-store";
 import { getCurrentPage, getPageViewStateKey } from "src/view/browser/types";
 import { requestThreadResJump } from "src/view/browser/utils/thread-read-state";
+
+const logger = createLogger("comment-overlay");
 
 /** Overlayから受け取ったレス番号を、元スレのタブ選択と本文スクロールへ接続する。 */
 export function CommentOverlayJumpBridge() {
@@ -63,7 +66,7 @@ export function CommentOverlayJumpBridge() {
       void Window.getByLabel("main")
         .then((mainWindow) => mainWindow?.setFocus())
         .catch((error: unknown) => {
-          console.error("[ChLens] レスジャンプ先の本体窓へ移動できませんでした:", error);
+          logger.error("レスジャンプ先の本体窓へ移動できませんでした:", error);
         });
     })
       .then((cleanup) => {
@@ -71,7 +74,7 @@ export function CommentOverlayJumpBridge() {
         else unsubscribe = cleanup;
       })
       .catch((error: unknown) => {
-        console.error("[ChLens] コメントOverlayのレスジャンプ監視に失敗しました:", error);
+        logger.error("コメントOverlayのレスジャンプ監視に失敗しました:", error);
       });
 
     return () => {

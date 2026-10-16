@@ -1,3 +1,4 @@
+import { createLogger } from "src/app/logger";
 import {
   mapWithConcurrency,
   MAX_CONCURRENT_BATCH_REQUESTS,
@@ -9,6 +10,8 @@ import {
 } from "src/features/next-thread/domain/next-thread-search";
 import type { IBoardResult, IRes, IThread, IThreadDetail } from "src/service-container/interfaces";
 import { getBoardUrlFromThreadUrl } from "src/view/browser/utils/link-routing";
+
+const logger = createLogger("comment-overlay");
 
 const CANDIDATE_MIN_SIMILARITY = 0.3;
 const CANDIDATE_POLL_INTERVAL_MS = 10_000;
@@ -238,7 +241,7 @@ export class CommentOverlayMultiThreadSession {
     } catch (error: unknown) {
       // 候補取得は補助機能のためOverlay自体を止めず、次の周期で再試行する。
       // エラー内容は原因追跡できるよう必ずログへ残す。
-      console.error("[ChLens] コメントOverlayの候補スレ取得に失敗しました:", error);
+      logger.error("コメントOverlayの候補スレ取得に失敗しました:", error);
     }
 
     if (this.running) this.scheduleNextTick();
@@ -264,10 +267,7 @@ export class CommentOverlayMultiThreadSession {
       state.lastResponseNumber = latestResponseNumber;
       if (additions.length > 0) this.options.onBatch(state.thread.url, additions);
     } catch (error: unknown) {
-      console.error(
-        `[ChLens] コメントOverlayの候補スレ取得に失敗しました: ${state.thread.url}`,
-        error,
-      );
+      logger.error(`コメントOverlayの候補スレ取得に失敗しました: ${state.thread.url}`, error);
     }
   }
 

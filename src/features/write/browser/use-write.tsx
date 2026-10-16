@@ -6,6 +6,7 @@ import {
 import { type FormEvent, type RefObject, useCallback, useEffect, useRef, useState } from "react";
 import { platform } from "src/app";
 import { wait } from "src/app/Defer";
+import { createLogger } from "src/app/logger";
 import { isTauriRuntime } from "src/app/platform/runtime";
 import type { HttpResponse, WriteFormData, WriteFormField } from "src/app/platform/types";
 import { getStore2String, setStore2String } from "src/app/Store2Storage";
@@ -26,6 +27,8 @@ import {
   type WriteConfirmationSubmission,
 } from "src/view/browser/utils/write-confirmation";
 import { classifyWriteResult, type WriteResultMessage } from "src/view/browser/utils/write-result";
+
+const logger = createLogger("write");
 
 // -----------------------------------------------------------------------
 // 定数
@@ -245,7 +248,7 @@ export function useWrite(threadUrl: string, options: UseWriteOptions = {}): UseW
       }
 
       pendingSubmittedWriteRef.current = null;
-      console.error("書き込み結果の通知を受信できませんでした");
+      logger.error("書き込み結果の通知を受信できませんでした");
       // 変更理由: 通知欠落は投稿成否を確認できない失敗なので、通常のidleへ戻すと
       // 警告がボタン下へ残り、共通の失敗ダイアログにも表示されなくなる。
       setStatus("error");
@@ -374,7 +377,7 @@ export function useWrite(threadUrl: string, options: UseWriteOptions = {}): UseW
           clearTauriWriteAttempt();
           pendingSubmittedWriteRef.current = null;
           // サーバーによる拒否も例外と同じく記録し、表示だけでは追えない失敗を調査できるようにする。
-          console.error("書き込みが拒否されました:", data.message ?? "エラー詳細なし");
+          logger.error("書き込みが拒否されました:", data.message ?? "エラー詳細なし");
           setStatus("error");
           setStatusText(
             data.message ? `書き込み失敗: ${String(data.message)}` : "書き込みに失敗しました",
@@ -412,7 +415,7 @@ export function useWrite(threadUrl: string, options: UseWriteOptions = {}): UseW
           if (typeof data.code === "string" && /^\d{6}$/.test(data.code) && authUrl != null) {
             handleWriteResult({ type: "auth-code", code: data.code, url: authUrl });
           } else {
-            console.error("書き込み認証の通知が不正です");
+            logger.error("書き込み認証の通知が不正です");
             handleWriteResult({ type: "error", message: "認証コードの通知を読み取れませんでした" });
           }
           break;
@@ -471,7 +474,7 @@ export function useWrite(threadUrl: string, options: UseWriteOptions = {}): UseW
       try {
         await setupHeaderModifier(formData.action);
       } catch (error) {
-        console.error("書き込み用リクエストヘッダーの設定に失敗しました:", error);
+        logger.error("書き込み用リクエストヘッダーの設定に失敗しました:", error);
         handleWriteResult({
           type: "error",
           message: error instanceof Error ? error.message : String(error),
@@ -498,7 +501,7 @@ export function useWrite(threadUrl: string, options: UseWriteOptions = {}): UseW
             ),
           );
         } catch (error) {
-          console.error("Tauri版の書き込みに失敗しました:", error);
+          logger.error("Tauri版の書き込みに失敗しました:", error);
           handleWriteResult({
             type: "error",
             message: error instanceof Error ? error.message : String(error),
@@ -509,7 +512,7 @@ export function useWrite(threadUrl: string, options: UseWriteOptions = {}): UseW
 
       const iframe = iframeRef.current;
       if (!iframe) {
-        console.error("書き込みフォームのiframeを初期化できませんでした");
+        logger.error("書き込みフォームのiframeを初期化できませんでした");
         handleWriteResult({ type: "error", message: "書き込みフォームを初期化できませんでした" });
         return;
       }
@@ -523,7 +526,7 @@ export function useWrite(threadUrl: string, options: UseWriteOptions = {}): UseW
         iframe.removeEventListener("load", onLoad);
         const doc = iframe.contentDocument;
         if (!doc) {
-          console.error("書き込みフォームのiframe文書を取得できませんでした");
+          logger.error("書き込みフォームのiframe文書を取得できませんでした");
           handleWriteResult({
             type: "error",
             message: "書き込みフォームを初期化できませんでした",
@@ -593,14 +596,14 @@ export function useWrite(threadUrl: string, options: UseWriteOptions = {}): UseW
             ),
           );
         } catch (error) {
-          console.error("Tauri版の確認ページ送信に失敗しました:", error);
+          logger.error("Tauri版の確認ページ送信に失敗しました:", error);
           handleWriteResult({
             type: "error",
             message: error instanceof Error ? error.message : String(error),
           });
         }
       } else {
-        console.error("Chrome版ではTauri専用の確認送信を実行できません");
+        logger.error("Chrome版ではTauri専用の確認送信を実行できません");
         handleWriteResult({
           type: "error",
           message: "確認ページの送信に失敗しました",

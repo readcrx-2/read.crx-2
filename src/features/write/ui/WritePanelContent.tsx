@@ -1,6 +1,7 @@
 import { Clipboard, ExternalLink, ImagePlus, MoreVertical, Settings } from "lucide-react";
 import React, { useCallback, useEffect, useId, useMemo, useRef, useState } from "react";
 import { createPortal } from "react-dom";
+import { createLogger } from "src/app/logger";
 import { extractUrlsFromMessage, toViewerImageUrl } from "src/core/util/url-media";
 import { uploadImageToImgur } from "src/features/media/application/imgur-upload";
 import { useMediaViewerStore } from "src/features/media/browser/use-media-viewer-store";
@@ -25,6 +26,8 @@ import { copyText, readClipboardImage } from "src/view/browser/utils/clipboard";
 import { sanitizeUrlsInText } from "src/view/browser/utils/url-tracking";
 import { bindWriteConfirmationFrame } from "src/view/browser/utils/write-confirmation";
 import { findUrlTrackingWarning, findWriteWarnings } from "src/view/browser/utils/write-warning";
+
+const logger = createLogger("write");
 
 const WRITE_SUBMIT_CTRL_ENTER_KEY = "write_submit_ctrl_enter";
 const WRITE_CLOSE_PANEL_AFTER_SUBMIT_KEY = "write_close_panel_after_submit";
@@ -270,7 +273,7 @@ const WritePanelEditor: React.FC<WritePanelContentProps> = ({
         }
         setImgurUploadStatus({ type: "success", message: "画像を投稿し、URLを本文に追加しました" });
       } catch (error) {
-        console.error("[ImgurUpload] 画像の投稿に失敗しました", error);
+        logger.error("画像の投稿に失敗しました", error);
         setImgurUploadStatus({
           type: "error",
           message: error instanceof Error ? error.message : String(error),
@@ -373,7 +376,7 @@ const WritePanelEditor: React.FC<WritePanelContentProps> = ({
       setIsAuthCodeCopied(true);
       toast.success("認証コードをコピーしました");
     } catch (error) {
-      console.error("eddibbの認証コードをコピーできませんでした", error);
+      logger.error("eddibbの認証コードをコピーできませんでした", error);
       toast.error("認証コードをコピーできませんでした");
     }
   }, [authCode, toast, viewSurface]);
@@ -385,7 +388,7 @@ const WritePanelEditor: React.FC<WritePanelContentProps> = ({
       setIsAuthCodeUrlCopied(true);
       toast.success("認証URLをコピーしました");
     } catch (error) {
-      console.error("eddibbの認証URLをコピーできませんでした", error);
+      logger.error("eddibbの認証URLをコピーできませんでした", error);
       toast.error("認証URLをコピーできませんでした");
     }
   }, [authCodeUrl, toast, viewSurface]);

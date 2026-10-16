@@ -106,6 +106,8 @@ describe("ThreadMinimap", () => {
     const rootRef = { current: host } as React.RefObject<HTMLDivElement | null>;
     const repIndex = new Map<number, Set<number>>([[10, new Set([11, 12, 13])]]);
 
+    // Reactの警告出力を検査するため、ロガーを通さない console を直接監視する。
+    // eslint-disable-next-line no-console
     const consoleErrorSpy = vi.spyOn(console, "error").mockImplementation(() => {});
 
     const { container } = render(

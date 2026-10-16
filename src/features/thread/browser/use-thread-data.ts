@@ -9,6 +9,7 @@ import {
   useRef,
   useState,
 } from "react";
+import { createLogger } from "src/app/logger";
 import { evaluateThreadNg } from "src/core/ng/ThreadNgEvaluator";
 import {
   useIsNgTemporarilyDisabled,
@@ -43,6 +44,8 @@ import {
 import { deriveThreadData } from "src/view/browser/utils/thread-data-derived";
 import { buildIndexes } from "src/view/browser/utils/thread-index";
 import { stripTrailingSyntheticAbobunResponses } from "src/view/browser/utils/thread-response-cache";
+
+const logger = createLogger("thread");
 
 interface FetchThreadOptions {
   /** 自動更新由来の取得では、dat落ち確認のsubject.txt取得を間引く */
@@ -252,7 +255,7 @@ export function useThreadData(
         setError(message);
         setLoading(false);
         finishManualRefresh(0, message);
-        console.error("[useThreadData] Sikiログの本文登録が見つかりません", {
+        logger.error("Sikiログの本文登録が見つかりません", {
           threadUrl: page.threadUrl,
         });
         return;
@@ -321,7 +324,7 @@ export function useThreadData(
           dispatch(tabActions.updateTitleForTab(tabId, result.title));
         }
       } catch (e) {
-        console.error("[useThreadData] スレッドの取得に失敗しました", {
+        logger.error("スレッドの取得に失敗しました", {
           threadUrl: page.threadUrl,
           error: e,
         });

@@ -24,7 +24,6 @@ import { MediaViewerContainer } from "src/features/media/ui/MediaViewerContainer
 import { useAutoNextThread } from "src/features/next-thread/browser/use-auto-next-thread";
 import { useAutoNextThreadSetting } from "src/features/next-thread/browser/use-auto-next-thread-setting";
 import { NextThreadSearchDialog } from "src/features/next-thread/ui/NextThreadSearchDialog";
-import { useNgStatus } from "src/features/ng/browser/use-ng-status";
 import type { ContextMenuPopupItem } from "src/features/popup/browser/popup-types";
 import { useThreadPopupManager } from "src/features/popup/browser/use-popup-manager";
 import { PopupRenderer } from "src/features/popup/ui/PopupRenderer";
@@ -47,10 +46,6 @@ import { ContextMenuNavigationActions } from "src/view/browser/components/Contex
 import { OperationStatusItem } from "src/view/browser/components/OperationStatusItem";
 import { useLatestRef } from "src/view/browser/hooks/use-latest-ref";
 import { useMouseGesture } from "src/view/browser/hooks/use-mouse-gesture";
-import {
-  getThreadPageCountKey,
-  usePageCountStatus,
-} from "src/view/browser/hooks/use-page-count-status";
 import { ThreadPageTopBar } from "src/view/browser/pages/thread/ThreadPageTopBar";
 import { useCommentOverlaySync } from "src/view/browser/pages/thread/use-comment-overlay-sync";
 import { useImageBlurConfig } from "src/view/browser/pages/thread/use-image-blur-config";
@@ -58,6 +53,7 @@ import { useOwnResTracking } from "src/view/browser/pages/thread/use-own-res-tra
 import { useResInteractionHandlers } from "src/view/browser/pages/thread/use-res-interaction-handlers";
 import { useThreadReadState } from "src/view/browser/pages/thread/use-thread-read-state";
 import { useThreadResContextMenu } from "src/view/browser/pages/thread/use-thread-res-context-menu";
+import { useThreadStatusSync } from "src/view/browser/pages/thread/use-thread-status-sync";
 import { useThreadTopBar } from "src/view/browser/pages/thread/use-thread-top-bar";
 import { useThreadTopScrollOpenFilter } from "src/view/browser/pages/thread/use-thread-top-scroll-open-filter";
 import { useUrlHandlers } from "src/view/browser/pages/thread/use-url-handlers";
@@ -258,9 +254,6 @@ export const ThreadPage: React.FC<ThreadPageProps> = ({
     edge: "bottom",
     onRefresh: requestManualRefresh,
   });
-  const { setThreadStats } = useNgStatus();
-  const { setPageCount } = usePageCountStatus();
-  const pageCountKey = getThreadPageCountKey(tabId, page.threadUrl);
   const mediaViewerScopeId = `${tabId}\u0000${page.threadUrl}`;
   const openMedia = useMediaViewerStore((state) => state.openMediaFromUrl);
   const openMediaFromUrl = useCallback(
@@ -632,54 +625,19 @@ export const ThreadPage: React.FC<ThreadPageProps> = ({
     scrollToResponse,
   });
 
-  const threadNgCount = useMemo(
-    () => responses.filter((res) => res.ng != null || res.class?.includes("ng")).length,
-    [responses],
-  );
-  const ngResNums = useMemo(
-    () =>
-      new Set(
-        responses
-          .filter((res) => res.ng != null || res.class?.includes("ng"))
-          .map((res) => res.num),
-      ),
-    [responses],
-  );
-
-  const ownHighlightCount = useMemo(() => {
-    const highlightedResNums = new Set<number>(ownResNums);
-    for (const resNum of replyToOwnResNums) {
-      highlightedResNums.add(resNum);
-    }
-    return highlightedResNums.size;
-  }, [ownResNums, replyToOwnResNums]);
+  const { ngResNums } = useThreadStatusSync({
+    tabId,
+    threadUrl: page.threadUrl,
+    loading,
+    responses,
+    ownResNums,
+    replyToOwnResNums,
+  });
 
   const blurredResNums = useMemo(() => {
     if (!imageBlurConfig.enabled) return new Set<number>();
     return buildBlurredResSet(responses, indexes.repIndex, imageBlurConfig.harmfulWordPattern);
   }, [imageBlurConfig, indexes.repIndex, responses]);
-
-  useEffect(() => {
-    // 変更理由: ステータスバーはページ外で描画されるため、タブ単位でレス数を共有し、
-    // 別タブの取得結果が現在の表示へ混ざらないようにする。
-    setPageCount(pageCountKey, {
-      kind: "thread",
-      count: loading && responses.length === 0 ? null : responses.length,
-    });
-    return () => setPageCount(pageCountKey, null);
-  }, [loading, pageCountKey, responses.length, setPageCount]);
-
-  useEffect(() => {
-    // ステータスバーの件数はページ外コンポーネントから参照するため、
-    // スレッド側で集計して共有ストアへ反映する。
-    setThreadStats({
-      ngCount: threadNgCount,
-      highlightCount: ownHighlightCount,
-    });
-    return () => {
-      setThreadStats({ ngCount: 0, highlightCount: 0 });
-    };
-  }, [ownHighlightCount, setThreadStats, threadNgCount]);
 
   const { openPopupResContextMenu, openThreadResContextMenu } = useThreadResContextMenu({
     addPopupContextMenu,

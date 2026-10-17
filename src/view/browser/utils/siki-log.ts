@@ -1,7 +1,9 @@
 import { createLogger } from "src/app/logger";
 import type { IRes } from "src/service-container/interfaces";
 import type { ThreadPage } from "src/view/browser/types";
+import { registerImportedThread } from "src/view/browser/utils/imported-thread";
 import { parseInternalBrowserPage } from "src/view/browser/utils/link-routing";
+import { selectLocalFile } from "src/view/browser/utils/local-file";
 
 const logger = createLogger("view/browser");
 
@@ -28,14 +30,6 @@ export interface ParsedSikiLog {
   threadUrl: string;
   responses: IRes[];
 }
-
-export interface ImportedSikiThread {
-  title: string;
-  responses: IRes[];
-}
-
-const importedSikiThreads = new Map<string, ImportedSikiThread>();
-let importSequence = 0;
 
 function isRecord(value: unknown): value is Record<string, unknown> {
   return typeof value === "object" && value !== null;
@@ -180,67 +174,9 @@ export async function parseSikiLogFile(file: Pick<File, "name" | "text">): Promi
 }
 
 export function selectSikiLogFile(): Promise<File | null> {
-  if (typeof document === "undefined" || !document.body) {
-    return Promise.reject(new Error("ファイル選択を開ける画面がありません"));
-  }
-
-  const input = document.createElement("input");
-  input.type = "file";
-  input.accept = ".json,application/json";
-  input.hidden = true;
-
-  return new Promise<File | null>((resolve) => {
-    let settled = false;
-    const settle = (file: File | null): void => {
-      if (settled) {
-        return;
-      }
-      settled = true;
-      input.remove();
-      resolve(file);
-    };
-
-    input.addEventListener("change", () => settle(input.files?.[0] ?? null), { once: true });
-    // cancelイベントは、ファイルを選ばずOSの選択画面を閉じた場合にも発火する。
-    input.addEventListener("cancel", () => settle(null), { once: true });
-    document.body.append(input);
-    input.click();
-  });
+  return selectLocalFile(".json,application/json");
 }
 
 export function registerSikiLogThread(parsed: ParsedSikiLog): ThreadPage {
-  const importedUrl = new URL(parsed.threadUrl);
-  // 同じスレの別ファイルも個別タブで開けるよう、既存URLと衝突しない識別子をクエリへ付ける。
-  importedUrl.searchParams.set(SIKI_LOG_QUERY_KEY, String(++importSequence));
-  const page: ThreadPage = {
-    type: "thread",
-    title: parsed.title,
-    threadUrl: importedUrl.href,
-  };
-
-  importedSikiThreads.set(page.threadUrl, {
-    title: parsed.title,
-    responses: parsed.responses.map((response) => ({ ...response })),
-  });
-  return page;
-}
-
-export function isSikiLogThreadUrl(threadUrl: string): boolean {
-  try {
-    return new URL(threadUrl).searchParams.has(SIKI_LOG_QUERY_KEY);
-  } catch {
-    return false;
-  }
-}
-
-export function getImportedSikiThread(threadUrl: string): ImportedSikiThread | null {
-  const imported = importedSikiThreads.get(threadUrl);
-  if (!imported) {
-    return null;
-  }
-
-  return {
-    title: imported.title,
-    responses: imported.responses.map((response) => ({ ...response })),
-  };
+  return registerImportedThread(SIKI_LOG_QUERY_KEY, parsed.threadUrl, parsed);
 }

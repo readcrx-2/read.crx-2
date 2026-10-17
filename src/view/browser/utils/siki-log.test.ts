@@ -1,9 +1,5 @@
-import {
-  getImportedSikiThread,
-  isSikiLogThreadUrl,
-  parseSikiLogDocument,
-  registerSikiLogThread,
-} from "src/view/browser/utils/siki-log";
+import { getImportedThread, isImportedThreadUrl } from "src/view/browser/utils/imported-thread";
+import { parseSikiLogDocument, registerSikiLogThread } from "src/view/browser/utils/siki-log";
 import { describe, expect, it } from "vite-plus/test";
 
 describe("Sikiログ", () => {
@@ -63,8 +59,8 @@ describe("Sikiログ", () => {
     const secondPage = registerSikiLogThread(parsed);
 
     expect(firstPage.threadUrl).not.toBe(secondPage.threadUrl);
-    expect(isSikiLogThreadUrl(firstPage.threadUrl)).toBe(true);
-    expect(getImportedSikiThread(firstPage.threadUrl)?.responses[0]?.message).toBe("本文");
+    expect(isImportedThreadUrl(firstPage.threadUrl)).toBe(true);
+    expect(getImportedThread(firstPage.threadUrl)?.responses[0]?.message).toBe("本文");
   });
 
   it("locationまたは本文がないJSONを拒否する", () => {

@@ -31,12 +31,12 @@ import {
   restoreRootSelection,
   type RootSelectionSnapshot,
 } from "src/view/browser/utils/dom-selection";
+import { getImportedThread, isImportedThreadUrl } from "src/view/browser/utils/imported-thread";
 import {
   consumeManualRefresh,
   getManualRefreshScopeKey,
 } from "src/view/browser/utils/manual-refresh";
 import { normalizePopularReplyThreshold } from "src/view/browser/utils/popular-filter";
-import { getImportedSikiThread, isSikiLogThreadUrl } from "src/view/browser/utils/siki-log";
 import {
   getThreadResponseCache,
   setThreadResponseCache,
@@ -180,7 +180,7 @@ export function useThreadData(
   }, [page.threadUrl]);
   const manualRefreshScopeKey = getManualRefreshScopeKey(tabId, page);
   const isCacheResolved =
-    cacheResolvedThreadUrl === page.threadUrl || isSikiLogThreadUrl(page.threadUrl);
+    cacheResolvedThreadUrl === page.threadUrl || isImportedThreadUrl(page.threadUrl);
 
   // 外部からの「ChLensで開く」も通常の遷移も、キャッシュ確認中から読み込みを示す。
   // 通信が先に完了してもキャッシュ確認が残っていれば待機中とし、本文があれば表示を優先する。
@@ -218,44 +218,44 @@ export function useThreadData(
       }
       titleUpdatedRef.current = false;
 
-      const importedSikiThread = getImportedSikiThread(page.threadUrl);
-      if (importedSikiThread) {
-        // 変更理由: Sikiログには再取得先の通信がないため、登録済み本文を使い、
+      const importedThread = getImportedThread(page.threadUrl);
+      if (importedThread) {
+        // 変更理由: ファイルから読んだスレには再取得先の通信がないため、登録済み本文を使い、
         // 通常スレと同じ検索・NG・アンカー処理へそのまま流す。
         // 通常スレと同じく、自動NG（連鎖・ID無し等）を含む判定を全レスへ一括適用する。
         const importedNgResults = evaluateThreadNg(
-          importedSikiThread.responses,
+          importedThread.responses,
           {
-            title: importedSikiThread.title,
+            title: importedThread.title,
             url: page.threadUrl,
           },
           // corePorts は core の中の受け渡し口なので、画面からは同じ実体のサービスコンテナを渡す。
           container,
         );
         setResponses(
-          importedSikiThread.responses.map((response) => ({
+          importedThread.responses.map((response) => ({
             ...response,
             ng: importedNgResults.get(response.num),
           })),
         );
-        if (importedSikiThread.title && importedSikiThread.title !== page.title) {
-          dispatch(tabActions.updateTitleForTab(tabId, importedSikiThread.title));
+        if (importedThread.title && importedThread.title !== page.title) {
+          dispatch(tabActions.updateTitleForTab(tabId, importedThread.title));
         }
         setError(null);
         setLoading(false);
-        finishManualRefresh(importedSikiThread.responses.length);
+        finishManualRefresh(importedThread.responses.length);
         return;
       }
 
-      if (isSikiLogThreadUrl(page.threadUrl)) {
+      if (isImportedThreadUrl(page.threadUrl)) {
         // セッション復元後はメモリ上の本文登録が存在しないため、誤って同じURLへ
-        // 通信しない。利用者が元のJSONを再度選べば新しい登録として開き直せる。
-        const message = "Sikiログの本文が見つかりません。JSONファイルを再度開いてください";
+        // 通信しない。利用者が元のファイルを再度開けば新しい登録として開き直せる。
+        const message = "ファイルの本文が見つかりません。元のファイルを再度開いてください";
         setResponses([]);
         setError(message);
         setLoading(false);
         finishManualRefresh(0, message);
-        logger.error("Sikiログの本文登録が見つかりません", {
+        logger.error("読み込み済みスレッドの本文登録が見つかりません", {
           threadUrl: page.threadUrl,
         });
         return;
@@ -361,7 +361,7 @@ export function useThreadData(
       // 変更理由: ページ移動直後に前スレの本文を新しいスレのキャッシュとして見せない。
       setResponses([]);
     }
-    if (isSikiLogThreadUrl(page.threadUrl)) {
+    if (isImportedThreadUrl(page.threadUrl)) {
       return;
     }
     let isCurrentThread = true;

@@ -64,6 +64,11 @@ import {
   parseInternalBrowserPage,
   parseInternalBrowserPageStrict,
 } from "src/view/browser/utils/link-routing";
+import {
+  parseLocalDatFile,
+  registerLocalDatThread,
+  selectLocalDatFile,
+} from "src/view/browser/utils/local-dat";
 import { getManualRefreshScopeKey, runManualRefresh } from "src/view/browser/utils/manual-refresh";
 import {
   parseSikiLogFile,
@@ -337,6 +342,30 @@ async function openSikiLogFile(context: BrowserCommandContext): Promise<void> {
   }
 }
 
+async function openLocalDatFile(context: BrowserCommandContext): Promise<void> {
+  const file = await selectLocalDatFile();
+  if (!file) {
+    return;
+  }
+
+  try {
+    const parsed = await parseLocalDatFile(file);
+    const page = registerLocalDatThread(parsed);
+    // 変更理由: datはファイルだけで再取得できないため、Sikiログと同じく本文を登録してから
+    // 通常のスレッドタブ経路へ渡し、検索・アンカー・NG表示を共有する。
+    context.dispatch(tabActions.openInNewTab(page));
+    getCommandToast(context).success(`datファイル「${parsed.title}」を開きました`);
+  } catch (error: unknown) {
+    logger.error("datファイルを開けませんでした", {
+      fileName: file.name,
+      error,
+    });
+    getCommandToast(context).error(
+      error instanceof Error ? error.message : "datファイルを開けませんでした",
+    );
+  }
+}
+
 function toggleFilter(context: BrowserCommandContext): void {
   const { window: viewWindow } = getCommandSurface(context);
   const viewWindowWithConstructors = viewWindow as Window & typeof globalThis;
@@ -545,6 +574,16 @@ export const BROWSER_COMMAND_DEFINITIONS: readonly BrowserCommandDefinition[] = 
     group: "navigation",
     icon: FileJson,
     run: openSikiLogFile,
+  },
+  {
+    id: "navigation.open-local-dat",
+    label: "ローカルのdatファイルを開く",
+    englishLabel: "Open Local DAT File",
+    description: "ローカルに保存されたdatファイルを読み込み、スレッドを新しいタブで開きます",
+    keywords: ["dat", "ファイル", "ローカル", "過去ログ", "Shift_JIS"],
+    group: "navigation",
+    icon: FileJson,
+    run: openLocalDatFile,
   },
   {
     id: "navigation.import-open-thread-tabs",

@@ -1,3 +1,7 @@
+import { createLogger } from "src/app/logger";
+
+const logger = createLogger("comment-overlay");
+
 export const COMMENT_OVERLAY_ATTACHMENT_STORAGE_KEY = "chlens:comment-overlay-attachment";
 
 export interface StoredOverlayAttachment {
@@ -23,7 +27,7 @@ export function loadOverlayAttachment(): StoredOverlayAttachment | null {
     }
     return { processPath: value.processPath, title: value.title };
   } catch (error: unknown) {
-    console.error("[ChLens] コメントOverlayの追従先の読み込みに失敗しました:", error);
+    logger.error("コメントOverlayの追従先の読み込みに失敗しました:", error);
     return null;
   }
 }

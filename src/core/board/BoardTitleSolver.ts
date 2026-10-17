@@ -5,11 +5,14 @@ import {
   resolveBoardTitle,
 } from "packages/chlib/src/index";
 import { defer } from "src/app/Defer";
+import { createLogger } from "src/app/logger";
 import { getBoardUrlKey } from "src/core/board/BoardUrlNormalizer";
 import { Request } from "src/core/network/HTTP";
 import type { IBBSMenuResult } from "src/core/ports/bbs-menu";
 import type { CorePorts } from "src/core/ports/registry";
 import { corePorts } from "src/core/ports/registry";
+
+const logger = createLogger("core/board");
 
 const isSavedTitleResolved = (title: string | null, boardUrl: string): title is string => {
   if (!title?.trim()) return false;
@@ -48,7 +51,7 @@ export function createBoardTitleSolver(deps: BoardTitleSolverDeps) {
           }
         }
       } catch (error) {
-        console.error("保存済みの板名を読み込めませんでした", error);
+        logger.error("保存済みの板名を読み込めませんでした", error);
       }
     }
     // 変更理由: deps.bookmark は未登録時に値を返さず例外を投げるため、存在確認の if は
@@ -59,7 +62,7 @@ export function createBoardTitleSolver(deps: BoardTitleSolverDeps) {
     try {
       await bookmark.promiseFirstScan;
     } catch (error) {
-      console.error("お気に入りの初回読み込みに失敗しました", error);
+      logger.error("お気に入りの初回読み込みに失敗しました", error);
     }
     for (const board of bookmark.getAllBoards()) {
       addTitle(board.url, _formatBoardTitle(board.title, new ChURL(board.url)));

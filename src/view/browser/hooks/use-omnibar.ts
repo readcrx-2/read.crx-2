@@ -8,6 +8,7 @@ import {
   useMemo,
   useState,
 } from "react";
+import { createLogger } from "src/app/logger";
 import type { ResolvedBrowserCommand } from "src/view/browser/commands/browser-commands";
 import { filterAndSortBrowserCommands } from "src/view/browser/commands/command-search";
 import {
@@ -15,6 +16,8 @@ import {
   type OmnibarMergedEntry,
   type OmnibarSuggestion,
 } from "src/view/browser/utils/omnibar";
+
+const logger = createLogger("view/browser");
 
 export type OmnibarInputMode = "navigation" | "command";
 
@@ -100,7 +103,7 @@ export function useOmnibar({
         }
         // 変更理由: 候補取得に失敗してもURLの直接入力は継続できるようにしつつ、
         // 履歴・お気に入りが消えた原因はログから追跡できるようにする。
-        console.error("Failed to load omnibar entries", { error });
+        logger.error("Failed to load omnibar entries", { error });
         setOmnibarEntries([]);
         setIsOmnibarLoaded(true);
       })

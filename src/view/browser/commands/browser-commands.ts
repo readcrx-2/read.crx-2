@@ -25,6 +25,7 @@ import {
 } from "lucide-react";
 import { ChURL } from "packages/chlib/src/index";
 import type { Dispatch } from "react";
+import { createLogger } from "src/app/logger";
 import { isTauriRuntime } from "src/app/platform/runtime";
 import { container } from "src/service-container";
 import type { IToastService } from "src/service-container/interfaces";
@@ -76,6 +77,8 @@ import {
 } from "src/view/browser/utils/tab-pages";
 import { requestThreadResJump } from "src/view/browser/utils/thread-read-state";
 import { encodeThreadAsToon, estimateToonTokenCount } from "src/view/browser/utils/thread-toon";
+
+const logger = createLogger("view/browser");
 
 export const BROWSER_COMMAND_GROUP_LABELS = {
   navigation: "移動",
@@ -289,7 +292,7 @@ async function importOpenThreadTabs(context: BrowserCommandContext): Promise<voi
     const failedTabIds = await removeExtensionTabs(tabIds);
     if (failedTabIds.length > 0) {
       failedTabCount += failedTabIds.length;
-      console.error("[ChLens] スレッド取り込み元タブの一部を閉じられませんでした", {
+      logger.error("スレッド取り込み元タブの一部を閉じられませんでした", {
         threadUrl: page.threadUrl,
         failedTabIds,
       });
@@ -324,7 +327,7 @@ async function openSikiLogFile(context: BrowserCommandContext): Promise<void> {
     getCommandToast(context).success(`Sikiログ「${parsed.title}」を開きました`);
   } catch (error: unknown) {
     // ファイル選択後の解析失敗は画面上でも知らせつつ、元のエラーをログへ残す。
-    console.error("[BrowserCommand] Sikiログを開けませんでした", {
+    logger.error("Sikiログを開けませんでした", {
       fileName: file.name,
       error,
     });
@@ -823,7 +826,7 @@ export const BROWSER_COMMAND_DEFINITIONS: readonly BrowserCommandDefinition[] = 
       const next = current === "vertical" ? "horizontal" : "vertical";
       // 変更理由: タブバーの右クリックメニューと同じ保存経路にし、config_updated 経由で即時反映する。
       void Promise.resolve(container.config.set("tab_bar_orientation", next)).catch((error) => {
-        console.error("[BrowserCommand] タブバー方向の保存に失敗しました", error);
+        logger.error("タブバー方向の保存に失敗しました", error);
       });
     },
   },

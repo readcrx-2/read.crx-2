@@ -1,6 +1,7 @@
 import { AlertTriangle } from "lucide-react";
 import React, { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { container } from "src/service-container/index";
+import { DebugLogPanel } from "src/view/browser/pages/settings/DebugLogPanel";
 import {
   buildDataExportFilename,
   exportDataArchive,
@@ -272,6 +273,8 @@ export function SettingsSupplementaryPanels({
               </SurfaceBody>
             </Surface>
           );
+        case "debugLog":
+          return <DebugLogPanel key={panelId} />;
         case "dangerZone":
           return (
             <Surface key={panelId} tone="danger" variant="flat">

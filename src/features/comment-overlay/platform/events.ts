@@ -1,4 +1,5 @@
 import { emit, listen } from "@tauri-apps/api/event";
+import { createLogger } from "src/app/logger";
 import { isTauriRuntime } from "src/app/platform/runtime";
 
 import {
@@ -6,6 +7,8 @@ import {
   type CommentOverlayEventBus,
   MemoryCommentOverlayEventBus,
 } from "../domain";
+
+const logger = createLogger("comment-overlay");
 
 export const COMMENT_OVERLAY_EVENT_NAME = "chlens://comment-overlay-update";
 
@@ -21,7 +24,7 @@ export class TauriCommentOverlayEventBus implements CommentOverlayEventBus {
   async subscribe(listener: (event: CommentOverlayEvent) => void): Promise<() => void> {
     return listen<CommentOverlayEvent>(COMMENT_OVERLAY_EVENT_NAME, ({ payload }) => {
       if (!isCommentOverlayEvent(payload)) {
-        console.error("[ChLens] 未対応のコメントOverlay eventを受信しました:", payload);
+        logger.error("未対応のコメントOverlay eventを受信しました:", payload);
         return;
       }
       listener(payload);

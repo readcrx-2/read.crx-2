@@ -1,5 +1,8 @@
 import type { ParsedBBSMenu } from "packages/chlib/src/index";
 import { createItestServerMap } from "packages/chlib/src/index";
+import { createLogger } from "src/app/logger";
+
+const logger = createLogger("view/browser");
 
 const STORAGE_KEY = "itestServerMap";
 
@@ -20,7 +23,7 @@ function loadPersistedMap(): void {
     }
   } catch (error) {
     // 変更理由: 保存領域が無効でも画面を起動できるよう復元は続行しつつ、原因を調査できるよう記録する。
-    console.error("itestサーバー対応表を復元できませんでした:", error);
+    logger.error("itestサーバー対応表を復元できませんでした:", error);
   }
 }
 
@@ -29,7 +32,7 @@ function persistMap(): void {
     window.localStorage.setItem(STORAGE_KEY, JSON.stringify(Object.fromEntries(serverMap)));
   } catch (error) {
     // 変更理由: 保存に失敗しても現在セッションのメモリ上の対応表は使えるため、失敗を記録して動作を続ける。
-    console.error("itestサーバー対応表を保存できませんでした:", error);
+    logger.error("itestサーバー対応表を保存できませんでした:", error);
   }
 }
 

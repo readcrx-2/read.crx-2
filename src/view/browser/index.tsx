@@ -4,11 +4,14 @@ import { createRoot } from "react-dom/client";
 import { boot } from "src/app";
 import { installDebugApi } from "src/app/debug/debug-api";
 import { installConsoleCapture } from "src/app/debug/debug-log";
+import { installLogPersistence } from "src/app/debug/log-persistence";
 import { setupBrowserViewServices } from "src/service-container/setup-browser-view";
 import { BrowserApp } from "src/view/browser/App";
 
 // 起動処理のエラーも外部CLIから読めるよう、boot より前に記録を始める。
 installConsoleCapture();
+// 記録を再起動後も読めるよう、IndexedDB へ保存し始める。
+installLogPersistence();
 installDebugApi();
 
 // 設定の読み込みとサービスコンテナの準備を待ってから描画する。

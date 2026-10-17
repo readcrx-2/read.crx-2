@@ -1,4 +1,5 @@
 import { useCallback, useEffect, useMemo, useState } from "react";
+import { createLogger } from "src/app/logger";
 import { readBookmarkStatus } from "src/features/bookmark/browser/use-bookmark-revision";
 import { container } from "src/service-container/index";
 import {
@@ -9,6 +10,8 @@ import { useToast } from "src/view/browser/hooks/use-toast";
 import { useViewSurface } from "src/view/browser/hooks/use-view-surface";
 import type { Page } from "src/view/browser/types";
 import { parseInternalBrowserPage } from "src/view/browser/utils/link-routing";
+
+const logger = createLogger("bookmark");
 
 export interface BookmarkTarget {
   url: string;
@@ -191,7 +194,7 @@ export function usePageBookmark(page: Page): PageBookmarkState {
             ? "ブックマークの追加に失敗しました"
             : "ブックマークの削除に失敗しました",
         );
-        console.error("Bookmark operation failed", error);
+        logger.error("Bookmark operation failed", error);
       })
       .finally(() => {
         setIsBookmarkPending(false);

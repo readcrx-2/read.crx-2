@@ -1,9 +1,12 @@
+import { createLogger } from "src/app/logger";
 import {
   serializeSharedHttpRequest,
   type SharedHttpResponseMessage,
 } from "src/app/platform/browser/shared-http-protocol";
 import { HttpClient, HttpRequestOptions, HttpResponse } from "src/app/platform/types";
 import browser from "webextension-polyfill";
+
+const logger = createLogger("platform");
 
 type DnrRule = browser.DeclarativeNetRequest.Rule;
 type DnrApi = NonNullable<(typeof browser)["declarativeNetRequest"]>;
@@ -43,7 +46,7 @@ async function setupWriteHeaders(formAction: string): Promise<void> {
     !api?.declarativeNetRequest?.updateSessionRules ||
     !api.declarativeNetRequest.getSessionRules
   ) {
-    console.warn("declarativeNetRequest is not available");
+    logger.warn("declarativeNetRequest is not available");
     return;
   }
 
@@ -82,7 +85,7 @@ async function setupWriteHeaders(formAction: string): Promise<void> {
       removeRuleIds: oldRule ? [oldRule.id] : [],
     });
   } catch (e) {
-    console.error("setupWriteHeaders failed:", e);
+    logger.error("setupWriteHeaders failed:", e);
   }
 }
 

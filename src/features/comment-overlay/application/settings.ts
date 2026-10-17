@@ -1,3 +1,4 @@
+import { createLogger } from "src/app/logger";
 import { isTauriRuntime } from "src/app/platform/runtime";
 import { container } from "src/service-container/index";
 
@@ -7,6 +8,8 @@ import {
   MAX_COMMENT_OVERLAY_DURATION_SECONDS,
   normalizeCommentOverlaySettings,
 } from "../domain";
+
+const logger = createLogger("comment-overlay");
 
 export const COMMENT_OVERLAY_CONFIG_KEYS = {
   // 既存キーを維持し、旧いpx/秒の保存値はreadCommentOverlaySettingsで秒へ変換する。
@@ -65,7 +68,7 @@ export function readCommentOverlaySettings(): CommentOverlaySettings {
         container.config.get(COMMENT_OVERLAY_CONFIG_KEYS.fetchAllCandidateThreads) === "on",
     });
   } catch (error: unknown) {
-    console.error("[ChLens] コメントOverlay設定の読み込みに失敗しました:", error);
+    logger.error("コメントOverlay設定の読み込みに失敗しました:", error);
     return { ...DEFAULT_COMMENT_OVERLAY_SETTINGS };
   }
 }
@@ -81,7 +84,7 @@ export function subscribeToCommentOverlaySettings(listener: () => void): () => v
     container.message.on("config_updated", handleConfigUpdated);
     return () => container.message.off("config_updated", handleConfigUpdated);
   } catch (error: unknown) {
-    console.error("[ChLens] コメントOverlay設定の変更監視に失敗しました:", error);
+    logger.error("コメントOverlay設定の変更監視に失敗しました:", error);
     return () => {};
   }
 }

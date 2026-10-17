@@ -107,7 +107,7 @@ export class BBSMenuModel {
         try {
           return await this._fetcher.getCached(url);
         } catch (error) {
-          console.error("保存済み板一覧の読み込みに失敗しました", { url, error });
+          logger.error("保存済み板一覧の読み込みに失敗しました", { url, error });
           return null;
         }
       }),
@@ -139,7 +139,7 @@ export class BBSMenuModel {
         const menu = await this.fetchOne(url, forceReload);
         menus.push(menu);
       } catch (error) {
-        console.error(error);
+        logger.error(error);
         // 利用者への見せ方（リンク付きのトーストなど）は service-container の setup が決める。
         this.deps.notice.bbsMenuFetchFailed(url);
       }

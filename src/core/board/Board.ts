@@ -7,11 +7,14 @@ import {
   getBoardNetwork,
   resolveBoardRedirectUrl,
 } from "packages/chlib/src/index";
+import { createLogger } from "src/app/logger";
 import { platform } from "src/app/platform";
 import { runBoardRequest } from "src/core/board/board-request";
 import { chServerMoveDetect } from "src/core/board/ch-server-move-detect";
 import { Response } from "src/core/network/HTTP";
 import type { CorePorts } from "src/core/ports/registry";
+
+const logger = createLogger("core/board");
 
 // 変更理由: 5ch/2ch.scのホスト名判定をcoreへ複製せず、通信条件だけを意味分類で選ぶ。
 
@@ -196,7 +199,7 @@ export default class Board {
             await cache.put();
           }
         } catch (error: unknown) {
-          console.error("Board GET error:", error);
+          logger.error("Board GET error:", error);
 
           // エラーの詳細を取得
           const errorObj = error as Record<string, unknown>;
@@ -363,7 +366,7 @@ class="open_in_rcrx">${this.deps.util.escapeHtml(newBoardUrl)}
     } catch (error) {
       // 変更理由: URLを直接開いた場合などは板キャッシュがない。ここで終了すると
       // subject.txtを一度も確認できず、dat落ちによる自動更新停止を取りこぼす。
-      console.error("[Board] スレッド存在確認用の板キャッシュを取得できませんでした:", error);
+      logger.error("スレッド存在確認用の板キャッシュを取得できませんでした:", error);
     }
 
     let threads: BoardThread[] = cachedThreads ?? [];

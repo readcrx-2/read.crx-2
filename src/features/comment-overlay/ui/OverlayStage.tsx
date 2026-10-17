@@ -2,6 +2,7 @@ import "./OverlayStage.css";
 
 import type { CSSProperties } from "react";
 import { useEffect, useLayoutEffect, useMemo, useRef, useState } from "react";
+import { createLogger } from "src/app/logger";
 import { toViewerImageUrl } from "src/core/util/url-media";
 import { ExternalImage } from "src/features/media/ui/ExternalImage";
 import { copyText } from "src/view/browser/utils/clipboard";
@@ -19,6 +20,8 @@ import {
   DEFAULT_MAX_QUEUE_SIZE,
 } from "../domain";
 import type { CommentCandidate } from "../domain/comment-types";
+
+const logger = createLogger("comment-overlay");
 
 const DEFAULT_STAGE_WIDTH = 800;
 const DEFAULT_STAGE_HEIGHT = 240;
@@ -494,7 +497,7 @@ export function OverlayStage({
 
   const copyToClipboard = (value: string): void => {
     void copyText(value).catch((error: unknown) => {
-      console.error("[ChLens] コメントOverlayのコピーに失敗しました:", error);
+      logger.error("コメントOverlayのコピーに失敗しました:", error);
     });
     setMenu(null);
   };

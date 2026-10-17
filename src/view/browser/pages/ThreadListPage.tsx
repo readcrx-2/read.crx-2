@@ -1,5 +1,6 @@
 import { ChURL } from "packages/chlib/src/index";
 import React, { type RefObject, useCallback, useEffect, useMemo, useRef, useState } from "react";
+import { createLogger } from "src/app/logger";
 import {
   BOARD_AUTO_REFRESH_CONFIG_KEY,
   MIN_BOARD_AUTO_REFRESH_MS,
@@ -66,6 +67,8 @@ import { getManualRefreshScopeKey, runManualRefresh } from "src/view/browser/uti
 import { isPageRefreshable } from "src/view/browser/utils/refreshable-pages";
 import { SCOPED_SETTINGS_CONFIG_KEY } from "src/view/browser/utils/scoped-settings";
 import { ThreadListView } from "src/view/shared/ThreadListView";
+
+const logger = createLogger("view/browser");
 
 // 既存のページ用ユーティリティの公開位置を維持しつつ、パネル側と同じ定義を共有する。
 export {
@@ -296,7 +299,7 @@ export const ThreadListPage: React.FC<Props> = ({
         }
       })
       .catch((err) => {
-        console.error(err);
+        logger.error(err);
       });
 
     return () => {

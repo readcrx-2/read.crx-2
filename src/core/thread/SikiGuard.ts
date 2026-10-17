@@ -1,6 +1,9 @@
 import { ChURL, createSikiGuardRequestUrl } from "packages/chlib/src/index";
+import { createLogger } from "src/app/logger";
 import { Request } from "src/core/network/HTTP.ts";
 import Cache from "src/core/storage/Cache.js";
+
+const logger = createLogger("core/thread");
 
 interface SikiGuardCacheError {
   idMap?: Map<string, Set<string>>;
@@ -92,7 +95,7 @@ export default class SikiGuard {
         void cache.put();
       }
     } catch (error: unknown) {
-      console.error("[SikiGuard] 読み込みに失敗しました:", error);
+      logger.error("読み込みに失敗しました:", error);
       // 旧実装は失敗時にエラー理由を公開しないため、呼び出し側との契約を保つ。
       const caught =
         typeof error === "object" && error !== null ? (error as SikiGuardCacheError) : {};

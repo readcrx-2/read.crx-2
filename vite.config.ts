@@ -539,6 +539,25 @@ export default defineConfig(async ({ mode, command }) => {
         ...restrictImports(UI_LAYER_FILES, [UI_LAYER_PATTERN]),
         // 機能ごとの境界（組み立て層と、他の機能の内部への import を禁止）。
         ...createFeatureBoundaryOverrides(),
+        // 生の console を使わず createLogger（src/app/logger）を通す。
+        // レベル切り替えやタグ付けが効かず、後から保存先を足すときに取りこぼすため。
+        {
+          files: ["src/**"],
+          rules: { "eslint/no-console": "error" },
+        },
+        // 例外: debug-log は console 出力を横取りして記録する仕組みそのもの、Log.ts は旧互換の薄い窓口、
+        // mcp と background は consola を載せない別実行環境（ワーカー）、theme-init.js は
+        // 画面の描画前に読む素のスクリプトなので、console を直接使う。
+        {
+          files: [
+            "src/app/debug/**",
+            "src/app/Log.ts",
+            "src/mcp/**",
+            "src/background.ts",
+            "src/view/browser/theme-init.js",
+          ],
+          rules: { "eslint/no-console": "off" },
+        },
         // view・features は window.app を参照しない（docs/plans/legacy-window-app-plan.md の Phase 3）。
         {
           files: ["src/view/**", "src/features/**"],

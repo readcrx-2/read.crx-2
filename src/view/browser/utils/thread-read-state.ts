@@ -1,7 +1,10 @@
 import { emit, listen } from "@tauri-apps/api/event";
+import { createLogger } from "src/app/logger";
 import { isTauriRuntime } from "src/app/platform/runtime";
 import type { IReadState } from "src/service-container/interfaces";
 import { isHTMLElementInWindow } from "src/view/browser/utils/dom";
+
+const logger = createLogger("view/browser");
 
 const THREAD_RES_JUMP_EVENT = "thread-res-jump";
 const THREAD_RES_JUMP_TAURI_EVENT = "chlens://thread-res-jump";
@@ -182,7 +185,7 @@ export function requestThreadResJump(
     // 変更理由: 切り離したタブは別WebViewでEventTargetを共有しないため、
     // 同じ要求をTauri eventでも配信して、表示先のWebViewで回収できるようにする。
     void emit(THREAD_RES_JUMP_TAURI_EVENT, jump).catch((error: unknown) => {
-      console.error("[ChLens] WebView間のレスジャンプ通知に失敗しました:", {
+      logger.error("WebView間のレスジャンプ通知に失敗しました:", {
         threadUrl,
         resNum: normalizedResNum,
         error,
@@ -226,7 +229,7 @@ export function subscribeThreadResJump(listener: (jump: PendingThreadJump) => vo
   if (isTauriRuntime()) {
     void listen<unknown>(THREAD_RES_JUMP_TAURI_EVENT, ({ payload }) => {
       if (!isPendingThreadJump(payload)) {
-        console.error("[ChLens] WebView間のレスジャンプ要求を検証できません:", payload);
+        logger.error("WebView間のレスジャンプ要求を検証できません:", payload);
         return;
       }
       listener(payload);
@@ -236,7 +239,7 @@ export function subscribeThreadResJump(listener: (jump: PendingThreadJump) => vo
         else unlistenTauri = unlisten;
       })
       .catch((error: unknown) => {
-        console.error("[ChLens] WebView間のレスジャンプ監視に失敗しました:", error);
+        logger.error("WebView間のレスジャンプ監視に失敗しました:", error);
       });
   }
   return () => {

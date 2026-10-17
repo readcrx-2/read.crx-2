@@ -2,9 +2,17 @@ import { container } from "src/service-container";
 import { reportHistoryPersistenceError } from "src/view/browser/state/tabs/tab-store-history-visit";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vite-plus/test";
 
+const loggerMock = vi.hoisted(() => ({
+  error: vi.fn(),
+  warn: vi.fn(),
+  info: vi.fn(),
+  debug: vi.fn(),
+}));
+vi.mock("src/app/logger", () => ({ createLogger: () => loggerMock }));
+
 describe("reportHistoryPersistenceError", () => {
   beforeEach(() => {
-    vi.spyOn(console, "error").mockImplementation(() => {});
+    loggerMock.error.mockClear();
   });
 
   afterEach(() => {
@@ -18,7 +26,7 @@ describe("reportHistoryPersistenceError", () => {
 
     reportHistoryPersistenceError("閲覧履歴の保存に失敗しました", error);
 
-    expect(console.error).toHaveBeenCalledWith(
+    expect(loggerMock.error).toHaveBeenCalledWith(
       "閲覧履歴の保存に失敗しました: 書き込めません",
       error,
     );
@@ -41,7 +49,7 @@ describe("reportHistoryPersistenceError", () => {
     expect(() =>
       reportHistoryPersistenceError("閲覧履歴の保存に失敗しました", "原因"),
     ).not.toThrow();
-    expect(console.error).toHaveBeenCalledWith(
+    expect(loggerMock.error).toHaveBeenCalledWith(
       "閲覧履歴の保存エラーを画面に知らせられませんでした",
       notifyError,
     );

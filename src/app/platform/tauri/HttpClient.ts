@@ -1,4 +1,5 @@
 import { invoke } from "@tauri-apps/api/core";
+import { createLogger } from "src/app/logger";
 import { decodeBase64, decodeBase64ArrayBuffer, encodeBase64 } from "src/app/platform/binary";
 import type {
   BinaryHttpResponse,
@@ -6,6 +7,8 @@ import type {
   HttpRequestOptions,
   HttpResponse,
 } from "src/app/platform/types";
+
+const logger = createLogger("platform");
 
 interface SharedHttpResponse {
   status: number;
@@ -23,7 +26,7 @@ function decodeText(bytes: Uint8Array, mimeType: string | undefined): string {
   try {
     return new TextDecoder(extractCharset(mimeType) ?? "utf-8").decode(bytes);
   } catch (error) {
-    console.error("Tauri共有HTTP応答のデコードに失敗しました:", error);
+    logger.error("Tauri共有HTTP応答のデコードに失敗しました:", error);
     return new TextDecoder().decode(bytes);
   }
 }
@@ -74,9 +77,9 @@ export const TauriHttpClient: HttpClient = {
         : {}),
       ...(options.body != null ? { body: "[redacted]" } : {}),
     };
-    console.log("[TauriHttpClient] Fetching: " + url, safeOptions);
+    logger.debug("Fetching: " + url, safeOptions);
     const response = await request(url, options);
-    console.log("[TauriHttpClient] Response status: " + response.status);
+    logger.debug("Response status: " + response.status);
 
     return {
       status: response.status,

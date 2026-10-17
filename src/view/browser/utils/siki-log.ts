@@ -1,6 +1,9 @@
+import { createLogger } from "src/app/logger";
 import type { IRes } from "src/service-container/interfaces";
 import type { ThreadPage } from "src/view/browser/types";
 import { parseInternalBrowserPage } from "src/view/browser/utils/link-routing";
+
+const logger = createLogger("view/browser");
 
 const SIKI_LOG_QUERY_KEY = "read_crx_siki";
 
@@ -169,7 +172,7 @@ export async function parseSikiLogFile(file: Pick<File, "name" | "text">): Promi
   try {
     value = JSON.parse(await file.text()) as unknown;
   } catch (error) {
-    console.error("[Sikiログ] JSONの読み込みに失敗しました", { fileName: file.name, error });
+    logger.error("[Sikiログ] JSONの読み込みに失敗しました", { fileName: file.name, error });
     throw new Error(`${file.name}は有効なJSONではありません`, { cause: error });
   }
 

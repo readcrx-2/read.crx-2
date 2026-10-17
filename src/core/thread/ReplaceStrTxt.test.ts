@@ -1,6 +1,9 @@
 // @vitest-environment node
 import { afterEach, beforeEach, describe, expect, it, vi } from "vite-plus/test";
 
+const loggerMock = vi.hoisted(() => ({ error: vi.fn(), warn: vi.fn(), debug: vi.fn() }));
+vi.mock("src/app/logger", () => ({ createLogger: () => loggerMock }));
+
 const { config, save } = vi.hoisted(() => {
   const config = new Map<string, string>();
   return {
@@ -55,24 +58,24 @@ describe("置換設定の保存とキャッシュ", () => {
   });
 
   it("不正な外部更新は一度だけログに出し、直前のルールを維持する", async () => {
-    const log = vi.spyOn(console, "error").mockImplementation(() => {});
+    loggerMock.error.mockClear();
     const replacement = await import("./ReplaceStrTxt");
     await replacement.set(source("b"));
     config.set("replace_str_txt", "a\tb\tmsg");
     expect(replacement.replace("", "", response).message).toBe("b");
     expect(replacement.replace("", "", response).message).toBe("b");
-    expect(log).toHaveBeenCalledTimes(1);
+    expect(loggerMock.error).toHaveBeenCalledTimes(1);
     config.set("replace_str_txt", source("c"));
     expect(replacement.replace("", "", response).message).toBe("c");
   });
 
   it("保存失敗をログへ出して返し、有効な設定を維持する", async () => {
-    const log = vi.spyOn(console, "error").mockImplementation(() => {});
+    loggerMock.error.mockClear();
     const replacement = await import("./ReplaceStrTxt");
     await replacement.set(source("b"));
     save.mockRejectedValueOnce(new Error("保存失敗"));
     await expect(replacement.set(source("c"))).rejects.toThrow("保存失敗");
-    expect(log).toHaveBeenCalled();
+    expect(loggerMock.error).toHaveBeenCalled();
     expect(replacement.replace("", "", response).message).toBe("b");
   });
 });

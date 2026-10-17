@@ -1,4 +1,5 @@
 import { recordDebugEvent } from "src/app/debug/debug-log";
+import { createLogger } from "src/app/logger";
 import { extractUrlsFromMessage, toViewerImageUrl } from "src/core/util/url-media";
 import type { IRes } from "src/service-container/interfaces";
 
@@ -22,6 +23,8 @@ import {
   CommentOverlayMultiThreadSession,
   type CommentOverlayMultiThreadSource,
 } from "./multi-thread-session";
+
+const logger = createLogger("comment-overlay");
 
 const MAX_RESPONSE_SNAPSHOT_COUNT = 8;
 const MAX_RESPONSES_PER_SNAPSHOT = 2_000;
@@ -285,10 +288,7 @@ export class CommentOverlayController {
           // reset送信に失敗した場合も、表示だけが残って操作不能にならないよう戻す。
           await this.applyVisibility(false);
         } catch (rollbackError: unknown) {
-          console.error(
-            "[ChLens] コメント実況の開始失敗後のOverlay非表示に失敗しました:",
-            rollbackError,
-          );
+          logger.error("コメント実況の開始失敗後のOverlay非表示に失敗しました:", rollbackError);
         }
       }
       this.reportError("[ChLens] コメント実況の開始に失敗しました:", error);
@@ -413,7 +413,7 @@ export class CommentOverlayController {
   }
 
   private reportError(message: string, error: unknown): void {
-    console.error(message, error);
+    logger.error(message, error);
     this.error = message;
     this.notify();
   }
@@ -426,7 +426,7 @@ export class CommentOverlayController {
         void this.handleSettingsUpdated();
       });
     } catch (error: unknown) {
-      console.error("[ChLens] コメントOverlay設定の変更監視登録に失敗しました:", error);
+      logger.error("コメントOverlay設定の変更監視登録に失敗しました:", error);
     }
   }
 
@@ -444,7 +444,7 @@ export class CommentOverlayController {
       }
     } catch (error: unknown) {
       // 設定反映の失敗は実況を停止せず、送信失敗の詳細だけを既存経路へ渡す。
-      console.error("[ChLens] コメントOverlay設定の反映に失敗しました:", error);
+      logger.error("コメントOverlay設定の反映に失敗しました:", error);
     }
   }
 
@@ -575,7 +575,7 @@ export class CommentOverlayController {
         this.visibilityUnsubscribe = unsubscribe;
       })
       .catch((error: unknown) => {
-        console.error("[ChLens] コメントOverlayの表示状態監視開始に失敗しました:", error);
+        logger.error("コメントOverlayの表示状態監視開始に失敗しました:", error);
       });
   }
 
@@ -587,7 +587,7 @@ export class CommentOverlayController {
     try {
       unsubscribe();
     } catch (error: unknown) {
-      console.error("[ChLens] コメントOverlay設定の変更監視解除に失敗しました:", error);
+      logger.error("コメントOverlay設定の変更監視解除に失敗しました:", error);
     }
   }
 

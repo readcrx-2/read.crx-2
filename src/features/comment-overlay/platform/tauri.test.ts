@@ -1,5 +1,13 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from "vite-plus/test";
 
+const loggerMock = vi.hoisted(() => ({
+  error: vi.fn(),
+}));
+
+vi.mock("src/app/logger", () => ({
+  createLogger: () => loggerMock,
+}));
+
 const tauriMocks = vi.hoisted(() => ({
   event: {
     emit: vi.fn(),
@@ -182,7 +190,7 @@ describe("TauriコメントOverlay window platform", () => {
 
   it("対象が閉じたらエラーを残して追従を止め、手動調整でも解除する", async () => {
     vi.useFakeTimers();
-    const errorLog = vi.spyOn(console, "error").mockImplementation(() => {});
+    loggerMock.error.mockClear();
     const platform = createTauriCommentOverlayPlatform();
     tauriMocks.invoke.mockResolvedValue({ x: 0, y: 0, width: 800, height: 600 });
     tauriMocks.invoke.mockResolvedValueOnce([]);
@@ -193,7 +201,7 @@ describe("TauriコメントOverlay window platform", () => {
       targetId: null,
       error: "Error: 対象が閉じました",
     });
-    expect(errorLog).toHaveBeenCalled();
+    expect(loggerMock.error).toHaveBeenCalled();
     tauriMocks.invoke.mockResolvedValue({ x: 0, y: 0, width: 800, height: 600 });
     tauriMocks.invoke.mockResolvedValueOnce([]);
     await platform.attachment!.setTarget("10:21");
@@ -202,7 +210,6 @@ describe("TauriコメントOverlay window platform", () => {
     tauriMocks.invoke.mockClear();
     await vi.advanceTimersByTimeAsync(500);
     expect(tauriMocks.invoke).not.toHaveBeenCalled();
-    errorLog.mockRestore();
   });
 
   it("最小化中に実況を止めて追従を解除しても、次回は手動領域を表示できる", async () => {
@@ -270,7 +277,7 @@ describe("TauriコメントOverlay window platform", () => {
     );
     let windows: { id: string; title: string; processPath: string }[] = [];
     let targetClosed = false;
-    const errorLog = vi.spyOn(console, "error").mockImplementation(() => {});
+    loggerMock.error.mockClear();
     tauriMocks.invoke.mockImplementation(async (command) => {
       if (command === "list_comment_overlay_windows") return windows;
       if (targetClosed) throw new Error("追従先が閉じられました");
@@ -294,9 +301,8 @@ describe("TauriコメントOverlay window platform", () => {
     expect(platform.attachment!.getState().targetId).toBe("70:80");
     expect(platform.attachment!.getState().error).toBeNull();
     expect(tauriMocks.window.setSize).toHaveBeenCalledTimes(2);
-    expect(errorLog).toHaveBeenCalled();
+    expect(loggerMock.error).toHaveBeenCalled();
     await platform.attachment!.setTarget(null);
-    errorLog.mockRestore();
   });
 
   it("選んだ追従先は実行ファイルで保存し、手動指定に戻すと記憶を解除する", async () => {

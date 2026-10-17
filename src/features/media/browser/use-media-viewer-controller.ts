@@ -6,6 +6,7 @@ import {
   useLayoutEffect,
   useRef,
 } from "react";
+import { createLogger } from "src/app/logger";
 import { platformDownloadManager } from "src/app/platform/DownloadManager";
 import { isTauriRuntime } from "src/app/platform/runtime";
 import { useToast } from "src/view/browser/hooks/use-toast";
@@ -18,6 +19,8 @@ import {
   type ViewerTransform,
 } from "./media-viewer-zoom";
 import { useMediaViewerStore } from "./use-media-viewer-store";
+
+const logger = createLogger("media");
 
 interface ViewerSize {
   width: number;
@@ -500,7 +503,7 @@ export function useMediaViewerController(
         toast.success("画像をダウンロードしました");
       }
     } catch (error) {
-      console.error("画像の保存に失敗しました", { url: viewer.src, error });
+      logger.error("画像の保存に失敗しました", { url: viewer.src, error });
       if (isTauriRuntime()) {
         toast.error("画像をダウンロードできませんでした");
       }

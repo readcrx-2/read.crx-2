@@ -1,6 +1,9 @@
+import { createLogger } from "src/app/logger";
 import type { Page } from "src/view/browser/types";
 import { parseInternalBrowserPageStrict } from "src/view/browser/utils/link-routing";
 import browser from "webextension-polyfill";
+
+const logger = createLogger("view/browser");
 
 type ExtensionBrowserApi = Pick<typeof browser, "runtime" | "tabs">;
 
@@ -47,7 +50,7 @@ export async function getOpenCompatibleThreadPages(): Promise<OpenCompatibleThre
     // 変更理由: 取り込み後に元タブを閉じる契約を満たせないタブは、
     // IDを追跡できる通常のブラウザタブだけを取り込み対象にする。
     if (typeof tab.id !== "number" || tab.id < 0) {
-      console.warn("[ChLens] 元ブラウザタブのIDを取得できないため取り込みをスキップしました", {
+      logger.warn("元ブラウザタブのIDを取得できないため取り込みをスキップしました", {
         tabId: tab.id,
         url: tab.url,
       });
@@ -79,7 +82,7 @@ export async function removeExtensionTabs(tabIds: readonly number[]): Promise<nu
 
   const browserApi = getExtensionBrowserApi();
   if (!browserApi) {
-    console.error("[ChLens] 取り込み元ブラウザタブを閉じるAPIが利用できません", { tabIds });
+    logger.error("取り込み元ブラウザタブを閉じるAPIが利用できません", { tabIds });
     return [...tabIds];
   }
 
@@ -91,7 +94,7 @@ export async function removeExtensionTabs(tabIds: readonly number[]): Promise<nu
       await browserApi.tabs.remove(tabId);
     } catch (error: unknown) {
       failedTabIds.push(tabId);
-      console.error("[ChLens] 取り込み元ブラウザタブを閉じられませんでした", {
+      logger.error("取り込み元ブラウザタブを閉じられませんでした", {
         tabId,
         error,
       });

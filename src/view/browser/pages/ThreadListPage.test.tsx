@@ -21,6 +21,14 @@ import { QUICK_ACCESS_FILTER_TOGGLE_EVENT_BY_PAGE_TYPE } from "src/view/browser/
 import { afterEach, beforeEach, describe, expect, it, vi } from "vite-plus/test";
 
 const THREAD_LIST_SORT_STORAGE_KEY = "chlens_browser_thread_list_sort_by_site";
+const loggerMock = vi.hoisted(() => ({
+  error: vi.fn(),
+  warn: vi.fn(),
+  info: vi.fn(),
+  debug: vi.fn(),
+}));
+vi.mock("src/app/logger", () => ({ createLogger: () => loggerMock }));
+
 const { dispatchMock, selectedTabIdRef, viewStateRef, updateViewStateMock } = vi.hoisted(() => ({
   dispatchMock: vi.fn(),
   selectedTabIdRef: { current: "tab-1" },
@@ -473,7 +481,7 @@ describe("ThreadListPage", () => {
 
   it("独自ホストは名前だけ判明しても、スレ一覧の取得に失敗したら保存対象を広げない", async () => {
     vi.useRealTimers();
-    const logger = vi.spyOn(console, "error").mockImplementation(() => undefined);
+    loggerMock.error.mockClear();
     let saved = "[]";
     serviceContainer.config.get = vi.fn((key: string) =>
       key === "opened_board_entries" ? saved : "0",
@@ -496,15 +504,14 @@ describe("ThreadListPage", () => {
         isActive
       />,
     );
-    await waitFor(() => expect(logger).toHaveBeenCalled());
+    await waitFor(() => expect(loggerMock.error).toHaveBeenCalled());
     await act(flushAsyncRender);
     expect(JSON.parse(saved)).toEqual([]);
-    logger.mockRestore();
   });
 
   it("板の保存に失敗した場合は詳細をログへ出し、次の保存を続ける", async () => {
     vi.useRealTimers();
-    const logger = vi.spyOn(console, "error").mockImplementation(() => undefined);
+    loggerMock.error.mockClear();
     const error = new Error("保存失敗");
     let saved = "[]";
     serviceContainer.config.get = vi.fn((key: string) =>
@@ -524,7 +531,7 @@ describe("ThreadListPage", () => {
     };
     render(<ThreadListPage tabId="tab-1" page={page} refreshKey={0} isActive />);
     await waitFor(() =>
-      expect(logger).toHaveBeenCalledWith("開いた板の保存に失敗しました", {
+      expect(loggerMock.error).toHaveBeenCalledWith("開いた板の保存に失敗しました", {
         boardUrl: page.boardUrl,
         error,
       }),
@@ -536,7 +543,6 @@ describe("ThreadListPage", () => {
         lastVisited: expect.any(Number),
       }),
     );
-    logger.mockRestore();
   });
 
   it("一覧上端の上ホイールはフィルタを開くだけで、一覧の更新はしない", async () => {
@@ -614,26 +620,22 @@ describe("ThreadListPage", () => {
               fails ? reject(refreshError) : resolve({ threads: THREADS, message: null });
           }),
       );
-      const errorLog = vi.spyOn(console, "error").mockImplementation(() => {});
-      try {
-        rerender(<ThreadListPage tabId="tab-1" page={page} refreshKey={1} isActive />);
-        expect(screen.getByLabelText("スレ一覧を読み込み中")).toBeVisible();
+      loggerMock.error.mockClear();
+      rerender(<ThreadListPage tabId="tab-1" page={page} refreshKey={1} isActive />);
+      expect(screen.getByLabelText("スレ一覧を読み込み中")).toBeVisible();
 
-        await act(async () => {
-          finishRefresh();
-          await flushAsyncRender();
-        });
+      await act(async () => {
+        finishRefresh();
+        await flushAsyncRender();
+      });
 
-        expect(screen.queryByLabelText("スレ一覧を読み込み中")).toBeNull();
-        expect(document.querySelector(".thread-list-page__loading-overlay")).toBeNull();
-        if (fails) {
-          expect(errorLog).toHaveBeenCalledWith(
-            expect.any(String),
-            expect.objectContaining({ error: refreshError }),
-          );
-        }
-      } finally {
-        errorLog.mockRestore();
+      expect(screen.queryByLabelText("スレ一覧を読み込み中")).toBeNull();
+      expect(document.querySelector(".thread-list-page__loading-overlay")).toBeNull();
+      if (fails) {
+        expect(loggerMock.error).toHaveBeenCalledWith(
+          expect.any(String),
+          expect.objectContaining({ error: refreshError }),
+        );
       }
     },
   );

@@ -1,4 +1,5 @@
 import { useCallback, useEffect, useLayoutEffect, useRef, useState } from "react";
+import { createLogger } from "src/app/logger";
 import { container } from "src/service-container/index";
 import type { IRes } from "src/service-container/interfaces";
 import { stripHtml } from "src/view/browser/utils/response-format";
@@ -10,6 +11,8 @@ import {
   subscribeThreadWriteCompleted,
   subscribeThreadWriteStarted,
 } from "src/view/browser/utils/thread-write-sync";
+
+const logger = createLogger("view/browser");
 
 interface PendingWriteMatchState extends PendingWritePayload {
   baselineResponseCount: number;
@@ -65,7 +68,7 @@ export function useOwnResTracking({
         if (!alive) return;
         setOwnResNums(buildWrittenResSet(rows));
       } catch (error) {
-        console.error("[useOwnResTracking] 書込履歴の取得に失敗しました", { threadUrl, error });
+        logger.error("書込履歴の取得に失敗しました", { threadUrl, error });
         if (alive) setOwnResNums(new Set());
       }
     };
@@ -132,7 +135,7 @@ export function useOwnResTracking({
             date: payload.submittedAt,
           });
         } catch (error) {
-          console.error("[useOwnResTracking] 仮の書込履歴の保存に失敗しました", {
+          logger.error("仮の書込履歴の保存に失敗しました", {
             threadUrl,
             error,
           });
@@ -209,7 +212,7 @@ export function useOwnResTracking({
             await container.writeHistory.add(finalizedRecord);
           }
         } catch (error) {
-          console.error("[useOwnResTracking] 書込履歴の確定に失敗しました", { threadUrl, error });
+          logger.error("書込履歴の確定に失敗しました", { threadUrl, error });
           // 書込履歴の永続化に失敗しても、画面上の自分レス強調までは失わない。
         }
       }

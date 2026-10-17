@@ -1,4 +1,7 @@
 import { useEffect, useMemo, useState } from "react";
+import { createLogger } from "src/app/logger";
+
+const logger = createLogger("media");
 
 export const IMGUR_ALBUM_API_URL = "https://api.imgur.com/3/album";
 export const IMGUR_IMAGE_API_URL = "https://api.imgur.com/3/image";
@@ -140,7 +143,7 @@ export class ImgurAlbumResolver {
     this.getClientId = options.getClientId;
     this.getAccessToken = options.getAccessToken;
     this.timeoutMs = options.timeoutMs ?? IMGUR_ALBUM_REQUEST_TIMEOUT_MS;
-    this.logError = options.logError ?? ((message, error) => console.error(message, error));
+    this.logError = options.logError ?? ((message, error) => logger.error(message, error));
   }
 
   async resolve(albumUrl: string, threadKey: string): Promise<readonly string[] | null> {
@@ -253,7 +256,7 @@ export class ImgurVideoResolver {
     this.getClientId = options.getClientId;
     this.getAccessToken = options.getAccessToken;
     this.timeoutMs = options.timeoutMs ?? IMGUR_ALBUM_REQUEST_TIMEOUT_MS;
-    this.logError = options.logError ?? ((message, error) => console.error(message, error));
+    this.logError = options.logError ?? ((message, error) => logger.error(message, error));
   }
 
   async resolve(rawUrl: string): Promise<string | null> {
@@ -362,7 +365,7 @@ export function useImgurAlbumMedia(
       })
       .catch((error: unknown) => {
         if (cancelled) return;
-        console.error("[useImgurAlbumMedia] album resolution failed:", error);
+        logger.error("album resolution failed:", error);
         setLoading(false);
       });
     return () => {

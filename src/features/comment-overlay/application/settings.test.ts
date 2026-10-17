@@ -13,6 +13,13 @@ const messageMock = vi.hoisted(() => ({
   on: vi.fn(),
   off: vi.fn(),
 }));
+const loggerMock = vi.hoisted(() => ({
+  error: vi.fn(),
+}));
+
+vi.mock("src/app/logger", () => ({
+  createLogger: () => loggerMock,
+}));
 
 vi.mock("src/app/platform/runtime", () => ({
   isTauriRuntime: () => runtimeMock.isTauri,
@@ -92,15 +99,13 @@ describe("ConfigからのコメントOverlay設定読み出し", () => {
     configMock.get.mockImplementation(() => {
       throw error;
     });
-    const consoleError = vi.spyOn(console, "error").mockImplementation(() => {});
+    loggerMock.error.mockClear();
 
     expect(readCommentOverlaySettings()).toEqual(DEFAULT_COMMENT_OVERLAY_SETTINGS);
-    expect(consoleError).toHaveBeenCalledWith(
-      "[ChLens] コメントOverlay設定の読み込みに失敗しました:",
+    expect(loggerMock.error).toHaveBeenCalledWith(
+      "コメントOverlay設定の読み込みに失敗しました:",
       error,
     );
-
-    consoleError.mockRestore();
   });
 
   it("Browser版では設定変更を購読しない", () => {

@@ -8,6 +8,7 @@ import React, {
   useRef,
   useState,
 } from "react";
+import { createLogger } from "src/app/logger";
 import { getStore2String, setStore2String } from "src/app/Store2Storage";
 import {
   type AuxiliaryWindowOptions,
@@ -16,6 +17,8 @@ import {
 import { useTabPanes, useTabStore } from "src/view/browser/state/tabs/use-tab-store";
 import type { Page, Tab } from "src/view/browser/types";
 import { getCurrentPage } from "src/view/browser/types";
+
+const logger = createLogger("write");
 
 const STORAGE_KEY = "chlens_write_session_v1";
 
@@ -84,7 +87,7 @@ function loadSession(): WriteSessionState {
       drafts: {},
     };
   } catch (error) {
-    console.error("[WriteSession] 書き込みセッションの復元に失敗しました", error);
+    logger.error("書き込みセッションの復元に失敗しました", error);
     return { selectedThreadUrl: null, drafts: {} };
   }
 }
@@ -196,7 +199,7 @@ export const WriteSessionProvider: React.FC<{ children: ReactNode }> = ({ childr
       STORAGE_KEY,
       JSON.stringify({ selectedThreadUrl: session.selectedThreadUrl }),
     ).catch((error: unknown) => {
-      console.error("[WriteSession] 書き込みセッションの保存に失敗しました", error);
+      logger.error("書き込みセッションの保存に失敗しました", error);
     });
   }, [session.selectedThreadUrl]);
 

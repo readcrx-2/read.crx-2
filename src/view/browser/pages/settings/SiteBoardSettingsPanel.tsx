@@ -2,6 +2,7 @@ import { MoreVertical } from "lucide-react";
 import type { ParsedBBSMenu } from "packages/chlib/src/index";
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { DEFAULT_CONFIG } from "src/app/config-defaults";
+import { createLogger } from "src/app/logger";
 import { platformCookieManager } from "src/app/platform/CookieManager";
 import { getBoardUrlKey } from "src/core/board/BoardUrlNormalizer";
 import {
@@ -39,6 +40,8 @@ import {
   type ScopedSettingsDocument,
   SITE_SHARED_SCOPE,
 } from "src/view/browser/utils/scoped-settings";
+
+const logger = createLogger("view/browser");
 
 interface BoardOption {
   site: string;
@@ -255,7 +258,7 @@ export function SiteBoardSettingsPanel() {
           setMenuBoards(readBBSMenuBoards(result.menu ?? []));
         }
       } catch (error) {
-        console.error("[SiteBoardSettings] BBSMENUから板一覧を取得できませんでした", error);
+        logger.error("BBSMENUから板一覧を取得できませんでした", error);
       } finally {
         if (!cancelled) {
           setLoading(false);
@@ -324,7 +327,7 @@ export function SiteBoardSettingsPanel() {
         }
       })
       .catch((error: unknown) => {
-        console.error("[SiteBoardSettings] ドメインCookieの確認に失敗しました", error);
+        logger.error("ドメインCookieの確認に失敗しました", error);
         if (!cancelled) {
           setHasSiteCookies(false);
         }
@@ -377,7 +380,7 @@ export function SiteBoardSettingsPanel() {
       await container.config.set(key, value);
       setGlobalValues((current) => ({ ...current, [key]: value }));
     } catch (error) {
-      console.error(`[SiteBoardSettings] 全体設定 ${key} の保存に失敗しました`, error);
+      logger.error(`全体設定 ${key} の保存に失敗しました`, error);
       container.toast.error(
         error instanceof Error ? error.message : "全体設定の保存に失敗しました",
       );
@@ -411,7 +414,7 @@ export function SiteBoardSettingsPanel() {
       container.toast.success(`${targetLabel}のCookieを削除しました`);
       setIsSiteActionsDialogOpen(false);
     } catch (error) {
-      console.error("[SiteBoardSettings] Cookieの削除に失敗しました", error);
+      logger.error("Cookieの削除に失敗しました", error);
       container.toast.error(error instanceof Error ? error.message : "Cookieの削除に失敗しました");
     } finally {
       setIsClearingCookies(false);

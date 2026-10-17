@@ -1,4 +1,7 @@
+import { createLogger } from "src/app/logger";
 import { getBoardUrlKey, normalizeBoardUrl } from "src/core/board/BoardUrlNormalizer";
+
+const logger = createLogger("core/board");
 
 // 開いた板の記録の保存形式と、その読み取り（解析）だけを置く純粋なモジュール。
 // 書き込み（OpenedBoards.ts の upsertOpenedBoardEntry）は設定の保存を伴うため、view・features からは
@@ -98,7 +101,7 @@ export function parseOpenedBoardEntries(raw: string | null): OpenedBoardEntry[] 
     return uniqueEntries;
   } catch (error) {
     // 破損データは空扱いにして板一覧表示を継続するが、原因調査のため必ずログに残す。
-    console.error("開いた板の記録を読み込めませんでした", { error });
+    logger.error("開いた板の記録を読み込めませんでした", { error });
     return [];
   }
 }

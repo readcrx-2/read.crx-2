@@ -1,4 +1,5 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import { createLogger } from "src/app/logger";
 import { platform } from "src/app/platform";
 import {
   type AuxiliaryWindowHandle,
@@ -9,6 +10,8 @@ import {
   type AuxiliaryWindowWatcher,
   watchAuxiliaryWindow,
 } from "src/features/auxiliary-window/browser/auxiliary-window-watcher";
+
+const logger = createLogger("auxiliary-window");
 
 export type {
   AuxiliaryWindowHandle,
@@ -29,7 +32,7 @@ function focusAuxiliaryWindow(popup: Window, logLabel: string): void {
   popup.focus();
   if (platform.window.focusPopup) {
     void platform.window.focusPopup(popup).catch((error: unknown) => {
-      console.error(`[${logLabel}] 別窓のフォーカスに失敗しました`, error);
+      logger.error(`[${logLabel}] 別窓のフォーカスに失敗しました`, error);
     });
   }
 }
@@ -67,11 +70,11 @@ export function openAuxiliaryWindow(
       ? (platform.window.openPopup?.(options.name, options.features, sourceWindow) ?? null)
       : (platform.window.openPopup?.(options.name, options.features) ?? null);
   } catch (error) {
-    console.error(`[${options.logLabel}] 別窓の生成に失敗しました`, error);
+    logger.error(`[${options.logLabel}] 別窓の生成に失敗しました`, error);
     return null;
   }
   if (!auxiliaryWindow) {
-    console.error(`[${options.logLabel}] 別窓を開けませんでした`);
+    logger.error(`[${options.logLabel}] 別窓を開けませんでした`);
     return null;
   }
 
@@ -81,14 +84,14 @@ export function openAuxiliaryWindow(
       root: createAuxiliaryWindowRoot(opener.document, auxiliaryWindow, options),
     };
   } catch (error) {
-    console.error(`[${options.logLabel}] 別窓の表示基盤を作成できませんでした`, error);
+    logger.error(`[${options.logLabel}] 別窓の表示基盤を作成できませんでした`, error);
     try {
       if (!auxiliaryWindow.closed) {
         auxiliaryWindow.close();
       }
     } catch (closeError) {
       // root作成失敗時にWindowProxyへ触れない環境でも、本窓へ例外を伝播させない。
-      console.error(`[${options.logLabel}] 失敗した別窓を閉じられませんでした`, closeError);
+      logger.error(`[${options.logLabel}] 失敗した別窓を閉じられませんでした`, closeError);
     }
     return null;
   }

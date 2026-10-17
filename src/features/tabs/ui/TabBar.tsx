@@ -12,6 +12,7 @@ import {
 } from "lucide-react";
 import normalizeWheel from "normalize-wheel";
 import React, { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import { createLogger } from "src/app/logger";
 import { useAutoScrollState } from "src/features/auto-refresh/browser/use-auto-scroll-state";
 import { useDetachedTabController } from "src/features/tabs/browser/use-detached-tab-controller";
 import {
@@ -34,6 +35,8 @@ import { useTabStore } from "src/view/browser/state/tabs/use-tab-store";
 import type { Tab } from "src/view/browser/types";
 import { getCurrentPage } from "src/view/browser/types";
 import { ContextMenu } from "src/view/browser/ui/ContextMenu";
+
+const logger = createLogger("tabs");
 
 interface ContextMenuState {
   tab: Tab;
@@ -666,7 +669,7 @@ export const TabBar: React.FC<{ orientation?: TabBarOrientation }> = ({
               isVertical ? "horizontal" : "vertical",
             ),
           ).catch((error) => {
-            console.error("[TabBar] タブバー方向の保存に失敗しました", error);
+            logger.error("タブバー方向の保存に失敗しました", error);
           });
         },
       },

@@ -8,6 +8,14 @@ import { QUICK_ACCESS_FILTER_TOGGLE_EVENT_BY_PAGE_TYPE } from "src/view/browser/
 import { afterEach, beforeEach, describe, expect, it, vi } from "vite-plus/test";
 
 const mockUseTabStore = vi.fn();
+const loggerMock = vi.hoisted(() => ({
+  error: vi.fn(),
+  warn: vi.fn(),
+  info: vi.fn(),
+  debug: vi.fn(),
+}));
+vi.mock("src/app/logger", () => ({ createLogger: () => loggerMock }));
+
 const { dispatchMock, removeBookmarkMock, copyTextMock, toastErrorMock } = vi.hoisted(() => ({
   dispatchMock: vi.fn(),
   removeBookmarkMock: vi.fn(async (_url: string) => true),
@@ -135,13 +143,13 @@ describe("BookmarkListPage", () => {
     const url = "https://example.com/sample/";
     getAllBookmarks.mockReturnValue([{ url, title: "サンプル板" }]);
     removeBookmarkMock.mockResolvedValueOnce(false);
-    const logger = vi.spyOn(console, "error").mockImplementation(() => undefined);
+    loggerMock.error.mockClear();
     render(<BookmarkListPage tabId="tab-1" isActive={true} />);
     const row = (await screen.findByText("サンプル板")).closest("tr")!;
     fireEvent.contextMenu(row);
     fireEvent.click(screen.getByRole("button", { name: "ブックマークを削除" }));
     await waitFor(() => expect(toastErrorMock).toHaveBeenCalled());
-    expect(logger).toHaveBeenCalled();
+    expect(loggerMock.error).toHaveBeenCalled();
     expect(screen.getByText("サンプル板")).toBeInTheDocument();
     fireEvent.contextMenu(row);
     fireEvent.click(screen.getByRole("button", { name: "ブックマークを削除" }));

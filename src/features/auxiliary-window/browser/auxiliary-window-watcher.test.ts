@@ -1,5 +1,8 @@
 import { afterEach, describe, expect, it, vi } from "vite-plus/test";
 
+const loggerMock = vi.hoisted(() => ({ error: vi.fn(), warn: vi.fn(), debug: vi.fn() }));
+vi.mock("src/app/logger", () => ({ createLogger: () => loggerMock }));
+
 const mocks = vi.hoisted(() => ({
   createAuxiliaryWindowRoot: vi.fn(),
 }));
@@ -104,13 +107,13 @@ describe("watchAuxiliaryWindow", () => {
     mocks.createAuxiliaryWindowRoot.mockImplementation(() => {
       throw error;
     });
-    const errorLog = vi.spyOn(console, "error").mockImplementation(() => {});
+    loggerMock.error.mockClear();
     const { fake, onReconnect } = setup();
 
     fake.dispatch("load");
 
     expect(onReconnect).not.toHaveBeenCalled();
-    expect(errorLog).toHaveBeenCalledWith(
+    expect(loggerMock.error).toHaveBeenCalledWith(
       "[TestWindow] 再読み込み後の別窓を再接続できませんでした",
       error,
     );

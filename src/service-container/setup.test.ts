@@ -150,7 +150,13 @@ vi.mock("src/app/Notification", () => ({
 vi.mock("src/core/thread/ThreadService", () => ({
   createThreadService: () => ({ getThread: vi.fn() }),
 }));
-vi.mock("src/app/logger", () => ({ setConsolaLevel: vi.fn() }));
+const loggerMock = vi.hoisted(() => ({
+  error: vi.fn(),
+  warn: vi.fn(),
+  info: vi.fn(),
+  debug: vi.fn(),
+}));
+vi.mock("src/app/logger", () => ({ setConsolaLevel: vi.fn(), createLogger: () => loggerMock }));
 vi.mock("src/service-container/Container", () => ({ container: {} }));
 vi.mock("src/service-container/toast-store", () => ({ toastStore: {} }));
 
@@ -288,15 +294,17 @@ describe("サービスコンテナの初期化", () => {
       mocks.promiseFirstScan = Promise.reject(scanError);
       // 未処理の reject として扱われないよう、テスト側でも受けておく。
       mocks.promiseFirstScan.catch(() => undefined);
-      const consoleError = vi.spyOn(console, "error").mockImplementation(() => undefined);
+      loggerMock.error.mockClear();
       const { setupContainer } = await import("src/service-container/setup");
       const { container } = await import("src/service-container/Container");
       for (const callback of mocks.configReadyCallbacks) callback();
       setupContainer();
 
       await expect(container.bookmark.ready()).resolves.toBeUndefined();
-      expect(consoleError).toHaveBeenCalledWith(expect.stringContaining("[Bookmark]"), scanError);
-      consoleError.mockRestore();
+      expect(loggerMock.error).toHaveBeenCalledWith(
+        expect.stringContaining("初回の走査"),
+        scanError,
+      );
     });
 
     it("画面が使う一覧・読み込み・保存先の操作を Bookmark へつなぐ", async () => {

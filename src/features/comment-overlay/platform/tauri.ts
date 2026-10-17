@@ -9,6 +9,7 @@ import {
   PhysicalSize,
   Window,
 } from "@tauri-apps/api/window";
+import { createLogger } from "src/app/logger";
 
 import {
   cloneCommentOverlayGeometry,
@@ -28,6 +29,8 @@ import type {
   CommentOverlayMonitor,
   CommentOverlayWindowPlatform,
 } from "./types";
+
+const logger = createLogger("comment-overlay");
 
 export const COMMENT_OVERLAY_WINDOW_LABEL = "comment-overlay";
 export const COMMENT_OVERLAY_VISIBILITY_EVENT_NAME = "chlens://comment-overlay-visibility";
@@ -196,7 +199,7 @@ export function createTauriCommentOverlayPlatform({
       }
     } catch (error: unknown) {
       if (expectedRevision !== revision) return;
-      console.error("[ChLens] コメントOverlayのウィンドウ追従に失敗しました:", error);
+      logger.error("コメントOverlayのウィンドウ追従に失敗しました:", error);
       attachmentError = String(error);
       targetId = null;
       lastBounds = "";
@@ -205,14 +208,14 @@ export function createTauriCommentOverlayPlatform({
         try {
           await (await getCommentOverlayWindow()).hide();
         } catch (hideError: unknown) {
-          console.error("[ChLens] 追従先終了後のOverlay非表示に失敗しました:", hideError);
+          logger.error("追従先終了後のOverlay非表示に失敗しました:", hideError);
         }
         targetHidden = true;
       } else if (wantedVisible && targetHidden) {
         try {
           await (await getCommentOverlayWindow()).show();
         } catch (showError: unknown) {
-          console.error("[ChLens] 追従解除後のOverlay再表示に失敗しました:", showError);
+          logger.error("追従解除後のOverlay再表示に失敗しました:", showError);
         }
       }
       if (!processTarget) targetHidden = false;
@@ -331,14 +334,14 @@ export function createTauriCommentOverlayPlatform({
           // 遅れて届いた初期取得や古いeventで、新しいnative表示状態を上書きしない。
           if (!disposed && requestedRevision === revision) listener(visible);
         } catch (error: unknown) {
-          console.error("[ChLens] コメントOverlayの表示状態同期に失敗しました:", error);
+          logger.error("コメントOverlayの表示状態同期に失敗しました:", error);
         }
       };
       const unlisten = await listen<CommentOverlayVisibilityPayload>(
         COMMENT_OVERLAY_VISIBILITY_EVENT_NAME,
         ({ payload }) => {
           if (!isCommentOverlayVisibilityPayload(payload)) {
-            console.error("[ChLens] コメントOverlayの表示状態eventを検証できません:", payload);
+            logger.error("コメントOverlayの表示状態eventを検証できません:", payload);
             return;
           }
           // 過去実況窓での表示操作もMainの追従ループへ引き継ぐ。
@@ -387,14 +390,14 @@ export function createTauriCommentOverlayPlatform({
           void readCommentOverlayGeometry(overlay)
             .then(listener)
             .catch((error: unknown) => {
-              console.error("[ChLens] コメントOverlayの移動geometry取得に失敗しました:", error);
+              logger.error("コメントOverlayの移動geometry取得に失敗しました:", error);
             });
         }),
         overlay.onResized(() => {
           void readCommentOverlayGeometry(overlay)
             .then(listener)
             .catch((error: unknown) => {
-              console.error("[ChLens] コメントOverlayのリサイズgeometry取得に失敗しました:", error);
+              logger.error("コメントOverlayのリサイズgeometry取得に失敗しました:", error);
             });
         }),
       ]);
@@ -419,7 +422,7 @@ export function createTauriCommentOverlayPlatform({
         // 完全に画面外へ残さず操作パネルから復帰できるよう、復元時だけwork areaへ収める。
         restored = await fitGeometryToAvailableMonitor(restored);
       } catch (error: unknown) {
-        console.error("[ChLens] コメントOverlayのwork area取得に失敗しました:", error);
+        logger.error("コメントOverlayのwork area取得に失敗しました:", error);
       }
       await applyGeometry(restored);
       if (JSON.stringify(restored) !== JSON.stringify(stored)) {

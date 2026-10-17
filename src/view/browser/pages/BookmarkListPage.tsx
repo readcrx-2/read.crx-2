@@ -1,4 +1,5 @@
 import React, { useCallback, useEffect, useMemo, useState } from "react";
+import { createLogger } from "src/app/logger";
 import {
   BookmarkContextMenu,
   type BookmarkContextMenuState,
@@ -14,6 +15,8 @@ import {
   parseInternalBrowserPage,
   resolveBoardUrlForBrowser,
 } from "src/view/browser/utils/link-routing";
+
+const logger = createLogger("view/browser");
 
 type SortDirection = "asc" | "desc";
 type SortColumn = "title" | "boardTitle" | "resCount" | "unreadCount" | "heat" | "createdAt";
@@ -265,7 +268,7 @@ export const BookmarkListPage: React.FC<BookmarkListPageProps> = ({ tabId, isAct
     try {
       setEntries(await readBookmarks());
     } catch (e) {
-      console.error("ブックマークの読み込みに失敗しました", e);
+      logger.error("ブックマークの読み込みに失敗しました", e);
       setError(e instanceof Error ? e.message : "ブックマークの読み込みに失敗しました");
       setEntries([]);
     } finally {

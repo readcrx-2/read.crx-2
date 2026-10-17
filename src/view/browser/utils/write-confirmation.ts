@@ -1,4 +1,7 @@
+import { createLogger } from "src/app/logger";
 import type { WriteFormField } from "src/app/platform/types";
+
+const logger = createLogger("view/browser");
 
 const CONFIRMATION_FORM_ATTRIBUTE = "data-chlens-write-form";
 const CONFIRMATION_ACTION_ATTRIBUTE = "data-chlens-write-action";
@@ -28,7 +31,7 @@ function isAllowedWriteAction(action: string, expectedAction: string): boolean {
     const expected = new URL(expectedAction);
     return actual.origin === expected.origin && actual.pathname === expected.pathname;
   } catch (error) {
-    console.error("確認ページのフォーム送信先を解釈できませんでした:", error);
+    logger.error("確認ページのフォーム送信先を解釈できませんでした:", error);
     return false;
   }
 }
@@ -37,7 +40,7 @@ function resolveWriteAction(rawAction: string | null, sourceUrl: string): string
   try {
     return new URL(rawAction?.trim() || sourceUrl, sourceUrl).href;
   } catch (error) {
-    console.error("確認ページの相対フォーム送信先を解決できませんでした:", error);
+    logger.error("確認ページの相対フォーム送信先を解決できませんでした:", error);
     return null;
   }
 }

@@ -28,6 +28,12 @@ const { dispatchMock, updateViewStateMock, viewStateMock, cacheGetMock, cachePut
   }),
 );
 
+const loggerMock = vi.hoisted(() => ({ error: vi.fn() }));
+
+vi.mock("src/app/logger", () => ({
+  createLogger: () => loggerMock,
+}));
+
 vi.mock("src/app", () => ({
   platform: {
     storage: {
@@ -371,7 +377,7 @@ describe("useThreadData Phase 0 contracts", () => {
         .mockResolvedValueOnce({ url: page.threadUrl, title: page.title, res: RESPONSES })
         .mockRejectedValueOnce(new Error("通信エラー")),
     } as IThreadService;
-    const log = vi.spyOn(console, "error").mockImplementation(() => {});
+    loggerMock.error.mockClear();
     const rootRef = { current: null } as RefObject<HTMLDivElement | null>;
     const { result, rerender } = renderHook(
       ({ refreshKey }) => {
@@ -380,19 +386,15 @@ describe("useThreadData Phase 0 contracts", () => {
       },
       { initialProps: { refreshKey: 0 } },
     );
-    try {
-      await waitFor(() => expect(result.current.loading).toBe(false));
-      await act(async () =>
-        runManualRefresh(getManualRefreshScopeKey("manual-error", page), () =>
-          rerender({ refreshKey: 1 }),
-        ),
-      );
-      expect(toastInfoMock).not.toHaveBeenCalled();
-      expect(toastErrorMock).toHaveBeenCalledExactlyOnceWith("通信エラー");
-      expect(log).toHaveBeenCalled();
-    } finally {
-      log.mockRestore();
-    }
+    await waitFor(() => expect(result.current.loading).toBe(false));
+    await act(async () =>
+      runManualRefresh(getManualRefreshScopeKey("manual-error", page), () =>
+        rerender({ refreshKey: 1 }),
+      ),
+    );
+    expect(toastInfoMock).not.toHaveBeenCalled();
+    expect(toastErrorMock).toHaveBeenCalledExactlyOnceWith("通信エラー");
+    expect(loggerMock.error).toHaveBeenCalled();
   });
 
   it("登録済みSikiログは通信せず通常のレス表示へ渡す", async () => {

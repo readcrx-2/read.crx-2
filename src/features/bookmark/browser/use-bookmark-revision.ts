@@ -1,5 +1,8 @@
 import { useEffect, useState } from "react";
+import { createLogger } from "src/app/logger";
 import { container } from "src/service-container/index";
+
+const logger = createLogger("bookmark");
 
 export function readBookmarkStatus(url: string): boolean {
   try {
@@ -7,7 +10,7 @@ export function readBookmarkStatus(url: string): boolean {
   } catch (error) {
     // 変更理由: 起動直後などで bookmark service がまだ登録されていなくても、
     // スレ一覧そのものは表示できるよう、ブックマークなしとして扱って詳細はログに残す。
-    console.error("[ThreadList] bookmark status read failed:", error);
+    logger.error("bookmark status read failed:", error);
     return false;
   }
 }
@@ -46,7 +49,7 @@ export function useBookmarkRevision(): number {
     } catch (error) {
       // 変更理由: サービス初期化前の描画で購読に失敗しても一覧表示を妨げず、
       // 初期化順序の問題を診断できるようエラーを記録する。
-      console.error("[ThreadList] bookmark update listener registration failed:", error);
+      logger.error("bookmark update listener registration failed:", error);
       return;
     }
 

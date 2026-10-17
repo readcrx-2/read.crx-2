@@ -1,4 +1,5 @@
 import React, { useCallback, useEffect, useId, useRef, useState } from "react";
+import { createLogger } from "src/app/logger";
 import {
   type CommentOverlayGeometry,
   type CommentOverlayMonitor,
@@ -7,6 +8,8 @@ import {
 import { OverlayControlPanel } from "src/features/comment-overlay/ui/OverlayControlPanel";
 import { WindowAttachmentControl } from "src/features/comment-overlay/ui/WindowAttachmentControl";
 import { useConfigBooleanSetting } from "src/view/browser/hooks/use-config-boolean-setting";
+
+const logger = createLogger("comment-overlay");
 
 type PlacementMode = "manual" | "follow";
 
@@ -50,7 +53,7 @@ export const OverlayPlacementPanel: React.FC<OverlayPlacementPanelProps> = ({ pl
     geometryQueueRef.current = geometryQueueRef.current
       .then(() => platform.setGeometry(pending))
       .catch((error: unknown) => {
-        console.error("[ChLens] コメントOverlay表示位置の反映に失敗しました:", error);
+        logger.error("コメントOverlay表示位置の反映に失敗しました:", error);
       });
   }, [platform]);
 
@@ -61,7 +64,7 @@ export const OverlayPlacementPanel: React.FC<OverlayPlacementPanelProps> = ({ pl
     // ChLensのあるモニターが判定できなくても調整はできるため、失敗はログに残して続ける。
     const hostMonitorRequest = (platform.getHostMonitorId?.() ?? Promise.resolve(null)).catch(
       (error: unknown) => {
-        console.error("[ChLens] ChLensを表示しているモニターの判定に失敗しました:", error);
+        logger.error("ChLensを表示しているモニターの判定に失敗しました:", error);
         return null;
       },
     );
@@ -81,7 +84,7 @@ export const OverlayPlacementPanel: React.FC<OverlayPlacementPanelProps> = ({ pl
         setHostMonitorId(nextHostMonitorId);
       })
       .catch((error: unknown) => {
-        console.error("[ChLens] コメントOverlay表示位置の初期化に失敗しました:", error);
+        logger.error("コメントOverlay表示位置の初期化に失敗しました:", error);
       })
       .finally(() => {
         if (!disposed) setIsModeChanging(false);
@@ -104,7 +107,7 @@ export const OverlayPlacementPanel: React.FC<OverlayPlacementPanelProps> = ({ pl
         else unwatch = dispose;
       })
       .catch((error: unknown) => {
-        console.error("[ChLens] コメントOverlay表示位置の監視に失敗しました:", error);
+        logger.error("コメントOverlay表示位置の監視に失敗しました:", error);
       });
     return () => {
       disposed = true;
@@ -127,7 +130,7 @@ export const OverlayPlacementPanel: React.FC<OverlayPlacementPanelProps> = ({ pl
       pendingGeometryRef.current = nextGeometry;
       // native反映の間引きとは分け、閉じる直前の変更も保存する。
       void platform.saveGeometry(nextGeometry).catch((error: unknown) => {
-        console.error("[ChLens] コメントOverlay表示位置の保存に失敗しました:", error);
+        logger.error("コメントOverlay表示位置の保存に失敗しました:", error);
       });
       if (geometryWriteTimerRef.current) clearTimeout(geometryWriteTimerRef.current);
       geometryWriteTimerRef.current = setTimeout(() => {
@@ -154,7 +157,7 @@ export const OverlayPlacementPanel: React.FC<OverlayPlacementPanelProps> = ({ pl
         .setTarget(null)
         .then(() => setMode("manual"))
         .catch((error: unknown) => {
-          console.error("[ChLens] コメントOverlayの追従解除に失敗しました:", error);
+          logger.error("コメントOverlayの追従解除に失敗しました:", error);
         })
         .finally(() => setIsModeChanging(false));
     },

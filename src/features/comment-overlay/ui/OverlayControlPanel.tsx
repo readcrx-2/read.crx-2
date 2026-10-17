@@ -9,6 +9,7 @@ import {
   useRef,
   useState,
 } from "react";
+import { createLogger } from "src/app/logger";
 
 import {
   fitCommentOverlayGeometryToAspectRatio,
@@ -20,6 +21,8 @@ import {
   type CommentOverlayMonitor,
   DEFAULT_COMMENT_OVERLAY_GEOMETRY,
 } from "../platform/types";
+
+const logger = createLogger("comment-overlay");
 
 const MIN_WIDTH = 320;
 const MIN_HEIGHT = 80;
@@ -343,7 +346,7 @@ export function OverlayControlPanel({
         // 撮影に対応しない環境（null）では、同じ結果を繰り返し要求しない。
         if (image != null) scheduleNext();
       } catch (error: unknown) {
-        console.error("[ChLens] ディスプレイのプレビュー取得に失敗しました:", error);
+        logger.error("ディスプレイのプレビュー取得に失敗しました:", error);
         if (disposed) return;
         // 一時的な失敗で直前の画像を消さず、次の周期で自動的に再試行する。
         setScreenPreview((current) => ({
@@ -619,9 +622,7 @@ export function OverlayControlPanel({
                       className="overlay-control-panel__screen-preview"
                       onPointerDown={(event) => startDrag(event, "select")}
                       onError={() => {
-                        console.error(
-                          "[ChLens] ディスプレイのプレビュー画像を表示できませんでした",
-                        );
+                        logger.error("ディスプレイのプレビュー画像を表示できませんでした");
                         setScreenPreview((current) =>
                           current ? { ...current, image: null, error: true } : null,
                         );

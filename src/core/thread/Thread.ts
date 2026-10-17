@@ -19,11 +19,14 @@ import {
   toArchiveThreadUrl,
   type XhrInfo,
 } from "packages/chlib/src/index";
+import { createLogger } from "src/app/logger";
 import { platform } from "src/app/platform";
 import { chServerMoveDetect } from "src/core/board/ch-server-move-detect";
 import { isMissingFromSubject, shouldForceSubjectCheck } from "src/core/board/SubjectPresence";
 import type { CorePorts } from "src/core/ports/registry";
 import type Cache from "src/core/storage/Cache.js";
+
+const logger = createLogger("core/thread");
 
 // ---------------------------------------------------------------------------
 // Internal types
@@ -260,7 +263,7 @@ export default class Thread {
         expired: this.expired,
       });
       const logCacheUpdateFailure = (error: unknown) => {
-        console.error("[Thread] スレッドキャッシュの更新に失敗しました:", error);
+        logger.error("スレッドキャッシュの更新に失敗しました:", error);
       };
       if (this.expired) {
         // 変更理由: 次のThreadインスタンスがsubject照合を省けるよう、expired記録だけは返却前に永続化する。
@@ -312,7 +315,7 @@ export default class Thread {
         try {
           await cache.put();
         } catch (error: unknown) {
-          console.error("[Thread] dat落ち状態のキャッシュ保存に失敗しました:", error);
+          logger.error("dat落ち状態のキャッシュ保存に失敗しました:", error);
         }
       }
       // ブックマーク更新は成否に関わらず実行する

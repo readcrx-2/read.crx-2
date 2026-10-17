@@ -1,5 +1,6 @@
 import { Check, RotateCw, Search } from "lucide-react";
 import React, { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import { createLogger } from "src/app/logger";
 import {
   readBookmarkStatus,
   useBookmarkRevision,
@@ -51,6 +52,8 @@ import {
   resolveBoardUrlForBrowser,
 } from "src/view/browser/utils/link-routing";
 import { normalizePageLocation } from "src/view/browser/utils/page-location";
+
+const logger = createLogger("thread-list");
 
 interface ThreadListPanelProps {
   threadUrl: string;
@@ -241,7 +244,7 @@ export const ThreadListPanel: React.FC<ThreadListPanelProps> = ({ threadUrl }) =
       }
       const message =
         fetchError instanceof Error ? fetchError.message : "スレッド一覧の取得に失敗しました";
-      console.error("[ThreadListPanel] thread list fetch failed:", fetchError);
+      logger.error("thread list fetch failed:", fetchError);
       setError(message);
     } finally {
       if (requestId === requestIdRef.current) {

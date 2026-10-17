@@ -2,6 +2,7 @@ import "./OverlayPlacementWindow.css";
 
 import React, { createContext, useContext, useEffect, useMemo } from "react";
 import { createPortal } from "react-dom";
+import { createLogger } from "src/app/logger";
 import {
   type AuxiliaryWindowOptions,
   useAuxiliaryWindow,
@@ -11,6 +12,8 @@ import { OverlayPlacementPanel } from "src/features/comment-overlay/ui/OverlayPl
 import { useConfigBooleanSetting } from "src/view/browser/hooks/use-config-boolean-setting";
 import { useTheme } from "src/view/browser/hooks/use-theme";
 import { ViewSurfaceProvider } from "src/view/browser/hooks/use-view-surface";
+
+const logger = createLogger("comment-overlay");
 
 const OVERLAY_PLACEMENT_WINDOW_OPTIONS: AuxiliaryWindowOptions = {
   name: "chlens-comment-overlay-placement",
@@ -52,13 +55,13 @@ export const OverlayPlacementWindowProvider: React.FC<{ children: React.ReactNod
   useEffect(() => {
     // Overlayは表示専用なので、調整窓を閉じていてもMainから設定を反映する。
     void commentOverlayWindowPlatform.setAlwaysOnTop?.(alwaysOnTop).catch((error: unknown) => {
-      console.error("[ChLens] コメントOverlayの最前面表示設定の反映に失敗しました:", error);
+      logger.error("コメントOverlayの最前面表示設定の反映に失敗しました:", error);
     });
   }, [alwaysOnTop]);
 
   useEffect(() => {
     void commentOverlayWindowPlatform.restorePlacement?.().catch((error: unknown) => {
-      console.error("[ChLens] コメントOverlayの配置設定の復元に失敗しました:", error);
+      logger.error("コメントOverlayの配置設定の復元に失敗しました:", error);
     });
   }, []);
 

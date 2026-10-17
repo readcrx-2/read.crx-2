@@ -4,6 +4,7 @@ import { setConsolaLevel } from "src/app/logger";
 import { createLogger } from "src/app/logger";
 import message from "src/app/Message";
 import Notification from "src/app/Notification";
+import { isTauriRuntime } from "src/app/platform/runtime";
 import { escapeHtml, safeHref } from "src/app/Util";
 import { BBSMenuModel } from "src/core/board/BBSMenuModel";
 import { createBoardService } from "src/core/board/BoardService";
@@ -91,7 +92,17 @@ export function setupContainer(): void {
   const runtimeMessage = message;
   // app.boot は config.ready の完了後に呼ぶため、ここでは読込済み設定からrootを決める。
   const syncConsolaLevel = () => {
-    setConsolaLevel(config.get("debug_log") === "on" ? LogLevels.debug : LogLevels.info);
+    const debugEnabled = config.get("debug_log") === "on";
+    // 変更理由: 通常は warn/error のみ出し、デバッグログ設定を有効にしたときだけ debug も出す。
+    setConsolaLevel(debugEnabled ? LogLevels.debug : LogLevels.warn);
+    if (isTauriRuntime()) {
+      // Rust側（tauri_plugin_log）も同じ設定に追従させる。
+      void import("@tauri-apps/api/core")
+        .then(({ invoke }) => invoke("set_log_debug", { enabled: debugEnabled }))
+        .catch((error: unknown) => {
+          logger.error("Rust側のログレベル切り替えに失敗しました", error);
+        });
+    }
   };
 
   syncConsolaLevel();

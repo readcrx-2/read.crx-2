@@ -6,6 +6,7 @@ import {
   GESTURE_START_THRESHOLD,
   summarizeVerticalGesture,
 } from "src/view/browser/utils/gesture";
+import { SCROLL_JUMP_EVENT } from "src/view/browser/utils/scroll-jump-event";
 
 export function useMouseGesture(
   rootRef: RefObject<HTMLDivElement | null>,
@@ -202,6 +203,8 @@ export function useMouseGesture(
       } else if (completedGesture === "Down") {
         scrollContainer.scrollTop = scrollContainer.scrollHeight;
       }
+      // scrollイベントは次のフレームまで届かないため、移動したことを同期で知らせる。
+      scrollContainer.dispatchEvent(new surfaceGlobal.Event(SCROLL_JUMP_EVENT));
     };
 
     const handleContextMenu = (e: MouseEvent): void => {

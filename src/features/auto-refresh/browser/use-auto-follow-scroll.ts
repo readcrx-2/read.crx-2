@@ -1,6 +1,7 @@
 import { type RefObject, useCallback, useEffect, useLayoutEffect, useRef, useState } from "react";
 import { useViewSurface } from "src/view/browser/hooks/use-view-surface";
 import { getResizeObserverForWindow, isHTMLElementInWindow } from "src/view/browser/utils/dom";
+import { SCROLL_JUMP_EVENT } from "src/view/browser/utils/scroll-jump-event";
 
 interface UseAutoFollowScrollOptions {
   enabled: boolean;
@@ -17,6 +18,16 @@ interface UseAutoFollowScrollOptions {
    * 更新開始・OFF・dat落ちで呼び出し側が戻すため、所有者は呼び出し側に置く。
    */
   userInterruptedRef: RefObject<boolean>;
+}
+
+/** 境界（スレッド末尾）が表示範囲に入っているか。 */
+function isBoundaryInView(scrollContainer: HTMLElement, boundary: HTMLElement): boolean {
+  const containerRect = scrollContainer.getBoundingClientRect();
+  const boundaryRect = boundary.getBoundingClientRect();
+  const viewportBottom = scrollContainer.scrollTop + scrollContainer.clientHeight;
+  const boundaryBottom = scrollContainer.scrollTop + boundaryRect.bottom - containerRect.top;
+  // scrollHeight/clientHeightは整数だが境界の座標は小数になるため、丸め誤差で追従を外さない。
+  return viewportBottom + 1 >= boundaryBottom;
 }
 
 export interface UseAutoFollowScrollResult {
@@ -166,16 +177,31 @@ export function useAutoFollowScroll({
       }
     }
 
-    const containerRect = scrollContainer.getBoundingClientRect();
-    const boundaryRect = boundary.getBoundingClientRect();
-    const viewportBottom = scrollContainer.scrollTop + scrollContainer.clientHeight;
-    const boundaryBottom = scrollContainer.scrollTop + boundaryRect.bottom - containerRect.top;
-    // scrollHeight/clientHeightは整数だが境界の座標は小数になるため、丸め誤差で追従を外さない。
-    const nextValue = viewportBottom + 1 >= boundaryBottom;
+    const nextValue = isBoundaryInView(scrollContainer, boundary);
 
     canAutoScrollRef.current = nextValue;
     setCanAutoScroll((prev) => (prev === nextValue ? prev : nextValue));
   }, [enabled, getScrollContainer, pauseAutoScroll, showScrollingIndicator, userInterruptedRef]);
+
+  /**
+   * 利用者が最下部へ戻ったら、手動スクロールによる追従の取り消しを解いて追従を再開する。
+   *
+   * 変更理由: 取り消しは次の更新開始まで残るため、ジェスチャーなどで最下部へ戻っても、
+   * 以降の新着が追従されず取り残されて追従が外れていた。最下部にいる間は取り消しを残さない。
+   * 上へ動かす操作は最下部ではないので、ここでは何もせず手動スクロールを優先できる。
+   */
+  const resumeFollowIfAtBottom = useCallback(() => {
+    const scrollContainer = getScrollContainer();
+    const boundary = autoScrollBoundaryRef.current;
+    if (!enabled || !scrollContainer || scrollContainer.dataset.active === "false" || !boundary) {
+      return;
+    }
+    if (!isBoundaryInView(scrollContainer, boundary)) {
+      return;
+    }
+    userInterruptedRef.current = false;
+    canAutoScrollRef.current = true;
+  }, [enabled, getScrollContainer, userInterruptedRef]);
 
   useLayoutEffect(() => {
     // ライブチャットは通信完了後にも行を追加するため、取得状態によらず描画ごとに補正する。
@@ -232,8 +258,16 @@ export function useAutoFollowScroll({
       }
     };
 
+    const handleScroll = () => {
+      resumeFollowIfAtBottom();
+      scheduleSync();
+    };
+
     scheduleSync();
-    scrollContainer.addEventListener("scroll", scheduleSync, { passive: true });
+    scrollContainer.addEventListener("scroll", handleScroll, { passive: true });
+    // scrollTopの直接書き換え（ジェスチャー）は、scrollイベントより先に行が増えることがあるため
+    // 専用のイベントで同期的に追従を判定する。
+    scrollContainer.addEventListener(SCROLL_JUMP_EVENT, handleScroll);
     scrollContainer.addEventListener("wheel", handleWheel, { passive: true });
 
     return () => {
@@ -242,10 +276,18 @@ export function useAutoFollowScroll({
         scrollObserverFrameRef.current = null;
       }
 
-      scrollContainer.removeEventListener("scroll", scheduleSync);
+      scrollContainer.removeEventListener("scroll", handleScroll);
+      scrollContainer.removeEventListener(SCROLL_JUMP_EVENT, handleScroll);
       scrollContainer.removeEventListener("wheel", handleWheel);
     };
-  }, [getScrollContainer, hasPendingRefresh, syncCanAutoScroll, userInterruptedRef, viewWindow]);
+  }, [
+    getScrollContainer,
+    hasPendingRefresh,
+    resumeFollowIfAtBottom,
+    syncCanAutoScroll,
+    userInterruptedRef,
+    viewWindow,
+  ]);
 
   useEffect(() => {
     const root = rootRef.current;

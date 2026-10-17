@@ -9,6 +9,7 @@ import { useLiveChatResponses } from "src/features/live-chat/browser/use-live-ch
 import { useThreadRefreshController } from "src/features/thread/browser/use-thread-refresh-controller";
 import { container } from "src/service-container/index";
 import type { IConfig, IMessage } from "src/service-container/interfaces";
+import { SCROLL_JUMP_EVENT } from "src/view/browser/utils/scroll-jump-event";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vite-plus/test";
 
 interface TestRectOptions {
@@ -431,6 +432,37 @@ describe("useAutoRefresh", () => {
       expect(getScrollTop()).toBe(100);
       expect(scrollBy).not.toHaveBeenCalled();
       expect(screen.getByTestId("can-auto-scroll")).toHaveTextContent("disabled");
+    },
+  );
+
+  it.each([false, true])(
+    "手動で上へ移動した後にジェスチャーで最下部へ戻ると、新着へ追従を再開する（ライブ=%s）",
+    (liveChatMode) => {
+      const { panel, setScrollTop, scrollHeight, getScrollTop } = renderScrollableHarness({
+        liveChatMode,
+      });
+      act(() => {
+        vi.advanceTimersByTime(3000);
+      });
+      fireEvent.wheel(panel, { deltaY: -100 });
+      setScrollTop(100);
+      fireEvent.scroll(panel);
+      act(() => {
+        vi.advanceTimersByTime(0);
+      });
+      expect(screen.getByTestId("can-auto-scroll")).toHaveTextContent("disabled");
+
+      // ジェスチャーはscrollTopを直接書き換えて、scrollイベントを待たずに通知する。
+      setScrollTop(scrollHeight() - 100);
+      act(() => {
+        panel.dispatchEvent(new Event(SCROLL_JUMP_EVENT));
+      });
+      fireEvent.click(screen.getByText("新着3件で完了"));
+      act(() => {
+        vi.advanceTimersByTime(1800);
+      });
+      expect(getScrollTop()).toBe(scrollHeight() - 100);
+      expect(screen.getByTestId("can-auto-scroll")).toHaveTextContent("enabled");
     },
   );
 

@@ -277,13 +277,16 @@ export function OverlayControlPanel({
   lockAspectRatio: requestedLockAspectRatio,
   onLockAspectRatioChange,
   onGeometryChange,
-  captureMonitorPreview,
+  captureMonitorPreview: requestedCaptureMonitorPreview,
   readOnly = false,
   initialMonitorId = null,
 }: OverlayControlPanelProps) {
   // 変更理由: 追従中の表示領域は追従先ウィンドウの内側サイズで決まるため、16:9へ補正して
   // 表示すると実際の位置とずれる。閲覧専用の間は縦横比固定を適用しない。
   const lockAspectRatio = requestedLockAspectRatio && !readOnly;
+  // 変更理由: 追従中は表示先のディスプレイが追従先に合わせて自動で決まり更新されるため、
+  // 画面の撮影（定期的な重い処理）は行わず、枠だけを示す。
+  const captureMonitorPreview = readOnly ? undefined : requestedCaptureMonitorPreview;
   const svgRef = useRef<SVGSVGElement>(null);
   const dragRef = useRef<DragState | null>(null);
   const [dragPreview, setDragPreview] = useState<CommentOverlayGeometry | null>(null);
@@ -298,12 +301,14 @@ export function OverlayControlPanel({
   }, [geometry, monitors]);
   // 変更理由: 全モニターを1枚のSVGへ押し込むと横長の座標系で各画面が縦に潰れるため、
   // 操作対象を1画面へ限定し、その画面本来の縦横比でプレビューする。
-  const previewMonitor =
-    monitors.find((monitor) => monitor.id === previewMonitorId) ??
-    monitors.find((monitor) => monitor.id === initialMonitorId) ??
-    geometryMonitor ??
-    monitors[0] ??
-    null;
+  // 追従中は手動の切り替えや初期モニターを使わず、Overlayがあるディスプレイへ自動で切り替える。
+  const previewMonitor = readOnly
+    ? (geometryMonitor ?? monitors[0] ?? null)
+    : (monitors.find((monitor) => monitor.id === previewMonitorId) ??
+      monitors.find((monitor) => monitor.id === initialMonitorId) ??
+      geometryMonitor ??
+      monitors[0] ??
+      null);
   const previewMonitorIndex = previewMonitor == null ? -1 : monitors.indexOf(previewMonitor);
   const bounds = useMemo(() => getMonitorBounds(previewMonitor), [previewMonitor]);
   const currentGeometry = useMemo(() => {
@@ -524,15 +529,21 @@ export function OverlayControlPanel({
         </p>
       ) : (
         <>
-          <div className="overlay-control-panel__monitor-navigation">
-            <button
-              type="button"
-              aria-label="前のディスプレイをプレビュー"
-              disabled={monitors.length < 2}
-              onClick={() => selectAdjacentMonitor(-1)}
-            >
-              ←
-            </button>
+          <div
+            className={`overlay-control-panel__monitor-navigation${
+              readOnly ? " overlay-control-panel__monitor-navigation--auto" : ""
+            }`}
+          >
+            {!readOnly && (
+              <button
+                type="button"
+                aria-label="前のディスプレイをプレビュー"
+                disabled={monitors.length < 2}
+                onClick={() => selectAdjacentMonitor(-1)}
+              >
+                ←
+              </button>
+            )}
             <div aria-live="polite">
               <strong>{previewMonitor?.name}</strong>
               <span>
@@ -540,14 +551,16 @@ export function OverlayControlPanel({
                 {previewMonitor?.height}
               </span>
             </div>
-            <button
-              type="button"
-              aria-label="次のディスプレイをプレビュー"
-              disabled={monitors.length < 2}
-              onClick={() => selectAdjacentMonitor(1)}
-            >
-              →
-            </button>
+            {!readOnly && (
+              <button
+                type="button"
+                aria-label="次のディスプレイをプレビュー"
+                disabled={monitors.length < 2}
+                onClick={() => selectAdjacentMonitor(1)}
+              >
+                →
+              </button>
+            )}
           </div>
           {captureMonitorPreview && (
             <div className="overlay-control-panel__preview-status">

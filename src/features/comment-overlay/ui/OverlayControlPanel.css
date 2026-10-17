@@ -97,6 +97,11 @@
   gap: 0.5rem;
 }
 
+/* 追従中は矢印ボタンがないため、ディスプレイ名だけを1列で表示する。 */
+.overlay-control-panel__monitor-navigation--auto {
+  grid-template-columns: minmax(0, 1fr);
+}
+
 .overlay-control-panel__monitor-navigation button {
   width: 2rem;
   height: 2rem;

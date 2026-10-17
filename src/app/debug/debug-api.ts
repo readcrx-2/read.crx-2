@@ -5,6 +5,11 @@ import {
   queryDebugLogs,
   toSerializable,
 } from "src/app/debug/debug-log";
+import {
+  clearPersistedLogs,
+  type PersistedLogEntry,
+  readPersistedLogs,
+} from "src/app/debug/log-persistence";
 
 /**
  * CDP経由で外部CLIから呼ぶ読み取り口。
@@ -18,6 +23,9 @@ export interface ChLensDebugApi {
   state(): Record<string, unknown>;
   logs(query?: DebugLogQuery): DebugLogEntry[];
   clearLogs(): void;
+  /** 再起動後も残る、IndexedDB に保存したログ（全ての窓の分）。 */
+  persistedLogs(query?: DebugLogQuery): Promise<PersistedLogEntry[]>;
+  clearPersistedLogs(): Promise<void>;
 }
 
 declare global {
@@ -60,5 +68,7 @@ export function installDebugApi(target: Window = window): void {
     state: collectDebugState,
     logs: queryDebugLogs,
     clearLogs: clearDebugLogs,
+    persistedLogs: readPersistedLogs,
+    clearPersistedLogs,
   };
 }

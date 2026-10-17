@@ -42,19 +42,27 @@ export const OverlayPlacementPanel: React.FC<OverlayPlacementPanelProps> = ({ pl
   const { value: alwaysOnTop, setValue: setAlwaysOnTop } = useConfigBooleanSetting(
     "comment_overlay_always_on_top",
   );
-  const geometryWriteTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const pendingGeometryRef = useRef<CommentOverlayGeometry | null>(null);
-  const geometryQueueRef = useRef<Promise<void>>(Promise.resolve());
+  const isApplyingGeometryRef = useRef(false);
 
-  const applyPendingGeometry = useCallback(() => {
-    const pending = pendingGeometryRef.current;
-    pendingGeometryRef.current = null;
-    if (!pending) return;
-    geometryQueueRef.current = geometryQueueRef.current
-      .then(() => platform.setGeometry(pending))
-      .catch((error: unknown) => {
-        logger.error("コメントOverlay表示位置の反映に失敗しました:", error);
-      });
+  // 変更理由: 以前は連続入力を40msのデバウンスでまとめていたため、ドラッグ中は手を止めるまで
+  // 実画面の枠が動かず、カクついていた。反映中でなければ即座に反映し、反映中に届いた座標は
+  // 最新の1件だけを残して直後に反映する（IPCを詰まらせず、常に最新の位置へ追従する）。
+  const applyPendingGeometry = useCallback(async () => {
+    if (isApplyingGeometryRef.current) return;
+    isApplyingGeometryRef.current = true;
+    try {
+      for (let next = pendingGeometryRef.current; next; next = pendingGeometryRef.current) {
+        pendingGeometryRef.current = null;
+        try {
+          await platform.setGeometry(next);
+        } catch (error: unknown) {
+          logger.error("コメントOverlay表示位置の反映に失敗しました:", error);
+        }
+      }
+    } finally {
+      isApplyingGeometryRef.current = false;
+    }
   }, [platform]);
 
   useEffect(() => {
@@ -117,26 +125,20 @@ export const OverlayPlacementPanel: React.FC<OverlayPlacementPanelProps> = ({ pl
 
   useEffect(() => {
     return () => {
-      if (geometryWriteTimerRef.current) clearTimeout(geometryWriteTimerRef.current);
       // 調整直後に窓を閉じても、最後の座標を取りこぼさずnative側へ反映する。
-      applyPendingGeometry();
+      void applyPendingGeometry();
     };
   }, [applyPendingGeometry]);
 
   const handleGeometryChange = useCallback(
     (nextGeometry: CommentOverlayGeometry) => {
-      // 変更理由: ドラッグ中の連続座標を40ms単位へまとめ、表示の追従性とnative IPC量を両立する。
       setGeometry(nextGeometry);
       pendingGeometryRef.current = nextGeometry;
-      // native反映の間引きとは分け、閉じる直前の変更も保存する。
+      // native反映とは分け、閉じる直前の変更も保存する。
       void platform.saveGeometry(nextGeometry).catch((error: unknown) => {
         logger.error("コメントOverlay表示位置の保存に失敗しました:", error);
       });
-      if (geometryWriteTimerRef.current) clearTimeout(geometryWriteTimerRef.current);
-      geometryWriteTimerRef.current = setTimeout(() => {
-        geometryWriteTimerRef.current = null;
-        applyPendingGeometry();
-      }, 40);
+      void applyPendingGeometry();
     },
     [applyPendingGeometry, platform],
   );
@@ -145,8 +147,7 @@ export const OverlayPlacementPanel: React.FC<OverlayPlacementPanelProps> = ({ pl
     (nextMode: PlacementMode) => {
       if (nextMode === mode) return;
       if (nextMode === "follow" || !attachment) {
-        if (geometryWriteTimerRef.current) clearTimeout(geometryWriteTimerRef.current);
-        applyPendingGeometry();
+        void applyPendingGeometry();
         // 追従先を選ぶまでは現在の位置のまま動かさない。
         setMode(nextMode);
         return;

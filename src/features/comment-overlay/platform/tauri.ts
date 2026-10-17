@@ -443,7 +443,8 @@ export function createTauriCommentOverlayPlatform({
     },
     async setGeometry(geometry: CommentOverlayGeometry) {
       // 手動調整を始めたら追従を解除し、次の更新で元の範囲へ戻されないようにする。
-      await platform.attachment?.setTarget(null);
+      // 追従していないときの連続操作（ドラッグ）では、毎回の解除処理を挟まず直接反映する。
+      if (targetId != null || processTarget != null) await platform.attachment?.setTarget(null);
       await applyGeometry(geometry);
     },
     async loadGeometry() {
@@ -473,8 +474,11 @@ export function createTauriCommentOverlayPlatform({
   async function applyGeometry(geometry: CommentOverlayGeometry): Promise<void> {
     const normalized = fallbackCommentOverlayGeometry(geometry);
     const overlay = await getCommentOverlayWindow();
-    await overlay.setPosition(new LogicalPosition(normalized.x, normalized.y));
-    await overlay.setSize(new LogicalSize(normalized.width, normalized.height));
+    // 位置とサイズを並列に送り、ドラッグ中のIPCの往復待ちを半分にする。
+    await Promise.all([
+      overlay.setPosition(new LogicalPosition(normalized.x, normalized.y)),
+      overlay.setSize(new LogicalSize(normalized.width, normalized.height)),
+    ]);
   }
 
   return platform;

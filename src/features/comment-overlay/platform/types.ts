@@ -50,6 +50,13 @@ export interface CommentOverlayWindowPlatform {
   close(): Promise<void>;
   watchVisibility(listener: (visible: boolean) => void): Promise<() => void>;
   getMonitors(): Promise<readonly CommentOverlayMonitor[]>;
+  /**
+   * 範囲をドラッグしている間、適用先の実画面にも同じ範囲の枠を出す。
+   * Overlayが非表示でも枠だけが見え、終了すると元の表示状態へ戻す。
+   */
+  setPlacementGuide?(active: boolean): Promise<void>;
+  /** Overlay側で、調整中の枠を描くかどうかの通知を受け取る。 */
+  watchPlacementGuide?(listener: (active: boolean) => void): Promise<() => void>;
   /** ChLens本体の窓があるモニターのid（getMonitorsのid）。判定できない環境では省略する。 */
   getHostMonitorId?: () => Promise<string | null>;
   /**

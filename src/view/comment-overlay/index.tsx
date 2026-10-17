@@ -1,3 +1,5 @@
+import "src/view/browser/styles/foundation/tokens.css";
+import "src/view/browser/styles/foundation/themes.css";
 import "src/features/comment-overlay/ui/OverlayStage.css";
 import "./styles.css";
 

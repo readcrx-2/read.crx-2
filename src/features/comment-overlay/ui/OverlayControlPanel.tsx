@@ -77,6 +77,8 @@ export interface OverlayControlPanelProps {
   onLockAspectRatioChange: (locked: boolean) => void;
   onGeometryChange: (geometry: CommentOverlayGeometry) => void;
   captureMonitorPreview?: (monitor: CommentOverlayMonitor) => Promise<string | null>;
+  /** ドラッグの開始・終了を通知する。実画面にも同じ範囲の枠を出すために使う。 */
+  onDragActiveChange?: (active: boolean) => void;
   /**
    * ウィンドウ追従中など、表示領域が外部で決まる間は閲覧専用にする。
    * 縦横比固定と手動の範囲指定を受け付けず、実際の表示領域をそのまま示す。
@@ -278,6 +280,7 @@ export function OverlayControlPanel({
   onLockAspectRatioChange,
   onGeometryChange,
   captureMonitorPreview: requestedCaptureMonitorPreview,
+  onDragActiveChange,
   readOnly = false,
   initialMonitorId = null,
 }: OverlayControlPanelProps) {
@@ -397,6 +400,7 @@ export function OverlayControlPanel({
       ...(direction ? { direction } : {}),
     };
     dragRef.current = next;
+    onDragActiveChange?.(true);
     if (typeof svgRef.current.setPointerCapture === "function") {
       svgRef.current.setPointerCapture(event.pointerId);
     }
@@ -438,6 +442,7 @@ export function OverlayControlPanel({
     }
     dragRef.current = null;
     setDragPreview(null);
+    onDragActiveChange?.(false);
   };
 
   const handleMonitorDoubleClick = (

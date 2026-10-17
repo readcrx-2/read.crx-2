@@ -28,3 +28,18 @@ body {
   inset: 0;
   pointer-events: none;
 }
+
+/*
+ * 調整窓で範囲をドラッグしている間、適用先の実画面に出す枠。
+ * 背景が明るくても暗くても見えるよう、アクセント色の枠を反対色の細線で縁取る。
+ */
+.comment-overlay-window__placement-guide {
+  position: absolute;
+  z-index: 1;
+  inset: 0;
+  box-sizing: border-box;
+  border: 3px dashed var(--sys-color-accent);
+  background: color-mix(in srgb, var(--sys-color-accent) 20%, transparent);
+  box-shadow: inset 0 0 0 1px var(--sys-color-accent-fg);
+  pointer-events: none;
+}

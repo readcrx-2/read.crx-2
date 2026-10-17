@@ -65,6 +65,7 @@ export function OverlayApp({
   const [isArchiveReplay, setIsArchiveReplay] = useState(false);
   const liveQueueEpochRef = useRef(0);
   const [archiveReplayPlaying, setArchiveReplayPlaying] = useState(true);
+  const [placementGuideActive, setPlacementGuideActive] = useState(false);
   const overlayRootRef = useRef<HTMLElement>(null);
   useOverlayPointerCapture(overlayRootRef);
   useEffect(() => {
@@ -355,12 +356,37 @@ export function OverlayApp({
     };
   }, [platform]);
 
+  useEffect(() => {
+    // 調整窓で範囲をドラッグしている間だけ、適用先のこの画面に枠を出す。
+    let disposed = false;
+    let unwatch: (() => void) | null = null;
+    void platform
+      .watchPlacementGuide?.(setPlacementGuideActive)
+      .then((cleanup) => {
+        if (disposed) cleanup();
+        else unwatch = cleanup;
+      })
+      .catch((error: unknown) => {
+        logger.error("コメントOverlayの調整枠の監視開始に失敗しました:", error);
+      });
+    return () => {
+      disposed = true;
+      unwatch?.();
+    };
+  }, [platform]);
+
   return (
     <main
       ref={overlayRootRef}
       className="comment-overlay-window"
       data-testid="comment-overlay-window"
     >
+      {placementGuideActive && (
+        <div
+          className="comment-overlay-window__placement-guide"
+          data-testid="comment-overlay-placement-guide"
+        />
+      )}
       <OverlayStage
         key={stageKey}
         className="comment-overlay-window__comment-layer"

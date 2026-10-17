@@ -218,6 +218,31 @@ describe("OverlayControlPanel", () => {
     });
   });
 
+  it("ドラッグの開始と終了を通知する", () => {
+    const onDragActiveChange = vi.fn();
+    render(
+      <OverlayControlPanel
+        monitors={[monitor]}
+        geometry={DEFAULT_COMMENT_OVERLAY_GEOMETRY}
+        lockAspectRatio={false}
+        onLockAspectRatioChange={vi.fn()}
+        onGeometryChange={vi.fn()}
+        onDragActiveChange={onDragActiveChange}
+      />,
+    );
+    const desktop = screen.getByTestId("overlay-control-panel-desktop");
+
+    fireEvent.pointerDown(desktop.querySelector("[data-overlay-control-background]")!, {
+      button: 0,
+      pointerId: 1,
+      clientX: 100,
+      clientY: 100,
+    });
+    expect(onDragActiveChange).toHaveBeenLastCalledWith(true);
+    fireEvent.pointerUp(desktop, { pointerId: 1 });
+    expect(onDragActiveChange).toHaveBeenLastCalledWith(false);
+  });
+
   it("仮想デスクトップをドラッグすると選択geometryを追従させる", () => {
     const onGeometryChange = vi.fn();
     render(

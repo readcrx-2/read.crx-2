@@ -164,6 +164,24 @@ export const OverlayPlacementPanel: React.FC<OverlayPlacementPanelProps> = ({ pl
     [applyPendingGeometry, attachment, mode],
   );
 
+  const handleDragActiveChange = useCallback(
+    (active: boolean) => {
+      void platform.setPlacementGuide?.(active).catch((error: unknown) => {
+        logger.error("コメントOverlayの調整枠の切り替えに失敗しました:", error);
+      });
+    },
+    [platform],
+  );
+
+  useEffect(() => {
+    // ドラッグ中に調整窓が閉じても、実画面の枠と一時表示を残さない。
+    return () => {
+      void platform.setPlacementGuide?.(false).catch((error: unknown) => {
+        logger.error("コメントOverlayの調整枠の解除に失敗しました:", error);
+      });
+    };
+  }, [platform]);
+
   const isFollowing = mode === "follow";
 
   return (
@@ -209,6 +227,7 @@ export const OverlayPlacementPanel: React.FC<OverlayPlacementPanelProps> = ({ pl
         onLockAspectRatioChange={setLockAspectRatio}
         onGeometryChange={handleGeometryChange}
         captureMonitorPreview={platform.captureMonitorPreview}
+        onDragActiveChange={handleDragActiveChange}
         readOnly={isFollowing}
         initialMonitorId={hostMonitorId}
       />

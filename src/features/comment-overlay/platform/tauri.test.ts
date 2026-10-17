@@ -161,6 +161,40 @@ describe("TauriコメントOverlay window platform", () => {
     expect(tauriMocks.window.setAlwaysOnTop.mock.calls).toEqual([[true], [false]]);
   });
 
+  it("調整中の枠は、実況停止中なら一時表示して終了時に隠す", async () => {
+    tauriMocks.window.show.mockClear();
+    tauriMocks.window.hide.mockClear();
+    const platform = createTauriCommentOverlayPlatform();
+
+    await platform.setPlacementGuide!(true);
+    await platform.setPlacementGuide!(true);
+    expect(tauriMocks.window.show).toHaveBeenCalledTimes(1);
+    expect(tauriMocks.event.emit).toHaveBeenLastCalledWith(
+      "chlens://comment-overlay-placement-guide",
+      { active: true },
+    );
+
+    await platform.setPlacementGuide!(false);
+    expect(tauriMocks.window.hide).toHaveBeenCalledTimes(1);
+    expect(tauriMocks.event.emit).toHaveBeenLastCalledWith(
+      "chlens://comment-overlay-placement-guide",
+      { active: false },
+    );
+  });
+
+  it("調整中の枠は、実況表示中なら表示状態を変えない", async () => {
+    tauriMocks.window.show.mockClear();
+    tauriMocks.window.hide.mockClear();
+    const platform = createTauriCommentOverlayPlatform();
+    await platform.show();
+    tauriMocks.window.show.mockClear();
+
+    await platform.setPlacementGuide!(true);
+    await platform.setPlacementGuide!(false);
+    expect(tauriMocks.window.show).not.toHaveBeenCalled();
+    expect(tauriMocks.window.hide).not.toHaveBeenCalled();
+  });
+
   it("対象の移動と最小化に追従し、実況停止中は復元されても表示しない", async () => {
     vi.useFakeTimers();
     tauriMocks.window.show.mockClear();

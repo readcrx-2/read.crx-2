@@ -34,6 +34,8 @@ const logger = createLogger("comment-overlay");
 
 export const COMMENT_OVERLAY_WINDOW_LABEL = "comment-overlay";
 export const COMMENT_OVERLAY_VISIBILITY_EVENT_NAME = "chlens://comment-overlay-visibility";
+export const COMMENT_OVERLAY_PLACEMENT_GUIDE_EVENT_NAME =
+  "chlens://comment-overlay-placement-guide";
 
 interface PhysicalWindowBounds {
   x: number;
@@ -157,6 +159,8 @@ export function createTauriCommentOverlayPlatform({
   let revision = 0;
   let lastBounds = "";
   let targetHidden = false;
+  // 調整中の枠のためだけに一時表示している間はtrue。実況の表示状態（wantedVisible）とは分ける。
+  let guideShown = false;
   const followTarget = async (expectedRevision: number): Promise<void> => {
     if ((!targetId && !processTarget) || expectedRevision !== revision) return;
     try {
@@ -363,6 +367,32 @@ export function createTauriCommentOverlayPlatform({
     },
     async getMonitors() {
       return readCommentOverlayMonitors();
+    },
+    async setPlacementGuide(active) {
+      const overlay = await getCommentOverlayWindow();
+      if (active) {
+        // 変更理由: 実況OFFでもドラッグ先の実画面に枠を見せるため、非表示のOverlayを一時表示する。
+        if (!wantedVisible && !guideShown) {
+          guideShown = true;
+          await overlay.show();
+        }
+      } else if (guideShown) {
+        guideShown = false;
+        if (!wantedVisible) await overlay.hide();
+      }
+      await emit(COMMENT_OVERLAY_PLACEMENT_GUIDE_EVENT_NAME, { active });
+    },
+    async watchPlacementGuide(listener: (active: boolean) => void) {
+      return listen<{ active?: unknown }>(
+        COMMENT_OVERLAY_PLACEMENT_GUIDE_EVENT_NAME,
+        ({ payload }) => {
+          if (typeof payload?.active !== "boolean") {
+            logger.error("コメントOverlayの調整枠eventを検証できません:", payload);
+            return;
+          }
+          listener(payload.active);
+        },
+      );
     },
     async getHostMonitorId() {
       // 変更理由: 調整窓を開いた直後に、ChLensを表示している画面をプレビューしたい。

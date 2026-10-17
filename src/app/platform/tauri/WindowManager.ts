@@ -1,4 +1,4 @@
-import { getCurrentWindow } from "@tauri-apps/api/window";
+import { getCurrentWindow, Window as TauriWindow } from "@tauri-apps/api/window";
 import { WindowManager, WindowOptions } from "src/app/platform/types";
 
 // Tauri環境ではbrowser.tabs/windowsが使えないため、
@@ -25,6 +25,16 @@ export const TauriWindowManager: WindowManager = {
   openPopup(name: string, features: string, sourceWindow = window): Window | null {
     // 表示元のWindowを受け取り、ブラウザ版と同じく別窓からの操作を起点にできるようにする。
     return sourceWindow.open("", name, features);
+  },
+
+  async focusPopup(popup: Window): Promise<void> {
+    // WebView2のDOM focusでは最小化したOS窓が復元されないため、生成時に付けたラベルで操作する。
+    const label = (popup as Window & { __chlensPopupLabel?: string }).__chlensPopupLabel;
+    if (!label) throw new Error("別窓のTauriラベルを取得できませんでした");
+    const nativeWindow = new TauriWindow(label);
+    await nativeWindow.unminimize();
+    await nativeWindow.show();
+    await nativeWindow.setFocus();
   },
 
   async closeCurrent(): Promise<void> {

@@ -45,9 +45,11 @@ fn create_requested_window<R: Runtime>(
 
   let builder = WebviewWindowBuilder::new(
     app,
-    label,
+    label.clone(),
     WebviewUrl::External("about:blank".parse().expect("about:blank is a valid URL")),
   )
+  // DOMのWindowProxyから同じOS窓を復元・フォーカスできるよう、生成時のラベルを渡す。
+  .initialization_script(format!("window.__chlensPopupLabel = {label:?};"))
   .window_features(features)
   .on_new_window(move |url, features| {
     create_requested_window(&child_app, &child_next_label, url, features)

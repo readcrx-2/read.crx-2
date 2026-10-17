@@ -6,12 +6,14 @@ import { afterEach, beforeEach, describe, expect, it, vi } from "vite-plus/test"
 
 const mocks = vi.hoisted(() => ({
   openPopup: vi.fn(),
+  focusPopup: vi.fn(),
 }));
 
 vi.mock("src/app/platform", () => ({
   platform: {
     window: {
       openPopup: mocks.openPopup,
+      focusPopup: mocks.focusPopup,
     },
   },
 }));
@@ -81,6 +83,8 @@ const Probe: React.FC = () => {
 describe("useAuxiliaryWindow", () => {
   beforeEach(() => {
     mocks.openPopup.mockReset();
+    mocks.focusPopup.mockReset();
+    mocks.focusPopup.mockResolvedValue(undefined);
     document.body.innerHTML = '<div class="browser-shell" data-theme="dark"></div>';
     const style = document.createElement("style");
     style.textContent = ".test-window { color: red; }";
@@ -110,6 +114,8 @@ describe("useAuxiliaryWindow", () => {
     fireEvent.click(screen.getByRole("button", { name: "別窓を開く" }));
     expect(mocks.openPopup).toHaveBeenCalledTimes(1);
     expect(popup.focus).toHaveBeenCalledTimes(2);
+    expect(mocks.focusPopup).toHaveBeenCalledTimes(1);
+    expect(mocks.focusPopup).toHaveBeenLastCalledWith(popup);
   });
 
   it("閉じる操作で表示状態と別窓を解放する", () => {

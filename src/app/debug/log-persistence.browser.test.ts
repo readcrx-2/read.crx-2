@@ -72,7 +72,7 @@ describe("ログの永続化", () => {
     expect(logs).toHaveLength(MAX_PERSISTED_ENTRIES);
     expect(logs[0].seq).toBe(total - MAX_PERSISTED_ENTRIES + 1);
     expect(logs.at(-1)?.seq).toBe(total);
-  });
+  }, 30_000);
 
   it("記録された出来事を一定時間後にまとめて保存し、解除時に残りも保存する", async () => {
     vi.useFakeTimers();

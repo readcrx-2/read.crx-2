@@ -59,12 +59,12 @@ export async function appendPersistedLogs(entries: readonly PersistedLogEntry[])
   await Promise.all(entries.map(({ id: _id, ...rest }) => tx.store.add(rest as PersistedLogEntry)));
   const count = await tx.store.count();
   if (count > MAX_PERSISTED_ENTRIES + TRIM_MARGIN) {
-    let excess = count - MAX_PERSISTED_ENTRIES;
-    let cursor = await tx.store.openCursor();
-    while (cursor && excess > 0) {
-      await cursor.delete();
-      excess -= 1;
-      cursor = await cursor.continue();
+    // 1件ずつ消すとカバレッジ計測付きのCIで時間切れになるほど遅いため、
+    // 消す範囲の末尾のキーを取り、範囲指定で一度に消す。
+    const oldestKeys = await tx.store.getAllKeys(undefined, count - MAX_PERSISTED_ENTRIES);
+    const lastKeyToDelete = oldestKeys.at(-1);
+    if (lastKeyToDelete !== undefined) {
+      await tx.store.delete(IDBKeyRange.upperBound(lastKeyToDelete));
     }
   }
   await tx.done;

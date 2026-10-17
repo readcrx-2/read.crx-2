@@ -2,6 +2,7 @@ mod cookie_cipher;
 mod download;
 mod download_path;
 mod http_transport;
+mod log_level;
 mod monitor_preview;
 mod overlay_attachment;
 mod preview_image;
@@ -83,6 +84,7 @@ pub fn run() {
     .invoke_handler(tauri::generate_handler![
       download::save_download_file,
       http_transport::shared_http_request,
+      log_level::set_log_debug,
       monitor_preview::capture_comment_overlay_monitor_preview,
       overlay_attachment::list_comment_overlay_windows,
       overlay_attachment::read_comment_overlay_target,
@@ -102,13 +104,15 @@ pub fn run() {
       window.app_handle().exit(0);
     })
     .setup(|app| {
-      if cfg!(debug_assertions) {
-        app.handle().plugin(
-          tauri_plugin_log::Builder::default()
-            .level(log::LevelFilter::Info)
-            .build(),
-        )?;
-      }
+      // 変更理由: 以前はdebugビルドだけ・Info固定だったため、配布版の不具合をRust側から追えなかった。
+      // 常に登録し、既定は warn/error のみにする。`debug_log` 設定はフロントエンドから
+      // `set_log_debug` で実行中に切り替える（プラグインは上限をDebugにして絞りだけ動的に変える）。
+      app.handle().plugin(
+        tauri_plugin_log::Builder::default()
+          .level(log::LevelFilter::Debug)
+          .build(),
+      )?;
+      log::set_max_level(log_level::level_for(false));
 
       // 投稿認証はWebViewと別のRust Clientが扱うため、データディレクトリ確定後に保存Cookieを復元する。
       app.manage(write_transport::WriteTransportState::new(

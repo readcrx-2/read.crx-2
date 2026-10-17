@@ -37,6 +37,7 @@ const MAX_DEPTH = 8;
 const SENSITIVE_KEY_PATTERN = /cookie|token|password|secret|authorization|^sid$/i;
 
 const entries: DebugLogEntry[] = [];
+const listeners = new Set<(entry: DebugLogEntry) => void>();
 let nextSeq = 1;
 
 function truncate(value: string): string {
@@ -103,10 +104,28 @@ function formatConsoleArgs(args: readonly unknown[]): string {
 }
 
 function pushEntry(entry: Omit<DebugLogEntry, "seq" | "time">): void {
-  entries.push({ seq: nextSeq++, time: Date.now(), ...entry });
+  const recorded: DebugLogEntry = { seq: nextSeq++, time: Date.now(), ...entry };
+  entries.push(recorded);
   if (entries.length > MAX_ENTRIES) {
     entries.splice(0, entries.length - MAX_ENTRIES);
   }
+  for (const listener of listeners) {
+    listener(recorded);
+  }
+}
+
+/**
+ * 記録された1件ごとに呼ばれる購読を登録する。
+ *
+ * 変更理由: リングバッファは画面を閉じると消える。永続化など、記録の行き先を増やす側が
+ * debug-log を書き換えずに済むよう、購読の口だけを用意した。購読側は例外を投げないこと
+ * （投げると console の記録経路まで巻き込むため、失敗は購読側で扱う）。
+ */
+export function subscribeDebugLog(listener: (entry: DebugLogEntry) => void): () => void {
+  listeners.add(listener);
+  return () => {
+    listeners.delete(listener);
+  };
 }
 
 /**
@@ -175,5 +194,6 @@ export function installConsoleCapture(target: Console = console): void {
 
 export function resetDebugLogForTest(): void {
   entries.length = 0;
+  listeners.clear();
   nextSeq = 1;
 }

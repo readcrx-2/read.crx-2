@@ -1,4 +1,3 @@
-import { parseReplacementDsl, validateRuleDsl } from "@chlen/chlib";
 import { AlertTriangle, ChevronDown, RefreshCw } from "lucide-react";
 import React, { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { NG_DSL_EXAMPLES, NGDslHelpSnippet, NGEditor } from "src/features/ng/ui/NGEditor";
@@ -11,11 +10,9 @@ import {
 import { container } from "src/service-container/index";
 import { useMediaQuery } from "src/view/browser/hooks/use-media-query";
 import {
-  AUTO_SAVE_DELAY_MS,
   isSettingsSectionId,
   NG_PRIMARY_FIELD_KEYS,
   readAllSettings,
-  saveSectionFormData,
   SETTINGS_SECTION_MAP,
   SETTINGS_SECTIONS,
 } from "src/view/browser/pages/settings/settings-sections";
@@ -31,6 +28,8 @@ import {
   isSettingsFieldItem,
 } from "src/view/browser/pages/settings/settings-types";
 import { SettingsSupplementaryPanels } from "src/view/browser/pages/settings/SettingsSupplementaryPanels";
+import { useCompactMenu } from "src/view/browser/pages/settings/use-compact-menu";
+import { useSettingsAutoSave } from "src/view/browser/pages/settings/use-settings-auto-save";
 import { useSettingsMaintenanceActions } from "src/view/browser/pages/settings/use-settings-maintenance";
 import { useTabViewState } from "src/view/browser/state/tabs/use-tab-store";
 import type {
@@ -95,8 +94,6 @@ export const SettingsPage: React.FC<{ tabId: string; page: SettingsPageType }> =
   const [formState, setFormState] = useState<SettingsFormState | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
-  const [savingSectionId, setSavingSectionId] = useState<SettingsSectionId | null>(null);
-  const [autoSaveError, setAutoSaveError] = useState<string | null>(null);
   const [isNgExamplesOpen, setIsNgExamplesOpen] = useState(initialUiState.ngExamplesOpen === true);
   const [ngSettingsTab, setNgSettingsTab] = useState<"ng" | "replacement">(
     initialUiState.ngSettingsTab === "replacement" ? "replacement" : "ng",
@@ -105,11 +102,11 @@ export const SettingsPage: React.FC<{ tabId: string; page: SettingsPageType }> =
     initialUiState.replacementExamplesOpen === true,
   );
   const [isNgAdvancedOpen, setIsNgAdvancedOpen] = useState(initialUiState.ngAdvancedOpen === true);
-  const [isCompactMenuOpen, setIsCompactMenuOpen] = useState(false);
-  const autoSaveTimerRef = useRef<number | null>(null);
-  const saveAttemptRef = useRef(0);
+  const { savingSectionId, autoSaveError, setAutoSaveError, autoSaveTimerRef, scheduleAutoSave } =
+    useSettingsAutoSave();
+  const { isCompactMenuOpen, openCompactMenu, closeCompactMenu, scheduleCompactMenuClose } =
+    useCompactMenu(isCompact);
   const formStateRef = useRef<SettingsFormState | null>(null);
-  const compactMenuCloseTimerRef = useRef<number | null>(null);
   const scrollViewportRef = useRef<HTMLDivElement | null>(null);
   const restoredScrollTopRef = useRef(
     typeof initialUiState.mainScrollTop === "number" &&
@@ -215,70 +212,6 @@ export const SettingsPage: React.FC<{ tabId: string; page: SettingsPageType }> =
     shouldRestoreScrollRef.current = false;
   }, [loading]);
 
-  const scheduleAutoSave = useCallback(
-    (sectionId: SettingsSectionId, sectionFormData: SettingsSectionFormData) => {
-      const section = SETTINGS_SECTION_MAP.get(sectionId);
-      if (!section) {
-        return;
-      }
-
-      if (autoSaveTimerRef.current != null) {
-        window.clearTimeout(autoSaveTimerRef.current);
-      }
-
-      // 新しい編集が始まった時点で、前回の保存結果を古いものとして扱う。
-      // 保存中に次の入力が入った場合、古い失敗結果が修正後の画面へ戻らないようにする。
-      const attemptId = ++saveAttemptRef.current;
-      setAutoSaveError(null);
-
-      // 入力途中の構文エラーはエディタ内に表示し、自動保存失敗の通知を繰り返さない。
-      if (
-        typeof sectionFormData.replace_str_txt === "string" &&
-        parseReplacementDsl(sectionFormData.replace_str_txt).diagnostics.length > 0
-      ) {
-        setSavingSectionId(null);
-        return;
-      }
-
-      if (
-        typeof sectionFormData.ngwords === "string" &&
-        validateRuleDsl(sectionFormData.ngwords).diagnostics.length > 0
-      ) {
-        setSavingSectionId(null);
-        return;
-      }
-
-      // 変更理由: キー入力ごとの同期書き込みを避け、設定保存の体感速度を維持する。
-      autoSaveTimerRef.current = window.setTimeout(() => {
-        autoSaveTimerRef.current = null;
-        setSavingSectionId(sectionId);
-        setAutoSaveError(null);
-
-        void (async () => {
-          try {
-            await saveSectionFormData(section, sectionFormData);
-            if (attemptId === saveAttemptRef.current) {
-              setAutoSaveError(null);
-            }
-          } catch (saveError) {
-            if (attemptId !== saveAttemptRef.current) {
-              return;
-            }
-            const message =
-              saveError instanceof Error ? saveError.message : "設定の自動保存に失敗しました";
-            setAutoSaveError(message);
-            container.toast.error(message);
-          } finally {
-            if (attemptId === saveAttemptRef.current) {
-              setSavingSectionId((prev) => (prev === sectionId ? null : prev));
-            }
-          }
-        })();
-      }, AUTO_SAVE_DELAY_MS);
-    },
-    [],
-  );
-
   const updateFieldValue = useCallback(
     (sectionId: SettingsSectionId, fieldKey: string, value: SettingsFormValue) => {
       const currentState = formStateRef.current;
@@ -302,46 +235,6 @@ export const SettingsPage: React.FC<{ tabId: string; page: SettingsPageType }> =
     },
     [scheduleAutoSave],
   );
-
-  useEffect(() => {
-    return () => {
-      if (autoSaveTimerRef.current != null) {
-        window.clearTimeout(autoSaveTimerRef.current);
-      }
-
-      if (compactMenuCloseTimerRef.current != null) {
-        window.clearTimeout(compactMenuCloseTimerRef.current);
-      }
-    };
-  }, []);
-
-  const clearCompactMenuCloseTimer = useCallback(() => {
-    if (compactMenuCloseTimerRef.current != null) {
-      window.clearTimeout(compactMenuCloseTimerRef.current);
-      compactMenuCloseTimerRef.current = null;
-    }
-  }, []);
-
-  const openCompactMenu = useCallback(() => {
-    clearCompactMenuCloseTimer();
-    setIsCompactMenuOpen(true);
-  }, [clearCompactMenuCloseTimer]);
-
-  const scheduleCompactMenuClose = useCallback(() => {
-    clearCompactMenuCloseTimer();
-    // 変更理由: ホットゾーンからメニュー本体へカーソルを移動する短時間で閉じないよう遅延を設ける。
-    compactMenuCloseTimerRef.current = window.setTimeout(() => {
-      compactMenuCloseTimerRef.current = null;
-      setIsCompactMenuOpen(false);
-    }, 120);
-  }, [clearCompactMenuCloseTimer]);
-
-  useEffect(() => {
-    if (!isCompact) {
-      clearCompactMenuCloseTimer();
-      setIsCompactMenuOpen(false);
-    }
-  }, [clearCompactMenuCloseTimer, isCompact]);
 
   const renderField = useCallback(
     (sectionId: SettingsSectionId, field: SettingsFieldDefinition) => {
@@ -613,7 +506,7 @@ export const SettingsPage: React.FC<{ tabId: string; page: SettingsPageType }> =
                       aria-current={activeSectionId === section.id ? "page" : undefined}
                       onClick={() => {
                         setActiveSectionId(section.id);
-                        setIsCompactMenuOpen(false);
+                        closeCompactMenu();
                       }}
                     >
                       <span className="settings-page__section-icon" aria-hidden="true">

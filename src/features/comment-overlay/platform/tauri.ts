@@ -193,6 +193,11 @@ export function createTauriCommentOverlayPlatform({
         if (expectedRevision !== revision) return;
         if (wantedVisible && targetHidden) await overlay.show();
         targetHidden = false;
+        // 変更理由: 追従先を操作するとOverlayがその背面へ回って見えなくなるため、
+        // 表示中は毎周期、追従先の直上へZ順を揃える（直上ならnative側で何もしない）。
+        if (wantedVisible && targetId) {
+          await invoke("raise_comment_overlay_above_target", { id: targetId });
+        }
       } else {
         if (!targetHidden) await overlay.hide();
         targetHidden = true;

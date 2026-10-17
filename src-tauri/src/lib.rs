@@ -89,6 +89,7 @@ pub fn run() {
       log_level::set_log_debug,
       monitor_preview::capture_comment_overlay_monitor_preview,
       overlay_attachment::list_comment_overlay_windows,
+      overlay_attachment::raise_comment_overlay_above_target,
       overlay_attachment::read_comment_overlay_target,
       write_transport::clear_all_write_cookies,
       write_transport::clear_write_cookies,

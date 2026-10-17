@@ -91,6 +91,66 @@ pub fn read_comment_overlay_target(id: String) -> Result<Option<TargetBounds>, S
   result
 }
 
+/// 追従中のOverlayを、追従先ウィンドウのすぐ上へ並べ直す。
+///
+/// 変更理由: 常に最前面がOFFのとき、追従先を操作するとOverlayがその背面へ回って見えなくなる。
+/// 追従先を前面化しない（アクティブにしない）まま、Z順だけを追従先の直上へ揃える。
+#[tauri::command]
+pub fn raise_comment_overlay_above_target(app: tauri::AppHandle, id: String) -> Result<(), String> {
+  let result = raise_above_target(&app, &id);
+  if let Err(error) = &result {
+    log::error!("追従先の直上へのOverlay配置に失敗しました: {error}");
+  }
+  result
+}
+
+#[cfg(not(windows))]
+fn raise_above_target(_app: &tauri::AppHandle, _id: &str) -> Result<(), String> {
+  Ok(())
+}
+
+#[cfg(windows)]
+fn raise_above_target(app: &tauri::AppHandle, id: &str) -> Result<(), String> {
+  use windows_sys::Win32::{Foundation::*, UI::WindowsAndMessaging::*};
+  let (handle, process) = parse_window_identity(id)?;
+  let target = handle as HWND;
+  let overlay = tauri::Manager::get_webview_window(app, "comment-overlay")
+    .ok_or_else(|| "Overlayウィンドウが見つかりません。".to_string())?
+    .hwnd()
+    .map_err(|error| error.to_string())?
+    .0 as HWND;
+  unsafe {
+    let mut pid = 0;
+    GetWindowThreadProcessId(target, &mut pid);
+    if IsWindow(target) == 0 || pid != process {
+      return Err("追従先が閉じられました。ウィンドウを選び直してください。".into());
+    }
+    // 最前面指定のOverlayは常に追従先より上なので、通常ウィンドウの順序へ戻さない。
+    if GetWindowLongPtrW(overlay, GWL_EXSTYLE) & WS_EX_TOPMOST as isize != 0 {
+      return Ok(());
+    }
+    let above_target = GetWindow(target, GW_HWNDPREV);
+    // すでに直上にあれば何もしない（100msごとの追従で無駄な再配置をしない）。
+    if above_target == overlay {
+      return Ok(());
+    }
+    let insert_after = if above_target.is_null() { HWND_TOP } else { above_target };
+    if SetWindowPos(
+      overlay,
+      insert_after,
+      0,
+      0,
+      0,
+      0,
+      SWP_NOMOVE | SWP_NOSIZE | SWP_NOACTIVATE,
+    ) == 0
+    {
+      return Err(std::io::Error::last_os_error().to_string());
+    }
+  }
+  Ok(())
+}
+
 #[cfg(not(windows))]
 fn list_windows() -> Result<Vec<AttachmentWindow>, String> {
   Ok(Vec::new())

@@ -66,6 +66,21 @@ describe("OverlayApp", () => {
     vi.restoreAllMocks();
   });
 
+  it("表示専用の窓から配置を復元・保存せず、追従先の範囲で手動設定を上書きしない", async () => {
+    const platform = createBrowserCommentOverlayPlatform();
+    const load = vi.spyOn(platform, "loadGeometry");
+    const save = vi.spyOn(platform, "saveGeometry");
+    vi.spyOn(platform, "watchGeometry").mockImplementation(async (listener) => {
+      listener({ x: 500, y: 100, width: 1000, height: 800 });
+      return () => {};
+    });
+    await act(async () => {
+      render(<OverlayApp eventBus={new MemoryCommentOverlayEventBus()} platform={platform} />);
+    });
+    expect(load).not.toHaveBeenCalled();
+    expect(save).not.toHaveBeenCalled();
+  });
+
   it("同じスレッドのresetでも前回のコメントを消し、再開後の同じ番号を受け入れる", async () => {
     const eventBus = new MemoryCommentOverlayEventBus();
     const platform = createBrowserCommentOverlayPlatform();

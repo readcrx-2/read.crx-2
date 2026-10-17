@@ -1,3 +1,4 @@
+import { getCurrentWindow } from "@tauri-apps/api/window";
 import { isTauriRuntime } from "src/app/platform/runtime";
 
 import { createBrowserCommentOverlayPlatform } from "./browser";
@@ -5,7 +6,7 @@ import { createTauriCommentOverlayPlatform } from "./tauri";
 
 export function createCommentOverlayWindowPlatform() {
   return isTauriRuntime()
-    ? createTauriCommentOverlayPlatform()
+    ? createTauriCommentOverlayPlatform({ managePlacement: getCurrentWindow().label === "main" })
     : createBrowserCommentOverlayPlatform();
 }
 

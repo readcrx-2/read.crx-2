@@ -47,6 +47,12 @@ export const OverlayPlacementWindowProvider: React.FC<{ children: React.ReactNod
   const { root, open } = useAuxiliaryWindow(OVERLAY_PLACEMENT_WINDOW_OPTIONS);
   const theme = useTheme();
 
+  useEffect(() => {
+    void commentOverlayWindowPlatform.restorePlacement?.().catch((error: unknown) => {
+      console.error("[ChLens] コメントOverlayの配置設定の復元に失敗しました:", error);
+    });
+  }, []);
+
   // メイン窓でテーマを切り替えたときも、開いている調整窓の色を追従させる。
   useEffect(() => {
     if (root) applyShellTheme(root, theme);

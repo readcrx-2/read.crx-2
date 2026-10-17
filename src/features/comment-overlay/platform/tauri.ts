@@ -17,7 +17,13 @@ import {
   loadStoredCommentOverlayGeometry,
   saveStoredCommentOverlayGeometry,
 } from "./geometry";
+import {
+  loadOverlayAttachment,
+  saveOverlayAttachment,
+  type StoredOverlayAttachment,
+} from "./placement";
 import type {
+  CommentOverlayAttachmentWindow,
   CommentOverlayGeometry,
   CommentOverlayMonitor,
   CommentOverlayWindowPlatform,
@@ -136,8 +142,12 @@ async function fitGeometryToAvailableMonitor(
   return fitCommentOverlayGeometryToWorkArea(normalized, workArea);
 }
 
-export function createTauriCommentOverlayPlatform(): CommentOverlayWindowPlatform {
+export function createTauriCommentOverlayPlatform({
+  managePlacement = true,
+} = {}): CommentOverlayWindowPlatform {
   let targetId: string | null = null;
+  let processTarget: StoredOverlayAttachment | null = null;
+  let placementRestored: Promise<void> | null = null;
   let attachmentError: string | null = null;
   let attachmentTimer: ReturnType<typeof setTimeout> | null = null;
   let wantedVisible = false;
@@ -145,14 +155,30 @@ export function createTauriCommentOverlayPlatform(): CommentOverlayWindowPlatfor
   let lastBounds = "";
   let targetHidden = false;
   const followTarget = async (expectedRevision: number): Promise<void> => {
-    if (!targetId || expectedRevision !== revision) return;
+    if ((!targetId && !processTarget) || expectedRevision !== revision) return;
     try {
-      const bounds = await invoke<CommentOverlayGeometry | null>("read_comment_overlay_target", {
-        id: targetId,
-      });
+      if (!targetId && processTarget) {
+        const windows = await invoke<CommentOverlayAttachmentWindow[]>(
+          "list_comment_overlay_windows",
+        );
+        if (expectedRevision !== revision) return;
+        const candidates = windows.filter(
+          (window) =>
+            window.processPath?.toLowerCase() === processTarget?.processPath.toLowerCase(),
+        );
+        targetId =
+          (candidates.find((window) => window.title === processTarget?.title) ?? candidates[0])
+            ?.id ?? null;
+      }
+      const bounds = targetId
+        ? await invoke<CommentOverlayGeometry | null>("read_comment_overlay_target", {
+            id: targetId,
+          })
+        : null;
       const overlay = await getCommentOverlayWindow();
       if (expectedRevision !== revision) return;
       if (bounds) {
+        attachmentError = null;
         const serialized = JSON.stringify(bounds);
         if (serialized !== lastBounds) {
           // native側の物理座標をそのまま使い、画面をまたぐ際のDPI換算のずれを防ぐ。
@@ -173,20 +199,32 @@ export function createTauriCommentOverlayPlatform(): CommentOverlayWindowPlatfor
       console.error("[ChLens] コメントOverlayのウィンドウ追従に失敗しました:", error);
       attachmentError = String(error);
       targetId = null;
-      if (wantedVisible && targetHidden) {
+      lastBounds = "";
+      // 対象の終了後もプロセス設定を残し、同じアプリの次のウィンドウを探し直す。
+      if (processTarget) {
+        try {
+          await (await getCommentOverlayWindow()).hide();
+        } catch (hideError: unknown) {
+          console.error("[ChLens] 追従先終了後のOverlay非表示に失敗しました:", hideError);
+        }
+        targetHidden = true;
+      } else if (wantedVisible && targetHidden) {
         try {
           await (await getCommentOverlayWindow()).show();
         } catch (showError: unknown) {
           console.error("[ChLens] 追従解除後のOverlay再表示に失敗しました:", showError);
         }
       }
-      targetHidden = false;
+      if (!processTarget) targetHidden = false;
     }
     // Overlay自身の表示・非表示と切り離してMain側で直列に更新し、IPCの重複を防ぐ。
-    if (targetId && expectedRevision === revision) {
-      attachmentTimer = setTimeout(() => {
-        void followTarget(expectedRevision);
-      }, 100);
+    if ((targetId || processTarget) && expectedRevision === revision) {
+      attachmentTimer = setTimeout(
+        () => {
+          void followTarget(expectedRevision);
+        },
+        targetId ? 100 : 1000,
+      );
     }
   };
   const publishWindowVisibility = async (visible: boolean): Promise<void> => {
@@ -197,23 +235,54 @@ export function createTauriCommentOverlayPlatform(): CommentOverlayWindowPlatfor
   const platform: CommentOverlayWindowPlatform = {
     attachment: {
       listWindows: () => invoke("list_comment_overlay_windows"),
-      getState: () => ({ targetId, error: attachmentError }),
+      getState: () => ({
+        targetId,
+        error: attachmentError,
+        ...(processTarget ? { processPath: processTarget.processPath } : {}),
+      }),
       async setTarget(id) {
+        await platform.restorePlacement?.();
+        const windows = id
+          ? await invoke<CommentOverlayAttachmentWindow[]>("list_comment_overlay_windows")
+          : [];
+        const selected = windows.find((window) => window.id === id);
+        const nextProcessTarget = selected?.processPath
+          ? { processPath: selected.processPath, title: selected.title }
+          : null;
+        saveOverlayAttachment(nextProcessTarget);
+        const wasFollowing = targetId != null || processTarget != null;
         const nextRevision = ++revision;
         if (attachmentTimer) clearTimeout(attachmentTimer);
         targetId = id;
+        processTarget = nextProcessTarget;
         attachmentError = null;
         lastBounds = "";
         if (id) {
           await followTarget(nextRevision);
           if (attachmentError) throw new Error(attachmentError);
         } else {
+          const stored = loadStoredCommentOverlayGeometry();
+          if (wasFollowing && stored) await applyGeometry(stored);
           if (wantedVisible && targetHidden) await (await getCommentOverlayWindow()).show();
           targetHidden = false;
         }
       },
     },
+    async restorePlacement() {
+      // 表示窓・過去実況窓にもplatformがあるため、復元と追従ループはMainだけが所有する。
+      if (!managePlacement) return;
+      placementRestored ??= (async () => {
+        await platform.loadGeometry();
+        processTarget = loadOverlayAttachment();
+        if (processTarget) await followTarget(++revision);
+      })().catch((error: unknown) => {
+        placementRestored = null;
+        throw error;
+      });
+      await placementRestored;
+    },
     async show() {
+      await platform.restorePlacement?.();
       wantedVisible = true;
       const overlay = await getCommentOverlayWindow();
       await overlay.unminimize();
@@ -226,6 +295,7 @@ export function createTauriCommentOverlayPlatform(): CommentOverlayWindowPlatfor
       await publishWindowVisibility(false);
     },
     async focus() {
+      await platform.restorePlacement?.();
       wantedVisible = true;
       const overlay = await getCommentOverlayWindow();
       await overlay.unminimize();
@@ -253,7 +323,8 @@ export function createTauriCommentOverlayPlatform(): CommentOverlayWindowPlatfor
         try {
           const nativeVisible = await (await getCommentOverlayWindow()).isVisible();
           // 追従先の最小化による一時的な非表示は、実況OFFとしてMainへ戻さない。
-          const visible = targetId && targetHidden ? wantedVisible : nativeVisible;
+          const visible =
+            (targetId || processTarget) && targetHidden ? wantedVisible : nativeVisible;
           // 遅れて届いた初期取得や古いeventで、新しいnative表示状態を上書きしない。
           if (!disposed && requestedRevision === revision) listener(visible);
         } catch (error: unknown) {
@@ -267,6 +338,8 @@ export function createTauriCommentOverlayPlatform(): CommentOverlayWindowPlatfor
             console.error("[ChLens] コメントOverlayの表示状態eventを検証できません:", payload);
             return;
           }
+          // 過去実況窓での表示操作もMainの追従ループへ引き継ぐ。
+          wantedVisible = payload.visible;
           void synchronize();
         },
       );
@@ -330,10 +403,7 @@ export function createTauriCommentOverlayPlatform(): CommentOverlayWindowPlatfor
     async setGeometry(geometry: CommentOverlayGeometry) {
       // 手動調整を始めたら追従を解除し、次の更新で元の範囲へ戻されないようにする。
       await platform.attachment?.setTarget(null);
-      const normalized = fallbackCommentOverlayGeometry(geometry);
-      const overlay = await getCommentOverlayWindow();
-      await overlay.setPosition(new LogicalPosition(normalized.x, normalized.y));
-      await overlay.setSize(new LogicalSize(normalized.width, normalized.height));
+      await applyGeometry(geometry);
     },
     async loadGeometry() {
       const stored = loadStoredCommentOverlayGeometry();
@@ -348,7 +418,7 @@ export function createTauriCommentOverlayPlatform(): CommentOverlayWindowPlatfor
       } catch (error: unknown) {
         console.error("[ChLens] コメントOverlayのwork area取得に失敗しました:", error);
       }
-      await platform.setGeometry(restored);
+      await applyGeometry(restored);
       if (JSON.stringify(restored) !== JSON.stringify(stored)) {
         saveStoredCommentOverlayGeometry(restored);
       }
@@ -358,6 +428,13 @@ export function createTauriCommentOverlayPlatform(): CommentOverlayWindowPlatfor
       saveStoredCommentOverlayGeometry(geometry);
     },
   };
+
+  async function applyGeometry(geometry: CommentOverlayGeometry): Promise<void> {
+    const normalized = fallbackCommentOverlayGeometry(geometry);
+    const overlay = await getCommentOverlayWindow();
+    await overlay.setPosition(new LogicalPosition(normalized.x, normalized.y));
+    await overlay.setSize(new LogicalSize(normalized.width, normalized.height));
+  }
 
   return platform;
 }

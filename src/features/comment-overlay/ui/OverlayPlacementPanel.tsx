@@ -25,9 +25,11 @@ export const OverlayPlacementPanel: React.FC<OverlayPlacementPanelProps> = ({ pl
   const { attachment } = platform;
   const modeName = useId();
   const [mode, setMode] = useState<PlacementMode>(() =>
-    attachment?.getState().targetId != null ? "follow" : "manual",
+    attachment?.getState().targetId != null || attachment?.getState().processPath
+      ? "follow"
+      : "manual",
   );
-  const [isModeChanging, setIsModeChanging] = useState(false);
+  const [isModeChanging, setIsModeChanging] = useState(platform.restorePlacement != null);
   const [monitors, setMonitors] = useState<readonly CommentOverlayMonitor[]>([]);
   const [geometry, setGeometry] = useState<CommentOverlayGeometry | null>(null);
   const [hostMonitorId, setHostMonitorId] = useState<string | null>(null);
@@ -35,6 +37,19 @@ export const OverlayPlacementPanel: React.FC<OverlayPlacementPanelProps> = ({ pl
     "comment_overlay_lock_aspect_ratio",
   );
   const geometryWriteTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const pendingGeometryRef = useRef<CommentOverlayGeometry | null>(null);
+  const geometryQueueRef = useRef<Promise<void>>(Promise.resolve());
+
+  const applyPendingGeometry = useCallback(() => {
+    const pending = pendingGeometryRef.current;
+    pendingGeometryRef.current = null;
+    if (!pending) return;
+    geometryQueueRef.current = geometryQueueRef.current
+      .then(() => platform.setGeometry(pending))
+      .catch((error: unknown) => {
+        console.error("[ChLens] コメントOverlay表示位置の反映に失敗しました:", error);
+      });
+  }, [platform]);
 
   useEffect(() => {
     // 変更理由: Overlayは表示専用に固定したため、実モニターと現在geometryを
@@ -47,7 +62,14 @@ export const OverlayPlacementPanel: React.FC<OverlayPlacementPanelProps> = ({ pl
         return null;
       },
     );
-    void Promise.all([platform.getMonitors(), platform.getGeometry(), hostMonitorRequest])
+    void (async () => {
+      await platform.restorePlacement?.();
+      if (!disposed) {
+        const state = attachment?.getState();
+        setMode(state?.targetId != null || state?.processPath ? "follow" : "manual");
+      }
+      return Promise.all([platform.getMonitors(), platform.getGeometry(), hostMonitorRequest]);
+    })()
       .then(([nextMonitors, nextGeometry, nextHostMonitorId]) => {
         if (disposed) return;
         // 別画面を一瞬表示してから切り替わらないよう、モニター一覧と同時に反映する。
@@ -57,11 +79,14 @@ export const OverlayPlacementPanel: React.FC<OverlayPlacementPanelProps> = ({ pl
       })
       .catch((error: unknown) => {
         console.error("[ChLens] コメントOverlay表示位置の初期化に失敗しました:", error);
+      })
+      .finally(() => {
+        if (!disposed) setIsModeChanging(false);
       });
     return () => {
       disposed = true;
     };
-  }, [platform]);
+  }, [attachment, platform]);
 
   useEffect(() => {
     // 追従による移動・サイズ変更もプレビュー上の枠へ反映する。
@@ -87,31 +112,35 @@ export const OverlayPlacementPanel: React.FC<OverlayPlacementPanelProps> = ({ pl
   useEffect(() => {
     return () => {
       if (geometryWriteTimerRef.current) clearTimeout(geometryWriteTimerRef.current);
+      // 調整直後に窓を閉じても、最後の座標を取りこぼさずnative側へ反映する。
+      applyPendingGeometry();
     };
-  }, []);
+  }, [applyPendingGeometry]);
 
   const handleGeometryChange = useCallback(
     (nextGeometry: CommentOverlayGeometry) => {
       // 変更理由: ドラッグ中の連続座標を40ms単位へまとめ、表示の追従性とnative IPC量を両立する。
       setGeometry(nextGeometry);
+      pendingGeometryRef.current = nextGeometry;
+      // native反映の間引きとは分け、閉じる直前の変更も保存する。
+      void platform.saveGeometry(nextGeometry).catch((error: unknown) => {
+        console.error("[ChLens] コメントOverlay表示位置の保存に失敗しました:", error);
+      });
       if (geometryWriteTimerRef.current) clearTimeout(geometryWriteTimerRef.current);
       geometryWriteTimerRef.current = setTimeout(() => {
         geometryWriteTimerRef.current = null;
-        void platform
-          .setGeometry(nextGeometry)
-          .then(() => platform.saveGeometry(nextGeometry))
-          .catch((error: unknown) => {
-            console.error("[ChLens] コメントOverlay表示位置の反映に失敗しました:", error);
-          });
+        applyPendingGeometry();
       }, 40);
     },
-    [platform],
+    [applyPendingGeometry, platform],
   );
 
   const handleModeChange = useCallback(
     (nextMode: PlacementMode) => {
       if (nextMode === mode) return;
       if (nextMode === "follow" || !attachment) {
+        if (geometryWriteTimerRef.current) clearTimeout(geometryWriteTimerRef.current);
+        applyPendingGeometry();
         // 追従先を選ぶまでは現在の位置のまま動かさない。
         setMode(nextMode);
         return;
@@ -126,7 +155,7 @@ export const OverlayPlacementPanel: React.FC<OverlayPlacementPanelProps> = ({ pl
         })
         .finally(() => setIsModeChanging(false));
     },
-    [attachment, mode],
+    [applyPendingGeometry, attachment, mode],
   );
 
   const isFollowing = mode === "follow";

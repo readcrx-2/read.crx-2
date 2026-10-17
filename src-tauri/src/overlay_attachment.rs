@@ -36,6 +36,33 @@ fn client_bounds(x: i32, y: i32, right: i32, bottom: i32) -> Option<TargetBounds
 pub struct AttachmentWindow {
   id: String,
   title: String,
+  #[serde(rename = "processPath")]
+  process_path: Option<String>,
+}
+
+#[cfg(windows)]
+fn process_path(pid: u32) -> Option<String> {
+  use windows_sys::Win32::{Foundation::CloseHandle, System::Threading::*};
+  unsafe {
+    let process = OpenProcess(PROCESS_QUERY_LIMITED_INFORMATION, 0, pid);
+    if process.is_null() {
+      log::warn!(
+        "追従先プロセスの取得に失敗しました（PID={pid}）: {}",
+        std::io::Error::last_os_error()
+      );
+      return None;
+    }
+    let mut path = vec![0u16; 32768];
+    let mut length = path.len() as u32;
+    let result = QueryFullProcessImageNameW(process, 0, path.as_mut_ptr(), &mut length);
+    let error = (result == 0).then(std::io::Error::last_os_error);
+    CloseHandle(process);
+    if let Some(error) = error {
+      log::warn!("追従先の実行ファイルの取得に失敗しました（PID={pid}）: {error}");
+      return None;
+    }
+    Some(String::from_utf16_lossy(&path[..length as usize]))
+  }
 }
 
 #[derive(Serialize)]
@@ -94,6 +121,7 @@ fn list_windows() -> Result<Vec<AttachmentWindow>, String> {
       windows.push(AttachmentWindow {
         id: format!("{}:{pid}", hwnd as usize),
         title: String::from_utf16_lossy(&title[..copied as usize]),
+        process_path: process_path(pid),
       });
     }
     1

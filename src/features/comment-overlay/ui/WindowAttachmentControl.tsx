@@ -105,6 +105,12 @@ export function WindowAttachmentControl({ attachment }: { attachment: Attachment
       <p className="mini-window__note">
         選んだウィンドウの内側に合わせて移動・サイズ変更します。最小化中はコメントを隠します。
       </p>
+      {state.processPath && (
+        <p className="mini-window__note">
+          追従先アプリを記憶しています。再起動後も同じアプリを探します。
+          {state.targetId == null && "追従先アプリの起動を待っています。"}
+        </p>
+      )}
       {(error || state.error) && <p role="alert">{error || state.error}</p>}
     </section>
   );

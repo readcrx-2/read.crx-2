@@ -297,25 +297,19 @@ export function OverlayApp({
   }, [archiveReplayEventBus]);
 
   useEffect(() => {
-    let saveTimer: ReturnType<typeof setTimeout> | null = null;
     let unwatchGeometry: (() => void) | null = null;
     let unwatchVisibility: (() => void) | null = null;
     let disposed = false;
     void platform
-      .loadGeometry()
-      .then(async (geometry) => {
-        if (geometry) {
+      // 配置の復元・保存はMainが担当し、このWebViewから追従中の範囲を上書きしない。
+      .getGeometry()
+      .then((geometry) => {
+        if (!disposed && geometry) {
           setOverlayGeometry(geometry);
-          return;
-        }
-        // 保存値がない初回だけnativeの現在値を読む。
-        const currentGeometry = await platform.getGeometry();
-        if (!disposed && currentGeometry) {
-          setOverlayGeometry(currentGeometry);
         }
       })
       .catch((error: unknown) => {
-        console.error("[ChLens] コメントOverlayのgeometry復元に失敗しました:", error);
+        console.error("[ChLens] コメントOverlayのgeometry取得に失敗しました:", error);
       });
     void platform
       .watchGeometry((geometry: CommentOverlayGeometry) => {
@@ -326,13 +320,6 @@ export function OverlayApp({
             ? current
             : geometry,
         );
-        if (saveTimer) clearTimeout(saveTimer);
-        saveTimer = setTimeout(() => {
-          saveTimer = null;
-          void platform.saveGeometry(geometry).catch((error: unknown) => {
-            console.error("[ChLens] コメントOverlayのgeometry自動保存に失敗しました:", error);
-          });
-        }, 250);
       })
       .then((cleanup) => {
         if (disposed) {
@@ -360,7 +347,6 @@ export function OverlayApp({
 
     return () => {
       disposed = true;
-      if (saveTimer) clearTimeout(saveTimer);
       unwatchGeometry?.();
       unwatchVisibility?.();
     };

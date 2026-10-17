@@ -34,3 +34,12 @@ fn 非Windowsでは追従先を一覧できず読み取れない() {
   assert!(super::list_comment_overlay_windows().unwrap().is_empty());
   assert!(super::read_comment_overlay_target("1:2".into()).is_err());
 }
+#[cfg(windows)]
+#[test]
+fn 実行中のプロセスから実行ファイルを取得できる() {
+  let path = super::process_path(std::process::id()).expect("実行ファイルを取得できる");
+  assert_eq!(
+    std::path::PathBuf::from(path),
+    std::env::current_exe().unwrap()
+  );
+}

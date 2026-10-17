@@ -57,6 +57,7 @@ vi.mock("@tauri-apps/api/window", () => ({
 }));
 
 import { COMMENT_OVERLAY_GEOMETRY_STORAGE_KEY } from "./geometry";
+import { COMMENT_OVERLAY_ATTACHMENT_STORAGE_KEY } from "./placement";
 import { COMMENT_OVERLAY_VISIBILITY_EVENT_NAME, createTauriCommentOverlayPlatform } from "./tauri";
 
 type VisibilityEventHandler = (event: { payload: unknown }) => void;
@@ -89,6 +90,7 @@ function createMemoryStorage(): Storage {
 describe("TauriコメントOverlay window platform", () => {
   beforeEach(() => {
     vi.stubGlobal("localStorage", createMemoryStorage());
+    tauriMocks.invoke.mockReset();
     tauriMocks.event.emit.mockReset();
     tauriMocks.event.emit.mockResolvedValue(undefined);
     tauriMocks.event.listen.mockReset();
@@ -148,6 +150,7 @@ describe("TauriコメントOverlay window platform", () => {
     tauriMocks.window.hide.mockClear();
     const platform = createTauriCommentOverlayPlatform();
     tauriMocks.invoke.mockResolvedValue({ x: -1200, y: 80, width: 800, height: 600 });
+    tauriMocks.invoke.mockResolvedValueOnce([]);
     await platform.attachment!.setTarget("10:20");
     expect(tauriMocks.window.setPosition).toHaveBeenLastCalledWith({ x: -1200, y: 80 });
     expect(tauriMocks.window.setSize).toHaveBeenLastCalledWith({ width: 800, height: 600 });
@@ -173,6 +176,7 @@ describe("TauriコメントOverlay window platform", () => {
     const errorLog = vi.spyOn(console, "error").mockImplementation(() => {});
     const platform = createTauriCommentOverlayPlatform();
     tauriMocks.invoke.mockResolvedValue({ x: 0, y: 0, width: 800, height: 600 });
+    tauriMocks.invoke.mockResolvedValueOnce([]);
     await platform.attachment!.setTarget("10:20");
     tauriMocks.invoke.mockRejectedValue(new Error("対象が閉じました"));
     await vi.advanceTimersByTimeAsync(100);
@@ -182,6 +186,7 @@ describe("TauriコメントOverlay window platform", () => {
     });
     expect(errorLog).toHaveBeenCalled();
     tauriMocks.invoke.mockResolvedValue({ x: 0, y: 0, width: 800, height: 600 });
+    tauriMocks.invoke.mockResolvedValueOnce([]);
     await platform.attachment!.setTarget("10:21");
     await platform.setGeometry({ x: 100, y: 100, width: 640, height: 360 });
     expect(platform.attachment!.getState().targetId).toBeNull();
@@ -196,6 +201,7 @@ describe("TauriコメントOverlay window platform", () => {
     tauriMocks.window.show.mockClear();
     const platform = createTauriCommentOverlayPlatform();
     tauriMocks.invoke.mockResolvedValue(null);
+    tauriMocks.invoke.mockResolvedValueOnce([]);
     await platform.attachment!.setTarget("10:20");
     await platform.hide();
     await platform.attachment!.setTarget(null);
@@ -214,6 +220,100 @@ describe("TauriコメントOverlay window platform", () => {
     expect(tauriMocks.window.setSize).toHaveBeenCalledWith(
       expect.objectContaining({ width: 320, height: 80 }),
     );
+  });
+
+  it("再起動後は保存した実行ファイルとタイトルから新しいウィンドウIDを取得する", async () => {
+    vi.useFakeTimers();
+    const manual = { x: 32, y: 64, width: 640, height: 128 };
+    localStorage.setItem(COMMENT_OVERLAY_GEOMETRY_STORAGE_KEY, JSON.stringify(manual));
+    localStorage.setItem(
+      COMMENT_OVERLAY_ATTACHMENT_STORAGE_KEY,
+      JSON.stringify({ processPath: "C:/Apps/player.exe", title: "動画プレイヤー" }),
+    );
+    tauriMocks.invoke.mockImplementation(async (command) => {
+      if (command === "list_comment_overlay_windows") {
+        return [
+          { id: "30:40", title: "別の動画", processPath: "c:/apps/PLAYER.exe" },
+          { id: "50:60", title: "動画プレイヤー", processPath: "c:/apps/PLAYER.exe" },
+        ];
+      }
+      return { x: 400, y: 200, width: 1200, height: 800 };
+    });
+    const platform = createTauriCommentOverlayPlatform();
+    await Promise.all([platform.restorePlacement!(), platform.show()]);
+
+    expect(platform.attachment!.getState().targetId).toBe("50:60");
+    expect(tauriMocks.invoke).toHaveBeenCalledWith("read_comment_overlay_target", { id: "50:60" });
+    expect(localStorage.getItem(COMMENT_OVERLAY_GEOMETRY_STORAGE_KEY)).toBe(JSON.stringify(manual));
+    expect(tauriMocks.window.setSize).toHaveBeenLastCalledWith({ width: 1200, height: 800 });
+
+    await platform.attachment!.setTarget(null);
+    expect(localStorage.getItem(COMMENT_OVERLAY_ATTACHMENT_STORAGE_KEY)).toBeNull();
+    expect(tauriMocks.window.setSize).toHaveBeenLastCalledWith({ width: 640, height: 128 });
+  });
+
+  it("追従先アプリがない間は隠して待ち、起動・再起動後の窓へ自動で追従する", async () => {
+    vi.useFakeTimers();
+    tauriMocks.window.show.mockClear();
+    localStorage.setItem(
+      COMMENT_OVERLAY_ATTACHMENT_STORAGE_KEY,
+      JSON.stringify({ processPath: "C:/Apps/player.exe", title: "動画プレイヤー" }),
+    );
+    let windows: { id: string; title: string; processPath: string }[] = [];
+    let targetClosed = false;
+    const errorLog = vi.spyOn(console, "error").mockImplementation(() => {});
+    tauriMocks.invoke.mockImplementation(async (command) => {
+      if (command === "list_comment_overlay_windows") return windows;
+      if (targetClosed) throw new Error("追従先が閉じられました");
+      return { x: 400, y: 200, width: 1200, height: 800 };
+    });
+    const platform = createTauriCommentOverlayPlatform();
+    await platform.show();
+    expect(tauriMocks.window.show).not.toHaveBeenCalled();
+    expect(platform.attachment!.getState().processPath).toBe("C:/Apps/player.exe");
+    windows = [{ id: "30:40", title: "新しい動画", processPath: "C:/Apps/player.exe" }];
+    await vi.advanceTimersByTimeAsync(1000);
+    expect(platform.attachment!.getState().targetId).toBe("30:40");
+    expect(tauriMocks.window.show).toHaveBeenCalledTimes(1);
+
+    targetClosed = true;
+    await vi.advanceTimersByTimeAsync(100);
+    expect(platform.attachment!.getState().targetId).toBeNull();
+    targetClosed = false;
+    windows = [{ id: "70:80", title: "再起動後の動画", processPath: "C:/Apps/player.exe" }];
+    await vi.advanceTimersByTimeAsync(1000);
+    expect(platform.attachment!.getState().targetId).toBe("70:80");
+    expect(platform.attachment!.getState().error).toBeNull();
+    expect(tauriMocks.window.setSize).toHaveBeenCalledTimes(2);
+    expect(errorLog).toHaveBeenCalled();
+    await platform.attachment!.setTarget(null);
+    errorLog.mockRestore();
+  });
+
+  it("選んだ追従先は実行ファイルで保存し、手動指定に戻すと記憶を解除する", async () => {
+    vi.useFakeTimers();
+    tauriMocks.invoke.mockResolvedValue({ x: 0, y: 0, width: 800, height: 600 });
+    tauriMocks.invoke.mockResolvedValueOnce([
+      { id: "10:20", title: "動画プレイヤー", processPath: "C:/Apps/player.exe" },
+    ]);
+    const platform = createTauriCommentOverlayPlatform();
+    await platform.attachment!.setTarget("10:20");
+    expect(JSON.parse(localStorage.getItem(COMMENT_OVERLAY_ATTACHMENT_STORAGE_KEY)!)).toEqual({
+      processPath: "C:/Apps/player.exe",
+      title: "動画プレイヤー",
+    });
+    await platform.setGeometry({ x: 100, y: 100, width: 640, height: 360 });
+    expect(localStorage.getItem(COMMENT_OVERLAY_ATTACHMENT_STORAGE_KEY)).toBeNull();
+  });
+
+  it("表示専用窓と過去実況窓では配置の復元や追従ループを重複起動しない", async () => {
+    localStorage.setItem(
+      COMMENT_OVERLAY_ATTACHMENT_STORAGE_KEY,
+      JSON.stringify({ processPath: "C:/Apps/player.exe", title: "動画プレイヤー" }),
+    );
+    const platform = createTauriCommentOverlayPlatform({ managePlacement: false });
+    await platform.show();
+    expect(tauriMocks.invoke).not.toHaveBeenCalled();
   });
 
   it("保存済みgeometryを読み込みnative windowへ復元する", async () => {

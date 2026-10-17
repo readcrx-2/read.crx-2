@@ -1,6 +1,6 @@
 import "@testing-library/jest-dom/vitest";
 
-import { cleanup, fireEvent, render, screen, waitFor } from "@testing-library/react";
+import { act, cleanup, fireEvent, render, screen, waitFor } from "@testing-library/react";
 import { afterEach, describe, expect, it, vi } from "vite-plus/test";
 
 import type { CommentOverlayWindowPlatform } from "../platform/types";
@@ -8,7 +8,7 @@ import { OverlayPlacementPanel } from "./OverlayPlacementPanel";
 
 function createPlatform(targetId: string | null): {
   platform: CommentOverlayWindowPlatform;
-  setTarget: ReturnType<typeof vi.fn>;
+  setTarget: (id: string | null) => Promise<void>;
 } {
   let currentTarget = targetId;
   const setTarget = vi.fn(async (id: string | null) => {
@@ -99,5 +99,30 @@ describe("OverlayPlacementPanel", () => {
     );
     fireEvent.click(screen.getByRole("button", { name: "前のディスプレイをプレビュー" }));
     expect(screen.getByRole("img", { name: "メインモニターのプレビュー" })).toBeInTheDocument();
+  });
+
+  it("配置の復元完了を待って追従モードと保存範囲を表示する", async () => {
+    const { platform, setTarget } = createPlatform(null);
+    platform.restorePlacement = async () => {
+      await setTarget("player");
+    };
+    render(<OverlayPlacementPanel platform={platform} />);
+    await waitFor(() =>
+      expect(screen.getByRole("radio", { name: "ウィンドウに追従" })).toBeChecked(),
+    );
+    expect(screen.getByLabelText("追従先ウィンドウ")).toHaveValue("player");
+  });
+
+  it("調整直後に窓を閉じても最後の範囲を保存して反映する", async () => {
+    const { platform } = createPlatform(null);
+    const saveGeometry = vi.spyOn(platform, "saveGeometry");
+    const setGeometry = vi.spyOn(platform, "setGeometry");
+    const { unmount } = render(<OverlayPlacementPanel platform={platform} />);
+    await waitFor(() => expect(screen.getByText("800 × 600")).toBeInTheDocument());
+    fireEvent.doubleClick(screen.getByTestId("overlay-control-panel-desktop"));
+    const expected = { x: 0, y: 0, width: 1920, height: 1080 };
+    expect(saveGeometry).toHaveBeenLastCalledWith(expected);
+    await act(async () => unmount());
+    expect(setGeometry).toHaveBeenLastCalledWith(expected);
   });
 });

@@ -26,13 +26,21 @@ export interface CommentOverlayMonitor {
   scaleFactor: number;
 }
 
+export interface CommentOverlayAttachmentWindow {
+  id: string;
+  title: string;
+  processPath?: string | null;
+}
+
 export interface CommentOverlayWindowPlatform {
-  /** 外部ウィンドウの識別子は再起動後に再利用せず、その起動中だけ保持する。 */
+  /** 再起動後は保存した実行ファイルから探し直し、古いウィンドウIDは再利用しない。 */
   attachment?: {
-    listWindows(): Promise<readonly { id: string; title: string }[]>;
-    getState(): { targetId: string | null; error: string | null };
+    listWindows(): Promise<readonly CommentOverlayAttachmentWindow[]>;
+    getState(): { targetId: string | null; error: string | null; processPath?: string };
     setTarget(id: string | null): Promise<void>;
   };
+  /** 配置の復元はMainだけが行い、表示前と調整窓の初期化で完了を待つ。 */
+  restorePlacement?(): Promise<void>;
   show(): Promise<void>;
   hide(): Promise<void>;
   focus(): Promise<void>;

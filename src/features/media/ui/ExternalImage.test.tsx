@@ -3,6 +3,9 @@ import "@testing-library/jest-dom/vitest";
 import { cleanup, fireEvent, render, screen, waitFor } from "@testing-library/react";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vite-plus/test";
 
+const loggerMock = vi.hoisted(() => ({ error: vi.fn(), warn: vi.fn(), debug: vi.fn() }));
+vi.mock("src/app/logger", () => ({ createLogger: () => loggerMock }));
+
 const { fetchTauriBinaryMock, isTauriRuntimeMock } = vi.hoisted(() => ({
   fetchTauriBinaryMock: vi.fn(),
   isTauriRuntimeMock: vi.fn(),
@@ -82,16 +85,15 @@ describe("ExternalImage", () => {
     isTauriRuntimeMock.mockReturnValue(true);
     fetchTauriBinaryMock.mockRejectedValue(new Error("network failure"));
     const onError = vi.fn();
-    const logError = vi.spyOn(console, "error").mockImplementation(() => {});
+    loggerMock.error.mockClear();
 
     render(<ExternalImage src={imageUrl} alt="テスト画像" onError={onError} />);
     fireEvent.error(screen.getByRole("img", { name: "テスト画像" }));
 
     await waitFor(() => expect(onError).toHaveBeenCalledOnce());
-    expect(logError).toHaveBeenCalledWith(
-      "[ExternalImage] Tauri経由の外部画像取得に失敗しました",
+    expect(loggerMock.error).toHaveBeenCalledWith(
+      "Tauri経由の外部画像取得に失敗しました",
       expect.objectContaining({ url: imageUrl }),
     );
-    logError.mockRestore();
   });
 });

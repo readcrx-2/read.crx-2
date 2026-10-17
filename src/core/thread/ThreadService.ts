@@ -1,11 +1,14 @@
 import { toCanonicalThread } from "packages/chlib/src/index";
 import type { ThreadRes } from "packages/chlib/src/parser/ThreadParser";
+import { createLogger } from "src/app/logger";
 import { evaluateThreadNg } from "src/core/ng/ThreadNgEvaluator";
 import type { CorePorts } from "src/core/ports/registry";
 import type { IRes, IThreadDetail, IThreadService } from "src/core/ports/thread";
 import { replace as replaceStrTxt } from "src/core/thread/ReplaceStrTxt";
 import Thread from "src/core/thread/Thread";
 import { toViewRes } from "src/core/thread/to-view-res";
+
+const logger = createLogger("core/thread");
 
 // 移行理由: 取得集約と置換処理の既存契約を保ちつつ、要求状態と返却モデルを明示的な型で管理する。
 interface GetThreadOptions {
@@ -60,7 +63,7 @@ class ThreadServiceImpl implements IThreadService {
             options.onCache(existingRequest.lastCacheResult);
           } catch (error) {
             // 遅れて合流した表示先の例外でも、共有中の取得結果は他の利用者へ返し続ける。
-            console.error("[ThreadService] キャッシュ通知に失敗しました:", error);
+            logger.error("キャッシュ通知に失敗しました:", error);
           }
         }
       }
@@ -102,7 +105,7 @@ class ThreadServiceImpl implements IThreadService {
           callback(result);
         } catch (error) {
           // 一つの表示先の例外で他の購読先やスレ取得自体を止めない。
-          console.error("[ThreadService] キャッシュ通知に失敗しました:", error);
+          logger.error("キャッシュ通知に失敗しました:", error);
         }
       }
     };
@@ -114,7 +117,7 @@ class ThreadServiceImpl implements IThreadService {
       return this._formatResult(thread);
     } catch (error) {
       // 変更理由: 取得失敗時もキャッシュ結果を返す従来動作を保ちつつ、原因を追跡可能にする。
-      console.error("[ThreadService] thread fetch failed:", error);
+      logger.error("thread fetch failed:", error);
       const result = this._formatResult(thread);
       result.message = thread.message || "スレッドの取得に失敗しました";
       return result;

@@ -1,9 +1,12 @@
 import { Star } from "lucide-react";
 import { ChURL } from "packages/chlib/src/url/ChURL";
 import React from "react";
+import { createLogger } from "src/app/logger";
 import { getStore2String, setStore2String } from "src/app/Store2Storage";
 import type { IThread } from "src/service-container/interfaces";
 import type { ColumnDef } from "src/view/browser/components/SimpleDataTable";
+
+const logger = createLogger("thread-list");
 
 const UI_CACHE_STORE = "UICache";
 const threadListCacheKey = (boardUrl: string) => `threadList:${boardUrl}`;
@@ -21,7 +24,7 @@ export async function getThreadListCache(boardUrl: string): Promise<IThread[] | 
       | undefined;
     return entry?.data ?? null;
   } catch (error) {
-    console.error("[ThreadListShared] cache read failed:", error);
+    logger.error("cache read failed:", error);
     return null;
   }
 }
@@ -32,7 +35,7 @@ export async function setThreadListCache(boardUrl: string, threads: IThread[]): 
     const store = platform.storage.getStore(UI_CACHE_STORE);
     await store.put({ url: threadListCacheKey(boardUrl), data: threads });
   } catch (error) {
-    console.error("[ThreadListShared] cache save failed:", error);
+    logger.error("cache save failed:", error);
   }
 }
 
@@ -114,7 +117,7 @@ export function readThreadListSortPreference(boardUrl: string): ThreadListSortPr
       return { column: preference.column, direction };
     }
   } catch (error) {
-    console.error("[ThreadListShared] sort preference read failed:", error);
+    logger.error("sort preference read failed:", error);
   }
   return DEFAULT_THREAD_LIST_SORT;
 }
@@ -129,7 +132,7 @@ export function writeThreadListSortPreference(
     stored[resolveThreadListSortSiteKey(boardUrl)] = preference;
     void setStore2String(THREAD_LIST_SORT_STORAGE_KEY, JSON.stringify(stored));
   } catch (error) {
-    console.error("[ThreadListShared] sort preference save failed:", error);
+    logger.error("sort preference save failed:", error);
   }
 }
 

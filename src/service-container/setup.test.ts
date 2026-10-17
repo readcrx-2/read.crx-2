@@ -150,7 +150,10 @@ vi.mock("src/app/Notification", () => ({
 vi.mock("src/core/thread/ThreadService", () => ({
   createThreadService: () => ({ getThread: vi.fn() }),
 }));
-vi.mock("src/app/logger", () => ({ setConsolaLevel: vi.fn() }));
+vi.mock("src/app/logger", () => {
+  const stubLogger = { error: vi.fn(), warn: vi.fn(), info: vi.fn(), debug: vi.fn() };
+  return { setConsolaLevel: vi.fn(), createLogger: () => stubLogger };
+});
 vi.mock("src/service-container/Container", () => ({ container: {} }));
 vi.mock("src/service-container/toast-store", () => ({ toastStore: {} }));
 

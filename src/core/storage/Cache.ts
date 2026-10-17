@@ -1,7 +1,10 @@
+import { createLogger } from "src/app/logger";
 import { platform } from "src/app/platform";
 import type { ObjectStore } from "src/app/platform/types";
 import { isHttps } from "src/core/network/url-protocol";
 import { getTauriRepositories, isTauriRuntime } from "src/core/storage/TauriDrizzleBridge";
+
+const logger = createLogger("core/storage");
 
 /**
  * キャッシュデータを管理するクラス
@@ -451,7 +454,7 @@ export default class Cache {
     } catch (e) {
       const error = e as Error;
       if (error.message !== "キャッシュが存在しません") {
-        console.error("Cache::get: トランザクション中断", error);
+        logger.error("Cache::get: トランザクション中断", error);
       }
       throw e;
     }
@@ -523,7 +526,7 @@ export default class Cache {
         kind: this.kind || null,
       });
     } catch (e) {
-      console.error("Cache::put: トランザクション中断", e);
+      logger.error("Cache::put: トランザクション中断", e);
       throw e;
     }
   }
@@ -542,7 +545,7 @@ export default class Cache {
 
       await Cache._getStore().delete(this.key);
     } catch (e) {
-      console.error("Cache::delete: トランザクション中断");
+      logger.error("Cache::delete: トランザクション中断");
       throw e;
     }
   }

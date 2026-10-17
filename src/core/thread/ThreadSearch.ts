@@ -1,8 +1,11 @@
 import { ChURL } from "packages/chlib/src/index";
+import { createLogger } from "src/app/logger";
 import { ask as askBoardTitleSolver } from "src/core/board/BoardTitleSolver.js";
 import { Request } from "src/core/network/HTTP.ts";
 import { setProtocol } from "src/core/network/URL.ts";
 import { decodeCharReference } from "src/core/util/char-reference";
+
+const logger = createLogger("core/thread");
 
 interface ThreadSearchResult {
   url: string;
@@ -26,7 +29,7 @@ async function parseItem(item: Element, protocol: string): Promise<ThreadSearchR
   try {
     boardTitle = await askBoardTitleSolver(boardUrl);
   } catch (error) {
-    console.error("[ThreadSearch] 板名の取得に失敗しました:", error);
+    logger.error("板名の取得に失敗しました:", error);
     boardTitle = "";
   }
   return {
@@ -67,7 +70,7 @@ export default class ThreadSearch {
       const rss = parser.parseFromString(body, "application/xml");
       items = Array.from(rss.getElementsByTagName("item"));
     } catch (error) {
-      console.error("[ThreadSearch] RSSの解析に失敗しました:", error);
+      logger.error("RSSの解析に失敗しました:", error);
       throw new Error("検索のJSONのパースに失敗しました", { cause: error });
     }
     return Promise.all(items.map((item) => parseItem(item, this.protocol)));

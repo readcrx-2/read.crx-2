@@ -49,9 +49,7 @@ export function useThreadReadState({
   const scrollToResponse = useCallback(
     (resNum: number, options?: { highlight?: boolean; offset?: number }) =>
       scrollThreadToResponse(rootRef.current, resNum, options),
-    // rootRef は安定した参照なので依存配列から除外する
-    // oxlint-disable-next-line react-hooks/exhaustive-deps
-    [],
+    [rootRef],
   );
 
   const saveCurrentReadState = useCallback(async () => {
@@ -86,9 +84,7 @@ export function useThreadReadState({
     } catch (error) {
       logger.error(error);
     }
-    // rootRef は安定した参照のため依存配列から除外する
-    // oxlint-disable-next-line react-hooks/exhaustive-deps
-  }, [isActive, isInitialReadStateResolved, threadUrl, responses.length]);
+  }, [isActive, isInitialReadStateResolved, threadUrl, responses.length, rootRef]);
 
   const scheduleReadStateSave = useCallback(() => {
     if (saveReadStateTimerRef.current != null) {
@@ -249,12 +245,11 @@ export function useThreadReadState({
       }
       void saveCurrentReadState();
     };
-    // rootRef は安定した参照のため依存配列から除外する
-    // oxlint-disable-next-line react-hooks/exhaustive-deps
   }, [
     isActive,
     isInitialReadStateResolved,
     responses.length,
+    rootRef,
     saveCurrentReadState,
     scheduleReadStateSave,
     viewWindow,

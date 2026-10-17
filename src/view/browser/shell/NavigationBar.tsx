@@ -16,14 +16,7 @@ import {
   Settings,
   Star,
 } from "lucide-react";
-import React, {
-  useCallback,
-  useEffect,
-  useMemo,
-  useRef,
-  useState,
-  useSyncExternalStore,
-} from "react";
+import React, { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { createPortal } from "react-dom";
 import { usePageBookmark } from "src/features/bookmark/browser/use-page-bookmark";
 import { useNavHistoryMenuItems } from "src/features/tabs/browser/use-nav-history-menu-items";
@@ -34,10 +27,7 @@ import {
   type BrowserCommandContext,
   resolveBrowserCommands,
 } from "src/view/browser/commands/browser-commands";
-import {
-  commandPalette,
-  commandPaletteStore,
-} from "src/view/browser/commands/command-palette-store";
+import { commandPalette } from "src/view/browser/commands/command-palette-store";
 import { TAB_COMMAND_IDS } from "src/view/browser/commands/tab-command-runtime";
 import { Omnibar } from "src/view/browser/components/Omnibar";
 import {
@@ -65,15 +55,10 @@ import {
   type QuickAccessFilterPageType,
 } from "src/view/browser/utils/filter-toolbar-events";
 import {
-  parseInternalBrowserPage,
-  parseOmnibarBrowserPage,
-} from "src/view/browser/utils/link-routing";
-import {
   getManualRefreshScopeKey,
   runManualRefresh,
   useManualRefreshCooldown,
 } from "src/view/browser/utils/manual-refresh";
-import { type OmnibarSuggestion } from "src/view/browser/utils/omnibar";
 import { loadOmnibarSources } from "src/view/browser/utils/omnibar-sources";
 import { isPageRefreshable } from "src/view/browser/utils/refreshable-pages";
 import {
@@ -81,6 +66,9 @@ import {
   createSettingsPage,
   type QuickAccessPage,
 } from "src/view/browser/utils/tab-pages";
+
+import { useCommandPaletteFocus } from "./use-command-palette-focus";
+import { useOmnibarNavigation } from "./use-omnibar-navigation";
 
 interface MenuPosition {
   x: number;
@@ -92,20 +80,6 @@ const OMNIBAR_MAX_SUGGESTIONS = 8;
 const NOOP_OPEN_NEXT_THREAD_SEARCH_DIALOG = async (): Promise<void> => undefined;
 const NOOP_OPEN_SIMILAR_THREAD_SEARCH_DIALOG = async (): Promise<void> => undefined;
 const NOOP_OPEN_ARCHIVE_REPLAY_WINDOW = (): void => undefined;
-
-// URLバーからの入力でページ種別を推定してナビゲートする
-function navigateByUrl(url: string, dispatch: ReturnType<typeof useTabStore>["dispatch"]) {
-  const trimmed = url.trim();
-  if (!trimmed) return;
-
-  const parsed = parseOmnibarBrowserPage(trimmed);
-  if (!parsed) return;
-
-  // 変更理由: ブラウザ標準と同じく、URL直入力は実際に訪れたページだけを履歴へ積む。
-  // 対象スレの板を自動補完すると、戻る操作が前居た場所ではなく対象板へ飛び、
-  // 直感的でないため補完しない。新規タブ側の正規履歴は buildHierarchyForNewTab が担う。
-  dispatch(tabActions.navigate(parsed));
-}
 
 interface NavigationBarProps {
   openNextThreadSearchDialog?: () => Promise<void>;
@@ -152,11 +126,6 @@ export const NavigationBar: React.FC<NavigationBarProps> = ({
   const refreshButtonRef = useRef<HTMLButtonElement>(null);
   const menuButtonRef = useRef<HTMLButtonElement>(null);
   const urlInputRef = useRef<HTMLInputElement>(null);
-  const paletteState = useSyncExternalStore(
-    commandPaletteStore.subscribe,
-    commandPaletteStore.getState,
-    commandPaletteStore.getState,
-  );
   const [portalContainer, setPortalContainer] = useState<HTMLElement | null>(null);
   const tabBarOrientation = useTabBarOrientation();
   // 変更理由: 垂直モードではペイン上部のボタン行をなくし、自ペインの TitleBar 受け口へ
@@ -201,95 +170,10 @@ export const NavigationBar: React.FC<NavigationBarProps> = ({
     submitResponseJump,
   } = useResponseJumpDialog(viewPage);
 
-  const openSuggestion = useCallback(
-    (suggestion: OmnibarSuggestion) => {
-      if (suggestion.sources.includes("direct")) {
-        if (suggestion.openInNewTab) {
-          // 変更理由: URL直入力から明示的に別タブで開くときは、新規タブの正規履歴に乗せて
-          // フォーカスを移す。同一タブの履歴へ対象板を補完しない方針と両立させるため。
-          const parsed = parseOmnibarBrowserPage(suggestion.url);
-          if (!parsed) {
-            return;
-          }
-
-          const page =
-            parsed.type === "threadList"
-              ? {
-                  ...parsed,
-                  title: suggestion.title,
-                  boardTitle: suggestion.boardTitle || suggestion.title,
-                }
-              : { ...parsed, title: suggestion.title };
-          dispatch(tabActions.openInNewTabForce(page, { focus: true }));
-          urlInputRef.current?.blur();
-          return;
-        }
-
-        navigateByUrl(suggestion.url, dispatch);
-        urlInputRef.current?.blur();
-        return;
-      }
-
-      const parsed = parseInternalBrowserPage(suggestion.url);
-      if (!parsed) {
-        return;
-      }
-
-      dispatch(
-        tabActions.navigate({
-          ...parsed,
-          title: suggestion.title,
-          ...(parsed.type === "threadList"
-            ? { boardTitle: suggestion.boardTitle || suggestion.title }
-            : {}),
-        }),
-      );
-
-      urlInputRef.current?.blur();
-    },
-    [dispatch],
-  );
-
-  const getDirectInputSuggestion = useCallback(
-    (inputValue: string, currentDisplayUrl: string): OmnibarSuggestion[] | null => {
-      const trimmed = inputValue.trim();
-      if (!trimmed || trimmed === currentDisplayUrl.trim()) {
-        return null;
-      }
-
-      const parsed = parseOmnibarBrowserPage(trimmed);
-      if (!parsed) {
-        return null;
-      }
-
-      const boardTitle = parsed.type === "threadList" ? parsed.boardTitle : "";
-
-      // 変更理由: URL直入力は同一タブで開くだけでなく、新しいタブで開く選択肢も並べる。
-      // 先頭が通常の「開く」、次が「新しいタブで開く」で、矢印キーとEnterでも選べる。
-      return [
-        {
-          url: trimmed,
-          title: trimmed,
-          boardTitle,
-          score: Number.POSITIVE_INFINITY,
-          isBookmark: false,
-          sources: ["direct"],
-          actionLabel: "URLを開く",
-        },
-        {
-          url: trimmed,
-          title: trimmed,
-          boardTitle,
-          score: Number.POSITIVE_INFINITY,
-          isBookmark: false,
-          sources: ["direct"],
-          actionLabel: "URLを新しいタブで開く",
-          openInNewTab: true,
-        },
-      ];
-    },
-    [],
-  );
+  const { submitUrl, openSuggestion, getDirectInputSuggestion } = useOmnibarNavigation({
+    dispatch,
+    urlInputRef,
+  });
 
   const context = useMemo<BrowserCommandContext>(
     () => ({
@@ -361,9 +245,7 @@ export const NavigationBar: React.FC<NavigationBarProps> = ({
     maxSuggestions: OMNIBAR_MAX_SUGGESTIONS,
     loadEntries: loadOmnibarSources,
     onSelectSuggestion: openSuggestion,
-    onSubmitInput: (url) => {
-      navigateByUrl(url, dispatch);
-    },
+    onSubmitInput: submitUrl,
     commands,
     recentCommandIds,
     onSelectCommand: (command) => {
@@ -372,58 +254,16 @@ export const NavigationBar: React.FC<NavigationBarProps> = ({
     getDirectInputSuggestion,
   });
 
-  useEffect(() => {
-    if (!isActivePane) {
-      return;
-    }
-
-    const handleShortcut = (event: KeyboardEvent) => {
-      if (!(event.ctrlKey || event.metaKey) || event.altKey) {
-        return;
-      }
-
-      const key = event.key.toLowerCase();
-      // Ctrl/Cmd+LはブラウザのURL入力に任せ、アプリはコマンドパレットのショートカットだけを扱う。
-      if (event.shiftKey && key === "p") {
-        event.preventDefault();
-        if (paletteState.opened && paletteState.mode === "command") {
-          commandPalette.close();
-        } else {
-          commandPalette.open("command");
-        }
-      }
-    };
-
-    window.addEventListener("keydown", handleShortcut);
-    return () => window.removeEventListener("keydown", handleShortcut);
-  }, [isActivePane, paletteState.mode, paletteState.opened]);
-
-  useEffect(() => {
-    if (!paletteState.opened || !isActivePane) {
-      return;
-    }
-
-    setIsUrlExpanded(true);
-    activate(paletteState.mode);
-  }, [activate, isActivePane, paletteState.mode, paletteState.opened]);
-
-  useEffect(() => {
-    if (!paletteState.opened || !isActivePane || !isUrlExpanded) {
-      return;
-    }
-
-    urlInputRef.current?.focus();
-  }, [isActivePane, isUrlExpanded, paletteState.opened]);
-
-  useEffect(() => {
-    if (!isUrlExpanded || paletteState.opened || !isActivePane) {
-      return;
-    }
-
-    // 変更理由: URLバーを展開した直後に入力欄へ操作を引き継ぎ、候補取得を開始して
-    // 下矢印のクリックだけで検索操作へ移れるようにする。
-    urlInputRef.current?.focus();
-  }, [isActivePane, isUrlExpanded, paletteState.opened]);
+  const paletteState = useCommandPaletteFocus({
+    isActivePane,
+    isUrlExpanded,
+    setIsUrlExpanded,
+    urlInputRef,
+    activate,
+    handleBlur,
+    omnibarMode,
+    isOmnibarOpen,
+  });
 
   const handleOmnibarBlur = useCallback(
     (event: React.FocusEvent<HTMLDivElement>) => {
@@ -444,23 +284,6 @@ export const NavigationBar: React.FC<NavigationBarProps> = ({
     },
     [handleBlur, omnibarMode, paletteState.opened, useTitleBarSlot],
   );
-
-  useEffect(() => {
-    const isCommandPaletteActive =
-      paletteState.opened || (omnibarMode === "command" && isOmnibarOpen);
-    if (!isActivePane || !isCommandPaletteActive) {
-      return;
-    }
-
-    // 変更理由: OSや別ウィンドウへフォーカスが移ると入力欄のblurが発火しない環境があるため、
-    // コマンドパレットが開いている間はウィンドウのフォーカスアウトでも状態を閉じる。
-    const handleWindowBlur = () => {
-      handleBlur();
-      commandPalette.close();
-    };
-    window.addEventListener("blur", handleWindowBlur);
-    return () => window.removeEventListener("blur", handleWindowBlur);
-  }, [handleBlur, isActivePane, isOmnibarOpen, omnibarMode, paletteState.opened]);
 
   const handleRefresh = useCallback(() => {
     setRefreshMenuPosition(null);

@@ -82,9 +82,8 @@ function usePersistedSet(
   useEffect(() => {
     const arr = loadStringArrayFromConfig(configKey);
     setSet(new Set(transform ? arr.map(transform) : arr));
-    // transform は外部で定義された純粋関数なので deps 不要
-    // oxlint-disable-next-line react-hooks/exhaustive-deps
-  }, [configKey]);
+    // transform は呼び出し側がモジュールスコープの関数を渡す前提。インライン関数を渡すと毎回再読込になる。
+  }, [configKey, transform]);
 
   const add = useCallback(
     (item: string) => {

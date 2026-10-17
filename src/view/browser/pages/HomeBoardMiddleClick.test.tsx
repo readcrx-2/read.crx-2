@@ -18,6 +18,14 @@ const { historyRecords, favoriteBoards, removeBookmarkMock, copyTextMock, toastE
     favoriteBoards: [{ url: "https://example.com/sample/", title: "サンプル板" }],
   }));
 
+const loggerMock = vi.hoisted(() => ({
+  error: vi.fn(),
+  warn: vi.fn(),
+  info: vi.fn(),
+  debug: vi.fn(),
+}));
+vi.mock("src/app/logger", () => ({ createLogger: () => loggerMock }));
+
 const { openedBoards, askBoardTitleMock, getCachedTitlesMock, listeners } = vi.hoisted(() => ({
   openedBoards: { raw: "[]" },
   askBoardTitleMock: vi.fn(async (_url: string): Promise<string | null> => "表示用の板名"),
@@ -377,12 +385,12 @@ describe("ホームの板項目のミドルクリック", () => {
 
   it("削除の例外を通知し、お気に入り板を画面に残す", async () => {
     removeBookmarkMock.mockRejectedValueOnce(new Error("保存失敗"));
-    const logger = vi.spyOn(console, "error").mockImplementation(() => undefined);
+    loggerMock.error.mockClear();
     await renderPage();
     await openFavoriteMenu();
     fireEvent.click(screen.getByRole("button", { name: "ブックマークを削除" }));
     await waitFor(() => expect(toastErrorMock).toHaveBeenCalled());
-    expect(logger).toHaveBeenCalled();
+    expect(loggerMock.error).toHaveBeenCalled();
     expect(screen.getAllByRole("button", { name: /サンプル板/ })).toHaveLength(2);
   });
 

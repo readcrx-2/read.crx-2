@@ -233,6 +233,9 @@ export function createTauriCommentOverlayPlatform({
   };
 
   const platform: CommentOverlayWindowPlatform = {
+    async setAlwaysOnTop(enabled) {
+      await (await getCommentOverlayWindow()).setAlwaysOnTop(enabled);
+    },
     attachment: {
       listWindows: () => invoke("list_comment_overlay_windows"),
       getState: () => ({

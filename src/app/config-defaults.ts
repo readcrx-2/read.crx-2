@@ -64,6 +64,8 @@ export const DEFAULT_CONFIG: Readonly<Record<string, string>> = {
   comment_overlay_fetch_all_threads: "off",
   // 表示領域は自由な縦横比を既定とし、16:9への固定は実況パネルから明示的に選ぶ。
   comment_overlay_lock_aspect_ratio: "off",
+  // 最前面への固定は利用者が選んだときだけ有効にする。
+  comment_overlay_always_on_top: "off",
   no_history: "off",
   no_writehistory: "off",
   bbsmenu:

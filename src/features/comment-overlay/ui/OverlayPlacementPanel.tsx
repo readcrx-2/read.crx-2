@@ -36,6 +36,9 @@ export const OverlayPlacementPanel: React.FC<OverlayPlacementPanelProps> = ({ pl
   const { value: lockAspectRatio, setValue: setLockAspectRatio } = useConfigBooleanSetting(
     "comment_overlay_lock_aspect_ratio",
   );
+  const { value: alwaysOnTop, setValue: setAlwaysOnTop } = useConfigBooleanSetting(
+    "comment_overlay_always_on_top",
+  );
   const geometryWriteTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const pendingGeometryRef = useRef<CommentOverlayGeometry | null>(null);
   const geometryQueueRef = useRef<Promise<void>>(Promise.resolve());
@@ -162,6 +165,16 @@ export const OverlayPlacementPanel: React.FC<OverlayPlacementPanelProps> = ({ pl
 
   return (
     <div className="overlay-placement">
+      {platform.setAlwaysOnTop && (
+        <label className="overlay-control-panel__aspect-ratio">
+          <input
+            type="checkbox"
+            checked={alwaysOnTop}
+            onChange={(event) => setAlwaysOnTop(event.target.checked)}
+          />
+          常に最前面に表示する
+        </label>
+      )}
       {attachment && (
         <fieldset className="overlay-placement__mode" disabled={isModeChanging}>
           <legend>配置方法</legend>

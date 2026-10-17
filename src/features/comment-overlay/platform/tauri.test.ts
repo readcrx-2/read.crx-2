@@ -29,6 +29,7 @@ const tauriMocks = vi.hoisted(() => ({
     hide: vi.fn(),
     unminimize: vi.fn(),
     setFocus: vi.fn(),
+    setAlwaysOnTop: vi.fn(),
     minimize: vi.fn(),
     toggleMaximize: vi.fn(),
     setPosition: vi.fn(),
@@ -91,6 +92,7 @@ describe("TauriコメントOverlay window platform", () => {
   beforeEach(() => {
     vi.stubGlobal("localStorage", createMemoryStorage());
     tauriMocks.invoke.mockReset();
+    tauriMocks.window.setAlwaysOnTop.mockReset();
     tauriMocks.event.emit.mockReset();
     tauriMocks.event.emit.mockResolvedValue(undefined);
     tauriMocks.event.listen.mockReset();
@@ -142,6 +144,13 @@ describe("TauriコメントOverlay window platform", () => {
       width: 900,
       height: 160,
     });
+  });
+
+  it("最前面への固定を有効・無効にできる", async () => {
+    const platform = createTauriCommentOverlayPlatform();
+    await platform.setAlwaysOnTop!(true);
+    await platform.setAlwaysOnTop!(false);
+    expect(tauriMocks.window.setAlwaysOnTop.mock.calls).toEqual([[true], [false]]);
   });
 
   it("対象の移動と最小化に追従し、実況停止中は復元されても表示しない", async () => {

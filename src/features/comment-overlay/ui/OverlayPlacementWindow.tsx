@@ -8,6 +8,7 @@ import {
 } from "src/features/auxiliary-window/browser/use-auxiliary-window";
 import { commentOverlayWindowPlatform } from "src/features/comment-overlay/platform";
 import { OverlayPlacementPanel } from "src/features/comment-overlay/ui/OverlayPlacementPanel";
+import { useConfigBooleanSetting } from "src/view/browser/hooks/use-config-boolean-setting";
 import { useTheme } from "src/view/browser/hooks/use-theme";
 import { ViewSurfaceProvider } from "src/view/browser/hooks/use-view-surface";
 
@@ -46,6 +47,14 @@ export const OverlayPlacementWindowProvider: React.FC<{ children: React.ReactNod
 }) => {
   const { root, open } = useAuxiliaryWindow(OVERLAY_PLACEMENT_WINDOW_OPTIONS);
   const theme = useTheme();
+  const { value: alwaysOnTop } = useConfigBooleanSetting("comment_overlay_always_on_top");
+
+  useEffect(() => {
+    // Overlayは表示専用なので、調整窓を閉じていてもMainから設定を反映する。
+    void commentOverlayWindowPlatform.setAlwaysOnTop?.(alwaysOnTop).catch((error: unknown) => {
+      console.error("[ChLens] コメントOverlayの最前面表示設定の反映に失敗しました:", error);
+    });
+  }, [alwaysOnTop]);
 
   useEffect(() => {
     void commentOverlayWindowPlatform.restorePlacement?.().catch((error: unknown) => {

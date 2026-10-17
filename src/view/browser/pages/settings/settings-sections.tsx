@@ -288,13 +288,19 @@ const ALL_SETTINGS_SECTIONS = [
   defineSection(
     "overlay",
     "コメントOverlay",
-    "Tauri版のコメント流し表示を調整します。表示設定は次回の実況開始時、分裂スレ取得は実況中にも反映します。",
+    "Tauri版のコメント流し表示を調整します。最前面表示と分裂スレ取得は変更時に反映します。",
     <MessageCircle size={20} />,
     [
       {
         kind: "divider",
         id: "display",
         title: "表示",
+      },
+      {
+        kind: "boolean",
+        key: "comment_overlay_always_on_top",
+        title: "常に最前面に表示する",
+        description: "ほかのアプリより手前にコメントOverlayを表示します。",
       },
       {
         kind: "number",

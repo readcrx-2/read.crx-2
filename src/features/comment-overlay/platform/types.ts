@@ -41,6 +41,7 @@ export interface CommentOverlayWindowPlatform {
   };
   /** 配置の復元はMainだけが行い、表示前と調整窓の初期化で完了を待つ。 */
   restorePlacement?(): Promise<void>;
+  setAlwaysOnTop?(enabled: boolean): Promise<void>;
   show(): Promise<void>;
   hide(): Promise<void>;
   focus(): Promise<void>;

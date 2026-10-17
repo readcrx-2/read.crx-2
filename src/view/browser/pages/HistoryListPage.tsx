@@ -1,6 +1,7 @@
 import { normalizeReadStateUrl } from "packages/chlib/src/index";
 import React, { useCallback, useEffect, useMemo, useState } from "react";
 import { platform } from "src/app";
+import { createLogger } from "src/app/logger";
 import { container } from "src/service-container/index";
 import { SearchBar } from "src/view/browser/components/SearchBar";
 import { ColumnDef } from "src/view/browser/components/SimpleDataTable";
@@ -11,6 +12,8 @@ import { useTabDispatch, useTabViewState } from "src/view/browser/state/tabs/use
 import { Spinner } from "src/view/browser/ui/Spinner";
 import { formatCompactDateTime, normalizeLegacyTimestamp } from "src/view/browser/utils/date-time";
 import { parseInternalBrowserPage } from "src/view/browser/utils/link-routing";
+
+const logger = createLogger("view/browser");
 
 const PAGE_SIZE = 500;
 const LOAD_MORE_THRESHOLD = 12;
@@ -77,7 +80,7 @@ const setHistoryCache = async (entries: HistoryEntry[]): Promise<void> => {
     const store = platform.storage.getStore(UI_CACHE_STORE);
     await store.put({ url: HISTORY_CACHE_KEY, data: entries });
   } catch (error) {
-    console.error("[HistoryListPage] cache save failed:", error);
+    logger.error("cache save failed:", error);
   }
 };
 
@@ -341,7 +344,7 @@ export const HistoryListPage: React.FC<HistoryListPageProps> = ({
         return next;
       });
     } catch (e) {
-      console.error("[HistoryListPage] 閲覧履歴の読み込みに失敗しました", e);
+      logger.error("閲覧履歴の読み込みに失敗しました", e);
       const message = e instanceof Error ? e.message : "閲覧履歴の読み込みに失敗しました";
       setError(message);
       if (reset) {

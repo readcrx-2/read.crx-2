@@ -13,6 +13,7 @@ import {
   Type,
 } from "lucide-react";
 import React, { useCallback, useEffect, useRef } from "react";
+import { createLogger } from "src/app/logger";
 import { isTauriRuntime } from "src/app/platform/runtime";
 import { stringifyNgDslValue } from "src/core/ng/ngDsl";
 import { requestArchiveReplaySeek } from "src/features/archive-replay/platform";
@@ -32,6 +33,8 @@ import type { ContextMenuItem } from "src/view/browser/ui/ContextMenu";
 import { buildKyodemoUrl } from "src/view/browser/utils/kyodemo-url";
 import { getManualRefreshScopeKey, runManualRefresh } from "src/view/browser/utils/manual-refresh";
 import { formatResForCopy, stripHtml } from "src/view/browser/utils/response-format";
+
+const logger = createLogger("view/browser");
 
 type AddPopupContextMenu = (
   x: number,
@@ -257,7 +260,7 @@ export function useThreadResContextMenu({
                     threadUrl: page.threadUrl,
                     responseNumber: targetRes.num,
                   }).catch((error: unknown) => {
-                    console.error("[ArchiveReplay] ThreadViewからのシーク要求に失敗しました", {
+                    logger.error("ThreadViewからのシーク要求に失敗しました", {
                       threadUrl: page.threadUrl,
                       responseNumber: targetRes.num,
                       error,

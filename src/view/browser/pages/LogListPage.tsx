@@ -1,4 +1,5 @@
 import React, { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import { createLogger } from "src/app/logger";
 import type { LogRecord } from "src/core/storage/Cache";
 import { container } from "src/service-container/index";
 import { SearchBar } from "src/view/browser/components/SearchBar";
@@ -10,6 +11,8 @@ import { useTabDispatch, useTabViewState } from "src/view/browser/state/tabs/use
 import { Spinner } from "src/view/browser/ui/Spinner";
 import { formatCompactDateTime } from "src/view/browser/utils/date-time";
 import { parseInternalBrowserPage } from "src/view/browser/utils/link-routing";
+
+const logger = createLogger("view/browser");
 
 type SortDirection = "asc" | "desc";
 type SortColumn = "title" | "boardTitle" | "resLength" | "lastUpdated";
@@ -234,7 +237,7 @@ export const LogListPage: React.FC<LogListPageProps> = ({ tabId, isActive, refre
             await new Promise<void>((resolve) => window.setTimeout(resolve, 0));
           }
         } catch (searchError) {
-          console.error("[LogListPage] body search failed:", searchError);
+          logger.error("body search failed:", searchError);
           if (!cancelled) {
             setBodyMatchedEntries([]);
           }

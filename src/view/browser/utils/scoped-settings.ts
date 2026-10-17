@@ -1,7 +1,10 @@
+import { createLogger } from "src/app/logger";
 import { normalizeBoardUrl } from "src/core/board/BoardUrlNormalizer";
 import { container } from "src/service-container/index";
 import { readConfigValue } from "src/view/browser/utils/config-setting";
 import { getBoardUrlFromThreadUrl } from "src/view/browser/utils/link-routing";
+
+const logger = createLogger("view/browser");
 
 /**
  * サイト・板ごとに上書きできる設定をまとめて保存するキー。
@@ -129,7 +132,7 @@ export function parseScopedSettings(raw: string | null | undefined): ScopedSetti
     return { sites };
   } catch (error) {
     // 破損したスコープ設定で通常の設定画面まで壊さず、原因だけをログへ残す。
-    console.error("[ScopedSettings] スコープ設定の読み込みに失敗しました", error);
+    logger.error("スコープ設定の読み込みに失敗しました", error);
     return createEmptyDocument();
   }
 }
@@ -293,7 +296,7 @@ export async function persistScopedSetting(
     try {
       await container.config.set(SCOPED_SETTINGS_CONFIG_KEY, JSON.stringify(document));
     } catch (error) {
-      console.error("[ScopedSettings] スコープ設定の保存に失敗しました", error);
+      logger.error("スコープ設定の保存に失敗しました", error);
       throw error;
     }
   });
@@ -319,7 +322,7 @@ export async function clearSiteScopedSettings(site: string): Promise<void> {
     try {
       await container.config.set(SCOPED_SETTINGS_CONFIG_KEY, JSON.stringify(document));
     } catch (error) {
-      console.error("[ScopedSettings] サイト設定の削除に失敗しました", error);
+      logger.error("サイト設定の削除に失敗しました", error);
       throw error;
     }
   });
@@ -339,7 +342,7 @@ export async function clearAllSiteScopedSettings(): Promise<void> {
     try {
       await container.config.set(SCOPED_SETTINGS_CONFIG_KEY, JSON.stringify({ sites: {} }));
     } catch (error) {
-      console.error("[ScopedSettings] すべてのサイト設定の削除に失敗しました", error);
+      logger.error("すべてのサイト設定の削除に失敗しました", error);
       throw error;
     }
   });

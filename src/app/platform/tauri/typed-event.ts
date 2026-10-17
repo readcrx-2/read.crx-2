@@ -1,4 +1,7 @@
 import { emitTo, listen } from "@tauri-apps/api/event";
+import { createLogger } from "src/app/logger";
+
+const logger = createLogger("platform");
 
 export interface TauriEventChannelOptions<T> {
   /** Tauri event名。窓をまたいで共有する契約なので、送信側と受信側で同じ定義を使う。 */
@@ -44,7 +47,7 @@ export function defineTauriEventChannel<T>(
     listen(listener) {
       return listen<unknown>(name, ({ payload }) => {
         if (!isPayload(payload)) {
-          console.error(`[${logLabel}] 不正な ${name} を受信しました:`, payload);
+          logger.error(`[${logLabel}] 不正な ${name} を受信しました:`, payload);
           return;
         }
         listener(payload);

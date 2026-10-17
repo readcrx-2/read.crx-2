@@ -1,9 +1,12 @@
+import { createLogger } from "src/app/logger";
 import { container } from "src/service-container";
 import {
   type BrowserCommandContext,
   executeBrowserCommand,
   getBrowserCommandLabel,
 } from "src/view/browser/commands/browser-commands";
+
+const logger = createLogger("view/browser");
 
 export interface BrowserCommandExecutionOptions {
   commandId: string;
@@ -36,7 +39,7 @@ export async function runBrowserCommand({
   } catch (error: unknown) {
     const label = getBrowserCommandLabel(commandId, context);
     // コマンドIDとページ種別を残し、複数の入口に集約した操作の失敗元を追跡できるようにする。
-    console.error("ブラウザコマンドの実行に失敗しました", {
+    logger.error("ブラウザコマンドの実行に失敗しました", {
       commandId,
       pageType: context.viewPage.type,
       error,

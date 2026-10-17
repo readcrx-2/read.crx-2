@@ -1,4 +1,7 @@
+import { createLogger } from "src/app/logger";
 import type { HttpResponse } from "src/app/platform/types";
+
+const logger = createLogger("platform");
 
 interface TauriWriteTransportRequest {
   action: string;
@@ -28,11 +31,11 @@ function decodeResponseBody(bytes: number[], charset: string, fallbackCharset: s
   try {
     return new TextDecoder(charset).decode(new Uint8Array(bytes));
   } catch (error) {
-    console.error(`Tauri版の書き込み応答を${charset}としてデコードできませんでした:`, error);
+    logger.error(`Tauri版の書き込み応答を${charset}としてデコードできませんでした:`, error);
     try {
       return new TextDecoder(fallbackCharset).decode(new Uint8Array(bytes));
     } catch (fallbackError) {
-      console.error(
+      logger.error(
         `Tauri版の書き込み応答を${fallbackCharset}としてもデコードできませんでした:`,
         fallbackError,
       );

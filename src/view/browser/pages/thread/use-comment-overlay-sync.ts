@@ -1,6 +1,9 @@
 import { useEffect, useRef } from "react";
+import { createLogger } from "src/app/logger";
 import type { CommentOverlayController } from "src/features/comment-overlay/application/controller";
 import type { IRes } from "src/service-container/interfaces";
+
+const logger = createLogger("view/browser");
 
 type CommentOverlaySyncController = Pick<
   CommentOverlayController,
@@ -38,7 +41,7 @@ export function useCommentOverlaySync({
     // 自動更新のOFFをどのUIから操作しても実況を止める。初期OFFや別スレへの移動では
     // 停止せず、非表示タブでも実況対象スレッドのONからOFFへの変化だけを扱う。
     void controller.stop().catch((error: unknown) => {
-      console.error("[ChLens] 自動更新停止に伴うコメント実況の停止に失敗しました:", error);
+      logger.error("自動更新停止に伴うコメント実況の停止に失敗しました:", error);
     });
   }, [controller, isAutoRefreshEnabled, threadUrl]);
 

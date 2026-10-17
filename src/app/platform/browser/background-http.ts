@@ -1,9 +1,12 @@
 import { fetchHttpsFirst } from "packages/chlib/src/fetcher/https-first";
+import { createLogger } from "src/app/logger";
 import { decodeBase64ArrayBuffer } from "src/app/platform/binary";
 import { QueuedHttpClient } from "src/app/platform/QueuedHttpClient";
 import type { HttpClient, HttpRequestOptions, HttpResponse } from "src/app/platform/types";
 
 import { isSharedHttpRequestMessage, type SharedHttpResponseMessage } from "./shared-http-protocol";
+
+const logger = createLogger("platform");
 
 const transport: HttpClient = {
   async fetch(url, options = {}): Promise<HttpResponse> {
@@ -35,7 +38,7 @@ const transport: HttpClient = {
           try {
             body = new TextDecoder(charset).decode(bytes);
           } catch (error) {
-            console.error("バックグラウンドHTTP応答のデコードに失敗しました:", error);
+            logger.error("バックグラウンドHTTP応答のデコードに失敗しました:", error);
             body = new TextDecoder().decode(bytes);
           }
           return {

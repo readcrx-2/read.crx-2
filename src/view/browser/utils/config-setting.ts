@@ -1,4 +1,7 @@
+import { createLogger } from "src/app/logger";
 import { container } from "src/service-container/index";
+
+const logger = createLogger("view/browser");
 
 export interface ConfigUpdatedMessage {
   key?: string;
@@ -21,7 +24,7 @@ export function readConfigValue(key: string): string | null {
   try {
     return container.config.get(key);
   } catch (error) {
-    console.error("[ConfigSetting] 設定の読み込みに失敗しました: " + key, error);
+    logger.error("設定の読み込みに失敗しました: " + key, error);
     return null;
   }
 }
@@ -29,11 +32,11 @@ export function readConfigValue(key: string): string | null {
 export function persistConfigValue(key: string, value: unknown, label = "設定"): void {
   try {
     void Promise.resolve(container.config.set(key, value)).catch((error: unknown) => {
-      console.error("[" + label + "] 設定の保存に失敗しました: " + key, error);
+      logger.error("[" + label + "] 設定の保存に失敗しました: " + key, error);
     });
   } catch (error) {
     // config.setが同期例外を投げる実装でも、利用者の操作を中断させず原因を記録する。
-    console.error("[" + label + "] 設定の保存に失敗しました: " + key, error);
+    logger.error("[" + label + "] 設定の保存に失敗しました: " + key, error);
   }
 }
 
@@ -59,7 +62,7 @@ export function subscribeConfigKeys(
     subscribed = true;
   } catch (error) {
     // 設定サービスが未登録のhostでも画面を壊さず、初期値で表示を継続する。
-    console.error("[" + label + "] 設定変更通知の購読に失敗しました", error);
+    logger.error("[" + label + "] 設定変更通知の購読に失敗しました", error);
   }
 
   return () => {
@@ -69,7 +72,7 @@ export function subscribeConfigKeys(
     try {
       container.message.off("config_updated", handleConfigUpdated);
     } catch (error) {
-      console.error("[" + label + "] 設定変更通知の購読解除に失敗しました", error);
+      logger.error("[" + label + "] 設定変更通知の購読解除に失敗しました", error);
     }
   };
 }

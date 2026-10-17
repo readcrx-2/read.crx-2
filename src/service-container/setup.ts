@@ -1,6 +1,7 @@
 import { LogLevels } from "consola";
 import { defer } from "src/app/Defer";
 import { setConsolaLevel } from "src/app/logger";
+import { createLogger } from "src/app/logger";
 import message from "src/app/Message";
 import Notification from "src/app/Notification";
 import { escapeHtml, safeHref } from "src/app/Util";
@@ -37,6 +38,8 @@ import {
   IUtil,
 } from "src/service-container/interfaces";
 import { toastStore } from "src/service-container/toast-store";
+
+const logger = createLogger("service-container");
 
 type BookmarkEntryListRuntime = Bookmark["bel"] & {
   needReconfigureRootNodeId?: {
@@ -155,7 +158,7 @@ export function setupContainer(): void {
         await activeBookmark.promiseFirstScan;
       } catch (error) {
         // 初回の走査に失敗しても、画面は読めるデータで表示を続ける。握りつぶさずに原因を残す。
-        console.error("[Bookmark] 初回の走査の完了待ちに失敗しました:", error);
+        logger.error("初回の走査の完了待ちに失敗しました:", error);
       }
     },
     getAll: () => activeBookmark.getAll(),

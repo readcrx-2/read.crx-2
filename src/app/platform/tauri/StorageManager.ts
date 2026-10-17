@@ -1,3 +1,4 @@
+import { createLogger } from "src/app/logger";
 import {
   KeyValueStore,
   ObjectStore,
@@ -10,6 +11,8 @@ import {
   removeStore2Value,
   setStore2String,
 } from "src/app/Store2Storage";
+
+const logger = createLogger("platform");
 
 function parseStorageEventValue(rawValue: string | null): string | null {
   if (rawValue == null) {
@@ -113,7 +116,7 @@ class TauriObjectStore implements ObjectStore {
 
         // オブジェクトストアが存在しない場合は作成
         if (!db.objectStoreNames.contains(this.dbName)) {
-          console.log(`[TauriObjectStore] Creating object store: ${this.dbName}`);
+          logger.debug(`Creating object store: ${this.dbName}`);
           const objStore = db.createObjectStore(this.dbName, {
             keyPath: "url",
           });

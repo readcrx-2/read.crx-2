@@ -1,5 +1,6 @@
 import type { RefObject } from "react";
 import { useCallback, useEffect, useRef, useState } from "react";
+import { createLogger } from "src/app/logger";
 import { container } from "src/service-container/index";
 import type { IReadState, IRes } from "src/service-container/interfaces";
 import { useViewSurface } from "src/view/browser/hooks/use-view-surface";
@@ -12,6 +13,8 @@ import {
   scrollThreadToResponse,
   subscribeThreadResJump,
 } from "src/view/browser/utils/thread-read-state";
+
+const logger = createLogger("view/browser");
 
 interface UseThreadReadStateParams {
   tabId: string;
@@ -81,7 +84,7 @@ export function useThreadReadState({
     try {
       await container.readState.set(nextReadState);
     } catch (error) {
-      console.error(error);
+      logger.error(error);
     }
     // rootRef は安定した参照のため依存配列から除外する
     // oxlint-disable-next-line react-hooks/exhaustive-deps
@@ -118,7 +121,7 @@ export function useThreadReadState({
           nextReadState = storedReadState;
         }
       } catch (error) {
-        console.error(error);
+        logger.error(error);
       }
 
       if (cancelled) return;

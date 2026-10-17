@@ -1,6 +1,9 @@
 import { platform } from "src/app";
+import { createLogger } from "src/app/logger";
 import type { IRes } from "src/service-container/interfaces";
 import { stripTrailingSyntheticAbobunResponses } from "src/view/browser/utils/thread-response-cache";
+
+const logger = createLogger("view/browser");
 
 export const THREAD_UI_CACHE_STORE = "UICache";
 
@@ -30,7 +33,7 @@ export async function getThreadResponseCache(threadUrl: string): Promise<IRes[] 
     }
     return stripTrailingSyntheticAbobunResponses(entry.data);
   } catch (error) {
-    console.error("[ThreadDataCache] スレッド表示キャッシュの読み込みに失敗しました", error);
+    logger.error("スレッド表示キャッシュの読み込みに失敗しました", error);
     return null;
   }
 }
@@ -48,6 +51,6 @@ export async function setThreadResponseCache(
       data: stripTrailingSyntheticAbobunResponses(responses),
     });
   } catch (error) {
-    console.error("[ThreadDataCache] スレッド表示キャッシュの保存に失敗しました", error);
+    logger.error("スレッド表示キャッシュの保存に失敗しました", error);
   }
 }

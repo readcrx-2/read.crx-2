@@ -97,11 +97,6 @@
   gap: 0.5rem;
 }
 
-/* 追従中は矢印ボタンがないため、ディスプレイ名だけを1列で表示する。 */
-.overlay-control-panel__monitor-navigation--auto {
-  grid-template-columns: minmax(0, 1fr);
-}
-
 .overlay-control-panel__monitor-navigation button {
   width: 2rem;
   height: 2rem;
@@ -283,10 +278,4 @@
   background: var(--sys-color-surface-muted, #213650);
   font-size: 0.7rem;
   text-align: center;
-}
-
-/* 追従中は範囲を操作できないため、操作可能に見えるカーソルを出さない。 */
-.overlay-control-panel__desktop--readonly,
-.overlay-control-panel__desktop--readonly * {
-  cursor: default;
 }

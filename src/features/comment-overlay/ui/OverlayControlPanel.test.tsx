@@ -141,27 +141,6 @@ describe("OverlayControlPanel", () => {
     expect(capture).toHaveBeenCalledTimes(1);
   });
 
-  it("閲覧専用では縦横比固定と範囲操作を出さず、実際の表示領域をそのまま示す", () => {
-    const onGeometryChange = vi.fn();
-    render(
-      <OverlayControlPanel
-        monitors={[monitor]}
-        geometry={{ x: 100, y: 100, width: 800, height: 600 }}
-        lockAspectRatio
-        onLockAspectRatioChange={vi.fn()}
-        onGeometryChange={onGeometryChange}
-        readOnly
-      />,
-    );
-
-    expect(screen.queryByRole("checkbox", { name: /縦横比を固定/ })).toBeNull();
-    expect(screen.queryByRole("button", { name: "初期位置" })).toBeNull();
-    // 縦横比固定が保存されていても、追従先の4:3をそのまま表示する。
-    expect(screen.getByText("800 × 600")).toBeInTheDocument();
-    fireEvent.doubleClick(screen.getByTestId("overlay-control-panel-desktop"));
-    expect(onGeometryChange).not.toHaveBeenCalled();
-  });
-
   it("ディスプレイをダブルクリックすると全画面geometryを通知する", () => {
     const onGeometryChange = vi.fn();
     render(

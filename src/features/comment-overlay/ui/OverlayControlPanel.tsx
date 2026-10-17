@@ -79,11 +79,6 @@ export interface OverlayControlPanelProps {
   captureMonitorPreview?: (monitor: CommentOverlayMonitor) => Promise<string | null>;
   /** ドラッグの開始・終了を通知する。実画面にも同じ範囲の枠を出すために使う。 */
   onDragActiveChange?: (active: boolean) => void;
-  /**
-   * ウィンドウ追従中など、表示領域が外部で決まる間は閲覧専用にする。
-   * 縦横比固定と手動の範囲指定を受け付けず、実際の表示領域をそのまま示す。
-   */
-  readOnly?: boolean;
   /** 利用者が画面を切り替えるまで、最初にプレビューするモニターのid。 */
   initialMonitorId?: string | null;
 }
@@ -276,20 +271,13 @@ function monitorGeometry(
 export function OverlayControlPanel({
   monitors,
   geometry = DEFAULT_COMMENT_OVERLAY_GEOMETRY,
-  lockAspectRatio: requestedLockAspectRatio,
+  lockAspectRatio,
   onLockAspectRatioChange,
   onGeometryChange,
-  captureMonitorPreview: requestedCaptureMonitorPreview,
+  captureMonitorPreview,
   onDragActiveChange,
-  readOnly = false,
   initialMonitorId = null,
 }: OverlayControlPanelProps) {
-  // 変更理由: 追従中の表示領域は追従先ウィンドウの内側サイズで決まるため、16:9へ補正して
-  // 表示すると実際の位置とずれる。閲覧専用の間は縦横比固定を適用しない。
-  const lockAspectRatio = requestedLockAspectRatio && !readOnly;
-  // 変更理由: 追従中は表示先のディスプレイが追従先に合わせて自動で決まり更新されるため、
-  // 画面の撮影（定期的な重い処理）は行わず、枠だけを示す。
-  const captureMonitorPreview = readOnly ? undefined : requestedCaptureMonitorPreview;
   const svgRef = useRef<SVGSVGElement>(null);
   const dragRef = useRef<DragState | null>(null);
   const [dragPreview, setDragPreview] = useState<CommentOverlayGeometry | null>(null);
@@ -304,14 +292,12 @@ export function OverlayControlPanel({
   }, [geometry, monitors]);
   // 変更理由: 全モニターを1枚のSVGへ押し込むと横長の座標系で各画面が縦に潰れるため、
   // 操作対象を1画面へ限定し、その画面本来の縦横比でプレビューする。
-  // 追従中は手動の切り替えや初期モニターを使わず、Overlayがあるディスプレイへ自動で切り替える。
-  const previewMonitor = readOnly
-    ? (geometryMonitor ?? monitors[0] ?? null)
-    : (monitors.find((monitor) => monitor.id === previewMonitorId) ??
-      monitors.find((monitor) => monitor.id === initialMonitorId) ??
-      geometryMonitor ??
-      monitors[0] ??
-      null);
+  const previewMonitor =
+    monitors.find((monitor) => monitor.id === previewMonitorId) ??
+    monitors.find((monitor) => monitor.id === initialMonitorId) ??
+    geometryMonitor ??
+    monitors[0] ??
+    null;
   const previewMonitorIndex = previewMonitor == null ? -1 : monitors.indexOf(previewMonitor);
   const bounds = useMemo(() => getMonitorBounds(previewMonitor), [previewMonitor]);
   const currentGeometry = useMemo(() => {
@@ -378,7 +364,7 @@ export function OverlayControlPanel({
     mode: DragMode,
     direction?: ResizeDirection,
   ): void => {
-    if (readOnly || event.button !== 0 || !svgRef.current) return;
+    if (event.button !== 0 || !svgRef.current) return;
     event.preventDefault();
     event.stopPropagation();
     const start = pointFromEvent(event, svgRef.current, bounds);
@@ -451,7 +437,6 @@ export function OverlayControlPanel({
   ): void => {
     // 変更理由: Overlay自身は常時クリック透過なので、ディスプレイ単位の操作は
     // この仮想画面からgeometryを直接作り、実ウィンドウへ遠隔反映する。
-    if (readOnly) return;
     event.preventDefault();
     event.stopPropagation();
     dragRef.current = null;
@@ -490,43 +475,35 @@ export function OverlayControlPanel({
       <header className="overlay-control-panel__header">
         <div>
           <h2>コメント表示領域</h2>
-          <p>
-            {readOnly
-              ? "追従先ウィンドウに合わせて自動で決まります。"
-              : "ディスプレイのプレビュー上で範囲を指定します。"}
-          </p>
+          <p>ディスプレイのプレビュー上で範囲を指定します。</p>
         </div>
-        {!readOnly && (
-          <button type="button" onClick={handleReset}>
-            初期位置
-          </button>
-        )}
+        <button type="button" onClick={handleReset}>
+          初期位置
+        </button>
       </header>
 
-      {!readOnly && (
-        <label className="overlay-control-panel__aspect-ratio">
-          <input
-            type="checkbox"
-            checked={lockAspectRatio}
-            onChange={(event) => {
-              const locked = event.target.checked;
-              dragRef.current = null;
-              setDragPreview(null);
-              onLockAspectRatioChange(locked);
-              if (locked && currentGeometry) {
-                onGeometryChange(
-                  clampGeometry(
-                    fitCommentOverlayGeometryToAspectRatio(currentGeometry),
-                    bounds,
-                    true,
-                  ),
-                );
-              }
-            }}
-          />
-          縦横比を固定（16:9）
-        </label>
-      )}
+      <label className="overlay-control-panel__aspect-ratio">
+        <input
+          type="checkbox"
+          checked={lockAspectRatio}
+          onChange={(event) => {
+            const locked = event.target.checked;
+            dragRef.current = null;
+            setDragPreview(null);
+            onLockAspectRatioChange(locked);
+            if (locked && currentGeometry) {
+              onGeometryChange(
+                clampGeometry(
+                  fitCommentOverlayGeometryToAspectRatio(currentGeometry),
+                  bounds,
+                  true,
+                ),
+              );
+            }
+          }}
+        />
+        縦横比を固定（16:9）
+      </label>
 
       {monitors.length === 0 ? (
         <p className="overlay-control-panel__empty" role="status">
@@ -534,21 +511,15 @@ export function OverlayControlPanel({
         </p>
       ) : (
         <>
-          <div
-            className={`overlay-control-panel__monitor-navigation${
-              readOnly ? " overlay-control-panel__monitor-navigation--auto" : ""
-            }`}
-          >
-            {!readOnly && (
-              <button
-                type="button"
-                aria-label="前のディスプレイをプレビュー"
-                disabled={monitors.length < 2}
-                onClick={() => selectAdjacentMonitor(-1)}
-              >
-                ←
-              </button>
-            )}
+          <div className="overlay-control-panel__monitor-navigation">
+            <button
+              type="button"
+              aria-label="前のディスプレイをプレビュー"
+              disabled={monitors.length < 2}
+              onClick={() => selectAdjacentMonitor(-1)}
+            >
+              ←
+            </button>
             <div aria-live="polite">
               <strong>{previewMonitor?.name}</strong>
               <span>
@@ -556,16 +527,14 @@ export function OverlayControlPanel({
                 {previewMonitor?.height}
               </span>
             </div>
-            {!readOnly && (
-              <button
-                type="button"
-                aria-label="次のディスプレイをプレビュー"
-                disabled={monitors.length < 2}
-                onClick={() => selectAdjacentMonitor(1)}
-              >
-                →
-              </button>
-            )}
+            <button
+              type="button"
+              aria-label="次のディスプレイをプレビュー"
+              disabled={monitors.length < 2}
+              onClick={() => selectAdjacentMonitor(1)}
+            >
+              →
+            </button>
           </div>
           {captureMonitorPreview && (
             <div className="overlay-control-panel__preview-status">
@@ -591,9 +560,7 @@ export function OverlayControlPanel({
           >
             <svg
               ref={svgRef}
-              className={`overlay-control-panel__desktop${
-                readOnly ? " overlay-control-panel__desktop--readonly" : ""
-              }`}
+              className="overlay-control-panel__desktop"
               data-testid="overlay-control-panel-desktop"
               viewBox={`${bounds.x} ${bounds.y} ${bounds.width} ${bounds.height}`}
               preserveAspectRatio="xMidYMid meet"
@@ -671,7 +638,6 @@ export function OverlayControlPanel({
                 />
               )}
               {displayedGeometry &&
-                !readOnly &&
                 RESIZE_HANDLES.map(({ direction, cursor }) => {
                   const x = direction.includes("West")
                     ? displayedGeometry.x
@@ -709,12 +675,10 @@ export function OverlayControlPanel({
                 })}
             </svg>
           </div>
-          {!readOnly && (
-            <div className="overlay-control-panel__help">
-              <span>ドラッグ: 範囲指定 / 移動</span>
-              <span>ダブルクリック: ディスプレイ全体</span>
-            </div>
-          )}
+          <div className="overlay-control-panel__help">
+            <span>ドラッグ: 範囲指定 / 移動</span>
+            <span>ダブルクリック: ディスプレイ全体</span>
+          </div>
           {displayedGeometry ? (
             <dl className="overlay-control-panel__geometry" aria-label="選択中のサイズ">
               <div>
@@ -732,9 +696,7 @@ export function OverlayControlPanel({
             </dl>
           ) : (
             <p className="overlay-control-panel__unselected">
-              {readOnly
-                ? "このディスプレイには表示領域がありません。"
-                : "このディスプレイには表示領域がありません。ドラッグまたはダブルクリックで指定します。"}
+              このディスプレイには表示領域がありません。ドラッグまたはダブルクリックで指定します。
             </p>
           )}
         </>

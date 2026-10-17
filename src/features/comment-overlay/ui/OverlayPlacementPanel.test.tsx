@@ -54,14 +54,14 @@ describe("OverlayPlacementPanel", () => {
     cleanup();
   });
 
-  it("追従中は追従モードで開き、縦横比固定と範囲操作を出さない", async () => {
+  it("追従中は追従モードで開き、コメント表示領域のセクションを出さない", async () => {
     const { platform } = createPlatform("player");
     render(<OverlayPlacementPanel platform={platform} />);
 
     expect(screen.getByRole("radio", { name: "ウィンドウに追従" })).toBeChecked();
     expect(screen.getByLabelText("追従先ウィンドウ")).toBeInTheDocument();
+    expect(screen.queryByTestId("overlay-control-panel")).toBeNull();
     expect(screen.queryByRole("checkbox", { name: /縦横比を固定/ })).toBeNull();
-    await waitFor(() => expect(screen.getByText("800 × 600")).toBeInTheDocument());
   });
 
   it("範囲指定へ切り替えると追従を解除してから縦横比固定を出す", async () => {

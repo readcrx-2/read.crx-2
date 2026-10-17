@@ -220,17 +220,19 @@ export const OverlayPlacementPanel: React.FC<OverlayPlacementPanelProps> = ({ pl
         </fieldset>
       )}
       {attachment && isFollowing && <WindowAttachmentControl attachment={attachment} />}
-      <OverlayControlPanel
-        monitors={monitors}
-        geometry={geometry}
-        lockAspectRatio={lockAspectRatio}
-        onLockAspectRatioChange={setLockAspectRatio}
-        onGeometryChange={handleGeometryChange}
-        captureMonitorPreview={platform.captureMonitorPreview}
-        onDragActiveChange={handleDragActiveChange}
-        readOnly={isFollowing}
-        initialMonitorId={hostMonitorId}
-      />
+      {/* 追従中は表示領域が追従先で決まり、操作も撮影も不要なので、セクションごと出さない。 */}
+      {!isFollowing && (
+        <OverlayControlPanel
+          monitors={monitors}
+          geometry={geometry}
+          lockAspectRatio={lockAspectRatio}
+          onLockAspectRatioChange={setLockAspectRatio}
+          onGeometryChange={handleGeometryChange}
+          captureMonitorPreview={platform.captureMonitorPreview}
+          onDragActiveChange={handleDragActiveChange}
+          initialMonitorId={hostMonitorId}
+        />
+      )}
     </div>
   );
 };

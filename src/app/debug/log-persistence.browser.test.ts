@@ -6,6 +6,8 @@ import { recordDebugEvent, resetDebugLogForTest } from "./debug-log";
 import {
   appendPersistedLogs,
   clearPersistedLogs,
+  flushPersistedLogs,
+  formatPersistedLog,
   installLogPersistence,
   MAX_PERSISTED_ENTRIES,
   type PersistedLogEntry,
@@ -70,7 +72,7 @@ describe("ログの永続化", () => {
     expect(logs).toHaveLength(MAX_PERSISTED_ENTRIES);
     expect(logs[0].seq).toBe(total - MAX_PERSISTED_ENTRIES + 1);
     expect(logs.at(-1)?.seq).toBe(total);
-  });
+  }, 30_000);
 
   it("記録された出来事を一定時間後にまとめて保存し、解除時に残りも保存する", async () => {
     vi.useFakeTimers();
@@ -93,5 +95,36 @@ describe("ログの永続化", () => {
     recordDebugEvent("auto-refresh", "再開", undefined, { withStack: false });
     dispose();
     await vi.waitFor(async () => expect(await readPersistedLogs()).toHaveLength(2));
+  });
+
+  it("flushPersistedLogsは保存待ちの記録を書き込み終えてから戻る", async () => {
+    const dispose = installLogPersistence({ page: "/view/index.html" });
+
+    recordDebugEvent("auto-refresh", "停止", undefined, { withStack: false });
+    await flushPersistedLogs();
+
+    expect(await readPersistedLogs()).toHaveLength(1);
+    dispose();
+  });
+});
+
+describe("ログの表示形式", () => {
+  it("時刻・レベル・出所・本文を1行にし、データとスタックは続く行へ字下げして足す", () => {
+    const text = formatPersistedLog(
+      entry(1, {
+        level: "event",
+        category: "auto-refresh",
+        message: "停止",
+        data: { tabId: "t1" },
+        stack: "at foo\nat bar",
+      }),
+    );
+
+    expect(text.split("\n")).toEqual([
+      "1970-01-01T00:00:01.001Z [event] (/view/index.html) auto-refresh: 停止",
+      '  data: {"tabId":"t1"}',
+      "  at foo",
+      "  at bar",
+    ]);
   });
 });

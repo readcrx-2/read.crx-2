@@ -59,12 +59,12 @@ export async function appendPersistedLogs(entries: readonly PersistedLogEntry[])
   await Promise.all(entries.map(({ id: _id, ...rest }) => tx.store.add(rest as PersistedLogEntry)));
   const count = await tx.store.count();
   if (count > MAX_PERSISTED_ENTRIES + TRIM_MARGIN) {
-    let excess = count - MAX_PERSISTED_ENTRIES;
-    let cursor = await tx.store.openCursor();
-    while (cursor && excess > 0) {
-      await cursor.delete();
-      excess -= 1;
-      cursor = await cursor.continue();
+    // 1件ずつ消すとカバレッジ計測付きのCIで時間切れになるほど遅いため、
+    // 消す範囲の末尾のキーを取り、範囲指定で一度に消す。
+    const oldestKeys = await tx.store.getAllKeys(undefined, count - MAX_PERSISTED_ENTRIES);
+    const lastKeyToDelete = oldestKeys.at(-1);
+    if (lastKeyToDelete !== undefined) {
+      await tx.store.delete(IDBKeyRange.upperBound(lastKeyToDelete));
     }
   }
   await tx.done;
@@ -88,7 +88,28 @@ export async function clearPersistedLogs(): Promise<void> {
   await db.clear(STORE_NAME);
 }
 
+/** 画面に見せる・コピーする・書き出す、いずれも同じ形式の1件分の文字列にする。 */
+export function formatPersistedLog(entry: PersistedLogEntry): string {
+  const lines = [
+    `${new Date(entry.time).toISOString()} [${entry.level}] (${entry.page}) ${entry.category}: ${entry.message}`,
+  ];
+  if (entry.data !== undefined) {
+    lines.push(`  data: ${JSON.stringify(entry.data)}`);
+  }
+  if (entry.stack) {
+    lines.push(...entry.stack.split("\n").map((line) => `  ${line}`));
+  }
+  return lines.join("\n");
+}
+
 let installed = false;
+// 設定画面などが「いまの記録」を読む前に、まだ保存されていない分を書き出すための口。
+let flushPending: (() => Promise<void>) | null = null;
+
+/** 保存待ちの記録をすぐ書き込み、書き込みが終わるまで待つ。 */
+export async function flushPersistedLogs(): Promise<void> {
+  await flushPending?.();
+}
 
 /**
  * 記録を一定件数・一定時間ごとにまとめて保存し始める。解除関数は残りを保存してから購読を外す。
@@ -106,7 +127,7 @@ export function installLogPersistence(
   let timer: ReturnType<typeof setTimeout> | null = null;
   let reportedFailure = false;
 
-  const flush = (): void => {
+  const flush = async (): Promise<void> => {
     if (timer != null) {
       clearTimeout(timer);
       timer = null;
@@ -114,34 +135,39 @@ export function installLogPersistence(
     if (buffer.length === 0) return;
     const batch = buffer;
     buffer = [];
-    appendPersistedLogs(batch).catch((error: unknown) => {
+    try {
+      await appendPersistedLogs(batch);
+    } catch (error: unknown) {
       if (reportedFailure) return;
       reportedFailure = true;
       console.warn("[ChLens Debug] ログの保存に失敗しました。以後の失敗は報告しません:", error);
-    });
+    }
   };
 
+  flushPending = flush;
   const unsubscribe = subscribeDebugLog((entry) => {
     buffer.push({ ...entry, page });
     if (buffer.length >= FLUSH_BATCH_SIZE) {
-      flush();
+      void flush();
     } else {
-      timer ??= setTimeout(flush, FLUSH_INTERVAL_MS);
+      timer ??= setTimeout(() => void flush(), FLUSH_INTERVAL_MS);
     }
   });
 
   // 画面を閉じる直前の分が失われないよう、非表示になった時点で保存する。
   const onHidden = (): void => {
-    if (target.document?.visibilityState === "hidden") flush();
+    if (target.document?.visibilityState === "hidden") void flush();
   };
-  target.addEventListener("pagehide", flush);
+  const onPageHide = (): void => void flush();
+  target.addEventListener("pagehide", onPageHide);
   target.document?.addEventListener("visibilitychange", onHidden);
 
   return () => {
     unsubscribe();
-    target.removeEventListener("pagehide", flush);
+    target.removeEventListener("pagehide", onPageHide);
     target.document?.removeEventListener("visibilitychange", onHidden);
-    flush();
+    void flush();
+    flushPending = null;
     installed = false;
   };
 }

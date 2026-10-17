@@ -8,6 +8,7 @@ import type { SettingsSectionId } from "src/view/browser/types";
 export type SettingsSupplementaryPanelId =
   | "titleBarButtonSettings"
   | "externalIntegration"
+  | "debugLog"
   | "dangerZone"
   | "dataManagement"
   | "siteBoardSettings";

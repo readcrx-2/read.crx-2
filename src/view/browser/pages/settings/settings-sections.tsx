@@ -451,7 +451,7 @@ const ALL_SETTINGS_SECTIONS = [
       },
     ],
     {
-      supplementaryPanelIds: ["externalIntegration", "dangerZone"],
+      supplementaryPanelIds: ["externalIntegration", "debugLog", "dangerZone"],
     },
   ),
 ] as const satisfies readonly SettingsSectionDefinition[];

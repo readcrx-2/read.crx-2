@@ -1,5 +1,5 @@
-import { useCallback } from "react";
 import type { RefObject } from "react";
+import { useCallback } from "react";
 import { tabActions } from "src/view/browser/state/tabs/tab-store-actions";
 import type { useTabStore } from "src/view/browser/state/tabs/use-tab-store";
 import {

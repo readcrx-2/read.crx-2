@@ -16,13 +16,7 @@ import {
   Settings,
   Star,
 } from "lucide-react";
-import React, {
-  useCallback,
-  useEffect,
-  useMemo,
-  useRef,
-  useState,
-} from "react";
+import React, { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { createPortal } from "react-dom";
 import { usePageBookmark } from "src/features/bookmark/browser/use-page-bookmark";
 import { useNavHistoryMenuItems } from "src/features/tabs/browser/use-nav-history-menu-items";
@@ -72,6 +66,7 @@ import {
   createSettingsPage,
   type QuickAccessPage,
 } from "src/view/browser/utils/tab-pages";
+
 import { useCommandPaletteFocus } from "./use-command-palette-focus";
 import { useOmnibarNavigation } from "./use-omnibar-navigation";
 

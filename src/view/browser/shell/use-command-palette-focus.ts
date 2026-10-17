@@ -1,10 +1,10 @@
-import { useEffect, useSyncExternalStore } from "react";
 import type { RefObject } from "react";
-import type { OmnibarInputMode } from "src/view/browser/hooks/use-omnibar";
+import { useEffect, useSyncExternalStore } from "react";
 import {
   commandPalette,
   commandPaletteStore,
 } from "src/view/browser/commands/command-palette-store";
+import type { OmnibarInputMode } from "src/view/browser/hooks/use-omnibar";
 
 interface UseCommandPaletteFocusParams {
   isActivePane: boolean;

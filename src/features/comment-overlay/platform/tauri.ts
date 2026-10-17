@@ -23,6 +23,7 @@ import {
   saveOverlayAttachment,
   type StoredOverlayAttachment,
 } from "./placement";
+import { parseCommentOverlayPreviewFrame } from "./preview-frame";
 import type {
   CommentOverlayAttachmentWindow,
   CommentOverlayGeometry,
@@ -370,6 +371,13 @@ export function createTauriCommentOverlayPlatform({
     },
     async setPlacementGuide(active) {
       const overlay = await getCommentOverlayWindow();
+      // 変更理由: 調整中の枠やコメントが調整窓のリアルタイムプレビューへ映り込んで二重に見えるため、
+      // 調整中だけOverlayを撮影から除外する。失敗しても枠の表示は続ける。
+      try {
+        await invoke("set_comment_overlay_capture_excluded", { excluded: active });
+      } catch (error: unknown) {
+        logger.error("Overlay窓の撮影除外の切り替えに失敗しました:", error);
+      }
       if (active) {
         // 変更理由: 実況OFFでもドラッグ先の実画面に枠を見せるため、非表示のOverlayを一時表示する。
         if (!wantedVisible && !guideShown) {
@@ -408,12 +416,13 @@ export function createTauriCommentOverlayPlatform({
     },
     async captureMonitorPreview(monitor) {
       // nativeの物理座標を使い、負座標や画面ごとのDPI倍率も実際の撮影先へ反映する。
-      return invoke<string | null>("capture_comment_overlay_monitor_preview", {
+      const buffer = await invoke<ArrayBuffer>("capture_comment_overlay_monitor_preview", {
         x: Math.round(monitor.x * monitor.scaleFactor),
         y: Math.round(monitor.y * monitor.scaleFactor),
         width: Math.round(monitor.width * monitor.scaleFactor),
         height: Math.round(monitor.height * monitor.scaleFactor),
       });
+      return parseCommentOverlayPreviewFrame(buffer);
     },
     async getGeometry() {
       return readCommentOverlayGeometry(await getCommentOverlayWindow());

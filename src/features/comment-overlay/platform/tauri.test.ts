@@ -174,7 +174,14 @@ describe("TauriコメントOverlay window platform", () => {
       { active: true },
     );
 
+    expect(tauriMocks.invoke).toHaveBeenCalledWith("set_comment_overlay_capture_excluded", {
+      excluded: true,
+    });
+
     await platform.setPlacementGuide!(false);
+    expect(tauriMocks.invoke).toHaveBeenLastCalledWith("set_comment_overlay_capture_excluded", {
+      excluded: false,
+    });
     expect(tauriMocks.window.hide).toHaveBeenCalledTimes(1);
     expect(tauriMocks.event.emit).toHaveBeenLastCalledWith(
       "chlens://comment-overlay-placement-guide",
@@ -519,8 +526,13 @@ describe("TauriコメントOverlay window platform", () => {
     expect(listener).toHaveBeenCalledTimes(1);
   });
 
-  it("負座標とDPI倍率を物理座標へ戻して選択画面の縮小画像を要求する", async () => {
-    tauriMocks.invoke.mockResolvedValue("data:image/png;base64,preview");
+  it("負座標とDPI倍率を物理座標へ戻して選択画面の縮小フレームを要求する", async () => {
+    const buffer = new ArrayBuffer(12);
+    const view = new DataView(buffer);
+    view.setUint32(0, 1, true);
+    view.setUint32(4, 1, true);
+    new Uint8Array(buffer).set([1, 2, 3, 255], 8);
+    tauriMocks.invoke.mockResolvedValue(buffer);
     const platform = createTauriCommentOverlayPlatform();
     await expect(
       platform.captureMonitorPreview?.({
@@ -532,7 +544,7 @@ describe("TauriコメントOverlay window platform", () => {
         height: 864,
         scaleFactor: 1.25,
       }),
-    ).resolves.toBe("data:image/png;base64,preview");
+    ).resolves.toMatchObject({ width: 1, height: 1 });
     expect(tauriMocks.invoke).toHaveBeenCalledWith("capture_comment_overlay_monitor_preview", {
       x: -1920,
       y: -100,

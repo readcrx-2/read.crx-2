@@ -56,8 +56,15 @@
   cursor: wait;
 }
 
+/* 画面のプレビューは表示専用で、クリックは下の画面の矩形へ通して範囲指定を妨げない。 */
 .overlay-control-panel__screen-preview {
-  cursor: crosshair;
+  pointer-events: none;
+}
+
+.overlay-control-panel__screen-canvas {
+  display: block;
+  width: 100%;
+  height: 100%;
 }
 
 .overlay-control-panel__aspect-ratio input {

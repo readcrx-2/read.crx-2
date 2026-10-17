@@ -19,6 +19,7 @@ import {
   COMMENT_OVERLAY_ASPECT_RATIO,
   type CommentOverlayGeometry,
   type CommentOverlayMonitor,
+  type CommentOverlayPreviewFrame,
   DEFAULT_COMMENT_OVERLAY_GEOMETRY,
 } from "../platform/types";
 
@@ -26,9 +27,9 @@ const logger = createLogger("comment-overlay");
 
 const MIN_WIDTH = 320;
 const MIN_HEIGHT = 80;
-// 変更理由: 手動の「プレビューを更新」を押さないと画面の変化が見えなかったため、
-// 撮影が終わってから次を予約する形で定期更新する。重い撮影を重複させない。
-const PREVIEW_REFRESH_INTERVAL_MS = 2_000;
+// 変更理由: プレビューを実画面の動きに合わせて見せるため、約15fpsで連続更新する。
+// 撮影が終わってから次を予約し、撮影が遅いときは待たずに続けて、重い撮影を重複させない。
+const PREVIEW_FRAME_INTERVAL_MS = 66;
 
 interface DesktopBounds {
   x: number;
@@ -76,7 +77,9 @@ export interface OverlayControlPanelProps {
   lockAspectRatio: boolean;
   onLockAspectRatioChange: (locked: boolean) => void;
   onGeometryChange: (geometry: CommentOverlayGeometry) => void;
-  captureMonitorPreview?: (monitor: CommentOverlayMonitor) => Promise<string | null>;
+  captureMonitorPreview?: (
+    monitor: CommentOverlayMonitor,
+  ) => Promise<CommentOverlayPreviewFrame | null>;
   /** ドラッグの開始・終了を通知する。実画面にも同じ範囲の枠を出すために使う。 */
   onDragActiveChange?: (active: boolean) => void;
   /** 利用者が画面を切り替えるまで、最初にプレビューするモニターのid。 */
@@ -311,9 +314,11 @@ export function OverlayControlPanel({
       : null;
   }, [bounds, geometry, lockAspectRatio, previewMonitor]);
   const displayedGeometry = dragPreview ?? currentGeometry;
+  // フレームそのものはcanvasへ直接描き、約15fpsでReactを再描画しない。stateは表示状態だけを持つ。
+  const canvasRef = useRef<HTMLCanvasElement>(null);
   const [screenPreview, setScreenPreview] = useState<{
     monitor: CommentOverlayMonitor;
-    image: string | null;
+    hasImage: boolean;
     error: boolean;
   } | null>(null);
   const currentPreview = screenPreview?.monitor === previewMonitor ? screenPreview : null;
@@ -324,31 +329,55 @@ export function OverlayControlPanel({
     if (!captureMonitorPreview || !previewMonitor) return;
     let disposed = false;
     let timer: ReturnType<typeof setTimeout> | null = null;
-    const scheduleNext = (): void => {
-      if (!disposed) timer = setTimeout(() => void captureOnce(), PREVIEW_REFRESH_INTERVAL_MS);
+    const updateStatus = (hasImage: boolean, error: boolean): void => {
+      // 毎フレーム同じ状態を設定してもReactを再描画しない。
+      setScreenPreview((current) =>
+        current?.monitor === previewMonitor &&
+        current.hasImage === hasImage &&
+        current.error === error
+          ? current
+          : { monitor: previewMonitor, hasImage, error },
+      );
+    };
+    const drawFrame = (frame: CommentOverlayPreviewFrame): void => {
+      const canvas = canvasRef.current;
+      const context = canvas?.getContext("2d");
+      if (!canvas || !context) return;
+      if (canvas.width !== frame.width || canvas.height !== frame.height) {
+        canvas.width = frame.width;
+        canvas.height = frame.height;
+      }
+      context.putImageData(new ImageData(frame.pixels, frame.width, frame.height), 0, 0);
+    };
+    const scheduleNext = (startedAt: number): void => {
+      if (disposed) return;
+      const wait = Math.max(0, PREVIEW_FRAME_INTERVAL_MS - (performance.now() - startedAt));
+      timer = setTimeout(() => void captureOnce(), wait);
     };
     const captureOnce = async (): Promise<void> => {
+      const startedAt = performance.now();
       // 窓が最小化・背面タブなどで見えない間は撮影せず、表示されたら再開する。
       if (svgRef.current?.ownerDocument.visibilityState === "hidden") {
-        scheduleNext();
+        scheduleNext(startedAt);
         return;
       }
       try {
-        const image = await captureMonitorPreview(previewMonitor);
+        const frame = await captureMonitorPreview(previewMonitor);
         if (disposed) return;
-        setScreenPreview({ monitor: previewMonitor, image, error: false });
+        if (frame) drawFrame(frame);
+        updateStatus(frame != null, false);
         // 撮影に対応しない環境（null）では、同じ結果を繰り返し要求しない。
-        if (image != null) scheduleNext();
+        if (frame != null) scheduleNext(startedAt);
       } catch (error: unknown) {
         logger.error("ディスプレイのプレビュー取得に失敗しました:", error);
         if (disposed) return;
         // 一時的な失敗で直前の画像を消さず、次の周期で自動的に再試行する。
         setScreenPreview((current) => ({
           monitor: previewMonitor,
-          image: current?.monitor === previewMonitor ? current.image : null,
+          hasImage: current?.monitor === previewMonitor && current.hasImage,
           error: true,
         }));
-        scheduleNext();
+        scheduleNext(startedAt);
       }
     };
     void captureOnce();
@@ -543,7 +572,7 @@ export function OverlayControlPanel({
                   ? "画面を取得中…"
                   : currentPreview?.error
                     ? "画面を取得できませんでした。自動で再試行します。"
-                    : currentPreview?.image
+                    : currentPreview?.hasImage
                       ? "プレビューを自動更新中"
                       : "この環境では画面の撮影に対応していません。"}
               </span>
@@ -596,24 +625,25 @@ export function OverlayControlPanel({
                     className="overlay-control-panel__monitor-screen"
                     onPointerDown={(event) => startDrag(event, "select")}
                   />
-                  {currentPreview?.image ? (
-                    <image
-                      href={currentPreview.image}
+                  {captureMonitorPreview && (
+                    // SVGはピクセル列を直接描けないため、foreignObjectのcanvasへフレームを描く。
+                    // クリックは下の画面の矩形へ通し、範囲指定の操作を妨げない。
+                    <foreignObject
                       x={bounds.x}
                       y={bounds.y}
                       width={bounds.width}
                       height={bounds.height}
-                      preserveAspectRatio="none"
                       className="overlay-control-panel__screen-preview"
-                      onPointerDown={(event) => startDrag(event, "select")}
-                      onError={() => {
-                        logger.error("ディスプレイのプレビュー画像を表示できませんでした");
-                        setScreenPreview((current) =>
-                          current ? { ...current, image: null, error: true } : null,
-                        );
-                      }}
-                    />
-                  ) : (
+                      visibility={currentPreview?.hasImage ? "visible" : "hidden"}
+                    >
+                      <canvas
+                        ref={canvasRef}
+                        className="overlay-control-panel__screen-canvas"
+                        aria-hidden="true"
+                      />
+                    </foreignObject>
+                  )}
+                  {!currentPreview?.hasImage && (
                     <text
                       x={previewMonitor.x + previewMonitor.width / 2}
                       y={previewMonitor.y + previewMonitor.height / 2}

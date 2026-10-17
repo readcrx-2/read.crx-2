@@ -1,12 +1,10 @@
-use super::{bgrx_to_rgb, preview_dimensions, to_png_data_url};
-use base64::engine::general_purpose::STANDARD;
-use base64::Engine;
+use super::{bgrx_to_rgba_frame, preview_dimensions};
 
 #[test]
-fn 小さい画面を拡大せず大きい画面を長辺640pxに縮小する() {
+fn 小さい画面を拡大せず大きい画面を長辺512pxに縮小する() {
   assert_eq!(preview_dimensions(320, 200).unwrap(), (320, 200));
-  assert_eq!(preview_dimensions(1920, 1080).unwrap(), (640, 360));
-  assert_eq!(preview_dimensions(10_000, 1).unwrap(), (640, 1));
+  assert_eq!(preview_dimensions(1920, 1080).unwrap(), (512, 288));
+  assert_eq!(preview_dimensions(10_000, 1).unwrap(), (512, 1));
 }
 
 #[test]
@@ -17,19 +15,15 @@ fn 無効な画面サイズを拒否する() {
 }
 
 #[test]
-fn bgrx画素を_rgbへ変換して未定義alphaを捨てる() {
+fn bgrx画素を幅高さ付きの不透明なrgbaへ変換する() {
   assert_eq!(
-    bgrx_to_rgb(&[3, 2, 1, 255, 30, 20, 10, 0]).unwrap(),
-    [1, 2, 3, 10, 20, 30]
+    bgrx_to_rgba_frame(2, 1, &[3, 2, 1, 0, 30, 20, 10, 7]).unwrap(),
+    [2, 0, 0, 0, 1, 0, 0, 0, 1, 2, 3, 255, 10, 20, 30, 255]
   );
-  assert!(bgrx_to_rgb(&[1, 2, 3]).is_err());
 }
 
 #[test]
-fn rgbデータを_pngのdata_urlへ変換する() {
-  let data_url = to_png_data_url(1, 1, &[1, 2, 3]).unwrap();
-  let encoded = data_url.strip_prefix("data:image/png;base64,").unwrap();
-  let bytes = STANDARD.decode(encoded).unwrap();
-  assert_eq!(&bytes[..8], b"\x89PNG\r\n\x1a\n");
-  assert!(to_png_data_url(1, 1, &[1, 2]).is_err());
+fn 画素数が幅高さと合わないデータを拒否する() {
+  assert!(bgrx_to_rgba_frame(2, 1, &[1, 2, 3, 4]).is_err());
+  assert!(bgrx_to_rgba_frame(1, 1, &[1, 2, 3]).is_err());
 }

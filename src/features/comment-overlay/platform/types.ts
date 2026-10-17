@@ -16,6 +16,13 @@ export const DEFAULT_COMMENT_OVERLAY_GEOMETRY: CommentOverlayGeometry = {
 };
 
 /** 仮想デスクトップ上でOverlayの配置先を表示するためのモニター情報。 */
+/** 画面を縮小撮影した1フレーム。pixelsは幅×高さ×4のRGBA。 */
+export interface CommentOverlayPreviewFrame {
+  width: number;
+  height: number;
+  pixels: Uint8ClampedArray<ArrayBuffer>;
+}
+
 export interface CommentOverlayMonitor {
   id: string;
   name: string;
@@ -60,10 +67,12 @@ export interface CommentOverlayWindowPlatform {
   /** ChLens本体の窓があるモニターのid（getMonitorsのid）。判定できない環境では省略する。 */
   getHostMonitorId?: () => Promise<string | null>;
   /**
-   * 選択画面の縮小静止画。対応しない環境ではnullを返す。保存はしない。
-   * 表示位置の調整窓が見えている間だけ、前回の撮影完了後に周期的に要求される。
+   * 選択画面の縮小フレーム。対応しない環境ではnullを返す。保存はしない。
+   * 調整窓が見えていてそのディスプレイを選んでいる間、前回の撮影完了後に連続して要求される。
    */
-  captureMonitorPreview?: (monitor: CommentOverlayMonitor) => Promise<string | null>;
+  captureMonitorPreview?: (
+    monitor: CommentOverlayMonitor,
+  ) => Promise<CommentOverlayPreviewFrame | null>;
   getGeometry(): Promise<CommentOverlayGeometry | null>;
   watchGeometry(listener: (geometry: CommentOverlayGeometry) => void): Promise<() => void>;
   setGeometry(geometry: CommentOverlayGeometry): Promise<void>;

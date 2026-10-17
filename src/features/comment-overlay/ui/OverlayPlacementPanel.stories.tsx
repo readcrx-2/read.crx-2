@@ -2,13 +2,36 @@ import "./OverlayPlacementWindow.css";
 
 import type { Meta, StoryObj } from "@storybook/react-vite";
 
-import type { CommentOverlayGeometry, CommentOverlayWindowPlatform } from "../platform/types";
+import type {
+  CommentOverlayGeometry,
+  CommentOverlayPreviewFrame,
+  CommentOverlayWindowPlatform,
+} from "../platform/types";
 import { OverlayPlacementPanel } from "./OverlayPlacementPanel";
 
-// 実画面の代わりに、デスクトップらしい配色の静止画をプレビューとして返す。
-const PREVIEW_IMAGE = `data:image/svg+xml;utf8,${encodeURIComponent(
-  '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1920 1080"><rect width="1920" height="1080" fill="#1f2a3a"/><rect x="80" y="60" width="1100" height="900" fill="#2d3b52"/><rect x="1240" y="60" width="600" height="900" fill="#3a4a63"/><rect y="1030" width="1920" height="50" fill="#0f1622"/></svg>',
-)}`;
+// 実画面の代わりに、デスクトップらしい配色の静止フレームをプレビューとして返す。
+function createPreviewFrame(): CommentOverlayPreviewFrame {
+  const width = 192;
+  const height = 108;
+  const pixels = new Uint8ClampedArray(width * height * 4);
+  for (let y = 0; y < height; y += 1) {
+    for (let x = 0; x < width; x += 1) {
+      const inTaskbar = y >= 103;
+      const inWindow = x >= 8 && x < 118 && y >= 6 && y < 96;
+      const inSidebar = x >= 124 && x < 184 && y >= 6 && y < 96;
+      const [red, green, blue] = inTaskbar
+        ? [15, 22, 34]
+        : inWindow
+          ? [45, 59, 82]
+          : inSidebar
+            ? [58, 74, 99]
+            : [31, 42, 58];
+      pixels.set([red, green, blue, 255], (y * width + x) * 4);
+    }
+  }
+  return { width, height, pixels };
+}
+const PREVIEW_FRAME = createPreviewFrame();
 
 function createPlatform(targetId: string | null): CommentOverlayWindowPlatform {
   let currentTarget = targetId;
@@ -54,7 +77,7 @@ function createPlatform(targetId: string | null): CommentOverlayWindowPlatform {
     ],
     // ChLensは左モニター、Overlayはメインモニターにある状況を再現する。
     getHostMonitorId: async () => "monitor-1",
-    captureMonitorPreview: async () => PREVIEW_IMAGE,
+    captureMonitorPreview: async () => PREVIEW_FRAME,
     getGeometry: async () => geometry,
     watchGeometry: async () => () => {},
     setGeometry: async (next) => {

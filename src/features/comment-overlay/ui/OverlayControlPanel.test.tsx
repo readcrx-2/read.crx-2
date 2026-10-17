@@ -3,7 +3,11 @@ import "@testing-library/jest-dom/vitest";
 import { act, cleanup, fireEvent, render, screen, waitFor } from "@testing-library/react";
 import { afterEach, describe, expect, it, vi } from "vite-plus/test";
 
-import { type CommentOverlayMonitor, DEFAULT_COMMENT_OVERLAY_GEOMETRY } from "../platform/types";
+import {
+  type CommentOverlayMonitor,
+  type CommentOverlayPreviewFrame,
+  DEFAULT_COMMENT_OVERLAY_GEOMETRY,
+} from "../platform/types";
 import { OverlayControlPanel } from "./OverlayControlPanel";
 
 const monitor: CommentOverlayMonitor = {
@@ -26,10 +30,36 @@ const secondMonitor: CommentOverlayMonitor = {
   scaleFactor: 1.25,
 };
 
+const previewFrame: CommentOverlayPreviewFrame = {
+  width: 1,
+  height: 1,
+  pixels: new Uint8ClampedArray([1, 2, 3, 255]),
+};
+
+// jsdomはcanvasの描画を実装しないため、描画先のコンテキストを差し替えて描画回数を確認する。
+function mockCanvasContext() {
+  const putImageData = vi.fn();
+  vi.spyOn(HTMLCanvasElement.prototype, "getContext").mockReturnValue({
+    putImageData,
+  } as unknown as CanvasRenderingContext2D);
+  vi.stubGlobal(
+    "ImageData",
+    class {
+      constructor(
+        readonly data: Uint8ClampedArray,
+        readonly width: number,
+        readonly height: number,
+      ) {}
+    },
+  );
+  return putImageData;
+}
+
 describe("OverlayControlPanel", () => {
-  it("選択した実画面のプレビューを自動で撮影し直し、範囲を指定できる", async () => {
+  it("選択した実画面のプレビューを約15fpsで連続して撮影し、範囲を指定できる", async () => {
     vi.useFakeTimers({ shouldAdvanceTime: true });
-    const capture = vi.fn().mockResolvedValue("data:image/png;base64,preview");
+    const putImageData = mockCanvasContext();
+    const capture = vi.fn().mockResolvedValue(previewFrame);
     const onGeometryChange = vi.fn();
     render(
       <OverlayControlPanel
@@ -43,33 +73,36 @@ describe("OverlayControlPanel", () => {
     await waitFor(() => expect(screen.getByText("プレビューを自動更新中")).toBeInTheDocument());
     expect(capture).toHaveBeenCalledExactlyOnceWith(monitor);
     expect(screen.queryByRole("button", { name: "プレビューを更新" })).toBeNull();
-    expect(document.querySelector("image")).toHaveAttribute(
-      "href",
-      "data:image/png;base64,preview",
-    );
+    expect(putImageData).toHaveBeenCalledTimes(1);
     fireEvent.doubleClick(screen.getByTestId("overlay-control-panel-desktop"));
     expect(onGeometryChange).toHaveBeenCalledWith({ x: 0, y: 0, width: 1920, height: 1080 });
-    // 前回の撮影が終わってから一定間隔で撮り直す。
+    // 前回の撮影が終わってから短い間隔で撮り直し、そのたびにcanvasへ描く。
     await act(async () => {
-      await vi.advanceTimersByTimeAsync(2_000);
+      await vi.advanceTimersByTimeAsync(200);
     });
-    await waitFor(() => expect(capture).toHaveBeenCalledTimes(2));
+    await waitFor(() => expect(capture.mock.calls.length).toBeGreaterThanOrEqual(3));
+    expect(putImageData.mock.calls.length).toBe(capture.mock.calls.length);
     fireEvent.click(screen.getByRole("button", { name: "次のディスプレイをプレビュー" }));
     await waitFor(() => expect(capture).toHaveBeenLastCalledWith(secondMonitor));
-    await waitFor(() => expect(document.querySelector("image")).toHaveAttribute("x", "1920"));
+    await waitFor(() =>
+      expect(document.querySelector("foreignObject")).toHaveAttribute("x", "1920"),
+    );
   });
 
   it("前の画面の撮影が遅れて完了しても選択中の画面に混ざらない", async () => {
-    let finishFirst: ((image: string) => void) | undefined;
+    const putImageData = mockCanvasContext();
+    const firstFrame = { ...previewFrame, pixels: new Uint8ClampedArray([9, 9, 9, 255]) };
+    const secondFrame = { ...previewFrame, pixels: new Uint8ClampedArray([7, 7, 7, 255]) };
+    let finishFirst: ((frame: CommentOverlayPreviewFrame) => void) | undefined;
     const capture = vi
       .fn()
       .mockImplementationOnce(
         () =>
-          new Promise<string>((resolve) => {
+          new Promise<CommentOverlayPreviewFrame>((resolve) => {
             finishFirst = resolve;
           }),
       )
-      .mockResolvedValue("data:image/png;base64,second");
+      .mockResolvedValue(secondFrame);
     render(
       <OverlayControlPanel
         monitors={[monitor, secondMonitor]}
@@ -80,24 +113,27 @@ describe("OverlayControlPanel", () => {
       />,
     );
     fireEvent.click(screen.getByRole("button", { name: "次のディスプレイをプレビュー" }));
-    await waitFor(() =>
-      expect(document.querySelector("image")).toHaveAttribute(
-        "href",
-        "data:image/png;base64,second",
-      ),
-    );
+    await waitFor(() => expect(putImageData).toHaveBeenCalled());
+    const drawnBefore = putImageData.mock.calls.length;
     await act(async () => {
-      finishFirst?.("data:image/png;base64,first");
+      finishFirst?.(firstFrame);
     });
-    expect(document.querySelector("image")).toHaveAttribute("href", "data:image/png;base64,second");
+    // 遅れて届いた前の画面のフレームは描かない。
+    expect(putImageData.mock.calls.length).toBe(drawnBefore);
+    expect(
+      putImageData.mock.calls.some(
+        ([image]) => (image as { data: Uint8ClampedArray }).data[0] === 9,
+      ),
+    ).toBe(false);
   });
 
   it("撮影に失敗しても範囲指定を維持し、次の周期で自動的に再試行する", async () => {
     vi.useFakeTimers({ shouldAdvanceTime: true });
+    mockCanvasContext();
     const capture = vi
       .fn()
       .mockRejectedValueOnce(new Error("撮影失敗"))
-      .mockResolvedValue("data:image/png;base64,retry");
+      .mockResolvedValue(previewFrame);
     render(
       <OverlayControlPanel
         monitors={[monitor]}
@@ -110,7 +146,7 @@ describe("OverlayControlPanel", () => {
     await waitFor(() => expect(screen.getByText(/画面を取得できませんでした/)).toBeInTheDocument());
     expect(screen.getByTestId("overlay-control-panel-selection")).toBeInTheDocument();
     await act(async () => {
-      await vi.advanceTimersByTimeAsync(2_000);
+      await vi.advanceTimersByTimeAsync(200);
     });
     await waitFor(() => expect(screen.getByText("プレビューを自動更新中")).toBeInTheDocument());
   });
@@ -118,6 +154,7 @@ describe("OverlayControlPanel", () => {
     cleanup();
     vi.useRealTimers();
     vi.restoreAllMocks();
+    vi.unstubAllGlobals();
   });
 
   it("撮影に対応しない環境では同じ撮影を繰り返し要求しない", async () => {

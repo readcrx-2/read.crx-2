@@ -88,6 +88,7 @@ pub fn run() {
       http_transport::shared_http_request,
       log_level::set_log_debug,
       monitor_preview::capture_comment_overlay_monitor_preview,
+      monitor_preview::set_comment_overlay_capture_excluded,
       overlay_attachment::list_comment_overlay_windows,
       overlay_attachment::raise_comment_overlay_above_target,
       overlay_attachment::read_comment_overlay_target,

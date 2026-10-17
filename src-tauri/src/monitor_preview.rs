@@ -1,4 +1,5 @@
-/// 選択画面の静止画だけを返し、画面内容をファイルやログへ保存しない。
+/// 選択画面の縮小フレーム（幅・高さ付きの生RGBA）だけを返し、画面内容をファイルやログへ保存しない。
+/// 撮影に対応しない環境では空のレスポンスを返す。
 #[tauri::command]
 pub async fn capture_comment_overlay_monitor_preview(
   app: tauri::AppHandle,
@@ -6,7 +7,7 @@ pub async fn capture_comment_overlay_monitor_preview(
   y: i32,
   width: u32,
   height: u32,
-) -> Result<Option<String>, String> {
+) -> Result<tauri::ipc::Response, String> {
   let result = async {
     let monitors = app
       .available_monitors()
@@ -28,7 +29,7 @@ pub async fn capture_comment_overlay_monitor_preview(
     }) {
       return Err("撮影対象のディスプレイが見つかりません。パネルを開き直してください。".into());
     }
-    // GDIとPNG圧縮をUIスレッドから外し、1回分の縮小画像だけをIPCへ渡す。
+    // GDIの撮影と変換をUIスレッドから外し、1回分の縮小フレームだけをIPCへ渡す。
     tauri::async_runtime::spawn_blocking(move || capture(x, y, width, height))
       .await
       .map_err(|error| error.to_string())?
@@ -37,17 +38,56 @@ pub async fn capture_comment_overlay_monitor_preview(
   if let Err(error) = &result {
     log::error!("ディスプレイのプレビュー取得に失敗しました: {error}");
   }
+  result.map(tauri::ipc::Response::new)
+}
+
+/// Overlay窓を画面の撮影から一時的に除外する（調整中の枠やコメントがプレビューに映り込まないようにする）。
+///
+/// 常時除外にすると、配信や録画でコメントOverlayを撮れなくなるため、調整中だけ有効にする。
+#[tauri::command]
+pub fn set_comment_overlay_capture_excluded(
+  app: tauri::AppHandle,
+  excluded: bool,
+) -> Result<(), String> {
+  let result = set_capture_excluded(&app, excluded);
+  if let Err(error) = &result {
+    log::error!("Overlay窓の撮影除外の切り替えに失敗しました: {error}");
+  }
   result
 }
 
 #[cfg(not(windows))]
-fn capture(_x: i32, _y: i32, _width: u32, _height: u32) -> Result<Option<String>, String> {
-  Ok(None)
+fn set_capture_excluded(_app: &tauri::AppHandle, _excluded: bool) -> Result<(), String> {
+  Ok(())
 }
 
 #[cfg(windows)]
-fn capture(x: i32, y: i32, width: u32, height: u32) -> Result<Option<String>, String> {
-  use crate::preview_image::{bgrx_to_rgb, preview_dimensions, to_png_data_url};
+fn set_capture_excluded(app: &tauri::AppHandle, excluded: bool) -> Result<(), String> {
+  use windows_sys::Win32::{Foundation::HWND, UI::WindowsAndMessaging::*};
+  let hwnd = tauri::Manager::get_webview_window(app, "comment-overlay")
+    .ok_or_else(|| "Overlayウィンドウが見つかりません。".to_string())?
+    .hwnd()
+    .map_err(|error| error.to_string())?
+    .0 as HWND;
+  let affinity = if excluded {
+    WDA_EXCLUDEFROMCAPTURE
+  } else {
+    WDA_NONE
+  };
+  if unsafe { SetWindowDisplayAffinity(hwnd, affinity) } == 0 {
+    return Err(std::io::Error::last_os_error().to_string());
+  }
+  Ok(())
+}
+
+#[cfg(not(windows))]
+fn capture(_x: i32, _y: i32, _width: u32, _height: u32) -> Result<Vec<u8>, String> {
+  Ok(Vec::new())
+}
+
+#[cfg(windows)]
+fn capture(x: i32, y: i32, width: u32, height: u32) -> Result<Vec<u8>, String> {
+  use crate::preview_image::{bgrx_to_rgba_frame, preview_dimensions};
   use std::{ffi::c_void, mem::size_of, ptr::null_mut};
   use windows_sys::Win32::Graphics::Gdi::*;
 
@@ -78,8 +118,8 @@ fn capture(x: i32, y: i32, width: u32, height: u32) -> Result<Option<String>, St
   }
 
   let (preview_width, preview_height) = preview_dimensions(width, height)?;
-  // 長辺640pxの静止画へ直接縮小し、4K画面のフルサイズ画像を保持・転送しない。
-  let rgb = unsafe {
+  // 長辺512pxへ直接縮小し、4K画面のフルサイズ画像を保持・転送しない。
+  let frame = unsafe {
     let mut resources = CaptureResources {
       screen: GetDC(null_mut()),
       memory: null_mut(),
@@ -131,11 +171,9 @@ fn capture(x: i32, y: i32, width: u32, height: u32) -> Result<Option<String>, St
       return Err("撮影用bitmapの選択に失敗しました".into());
     }
     resources.previous = previous;
-    if SetStretchBltMode(resources.memory, HALFTONE) == 0 {
+    // 変更理由: 10〜20fpsで更新するため、重いHALFTONEではなく単純な間引きで縮小する。
+    if SetStretchBltMode(resources.memory, COLORONCOLOR) == 0 {
       return Err("画面縮小モードの設定に失敗しました".into());
-    }
-    if SetBrushOrgEx(resources.memory, 0, 0, null_mut()) == 0 {
-      return Err("画面縮小の原点設定に失敗しました".into());
     }
     if StretchBlt(
       resources.memory,
@@ -159,13 +197,16 @@ fn capture(x: i32, y: i32, width: u32, height: u32) -> Result<Option<String>, St
     if GdiFlush() == 0 {
       return Err("画面の撮影結果の同期に失敗しました".into());
     }
-    // DIBのBGR成分をPNGのRGBへ変換する。未定義のalphaを使うと透明な画像になる。
-    bgrx_to_rgb(std::slice::from_raw_parts(
-      pixels.cast::<u8>(),
-      (preview_width * preview_height * 4) as usize,
-    ))?
+    bgrx_to_rgba_frame(
+      preview_width,
+      preview_height,
+      std::slice::from_raw_parts(
+        pixels.cast::<u8>(),
+        (preview_width * preview_height * 4) as usize,
+      ),
+    )?
   };
-  Ok(Some(to_png_data_url(preview_width, preview_height, &rgb)?))
+  Ok(frame)
 }
 
 fn monitor_matches_bounds(

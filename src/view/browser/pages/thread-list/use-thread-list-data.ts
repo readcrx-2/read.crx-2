@@ -1,5 +1,6 @@
 import type { MutableRefObject } from "react";
 import { useCallback, useEffect, useRef, useState } from "react";
+import { createLogger } from "src/app/logger";
 import {
   getThreadListCache,
   setThreadListCache,
@@ -7,6 +8,8 @@ import {
 import { container } from "src/service-container/index";
 import type { IThread } from "src/service-container/interfaces";
 import { consumeManualRefresh } from "src/view/browser/utils/manual-refresh";
+
+const logger = createLogger("view/browser");
 
 interface UseThreadListDataOptions {
   boardUrl: string;
@@ -83,7 +86,7 @@ export function useThreadListData({
         }
       }
     } catch (e) {
-      console.error("[ChLens] スレッド一覧の取得に失敗しました:", {
+      logger.error("スレッド一覧の取得に失敗しました:", {
         boardUrl: boardUrl,
         error: e,
       });

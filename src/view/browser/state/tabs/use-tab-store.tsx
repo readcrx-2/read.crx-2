@@ -10,6 +10,7 @@ import React, {
   useState,
 } from "react";
 import { registerDebugStateProvider } from "src/app/debug/debug-api";
+import { createLogger } from "src/app/logger";
 import { platform } from "src/app/platform";
 import { container } from "src/service-container/index";
 import { tabActions } from "src/view/browser/state/tabs/tab-store-actions";
@@ -60,6 +61,8 @@ import {
 } from "src/view/browser/types";
 import { parseInternalBrowserPage } from "src/view/browser/utils/link-routing";
 import browser from "webextension-polyfill";
+
+const logger = createLogger("view/browser");
 
 export type { TabActionCreators } from "src/view/browser/state/tabs/tab-store-actions";
 export { tabActions } from "src/view/browser/state/tabs/tab-store-actions";
@@ -363,7 +366,7 @@ export const TabProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
       url.searchParams.delete("q");
       window.history.replaceState(window.history.state, "", url.href);
     } catch (error) {
-      console.error("起動先のURLパラメーターを消費できませんでした", error);
+      logger.error("起動先のURLパラメーターを消費できませんでした", error);
     }
   }, []);
 

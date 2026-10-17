@@ -1,6 +1,7 @@
 import React, { type RefObject, useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { registerDebugStateProvider } from "src/app/debug/debug-api";
 import { recordDebugEvent } from "src/app/debug/debug-log";
+import { createLogger } from "src/app/logger";
 import { useArchiveReplayPositionStore } from "src/features/archive-replay/browser/position-store";
 import { normalizeArchiveReplayThreadUrl } from "src/features/archive-replay/domain";
 import {
@@ -81,6 +82,8 @@ import {
   countNewRepliesToWrittenResponses,
 } from "src/view/browser/utils/thread-emphasis";
 import { subscribeThreadResJump } from "src/view/browser/utils/thread-read-state";
+
+const logger = createLogger("view/browser");
 interface ThreadPageProps {
   tabId: string;
   // ContentAreaから描画対象を明示して受け取り、別の表示ホストでもペインのactiveTabに依存しない。
@@ -229,7 +232,7 @@ export const ThreadPage: React.FC<ThreadPageProps> = ({
         ownResponseNumbers: ownResNums,
       })
       .catch((error: unknown) => {
-        console.error("[ChLens] 次スレ移動後のコメント実況引き継ぎに失敗しました:", error);
+        logger.error("次スレ移動後のコメント実況引き継ぎに失敗しました:", error);
       });
   }, [
     navigationTab.currentIndex,
@@ -443,7 +446,7 @@ export const ThreadPage: React.FC<ThreadPageProps> = ({
           targetWindow: viewWindow,
         })
         .catch((error: unknown) => {
-          console.error("[ChLens] 新着レス通知の表示に失敗しました:", error);
+          logger.error("新着レス通知の表示に失敗しました:", error);
         });
     },
     [ownResNums, page.threadUrl, page.title, replyToOwnResNums, responses, viewWindow],
@@ -508,7 +511,7 @@ export const ThreadPage: React.FC<ThreadPageProps> = ({
       void commentOverlayController
         .publishSystemMessage(page.threadUrl, `スレ「${nextThread.title}」へ移動します。`)
         .catch((error: unknown) => {
-          console.error("[ChLens] 次スレ移動の通知コメント送信に失敗しました:", error);
+          logger.error("次スレ移動の通知コメント送信に失敗しました:", error);
         });
       dispatch(
         tabActions.followNextThread(

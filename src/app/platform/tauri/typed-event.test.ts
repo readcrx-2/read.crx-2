@@ -1,5 +1,13 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from "vite-plus/test";
 
+const loggerMock = vi.hoisted(() => ({
+  error: vi.fn(),
+  warn: vi.fn(),
+  info: vi.fn(),
+  debug: vi.fn(),
+}));
+vi.mock("src/app/logger", () => ({ createLogger: () => loggerMock }));
+
 const mocks = vi.hoisted(() => ({
   emitTo: vi.fn(),
   listen: vi.fn(),
@@ -65,7 +73,7 @@ describe("defineTauriEventChannel", () => {
       handler = callback;
       return unlisten;
     });
-    const consoleError = vi.spyOn(console, "error").mockImplementation(() => {});
+    loggerMock.error.mockClear();
     const listener = vi.fn();
     const channel = createChannel();
 
@@ -75,7 +83,7 @@ describe("defineTauriEventChannel", () => {
 
     expect(mocks.listen).toHaveBeenCalledWith("chlens://test-ping", expect.any(Function));
     expect(listener).toHaveBeenCalledExactlyOnceWith({ count: 2 });
-    expect(consoleError).toHaveBeenCalledOnce();
+    expect(loggerMock.error).toHaveBeenCalledOnce();
     expect(dispose).toBe(unlisten);
   });
 });

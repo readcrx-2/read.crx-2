@@ -1,4 +1,7 @@
+import { createLogger } from "src/app/logger";
 import { resolveBoardUrlForBrowser } from "src/view/browser/utils/link-routing";
+
+const logger = createLogger("view/browser");
 
 /**
  * ページの同一性判定（タブ履歴・自動更新キー・ビュー状態キー）に使うURLの正規化。
@@ -23,7 +26,7 @@ export function normalizePageLocation(
     return parsed.toString().replace(/\/+$/, "/");
   } catch (error) {
     // URLとして解釈できない入力は照合キーとしてそのまま使うが、原因調査のためログは残す。
-    console.warn("[page-location] URLを正規化できないため文字列として扱います", {
+    logger.warn("URLを正規化できないため文字列として扱います", {
       rawLocation,
       error,
     });

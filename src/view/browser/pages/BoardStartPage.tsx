@@ -1,4 +1,5 @@
 import React from "react";
+import { createLogger } from "src/app/logger";
 import { getBoardUrlKey, normalizeBoardUrl } from "src/core/board/BoardUrlNormalizer";
 import {
   OPENED_BOARDS_CONFIG_KEY,
@@ -14,6 +15,8 @@ import { Alert } from "src/view/browser/ui/Alert";
 import { Button } from "src/view/browser/ui/Button";
 import { Spinner } from "src/view/browser/ui/Spinner";
 import { getBoardUrlFromThreadUrl } from "src/view/browser/utils/link-routing";
+
+const logger = createLogger("view/browser");
 
 interface RecentBoard {
   boardUrl: string;
@@ -132,7 +135,7 @@ export const BoardStartPage: React.FC<{ intro: React.ReactNode }> = ({ intro }) 
           setBoards(titledBoards);
         }
       } catch (e) {
-        console.error("最近開いた板の読み込みに失敗しました", e);
+        logger.error("最近開いた板の読み込みに失敗しました", e);
         if (!cancelled && revision === requestRevision) {
           setError(e instanceof Error ? e.message : "最近開いた板の読み込みに失敗しました");
         }

@@ -7,6 +7,14 @@ import {
 } from "src/view/browser/commands/command-runtime";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vite-plus/test";
 
+const loggerMock = vi.hoisted(() => ({
+  error: vi.fn(),
+  warn: vi.fn(),
+  info: vi.fn(),
+  debug: vi.fn(),
+}));
+vi.mock("src/app/logger", () => ({ createLogger: () => loggerMock }));
+
 const copyTextMock = vi.hoisted(() => vi.fn<() => Promise<void>>());
 
 vi.mock("src/view/browser/utils/clipboard", async (importOriginal) => {
@@ -160,7 +168,7 @@ describe("command-runtime", () => {
     const runtime = createRuntime();
     const toastErrorMock = vi.fn();
     runtime.toast.error = toastErrorMock;
-    const consoleErrorSpy = vi.spyOn(console, "error").mockImplementation(() => undefined);
+    loggerMock.error.mockClear();
 
     await expect(
       runCommandRequest(
@@ -169,19 +177,18 @@ describe("command-runtime", () => {
       ),
     ).resolves.toBe(false);
 
-    expect(consoleErrorSpy).toHaveBeenCalledWith(
+    expect(loggerMock.error).toHaveBeenCalledWith(
       "コマンドの実行に失敗しました",
       expect.objectContaining({ commandId: COMMAND_REQUEST_IDS.TARGET_COPY, error }),
     );
     expect(toastErrorMock).toHaveBeenCalledWith("コピーに失敗しました");
-    consoleErrorSpy.mockRestore();
   });
 
   it("任意文字列コピーの失敗ログには本文を含めない", async () => {
     const error = new Error("コピーに失敗しました");
     copyTextMock.mockRejectedValue(error);
     const runtime = createRuntime();
-    const consoleErrorSpy = vi.spyOn(console, "error").mockImplementation(() => undefined);
+    loggerMock.error.mockClear();
 
     await expect(
       runCommandRequest(
@@ -190,13 +197,12 @@ describe("command-runtime", () => {
       ),
     ).resolves.toBe(false);
 
-    expect(consoleErrorSpy).toHaveBeenCalledWith(
+    expect(loggerMock.error).toHaveBeenCalledWith(
       "コマンドの実行に失敗しました",
       expect.objectContaining({ commandId: COMMAND_REQUEST_IDS.CLIPBOARD_COPY_TEXT, error }),
     );
-    const details = consoleErrorSpy.mock.calls.at(-1)?.[1] as Record<string, unknown>;
+    const details = loggerMock.error.mock.calls.at(-1)?.[1] as Record<string, unknown>;
     expect(details).not.toHaveProperty("target");
     expect(details).not.toHaveProperty("text");
-    consoleErrorSpy.mockRestore();
   });
 });

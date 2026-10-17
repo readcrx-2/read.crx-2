@@ -1,5 +1,8 @@
 import { bootView } from "src/app/boot";
+import { createLogger } from "src/app/logger";
 import * as platformInternal from "src/app/platform";
+
+const logger = createLogger("app");
 
 // 変更理由: 以前はここで window.app（旧互換の入口）を組み立て、core のモジュール約 30 個も再エクスポートしていた。
 // legacy-window-app-plan の Phase 4 で、リポジトリの中にも外にも利用者がいないことを確かめたため、
@@ -11,7 +14,7 @@ export const platform = new Proxy({} as typeof platformInternal.platform, {
   get(_target, prop) {
     const actualPlatform = platformInternal.platform;
     if (!actualPlatform) {
-      console.error("platform is not initialized");
+      logger.error("platform is not initialized");
       return undefined;
     }
     return actualPlatform[prop as keyof typeof platformInternal.platform];

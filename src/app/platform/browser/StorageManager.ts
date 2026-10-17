@@ -1,3 +1,4 @@
+import { createLogger } from "src/app/logger";
 import {
   KeyValueStore,
   ObjectStore,
@@ -5,6 +6,8 @@ import {
   StorageManager,
 } from "src/app/platform/types";
 import browser from "webextension-polyfill";
+
+const logger = createLogger("platform");
 
 /**
  * ブラウザ拡張機能環境用のKeyValueStore実装 (browser.storage.localを使用)
@@ -75,7 +78,7 @@ class BrowserObjectStore implements ObjectStore {
 
         // オブジェクトストアが存在しない場合は作成
         if (!db.objectStoreNames.contains(this.dbName)) {
-          console.log(`[BrowserObjectStore] Creating object store: ${this.dbName}`);
+          logger.debug(`Creating object store: ${this.dbName}`);
           const objStore = db.createObjectStore(this.dbName, {
             keyPath: "url",
           });

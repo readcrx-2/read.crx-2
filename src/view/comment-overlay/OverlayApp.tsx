@@ -1,4 +1,5 @@
 import { useEffect, useRef, useState } from "react";
+import { createLogger } from "src/app/logger";
 import {
   type ArchiveReplayOverlayEvent,
   type ArchiveReplayOverlayEventBus,
@@ -28,6 +29,8 @@ import {
   OverlayStage,
 } from "src/features/comment-overlay/ui/OverlayStage";
 import { useOverlayPointerCapture } from "src/features/comment-overlay/ui/use-overlay-pointer-capture";
+
+const logger = createLogger("view/comment-overlay");
 
 const MAX_COMMENT_HISTORY = DEFAULT_COMMENT_HISTORY_LIMIT;
 
@@ -221,7 +224,7 @@ export function OverlayApp({
         unsubscribe = cleanup;
       })
       .catch((error: unknown) => {
-        console.error("[ChLens] コメントOverlay eventの購読に失敗しました:", error);
+        logger.error("コメントOverlay eventの購読に失敗しました:", error);
       });
 
     return () => {
@@ -286,7 +289,7 @@ export function OverlayApp({
         unsubscribe = cleanup;
       })
       .catch((error: unknown) => {
-        console.error("[ChLens] 過去実況Overlay eventの購読に失敗しました:", error);
+        logger.error("過去実況Overlay eventの購読に失敗しました:", error);
       });
 
     return () => {
@@ -315,7 +318,7 @@ export function OverlayApp({
         }
       })
       .catch((error: unknown) => {
-        console.error("[ChLens] コメントOverlayのgeometry復元に失敗しました:", error);
+        logger.error("コメントOverlayのgeometry復元に失敗しました:", error);
       });
     void platform
       .watchGeometry((geometry: CommentOverlayGeometry) => {
@@ -330,7 +333,7 @@ export function OverlayApp({
         saveTimer = setTimeout(() => {
           saveTimer = null;
           void platform.saveGeometry(geometry).catch((error: unknown) => {
-            console.error("[ChLens] コメントOverlayのgeometry自動保存に失敗しました:", error);
+            logger.error("コメントOverlayのgeometry自動保存に失敗しました:", error);
           });
         }, 250);
       })
@@ -342,7 +345,7 @@ export function OverlayApp({
         unwatchGeometry = cleanup;
       })
       .catch((error: unknown) => {
-        console.error("[ChLens] コメントOverlayのgeometry監視開始に失敗しました:", error);
+        logger.error("コメントOverlayのgeometry監視開始に失敗しました:", error);
       });
 
     void platform
@@ -355,7 +358,7 @@ export function OverlayApp({
         unwatchVisibility = cleanup;
       })
       .catch((error: unknown) => {
-        console.error("[ChLens] コメントOverlayの表示状態監視開始に失敗しました:", error);
+        logger.error("コメントOverlayの表示状態監視開始に失敗しました:", error);
       });
 
     return () => {
@@ -402,10 +405,7 @@ export function OverlayApp({
                   threadUrl: comment.sourceThreadUrl,
                   responseNumber: comment.responseNumber,
                 }).catch((error: unknown) => {
-                  console.error(
-                    "[ChLens] コメントOverlayからのレスジャンプ要求に失敗しました:",
-                    error,
-                  );
+                  logger.error("コメントOverlayからのレスジャンプ要求に失敗しました:", error);
                 });
               }
             : undefined

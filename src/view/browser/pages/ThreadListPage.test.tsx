@@ -481,7 +481,7 @@ describe("ThreadListPage", () => {
 
   it("独自ホストは名前だけ判明しても、スレ一覧の取得に失敗したら保存対象を広げない", async () => {
     vi.useRealTimers();
-    const logger = vi.spyOn(console, "error").mockImplementation(() => undefined);
+    loggerMock.error.mockClear();
     let saved = "[]";
     serviceContainer.config.get = vi.fn((key: string) =>
       key === "opened_board_entries" ? saved : "0",
@@ -504,10 +504,9 @@ describe("ThreadListPage", () => {
         isActive
       />,
     );
-    await waitFor(() => expect(logger).toHaveBeenCalled());
+    await waitFor(() => expect(loggerMock.error).toHaveBeenCalled());
     await act(flushAsyncRender);
     expect(JSON.parse(saved)).toEqual([]);
-    logger.mockRestore();
   });
 
   it("板の保存に失敗した場合は詳細をログへ出し、次の保存を続ける", async () => {
@@ -621,26 +620,22 @@ describe("ThreadListPage", () => {
               fails ? reject(refreshError) : resolve({ threads: THREADS, message: null });
           }),
       );
-      const errorLog = vi.spyOn(console, "error").mockImplementation(() => {});
-      try {
-        rerender(<ThreadListPage tabId="tab-1" page={page} refreshKey={1} isActive />);
-        expect(screen.getByLabelText("スレ一覧を読み込み中")).toBeVisible();
+      loggerMock.error.mockClear();
+      rerender(<ThreadListPage tabId="tab-1" page={page} refreshKey={1} isActive />);
+      expect(screen.getByLabelText("スレ一覧を読み込み中")).toBeVisible();
 
-        await act(async () => {
-          finishRefresh();
-          await flushAsyncRender();
-        });
+      await act(async () => {
+        finishRefresh();
+        await flushAsyncRender();
+      });
 
-        expect(screen.queryByLabelText("スレ一覧を読み込み中")).toBeNull();
-        expect(document.querySelector(".thread-list-page__loading-overlay")).toBeNull();
-        if (fails) {
-          expect(errorLog).toHaveBeenCalledWith(
-            expect.any(String),
-            expect.objectContaining({ error: refreshError }),
-          );
-        }
-      } finally {
-        errorLog.mockRestore();
+      expect(screen.queryByLabelText("スレ一覧を読み込み中")).toBeNull();
+      expect(document.querySelector(".thread-list-page__loading-overlay")).toBeNull();
+      if (fails) {
+        expect(loggerMock.error).toHaveBeenCalledWith(
+          expect.any(String),
+          expect.objectContaining({ error: refreshError }),
+        );
       }
     },
   );

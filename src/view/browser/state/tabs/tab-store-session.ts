@@ -1,3 +1,4 @@
+import { createLogger } from "src/app/logger";
 import {
   getBrowserSessionJson,
   setBrowserSessionJson,
@@ -9,6 +10,8 @@ import {
   ensurePaneHasTab,
   getPageViewStateKey,
 } from "src/view/browser/types";
+
+const logger = createLogger("view/browser");
 
 // セッションJSONに書き出す形。タブは保存対象の項目だけを持つ。
 interface PersistedPane {
@@ -183,7 +186,7 @@ export function loadTabStoreSession(): TabStoreState | null {
       };
     }
   } catch (error) {
-    console.error("[TabStoreSession] セッションの復元に失敗しました", error);
+    logger.error("セッションの復元に失敗しました", error);
   }
   return null;
 }
@@ -191,10 +194,10 @@ export function loadTabStoreSession(): TabStoreState | null {
 export function saveTabStoreSession(state: TabStoreState): void {
   try {
     void setBrowserSessionJson(JSON.stringify(toPersistedTabStoreState(state))).catch((error) => {
-      console.error("[TabStoreSession] セッションの保存に失敗しました", error);
+      logger.error("セッションの保存に失敗しました", error);
     });
   } catch (error) {
     // localStorage容量超過等でも、現在のタブ操作は継続できるようログだけ残す。
-    console.error("[TabStoreSession] セッションの保存に失敗しました", error);
+    logger.error("セッションの保存に失敗しました", error);
   }
 }

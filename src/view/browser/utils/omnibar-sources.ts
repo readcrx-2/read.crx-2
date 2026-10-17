@@ -1,3 +1,4 @@
+import { createLogger } from "src/app/logger";
 import { container } from "src/service-container/index";
 import {
   getBoardUrlFromThreadUrl,
@@ -9,6 +10,8 @@ import {
   type OmnibarBookmarkSource,
   type OmnibarHistorySource,
 } from "src/view/browser/utils/omnibar";
+
+const logger = createLogger("view/browser");
 
 interface LegacyReadStateLike {
   read?: unknown;
@@ -153,7 +156,7 @@ async function readBBSMenuBoardSources(): Promise<OmnibarBoardSource[]> {
     );
   } catch (error) {
     // 板一覧が取得できなくても履歴・お気に入り候補は使えるよう空扱いにするが、原因はログに残す。
-    console.error("[omnibar] bbsmenuの板候補を取得できませんでした", error);
+    logger.error("bbsmenuの板候補を取得できませんでした", error);
     return [];
   }
 }

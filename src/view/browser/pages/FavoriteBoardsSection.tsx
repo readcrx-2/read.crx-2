@@ -1,4 +1,5 @@
 import React from "react";
+import { createLogger } from "src/app/logger";
 import {
   BookmarkContextMenu,
   type BookmarkContextMenuState,
@@ -9,6 +10,8 @@ import { useTabStore } from "src/view/browser/state/tabs/use-tab-store";
 import { Alert } from "src/view/browser/ui/Alert";
 import { Button } from "src/view/browser/ui/Button";
 import { Spinner } from "src/view/browser/ui/Spinner";
+
+const logger = createLogger("view/browser");
 
 interface FavoriteBoard {
   url: string;
@@ -72,7 +75,7 @@ export const FavoriteBoardsSection: React.FC = () => {
     try {
       setFavoriteBoards(await readFavoriteBoards());
     } catch (e) {
-      console.error("お気に入り板の読み込みに失敗しました", e);
+      logger.error("お気に入り板の読み込みに失敗しました", e);
       setError(e instanceof Error ? e.message : "お気に入り板の読み込みに失敗しました");
     } finally {
       setLoading(false);

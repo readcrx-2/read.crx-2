@@ -1,5 +1,6 @@
 import React, { type ReactNode, useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { createPortal } from "react-dom";
+import { createLogger } from "src/app/logger";
 import {
   type AuxiliaryWindowWatcher,
   watchAuxiliaryWindow,
@@ -23,6 +24,8 @@ import {
   useTabStore,
 } from "src/view/browser/state/tabs/use-tab-store";
 import { getCurrentPage, type Page, type Pane, type Tab } from "src/view/browser/types";
+
+const logger = createLogger("view/browser");
 
 interface TabWindowEntry extends AuxiliaryWindowHandle {
   tabId: string;
@@ -216,7 +219,7 @@ export const TabWindowHost: React.FC<{ children: ReactNode }> = ({ children }) =
       if (!located || located.tab.pinned || !pane) {
         // TabStoreの固定タブ保護を破らず、操作不能な不可視タブを残さないため、
         // 構造上閉じられない場合は明示的な復帰へフォールバックする。
-        console.warn("[DetachedTab] このタブは別窓から終了できないため元画面へ戻します", tabId);
+        logger.warn("このタブは別窓から終了できないため元画面へ戻します", tabId);
         reattachTab(tabId);
         return;
       }

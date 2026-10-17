@@ -1,4 +1,7 @@
+import { createLogger } from "src/app/logger";
 import type { IToastService } from "src/service-container/interfaces";
+
+const logger = createLogger("view/browser");
 
 /**
  * テキスト・画像のクリップボード操作をまとめる。
@@ -83,7 +86,7 @@ export async function copyImageWithNotice(
     toast.success(`${label}をコピーしました`);
   } catch (error) {
     // 変更理由: 画像コピーにはテキストのような安全な代替経路がないため、失敗を握りつぶさず通知する。
-    console.error(`${label}を画像としてコピーできませんでした`, error);
+    logger.error(`${label}を画像としてコピーできませんでした`, error);
     toast.error(`${label}をコピーできませんでした`);
   }
 }

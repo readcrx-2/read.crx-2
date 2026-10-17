@@ -1,5 +1,6 @@
 import { useCallback, useEffect, useState } from "react";
 import { DEFAULT_CONFIG } from "src/app/config-defaults";
+import { createLogger } from "src/app/logger";
 import { persistConfigValue, subscribeConfigKeys } from "src/view/browser/utils/config-setting";
 import {
   persistScopedSettingForUrl,
@@ -7,6 +8,8 @@ import {
   SCOPED_SETTINGS_CONFIG_KEY,
   type ScopedSettingKey,
 } from "src/view/browser/utils/scoped-settings";
+
+const logger = createLogger("view/browser");
 
 function readBooleanValue(
   key: ScopedSettingKey,
@@ -41,7 +44,7 @@ export function useScopedConfigBooleanSetting(
       if (rawUrl) {
         void persistScopedSettingForUrl(key, rawUrl, nextValue ? "on" : "off").catch(
           (error: unknown) => {
-            console.error("[ScopedConfigBooleanSetting] 設定の保存に失敗しました", error);
+            logger.error("設定の保存に失敗しました", error);
           },
         );
       } else {

@@ -1,4 +1,5 @@
 import React, { useCallback, useEffect } from "react";
+import { createLogger } from "src/app/logger";
 import { isTauriRuntime } from "src/app/platform/runtime";
 import { useArchiveReplayMainThreadSync } from "src/features/archive-replay/browser/use-main-thread-sync";
 import { openArchiveReplayWindow as openArchiveReplayNativeWindow } from "src/features/archive-replay/platform";
@@ -50,6 +51,8 @@ import { TooltipProvider } from "src/view/browser/ui/Tooltip";
 import { applyBBSMenuToItestServerMap } from "src/view/browser/utils/itest-server-map";
 import browser from "webextension-polyfill";
 
+const logger = createLogger("view/browser");
+
 // MCPのURL省略要求とサービスワーカー用設定を保存する。
 // TabStoreはReact Context内の状態なので、UI外のサービスワーカーへはこの最小限の値だけ渡す。
 const ActiveThreadBridgeState: React.FC<{ isActive: boolean }> = ({ isActive }) => {
@@ -70,7 +73,7 @@ const ActiveThreadBridgeState: React.FC<{ isActive: boolean }> = ({ isActive }) 
         format2chnet,
       })
       .catch((error: unknown) => {
-        console.error("[ChLens MCP] 現在スレッド情報の同期に失敗しました:", error);
+        logger.error("現在スレッド情報の同期に失敗しました:", error);
       });
   }, [activeThreadUrl, format2chnet, isActive]);
 
@@ -110,13 +113,13 @@ const PaneColumnInner: React.FC<{ isActive: boolean }> = ({ isActive }) => {
   const openArchiveReplayWindow = useCallback(() => {
     if (!isTauriRuntime()) {
       // コマンド一覧から除外される以外の経路でも、ブラウザ版でTauri専用窓を開かない。
-      console.error("[ArchiveReplay] Tauri版以外から再生窓を開こうとしました");
+      logger.error("Tauri版以外から再生窓を開こうとしました");
       return;
     }
     // 変更理由: 再生中もThreadViewとコメントOverlayを同時に使うため、
     // Mainのペインへ埋め込まず、専用Tauri窓の表示だけを要求する。
     void openArchiveReplayNativeWindow().catch((error: unknown) => {
-      console.error("[ArchiveReplay] 再生窓の表示に失敗しました", error);
+      logger.error("再生窓の表示に失敗しました", error);
     });
   }, []);
   const navigationBar = (
@@ -244,7 +247,7 @@ const BrowserAppContent: React.FC = () => {
         await browser.runtime.sendMessage({ type: "viewer-ready", tabId: tab.id });
       })
       .catch((error: unknown) => {
-        console.error("[ChLens] ビューアーの起動準備完了を通知できませんでした", error);
+        logger.error("ビューアーの起動準備完了を通知できませんでした", error);
       });
   }, []);
 

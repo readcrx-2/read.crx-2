@@ -1,5 +1,6 @@
 import React, { useCallback, useEffect, useMemo, useState } from "react";
 import { platform } from "src/app";
+import { createLogger } from "src/app/logger";
 import { container } from "src/service-container/index";
 import { SearchBar } from "src/view/browser/components/SearchBar";
 import { ColumnDef, SimpleDataTable } from "src/view/browser/components/SimpleDataTable";
@@ -13,6 +14,8 @@ import { Spinner } from "src/view/browser/ui/Spinner";
 import { formatCompactDateTime, normalizeLegacyTimestamp } from "src/view/browser/utils/date-time";
 import { parseInternalBrowserPage } from "src/view/browser/utils/link-routing";
 import { requestThreadResJump } from "src/view/browser/utils/thread-read-state";
+
+const logger = createLogger("view/browser");
 
 type SortDirection = "asc" | "desc";
 type SortColumn = "title" | "writtenRes" | "name" | "mail" | "message" | "writtenDate";
@@ -60,7 +63,7 @@ const setWriteHistoryCache = async (entries: WriteHistoryEntry[]): Promise<void>
     const store = platform.storage.getStore(UI_CACHE_STORE);
     await store.put({ url: WRITE_HISTORY_CACHE_KEY, data: entries });
   } catch (error) {
-    console.error("[WriteHistoryListPage] cache save failed:", error);
+    logger.error("cache save failed:", error);
   }
 };
 

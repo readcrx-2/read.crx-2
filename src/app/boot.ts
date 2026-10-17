@@ -1,7 +1,10 @@
 import "webextension-polyfill";
 
+import { createLogger } from "src/app/logger";
 import { configInstance } from "src/service-container/config-instance";
 import { setupContainer } from "src/service-container/setup";
+
+const logger = createLogger("app");
 
 export const manifest = (async () => {
   // ブラウザ拡張の環境では拡張マニフェストを取得するが、
@@ -20,7 +23,7 @@ export const manifest = (async () => {
     const response = await fetch("/manifest.json");
     return await response.json();
   } catch (e) {
-    console.error("manifest.json fetch failed:", e);
+    logger.error("manifest.json fetch failed:", e);
     return { version: document.documentElement.dataset.appVersion || "" };
   }
 })();

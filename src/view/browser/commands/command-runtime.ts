@@ -1,7 +1,10 @@
+import { createLogger } from "src/app/logger";
 import { container } from "src/service-container";
 import type { IToastService } from "src/service-container/interfaces";
 import type { ViewSurface } from "src/view/browser/hooks/use-view-surface";
 import { copyText, formatMarkdownLink } from "src/view/browser/utils/clipboard";
+
+const logger = createLogger("view/browser");
 
 /**
  * コマンドが操作する対象を、表示中のページから独立して表現する。
@@ -181,7 +184,7 @@ export async function runCommandRequest(
     return true;
   } catch (error: unknown) {
     const target = "target" in request.args ? request.args.target : undefined;
-    console.error("コマンドの実行に失敗しました", {
+    logger.error("コマンドの実行に失敗しました", {
       commandId: request.id,
       ...(target ? { target } : {}),
       error,

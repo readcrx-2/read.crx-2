@@ -24,7 +24,9 @@
     "noUnusedLocals": true,
     "noEmit": true
   },
-  "include": ["./**/*.ts", "./**/*.tsx"],
+  // `**` は `.` で始まるディレクトリに入らないため、Storybook の設定は明示する。
+  // 含めないと型検査（vp check）が paths なしの既定設定で読み、@chlen/chlib を解決できない。
+  "include": ["./**/*.ts", "./**/*.tsx", ".storybook/**/*.ts", ".storybook/**/*.tsx"],
   // RustのTauri buildが生成するバイナリ埋め込み用TS断片は、Web側の型検査対象ではない。
   "exclude": ["node_modules", "tests", "src-tauri/**"]
 }

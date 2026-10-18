@@ -33,8 +33,6 @@ export function setupBrowserViewServices(): void {
   };
   // config は上で登録した container.config を使う（core の既定のインスタンスと同じ設定を見る）。
   container.openedBoards = createOpenedBoards(container);
-  // 板名の解決結果のキャッシュを core の ThreadSearch と共有するため、
-  // 新しく作らず core の既定のインスタンスを登録する。
   container.boardTitle = {
     ask: BoardTitleSolver.ask,
     askByUrl: BoardTitleSolver.askByUrl,

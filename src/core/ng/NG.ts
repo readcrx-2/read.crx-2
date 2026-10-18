@@ -11,7 +11,6 @@ import {
 import { createLogger } from "src/app/logger";
 import type { INGResult } from "src/core/ports/ng";
 import type { CorePorts } from "src/core/ports/registry";
-import { corePorts } from "src/core/ports/registry";
 import { countReplyAnchorTargets } from "src/core/thread/reply-index";
 
 const CONFIG_STRING_NAME = "ngwords";
@@ -281,19 +280,3 @@ export function createNG(deps: NGDeps) {
 
   return { apply, validate, get, set, invalidateCache, add, isNGBoard, isNGThread, execExpire };
 }
-
-// 既存の import 先（app.ts の公開 API と setup.ts）を維持するため、登録済みのサービスで組み立てた既定のインスタンスを公開する。
-// 依存は関数が呼ばれた時点で参照されるため、ここでの組み立てで未登録の例外は出ない。
-const defaultNG = createNG(corePorts);
-
-export const {
-  apply,
-  validate,
-  get,
-  set,
-  invalidateCache,
-  add,
-  isNGBoard,
-  isNGThread,
-  execExpire,
-} = defaultNG;

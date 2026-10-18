@@ -1,21 +1,21 @@
 // @vitest-environment node
+import { createNG, type NGDeps } from "src/core/ng/NG";
 import { beforeEach, describe, expect, it, vi } from "vite-plus/test";
 
 const configStore = new Map<string, string>();
 
-vi.mock("src/core/ports/registry", () => ({
-  corePorts: {
-    config: {
-      get: (key: string) => configStore.get(key) ?? null,
-      set: (key: string, value: string) => {
-        configStore.set(key, value);
-        return Promise.resolve();
-      },
+// 依存は登録済みのサービスに頼らず、テスト用の値を create 関数へ直接渡す。
+const deps = {
+  config: {
+    get: (key: string) => configStore.get(key) ?? null,
+    set: (key: string, value: string) => {
+      configStore.set(key, value);
+      return Promise.resolve();
     },
-    notice: { ngRuleRegexInvalid: vi.fn(), bbsMenuFetchFailed: vi.fn() },
-    message: { send: vi.fn() },
   },
-}));
+  notice: { ngRuleRegexInvalid: vi.fn(), bbsMenuFetchFailed: vi.fn() },
+  message: { send: vi.fn() },
+} as unknown as NGDeps;
 
 describe("NG shared evaluator characterization", () => {
   beforeEach(() => configStore.clear());
@@ -30,7 +30,7 @@ hide:
   when body regex "(imgur\\\\.com/.+?){2}"`;
     const { evaluateBoardRules, evaluateResponseRules, parseRuleDsl } =
       await import("@chlen/chlib");
-    const { apply, invalidateCache, isNGBoard, isNGThread } = await import("src/core/ng/NG");
+    const { apply, invalidateCache, isNGBoard, isNGThread } = createNG(deps);
     invalidateCache();
     apply(source);
 

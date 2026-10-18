@@ -1,4 +1,3 @@
-import { installCorePorts } from "src/core/ports/registry";
 import {
   IBBSMenuService,
   IBoardService,
@@ -242,9 +241,6 @@ if (!globalObj.__ServiceContainer) {
 export const container: IServiceContainer = globalObj.__ServiceContainer as IServiceContainer;
 // 変更理由: 以前は window.container にも載せていたが、どこからも読まれていなかったため外した
 // （legacy-window-app-plan の Phase 5）。__ServiceContainer は vi.resetModules() の後も同じ実体を保つために残す。
-// core が参照するサービスの登録先を、この global と同じ実体にする。
-// 登録後の代入もそのまま見えるため、setupContainer の前後どちらでも同じ値を使える。
-installCorePorts(container);
 
 // import { IServiceContainer, IConfig, ICacheService, IBookmark, IMessage, IUtil } from "src/service-container/interfaces";
 

@@ -10,7 +10,6 @@ import { getBoardUrlKey } from "src/core/board/BoardUrlNormalizer";
 import { Request } from "src/core/network/HTTP";
 import type { IBBSMenuResult } from "src/core/ports/bbs-menu";
 import type { CorePorts } from "src/core/ports/registry";
-import { corePorts } from "src/core/ports/registry";
 
 const logger = createLogger("core/board");
 
@@ -196,9 +195,3 @@ export function createBoardTitleSolver(deps: BoardTitleSolverDeps) {
 
   return { getCachedTitles, ask, askByUrl };
 }
-
-// 既存の import 先（app.ts の公開 API）を維持するため、登録済みのサービスで組み立てた既定のインスタンスを公開する。
-// 依存は関数が呼ばれた時点で参照されるため、ここでの組み立てで未登録の例外は出ない。
-const defaultBoardTitleSolver = createBoardTitleSolver(corePorts);
-
-export const { getCachedTitles, ask, askByUrl } = defaultBoardTitleSolver;

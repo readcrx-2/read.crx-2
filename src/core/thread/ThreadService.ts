@@ -4,7 +4,7 @@ import { createLogger } from "src/app/logger";
 import { evaluateThreadNg } from "src/core/ng/ThreadNgEvaluator";
 import type { CorePorts } from "src/core/ports/registry";
 import type { IRes, IThreadDetail, IThreadService } from "src/core/ports/thread";
-import { replace as replaceStrTxt } from "src/core/thread/ReplaceStrTxt";
+import type { ReplaceStrTxt } from "src/core/thread/ReplaceStrTxt";
 import Thread from "src/core/thread/Thread";
 import { toViewRes } from "src/core/thread/to-view-res";
 
@@ -34,7 +34,7 @@ const isManualForceUpdate = (options: GetThreadOptions): boolean =>
 export type ThreadServiceDeps = Pick<
   CorePorts,
   "board" | "bbsMenu" | "bookmark" | "cache" | "config" | "message" | "ng" | "util"
->;
+> & { replaceStr: Pick<ReplaceStrTxt, "replace"> };
 
 class ThreadServiceImpl implements IThreadService {
   private pendingRequests = new Map<string, PendingRequest>();
@@ -132,7 +132,7 @@ class ThreadServiceImpl implements IThreadService {
     // 変更理由: 旧経路の置換適用がThreadModelと共に使われなくなり、置換設定が無効化されていたため。
     const replacedRes = (thread.res ?? []).map((response: ThreadRes) => ({
       ...response,
-      ...replaceStrTxt(url, title, response),
+      ...this.deps.replaceStr.replace(url, title, response),
     }));
     const canonicalThread = toCanonicalThread({
       title: thread.title || undefined,

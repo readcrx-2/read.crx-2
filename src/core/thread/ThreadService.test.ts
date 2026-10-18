@@ -1,4 +1,5 @@
 // @vitest-environment node
+import type { ThreadServiceDeps } from "src/core/thread/ThreadService";
 import { beforeEach, describe, expect, it, vi } from "vite-plus/test";
 
 const mocks = vi.hoisted(() => ({
@@ -8,24 +9,20 @@ const mocks = vi.hoisted(() => ({
   config: new Map<string, string>(),
 }));
 
-vi.mock("src/core/ports/registry", () => ({
-  corePorts: {
-    util: {
-      guessType: () => ({ bbsType: "2ch", protocol: "https:" }),
-    },
-    ng: {
-      isNGThread: mocks.isNGThread,
-    },
-    config: {
-      get: (key: string) => mocks.config.get(key) ?? null,
-    },
+// 依存は登録済みのサービスに頼らず、テスト用の値を直接渡す。
+// 置換器は、設定キャッシュの状態に依存せず処理順を検証するため差し替える。
+const deps = {
+  util: {
+    guessType: () => ({ bbsType: "2ch", protocol: "https:" }),
   },
-}));
-
-// 設定キャッシュの状態に依存せず処理順を検証するため、置換器を差し替える。
-vi.mock("src/core/thread/ReplaceStrTxt", () => ({
-  replace: mocks.replaceStrTxt,
-}));
+  ng: {
+    isNGThread: mocks.isNGThread,
+  },
+  config: {
+    get: (key: string) => mocks.config.get(key) ?? null,
+  },
+  replaceStr: { replace: mocks.replaceStrTxt },
+} as unknown as ThreadServiceDeps;
 
 vi.mock("src/core/thread/Thread", () => ({
   default: class Thread {
@@ -67,12 +64,9 @@ interface ThreadServiceLike {
   ): Promise<unknown>;
 }
 
-// 既定のインスタンス（app.ts の公開 API のためにあった）は legacy-window-app-plan の Phase 4 で削除したため、
-// モックした corePorts から都度組み立てる。
 async function createService() {
   const { createThreadService } = await import("src/core/thread/ThreadService");
-  const { corePorts } = await import("src/core/ports/registry");
-  return createThreadService(corePorts);
+  return createThreadService(deps);
 }
 
 describe("スレッドサービス", () => {

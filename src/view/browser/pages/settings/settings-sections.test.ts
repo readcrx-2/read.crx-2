@@ -8,10 +8,10 @@ const { saveConfig, sendMessage } = vi.hoisted(() => ({
 
 vi.mock("src/service-container/index", () => ({
   container: {
-    // 置換ルールの解析と保存は、下の corePorts のモック（同じ container）を使う本物の実装で確かめる。
+    // 置換ルールの解析と保存は、このモックの container を渡した本物の実装（下の replaceStrTxt）で確かめる。
     replaceStr: {
-      // モックの組み立て時ではなく呼び出し時に参照するため、静的 import の関数を使える。
-      set: (value: string) => setReplacementDsl(value),
+      // モックの組み立て時ではなく呼び出し時に参照するため、後で作るインスタンスを使える。
+      set: (value: string) => replaceStrTxt.set(value),
     },
     message: { send: sendMessage },
     config: {
@@ -19,11 +19,6 @@ vi.mock("src/service-container/index", () => ({
       set: saveConfig,
     },
   },
-}));
-
-// core の処理が使うサービスは、上の service-container のモックと同じものを渡す。
-vi.mock("src/core/ports/registry", async () => ({
-  corePorts: (await import("src/service-container/index")).container,
 }));
 
 vi.mock("src/features/ng/ui/NGEditor", () => ({
@@ -35,9 +30,13 @@ import {
   CONFIG_KEYS_OUTSIDE_SETTINGS_FORM,
   DEFAULT_CONFIG,
 } from "src/app/config-defaults";
-import { set as setReplacementDsl } from "src/core/thread/ReplaceStrTxt";
+import { createReplaceStrTxt } from "src/core/thread/ReplaceStrTxt";
+import { container } from "src/service-container/index";
 
 import { getSettingsSections, readAllSettings, saveSectionFormData } from "./settings-sections";
+
+// 画面と同じく、サービスコンテナの config を使う置換設定のインスタンスを1つだけ作る。
+const replaceStrTxt = createReplaceStrTxt(container);
 
 describe("置換設定のフォーム保存", () => {
   beforeEach(() => saveConfig.mockClear());

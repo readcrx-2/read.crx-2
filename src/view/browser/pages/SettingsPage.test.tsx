@@ -2,7 +2,8 @@ import "@testing-library/jest-dom/vitest";
 
 import { act, cleanup, fireEvent, render, screen } from "@testing-library/react";
 import { useEffect } from "react";
-import { set as setReplacementDsl } from "src/core/thread/ReplaceStrTxt";
+import { createReplaceStrTxt } from "src/core/thread/ReplaceStrTxt";
+import { container } from "src/service-container/index";
 import type { ScopedTabAction, TabStoreState } from "src/view/browser/state/tabs/tab-store-types";
 import type { SettingsPageUiState } from "src/view/browser/types";
 import { createHomeTab } from "src/view/browser/types";
@@ -22,10 +23,10 @@ vi.mock("webextension-polyfill", () => ({
 }));
 vi.mock("src/service-container/index", () => ({
   container: {
-    // 置換ルールの解析と保存は、下の corePorts のモック（同じ container）を使う本物の実装で確かめる。
+    // 置換ルールの解析と保存は、このモックの container を渡した本物の実装（下の replaceStrTxt）で確かめる。
     replaceStr: {
-      // モックの組み立て時ではなく呼び出し時に参照するため、静的 import の関数を使える。
-      set: (value: string) => setReplacementDsl(value),
+      // モックの組み立て時ではなく呼び出し時に参照するため、後で作るインスタンスを使える。
+      set: (value: string) => replaceStrTxt.set(value),
     },
     // src/core/history/History はサービスコンテナの history から使う。
     history: {
@@ -39,10 +40,6 @@ vi.mock("src/service-container/index", () => ({
   },
 }));
 
-// core の処理が使うサービスは、上の service-container のモックと同じものを渡す。
-vi.mock("src/core/ports/registry", async () => ({
-  corePorts: (await import("src/service-container/index")).container,
-}));
 vi.mock("src/view/browser/hooks/use-media-query", () => ({ useMediaQuery: () => false }));
 vi.mock("src/features/ng/ui/NGEditor", () => ({
   NGEditor: () => null,
@@ -76,6 +73,9 @@ vi.mock("@monaco-editor/react", () => ({
   useMonaco: () => null,
 }));
 vi.mock("src/view/browser/hooks/use-theme", () => ({ useTheme: () => "light" }));
+
+// 画面と同じく、サービスコンテナの config を使う置換設定のインスタンスを1つだけ作る。
+const replaceStrTxt = createReplaceStrTxt(container);
 
 const SESSION_KEY = "chlens_browser_session";
 const settingsPage = { type: "settings" as const, title: "設定", sectionId: "general" };

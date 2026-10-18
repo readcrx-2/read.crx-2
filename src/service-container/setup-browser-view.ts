@@ -1,9 +1,8 @@
-import * as BoardTitleSolver from "src/core/board/BoardTitleSolver";
+import { createBoardTitleSolver } from "src/core/board/BoardTitleSolver";
 import { createOpenedBoards } from "src/core/board/OpenedBoards";
 import * as History from "src/core/history/History";
 import * as WriteHistory from "src/core/history/WriteHistory";
 import Cache from "src/core/storage/Cache";
-import * as ReplaceStrTxt from "src/core/thread/ReplaceStrTxt";
 import { container } from "src/service-container/Container";
 
 /**
@@ -31,15 +30,9 @@ export function setupBrowserViewServices(): void {
     getAll: WriteHistory.getAll,
     clear: WriteHistory.clear,
   };
-  // config は上で登録した container.config を使う（core の既定のインスタンスと同じ設定を見る）。
+  // config は setupContainer で登録した container.config を使う。
   container.openedBoards = createOpenedBoards(container);
-  container.boardTitle = {
-    ask: BoardTitleSolver.ask,
-    askByUrl: BoardTitleSolver.askByUrl,
-    getCachedTitles: BoardTitleSolver.getCachedTitles,
-  };
-  // 解析済みの置換ルールを、レスの表示で使う core の既定のインスタンスと共有する。
-  container.replaceStr = { set: ReplaceStrTxt.set };
+  container.boardTitle = createBoardTitleSolver(container);
   // 静的メソッドを切り離して渡すと this が外れるため、Cache を通して呼ぶ関数で包む。
   container.threadLog = {
     listLogs: (...args) => Cache.listLogs(...args),

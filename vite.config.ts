@@ -300,7 +300,7 @@ interface RestrictedImportPattern {
 const CORE_TO_CONTAINER_PATTERN: RestrictedImportPattern = {
   group: ["**/service-container/**"],
   message:
-    "core は service-container を import しない。型は src/core/ports、サービスは corePorts（src/core/ports/registry）を使う。",
+    "core は service-container を import しない。型は src/core/ports、サービスは呼び出し側から引数で受け取る（型は src/core/ports/registry の CorePorts）。",
 };
 
 /**

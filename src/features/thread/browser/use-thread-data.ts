@@ -229,7 +229,7 @@ export function useThreadData(
             title: importedThread.title,
             url: page.threadUrl,
           },
-          // corePorts は core の中の受け渡し口なので、画面からは同じ実体のサービスコンテナを渡す。
+          // 依存は通常スレの ThreadService と同じサービスコンテナを渡す。
           container,
         );
         setResponses(

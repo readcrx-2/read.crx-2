@@ -12,9 +12,9 @@ import Bookmark from "src/core/bookmark/Bookmark";
 import type { ComparableReadState } from "src/core/bookmark/read-state-compare";
 import { isNewerReadState } from "src/core/bookmark/read-state-compare";
 import * as ReadState from "src/core/bookmark/ReadState";
-import * as NG from "src/core/ng/NG";
-import { installCorePorts } from "src/core/ports/registry";
+import { createNG } from "src/core/ng/NG";
 import Cache from "src/core/storage/Cache";
+import { createReplaceStrTxt } from "src/core/thread/ReplaceStrTxt";
 import { createThreadService } from "src/core/thread/ThreadService";
 import { configInstance } from "src/service-container/config-instance";
 import { container } from "src/service-container/Container";
@@ -107,6 +107,11 @@ export function setupContainer(): void {
 
   syncConsolaLevel();
 
+  // NG と置換設定の状態は、ここで作る1つずつのインスタンスだけが持つ。
+  // 依存は呼ばれた時点で container から読むため、登録前に作っても未登録の例外は出ない。
+  const ng = createNG(container);
+  const replaceStrTxt = createReplaceStrTxt(container);
+
   // Config Adapter
   const configAdapter: IConfig = {
     get: (key: string) => config.get(key),
@@ -116,14 +121,14 @@ export function setupContainer(): void {
       if (key === "ngwords") {
         // 構文エラーの入力を先に保存すると、修正途中のDSLが永続化されて
         // 次回起動でも警告が残るため、検証成功後にだけストレージを書き換える。
-        NG.validate(typeof val === "string" ? val : "");
+        ng.validate(typeof val === "string" ? val : "");
       }
       // 変更理由: Config実装はstring/numberを受理するため、型宣言のstringへ変換せず値を渡す。
       await config.set(key, val as string);
       // NGワード設定が更新されたら、NGサービス側の内部状態とキャッシュも同期する。
       // これにより、設定画面での保存が即座にNG判定ロジックへ反映されるようになる。
       if (key === "ngwords") {
-        NG.apply(typeof val === "string" ? val : "");
+        ng.apply(typeof val === "string" ? val : "");
       }
       if (key === "debug_log") {
         syncConsolaLevel();
@@ -291,11 +296,11 @@ export function setupContainer(): void {
 
   // NG Service Adapter
   const ngServiceAdapter: INGService = {
-    isNGBoard: (title, url, resCount) => NG.isNGBoard(title, url, resCount),
-    isNGThread: (res, title, url) => NG.isNGThread(res, title, url),
-    add: (ruleDsl) => NG.add(ruleDsl),
-    invalidateCache: () => NG.invalidateCache(),
-    execExpire: () => NG.execExpire(),
+    isNGBoard: (title, url, resCount) => ng.isNGBoard(title, url, resCount),
+    isNGThread: (res, title, url) => ng.isNGThread(res, title, url),
+    add: (ruleDsl) => ng.add(ruleDsl),
+    invalidateCache: () => ng.invalidateCache(),
+    execExpire: () => ng.execExpire(),
   };
 
   // Util Adapter
@@ -328,7 +333,5 @@ export function setupContainer(): void {
   container.notification = notificationServiceAdapter;
   container.ng = ngServiceAdapter;
   container.notice = coreNoticeAdapter;
-
-  // core は container を import せず、ここで登録されたサービスだけを使う（Phase C-1）。
-  installCorePorts(container);
+  container.replaceStr = { set: replaceStrTxt.set, replace: replaceStrTxt.replace };
 }

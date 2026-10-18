@@ -7,7 +7,6 @@ import {
 } from "@chlen/chlib";
 import { createLogger } from "src/app/logger";
 import type { CorePorts } from "src/core/ports/registry";
-import { corePorts } from "src/core/ports/registry";
 
 const logger = createLogger("core/thread");
 
@@ -66,8 +65,4 @@ export function createReplaceStrTxt(deps: ReplaceStrTxtDeps) {
   return { get, set, replace };
 }
 
-// 既存の import 先（app.ts の公開 API と ThreadService）を維持するため、登録済みのサービスで組み立てた既定のインスタンスを公開する。
-// 依存は関数が呼ばれた時点で参照されるため、ここでの組み立てで未登録の例外は出ない。
-const defaultReplaceStrTxt = createReplaceStrTxt(corePorts);
-
-export const { get, set, replace } = defaultReplaceStrTxt;
+export type ReplaceStrTxt = ReturnType<typeof createReplaceStrTxt>;

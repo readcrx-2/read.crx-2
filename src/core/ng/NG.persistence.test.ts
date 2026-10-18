@@ -1,4 +1,5 @@
 // @vitest-environment node
+import { createNG, type NGDeps } from "src/core/ng/NG";
 import { beforeEach, describe, expect, it, vi } from "vite-plus/test";
 
 const mocks = vi.hoisted(() => ({
@@ -13,31 +14,30 @@ const mocks = vi.hoisted(() => ({
   ngRuleRegexInvalid: vi.fn(),
 }));
 
-vi.mock("src/core/ports/registry", () => ({
-  corePorts: {
-    config: {
-      get: (key: string) => mocks.configStore.get(key) ?? null,
-      set: (key: string, value: string) => {
-        if (!mocks.holdWrites) {
-          mocks.configStore.set(key, value);
-          return Promise.resolve();
-        }
-        return new Promise<void>((resolve) => {
-          mocks.pendingWrites.push({
-            key,
-            value,
-            resolve: () => {
-              mocks.configStore.set(key, value);
-              resolve();
-            },
-          });
+// 依存は登録済みのサービスに頼らず、テスト用の値を create 関数へ直接渡す。
+const deps = {
+  config: {
+    get: (key: string) => mocks.configStore.get(key) ?? null,
+    set: (key: string, value: string) => {
+      if (!mocks.holdWrites) {
+        mocks.configStore.set(key, value);
+        return Promise.resolve();
+      }
+      return new Promise<void>((resolve) => {
+        mocks.pendingWrites.push({
+          key,
+          value,
+          resolve: () => {
+            mocks.configStore.set(key, value);
+            resolve();
+          },
         });
-      },
+      });
     },
-    notice: { ngRuleRegexInvalid: mocks.ngRuleRegexInvalid, bbsMenuFetchFailed: vi.fn() },
-    message: { send: mocks.messageSend },
   },
-}));
+  notice: { ngRuleRegexInvalid: mocks.ngRuleRegexInvalid, bbsMenuFetchFailed: vi.fn() },
+  message: { send: mocks.messageSend },
+} as unknown as NGDeps;
 
 describe("NG Rule persistence", () => {
   beforeEach(() => {
@@ -50,7 +50,7 @@ describe("NG Rule persistence", () => {
 
   it("waits for the DSL write and restores the Rule after reload", async () => {
     mocks.holdWrites = true;
-    const { add, get, invalidateCache } = await import("src/core/ng/NG");
+    const { add, get, invalidateCache } = createNG(deps);
     invalidateCache();
 
     let settled = false;
@@ -81,13 +81,13 @@ describe("NG Rule persistence", () => {
   });
 
   it("rejects the removed legacy function syntax", async () => {
-    const { add } = await import("src/core/ng/NG");
+    const { add } = createNG(deps);
     await expect(add("ID(value=abc123)")).rejects.toThrow("新しいブロックDSL");
   });
 
   it("appends semi-automatically added rules after existing rules", async () => {
     mocks.configStore.set("ngwords", 'hide:\n  when id contains "existing"');
-    const { add, get, invalidateCache } = await import("src/core/ng/NG");
+    const { add, get, invalidateCache } = createNG(deps);
     invalidateCache();
 
     await add('hide:\n  when id contains "added"');

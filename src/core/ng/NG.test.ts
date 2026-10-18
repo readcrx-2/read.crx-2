@@ -1,21 +1,21 @@
 // @vitest-environment node
+import { createNG, type NGDeps } from "src/core/ng/NG";
 import { beforeEach, describe, expect, it, vi } from "vite-plus/test";
 
 const configStore = new Map<string, string>();
 
-vi.mock("src/core/ports/registry", () => ({
-  corePorts: {
-    config: {
-      get: (key: string) => configStore.get(key) ?? null,
-      set: (key: string, value: string) => {
-        configStore.set(key, value);
-        return Promise.resolve();
-      },
+// 依存は登録済みのサービスに頼らず、テスト用の値を create 関数へ直接渡す。
+const deps = {
+  config: {
+    get: (key: string) => configStore.get(key) ?? null,
+    set: (key: string, value: string) => {
+      configStore.set(key, value);
+      return Promise.resolve();
     },
-    notice: { ngRuleRegexInvalid: vi.fn(), bbsMenuFetchFailed: vi.fn() },
-    message: { send: vi.fn() },
   },
-}));
+  notice: { ngRuleRegexInvalid: vi.fn(), bbsMenuFetchFailed: vi.fn() },
+  message: { send: vi.fn() },
+} as unknown as NGDeps;
 
 describe("NG Rule service", () => {
   beforeEach(() => configStore.clear());
@@ -32,7 +32,7 @@ describe("NG Rule service", () => {
 hide:
   when body regex "(imgur\\\\.com/.+?){15}"`,
     );
-    const { get, invalidateCache, isNGBoard, isNGThread } = await import("src/core/ng/NG");
+    const { get, invalidateCache, isNGBoard, isNGThread } = createNG(deps);
     invalidateCache();
 
     expect(get()).toHaveLength(2);
@@ -59,12 +59,12 @@ hide:
   });
 
   it("rejects the removed function-style syntax", async () => {
-    const { set } = await import("src/core/ng/NG");
+    const { set } = createNG(deps);
     await expect(set("Body(value=荒らし)")).rejects.toThrow("新しいブロックDSL");
   });
 
   it("スレ一覧の折りたたみを完全非表示と区別する", async () => {
-    const { apply, invalidateCache, isNGBoard } = await import("src/core/ng/NG");
+    const { apply, invalidateCache, isNGBoard } = createNG(deps);
     invalidateCache();
     apply(`collapse:
   when title contains "薄くする"
@@ -81,7 +81,7 @@ hide:
   });
 
   it("タイトルとレス数の条件を組み合わせて板のハイライトを適用する", async () => {
-    const { apply, invalidateCache, isNGBoard } = await import("src/core/ng/NG");
+    const { apply, invalidateCache, isNGBoard } = createNG(deps);
     invalidateCache();
     apply(`highlight:
   color red
@@ -100,7 +100,7 @@ hide:
   });
 
   it("applies a stored DSL without writing it back", async () => {
-    const { apply, get, invalidateCache } = await import("src/core/ng/NG");
+    const { apply, get, invalidateCache } = createNG(deps);
     invalidateCache();
     apply('hide:\n  when body contains "保存済み"');
 
@@ -115,7 +115,7 @@ hide:
   });
 
   it("matches anchor-count from the response body", async () => {
-    const { apply, invalidateCache, isNGThread } = await import("src/core/ng/NG");
+    const { apply, invalidateCache, isNGThread } = createNG(deps);
     invalidateCache();
     apply("hide:\n  when anchor-count >= 2");
 
@@ -136,7 +136,7 @@ hide:
   it("表示方式名で書かれたルールを検証エラーにせずhideとして適用する", async () => {
     // 設定画面で目にする表示方式名を表示方式の設定と混同して動作欄へ書いても、
     // NG判定全体を止めないことを保証する。
-    const { apply, get, invalidateCache, validate } = await import("src/core/ng/NG");
+    const { apply, get, invalidateCache, validate } = createNG(deps);
     invalidateCache();
     const source = 'hide:\n  when body contains "荒らし"';
     expect(() => validate(source)).not.toThrow();

@@ -56,11 +56,15 @@ const mocks = vi.hoisted(() => {
 });
 
 vi.mock("src/core/history/History", () => mocks.history);
-vi.mock("src/core/thread/ReplaceStrTxt", () => ({ set: mocks.replaceStrSet }));
+vi.mock("src/core/thread/ReplaceStrTxt", () => ({
+  createReplaceStrTxt: () => ({ get: vi.fn(), set: mocks.replaceStrSet, replace: vi.fn() }),
+}));
 vi.mock("src/core/board/BoardTitleSolver", () => ({
-  ask: vi.fn(),
-  askByUrl: mocks.askBoardTitleByUrl,
-  getCachedTitles: vi.fn(),
+  createBoardTitleSolver: () => ({
+    ask: vi.fn(),
+    askByUrl: mocks.askBoardTitleByUrl,
+    getCachedTitles: vi.fn(),
+  }),
 }));
 vi.mock("src/core/history/WriteHistory", () => mocks.writeHistory);
 
@@ -133,13 +137,15 @@ vi.mock("src/core/storage/Cache", () => ({
   },
 }));
 vi.mock("src/core/ng/NG", () => ({
-  validate: vi.fn(),
-  apply: vi.fn(),
-  isNGBoard: vi.fn(),
-  isNGThread: vi.fn(),
-  add: vi.fn(),
-  invalidateCache: vi.fn(),
-  execExpire: vi.fn(),
+  createNG: () => ({
+    validate: vi.fn(),
+    apply: vi.fn(),
+    isNGBoard: vi.fn(),
+    isNGThread: vi.fn(),
+    add: vi.fn(),
+    invalidateCache: vi.fn(),
+    execExpire: vi.fn(),
+  }),
 }));
 vi.mock("src/app/Notification", () => ({
   default: class {

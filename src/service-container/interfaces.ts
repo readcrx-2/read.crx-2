@@ -93,8 +93,8 @@ export type IBoardTitleService = Pick<
   "ask" | "askByUrl" | "getCachedTitles"
 >;
 
-/** 置換ルールの保存（Phase E、計画書 §3.6）。解析済みのルールを持つため、サービスコンテナ経由で使う。 */
-export type IReplaceStrService = Pick<ReturnType<typeof createReplaceStrTxt>, "set">;
+/** 置換ルールの保存とレスへの適用（Phase E、計画書 §3.6）。解析済みのルールを持つため、サービスコンテナ経由で使う。 */
+export type IReplaceStrService = Pick<ReturnType<typeof createReplaceStrTxt>, "set" | "replace">;
 
 /**
  * ブックマークの保存先（ブラウザのブックマークのフォルダ）の設定。

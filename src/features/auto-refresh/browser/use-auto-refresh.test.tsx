@@ -16,6 +16,12 @@ interface TestRectOptions {
   bottom: number;
 }
 
+// jsdom の HTMLElement#scrollBy は ScrollToOptions 単一引数のオーバーロードを型に持たないため、
+// 代入ではなく Object.assign で差し替えて、型エラーを抑止するコメントを不要にする。
+function mockScrollBy(element: HTMLElement, scrollBy: (options: ScrollToOptions) => void): void {
+  Object.assign(element, { scrollBy });
+}
+
 function createRect({ top, bottom }: TestRectOptions): DOMRect {
   return {
     x: 0,
@@ -279,8 +285,7 @@ describe("useAutoRefresh", () => {
             },
           });
           element.getBoundingClientRect = () => createRect({ top: 0, bottom: 100 });
-          // @ts-expect-error: jsdomのscrollByはScrollToOptions単一引数オーバーロードを持たない
-          element.scrollBy = scrollBy;
+          mockScrollBy(element, scrollBy);
         }}
       />,
     );
@@ -478,8 +483,7 @@ describe("useAutoRefresh", () => {
     const scrollBy = vi.fn(({ top }: ScrollToOptions) => {
       scrollTopValue += top ?? 0;
     });
-    // @ts-expect-error: jsdom の HTMLElement#scrollBy は ScrollToOptions 単一引数オーバーロードを持たない
-    scrollContainer.scrollBy = scrollBy;
+    mockScrollBy(scrollContainer, scrollBy);
 
     act(() => {
       vi.runOnlyPendingTimers();
@@ -570,8 +574,7 @@ describe("useAutoRefresh", () => {
     const scrollBy = vi.fn(({ top }: ScrollToOptions) => {
       scrollTopValue += top ?? 0;
     });
-    // @ts-expect-error: 同上
-    scrollContainer.scrollBy = scrollBy;
+    mockScrollBy(scrollContainer, scrollBy);
 
     act(() => {
       vi.runOnlyPendingTimers();
@@ -627,8 +630,7 @@ describe("useAutoRefresh", () => {
     const scrollBy = vi.fn(({ top }: ScrollToOptions) => {
       scrollTopValue += top ?? 0;
     });
-    // @ts-expect-error: jsdom の HTMLElement#scrollBy は ScrollToOptions 単一引数オーバーロードを持たない
-    scrollContainer.scrollBy = scrollBy;
+    mockScrollBy(scrollContainer, scrollBy);
 
     act(() => {
       vi.runOnlyPendingTimers();
@@ -676,8 +678,7 @@ describe("useAutoRefresh", () => {
     const scrollBy = vi.fn(({ top }: ScrollToOptions) => {
       scrollTopValue += top ?? 0;
     });
-    // @ts-expect-error: jsdom の HTMLElement#scrollBy は ScrollToOptions 単一引数オーバーロードを持たない
-    scrollContainer.scrollBy = scrollBy;
+    mockScrollBy(scrollContainer, scrollBy);
 
     act(() => {
       vi.runOnlyPendingTimers();
@@ -743,8 +744,7 @@ describe("useAutoRefresh", () => {
     const scrollBy = vi.fn(({ top }: ScrollToOptions) => {
       scrollTopValue += top ?? 0;
     });
-    // @ts-expect-error: 同上
-    scrollContainer.scrollBy = scrollBy;
+    mockScrollBy(scrollContainer, scrollBy);
 
     act(() => {
       vi.runOnlyPendingTimers();
@@ -795,8 +795,7 @@ describe("useAutoRefresh", () => {
     const scrollBy = vi.fn(({ top }: ScrollToOptions) => {
       scrollTopValue += top ?? 0;
     });
-    // @ts-expect-error: jsdom の HTMLElement#scrollBy は ScrollToOptions 単一引数オーバーロードを持たない
-    scrollContainer.scrollBy = scrollBy;
+    mockScrollBy(scrollContainer, scrollBy);
 
     act(() => {
       vi.runOnlyPendingTimers();
@@ -852,8 +851,7 @@ describe("useAutoRefresh", () => {
     const scrollBy = vi.fn(({ top }: ScrollToOptions) => {
       scrollTopValue += top ?? 0;
     });
-    // @ts-expect-error: jsdom の HTMLElement#scrollBy は ScrollToOptions 単一引数オーバーロードを持たない
-    scrollContainer.scrollBy = scrollBy;
+    mockScrollBy(scrollContainer, scrollBy);
 
     act(() => {
       vi.runOnlyPendingTimers();
@@ -909,8 +907,7 @@ describe("useAutoRefresh", () => {
     const scrollBy = vi.fn(({ top }: ScrollToOptions) => {
       scrollTopValue += top ?? 0;
     });
-    // @ts-expect-error: jsdom の HTMLElement#scrollBy は ScrollToOptions 単一引数オーバーロードを持たない
-    scrollContainer.scrollBy = scrollBy;
+    mockScrollBy(scrollContainer, scrollBy);
 
     act(() => {
       vi.runOnlyPendingTimers();
@@ -1094,10 +1091,9 @@ describe("useAutoRefresh", () => {
     let scrollHeightValue = 80;
     const configureScrollContainer = (scrollContainer: HTMLDivElement) => {
       // 初回取得の描画も共通の底面補正を通るため、jsdomにないスクロール操作を再現する。
-      // @ts-expect-error: jsdomのscrollByはScrollToOptions単一引数オーバーロードを持たない
-      scrollContainer.scrollBy = ({ top }: ScrollToOptions) => {
+      mockScrollBy(scrollContainer, ({ top }: ScrollToOptions) => {
         scrollTopValue += top ?? 0;
-      };
+      });
       Object.defineProperty(scrollContainer, "clientHeight", {
         configurable: true,
         get: () => 100,

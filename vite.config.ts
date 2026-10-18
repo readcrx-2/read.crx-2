@@ -522,7 +522,7 @@ export default defineConfig(async ({ mode, command }) => {
         "import/no-cycle": "error",
       },
       // core は service-container に依存しない（計画: docs/plans/module-boundaries-plan.md Phase C-1）。
-      // 依存は core/ports（型と registry）だけにする。service-container は setup で registry に登録する。
+      // 依存は core/ports の型だけにする。実体は service-container の setup が引数で渡す。
       overrides: [
         // core は service-container を import しない。
         // jsutil（window.app.util の互換用のまとめ口）を経由させない制限もここにあったが、

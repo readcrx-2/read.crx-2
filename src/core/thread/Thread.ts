@@ -101,7 +101,7 @@ const stripTrailingSubjectPadding = (thread: ParsedThread): ParsedThread => {
  *   - 通信・キャッシュ・パース・エラーメッセージ生成の責務をそれぞれ分離し、
  *     単体テストを書きやすくする。
  */
-/** スレの取得・解析に必要なサービス。省略時は登録済みのサービスを使う（window.app.Thread の互換）。 */
+/** スレの取得・解析に必要なサービス。呼び出し側（ThreadService）が渡す。 */
 export type ThreadDeps = Pick<
   CorePorts,
   "board" | "bbsMenu" | "bookmark" | "cache" | "config" | "message" | "util"

@@ -186,8 +186,7 @@ export function setupContainer(): void {
   };
 
   // BookmarkRoot Adapter
-  // 保存先の切り替えと選び直しの要否は、画面から window.app.bookmarkEntryList を通さずにここから使う
-  // （legacy-window-app-plan の Phase 2）。保存先の実装（ブラウザのブックマーク・IndexedDB）は Bookmark が選ぶ。
+  // 画面は保存先の切り替えと選び直しの要否をここから使う。保存先の実装（ブラウザのブックマーク・IndexedDB）は Bookmark が選ぶ。
   const activeEntryList = activeBookmark.bel as BookmarkEntryListRuntime;
   const bookmarkRootAdapter: IBookmarkRootService = {
     isReconfigureRequired: () => activeEntryList.needReconfigureRootNodeId?.wasCalled === true,

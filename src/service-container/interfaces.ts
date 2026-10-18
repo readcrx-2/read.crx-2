@@ -97,8 +97,8 @@ export type IBoardTitleService = Pick<
 export type IReplaceStrService = Pick<ReturnType<typeof createReplaceStrTxt>, "set">;
 
 /**
- * ブックマークの保存先（ブラウザのブックマークのフォルダ）の設定（legacy-window-app-plan の Phase 2）。
- * 画面は window.app.bookmarkEntryList ではなくここから使う。core は使わないため ports には置かない。
+ * ブックマークの保存先（ブラウザのブックマークのフォルダ）の設定。
+ * 画面だけが使い、core は使わないため ports には置かない。
  */
 export interface IBookmarkRootService {
   /** 保存先のフォルダが見つからず、選び直しが必要だと分かっているか。 */

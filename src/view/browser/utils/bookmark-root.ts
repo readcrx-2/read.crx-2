@@ -34,14 +34,11 @@ export function supportsBookmarkFolderSelection(): boolean {
 }
 
 export function readConfiguredBookmarkFolderId(): string {
-  // window.app.config と container.config は同じ Config の実体を見るため、コンテナから読む
-  // （legacy-window-app-plan の Phase 1）。
   const bookmarkId = container.config.get("bookmark_id");
   return typeof bookmarkId === "string" ? bookmarkId : "";
 }
 
 export function isBookmarkRootSelectionRequired(): boolean {
-  // 選び直しの要否は window.app.bookmarkEntryList ではなくサービスコンテナから読む（legacy-window-app-plan の Phase 2）。
   return (
     readConfiguredBookmarkFolderId().length === 0 || container.bookmarkRoot.isReconfigureRequired()
   );

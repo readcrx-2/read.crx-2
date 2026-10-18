@@ -53,7 +53,7 @@ const BASE_PROPS: React.ComponentProps<typeof ReplyTreePopup> = {
 };
 
 describe("ReplyTreePopup", () => {
-  const writeText = vi.fn<() => Promise<void>>();
+  const writeText = vi.fn<(text: string) => Promise<void>>();
   const writeClipboard = vi.fn<() => Promise<void>>();
   const clipboardItemCtor = vi.fn();
   class ClipboardItemMock {
@@ -214,30 +214,18 @@ describe("ReplyTreePopup", () => {
     fireEvent.click(screen.getByRole("button", { name: "返信ツリーを一括コピー" }));
 
     expect(writeText).toHaveBeenCalledOnce();
-    // @ts-expect-error: mock.calls の引数型は vi.fn の型定義から推論されない
     expect(writeText.mock.calls[0]?.[0]).not.toContain("[参照元レス]");
-    // @ts-expect-error: 同上
     expect(writeText.mock.calls[0]?.[0]).toContain("1 name-1");
-    // @ts-expect-error: 同上
     expect(writeText.mock.calls[0]?.[0]).toContain("1 name-1 ID:source-id");
-    // @ts-expect-error: 同上
     expect(writeText.mock.calls[0]?.[0]).toContain("source message");
-    // @ts-expect-error: 同上
     expect(writeText.mock.calls[0]?.[0]).toContain("[返信レス]");
-    // @ts-expect-error: 同上
     expect(writeText.mock.calls[0]?.[0]).toContain("2 name-2");
-    // @ts-expect-error: 同上
     expect(writeText.mock.calls[0]?.[0]).toContain("2 name-2 ID:reply-id");
-    // @ts-expect-error: 同上
     expect(writeText.mock.calls[0]?.[0]).toContain("4 name-4");
-    // @ts-expect-error: 同上
     expect(writeText.mock.calls[0]?.[0]).toContain("4 name-4 ID:nested-id");
-    // @ts-expect-error: 同上
     expect(writeText.mock.calls[0]?.[0]).toContain("3 name-3 ID:sibling-id");
     // 末尾にスレタイとURLが付加されることを検証する。
-    // @ts-expect-error: 同上
     expect(writeText.mock.calls[0]?.[0]).toContain("テストスレタイ");
-    // @ts-expect-error: 同上
     expect(writeText.mock.calls[0]?.[0]).toContain("https://example.com/test/read.cgi/board/123/");
   });
 

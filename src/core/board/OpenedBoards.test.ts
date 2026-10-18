@@ -1,4 +1,4 @@
-import { parseOpenedBoardEntries } from "src/core/board/OpenedBoards";
+import { parseOpenedBoardEntries } from "src/core/board/opened-board-entries";
 import { describe, expect, it, vi } from "vite-plus/test";
 
 vi.mock("src/core/board/BoardUrlNormalizer", async (importOriginal) => {

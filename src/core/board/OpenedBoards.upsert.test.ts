@@ -1,19 +1,13 @@
-import { upsertOpenedBoardEntry } from "src/core/board/OpenedBoards";
+import { createOpenedBoards, type OpenedBoardsDeps } from "src/core/board/OpenedBoards";
 import { beforeEach, describe, expect, it, vi } from "vite-plus/test";
 
-const { store, setMock } = vi.hoisted(() => {
-  const store = new Map<string, string>();
-  return {
-    store,
-    setMock: vi.fn(async (key: string, value: string) => {
-      store.set(key, value);
-    }),
-  };
+const store = new Map<string, string>();
+const setMock = vi.fn(async (key: string, value: string) => {
+  store.set(key, value);
 });
-
-vi.mock("src/core/ports/registry", () => ({
-  corePorts: { config: { get: (key: string) => store.get(key) ?? null, set: setMock } },
-}));
+const deps = {
+  config: { get: (key: string) => store.get(key) ?? null, set: setMock },
+} as unknown as OpenedBoardsDeps;
 
 vi.mock("src/core/board/BoardUrlNormalizer", async (importOriginal) => {
   const actual = await importOriginal<typeof import("src/core/board/BoardUrlNormalizer")>();
@@ -35,9 +29,12 @@ const flushWrites = async () => {
 const readSaved = () => JSON.parse(store.get("opened_board_entries") ?? "[]");
 
 describe("upsertOpenedBoardEntry", () => {
+  let upsertOpenedBoardEntry: ReturnType<typeof createOpenedBoards>["upsertOpenedBoardEntry"];
+
   beforeEach(() => {
     store.clear();
     setMock.mockClear();
+    ({ upsertOpenedBoardEntry } = createOpenedBoards(deps));
   });
 
   it("新しい板を先頭に追加して保存する", async () => {

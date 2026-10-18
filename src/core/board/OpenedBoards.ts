@@ -7,17 +7,8 @@ import {
   parseOpenedBoardEntries,
 } from "src/core/board/opened-board-entries";
 import type { CorePorts } from "src/core/ports/registry";
-import { corePorts } from "src/core/ports/registry";
 
 const logger = createLogger("core/board");
-
-// 保存形式と読み取りは opened-board-entries.ts に置く。既存の import 先のために再エクスポートする。
-export {
-  MAX_OPENED_BOARD_ENTRIES,
-  OPENED_BOARDS_CONFIG_KEY,
-  type OpenedBoardEntry,
-  parseOpenedBoardEntries,
-} from "src/core/board/opened-board-entries";
 
 /** 開いた板の記録の読み書きに必要なサービス。呼び出し側が渡す（C-2）。 */
 export type OpenedBoardsDeps = Pick<CorePorts, "config">;
@@ -97,9 +88,3 @@ export function createOpenedBoards(deps: OpenedBoardsDeps) {
 
   return { upsertOpenedBoardEntry };
 }
-
-// 既存の import 先（view の板一覧・スレ一覧）を維持するため、登録済みのサービスで組み立てた既定のインスタンスを公開する。
-// 依存は関数が呼ばれた時点で参照されるため、ここでの組み立てで未登録の例外は出ない。
-const defaultOpenedBoards = createOpenedBoards(corePorts);
-
-export const { upsertOpenedBoardEntry } = defaultOpenedBoards;

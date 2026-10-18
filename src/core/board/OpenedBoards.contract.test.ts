@@ -1,6 +1,6 @@
 import type { BBSMenuModelDeps } from "src/core/board/BBSMenuModel";
 import { BBSMenuModel } from "src/core/board/BBSMenuModel";
-import { parseOpenedBoardEntries } from "src/core/board/OpenedBoards";
+import { parseOpenedBoardEntries } from "src/core/board/opened-board-entries";
 import { beforeEach, describe, expect, it, vi } from "vite-plus/test";
 
 const { config } = vi.hoisted(() => ({ config: new Map<string, string>() }));

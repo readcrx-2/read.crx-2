@@ -1,7 +1,7 @@
 import "@testing-library/jest-dom/vitest";
 import "fake-indexeddb/auto";
 
-import { cleanup, fireEvent, render, screen, waitFor, within } from "@testing-library/react";
+import { act, cleanup, fireEvent, render, screen, waitFor, within } from "@testing-library/react";
 import { container } from "src/service-container";
 import {
   commandPalette,
@@ -10,6 +10,7 @@ import {
 import { NavigationBar } from "src/view/browser/shell/NavigationBar";
 import type { Page } from "src/view/browser/types";
 import { QUICK_ACCESS_FILTER_TOGGLE_EVENT_BY_PAGE_TYPE } from "src/view/browser/utils/filter-toolbar-events";
+import { setFilterToolbarOpen } from "src/view/browser/utils/filter-toolbar-open-state";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vite-plus/test";
 
 // browser-commands は拡張機能向け依存を含むため、DOM単体テストではAPIモジュールを差し替える。
@@ -565,7 +566,7 @@ describe("NavigationBar", () => {
       button.getAttribute("title"),
     );
 
-    expect(buttons).toEqual(["URLバーを表示", "メニュー"]);
+    expect(buttons).toEqual(["フィルターを開閉", "URLバーを表示", "メニュー"]);
     expect(screen.queryByTitle("2ペインで表示")).not.toBeInTheDocument();
   });
 
@@ -633,6 +634,33 @@ describe("NavigationBar", () => {
 
     expect(screen.queryByRole("button", { name: "コマンドパレット" })).not.toBeInTheDocument();
     expect(screen.queryByRole("button", { name: "設定を開く" })).not.toBeInTheDocument();
+  });
+
+  it("URLバーの開閉ボタンの左にあるフィルタボタンでフィルタトグルイベントを送る", () => {
+    const dispatchEventSpy = vi.spyOn(window, "dispatchEvent");
+    render(<NavigationBar />);
+
+    fireEvent.click(screen.getByRole("button", { name: "フィルターを開閉" }));
+
+    expect(dispatchEventSpy).toHaveBeenCalledWith(
+      expect.objectContaining({ type: "thread-filter-toolbar-toggle" }),
+    );
+    dispatchEventSpy.mockRestore();
+  });
+
+  it("フィルタバーが開いている間はフィルタボタンを押下状態にして色を変える", () => {
+    render(<NavigationBar />);
+    const filterButton = screen.getByRole("button", { name: "フィルターを開閉" });
+
+    expect(filterButton).toHaveAttribute("aria-pressed", "false");
+    expect(filterButton).not.toHaveClass("nav-bar__filter-toggle--active");
+
+    act(() => setFilterToolbarOpen(viewTab.id, true));
+    expect(filterButton).toHaveAttribute("aria-pressed", "true");
+    expect(filterButton).toHaveClass("nav-bar__filter-toggle--active");
+
+    act(() => setFilterToolbarOpen(viewTab.id, false));
+    expect(filterButton).toHaveAttribute("aria-pressed", "false");
   });
 
   it("メニュー項目の『フィルターを開く』でフィルタトグルイベントを送る", () => {
@@ -975,8 +1003,37 @@ describe("NavigationBar titlebar slot", () => {
     expect(slot.querySelector(".nav-bar__url-row")).toBeNull();
   });
 
-  it("水平ではフォーカスアウトしてもURL行を開いたままにする", () => {
+  it("水平でもアクティブペインの操作ボタンをタイトルバーの受け口へポータルする", () => {
     orientationHolder.value = "horizontal";
+
+    const { container } = render(
+      <div className="pane-column__chrome">
+        <NavigationBar />
+      </div>,
+    );
+
+    expect(container.querySelector(".pane-column__chrome")).toBeEmptyDOMElement();
+    expect(slot.querySelector('[title="メニュー"]')).not.toBeNull();
+  });
+
+  it("水平で受け口を持たない非アクティブペインはボタンを描画しない", () => {
+    orientationHolder.value = "horizontal";
+    paneHolder.panes = [{ id: "pane-1" }, { id: "pane-2" }];
+    paneHolder.activePaneId = "pane-2";
+    slot.remove();
+
+    const { container } = render(
+      <div className="pane-column__chrome">
+        <NavigationBar />
+      </div>,
+    );
+
+    expect(container.querySelector(".pane-column__chrome .nav-bar")).toBeNull();
+  });
+
+  it("受け口が無い水平のアクティブペインではインラインに描画してURL行を開いたままにする", () => {
+    orientationHolder.value = "horizontal";
+    slot.remove();
 
     const { container } = render(<NavigationBar />);
 

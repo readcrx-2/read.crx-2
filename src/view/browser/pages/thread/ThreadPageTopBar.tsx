@@ -1,27 +1,28 @@
 import React, { useEffect, useRef } from "react";
 import type { TopBarMode } from "src/view/browser/pages/thread/use-thread-top-bar";
 import type { ThreadFilter, ThreadSearchTarget } from "src/view/browser/types";
+import type { ThreadFilterCounts } from "src/view/browser/utils/thread-data-derived";
 
 interface ThreadPageTopBarProps {
   activeTopBar: TopBarMode;
   filter: ThreadFilter;
-  filteredResponseCount: number;
+  filterCounts: ThreadFilterCounts;
   onClose: () => void;
   onFilterChange: (filter: ThreadFilter) => void;
   onSearchTargetChange: (searchTarget: ThreadSearchTarget) => void;
   onSearchQueryChange: (query: string) => void;
-  responseCount: number;
   searchFocusKey: number;
+  suppressInitialFocus?: boolean;
   searchQuery: string;
   searchTarget: ThreadSearchTarget;
 }
 
-const FILTER_BUTTONS: { key: ThreadFilter; label: string }[] = [
-  { key: "all", label: "全て" },
-  { key: "popular", label: "多レス" },
+// 変更理由: 「全て」ボタンを置かず、選択中の項目をもう一度押すと解除する切り替え式にする。
+const FILTER_BUTTONS: { key: Exclude<ThreadFilter, "all">; label: string }[] = [
+  { key: "popular", label: "人気" },
   { key: "image", label: "画像" },
   { key: "video", label: "動画" },
-  { key: "link", label: "リンク" },
+  { key: "link", label: "外部" },
 ];
 
 const SEARCH_TARGETS: { key: ThreadSearchTarget; label: string }[] = [
@@ -34,21 +35,20 @@ const SEARCH_TARGETS: { key: ThreadSearchTarget; label: string }[] = [
 export const ThreadPageTopBar: React.FC<ThreadPageTopBarProps> = ({
   activeTopBar,
   filter,
-  filteredResponseCount,
+  filterCounts,
   onClose,
   onFilterChange,
   onSearchTargetChange,
   onSearchQueryChange,
-  responseCount,
   searchFocusKey,
+  suppressInitialFocus = false,
   searchQuery,
   searchTarget,
 }) => {
   const inputRef = useRef<HTMLInputElement>(null);
-  const topBarCountLabel = `${filteredResponseCount}/${responseCount}件`;
 
   useEffect(() => {
-    if (activeTopBar === "none") {
+    if (activeTopBar === "none" || suppressInitialFocus) {
       return;
     }
 
@@ -58,7 +58,7 @@ export const ThreadPageTopBar: React.FC<ThreadPageTopBarProps> = ({
     } catch {
       inputRef.current?.focus();
     }
-  }, [activeTopBar, searchFocusKey]);
+  }, [activeTopBar, searchFocusKey, suppressInitialFocus]);
 
   // ThreadPage本体は「バーを出すか」だけを判断し、
   // 検索とフィルタの複合UIは専用コンポーネントへ閉じ込めて見通しを保つ。
@@ -68,63 +68,52 @@ export const ThreadPageTopBar: React.FC<ThreadPageTopBarProps> = ({
 
   return (
     <div className="thread-page__top-bar thread-page__toolbar">
-      <div className="thread-page__toolbar-main">
-        <div className="thread-page__filters">
-          {FILTER_BUTTONS.map(({ key, label }) => (
+      <div className="thread-page__filters">
+        {FILTER_BUTTONS.map(({ key, label }) => {
+          const isSelected = filter === key;
+          const count = filterCounts[key];
+          return (
             <button
               key={key}
+              type="button"
               className={`thread-page__filter-btn${
-                filter === key ? " thread-page__filter-btn--active" : ""
-              }`}
-              onClick={() => onFilterChange(key)}
+                isSelected ? " thread-page__filter-btn--active" : ""
+              }${count === 0 ? " thread-page__filter-btn--empty" : ""}`}
+              aria-pressed={isSelected}
+              onClick={() => onFilterChange(isSelected ? "all" : key)}
             >
               {label}
+              <span className="thread-page__filter-count">{count}</span>
             </button>
+          );
+        })}
+      </div>
+      <div className="thread-page__toolbar-search">
+        <select
+          className="thread-page__toolbar-search-target"
+          aria-label="検索対象"
+          value={searchTarget}
+          onChange={(event) => onSearchTargetChange(event.target.value as ThreadSearchTarget)}
+        >
+          {SEARCH_TARGETS.map(({ key, label }) => (
+            <option key={key} value={key}>
+              {label}
+            </option>
           ))}
-        </div>
-        <div className="thread-page__toolbar-search">
-          <select
-            className="thread-page__toolbar-search-target"
-            aria-label="検索対象"
-            value={searchTarget}
-            onChange={(event) => onSearchTargetChange(event.target.value as ThreadSearchTarget)}
-          >
-            {SEARCH_TARGETS.map(({ key, label }) => (
-              <option key={key} value={key}>
-                {label}
-              </option>
-            ))}
-          </select>
-          <input
-            ref={inputRef}
-            type="text"
-            className="thread-page__toolbar-search-input"
-            placeholder="検索..."
-            value={searchQuery}
-            onChange={(event) => onSearchQueryChange(event.target.value)}
-            onKeyDown={(event) => {
-              if (event.key === "Escape") {
-                onClose();
-              }
-            }}
-          />
-          {/*
-           * 件数・閉じるボタンをツールバーの直下に置くと、幅不足時に検索欄とは別の行へ
-           * 折り返されて3段化するため、検索欄の中に同居させて同じ行へ折り返す。
-           * 入力欄が flex + min-width: 0 のため、狭い幅の吸収は入力欄が担う。
-           */}
-          <div className="thread-page__toolbar-right">
-            <span className="thread-page__count">{topBarCountLabel}</span>
-            <button
-              type="button"
-              className="thread-page__toolbar-close"
-              onClick={onClose}
-              aria-label="フィルターを閉じる"
-            >
-              ✕
-            </button>
-          </div>
-        </div>
+        </select>
+        <input
+          ref={inputRef}
+          type="text"
+          className="thread-page__toolbar-search-input"
+          placeholder="フィルタする文字を入力"
+          value={searchQuery}
+          onChange={(event) => onSearchQueryChange(event.target.value)}
+          onKeyDown={(event) => {
+            if (event.key === "Escape") {
+              onClose();
+            }
+          }}
+        />
       </div>
     </div>
   );

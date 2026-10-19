@@ -54,6 +54,7 @@ import {
   QUICK_ACCESS_FILTER_TOGGLE_EVENT_BY_PAGE_TYPE,
   type QuickAccessFilterPageType,
 } from "src/view/browser/utils/filter-toolbar-events";
+import { useFilterToolbarOpen } from "src/view/browser/utils/filter-toolbar-open-state";
 import {
   getManualRefreshScopeKey,
   runManualRefresh,
@@ -87,6 +88,20 @@ interface NavigationBarProps {
   openArchiveReplayWindow?: () => void;
 }
 
+const FILTERABLE_PAGE_TYPES = new Set<string>([
+  "thread",
+  "boardList",
+  "threadList",
+  "bookmarkList",
+  "historyList",
+  "writeHistoryList",
+  "logList",
+]);
+
+function isFilterablePageType(pageType: string): boolean {
+  return FILTERABLE_PAGE_TYPES.has(pageType);
+}
+
 export const NavigationBar: React.FC<NavigationBarProps> = ({
   openNextThreadSearchDialog = NOOP_OPEN_NEXT_THREAD_SEARCH_DIALOG,
   openSimilarThreadSearchDialog = NOOP_OPEN_SIMILAR_THREAD_SEARCH_DIALOG,
@@ -95,6 +110,7 @@ export const NavigationBar: React.FC<NavigationBarProps> = ({
   const { state, viewTab, viewPage, dispatch, paneId } = useTabStore();
   const manualRefreshScopeKey = getManualRefreshScopeKey(viewTab.id, viewPage);
   const refreshCoolingDown = useManualRefreshCooldown(manualRefreshScopeKey);
+  const isFilterToolbarOpen = useFilterToolbarOpen(viewTab.id);
   const viewSurface = useViewSurface();
   const toast = useToast();
   const runTabCommand = useTabCommandRunner(viewTab.id);
@@ -128,10 +144,11 @@ export const NavigationBar: React.FC<NavigationBarProps> = ({
   const urlInputRef = useRef<HTMLInputElement>(null);
   const [portalContainer, setPortalContainer] = useState<HTMLElement | null>(null);
   const tabBarOrientation = useTabBarOrientation();
-  // 変更理由: 垂直モードではペイン上部のボタン行をなくし、自ペインの TitleBar 受け口へ
-  // ポータルする。Reactツリー上の位置は変えないため、ペインスコープの各プロバイダ
-  // （タブ状態・下部パネル等）はそのまま利用できる。
-  // 受け口はペインごとに分かれるため、アクティブ切り替え時の表示制御は不要である。
+  // 変更理由: 水平・垂直どちらでもボタンの位置がタイトルバー右上で変わらないよう、
+  // 自ペインの TitleBar 受け口へポータルする。Reactツリー上の位置は変えないため、
+  // ペインスコープの各プロバイダ（タブ状態・下部パネル等）はそのまま利用できる。
+  // 水平モードの共通タイトルバーはアクティブペインの受け口だけを持つので、
+  // アクティブペインが切り替わったときも受け口を探し直す。
   const [titleBarSlot, setTitleBarSlot] = useState<HTMLElement | null>(null);
 
   useEffect(() => {
@@ -142,11 +159,15 @@ export const NavigationBar: React.FC<NavigationBarProps> = ({
     setTitleBarSlot(
       document.querySelector<HTMLElement>(`.title-bar__nav-slot[data-pane-id="${paneId}"]`),
     );
-  }, [paneId, tabBarOrientation]);
-  // 変更理由: 垂直モードでは自ペインの受け口へポータルし、ペイン上部の高さを本文へ返す。
+  }, [paneId, tabBarOrientation, activePaneId]);
+  // 変更理由: 受け口へポータルしてペイン上部の高さを本文へ返す。
   // スロットが無い環境（テスト等）では従来どおりインライン表示する。
   // blur処理からも参照するため、描画部より前で定義する。
-  const useTitleBarSlot = tabBarOrientation === "vertical" && titleBarSlot !== null;
+  const useTitleBarSlot = titleBarSlot !== null;
+  // 変更理由: 水平モードの共通タイトルバーには受け口がアクティブペインの分しかない。
+  // 非アクティブペインのボタンをタブバー横へインライン表示すると位置が変わるため描画しない。
+  const hideInactiveChrome =
+    tabBarOrientation === "horizontal" && !isActivePane && !useTitleBarSlot;
 
   useEffect(() => {
     // 変更理由: グローバルなトーストはペイン内のURLバーと別階層にあるため、
@@ -414,6 +435,8 @@ export const NavigationBar: React.FC<NavigationBarProps> = ({
     [forward],
   );
 
+  const canToggleFilter = isFilterablePageType(viewPage.type);
+
   const toggleFilterFromMenu = useCallback(() => {
     // フィルタUIはメニュー項目からのみ開くことで、
     // メニューボタン押下そのものをトリガーにしない。
@@ -456,13 +479,7 @@ export const NavigationBar: React.FC<NavigationBarProps> = ({
         icon: <Command size={14} />,
         onSelect: () => commandPalette.open("command"),
       },
-      ...(viewPage.type === "thread" ||
-      viewPage.type === "boardList" ||
-      viewPage.type === "threadList" ||
-      viewPage.type === "bookmarkList" ||
-      viewPage.type === "historyList" ||
-      viewPage.type === "writeHistoryList" ||
-      viewPage.type === "logList"
+      ...(canToggleFilter
         ? [
             {
               id: "open-filter-toolbar",
@@ -542,6 +559,7 @@ export const NavigationBar: React.FC<NavigationBarProps> = ({
     [
       viewPage.type,
       activePanelTabId,
+      canToggleFilter,
       openQuickAccessPage,
       openQuickAccessPageInNewTab,
       toggleFilterFromMenu,
@@ -646,6 +664,22 @@ export const NavigationBar: React.FC<NavigationBarProps> = ({
   );
   const chrome = (
     <div className={`nav-bar${useTitleBarSlot ? " nav-bar--titlebar" : ""}`}>
+      {canToggleFilter ? (
+        // 変更理由: フィルタの開閉をメニューの奥ではなく常に見える位置から行えるよう、
+        // URLバーの開閉ボタンの左へ置き、メニュー項目と同じ切り替え処理を使う。
+        <button
+          type="button"
+          className={`nav-bar__filter-toggle${
+            isFilterToolbarOpen ? " nav-bar__filter-toggle--active" : ""
+          }`}
+          aria-pressed={isFilterToolbarOpen}
+          onClick={toggleFilterFromMenu}
+          title="フィルターを開閉"
+          aria-label="フィルターを開閉"
+        >
+          <Filter size={13} />
+        </button>
+      ) : null}
       <button
         type="button"
         className="nav-bar__url-toggle"
@@ -654,7 +688,7 @@ export const NavigationBar: React.FC<NavigationBarProps> = ({
         title={isUrlExpanded ? "URLバーを折りたたむ" : "URLバーを表示"}
         aria-label={isUrlExpanded ? "URLバーを折りたたむ" : "URLバーを表示"}
       >
-        {isUrlExpanded ? <ChevronUp size={17} /> : <ChevronDown size={17} />}
+        {isUrlExpanded ? <ChevronUp size={13} /> : <ChevronDown size={13} />}
       </button>
 
       {isUrlExpanded && (
@@ -720,7 +754,7 @@ export const NavigationBar: React.FC<NavigationBarProps> = ({
           handleMenuClick(e);
         }}
       >
-        <Menu size={18} />
+        <Menu size={13} />
       </button>
 
       {menuPosition && (
@@ -768,7 +802,11 @@ export const NavigationBar: React.FC<NavigationBarProps> = ({
 
   return (
     <>
-      {useTitleBarSlot && titleBarSlot ? createPortal(chrome, titleBarSlot) : chrome}
+      {useTitleBarSlot && titleBarSlot
+        ? createPortal(chrome, titleBarSlot)
+        : hideInactiveChrome
+          ? null
+          : chrome}
 
       <Dialog.Root
         open={isResponseJumpDialogOpen}

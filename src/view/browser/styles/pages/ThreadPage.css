@@ -155,20 +155,24 @@
   color: var(--sys-color-accent);
 }
 
+/*
+ * 変更理由: 自動更新中は最終レスの下に固定の高さ（120px）を予約していたため、
+ * 本文の末尾と追従判定の破線の間が大きく空いていた。高さの予約をやめ、
+ * ラベルと破線だけが入る最小限の余白にする。追従判定は破線の実位置で行うため、高さに依存しない。
+ */
 .thread-page__auto-scroll-threshold {
   position: relative;
   display: flex;
   align-items: flex-end;
   justify-content: flex-end;
-  min-height: 120px;
-  padding: 0 var(--sys-space-8) var(--sys-space-11);
+  padding: 0 var(--sys-space-8) var(--sys-space-6);
   color: var(--sys-color-text-muted);
 }
 
 .thread-page__auto-scroll-threshold-line {
   position: absolute;
   right: var(--sys-space-8);
-  bottom: var(--sys-space-8);
+  bottom: var(--sys-space-4);
   left: var(--sys-space-8);
   height: 0;
   border-top: 2px dashed var(--sys-color-auto-scroll-border);
@@ -203,92 +207,108 @@
   position: relative;
 }
 
+/*
+ * 変更理由: フィルタ項目をタブのように等分に並べて件数を添え、文字入力のフィルタ欄を同じ行の右端へ置く。
+ * 1行にまとめて本文を押し下げる量を抑え、幅が足りないときだけ入力欄を次の行へ折り返す。
+ */
 .thread-page__toolbar {
   display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: var(--sys-space-4);
   flex-wrap: wrap;
-  padding: var(--sys-space-2) var(--sys-space-4);
+  align-items: stretch;
   background: var(--sys-color-table-heading-bg);
   border-bottom: 1px solid var(--sys-color-table-heading-border);
 }
 
-.thread-page__toolbar-main {
-  display: flex;
-  align-items: center;
-  gap: var(--sys-space-4);
-  flex: 1 1 360px;
-  min-width: 0;
-  flex-wrap: wrap;
-}
-
 .thread-page__filters {
   display: flex;
-  gap: var(--sys-space-1);
-  flex-wrap: wrap;
+  flex: 1 1 360px;
+  align-items: stretch;
+  min-width: 0;
 }
 
 .thread-page__filter-btn {
-  padding: var(--sys-space-1) var(--sys-space-5);
-  border: 1px solid var(--sys-color-border);
-  border-radius: var(--sys-radius-pill);
-  background: var(--sys-color-surface);
+  display: inline-flex;
+  flex: 1 1 0;
+  align-items: center;
+  justify-content: center;
+  gap: var(--sys-space-2);
+  min-width: 0;
+  padding: var(--sys-space-2) var(--sys-space-2);
+  border: 0;
+  background: transparent;
+  font-family: inherit;
   font-size: var(--sys-font-size-sm);
+  color: var(--sys-color-text);
   cursor: pointer;
-  color: var(--sys-color-text-muted);
+  white-space: nowrap;
   transition:
     background var(--sys-duration-fast),
     color var(--sys-duration-fast);
-  font-family: inherit;
 }
 
 .thread-page__filter-btn:hover {
   background: var(--sys-color-list-hover-bg);
 }
 
+.thread-page__filter-btn--empty {
+  color: var(--sys-color-text-disabled);
+}
+
+.thread-page__filter-count {
+  font-size: var(--sys-font-size-xs);
+  color: var(--sys-color-text-muted);
+  font-variant-numeric: tabular-nums;
+}
+
+.thread-page__filter-btn--empty .thread-page__filter-count {
+  color: inherit;
+}
+
+/* 選択中の項目はボタンごと青く塗り、どの絞り込みが効いているかを一目で分かるようにする。 */
 .thread-page__filter-btn--active {
   background: var(--sys-color-accent);
   color: var(--sys-color-accent-fg);
-  border-color: var(--sys-color-accent);
 }
 
 .thread-page__filter-btn--active:hover {
   background: var(--sys-color-accent-hover);
 }
 
-.thread-page__count {
-  font-size: var(--sys-font-size-sm);
-  color: var(--sys-color-table-muted);
+.thread-page__filter-btn--active .thread-page__filter-count {
+  color: inherit;
 }
 
 .thread-page__toolbar-search {
   display: flex;
+  flex: 0 0 auto;
   align-items: center;
-  gap: var(--sys-space-4);
-  flex: 1 1 220px;
-  min-width: 180px;
+  gap: var(--sys-space-2);
+  /* 折り返して単独の行になったときも右端へ寄せる。 */
+  margin-left: auto;
+  /* 変更理由: 左は末尾の「外部」ボタンと検索対象のセレクトが接して見えないよう広めに取り、
+     右は入力欄の外側に余白が残りすぎないよう狭める。 */
+  padding: var(--sys-space-1) var(--sys-space-2) var(--sys-space-1) var(--sys-space-6);
 }
 
 .thread-page__toolbar-search-target {
-  height: 28px;
-  padding: 0 var(--sys-space-4);
+  height: 22px;
+  padding: 0 var(--sys-space-2);
   border: 1px solid var(--sys-color-input-border);
-  border-radius: var(--sys-radius-md);
-  font-size: var(--sys-font-size-sm);
+  border-radius: var(--sys-radius-sm);
+  font-size: var(--sys-font-size-xs);
   font-family: inherit;
   background: var(--sys-color-input-bg);
   color: var(--sys-color-text);
 }
 
 .thread-page__toolbar-search-input {
-  flex: 1;
+  flex: 0 1 220px;
   min-width: 0;
-  height: 28px;
-  padding: 0 var(--sys-space-4);
+  height: 22px;
+  padding: 0 var(--sys-space-3);
   border: 1px solid var(--sys-color-input-border);
-  border-radius: var(--sys-radius-md);
-  font-size: var(--sys-font-size-md);
+  border-radius: var(--sys-radius-sm);
+  font-size: var(--sys-font-size-sm);
   outline: none;
   font-family: inherit;
   background: var(--sys-color-input-bg);
@@ -303,46 +323,6 @@
   border-color: var(--sys-color-focus-ring);
 }
 
-.thread-page__toolbar-right {
-  display: flex;
-  align-items: center;
-  gap: var(--sys-space-4);
-  margin-left: auto;
-}
-
-.thread-page__toolbar-close {
-  width: 24px;
-  height: 24px;
-  border: none;
-  background: transparent;
-  cursor: pointer;
-  border-radius: 50%;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  color: var(--sys-color-text-muted);
-  font-size: var(--sys-font-size-md);
-}
-
-.thread-page__toolbar-close:hover {
-  background: var(--sys-color-surface-muted);
-}
-
-@media (max-width: 720px) {
-  .thread-page__toolbar-main {
-    flex-basis: 100%;
-  }
-
-  /*
-   * 狭い画面でも件数・閉じるボタンは検索欄と同じ行に残し、入力欄だけを縮める。
-   * right 側へ width: 100% を振ると件数行が分離してツールバーが3段化するため、
-   * 幅の吸収は min-width: 0 の入力欄に寄せる。
-   */
-  .thread-page__toolbar-search {
-    flex: 1 1 auto;
-    min-width: 0;
-  }
-}
 .thread-page__replay-position {
   display: flex;
   align-items: center;

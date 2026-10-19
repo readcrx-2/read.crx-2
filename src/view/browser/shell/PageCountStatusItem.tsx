@@ -41,7 +41,11 @@ export const PageCountStatusItem: React.FC = () => {
     return null;
   }
 
-  const label = `${formatCount(getPageCount(pageInfo.key)?.count)}${pageInfo.suffix}`;
+  const pageCount = getPageCount(pageInfo.key);
+  const filteredCount = pageCount?.filteredCount;
+  const totalLabel = `${formatCount(pageCount?.count)}${pageInfo.suffix}`;
+  // 絞り込み中は「表示件数/全体件数」で示し、フィルタの効き具合をステータスバーだけで分かるようにする。
+  const label = filteredCount == null ? totalLabel : `${formatCount(filteredCount)}/${totalLabel}`;
   const accessibleLabel = `現在の${pageInfo.name}: ${label}`;
   const isThreadPage = viewPage.type === "thread";
 

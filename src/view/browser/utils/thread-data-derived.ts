@@ -15,11 +15,35 @@ export interface ThreadDerivedDataOptions {
   ngDisplayMode: NgDisplayMode;
 }
 
+export type ThreadFilterCounts = Record<Exclude<ThreadFilter, "all">, number>;
+
 export interface ThreadDerivedData {
   visibleResponses: IRes[];
   indexes: ReturnType<typeof buildIndexes>;
   filteredResponses: IRes[];
+  /** 各フィルタに該当するレス数。フィルタ項目の横へ件数を出すために使う。 */
+  filterCounts: ThreadFilterCounts;
   idPositions: Map<number, number>;
+}
+
+const COUNTED_FILTERS = ["popular", "image", "video", "link"] as const;
+
+function matchesThreadFilter(
+  res: IRes,
+  filter: Exclude<ThreadFilter, "all">,
+  repIndex: ReturnType<typeof buildIndexes>["repIndex"],
+  popularReplyThreshold: number,
+): boolean {
+  switch (filter) {
+    case "popular":
+      return (repIndex.get(res.num)?.size ?? 0) >= popularReplyThreshold;
+    case "image":
+      return hasImage(res.message);
+    case "video":
+      return hasVideo(res.message);
+    case "link":
+      return hasExternalLink(res.message);
+  }
 }
 
 /**
@@ -47,18 +71,19 @@ export function deriveThreadData(options: ThreadDerivedDataOptions): ThreadDeriv
 
   let filteredResponses = visibleResponses;
   if (filter !== "all") {
-    filteredResponses = filteredResponses.filter((res) => {
-      switch (filter) {
-        case "popular":
-          return (indexes.repIndex.get(res.num)?.size ?? 0) >= popularReplyThreshold;
-        case "image":
-          return hasImage(res.message);
-        case "video":
-          return hasVideo(res.message);
-        case "link":
-          return hasExternalLink(res.message);
+    filteredResponses = filteredResponses.filter((res) =>
+      matchesThreadFilter(res, filter, indexes.repIndex, popularReplyThreshold),
+    );
+  }
+
+  // 件数は検索語に関係なくスレッド全体に対して数え、フィルタを選ぶ前に該当数を見られるようにする。
+  const filterCounts: ThreadFilterCounts = { popular: 0, image: 0, video: 0, link: 0 };
+  for (const res of visibleResponses) {
+    for (const countedFilter of COUNTED_FILTERS) {
+      if (matchesThreadFilter(res, countedFilter, indexes.repIndex, popularReplyThreshold)) {
+        filterCounts[countedFilter] += 1;
       }
-    });
+    }
   }
 
   if (searchQuery) {
@@ -76,5 +101,5 @@ export function deriveThreadData(options: ThreadDerivedDataOptions): ThreadDeriv
     idPositions.set(res.num, count);
   }
 
-  return { visibleResponses, indexes, filteredResponses, idPositions };
+  return { visibleResponses, indexes, filteredResponses, filterCounts, idPositions };
 }

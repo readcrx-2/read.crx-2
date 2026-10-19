@@ -39,8 +39,8 @@
   align-items: stretch;
   column-gap: 2px;
   row-gap: 0;
+  /* 変更理由: タブバーと本文・フィルタバーの境界は背景色の差で足りるため、細い線を引かない。 */
   background: var(--sys-color-tab-strip);
-  border-bottom: 1px solid var(--sys-color-border);
 }
 
 /* 変更理由: 候補リストのz-indexだけでは親の重なりコンテキストを越えられないため、

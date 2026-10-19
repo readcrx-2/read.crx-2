@@ -10,9 +10,11 @@ import { afterEach, describe, expect, it } from "vite-plus/test";
 function TopBarHarness({
   isActive = true,
   tabId = "tab-1",
+  openByDefault = false,
 }: {
   isActive?: boolean;
   tabId?: string;
+  openByDefault?: boolean;
 }) {
   const [searchQuery, setSearchQuery] = useState("");
   const [filter, setFilter] = useState<ThreadFilter>("all");
@@ -22,18 +24,21 @@ function TopBarHarness({
     closeTopBarPreservingFilter,
     openFilterToolbar,
     searchFocusKey,
+    suppressInitialFocus,
   } = useThreadTopBar({
     tabId,
     isActive,
     searchQuery,
     setSearchQuery,
     clearFilter: () => setFilter("all"),
+    openByDefault,
   });
 
   return (
     <div>
       <output data-testid="active-top-bar">{activeTopBar}</output>
       <output data-testid="search-focus-key">{searchFocusKey}</output>
+      <output data-testid="suppress-initial-focus">{String(suppressInitialFocus)}</output>
       <output data-testid="search-query">{searchQuery}</output>
       <output data-testid="filter">{filter}</output>
       <button onClick={() => setSearchQuery("abc")}>set query</button>
@@ -48,6 +53,29 @@ function TopBarHarness({
 describe("useThreadTopBar", () => {
   afterEach(() => {
     cleanup();
+  });
+
+  it("既定で開く設定のときは開いた状態で始まり、入力欄へのフォーカスを抑える", () => {
+    render(<TopBarHarness openByDefault />);
+
+    expect(screen.getByTestId("active-top-bar")).toHaveTextContent("filter");
+    expect(screen.getByTestId("suppress-initial-focus")).toHaveTextContent("true");
+  });
+
+  it("既定で開く設定でも、閉じて開き直した後は通常どおりフォーカスする", () => {
+    render(<TopBarHarness openByDefault />);
+
+    fireEvent.click(screen.getByRole("button", { name: "close" }));
+    fireEvent.click(screen.getByRole("button", { name: "open filter" }));
+
+    expect(screen.getByTestId("active-top-bar")).toHaveTextContent("filter");
+    expect(screen.getByTestId("suppress-initial-focus")).toHaveTextContent("false");
+  });
+
+  it("設定が無いときは閉じた状態で始まる", () => {
+    render(<TopBarHarness />);
+
+    expect(screen.getByTestId("active-top-bar")).toHaveTextContent("none");
   });
 
   it("検索イベントでフィルタバーを開いて検索focusキーを更新する", () => {

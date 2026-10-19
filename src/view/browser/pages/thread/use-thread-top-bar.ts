@@ -4,6 +4,7 @@ import {
   THREAD_FILTER_TOOLBAR_TOGGLE_EVENT,
   type ThreadFilterToolbarToggleDetail,
 } from "src/view/browser/utils/filter-toolbar-events";
+import { setFilterToolbarOpen } from "src/view/browser/utils/filter-toolbar-open-state";
 
 const TOP_BAR_EVENT_BY_MODE = {
   search: "thread-search-toggle",
@@ -19,6 +20,8 @@ interface UseThreadTopBarParams {
   setSearchQuery: (query: string) => void;
   clearFilter: () => void;
   hasActiveFilter?: boolean;
+  /** 設定により、検索語やフィルタがなくてもバーを開いた状態で始める。 */
+  openByDefault?: boolean;
 }
 
 interface UseThreadTopBarResult {
@@ -27,6 +30,8 @@ interface UseThreadTopBarResult {
   closeTopBarPreservingFilter: () => void;
   openFilterToolbar: () => void;
   searchFocusKey: number;
+  /** 設定で開いた直後は、閲覧中のキー操作を奪わないよう入力欄へフォーカスしない。 */
+  suppressInitialFocus: boolean;
 }
 
 export function useThreadTopBar({
@@ -36,12 +41,29 @@ export function useThreadTopBar({
   setSearchQuery,
   clearFilter,
   hasActiveFilter = false,
+  openByDefault = false,
 }: UseThreadTopBarParams): UseThreadTopBarResult {
   const { window: viewWindow } = useViewSurface();
-  const [activeTopBar, setActiveTopBar] = useState<TopBarMode>(() =>
-    searchQuery.trim() !== "" || hasActiveFilter ? "filter" : "none",
+  const [activeTopBar, setActiveTopBarState] = useState<TopBarMode>(() =>
+    searchQuery.trim() !== "" || hasActiveFilter || openByDefault ? "filter" : "none",
   );
   const [searchFocusKey, setSearchFocusKey] = useState(0);
+  // 検索語やフィルタが無く、設定だけで開いたときに限りフォーカスを移さない。
+  const [suppressInitialFocus, setSuppressInitialFocus] = useState(
+    () => openByDefault && searchQuery.trim() === "" && !hasActiveFilter,
+  );
+  // 利用者の操作でバーの状態が変わったら、以降は通常どおり入力欄へフォーカスする。
+  const setActiveTopBar = useCallback((mode: TopBarMode) => {
+    setSuppressInitialFocus(false);
+    setActiveTopBarState(mode);
+  }, []);
+
+  useEffect(() => {
+    setFilterToolbarOpen(tabId, activeTopBar === "filter");
+    return () => {
+      setFilterToolbarOpen(tabId, false);
+    };
+  }, [activeTopBar, tabId]);
 
   const closeTopBar = useCallback(() => {
     if (searchQuery) {
@@ -108,5 +130,6 @@ export function useThreadTopBar({
     closeTopBarPreservingFilter,
     openFilterToolbar,
     searchFocusKey,
+    suppressInitialFocus,
   };
 }

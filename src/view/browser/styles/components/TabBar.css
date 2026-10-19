@@ -4,10 +4,10 @@
   align-items: center;
   flex: 1 1 0;
   min-width: 0;
-  height: var(--sys-space-13);
+  height: var(--sys-space-12);
   padding: 0 var(--sys-space-2);
   background: var(--sys-color-tab-strip);
-  border-bottom: 1px solid var(--sys-color-border);
+  /* 下側の区切り線はペイン上部（.pane-column__chrome）と二重になるため引かない。 */
   user-select: none;
 }
 
@@ -75,11 +75,12 @@
   align-items: center;
   min-width: 72px;
   max-width: 180px;
-  height: var(--sys-space-13);
+  height: var(--sys-space-12);
   padding: 0 var(--sys-space-4) 0 var(--sys-space-5);
   border: 0;
   border-right: 1px solid var(--sys-color-border);
-  border-bottom: 2px solid transparent;
+  /* 変更理由: 区切り線をなくした分、選択中タブの下線を太くして現在のタブを見分けやすくする。 */
+  border-bottom: 3px solid transparent;
   border-radius: 0;
   color: var(--sys-color-text-muted);
   cursor: pointer;
@@ -120,7 +121,7 @@
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
-  line-height: var(--sys-space-13);
+  line-height: var(--sys-space-12);
 }
 
 .tab__auto-refresh-indicator {

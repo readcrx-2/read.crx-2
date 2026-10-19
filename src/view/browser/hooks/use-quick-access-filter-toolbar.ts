@@ -6,6 +6,7 @@ import {
   type QuickAccessFilterPageType,
   type QuickAccessFilterToggleDetail,
 } from "src/view/browser/utils/filter-toolbar-events";
+import { setFilterToolbarOpen } from "src/view/browser/utils/filter-toolbar-open-state";
 
 interface UseQuickAccessFilterToolbarParams {
   pageType: QuickAccessFilterPageType;
@@ -39,6 +40,13 @@ export function useQuickAccessFilterToolbar({
     }
     setIsFilterOpen(false);
   }, [searchQuery, setSearchQuery]);
+
+  useEffect(() => {
+    setFilterToolbarOpen(tabId, isFilterOpen);
+    return () => {
+      setFilterToolbarOpen(tabId, false);
+    };
+  }, [isFilterOpen, tabId]);
 
   useEffect(() => {
     if (!isFilterOpen) {

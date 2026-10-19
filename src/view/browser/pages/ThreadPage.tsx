@@ -51,6 +51,7 @@ import { useCommentOverlaySync } from "src/view/browser/pages/thread/use-comment
 import { useImageBlurConfig } from "src/view/browser/pages/thread/use-image-blur-config";
 import { useOwnResTracking } from "src/view/browser/pages/thread/use-own-res-tracking";
 import { useResInteractionHandlers } from "src/view/browser/pages/thread/use-res-interaction-handlers";
+import { useThreadFilterDefaultOpenSetting } from "src/view/browser/pages/thread/use-thread-filter-default-open-setting";
 import { useThreadReadState } from "src/view/browser/pages/thread/use-thread-read-state";
 import { useThreadResContextMenu } from "src/view/browser/pages/thread/use-thread-res-context-menu";
 import { useThreadStatusSync } from "src/view/browser/pages/thread/use-thread-status-sync";
@@ -121,7 +122,6 @@ export const ThreadPage: React.FC<ThreadPageProps> = ({
   const refreshController = useThreadRefreshController(refreshKey);
   const {
     responses,
-    visibleResponses,
     loading,
     isInitialLoading,
     isCacheResolved,
@@ -130,6 +130,7 @@ export const ThreadPage: React.FC<ThreadPageProps> = ({
     missingFromSubject,
     indexes,
     filteredResponses,
+    filterCounts,
     filter,
     setFilter,
     searchTarget,
@@ -274,6 +275,7 @@ export const ThreadPage: React.FC<ThreadPageProps> = ({
     [responses],
   );
 
+  const isFilterDefaultOpen = useThreadFilterDefaultOpenSetting();
   const [miniAaResNums, setMiniAaResNums] = useState<Set<number>>(new Set());
   const {
     activeTopBar,
@@ -281,6 +283,7 @@ export const ThreadPage: React.FC<ThreadPageProps> = ({
     closeTopBarPreservingFilter,
     openFilterToolbar,
     searchFocusKey,
+    suppressInitialFocus,
   } = useThreadTopBar({
     tabId,
     isActive,
@@ -288,6 +291,7 @@ export const ThreadPage: React.FC<ThreadPageProps> = ({
     setSearchQuery,
     clearFilter,
     hasActiveFilter: filter !== "all",
+    openByDefault: isFilterDefaultOpen,
   });
 
   useMouseGesture(rootRef, viewSurface);
@@ -630,6 +634,7 @@ export const ThreadPage: React.FC<ThreadPageProps> = ({
     threadUrl: page.threadUrl,
     loading,
     responses,
+    filteredCount: isFilterEnabled ? filteredResponses.length : null,
     ownResNums,
     replyToOwnResNums,
   });
@@ -780,13 +785,13 @@ export const ThreadPage: React.FC<ThreadPageProps> = ({
             <ThreadPageTopBar
               activeTopBar={activeTopBar}
               filter={filter}
-              filteredResponseCount={filteredResponses.length}
+              filterCounts={filterCounts}
               onClose={closeTopBar}
               onFilterChange={setFilter}
               onSearchTargetChange={setSearchTarget}
               onSearchQueryChange={setSearchQuery}
-              responseCount={visibleResponses.length}
               searchFocusKey={searchFocusKey}
+              suppressInitialFocus={suppressInitialFocus}
               searchQuery={searchQuery}
               searchTarget={searchTarget}
             />

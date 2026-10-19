@@ -35,6 +35,12 @@ const SETTINGS = [
   ["データ", "settings-data"],
 ] as const;
 
+/**
+ * 1920px幅のディスプレイで、ウィンドウを左右半分に並べたときの表示領域。
+ * 設定画面のサイドバーがこの幅でも窮屈にならないかを確かめるため、各カテゴリを撮る。
+ */
+const HALF_DISPLAY_VIEWPORT = { width: 960, height: 1040 };
+
 function defaultRoot(): string {
   const stamp = new Date().toISOString().replaceAll(":", "-").replaceAll(".", "-");
   return path.join("screenshots", "ui", stamp);
@@ -225,6 +231,28 @@ async function captureSettings(page: Page, shooter: Shooter): Promise<void> {
   }
 }
 
+/**
+ * 表示領域をディスプレイの半分の幅へ変え、設定の各カテゴリの先頭を撮る。
+ * 表示領域を元に戻さないため、撮影の最後に呼ぶ。
+ */
+async function captureSettingsAtHalfDisplay(page: Page, shooter: Shooter): Promise<void> {
+  await page.setViewportSize(HALF_DISPLAY_VIEWPORT);
+  const main = page.locator(".settings-page__main");
+  for (const [label, file] of SETTINGS) {
+    const section = page.locator(".settings-page__section-btn").filter({ hasText: label }).first();
+    if (!(await section.count())) continue;
+    await section.click();
+    await expect(page.locator(".settings-page__title")).toHaveText(label);
+    await page.locator('[aria-label$="読み込み中"]').waitFor({ state: "hidden" });
+    await page.locator(".settings-page__site-board-loading").waitFor({ state: "hidden" });
+    await main.evaluate((element) => {
+      element.scrollTop = 0;
+    });
+    await page.waitForTimeout(200);
+    await shooter.capture(page, `${file}-half-display`);
+  }
+}
+
 export interface ScenarioOptions {
   /** スレッドを開いて新着を受け取った後に、版に固有の画面を撮影する。 */
   afterThread?: () => Promise<void>;
@@ -308,4 +336,5 @@ export async function captureCommonScreens(
   await captureQuickAccessPage(page, shooter, "書き込み履歴", "09-write-history");
 
   await captureSettings(page, shooter);
+  await captureSettingsAtHalfDisplay(page, shooter);
 }

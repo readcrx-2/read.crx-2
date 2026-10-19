@@ -11,6 +11,8 @@ interface UseThreadStatusSyncParams {
   threadUrl: string;
   loading: boolean;
   responses: IRes[];
+  /** 検索・フィルタで絞り込んでいるときの表示件数。絞り込みなしなら null。 */
+  filteredCount: number | null;
   ownResNums: Set<number>;
   replyToOwnResNums: Set<number>;
 }
@@ -31,6 +33,7 @@ export function useThreadStatusSync({
   threadUrl,
   loading,
   responses,
+  filteredCount,
   ownResNums,
   replyToOwnResNums,
 }: UseThreadStatusSyncParams): UseThreadStatusSyncResult {
@@ -58,9 +61,11 @@ export function useThreadStatusSync({
     setPageCount(pageCountKey, {
       kind: "thread",
       count: loading && responses.length === 0 ? null : responses.length,
+      // 変更理由: 検索・フィルタバーから件数表示をなくしたため、絞り込み中の件数はステータスバーで示す。
+      filteredCount,
     });
     return () => setPageCount(pageCountKey, null);
-  }, [loading, pageCountKey, responses.length, setPageCount]);
+  }, [filteredCount, loading, pageCountKey, responses.length, setPageCount]);
 
   useEffect(() => {
     // ステータスバーの件数はページ外コンポーネントから参照するため、

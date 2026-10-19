@@ -13,6 +13,7 @@
 
 /* 変更理由: TitleBar の細バーに収めるため、ポータルされた2ボタンは小さくする。
    並び順はchevron→メニューとし、分割ボタンの左隣にメニューが来るようにする。 */
+.nav-bar--titlebar .nav-bar__filter-toggle,
 .nav-bar--titlebar .nav-bar__url-toggle {
   order: 1;
 }
@@ -21,12 +22,14 @@
   order: 2;
 }
 
+.nav-bar--titlebar .nav-bar__filter-toggle,
 .nav-bar--titlebar .nav-bar__url-toggle,
 .nav-bar--titlebar .nav-bar__btn {
   width: var(--sys-space-9);
   height: var(--sys-space-9);
 }
 
+.nav-bar--titlebar .nav-bar__filter-toggle svg,
 .nav-bar--titlebar .nav-bar__url-toggle svg,
 .nav-bar--titlebar .nav-bar__btn svg {
   width: 14px;
@@ -71,6 +74,7 @@
   color: var(--sys-color-text-disabled);
   cursor: default;
 }
+.nav-bar__filter-toggle,
 .nav-bar__url-toggle {
   width: 30px;
   height: 30px;
@@ -86,6 +90,7 @@
   align-self: center;
   transition: background 0.1s;
 }
+.nav-bar__filter-toggle:hover,
 .nav-bar__url-toggle:hover {
   background: var(--sys-color-tab-strip-hover);
 }

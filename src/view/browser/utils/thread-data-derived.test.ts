@@ -37,6 +37,21 @@ describe("スレッド表示用派生データ", () => {
     expect(result.filteredResponses.map((item) => item.num)).toEqual([2]);
   });
 
+  it("検索語やフィルタに関係なく、スレッド全体で各フィルタの該当件数を数える", () => {
+    const result = deriveThreadData({
+      responses,
+      filter: "video",
+      popularReplyThreshold: 1,
+      searchQuery: "該当しない語",
+      searchTarget: "body",
+      isNgTemporarilyDisabled: false,
+      ngDisplayMode: "soft-ng",
+    });
+
+    expect(result.filteredResponses).toEqual([]);
+    expect(result.filterCounts).toEqual({ popular: 1, image: 1, video: 1, link: 2 });
+  });
+
   it("IDごとの出現位置と返信索引を表示側へ渡す", () => {
     const result = deriveThreadData({
       responses,

@@ -27,6 +27,7 @@ describe("useThreadStatusSync", () => {
         loading: false,
         responses,
         ownResNums: new Set(),
+        filteredCount: null,
         replyToOwnResNums: new Set(),
       }),
     );
@@ -42,6 +43,7 @@ describe("useThreadStatusSync", () => {
         loading: true,
         responses: [],
         ownResNums: new Set(),
+        filteredCount: null,
         replyToOwnResNums: new Set(),
       }),
     );

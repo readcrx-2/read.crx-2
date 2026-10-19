@@ -7,6 +7,8 @@ import { cleanup, fireEvent, render, screen } from "@testing-library/react";
 import { ThreadPageTopBar } from "src/view/browser/pages/thread/ThreadPageTopBar";
 import { afterEach, describe, expect, it, vi } from "vite-plus/test";
 
+const COUNTS = { popular: 2, image: 3, video: 0, link: 9 };
+
 const threadPageCss = readFileSync(resolve("src/view/browser/styles/pages/ThreadPage.css"), "utf8");
 
 describe("ThreadPageTopBar", () => {
@@ -19,12 +21,11 @@ describe("ThreadPageTopBar", () => {
       <ThreadPageTopBar
         activeTopBar="filter"
         filter="all"
-        filteredResponseCount={3}
+        filterCounts={COUNTS}
         onClose={vi.fn()}
         onFilterChange={vi.fn()}
         onSearchTargetChange={vi.fn()}
         onSearchQueryChange={vi.fn()}
-        responseCount={3}
         searchFocusKey={0}
         searchQuery=""
         searchTarget="all"
@@ -47,12 +48,11 @@ describe("ThreadPageTopBar", () => {
       <ThreadPageTopBar
         activeTopBar="filter"
         filter="all"
-        filteredResponseCount={0}
+        filterCounts={COUNTS}
         onClose={vi.fn()}
         onFilterChange={vi.fn()}
         onSearchTargetChange={onSearchTargetChange}
         onSearchQueryChange={vi.fn()}
-        responseCount={0}
         searchFocusKey={0}
         searchQuery=""
         searchTarget="all"
@@ -77,38 +77,74 @@ describe("ThreadPageTopBar", () => {
     expect(minimapReservationSelectors).not.toContain(".thread-page__toolbar");
   });
 
-  it("件数と閉じるボタンを検索欄と同じ行に配置する", () => {
+  it("フィルタ項目に件数を添え、該当なしの項目は薄く表示する", () => {
     render(
       <ThreadPageTopBar
         activeTopBar="filter"
         filter="all"
-        filteredResponseCount={3}
+        filterCounts={COUNTS}
         onClose={vi.fn()}
         onFilterChange={vi.fn()}
         onSearchTargetChange={vi.fn()}
         onSearchQueryChange={vi.fn()}
-        responseCount={3}
         searchFocusKey={0}
         searchQuery=""
         searchTarget="all"
       />,
     );
 
-    // 件数・閉じるボタンがツールバーの直下にあると、幅不足時に検索欄とは別の行へ
-    // 折り返されて3段化するため、検索欄の中に同居していることを保証する。
-    const search = screen.getByPlaceholderText("検索...").closest(".thread-page__toolbar-search");
-    const right = screen.getByText("3/3件").closest(".thread-page__toolbar-right");
-    expect(search).not.toBeNull();
-    expect(right).not.toBeNull();
-    expect(search).toContainElement(right as HTMLElement);
+    expect(screen.getByRole("button", { name: /^画像\s*3$/u })).toBeInTheDocument();
+    expect(screen.getByRole("button", { name: /^外部\s*9$/u })).toBeInTheDocument();
+    expect(screen.getByRole("button", { name: /^動画\s*0$/u })).toHaveClass(
+      "thread-page__filter-btn--empty",
+    );
+    expect(screen.queryByRole("button", { name: /全て/u })).not.toBeInTheDocument();
   });
 
-  it("狭い画面でも件数・閉じるボタンを行分離しない", () => {
-    const narrowScreenBlock =
-      threadPageCss.match(/@media \(max-width: 720px\) \{([\s\S]*)\}\s*$/)?.[1] ?? "";
+  it("選択中のフィルタ項目をもう一度押すと解除する", () => {
+    const onFilterChange = vi.fn();
+    render(
+      <ThreadPageTopBar
+        activeTopBar="filter"
+        filter="image"
+        filterCounts={COUNTS}
+        onClose={vi.fn()}
+        onFilterChange={onFilterChange}
+        onSearchTargetChange={vi.fn()}
+        onSearchQueryChange={vi.fn()}
+        searchFocusKey={0}
+        searchQuery=""
+        searchTarget="all"
+      />,
+    );
 
-    expect(narrowScreenBlock).toContain(".thread-page__toolbar-search");
-    expect(narrowScreenBlock).toContain("min-width: 0");
-    expect(narrowScreenBlock).not.toContain(".thread-page__toolbar-right");
+    const image = screen.getByRole("button", { name: /^画像\s*3$/u });
+    expect(image).toHaveAttribute("aria-pressed", "true");
+    fireEvent.click(image);
+    expect(onFilterChange).toHaveBeenLastCalledWith("all");
+
+    fireEvent.click(screen.getByRole("button", { name: /^人気\s*2$/u }));
+    expect(onFilterChange).toHaveBeenLastCalledWith("popular");
+  });
+
+  it("文字入力欄でEscapeを押すとバーを閉じる", () => {
+    const onClose = vi.fn();
+    render(
+      <ThreadPageTopBar
+        activeTopBar="filter"
+        filter="all"
+        filterCounts={COUNTS}
+        onClose={onClose}
+        onFilterChange={vi.fn()}
+        onSearchTargetChange={vi.fn()}
+        onSearchQueryChange={vi.fn()}
+        searchFocusKey={0}
+        searchQuery=""
+        searchTarget="all"
+      />,
+    );
+
+    fireEvent.keyDown(screen.getByPlaceholderText("フィルタする文字を入力"), { key: "Escape" });
+    expect(onClose).toHaveBeenCalled();
   });
 });

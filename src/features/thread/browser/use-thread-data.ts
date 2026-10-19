@@ -41,7 +41,10 @@ import {
   getThreadResponseCache,
   setThreadResponseCache,
 } from "src/view/browser/utils/thread-data-cache";
-import { deriveThreadData } from "src/view/browser/utils/thread-data-derived";
+import {
+  deriveThreadData,
+  type ThreadFilterCounts,
+} from "src/view/browser/utils/thread-data-derived";
 import { buildIndexes } from "src/view/browser/utils/thread-index";
 import { stripTrailingSyntheticAbobunResponses } from "src/view/browser/utils/thread-response-cache";
 
@@ -63,6 +66,7 @@ interface ThreadData {
   missingFromSubject: boolean;
   indexes: ReturnType<typeof buildIndexes>;
   filteredResponses: IRes[];
+  filterCounts: ThreadFilterCounts;
   filter: ThreadFilter;
   setFilter: Dispatch<SetStateAction<ThreadFilter>>;
   searchTarget: ThreadSearchTarget;
@@ -409,7 +413,7 @@ export function useThreadData(
     };
   }, [page.title, page.threadUrl, setResponses]);
 
-  const { visibleResponses, indexes, filteredResponses, idPositions } = useMemo(
+  const { visibleResponses, indexes, filteredResponses, filterCounts, idPositions } = useMemo(
     () =>
       deriveThreadData({
         responses,
@@ -442,6 +446,7 @@ export function useThreadData(
     missingFromSubject,
     indexes,
     filteredResponses,
+    filterCounts,
     filter,
     setFilter,
     searchTarget,

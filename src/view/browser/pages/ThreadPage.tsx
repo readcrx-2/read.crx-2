@@ -121,7 +121,6 @@ export const ThreadPage: React.FC<ThreadPageProps> = ({
   const refreshController = useThreadRefreshController(refreshKey);
   const {
     responses,
-    visibleResponses,
     loading,
     isInitialLoading,
     isCacheResolved,
@@ -130,6 +129,7 @@ export const ThreadPage: React.FC<ThreadPageProps> = ({
     missingFromSubject,
     indexes,
     filteredResponses,
+    filterCounts,
     filter,
     setFilter,
     searchTarget,
@@ -630,6 +630,7 @@ export const ThreadPage: React.FC<ThreadPageProps> = ({
     threadUrl: page.threadUrl,
     loading,
     responses,
+    filteredCount: isFilterEnabled ? filteredResponses.length : null,
     ownResNums,
     replyToOwnResNums,
   });
@@ -780,12 +781,11 @@ export const ThreadPage: React.FC<ThreadPageProps> = ({
             <ThreadPageTopBar
               activeTopBar={activeTopBar}
               filter={filter}
-              filteredResponseCount={filteredResponses.length}
+              filterCounts={filterCounts}
               onClose={closeTopBar}
               onFilterChange={setFilter}
               onSearchTargetChange={setSearchTarget}
               onSearchQueryChange={setSearchQuery}
-              responseCount={visibleResponses.length}
               searchFocusKey={searchFocusKey}
               searchQuery={searchQuery}
               searchTarget={searchTarget}

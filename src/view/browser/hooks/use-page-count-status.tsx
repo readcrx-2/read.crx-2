@@ -11,6 +11,8 @@ export type PageCountKind = "thread" | "threadList";
 export type PageCountValue = {
   kind: PageCountKind;
   count: number | null;
+  /** 絞り込み中だけ設定する、表示中の件数。未設定なら絞り込みなしとして扱う。 */
+  filteredCount?: number | null;
 };
 
 interface PageCountStatusContextValue {
@@ -41,7 +43,11 @@ export const PageCountStatusProvider: React.FC<{ children: ReactNode }> = ({ chi
       }
 
       const previous = current[key];
-      if (previous?.kind === value.kind && previous.count === value.count) {
+      if (
+        previous?.kind === value.kind &&
+        previous.count === value.count &&
+        previous.filteredCount === value.filteredCount
+      ) {
         return current;
       }
       return { ...current, [key]: value };

@@ -87,6 +87,20 @@ interface NavigationBarProps {
   openArchiveReplayWindow?: () => void;
 }
 
+const FILTERABLE_PAGE_TYPES = new Set<string>([
+  "thread",
+  "boardList",
+  "threadList",
+  "bookmarkList",
+  "historyList",
+  "writeHistoryList",
+  "logList",
+]);
+
+function isFilterablePageType(pageType: string): boolean {
+  return FILTERABLE_PAGE_TYPES.has(pageType);
+}
+
 export const NavigationBar: React.FC<NavigationBarProps> = ({
   openNextThreadSearchDialog = NOOP_OPEN_NEXT_THREAD_SEARCH_DIALOG,
   openSimilarThreadSearchDialog = NOOP_OPEN_SIMILAR_THREAD_SEARCH_DIALOG,
@@ -414,6 +428,8 @@ export const NavigationBar: React.FC<NavigationBarProps> = ({
     [forward],
   );
 
+  const canToggleFilter = isFilterablePageType(viewPage.type);
+
   const toggleFilterFromMenu = useCallback(() => {
     // フィルタUIはメニュー項目からのみ開くことで、
     // メニューボタン押下そのものをトリガーにしない。
@@ -456,13 +472,7 @@ export const NavigationBar: React.FC<NavigationBarProps> = ({
         icon: <Command size={14} />,
         onSelect: () => commandPalette.open("command"),
       },
-      ...(viewPage.type === "thread" ||
-      viewPage.type === "boardList" ||
-      viewPage.type === "threadList" ||
-      viewPage.type === "bookmarkList" ||
-      viewPage.type === "historyList" ||
-      viewPage.type === "writeHistoryList" ||
-      viewPage.type === "logList"
+      ...(canToggleFilter
         ? [
             {
               id: "open-filter-toolbar",
@@ -542,6 +552,7 @@ export const NavigationBar: React.FC<NavigationBarProps> = ({
     [
       viewPage.type,
       activePanelTabId,
+      canToggleFilter,
       openQuickAccessPage,
       openQuickAccessPageInNewTab,
       toggleFilterFromMenu,
@@ -646,6 +657,19 @@ export const NavigationBar: React.FC<NavigationBarProps> = ({
   );
   const chrome = (
     <div className={`nav-bar${useTitleBarSlot ? " nav-bar--titlebar" : ""}`}>
+      {canToggleFilter ? (
+        // 変更理由: フィルタの開閉をメニューの奥ではなく常に見える位置から行えるよう、
+        // URLバーの開閉ボタンの左へ置き、メニュー項目と同じ切り替え処理を使う。
+        <button
+          type="button"
+          className="nav-bar__filter-toggle"
+          onClick={toggleFilterFromMenu}
+          title="フィルターを開閉"
+          aria-label="フィルターを開閉"
+        >
+          <Filter size={13} />
+        </button>
+      ) : null}
       <button
         type="button"
         className="nav-bar__url-toggle"

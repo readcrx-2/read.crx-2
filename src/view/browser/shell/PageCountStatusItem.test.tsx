@@ -33,7 +33,15 @@ vi.mock("src/view/browser/state/tabs/use-tab-store", () => ({
   }),
 }));
 
-function CountWriter({ kind, count }: { kind: "thread" | "threadList"; count: number }): null {
+function CountWriter({
+  kind,
+  count,
+  filteredCount,
+}: {
+  kind: "thread" | "threadList";
+  count: number;
+  filteredCount?: number | null;
+}): null {
   const { setPageCount } = usePageCountStatus();
   const key =
     kind === "threadList"
@@ -41,14 +49,18 @@ function CountWriter({ kind, count }: { kind: "thread" | "threadList"; count: nu
       : getThreadPageCountKey("tab-1", "https://example.com/test/read.cgi/board/1/");
 
   useEffect(() => {
-    setPageCount(key, { kind, count });
+    setPageCount(key, { kind, count, filteredCount });
     return () => setPageCount(key, null);
-  }, [count, key, kind, setPageCount]);
+  }, [count, filteredCount, key, kind, setPageCount]);
 
   return null;
 }
 
-function renderStatusBar(kind: "thread" | "threadList", count: number): void {
+function renderStatusBar(
+  kind: "thread" | "threadList",
+  count: number,
+  filteredCount?: number | null,
+): void {
   activePageRef.current =
     kind === "threadList"
       ? {
@@ -66,7 +78,7 @@ function renderStatusBar(kind: "thread" | "threadList", count: number): void {
   render(
     <StatusBarProvider>
       <PageCountStatusProvider>
-        <CountWriter kind={kind} count={count} />
+        <CountWriter kind={kind} count={count} filteredCount={filteredCount} />
         <PageCountStatusItem />
         <StatusBar />
       </PageCountStatusProvider>
@@ -92,6 +104,14 @@ describe("PageCountStatusItem", () => {
     await waitFor(() => {
       expect(screen.getByText("128レス")).toBeInTheDocument();
       expect(screen.getByLabelText("現在のレス数: 128レス")).toBeInTheDocument();
+    });
+  });
+
+  it("スレを絞り込んでいる間は表示件数と全体件数を並べて表示する", async () => {
+    renderStatusBar("thread", 128, 7);
+
+    await waitFor(() => {
+      expect(screen.getByText("7/128レス")).toBeInTheDocument();
     });
   });
 

@@ -565,7 +565,7 @@ describe("NavigationBar", () => {
       button.getAttribute("title"),
     );
 
-    expect(buttons).toEqual(["URLバーを表示", "メニュー"]);
+    expect(buttons).toEqual(["フィルターを開閉", "URLバーを表示", "メニュー"]);
     expect(screen.queryByTitle("2ペインで表示")).not.toBeInTheDocument();
   });
 
@@ -633,6 +633,18 @@ describe("NavigationBar", () => {
 
     expect(screen.queryByRole("button", { name: "コマンドパレット" })).not.toBeInTheDocument();
     expect(screen.queryByRole("button", { name: "設定を開く" })).not.toBeInTheDocument();
+  });
+
+  it("URLバーの開閉ボタンの左にあるフィルタボタンでフィルタトグルイベントを送る", () => {
+    const dispatchEventSpy = vi.spyOn(window, "dispatchEvent");
+    render(<NavigationBar />);
+
+    fireEvent.click(screen.getByRole("button", { name: "フィルターを開閉" }));
+
+    expect(dispatchEventSpy).toHaveBeenCalledWith(
+      expect.objectContaining({ type: "thread-filter-toolbar-toggle" }),
+    );
+    dispatchEventSpy.mockRestore();
   });
 
   it("メニュー項目の『フィルターを開く』でフィルタトグルイベントを送る", () => {

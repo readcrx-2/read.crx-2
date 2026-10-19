@@ -29,7 +29,7 @@ test("ローカル板からスレッドを開き、更新と再起動後もレ�
   localBoard,
 }) => {
   await page.goto(`chrome-extension://${extensionId}/view/index.html`);
-  await page.getByTitle("URLバーを表示", { exact: true }).click();
+  await page.getByTestId("title-bar-title").click();
   const urlInput = page.getByPlaceholder("URLを入力");
   await urlInput.fill(localBoard.boardUrl);
   await urlInput.press("Enter");

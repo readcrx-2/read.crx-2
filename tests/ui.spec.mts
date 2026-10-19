@@ -6,7 +6,7 @@ test("起動時にホームと新しいタブの操作が表示される", async
   await expect(page.locator(".browser-shell")).toBeVisible();
   await expect(page.getByRole("button", { name: "板一覧を開く", exact: true })).toBeVisible();
   await page.getByTitle("新しいタブ", { exact: true }).click();
-  await page.getByTitle("URLバーを表示", { exact: true }).click();
+  await page.getByTestId("title-bar-title").click();
   await expect(page.getByPlaceholder("URLを入力")).toBeVisible();
 });
 

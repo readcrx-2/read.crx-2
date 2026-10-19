@@ -13,7 +13,7 @@ test("NGエディタの新構文でOR・AND・除外・適用先を保存し、�
     ].join("\n"),
   );
   await page.goto(`chrome-extension://${extensionId}/view/index.html`);
-  await page.getByTitle("URLバーを表示", { exact: true }).click();
+  await page.getByTestId("title-bar-title").click();
   const urlInput = page.getByPlaceholder("URLを入力");
   await urlInput.fill(localBoard.threadUrl);
   await urlInput.press("Enter");
@@ -91,8 +91,8 @@ hide:
   await expect(third).toBeVisible();
 
   // 同じルール群をスレ一覧で評価し、titleとレス数のANDで色・ラベルを付ける。
-  // URLバーの開閉状態は再読み込みで閉じるため、移動前に開き直す。
-  await page.getByTitle("URLバーを表示", { exact: true }).click();
+  // URL入力はフォーカスが外れるとタイトルのピルへ戻るため、移動前に開き直す。
+  await page.getByTestId("title-bar-title").click();
   await urlInput.fill(localBoard.boardUrl);
   await urlInput.press("Enter");
   await expect(panel.getByText("ローカルテストスレッド", { exact: true })).toBeVisible();
@@ -149,7 +149,7 @@ test("collapseでスレ一覧とレスを折りたたみ、unless単体の複数
   localBoard,
 }) => {
   await page.goto(`chrome-extension://${extensionId}/view/index.html`);
-  await page.getByTitle("URLバーを表示", { exact: true }).click();
+  await page.getByTestId("title-bar-title").click();
   const input = page.getByPlaceholder("URLを入力");
   await input.fill(localBoard.boardUrl);
   await input.press("Enter");
@@ -181,8 +181,8 @@ collapse:
   await expect(panel.getByText("ローカルテストスレッド", { exact: true })).toBeHidden();
   await group.click();
   await expect(panel.getByText("ローカルテストスレッド", { exact: true })).toBeVisible();
-  // URLバーは水平タブではフォーカスが外れると閉じるため、スレを開く前に開き直す。
-  await page.getByTitle("URLバーを表示", { exact: true }).click();
+  // URL入力はフォーカスが外れるとタイトルのピルへ戻るため、スレを開く前に開き直す。
+  await page.getByTestId("title-bar-title").click();
   await input.fill(localBoard.threadUrl);
   await input.press("Enter");
   await expect(panel.locator('[data-res-num="1"]')).toContainText("最初の日本語レス");

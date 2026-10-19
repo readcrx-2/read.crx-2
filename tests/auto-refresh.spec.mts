@@ -12,7 +12,7 @@ test("スレッドの自動更新をONにすると新着を取得して追従し
     localStorage.setItem("config_auto_load_second", "5000");
   });
   await page.goto(`chrome-extension://${extensionId}/view/index.html`);
-  await page.getByTitle("URLバーを表示", { exact: true }).click();
+  await page.getByTestId("title-bar-title").click();
   const urlInput = page.getByPlaceholder("URLを入力");
   await urlInput.fill(localBoard.boardUrl);
   await urlInput.press("Enter");

@@ -3,8 +3,8 @@
   display: contents;
 }
 
-/* 変更理由: 垂直モードではペイン上部のボタン行をなくし、TitleBar 左上へポータルする。
-   URL行は行追加ではなく TitleBar 直下のオーバーレイとして出し、本文の高さを奪わない。 */
+/* 変更理由: ペイン上部のボタン行をなくし、TitleBar 右上へポータルする。
+   URL入力は行を足さず、TitleBar 中央のピルと入れ替えて出すので本文の高さを奪わない。 */
 .nav-bar--titlebar {
   display: flex;
   align-items: center;
@@ -12,9 +12,8 @@
 }
 
 /* 変更理由: TitleBar の細バーに収めるため、ポータルされた2ボタンは小さくする。
-   並び順はchevron→メニューとし、分割ボタンの左隣にメニューが来るようにする。 */
-.nav-bar--titlebar .nav-bar__filter-toggle,
-.nav-bar--titlebar .nav-bar__url-toggle {
+   並び順はフィルタ→メニューとし、分割ボタンの左隣にメニューが来るようにする。 */
+.nav-bar--titlebar .nav-bar__filter-toggle {
   order: 1;
 }
 
@@ -23,7 +22,6 @@
 }
 
 .nav-bar--titlebar .nav-bar__filter-toggle,
-.nav-bar--titlebar .nav-bar__url-toggle,
 .nav-bar--titlebar .nav-bar__btn {
   /* 変更理由: 水平タブ時のタブバー行にあった大きさ（30px・32px）に揃え、押しやすさを保つ。 */
   width: 30px;
@@ -31,27 +29,26 @@
 }
 
 .nav-bar--titlebar .nav-bar__filter-toggle svg,
-.nav-bar--titlebar .nav-bar__url-toggle svg,
 .nav-bar--titlebar .nav-bar__btn svg {
   width: 14px;
   height: 14px;
 }
 
-.nav-bar--titlebar .nav-bar__url-row {
-  position: absolute;
-  top: calc(100% + var(--sys-space-2));
-  left: var(--sys-space-2);
-  z-index: var(--sys-z-omnibar);
-  order: 0;
-  flex: none;
-  width: min(560px, calc(100vw - var(--sys-space-6)));
-  height: auto;
-  min-height: 40px;
-  padding: 0 8px;
-  border: 1px solid var(--sys-color-border);
-  border-radius: var(--sys-radius-xl);
+/* 変更理由: タイトルバー中央では、ピルと同じ高さ・見た目の入力欄にして置き換わりを自然にする。
+   候補リストは入力欄の幅に合わせて下へ開く。 */
+.title-bar__omnibar-slot .nav-bar__url {
+  flex: 1 1 auto;
+  width: 100%;
+  height: var(--sys-space-11);
+  margin: 0;
+  border: 1px solid var(--sys-color-accent);
+  border-radius: var(--sys-radius-md);
   background: var(--sys-color-surface);
-  box-shadow: var(--sys-shadow-floating);
+}
+
+.title-bar__omnibar-slot .nav-bar__url-input {
+  border-radius: var(--sys-radius-md);
+  font-size: var(--sys-font-size-xs);
 }
 .nav-bar__btn {
   width: 32px;
@@ -75,8 +72,7 @@
   color: var(--sys-color-text-disabled);
   cursor: default;
 }
-.nav-bar__filter-toggle,
-.nav-bar__url-toggle {
+.nav-bar__filter-toggle {
   width: 30px;
   height: 30px;
   flex-shrink: 0;
@@ -91,8 +87,7 @@
   align-self: center;
   transition: background 0.1s;
 }
-.nav-bar__filter-toggle:hover,
-.nav-bar__url-toggle:hover {
+.nav-bar__filter-toggle:hover {
   background: var(--sys-color-tab-strip-hover);
 }
 /* 変更理由: フィルタバーが開いている間は、ボタンの色を変えて開閉状態を示す。 */
@@ -120,22 +115,6 @@
   transition:
     background 0.15s,
     box-shadow 0.15s;
-}
-.nav-bar__url-row {
-  display: flex;
-  order: 1;
-  flex: 0 0 100%;
-  align-items: center;
-  min-width: 0;
-  height: 40px;
-  padding: 0 8px;
-  border-top: 1px solid var(--sys-color-border);
-  background: var(--sys-color-surface);
-}
-.nav-bar__url-row .nav-bar__url {
-  flex: 1 1 auto;
-  width: auto;
-  margin: 0;
 }
 .nav-bar__url--has-action .nav-bar__url-input {
   padding-right: 44px;

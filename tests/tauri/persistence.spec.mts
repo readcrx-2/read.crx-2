@@ -4,7 +4,7 @@ import { expect, test } from "./fixtures.mjs";
 // タブのセッションはWebView2のlocalStorageに残るため、両方が同じ保存先へ書けていることを確かめる。
 test("Tauri版を再起動しても閲覧中のスレッドと閲覧履歴が残る", async ({ tauri, localBoard }) => {
   const page = tauri.page;
-  await page.getByTitle("URLバーを表示", { exact: true }).click();
+  await page.getByTestId("title-bar-title").click();
   const urlInput = page.getByPlaceholder("URLを入力");
   await urlInput.fill(localBoard.threadUrl);
   await urlInput.press("Enter");

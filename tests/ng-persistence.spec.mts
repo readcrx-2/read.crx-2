@@ -6,7 +6,7 @@ test("IDをNG指定したレスは更新と再読み込み後も非表示のま�
   localBoard,
 }) => {
   await page.goto(`chrome-extension://${extensionId}/view/index.html`);
-  await page.getByTitle("URLバーを表示", { exact: true }).click();
+  await page.getByTestId("title-bar-title").click();
   const input = page.getByPlaceholder("URLを入力");
   await input.fill(localBoard.threadUrl);
   await input.press("Enter");

@@ -3,8 +3,6 @@ import {
   ArrowLeft,
   ArrowRight,
   Bookmark,
-  ChevronDown,
-  ChevronUp,
   Command,
   Filter,
   History,
@@ -135,8 +133,9 @@ export const NavigationBar: React.FC<NavigationBarProps> = ({
   const [backMenuPosition, setBackMenuPosition] = useState<MenuPosition | null>(null);
   const [refreshMenuPosition, setRefreshMenuPosition] = useState<MenuPosition | null>(null);
   const [forwardMenuPosition, setForwardMenuPosition] = useState<MenuPosition | null>(null);
-  // URL入力は必要なときだけ展開し、タブと本文に使える高さを初期状態で確保する。
-  const [isUrlExpanded, setIsUrlExpanded] = useState(false);
+  // 変更理由: URL入力はタイトルのピルをクリックした間だけ、ピルと入れ替わる形で表示する。
+  // 常時の行を持たないので、タブと本文に使える高さは変わらない。
+  const [isUrlEditing, setIsUrlEditing] = useState(false);
   const backButtonRef = useRef<HTMLButtonElement>(null);
   const forwardButtonRef = useRef<HTMLButtonElement>(null);
   const refreshButtonRef = useRef<HTMLButtonElement>(null);
@@ -150,6 +149,8 @@ export const NavigationBar: React.FC<NavigationBarProps> = ({
   // 水平モードの共通タイトルバーはアクティブペインの受け口だけを持つので、
   // アクティブペインが切り替わったときも受け口を探し直す。
   const [titleBarSlot, setTitleBarSlot] = useState<HTMLElement | null>(null);
+  // 変更理由: オムニバーの入力欄はボタン群とは別に、タイトルバー中央のピルと同じ位置へ出す。
+  const [omnibarSlot, setOmnibarSlot] = useState<HTMLElement | null>(null);
 
   useEffect(() => {
     setPortalContainer(document.querySelector<HTMLElement>(".browser-shell"));
@@ -158,6 +159,9 @@ export const NavigationBar: React.FC<NavigationBarProps> = ({
   useEffect(() => {
     setTitleBarSlot(
       document.querySelector<HTMLElement>(`.title-bar__nav-slot[data-pane-id="${paneId}"]`),
+    );
+    setOmnibarSlot(
+      document.querySelector<HTMLElement>(`.title-bar__omnibar-slot[data-pane-id="${paneId}"]`),
     );
   }, [paneId, tabBarOrientation, activePaneId]);
   // 変更理由: 受け口へポータルしてペイン上部の高さを本文へ返す。
@@ -172,11 +176,11 @@ export const NavigationBar: React.FC<NavigationBarProps> = ({
   useEffect(() => {
     // 変更理由: グローバルなトーストはペイン内のURLバーと別階層にあるため、
     // 展開中のペインを共有してURLバーの有無に応じた位置へ表示する。
-    setUrlBarExpanded(isUrlExpanded);
+    setUrlBarExpanded(isUrlEditing);
     return () => {
       setUrlBarExpanded(false);
     };
-  }, [isUrlExpanded, setUrlBarExpanded]);
+  }, [isUrlEditing, setUrlBarExpanded]);
 
   const currentAutoRefreshPageKey = getAutoRefreshPageKey(viewPage);
   const isCurrentPageAutoRefreshEnabled = isAutoRefreshEnabledForPage(viewTab, viewPage);
@@ -277,8 +281,8 @@ export const NavigationBar: React.FC<NavigationBarProps> = ({
 
   const paletteState = useCommandPaletteFocus({
     isActivePane,
-    isUrlExpanded,
-    setIsUrlExpanded,
+    isUrlEditing,
+    setIsUrlEditing,
     urlInputRef,
     activate,
     handleBlur,
@@ -297,31 +301,16 @@ export const NavigationBar: React.FC<NavigationBarProps> = ({
       if (paletteState.opened || omnibarMode === "command") {
         commandPalette.close();
       }
-      // 変更理由: 垂直モードのURL行は本文へ重なるオーバーレイのため、フォーカスが外れたら
-      // 行ごと閉じて本文へ返す。水平モードは従来どおりchevron操作でのみ開閉する。
-      if (useTitleBarSlot) {
-        setIsUrlExpanded(false);
-      }
+      // 変更理由: 入力欄はピルと入れ替わる一時的な表示のため、フォーカスが外れたらピルへ戻す。
+      setIsUrlEditing(false);
     },
-    [handleBlur, omnibarMode, paletteState.opened, useTitleBarSlot],
+    [handleBlur, omnibarMode, paletteState.opened],
   );
 
   const handleRefresh = useCallback(() => {
     setRefreshMenuPosition(null);
     runManualRefresh(manualRefreshScopeKey, () => runTabCommand(TAB_COMMAND_IDS.RELOAD));
   }, [manualRefreshScopeKey, runTabCommand]);
-
-  const handleUrlBarToggle = useCallback(() => {
-    commandPalette.close();
-    if (isUrlExpanded) {
-      handleBlur();
-      setIsUrlExpanded(false);
-      return;
-    }
-
-    activate("navigation");
-    setIsUrlExpanded(true);
-  }, [activate, handleBlur, isUrlExpanded]);
 
   const openQuickAccessPage = useCallback(
     (page: QuickAccessPage) => {
@@ -662,6 +651,51 @@ export const NavigationBar: React.FC<NavigationBarProps> = ({
       </button>
     </div>
   );
+  const omnibar = (
+    <Omnibar
+      inputRef={urlInputRef}
+      inputValue={inputValue}
+      placeholder={omnibarMode === "command" ? "コマンドを検索..." : "URLを入力"}
+      isOpen={isOmnibarOpen}
+      isLoading={isOmnibarLoading}
+      suggestions={omnibarSuggestions}
+      commandSuggestions={omnibarCommandSuggestions}
+      mode={omnibarMode}
+      activeSuggestionIndex={activeSuggestionIndex}
+      shouldShowNoMatch={shouldShowNoMatch}
+      onInputChange={handleInputChange}
+      onKeyDown={handleKeyDown}
+      onFocus={handleFocus}
+      onBlur={handleOmnibarBlur}
+      onSuggestionHover={setActiveSuggestionIndex}
+      onSuggestionSelect={handleSelectSuggestion}
+      onCommandSelect={(command) => void executeCommand(command)}
+      trailingAction={
+        bookmarkTarget ? (
+          <button
+            type="button"
+            className={`nav-bar__url-action-btn${
+              isBookmarked ? " nav-bar__url-action-btn--active" : ""
+            }`}
+            aria-label={
+              isBookmarked ? "このページをブックマークから削除" : "このページをブックマークに追加"
+            }
+            aria-pressed={isBookmarked}
+            title={
+              isBookmarked ? "このページをブックマークから削除" : "このページをブックマークに追加"
+            }
+            disabled={isBookmarkPending}
+            onMouseDown={(event) => {
+              event.preventDefault();
+            }}
+            onClick={handleToggleBookmark}
+          >
+            <Star size={16} fill={isBookmarked ? "currentColor" : "none"} />
+          </button>
+        ) : null
+      }
+    />
+  );
   const chrome = (
     <div className={`nav-bar${useTitleBarSlot ? " nav-bar--titlebar" : ""}`}>
       {canToggleFilter ? (
@@ -680,68 +714,7 @@ export const NavigationBar: React.FC<NavigationBarProps> = ({
           <Filter size={13} />
         </button>
       ) : null}
-      <button
-        type="button"
-        className="nav-bar__url-toggle"
-        onClick={handleUrlBarToggle}
-        aria-expanded={isUrlExpanded}
-        title={isUrlExpanded ? "URLバーを折りたたむ" : "URLバーを表示"}
-        aria-label={isUrlExpanded ? "URLバーを折りたたむ" : "URLバーを表示"}
-      >
-        {isUrlExpanded ? <ChevronUp size={13} /> : <ChevronDown size={13} />}
-      </button>
-
-      {isUrlExpanded && (
-        <div className="nav-bar__url-row">
-          <Omnibar
-            inputRef={urlInputRef}
-            inputValue={inputValue}
-            placeholder={omnibarMode === "command" ? "コマンドを検索..." : "URLを入力"}
-            isOpen={isOmnibarOpen}
-            isLoading={isOmnibarLoading}
-            suggestions={omnibarSuggestions}
-            commandSuggestions={omnibarCommandSuggestions}
-            mode={omnibarMode}
-            activeSuggestionIndex={activeSuggestionIndex}
-            shouldShowNoMatch={shouldShowNoMatch}
-            onInputChange={handleInputChange}
-            onKeyDown={handleKeyDown}
-            onFocus={handleFocus}
-            onBlur={handleOmnibarBlur}
-            onSuggestionHover={setActiveSuggestionIndex}
-            onSuggestionSelect={handleSelectSuggestion}
-            onCommandSelect={(command) => void executeCommand(command)}
-            trailingAction={
-              bookmarkTarget ? (
-                <button
-                  type="button"
-                  className={`nav-bar__url-action-btn${
-                    isBookmarked ? " nav-bar__url-action-btn--active" : ""
-                  }`}
-                  aria-label={
-                    isBookmarked
-                      ? "このページをブックマークから削除"
-                      : "このページをブックマークに追加"
-                  }
-                  aria-pressed={isBookmarked}
-                  title={
-                    isBookmarked
-                      ? "このページをブックマークから削除"
-                      : "このページをブックマークに追加"
-                  }
-                  disabled={isBookmarkPending}
-                  onMouseDown={(event) => {
-                    event.preventDefault();
-                  }}
-                  onClick={handleToggleBookmark}
-                >
-                  <Star size={16} fill={isBookmarked ? "currentColor" : "none"} />
-                </button>
-              ) : null
-            }
-          />
-        </div>
-      )}
+      {isUrlEditing && !omnibarSlot ? omnibar : null}
 
       <button
         ref={menuButtonRef}
@@ -807,6 +780,9 @@ export const NavigationBar: React.FC<NavigationBarProps> = ({
         : hideInactiveChrome
           ? null
           : chrome}
+      {/* 変更理由: 入力欄はタイトルバー中央のピルと同じ位置へ出す。受け口がない環境
+          （テスト等）では上のボタン群と同じ場所へインライン表示する。 */}
+      {isUrlEditing && omnibarSlot ? createPortal(omnibar, omnibarSlot) : null}
 
       <Dialog.Root
         open={isResponseJumpDialogOpen}

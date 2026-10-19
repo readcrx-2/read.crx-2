@@ -46,7 +46,7 @@ test("NG内の置換タブから先頭のBEアイコンを削除し、本文と�
     });
   });
   await page.goto(`chrome-extension://${extensionId}/view/index.html`);
-  await page.getByTitle("URLバーを表示", { exact: true }).click();
+  await page.getByTestId("title-bar-title").click();
   const urlInput = page.getByPlaceholder("URLを入力");
   await urlInput.fill(localBoard.threadUrl);
   await urlInput.press("Enter");

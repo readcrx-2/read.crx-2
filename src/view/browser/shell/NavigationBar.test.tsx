@@ -113,6 +113,11 @@ vi.mock("src/view/browser/hooks/use-bottom-panel", () => ({
   }),
 }));
 
+// タイトルバーのピルをクリックしたときと同じく、コマンドパレット経由でURL入力を開く。
+function openUrlBar() {
+  act(() => commandPalette.open("navigation"));
+}
+
 describe("NavigationBar", () => {
   beforeEach(() => {
     bookmarkedUrls = new Set<string>();
@@ -218,7 +223,7 @@ describe("NavigationBar", () => {
 
     render(<NavigationBar />);
 
-    fireEvent.click(screen.getByTitle("URLバーを表示"));
+    openUrlBar();
     const input = screen.getByPlaceholderText("URLを入力");
     fireEvent.focus(input);
     fireEvent.change(input, { target: { value: "openai" } });
@@ -236,7 +241,7 @@ describe("NavigationBar", () => {
 
     render(<NavigationBar />);
 
-    fireEvent.click(screen.getByTitle("URLバーを表示"));
+    openUrlBar();
     const input = screen.getByPlaceholderText("URLを入力");
     fireEvent.focus(input);
     fireEvent.change(input, { target: { value: "openai" } });
@@ -385,7 +390,7 @@ describe("NavigationBar", () => {
 
     render(<NavigationBar />);
 
-    fireEvent.click(screen.getByTitle("URLバーを表示"));
+    openUrlBar();
     const input = screen.getByPlaceholderText("URLを入力");
     fireEvent.focus(input);
     fireEvent.change(input, {
@@ -412,7 +417,7 @@ describe("NavigationBar", () => {
 
     render(<NavigationBar />);
 
-    fireEvent.click(screen.getByTitle("URLバーを表示"));
+    openUrlBar();
     const input = screen.getByPlaceholderText("URLを入力");
     fireEvent.focus(input);
     fireEvent.change(input, {
@@ -439,7 +444,7 @@ describe("NavigationBar", () => {
   it("URL欄から別板のスレを開くと、前居た場所へ戻れるよう単一遷移する", () => {
     render(<NavigationBar />);
 
-    fireEvent.click(screen.getByTitle("URLバーを表示"));
+    openUrlBar();
     const input = screen.getByPlaceholderText("URLを入力");
     fireEvent.change(input, {
       target: { value: "https://egg.5ch.io/test/read.cgi/board-b/123/" },
@@ -458,22 +463,30 @@ describe("NavigationBar", () => {
     });
   });
 
-  it("URLバーを折りたたみボタンで表示・非表示に切り替える", () => {
+  it("URL入力はタイトルのピルを開いている間だけ表示し、フォーカスが外れたら閉じる", () => {
     render(<NavigationBar />);
 
-    const expandButton = screen.getByTitle("URLバーを表示");
-    expect(expandButton).toHaveAttribute("aria-expanded", "false");
+    // 変更理由: 展開用のボタンは廃止し、常時の入力行も持たない。
+    expect(screen.queryByTitle("URLバーを表示")).not.toBeInTheDocument();
     expect(screen.queryByPlaceholderText("URLを入力")).not.toBeInTheDocument();
 
-    fireEvent.click(expandButton);
+    openUrlBar();
 
-    const collapseButton = screen.getByTitle("URLバーを折りたたむ");
-    expect(collapseButton).toHaveAttribute("aria-expanded", "true");
     const input = screen.getByPlaceholderText("URLを入力");
-    expect(input).toBeInTheDocument();
-    expect(input.closest(".nav-bar__url-row")).toBeInTheDocument();
+    expect(input).toHaveFocus();
 
-    fireEvent.click(collapseButton);
+    fireEvent.blur(input);
+
+    expect(screen.queryByPlaceholderText("URLを入力")).not.toBeInTheDocument();
+    expect(commandPaletteStore.getState().opened).toBe(false);
+  });
+
+  it("Escapeを押すと入力を閉じてピルへ戻す", () => {
+    render(<NavigationBar />);
+
+    openUrlBar();
+    fireEvent.keyDown(screen.getByPlaceholderText("URLを入力"), { key: "Escape" });
+
     expect(screen.queryByPlaceholderText("URLを入力")).not.toBeInTheDocument();
   });
 
@@ -488,7 +501,7 @@ describe("NavigationBar", () => {
 
     render(<NavigationBar />);
 
-    fireEvent.click(screen.getByTitle("URLバーを表示"));
+    openUrlBar();
     const input = screen.getByPlaceholderText("URLを入力");
     expect(input).toHaveFocus();
     expect(await screen.findByRole("option", { name: /Current Thread/ })).toBeInTheDocument();
@@ -501,7 +514,7 @@ describe("NavigationBar", () => {
       screen.queryByRole("button", { name: "このページをブックマークに追加" }),
     ).not.toBeInTheDocument();
 
-    fireEvent.click(screen.getByTitle("URLバーを表示"));
+    openUrlBar();
     const bookmarkButton = screen.getByRole("button", {
       name: "このページをブックマークに追加",
     });
@@ -566,7 +579,7 @@ describe("NavigationBar", () => {
       button.getAttribute("title"),
     );
 
-    expect(buttons).toEqual(["フィルターを開閉", "URLバーを表示", "メニュー"]);
+    expect(buttons).toEqual(["フィルターを開閉", "メニュー"]);
     expect(screen.queryByTitle("2ペインで表示")).not.toBeInTheDocument();
   });
 
@@ -868,6 +881,7 @@ describe("NavigationBar", () => {
 
 describe("NavigationBar titlebar slot", () => {
   let slot: HTMLDivElement;
+  let omnibarSlot: HTMLDivElement;
 
   beforeEach(() => {
     orientationHolder.value = "vertical";
@@ -906,10 +920,16 @@ describe("NavigationBar titlebar slot", () => {
     slot.className = "title-bar__nav-slot";
     slot.dataset.paneId = "pane-1";
     document.body.appendChild(slot);
+
+    omnibarSlot = document.createElement("div");
+    omnibarSlot.className = "title-bar__omnibar-slot";
+    omnibarSlot.dataset.paneId = "pane-1";
+    document.body.appendChild(omnibarSlot);
   });
 
   afterEach(() => {
     slot.remove();
+    omnibarSlot.remove();
     orientationHolder.value = "horizontal";
     paneHolder.activePaneId = "pane-1";
     cleanup();
@@ -927,7 +947,7 @@ describe("NavigationBar titlebar slot", () => {
 
     expect(chrome).toBeEmptyDOMElement();
     expect(slot.querySelector(".nav-bar--titlebar")).not.toBeNull();
-    expect(slot.querySelector('[title="URLバーを表示"]')).not.toBeNull();
+    expect(slot.querySelector('[title="URLバーを表示"]')).toBeNull();
     expect(slot.querySelector('[title="メニュー"]')).not.toBeNull();
   });
 
@@ -976,31 +996,58 @@ describe("NavigationBar titlebar slot", () => {
     expect(container.querySelector(".pane-column__chrome .nav-bar")).not.toBeNull();
   });
 
-  it("垂直でURLバーを開くとスロット内にURL行を表示する", () => {
-    render(
+  it("URL入力はタイトルバー中央の受け口へポータルする", () => {
+    const { container } = render(
       <div className="pane-column__chrome">
         <NavigationBar />
       </div>,
     );
 
-    fireEvent.click(slot.querySelector('[title="URLバーを表示"]') as HTMLElement);
+    expect(omnibarSlot).toBeEmptyDOMElement();
 
-    expect(slot.querySelector(".nav-bar__url-row")).not.toBeNull();
+    openUrlBar();
+
+    expect(omnibarSlot.querySelector(".nav-bar__url-input")).not.toBeNull();
+    // 右上のボタン群や元の場所へは入力欄を出さない。
+    expect(slot.querySelector(".nav-bar__url-input")).toBeNull();
+    expect(container.querySelector(".nav-bar__url-input")).toBeNull();
   });
 
-  it("垂直ではフォーカスアウトでURL行を閉じる", () => {
+  it("フォーカスアウトで受け口の入力欄を閉じる", () => {
     render(
       <div className="pane-column__chrome">
         <NavigationBar />
       </div>,
     );
 
-    fireEvent.click(slot.querySelector('[title="URLバーを表示"]') as HTMLElement);
-    expect(slot.querySelector(".nav-bar__url-row")).not.toBeNull();
+    openUrlBar();
+    expect(omnibarSlot.querySelector(".nav-bar__url-input")).not.toBeNull();
 
-    fireEvent.blur(slot.querySelector(".nav-bar__url-input") as HTMLInputElement);
+    fireEvent.blur(omnibarSlot.querySelector(".nav-bar__url-input") as HTMLInputElement);
 
-    expect(slot.querySelector(".nav-bar__url-row")).toBeNull();
+    expect(omnibarSlot).toBeEmptyDOMElement();
+  });
+
+  it("別ペインのオムニバー受け口には入力欄を出さない", () => {
+    const otherOmnibarSlot = document.createElement("div");
+    otherOmnibarSlot.className = "title-bar__omnibar-slot";
+    otherOmnibarSlot.dataset.paneId = "pane-2";
+    document.body.appendChild(otherOmnibarSlot);
+
+    try {
+      render(
+        <div className="pane-column__chrome">
+          <NavigationBar />
+        </div>,
+      );
+
+      openUrlBar();
+
+      expect(omnibarSlot.querySelector(".nav-bar__url-input")).not.toBeNull();
+      expect(otherOmnibarSlot).toBeEmptyDOMElement();
+    } finally {
+      otherOmnibarSlot.remove();
+    }
   });
 
   it("水平でもアクティブペインの操作ボタンをタイトルバーの受け口へポータルする", () => {
@@ -1031,17 +1078,18 @@ describe("NavigationBar titlebar slot", () => {
     expect(container.querySelector(".pane-column__chrome .nav-bar")).toBeNull();
   });
 
-  it("受け口が無い水平のアクティブペインではインラインに描画してURL行を開いたままにする", () => {
+  it("受け口が無い環境ではURL入力もインラインに描画し、フォーカスアウトで閉じる", () => {
     orientationHolder.value = "horizontal";
     slot.remove();
+    omnibarSlot.remove();
 
     const { container } = render(<NavigationBar />);
 
-    fireEvent.click(screen.getByTitle("URLバーを表示"));
-    expect(container.querySelector(".nav-bar__url-row")).not.toBeNull();
+    openUrlBar();
+    expect(container.querySelector(".nav-bar .nav-bar__url-input")).not.toBeNull();
 
     fireEvent.blur(container.querySelector(".nav-bar__url-input") as HTMLInputElement);
 
-    expect(container.querySelector(".nav-bar__url-row")).not.toBeNull();
+    expect(container.querySelector(".nav-bar__url-input")).toBeNull();
   });
 });

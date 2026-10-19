@@ -46,7 +46,7 @@ test("コメントOverlayを流し始めると、更新で届いたレスが別�
   localBoard,
 }) => {
   const page = tauri.page;
-  await page.getByTitle("URLバーを表示", { exact: true }).click();
+  await page.getByTestId("title-bar-title").click();
   const urlInput = page.getByPlaceholder("URLを入力");
   await urlInput.fill(localBoard.threadUrl);
   await urlInput.press("Enter");

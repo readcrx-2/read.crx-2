@@ -11,7 +11,7 @@ test("非表示の閲覧履歴タブへ戻ると最新の履歴が表示され�
   const panel = page.locator('.content-area__tab-panel[data-active="true"]');
   await expect(panel.locator(".history-list-page__table")).toBeVisible();
   await page.getByTitle("新しいタブ", { exact: true }).click();
-  await page.getByTitle("URLバーを表示", { exact: true }).click();
+  await page.getByTestId("title-bar-title").click();
   const input = page.getByPlaceholder("URLを入力");
   await input.fill(localBoard.threadUrl);
   await input.press("Enter");

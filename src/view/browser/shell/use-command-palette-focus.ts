@@ -8,8 +8,8 @@ import type { OmnibarInputMode } from "src/view/browser/hooks/use-omnibar";
 
 interface UseCommandPaletteFocusParams {
   isActivePane: boolean;
-  isUrlExpanded: boolean;
-  setIsUrlExpanded: (expanded: boolean) => void;
+  isUrlEditing: boolean;
+  setIsUrlEditing: (editing: boolean) => void;
   urlInputRef: RefObject<HTMLInputElement | null>;
   activate: (mode: OmnibarInputMode) => void;
   handleBlur: () => void;
@@ -18,13 +18,13 @@ interface UseCommandPaletteFocusParams {
 }
 
 /**
- * コマンドパレットの開閉とURLバー(オムニバー)の展開・フォーカス・ブラー連動をまとめる。
+ * コマンドパレットの開閉とオムニバー(タイトルバーのURL入力)の編集開始・フォーカス・ブラー連動をまとめる。
  * パレットの状態を返し、呼び出し側はフォーカスアウト時の判定に使う。
  */
 export function useCommandPaletteFocus({
   isActivePane,
-  isUrlExpanded,
-  setIsUrlExpanded,
+  isUrlEditing,
+  setIsUrlEditing,
   urlInputRef,
   activate,
   handleBlur,
@@ -68,27 +68,19 @@ export function useCommandPaletteFocus({
       return;
     }
 
-    setIsUrlExpanded(true);
+    setIsUrlEditing(true);
     activate(paletteState.mode);
-  }, [activate, isActivePane, paletteState.mode, paletteState.opened, setIsUrlExpanded]);
+  }, [activate, isActivePane, paletteState.mode, paletteState.opened, setIsUrlEditing]);
 
   useEffect(() => {
-    if (!paletteState.opened || !isActivePane || !isUrlExpanded) {
+    if (!paletteState.opened || !isActivePane || !isUrlEditing) {
       return;
     }
 
+    // 変更理由: 入力欄はピルと入れ替わって現れるため、現れた直後に操作を引き継ぎ、
+    // 候補取得を開始してそのまま入力できるようにする。
     urlInputRef.current?.focus();
-  }, [isActivePane, isUrlExpanded, paletteState.opened, urlInputRef]);
-
-  useEffect(() => {
-    if (!isUrlExpanded || paletteState.opened || !isActivePane) {
-      return;
-    }
-
-    // 変更理由: URLバーを展開した直後に入力欄へ操作を引き継ぎ、候補取得を開始して
-    // 下矢印のクリックだけで検索操作へ移れるようにする。
-    urlInputRef.current?.focus();
-  }, [isActivePane, isUrlExpanded, paletteState.opened, urlInputRef]);
+  }, [isActivePane, isUrlEditing, paletteState.opened, urlInputRef]);
 
   useEffect(() => {
     const isCommandPaletteActive =

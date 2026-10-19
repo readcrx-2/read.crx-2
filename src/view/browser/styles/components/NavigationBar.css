@@ -25,8 +25,9 @@
 .nav-bar--titlebar .nav-bar__filter-toggle,
 .nav-bar--titlebar .nav-bar__url-toggle,
 .nav-bar--titlebar .nav-bar__btn {
-  width: var(--sys-space-9);
-  height: var(--sys-space-9);
+  /* 変更理由: 水平タブ時のタブバー行にあった大きさ（30px・32px）に揃え、押しやすさを保つ。 */
+  width: 30px;
+  height: 30px;
 }
 
 .nav-bar--titlebar .nav-bar__filter-toggle svg,

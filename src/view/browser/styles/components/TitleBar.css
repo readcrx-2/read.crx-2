@@ -8,9 +8,11 @@
   /* 変更理由: 狭いウィンドウでは左右の操作欄を先に確保し、中央の長いタイトルだけを
      省略させる。操作欄を1frのままにすると、タイトルの最小幅に押されてアイコンが枠外へ出る。 */
   grid-template-columns: max-content minmax(0, 1fr) max-content;
-  flex: 0 0 var(--sys-space-10);
+  /* 変更理由: 右上の3ボタンを水平タブ時のタブバー行と同じ大きさで収めるため、
+     タイトルバーの高さもタブバー（--sys-space-12）に揃える。 */
+  flex: 0 0 var(--sys-space-12);
   align-items: center;
-  min-height: var(--sys-space-10);
+  min-height: var(--sys-space-12);
   padding: 0 var(--sys-space-3);
   /* 変更理由: タイトルバー・タブバー・フィルタバーの境界に細い線が重なって見えるため、
      区切りは背景色の差だけで示す。 */
@@ -174,7 +176,7 @@
   color: var(--sys-color-text);
   font-size: var(--sys-font-size-xs);
   font-weight: 600;
-  line-height: var(--sys-space-10);
+  line-height: var(--sys-space-12);
   text-align: center;
   text-overflow: ellipsis;
   white-space: nowrap;

@@ -33,7 +33,12 @@ import {
 import { createReplaceStrTxt } from "src/core/thread/ReplaceStrTxt";
 import { container } from "src/service-container/index";
 
-import { getSettingsSections, readAllSettings, saveSectionFormData } from "./settings-sections";
+import {
+  getSettingsSections,
+  groupSettingsSections,
+  readAllSettings,
+  saveSectionFormData,
+} from "./settings-sections";
 
 // 画面と同じく、サービスコンテナの config を使う置換設定のインスタンスを1つだけ作る。
 const replaceStrTxt = createReplaceStrTxt(container);
@@ -199,5 +204,23 @@ describe("設定セクションの実行環境フィルター", () => {
     expect(keys).not.toContain("title_bar_back");
     expect(keys).not.toContain("title_bar_forward");
     expect(keys).not.toContain("title_bar_refresh");
+  });
+});
+
+describe("設定カテゴリの見出しごとのまとめ", () => {
+  it("全カテゴリを定義順のまま、いずれか1つの見出しの下に並べる", () => {
+    const sections = getSettingsSections(true);
+    const groups = groupSettingsSections(sections);
+    expect(groups.map((group) => group.title)).toEqual(["アプリ", "閲覧", "管理"]);
+    expect(groups.flatMap((group) => group.sections.map((section) => section.id))).toEqual(
+      sections.map((section) => section.id),
+    );
+  });
+
+  it("表示するカテゴリが1つもない見出しは出さない", () => {
+    const sections = getSettingsSections(false).filter(
+      (section) => section.id !== "data" && section.id !== "other",
+    );
+    expect(groupSettingsSections(sections).map((group) => group.title)).toEqual(["アプリ", "閲覧"]);
   });
 });

@@ -23,6 +23,8 @@ import type {
   SettingsOption,
   SettingsSectionDefinition,
   SettingsSectionFormData,
+  SettingsSectionGroup,
+  SettingsSectionGroupId,
   SettingsSectionItem,
   SettingsSupplementaryPanelId,
 } from "src/view/browser/pages/settings/settings-types";
@@ -468,6 +470,37 @@ export function getSettingsSections(isTauri: boolean): readonly SettingsSectionD
 }
 
 export const SETTINGS_SECTIONS = getSettingsSections(isTauriRuntime());
+
+// 変更理由: カテゴリが増えて一覧が単調な縦並びになったため、Obsidian や Discord の設定画面のように
+// 見出しで用途ごとにまとめる。全カテゴリの所属を型で強制し、追加時にグループの付け忘れを防ぐ。
+const SETTINGS_SECTION_GROUP_OF = {
+  general: "app",
+  display: "app",
+  "site-board": "browsing",
+  reload: "browsing",
+  overlay: "browsing",
+  ng: "browsing",
+  data: "manage",
+  other: "manage",
+} as const satisfies Record<SettingsSectionId, SettingsSectionGroupId>;
+
+const SETTINGS_SECTION_GROUP_TITLES = [
+  { id: "app", title: "アプリ" },
+  { id: "browsing", title: "閲覧" },
+  { id: "manage", title: "管理" },
+] as const satisfies readonly { id: SettingsSectionGroupId; title: string }[];
+
+/** カテゴリを見出しごとにまとめる。表示するカテゴリが1つもない見出しは出さない。 */
+export function groupSettingsSections(
+  sections: readonly SettingsSectionDefinition[],
+): readonly SettingsSectionGroup[] {
+  return SETTINGS_SECTION_GROUP_TITLES.map((group) => ({
+    ...group,
+    sections: sections.filter((section) => SETTINGS_SECTION_GROUP_OF[section.id] === group.id),
+  })).filter((group) => group.sections.length > 0);
+}
+
+export const SETTINGS_SECTION_GROUPS = groupSettingsSections(SETTINGS_SECTIONS);
 
 export const SETTINGS_SECTION_MAP = new Map<SettingsSectionId, SettingsSectionDefinition>(
   SETTINGS_SECTIONS.map((section) => [section.id, section]),

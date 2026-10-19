@@ -159,18 +159,25 @@
   padding: var(--sys-space-8) var(--sys-space-4);
 }
 
-.settings-page__sidebar-title {
-  padding: 0 var(--sys-space-4) var(--sys-space-3);
+.settings-page__section-list {
+  display: flex;
+  flex-direction: column;
+  gap: var(--sys-space-8);
+}
+
+.settings-page__section-group {
+  display: flex;
+  flex-direction: column;
+  gap: var(--sys-space-1);
+}
+
+.settings-page__section-group-title {
+  margin: 0;
+  padding: 0 var(--sys-space-4) var(--sys-space-2);
   font-size: var(--sys-font-size-xs);
   font-weight: 700;
   letter-spacing: 0.05em;
   color: var(--sys-color-text-muted);
-}
-
-.settings-page__section-list {
-  display: flex;
-  flex-direction: column;
-  gap: var(--sys-space-1);
 }
 
 /* 説明文を出さず、アイコンと名前だけの1行で項目を並べる。 */

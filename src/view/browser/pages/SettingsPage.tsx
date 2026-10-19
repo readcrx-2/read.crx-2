@@ -13,6 +13,7 @@ import {
   isSettingsSectionId,
   NG_PRIMARY_FIELD_KEYS,
   readAllSettings,
+  SETTINGS_SECTION_GROUPS,
   SETTINGS_SECTION_MAP,
   SETTINGS_SECTIONS,
 } from "src/view/browser/pages/settings/settings-sections";
@@ -84,27 +85,38 @@ const SettingsSectionNav: React.FC<{
   activeSectionId: SettingsSectionId;
   onSelect: (sectionId: SettingsSectionId) => void;
 }> = ({ activeSectionId, onSelect }) => (
-  <>
-    <div className="settings-page__sidebar-title">設定カテゴリ</div>
-    <nav className="settings-page__section-list" aria-label="設定カテゴリ">
-      {SETTINGS_SECTIONS.map((section) => (
-        <button
-          key={section.id}
-          type="button"
-          className={`settings-page__section-btn${
-            activeSectionId === section.id ? " settings-page__section-btn--active" : ""
-          }`}
-          aria-current={activeSectionId === section.id ? "page" : undefined}
-          onClick={() => onSelect(section.id)}
+  <nav className="settings-page__section-list" aria-label="設定カテゴリ">
+    {SETTINGS_SECTION_GROUPS.map((group) => (
+      <section
+        key={group.id}
+        className="settings-page__section-group"
+        aria-labelledby={`settings-section-group-${group.id}`}
+      >
+        <h3
+          id={`settings-section-group-${group.id}`}
+          className="settings-page__section-group-title"
         >
-          <span className="settings-page__section-icon" aria-hidden="true">
-            {section.icon}
-          </span>
-          <span className="settings-page__section-name">{section.title}</span>
-        </button>
-      ))}
-    </nav>
-  </>
+          {group.title}
+        </h3>
+        {group.sections.map((section) => (
+          <button
+            key={section.id}
+            type="button"
+            className={`settings-page__section-btn${
+              activeSectionId === section.id ? " settings-page__section-btn--active" : ""
+            }`}
+            aria-current={activeSectionId === section.id ? "page" : undefined}
+            onClick={() => onSelect(section.id)}
+          >
+            <span className="settings-page__section-icon" aria-hidden="true">
+              {section.icon}
+            </span>
+            <span className="settings-page__section-name">{section.title}</span>
+          </button>
+        ))}
+      </section>
+    ))}
+  </nav>
 );
 
 export const SettingsPage: React.FC<{ tabId: string; page: SettingsPageType }> = ({

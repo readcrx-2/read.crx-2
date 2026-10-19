@@ -80,3 +80,12 @@ export interface SettingsSectionDefinition {
   uiSchema: UiSchema<SettingsSectionFormData>;
   supplementaryPanelIds?: readonly SettingsSupplementaryPanelId[];
 }
+
+export type SettingsSectionGroupId = "app" | "browsing" | "manage";
+
+/** サイドバーで見出しの下にまとめて並べる設定カテゴリの組。 */
+export interface SettingsSectionGroup {
+  id: SettingsSectionGroupId;
+  title: string;
+  sections: readonly SettingsSectionDefinition[];
+}

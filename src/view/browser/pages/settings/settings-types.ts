@@ -13,7 +13,13 @@ export type SettingsSupplementaryPanelId =
   | "dataManagement"
   | "siteBoardSettings";
 
-export type SettingsFormWidget = "radio" | "textarea" | "ng_editor" | "replacement_editor";
+// segmented は短い2〜3択を行の右へ横並びで置き、radio は長い選択肢を行の下へ縦に並べる。
+export type SettingsFormWidget =
+  | "radio"
+  | "segmented"
+  | "textarea"
+  | "ng_editor"
+  | "replacement_editor";
 export type SettingsFormValue = boolean | number | string | undefined;
 export type SettingsSectionFormData = Record<string, SettingsFormValue>;
 export type SettingsFormState = Record<SettingsSectionId, SettingsSectionFormData>;
@@ -61,6 +67,12 @@ export interface SettingsDividerItem {
 }
 
 export type SettingsSectionItem = SettingsFieldDefinition | SettingsDividerItem;
+
+/** 区切りの見出しと、その下にまとめて1枚の枠へ並べる項目。 */
+export interface SettingsFieldGroup {
+  divider?: SettingsDividerItem;
+  fields: readonly SettingsFieldDefinition[];
+}
 
 export function isSettingsDividerItem(item: SettingsSectionItem): item is SettingsDividerItem {
   return item.kind === "divider";

@@ -35,6 +35,7 @@ import { container } from "src/service-container/index";
 
 import {
   getSettingsSections,
+  groupSectionItems,
   groupSettingsSections,
   readAllSettings,
   saveSectionFormData,
@@ -280,5 +281,23 @@ describe("設定カテゴリの見出しごとのまとめ", () => {
       (section) => !["data", "debug"].includes(section.id),
     );
     expect(groupSettingsSections(sections).map((group) => group.title)).toEqual(["基本", "閲覧"]);
+  });
+});
+
+describe("設定項目の区切りごとのまとめ", () => {
+  it("区切りの下の項目を1つの組にし、最初の区切りより前の項目は見出しなしの組にする", () => {
+    const general = getSettingsSections(false).find((section) => section.id === "general")!;
+    const groups = groupSectionItems([
+      { kind: "boolean", key: "before", title: "前" },
+      ...general.fields,
+    ]);
+
+    expect(
+      groups.map((group) => [group.divider?.id, group.fields.map((field) => field.key)]),
+    ).toEqual([
+      [undefined, ["before"]],
+      ["new-tab", ["new_tab_page_mode", "focus_new_tab_on_open", "new_tab_page_board_url"]],
+      ["tab-bar", ["tab_bar_orientation", "tab_bar_collapsed"]],
+    ]);
   });
 });

@@ -5,14 +5,6 @@
   min-width: 0;
 }
 
-.browser-field__label,
-.browser-radio-field legend {
-  padding: 0;
-  color: var(--sys-color-text);
-  font-size: var(--sys-font-size-md);
-  font-weight: 600;
-}
-
 .browser-field__description {
   margin: 0;
   color: var(--sys-color-text-muted);
@@ -20,25 +12,6 @@
   line-height: 1.5;
 }
 
-.browser-field > input,
-.browser-field > textarea {
-  width: 100%;
-  padding: var(--sys-space-4) var(--sys-space-6);
-  border: 1px solid var(--sys-color-input-border);
-  border-radius: var(--sys-radius-lg);
-  background: var(--sys-color-input-bg);
-  color: var(--sys-color-text);
-  font: inherit;
-}
-
-.browser-field > textarea {
-  min-height: var(--sys-space-16);
-  resize: vertical;
-  line-height: 1.5;
-}
-
-.browser-field > input:focus,
-.browser-field > textarea:focus,
 .browser-checkbox-field__control:focus-visible,
 .browser-radio-field__control:focus-visible {
   border-color: var(--sys-color-focus-ring);
@@ -93,13 +66,6 @@
   margin-left: calc(var(--sys-space-7) + var(--sys-space-4));
 }
 
-.browser-radio-field {
-  min-width: 0;
-  margin: 0;
-  padding: 0;
-  border: 0;
-}
-
 .browser-radio-field__group {
   display: grid;
   gap: var(--sys-space-3);
@@ -128,4 +94,153 @@
   height: var(--sys-space-3);
   border-radius: var(--sys-radius-pill);
   background: var(--sys-color-accent);
+}
+
+/* 設定画面の1項目＝1行。左に名前と説明、右に操作部品を置き、左端と右端を全項目で揃える。 */
+.browser-setting-row {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  align-items: center;
+  gap: var(--sys-space-4) var(--sys-space-10);
+  padding: var(--sys-space-8) var(--sys-space-10);
+  min-width: 0;
+}
+
+/* 長い入力は名前の横に収まらないため、名前の下へ全幅で置く。 */
+.browser-setting-row[data-layout="stacked"] {
+  grid-template-columns: minmax(0, 1fr);
+  align-items: stretch;
+}
+
+.browser-setting-row__text {
+  display: grid;
+  gap: var(--sys-space-2);
+  min-width: 0;
+}
+
+.browser-setting-row__label {
+  color: var(--sys-color-text);
+  font-size: var(--sys-font-size-body);
+  font-weight: 500;
+  line-height: 1.5;
+}
+
+.browser-setting-row__description {
+  margin: 0;
+  color: var(--sys-color-text-muted);
+  font-size: var(--sys-font-size-sm);
+  line-height: 1.5;
+}
+
+.browser-setting-row__control {
+  display: flex;
+  justify-content: flex-end;
+  min-width: 0;
+}
+
+.browser-setting-row[data-layout="stacked"] .browser-setting-row__control {
+  display: block;
+}
+
+.browser-setting-row__control > input,
+.browser-setting-row__control > textarea {
+  width: 100%;
+  padding: var(--sys-space-4) var(--sys-space-6);
+  border: 1px solid var(--sys-color-input-border);
+  border-radius: var(--sys-radius-lg);
+  background: var(--sys-color-input-bg);
+  color: var(--sys-color-text);
+  font: inherit;
+  font-size: var(--sys-font-size-body);
+}
+
+.browser-setting-row__control > input[type="number"] {
+  width: calc(var(--sys-space-16) * 2);
+  text-align: right;
+}
+
+.browser-setting-row__control > textarea {
+  resize: vertical;
+  line-height: 1.5;
+}
+
+.browser-setting-row__control > input:focus,
+.browser-setting-row__control > textarea:focus,
+.browser-segmented__item:focus-visible {
+  border-color: var(--sys-color-focus-ring);
+  outline: 2px solid var(--sys-color-selection);
+  outline-offset: 1px;
+}
+
+.browser-switch {
+  display: inline-flex;
+  align-items: center;
+  flex: 0 0 auto;
+  width: var(--sys-space-13);
+  height: var(--sys-space-9);
+  padding: 0;
+  border: 0;
+  border-radius: var(--sys-radius-pill);
+  background: var(--sys-color-input-border);
+  cursor: pointer;
+  transition: background var(--sys-duration-normal) var(--sys-ease-standard);
+}
+
+.browser-switch[data-state="checked"] {
+  background: var(--sys-color-accent);
+}
+
+.browser-switch:focus-visible {
+  outline: 2px solid var(--sys-color-focus-ring);
+  outline-offset: 2px;
+}
+
+.browser-switch:disabled {
+  cursor: not-allowed;
+  opacity: 0.5;
+}
+
+.browser-switch__thumb {
+  display: block;
+  width: var(--sys-space-8);
+  height: var(--sys-space-8);
+  border-radius: var(--sys-radius-pill);
+  background: var(--sys-color-accent-fg);
+  transform: translateX(var(--sys-space-1));
+  transition: transform var(--sys-duration-normal) var(--sys-ease-standard);
+}
+
+.browser-switch__thumb[data-state="checked"] {
+  transform: translateX(calc(var(--sys-space-13) - var(--sys-space-8) - var(--sys-space-1)));
+}
+
+.browser-segmented {
+  display: inline-flex;
+  flex-wrap: wrap;
+  gap: var(--sys-space-1);
+  padding: var(--sys-space-1);
+  border: 1px solid var(--sys-color-input-border);
+  border-radius: var(--sys-radius-lg);
+  background: var(--sys-color-input-bg);
+}
+
+.browser-segmented__item {
+  padding: var(--sys-space-2) var(--sys-space-6);
+  border: 1px solid transparent;
+  border-radius: var(--sys-radius-md);
+  background: transparent;
+  color: var(--sys-color-text-muted);
+  font: inherit;
+  font-size: var(--sys-font-size-md);
+  white-space: nowrap;
+  cursor: pointer;
+}
+
+.browser-segmented__item:hover {
+  color: var(--sys-color-text);
+}
+
+.browser-segmented__item[data-state="checked"] {
+  background: var(--sys-color-accent);
+  color: var(--sys-color-accent-fg);
 }

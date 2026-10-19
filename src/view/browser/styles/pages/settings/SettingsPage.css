@@ -54,17 +54,68 @@
 }
 
 .settings-page__header {
-  display: flex;
-  align-items: flex-start;
-  justify-content: space-between;
-  gap: var(--sys-space-8);
-  flex-wrap: wrap;
+  display: grid;
+  gap: var(--sys-space-3);
 }
 
-.settings-page__divider {
-  margin: var(--sys-space-10) 0;
-  border: 0;
+.settings-page__heading {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: var(--sys-space-8);
+}
+
+.settings-page__body {
+  display: grid;
+  gap: var(--sys-space-12);
+  min-width: 0;
+}
+
+/* 見出しは枠の外に置き、その下の枠に項目を1行ずつ並べて線で区切る。 */
+.settings-page__group {
+  display: grid;
+  gap: var(--sys-space-5);
+  min-width: 0;
+}
+
+.settings-page__group-header {
+  display: grid;
+  gap: var(--sys-space-2);
+  padding: 0 var(--sys-space-2);
+}
+
+.settings-page__group-title {
+  margin: 0;
+  color: var(--sys-color-text);
+  font-size: var(--sys-font-size-lg);
+  font-weight: 700;
+}
+
+.settings-page__group-description {
+  margin: 0;
+  color: var(--sys-color-text-muted);
+  font-size: var(--sys-font-size-sm);
+  line-height: 1.5;
+}
+
+.settings-page__group-card {
+  border: 1px solid var(--sys-color-border);
+  border-radius: var(--sys-radius-xl);
+  background: var(--sys-color-settings-card-bg);
+  overflow: hidden;
+}
+
+.settings-page__group-card > * + * {
   border-top: 1px solid var(--sys-color-border);
+}
+
+/* 直前の入力に対する操作なので、線で切り離さず同じ項目の続きとして置く。 */
+.settings-page__group-card > .settings-page__group-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--sys-space-4);
+  padding: 0 var(--sys-space-10) var(--sys-space-8);
+  border-top: 0;
 }
 
 .settings-page__section-stack,
@@ -98,8 +149,7 @@
   transform: rotate(180deg);
 }
 
-.settings-page__ng-field-description,
-.settings-page__section-divider-description {
+.settings-page__ng-field-description {
   margin: 0;
   color: var(--sys-color-text-muted);
   font-size: var(--sys-font-size-sm);
@@ -123,27 +173,6 @@
   color: var(--sys-color-text);
   font-size: var(--sys-font-size-md);
   font-weight: 600;
-}
-
-.settings-page__section-divider {
-  display: grid;
-  gap: var(--sys-space-3);
-}
-
-.settings-page__section-divider-line {
-  display: flex;
-  align-items: center;
-  gap: var(--sys-space-5);
-  color: var(--sys-color-text);
-  font-size: var(--sys-font-size-lg);
-  font-weight: 700;
-}
-
-.settings-page__section-divider-line::after {
-  content: "";
-  flex: 1;
-  height: 1px;
-  background: linear-gradient(to right, var(--sys-color-border), transparent);
 }
 
 .settings-page {
@@ -239,25 +268,17 @@
   scroll-behavior: smooth;
 }
 
-.settings-page__eyebrow {
-  font-size: var(--sys-font-size-xs);
-  font-weight: 800;
-  letter-spacing: 0.1em;
-  color: var(--sys-color-accent);
-  text-transform: uppercase;
-}
-
 .settings-page__title {
-  margin-top: var(--sys-space-4);
-  font-size: 32px;
+  margin: 0;
+  font-size: calc(var(--sys-font-size-lg) * 1.5);
   font-weight: 700;
   color: var(--sys-color-text);
-  letter-spacing: -0.02em;
+  letter-spacing: -0.01em;
 }
 
 .settings-page__description {
-  margin-top: var(--sys-space-6);
-  font-size: 15px;
+  margin: 0;
+  font-size: var(--sys-font-size-body);
   line-height: 1.6;
   color: var(--sys-color-text-muted);
 }
@@ -267,33 +288,12 @@
   flex-wrap: wrap;
   align-items: center;
   gap: var(--sys-space-4);
-  margin-top: var(--sys-space-4);
   font-size: var(--sys-font-size-sm);
   color: var(--sys-color-text-muted);
 }
 
 .settings-page__related-link {
   color: var(--sys-color-accent);
-}
-
-.settings-page__note {
-  display: inline-flex;
-  align-items: center;
-  gap: var(--sys-space-4);
-  padding: var(--sys-space-4) var(--sys-space-8);
-  border-radius: var(--sys-radius-pill);
-  background: var(--sys-color-surface-muted);
-  font-size: var(--sys-font-size-sm);
-  font-weight: 500;
-  color: var(--sys-color-text-muted);
-}
-
-.settings-page__status-row {
-  margin-top: var(--sys-space-9);
-  display: flex;
-  align-items: center;
-  gap: var(--sys-space-8);
-  min-height: 36px;
 }
 
 .settings-page__saving {
@@ -325,10 +325,10 @@
   }
 }
 
-.settings-page__content-stack {
+.settings-page__content {
   display: grid;
   width: min(100%, 800px);
-  gap: var(--sys-space-10);
+  gap: var(--sys-space-12);
   margin: 0 auto;
 }
 

@@ -10,6 +10,7 @@ import {
 import { container } from "src/service-container/index";
 import { useMediaQuery } from "src/view/browser/hooks/use-media-query";
 import {
+  groupSectionItems,
   isSettingsSectionId,
   NG_PRIMARY_FIELD_KEYS,
   readAllSettings,
@@ -40,21 +41,13 @@ import type {
 } from "src/view/browser/types";
 import { Alert } from "src/view/browser/ui/Alert";
 import { Button } from "src/view/browser/ui/Button";
-import {
-  CheckboxField,
-  NumberField,
-  RadioField,
-  TextareaField,
-} from "src/view/browser/ui/FormControls";
+import { ChoiceControl, SettingRow, SwitchControl } from "src/view/browser/ui/FormControls";
 import { Spinner } from "src/view/browser/ui/Spinner";
 import {
   Surface,
-  SurfaceActions,
   SurfaceBody,
   SurfaceDescription,
   SurfaceHeader,
-  SurfaceStack,
-  SurfaceTitle,
 } from "src/view/browser/ui/Surface";
 import { Tooltip } from "src/view/browser/ui/Tooltip";
 
@@ -295,46 +288,71 @@ export const SettingsPage: React.FC<{ tabId: string; page: SettingsPageType }> =
       const sectionData = formState?.[sectionId] ?? {};
       const value = sectionData[field.key];
 
+      const id = `settings-${field.key}`;
+
       if (field.kind === "boolean") {
         return (
-          <CheckboxField
+          <SettingRow
             key={field.key}
-            id={`settings-${field.key}`}
-            checked={toBooleanValue(value)}
+            htmlFor={id}
             label={field.title}
             description={field.description}
-            onCheckedChange={(checked) => updateFieldValue(sectionId, field.key, checked)}
-          />
+          >
+            <SwitchControl
+              id={id}
+              checked={toBooleanValue(value)}
+              // 非推奨の項目は互換のため表示だけ残しており、切り替えても動作に影響しない。
+              disabled={field.deprecated}
+              onCheckedChange={(checked) => updateFieldValue(sectionId, field.key, checked)}
+            />
+          </SettingRow>
         );
       }
 
       if (field.kind === "number") {
         return (
-          <NumberField
+          <SettingRow
             key={field.key}
-            id={`settings-${field.key}`}
+            htmlFor={id}
             label={field.title}
             description={field.description}
-            value={toNumberValue(value)}
-            min={field.minimum}
-            max={field.maximum}
-            step={field.step}
-            onChange={(nextValue) => updateFieldValue(sectionId, field.key, nextValue)}
-          />
+          >
+            <input
+              id={id}
+              type="number"
+              value={toNumberValue(value)}
+              min={field.minimum}
+              max={field.maximum}
+              step={field.step}
+              onChange={(event) => {
+                const nextValue = Number(event.currentTarget.value);
+                updateFieldValue(sectionId, field.key, Number.isFinite(nextValue) ? nextValue : 0);
+              }}
+            />
+          </SettingRow>
         );
       }
 
       if (field.options && field.options.length > 0) {
+        const labelId = `${id}-label`;
+        const isSegmented = field.widget === "segmented";
         return (
-          <RadioField
+          <SettingRow
             key={field.key}
-            id={`settings-${field.key}`}
+            labelId={labelId}
             label={field.title}
             description={field.description}
-            value={toStringValue(value)}
-            options={field.options}
-            onValueChange={(nextValue) => updateFieldValue(sectionId, field.key, nextValue)}
-          />
+            layout={isSegmented ? "inline" : "stacked"}
+          >
+            <ChoiceControl
+              id={id}
+              labelledBy={labelId}
+              value={toStringValue(value)}
+              options={field.options}
+              variant={isSegmented ? "segmented" : "list"}
+              onValueChange={(nextValue) => updateFieldValue(sectionId, field.key, nextValue)}
+            />
+          </SettingRow>
         );
       }
 
@@ -348,22 +366,6 @@ export const SettingsPage: React.FC<{ tabId: string; page: SettingsPageType }> =
               onChange={(nextValue) => updateFieldValue(sectionId, field.key, nextValue)}
             />
           </div>
-        );
-      }
-
-      if (field.widget === "textarea") {
-        return (
-          <TextareaField
-            key={field.key}
-            id={`settings-${field.key}`}
-            label={field.title}
-            description={field.description}
-            value={toStringValue(value)}
-            rows={field.rows ?? 6}
-            onChange={(event) => {
-              updateFieldValue(sectionId, field.key, event.currentTarget.value);
-            }}
-          />
         );
       }
 
@@ -384,18 +386,36 @@ export const SettingsPage: React.FC<{ tabId: string; page: SettingsPageType }> =
         );
       }
 
+      // 変更理由: 1行の文字列（URLや正規表現）も2行のtextareaで表示していたため、
+      // 複数行を書く項目だけtextareaにし、それ以外は1行の入力欄にする。
       return (
-        <TextareaField
+        <SettingRow
           key={field.key}
-          id={`settings-${field.key}`}
+          htmlFor={id}
           label={field.title}
           description={field.description}
-          value={toStringValue(value)}
-          rows={2}
-          onChange={(event) => {
-            updateFieldValue(sectionId, field.key, event.currentTarget.value);
-          }}
-        />
+          layout="stacked"
+        >
+          {field.widget === "textarea" ? (
+            <textarea
+              id={id}
+              rows={field.rows ?? 6}
+              value={toStringValue(value)}
+              onChange={(event) => {
+                updateFieldValue(sectionId, field.key, event.currentTarget.value);
+              }}
+            />
+          ) : (
+            <input
+              id={id}
+              type="text"
+              value={toStringValue(value)}
+              onChange={(event) => {
+                updateFieldValue(sectionId, field.key, event.currentTarget.value);
+              }}
+            />
+          )}
+        </SettingRow>
       );
     },
     [formState, updateFieldValue],
@@ -403,21 +423,33 @@ export const SettingsPage: React.FC<{ tabId: string; page: SettingsPageType }> =
 
   const renderSectionItems = useCallback(
     (sectionId: SettingsSectionId, items: readonly SettingsSectionItem[]) =>
-      items.map((item, index) => {
-        if (isSettingsDividerItem(item)) {
-          return (
-            <div key={`divider-${item.id}-${index}`} className="settings-page__section-divider">
-              <div className="settings-page__section-divider-line">
-                <span>{item.title}</span>
+      // 変更理由: 区切りの見出しの下に項目をまとめた枠を置き、枠の中は行ごとに線で区切る。
+      // 項目の境目と見出しの階層を見た目で分かるようにし、Obsidianなどの設定画面に揃える。
+      groupSectionItems(items).map((group, index) => {
+        const hasOnlyEditors = group.fields.every(
+          (field) => field.widget === "ng_editor" || field.widget === "replacement_editor",
+        );
+        return (
+          <section key={group.divider?.id ?? `group-${index}`} className="settings-page__group">
+            {group.divider && (
+              <div className="settings-page__group-header">
+                <h3 className="settings-page__group-title">{group.divider.title}</h3>
+                {group.divider.description && (
+                  <p className="settings-page__group-description">{group.divider.description}</p>
+                )}
               </div>
-              {item.description && (
-                <p className="settings-page__section-divider-description">{item.description}</p>
-              )}
-            </div>
-          );
-        }
-
-        return renderField(sectionId, item);
+            )}
+            {group.fields.length > 0 &&
+              // NG・置換のエディタは独自の枠と操作を持つため、行の枠へ入れない。
+              (hasOnlyEditors ? (
+                group.fields.map((field) => renderField(sectionId, field))
+              ) : (
+                <div className="settings-page__group-card">
+                  {group.fields.map((field) => renderField(sectionId, field))}
+                </div>
+              ))}
+          </section>
+        );
       }),
     [renderField],
   );
@@ -523,270 +555,269 @@ export const SettingsPage: React.FC<{ tabId: string; page: SettingsPageType }> =
         className="settings-page__main"
         onScroll={(event) => persistPageUiState(event.currentTarget.scrollTop)}
       >
-        <SurfaceStack className="settings-page__content-stack">
-          <Surface>
-            <SurfaceHeader className="settings-page__header">
-              <div>
-                <div className="settings-page__eyebrow">SETTINGS</div>
-                <h2 className="settings-page__title">{activeSection.title}</h2>
-                <p className="settings-page__description">{activeSection.description}</p>
-                {relatedSection && (
-                  <p className="settings-page__related">
-                    {relatedSection.description}
-                    <Button
-                      className="settings-page__related-link"
-                      variant="subtle"
-                      onClick={() => setActiveSectionId(relatedSection.id)}
-                    >
-                      {relatedSection.label}
-                    </Button>
-                  </p>
-                )}
-              </div>
-              <div className="settings-page__status-row">
-                <span className="settings-page__note">自動保存</span>
-                {savingSectionId === activeSection.id && (
-                  <span className="settings-page__saving">
-                    <RefreshCw size={14} className="animate-spin" aria-hidden="true" />
-                    保存中...
-                  </span>
-                )}
-              </div>
-            </SurfaceHeader>
-
-            <SurfaceBody>
-              {autoSaveError && (
-                <Alert
-                  className="settings-page__auto-save-error"
-                  color="red"
-                  icon={<AlertTriangle size={16} />}
+        {/* 変更理由: ページ全体を大きな枠で囲むと、中の項目の枠と二重になって重く見える。
+            枠は項目のまとまりだけに付け、見出しは枠の外に置く。 */}
+        <div className="settings-page__content">
+          <header className="settings-page__header">
+            <div className="settings-page__heading">
+              <h2 className="settings-page__title">{activeSection.title}</h2>
+              {/* 変更は常に自動保存するため、保存中だけ知らせる。 */}
+              {savingSectionId === activeSection.id && (
+                <span className="settings-page__saving" role="status">
+                  <RefreshCw size={14} className="animate-spin" aria-hidden="true" />
+                  保存中...
+                </span>
+              )}
+            </div>
+            <p className="settings-page__description">{activeSection.description}</p>
+            {relatedSection && (
+              <p className="settings-page__related">
+                {relatedSection.description}
+                <Button
+                  className="settings-page__related-link"
+                  variant="subtle"
+                  onClick={() => setActiveSectionId(relatedSection.id)}
                 >
-                  {autoSaveError}
-                </Alert>
-              )}
+                  {relatedSection.label}
+                </Button>
+              </p>
+            )}
+          </header>
 
-              <hr className="settings-page__divider" />
+          <div className="settings-page__body">
+            {autoSaveError && (
+              <Alert
+                className="settings-page__auto-save-error"
+                color="red"
+                icon={<AlertTriangle size={16} />}
+              >
+                {autoSaveError}
+              </Alert>
+            )}
 
-              {/* 変更理由: 表示セクションのタイトルバー設定を先頭に置き、関連項目を見つけやすくする。 */}
-              {activeSection.id === "display" && (
-                <SettingsSupplementaryPanels
-                  panelIds={activeSection.supplementaryPanelIds}
-                  maintenanceActions={maintenanceActions}
-                />
-              )}
+            {/* 変更理由: 表示セクションのタイトルバー設定を先頭に置き、関連項目を見つけやすくする。 */}
+            {activeSection.id === "display" && (
+              <SettingsSupplementaryPanels
+                panelIds={activeSection.supplementaryPanelIds}
+                maintenanceActions={maintenanceActions}
+              />
+            )}
 
-              {activeSection.id !== "ng" && (
-                <div className="settings-page__section-stack">
-                  {activeSection.id !== "site-board" &&
-                    renderSectionItems(activeSection.id, regularSectionItems)}
+            {/* 項目のないカテゴリで空の入れ物を出すと、間隔が二重に空くため描かない。 */}
+            {activeSection.id !== "ng" && regularSectionItems.length > 0 && (
+              <div className="settings-page__section-stack">
+                {activeSection.id !== "site-board" &&
+                  renderSectionItems(activeSection.id, regularSectionItems)}
 
-                  {activeSection.id === "site-board" && (
-                    // 変更理由: 見出し・区切り線・項目名で bbsmenu を3回繰り返していたため、
-                    // 見出しは用途（板一覧の取得元）だけにし、項目名で入力内容を示す。
-                    <Surface as="section" tone="muted" variant="flat">
-                      <SurfaceHeader>
-                        <SurfaceTitle>板一覧の取得元</SurfaceTitle>
-                      </SurfaceHeader>
-                      <SurfaceBody>
-                        {renderSectionItems("site-board", regularSectionItems)}
-                        <SurfaceActions>
-                          <Button
-                            onClick={() => void maintenanceActions.handleBBSMenuCheck()}
-                            loading={maintenanceActions.isBbsMenuChecking}
-                            disabled={maintenanceActions.isBbsMenuRefreshing}
-                          >
-                            URLチェック
-                          </Button>
-                          <Tooltip label="設定したBBSMENUを強制取得してキャッシュを更新します。「一度開いた板」は明示的な記録だけから再構成し、外部サイトや重複を除外します。">
-                            <span>
-                              <Button
-                                onClick={() => void maintenanceActions.handleBBSMenuRefresh()}
-                                loading={maintenanceActions.isBbsMenuRefreshing}
-                                disabled={maintenanceActions.isBbsMenuChecking}
-                              >
-                                板一覧を再取得
-                              </Button>
-                            </span>
-                          </Tooltip>
-                        </SurfaceActions>
-                      </SurfaceBody>
-                    </Surface>
-                  )}
+                {activeSection.id === "site-board" && (
+                  // 変更理由: 見出し・区切り線・項目名で bbsmenu を3回繰り返していたため、
+                  // 見出しは用途（板一覧の取得元）だけにし、項目名で入力内容を示す。
+                  // 枠も二重にせず、ほかの項目と同じ「見出しの下に1枚の枠」の形にする。
+                  <section className="settings-page__group">
+                    <div className="settings-page__group-header">
+                      <h3 className="settings-page__group-title">BBSMENU</h3>
+                    </div>
+                    <div className="settings-page__group-card">
+                      {regularSectionItems
+                        .filter(isSettingsFieldItem)
+                        .map((field) => renderField("site-board", field))}
+                      <div className="settings-page__group-actions">
+                        <Button
+                          onClick={() => void maintenanceActions.handleBBSMenuCheck()}
+                          loading={maintenanceActions.isBbsMenuChecking}
+                          disabled={maintenanceActions.isBbsMenuRefreshing}
+                        >
+                          URLチェック
+                        </Button>
+                        <Tooltip label="設定したBBSMENUを強制取得してキャッシュを更新します。「一度開いた板」は明示的な記録だけから再構成し、外部サイトや重複を除外します。">
+                          <span>
+                            <Button
+                              onClick={() => void maintenanceActions.handleBBSMenuRefresh()}
+                              loading={maintenanceActions.isBbsMenuRefreshing}
+                              disabled={maintenanceActions.isBbsMenuChecking}
+                            >
+                              板一覧を再取得
+                            </Button>
+                          </span>
+                        </Tooltip>
+                      </div>
+                    </div>
+                  </section>
+                )}
+              </div>
+            )}
+
+            {activeSection.id === "ng" && (
+              <div className="settings-page__section-stack settings-page__section-stack--ng">
+                <div
+                  className="settings-page__rule-tabs"
+                  role="tablist"
+                  aria-label="NGと文字列置換"
+                >
+                  {(["ng", "replacement"] as const).map((tab, index, tabs) => (
+                    <button
+                      key={tab}
+                      id={`rule-tab-${tabId}-${tab}`}
+                      role="tab"
+                      type="button"
+                      aria-selected={ngSettingsTab === tab}
+                      aria-controls={`rule-panel-${tabId}-${tab}`}
+                      tabIndex={ngSettingsTab === tab ? 0 : -1}
+                      onClick={() => setNgSettingsTab(tab)}
+                      onKeyDown={(event) => {
+                        const next =
+                          event.key === "ArrowRight"
+                            ? tabs[(index + 1) % tabs.length]
+                            : event.key === "ArrowLeft"
+                              ? tabs[(index + tabs.length - 1) % tabs.length]
+                              : event.key === "Home"
+                                ? tabs[0]
+                                : event.key === "End"
+                                  ? tabs[tabs.length - 1]
+                                  : null;
+                        if (next) {
+                          event.preventDefault();
+                          setNgSettingsTab(next);
+                          document.getElementById(`rule-tab-${tabId}-${next}`)?.focus();
+                        }
+                      }}
+                    >
+                      {tab === "ng" ? "NGルール" : "文字列置換"}
+                    </button>
+                  ))}
                 </div>
-              )}
-
-              {activeSection.id === "ng" && (
-                <div className="settings-page__section-stack settings-page__section-stack--ng">
+                {ngSettingsTab === "ng" ? (
                   <div
-                    className="settings-page__rule-tabs"
-                    role="tablist"
-                    aria-label="NGと文字列置換"
+                    role="tabpanel"
+                    id={`rule-panel-${tabId}-ng`}
+                    aria-labelledby={`rule-tab-${tabId}-ng`}
+                    className="settings-page__section-stack--nested"
                   >
-                    {(["ng", "replacement"] as const).map((tab, index, tabs) => (
-                      <button
-                        key={tab}
-                        id={`rule-tab-${tabId}-${tab}`}
-                        role="tab"
-                        type="button"
-                        aria-selected={ngSettingsTab === tab}
-                        aria-controls={`rule-panel-${tabId}-${tab}`}
-                        tabIndex={ngSettingsTab === tab ? 0 : -1}
-                        onClick={() => setNgSettingsTab(tab)}
-                        onKeyDown={(event) => {
-                          const next =
-                            event.key === "ArrowRight"
-                              ? tabs[(index + 1) % tabs.length]
-                              : event.key === "ArrowLeft"
-                                ? tabs[(index + tabs.length - 1) % tabs.length]
-                                : event.key === "Home"
-                                  ? tabs[0]
-                                  : event.key === "End"
-                                    ? tabs[tabs.length - 1]
-                                    : null;
-                          if (next) {
-                            event.preventDefault();
-                            setNgSettingsTab(next);
-                            document.getElementById(`rule-tab-${tabId}-${next}`)?.focus();
-                          }
-                        }}
-                      >
-                        {tab === "ng" ? "NGルール" : "文字列置換"}
-                      </button>
-                    ))}
+                    {renderSectionItems("ng", ngPrimarySectionItems)}
+
+                    <Button
+                      className="settings-page__toggle"
+                      variant="subtle"
+                      aria-expanded={isNgExamplesOpen}
+                      onClick={() => setIsNgExamplesOpen((prev) => !prev)}
+                    >
+                      <ChevronDown
+                        size={16}
+                        className={`settings-page__toggle-icon${
+                          isNgExamplesOpen ? " settings-page__toggle-icon--open" : ""
+                        }`}
+                        aria-hidden="true"
+                      />
+                      NG記法例
+                    </Button>
+
+                    {isNgExamplesOpen && (
+                      <Surface as="section" tone="muted" variant="flat">
+                        <SurfaceHeader>
+                          <SurfaceDescription>
+                            よく使う例をそのままコピーして調整できます。
+                          </SurfaceDescription>
+                        </SurfaceHeader>
+                        <SurfaceBody>
+                          {NG_DSL_EXAMPLES.map((example) => (
+                            <section
+                              key={example.title}
+                              className="settings-page__section-stack--nested"
+                            >
+                              <h3 className="settings-page__help-label">{example.title}</h3>
+                              <SurfaceDescription>{example.description}</SurfaceDescription>
+                              <NGDslHelpSnippet code={example.code} />
+                            </section>
+                          ))}
+                        </SurfaceBody>
+                      </Surface>
+                    )}
+
+                    <Button
+                      className="settings-page__toggle"
+                      variant="subtle"
+                      aria-expanded={isNgAdvancedOpen}
+                      onClick={() => setIsNgAdvancedOpen((prev) => !prev)}
+                    >
+                      <ChevronDown
+                        size={16}
+                        className={`settings-page__toggle-icon${
+                          isNgAdvancedOpen ? " settings-page__toggle-icon--open" : ""
+                        }`}
+                        aria-hidden="true"
+                      />
+                      高度なNG設定
+                    </Button>
+
+                    {isNgAdvancedOpen && (
+                      <div className="settings-page__section-stack--nested">
+                        {renderSectionItems("ng", ngAdvancedSectionItems)}
+                      </div>
+                    )}
                   </div>
-                  {ngSettingsTab === "ng" ? (
-                    <div
-                      role="tabpanel"
-                      id={`rule-panel-${tabId}-ng`}
-                      aria-labelledby={`rule-tab-${tabId}-ng`}
-                      className="settings-page__section-stack--nested"
+                ) : (
+                  <div
+                    role="tabpanel"
+                    id={`rule-panel-${tabId}-replacement`}
+                    aria-labelledby={`rule-tab-${tabId}-replacement`}
+                    className="settings-page__section-stack--nested"
+                  >
+                    {renderSectionItems(
+                      "ng",
+                      activeSection.fields.filter(
+                        (item) => isSettingsFieldItem(item) && item.key === "replace_str_txt",
+                      ),
+                    )}
+                    <Button
+                      className="settings-page__toggle"
+                      variant="subtle"
+                      aria-expanded={isReplacementExamplesOpen}
+                      onClick={() => setIsReplacementExamplesOpen((prev) => !prev)}
                     >
-                      {renderSectionItems("ng", ngPrimarySectionItems)}
+                      <ChevronDown
+                        size={16}
+                        className={`settings-page__toggle-icon${isReplacementExamplesOpen ? " settings-page__toggle-icon--open" : ""}`}
+                        aria-hidden="true"
+                      />
+                      置換記法例
+                    </Button>
+                    {isReplacementExamplesOpen && (
+                      <Surface as="section" tone="muted" variant="flat">
+                        <SurfaceHeader>
+                          <SurfaceDescription>
+                            よく使う例をそのままコピーして調整できます。
+                          </SurfaceDescription>
+                        </SurfaceHeader>
+                        <SurfaceBody>
+                          <h3 className="settings-page__help-label">基本・正規表現</h3>
+                          <ReplacementDslHelpSnippet code={REPLACEMENT_DSL_EXAMPLE} />
+                          <h3 className="settings-page__help-label">行削除・適用条件</h3>
+                          <ReplacementDslHelpSnippet code={REPLACEMENT_LINE_EXAMPLE} />
+                          <p className="ng-editor__help-note">
+                            既定では大文字小文字を区別してすべて置換します。flags=i
+                            は大小文字を無視して最初の一致、flags=gi はすべての一致を置換します。to
+                            "" で空文字に置換できます。
+                          </p>
+                          <p className="ng-editor__help-note">
+                            remove body line first は先頭行だけを判定し、first
+                            を省略すると一致する行をすべて削除します。行端の空白と画像タグ、BEアイコンのsssp://表記を考慮します。削除した画像はサムネイルにも表示しません。
+                          </p>
+                        </SurfaceBody>
+                      </Surface>
+                    )}
+                  </div>
+                )}
+              </div>
+            )}
 
-                      <Button
-                        className="settings-page__toggle"
-                        variant="subtle"
-                        aria-expanded={isNgExamplesOpen}
-                        onClick={() => setIsNgExamplesOpen((prev) => !prev)}
-                      >
-                        <ChevronDown
-                          size={16}
-                          className={`settings-page__toggle-icon${
-                            isNgExamplesOpen ? " settings-page__toggle-icon--open" : ""
-                          }`}
-                          aria-hidden="true"
-                        />
-                        NG記法例
-                      </Button>
-
-                      {isNgExamplesOpen && (
-                        <Surface as="section" tone="muted" variant="flat">
-                          <SurfaceHeader>
-                            <SurfaceDescription>
-                              よく使う例をそのままコピーして調整できます。
-                            </SurfaceDescription>
-                          </SurfaceHeader>
-                          <SurfaceBody>
-                            {NG_DSL_EXAMPLES.map((example) => (
-                              <section
-                                key={example.title}
-                                className="settings-page__section-stack--nested"
-                              >
-                                <h3 className="settings-page__help-label">{example.title}</h3>
-                                <SurfaceDescription>{example.description}</SurfaceDescription>
-                                <NGDslHelpSnippet code={example.code} />
-                              </section>
-                            ))}
-                          </SurfaceBody>
-                        </Surface>
-                      )}
-
-                      <Button
-                        className="settings-page__toggle"
-                        variant="subtle"
-                        aria-expanded={isNgAdvancedOpen}
-                        onClick={() => setIsNgAdvancedOpen((prev) => !prev)}
-                      >
-                        <ChevronDown
-                          size={16}
-                          className={`settings-page__toggle-icon${
-                            isNgAdvancedOpen ? " settings-page__toggle-icon--open" : ""
-                          }`}
-                          aria-hidden="true"
-                        />
-                        高度なNG設定
-                      </Button>
-
-                      {isNgAdvancedOpen && (
-                        <div className="settings-page__section-stack--nested">
-                          {renderSectionItems("ng", ngAdvancedSectionItems)}
-                        </div>
-                      )}
-                    </div>
-                  ) : (
-                    <div
-                      role="tabpanel"
-                      id={`rule-panel-${tabId}-replacement`}
-                      aria-labelledby={`rule-tab-${tabId}-replacement`}
-                      className="settings-page__section-stack--nested"
-                    >
-                      {renderSectionItems(
-                        "ng",
-                        activeSection.fields.filter(
-                          (item) => isSettingsFieldItem(item) && item.key === "replace_str_txt",
-                        ),
-                      )}
-                      <Button
-                        className="settings-page__toggle"
-                        variant="subtle"
-                        aria-expanded={isReplacementExamplesOpen}
-                        onClick={() => setIsReplacementExamplesOpen((prev) => !prev)}
-                      >
-                        <ChevronDown
-                          size={16}
-                          className={`settings-page__toggle-icon${isReplacementExamplesOpen ? " settings-page__toggle-icon--open" : ""}`}
-                          aria-hidden="true"
-                        />
-                        置換記法例
-                      </Button>
-                      {isReplacementExamplesOpen && (
-                        <Surface as="section" tone="muted" variant="flat">
-                          <SurfaceHeader>
-                            <SurfaceDescription>
-                              よく使う例をそのままコピーして調整できます。
-                            </SurfaceDescription>
-                          </SurfaceHeader>
-                          <SurfaceBody>
-                            <h3 className="settings-page__help-label">基本・正規表現</h3>
-                            <ReplacementDslHelpSnippet code={REPLACEMENT_DSL_EXAMPLE} />
-                            <h3 className="settings-page__help-label">行削除・適用条件</h3>
-                            <ReplacementDslHelpSnippet code={REPLACEMENT_LINE_EXAMPLE} />
-                            <p className="ng-editor__help-note">
-                              既定では大文字小文字を区別してすべて置換します。flags=i
-                              は大小文字を無視して最初の一致、flags=gi
-                              はすべての一致を置換します。to "" で空文字に置換できます。
-                            </p>
-                            <p className="ng-editor__help-note">
-                              remove body line first は先頭行だけを判定し、first
-                              を省略すると一致する行をすべて削除します。行端の空白と画像タグ、BEアイコンのsssp://表記を考慮します。削除した画像はサムネイルにも表示しません。
-                            </p>
-                          </SurfaceBody>
-                        </Surface>
-                      )}
-                    </div>
-                  )}
-                </div>
-              )}
-
-              {activeSection.id !== "display" && (
-                <SettingsSupplementaryPanels
-                  panelIds={activeSection.supplementaryPanelIds}
-                  maintenanceActions={maintenanceActions}
-                />
-              )}
-            </SurfaceBody>
-          </Surface>
-        </SurfaceStack>
+            {activeSection.id !== "display" && (
+              <SettingsSupplementaryPanels
+                panelIds={activeSection.supplementaryPanelIds}
+                maintenanceActions={maintenanceActions}
+              />
+            )}
+          </div>
+        </div>
       </main>
     </div>
   );

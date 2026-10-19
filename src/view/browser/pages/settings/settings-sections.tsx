@@ -17,7 +17,9 @@ import {
   buildUiSchema,
 } from "src/view/browser/pages/settings/settings-form-registry";
 import type {
+  SettingsDividerItem,
   SettingsFieldDefinition,
+  SettingsFieldGroup,
   SettingsFormState,
   SettingsFormValue,
   SettingsOption,
@@ -29,7 +31,10 @@ import type {
   SettingsSectionItem,
   SettingsSupplementaryPanelId,
 } from "src/view/browser/pages/settings/settings-types";
-import { isSettingsFieldItem } from "src/view/browser/pages/settings/settings-types";
+import {
+  isSettingsDividerItem,
+  isSettingsFieldItem,
+} from "src/view/browser/pages/settings/settings-types";
 import type { SettingsSectionId } from "src/view/browser/types";
 import {
   NG_DISPLAY_CONFIG_KEY,
@@ -38,7 +43,7 @@ import {
 } from "src/view/browser/utils/ng-display-mode";
 
 const THEME_ID_OPTIONS = [
-  { const: "system", title: "システム（OSに合わせる）" },
+  { const: "system", title: "OSに合わせる" },
   { const: "light", title: "ライト" },
   { const: "dark", title: "ダーク" },
 ] as const satisfies readonly SettingsOption[];
@@ -47,7 +52,7 @@ const NEW_TAB_PAGE_MODE_OPTIONS = [
   // 初期ページの設定値は維持し、統一した入口の名前を表示する。
   { const: "home", title: "ホーム" },
   { const: "related_board", title: "関連する板" },
-  { const: "custom_board", title: "指定の板（入力）" },
+  { const: "custom_board", title: "指定の板" },
 ] as const satisfies readonly SettingsOption[];
 
 const TAB_BAR_ORIENTATION_OPTIONS = [
@@ -118,7 +123,7 @@ const ALL_SETTINGS_SECTIONS = [
         key: "new_tab_page_mode",
         title: "新しいタブで開くページ",
         options: NEW_TAB_PAGE_MODE_OPTIONS,
-        widget: "radio",
+        widget: "segmented",
       },
       {
         kind: "boolean",
@@ -132,7 +137,7 @@ const ALL_SETTINGS_SECTIONS = [
         key: "new_tab_page_board_url",
         title: "指定の板 URL",
         description:
-          "『指定の板（入力）』を選んだ時に開く板URLです（例: https://example.com/test/read.cgi/software/）。",
+          "『指定の板』を選んだ時に開く板URLです（例: https://example.com/test/read.cgi/software/）。",
       },
       {
         kind: "divider",
@@ -145,7 +150,7 @@ const ALL_SETTINGS_SECTIONS = [
         title: "タブバーの配置",
         description: "タブ一覧を上部の横並びと左端の縦並びで切り替えます。",
         options: TAB_BAR_ORIENTATION_OPTIONS,
-        widget: "radio",
+        widget: "segmented",
       },
       {
         kind: "boolean",
@@ -187,7 +192,7 @@ const ALL_SETTINGS_SECTIONS = [
         key: "theme_id",
         title: "テーマ",
         options: THEME_ID_OPTIONS,
-        widget: "radio",
+        widget: "segmented",
       },
       {
         kind: "divider",
@@ -384,7 +389,7 @@ const ALL_SETTINGS_SECTIONS = [
   // 変更理由: ドメイン共通から各板への継承は通常の全体設定フォームとは異なるため、
   // 専用パネルへ閉じ込めて項目追加時のフォーム分岐を増やさない。
   // 必要な板だけを上書きする応用設定なので、よく使う閲覧の設定より後ろに置く。
-  // 板一覧の取得元（bbsmenu）は下の板の候補にもなるため、「その他」から移して同じカテゴリの先頭に置く。
+  // BBSMENUは下の板の候補にもなるため、「その他」から移して同じカテゴリの先頭に置く。
   defineSection(
     "site-board",
     "板",
@@ -578,4 +583,25 @@ export function readBBSMenuUrlsForCheck(raw: string): string[] {
     .split("\n")
     .map((line) => line.trim())
     .filter((line) => line !== "" && !line.startsWith("//"));
+}
+
+/**
+ * 区切りごとに項目をまとめる。最初の区切りより前の項目は見出しなしの組にし、
+ * 項目のない区切りも見出しとして残す（説明だけを示す区切りがあるため）。
+ */
+export function groupSectionItems(items: readonly SettingsSectionItem[]): SettingsFieldGroup[] {
+  const groups: { divider?: SettingsDividerItem; fields: SettingsFieldDefinition[] }[] = [];
+  for (const item of items) {
+    if (isSettingsDividerItem(item)) {
+      groups.push({ divider: item, fields: [] });
+      continue;
+    }
+    const current = groups.at(-1);
+    if (current) {
+      current.fields.push(item);
+    } else {
+      groups.push({ fields: [item] });
+    }
+  }
+  return groups;
 }

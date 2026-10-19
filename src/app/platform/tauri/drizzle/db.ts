@@ -123,8 +123,23 @@ async function runMigrations(raw: SqlPluginDatabase): Promise<void> {
   await raw.execute("CREATE INDEX IF NOT EXISTS idx_write_history_date ON write_history(date)");
 }
 
+/**
+ * 開くSQLiteの接続文字列を返す。
+ *
+ * E2E用ビルドで保存先が差し替えられているときは、普段使いのDBを読み書きしないよう
+ * その絶対パスで開く。tauri-plugin-sql は相対パスだけをアプリの設定フォルダーへ結合する。
+ */
+async function resolveConnectionString(): Promise<string> {
+  const { invoke } = await import("@tauri-apps/api/core");
+  const overrideDir = await invoke<string | null>("data_dir_override");
+  if (overrideDir == null) return "sqlite:chlens.db";
+  logger.warn(`E2E用の保存先のSQLiteを開きます: ${overrideDir}`);
+  return `sqlite:${overrideDir}/chlens.db`;
+}
+
 async function createContext(): Promise<TauriDrizzleContext> {
   logger.debug("SQLite contextの初期化開始");
+  const connectionString = await resolveConnectionString();
 
   // Why: Tauri plugin が完全に初期化されるまで待機。prodビルドでは
   // タイミングの問題が起きるため、最大3回までリトライ
@@ -138,7 +153,7 @@ async function createContext(): Promise<TauriDrizzleContext> {
       await new Promise((resolve) => setTimeout(resolve, waitMs));
 
       logger.debug(`Database.load試行 (${attempt}/${maxRetries})`);
-      const raw = (await Database.load("sqlite:chlens.db")) as SqlPluginDatabase;
+      const raw = (await Database.load(connectionString)) as SqlPluginDatabase;
       logger.debug("Database.load成功");
 
       await runMigrations(raw);

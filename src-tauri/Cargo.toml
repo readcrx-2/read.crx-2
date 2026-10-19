@@ -50,6 +50,10 @@ windows-sys = { version = "0.61", features = [
   "Win32_UI_WindowsAndMessaging",
 ] }
 
+[features]
+# E2E用ビルドだけが環境変数 CHLENS_DATA_DIR で保存先を差し替えられるようにする（src/data_dir.rs）。
+e2e = []
+
 [[bin]]
 name = "chlens"
 path = "src/main.rs"

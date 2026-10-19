@@ -1,4 +1,5 @@
 mod cookie_cipher;
+mod data_dir;
 mod download;
 mod download_path;
 mod http_transport;
@@ -80,10 +81,14 @@ fn new_window_handler<R: Runtime>(
 
 #[cfg_attr(mobile, tauri::mobile_entry_point)]
 pub fn run() {
+  // WebView2の保存先は最初のWebViewを作る前に決まるため、Builderより先に差し替える。
+  let data_override = data_dir::prepare_override().expect("E2E用の保存先を作成できませんでした");
+
   // Overlayは起動直後から背後のMain操作を受け取れるよう、native側で常時クリック透過にする。
   tauri::Builder::default()
     .plugin(tauri_plugin_sql::Builder::default().build())
     .invoke_handler(tauri::generate_handler![
+      data_dir::data_dir_override,
       download::save_download_file,
       http_transport::shared_http_request,
       log_level::set_log_debug,
@@ -107,20 +112,34 @@ pub fn run() {
       // Main終了をアプリ全体の終了とみなし、裏で残るWebViewやRustプロセスを確実に解放する。
       window.app_handle().exit(0);
     })
-    .setup(|app| {
+    .setup(move |app| {
       // 変更理由: 以前はdebugビルドだけ・Info固定だったため、配布版の不具合をRust側から追えなかった。
       // 常に登録し、既定は warn/error のみにする。`debug_log` 設定はフロントエンドから
       // `set_log_debug` で実行中に切り替える（プラグインは上限をDebugにして絞りだけ動的に変える）。
-      app.handle().plugin(
-        tauri_plugin_log::Builder::default()
-          .level(log::LevelFilter::Debug)
-          .build(),
-      )?;
+      let mut log_builder = tauri_plugin_log::Builder::default().level(log::LevelFilter::Debug);
+      if let Some(root) = &data_override {
+        // E2Eのログを普段使いのログフォルダーへ混ぜず、テストの保存先へまとめて残す。
+        log_builder = log_builder.targets([
+          tauri_plugin_log::Target::new(tauri_plugin_log::TargetKind::Stdout),
+          tauri_plugin_log::Target::new(tauri_plugin_log::TargetKind::Folder {
+            path: data_dir::log_dir(root),
+            file_name: None,
+          }),
+        ]);
+      }
+      app.handle().plugin(log_builder.build())?;
       log::set_max_level(log_level::level_for(false));
+      if let Some(root) = &data_override {
+        log::warn!("E2E用の保存先を使います: {}", root.display());
+      }
 
       // 投稿認証はWebViewと別のRust Clientが扱うため、データディレクトリ確定後に保存Cookieを復元する。
+      let cookie_dir = match &data_override {
+        Some(root) => root.clone(),
+        None => app.path().app_data_dir()?,
+      };
       app.manage(write_transport::WriteTransportState::new(
-        write_cookies::WriteCookies::open_app_data(&app.path().app_data_dir()?),
+        write_cookies::WriteCookies::open_app_data(&cookie_dir),
       ));
       app.manage(http_transport::HttpTransportState::new()?);
 

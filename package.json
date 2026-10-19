@@ -14,6 +14,8 @@
     "build:firefox": "cross-env PLATFORM=firefox ENTRY=browser vp build",
     "build:extensions": "run-s build:chrome build:firefox",
     "build:tauri": "tauri build",
+    "// E2E用のTauri版。保存先を CHLENS_DATA_DIR へ差し替えられる実行ファイルだけを作り、インストーラーは作らない": "",
+    "build:tauri:e2e": "tauri build --debug --no-bundle --features e2e",
     "// Tauriのパッケージ化前に、3つのWebView用資産を生成する内部スクリプト": "",
     "build:tauri:assets": "run-s build:tauri:main build:tauri:overlay build:tauri:replay",
     "build:tauri:main": "cross-env PLATFORM=tauri ENTRY=browser vp build",

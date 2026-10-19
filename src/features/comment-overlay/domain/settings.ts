@@ -1,5 +1,3 @@
-import { DEFAULT_CONFIG } from "src/app/config-defaults";
-
 export interface CommentOverlaySettings {
   /** コメントがステージへ入ってから出るまでの基準時間。単位は秒。 */
   durationSeconds: number;
@@ -14,11 +12,13 @@ export interface CommentOverlaySettings {
 export const MIN_COMMENT_OVERLAY_DURATION_SECONDS = 2;
 export const MAX_COMMENT_OVERLAY_DURATION_SECONDS = 15;
 
+// 変更理由: 通過時間・不透明度・待機queue上限は設定画面から外し、常にこの既定値で動かす。
+// 保存済みの値は読まないため、以前に変更した利用者も既定の見た目へ戻る。
 export const DEFAULT_COMMENT_OVERLAY_SETTINGS: Readonly<CommentOverlaySettings> = {
-  durationSeconds: Number(DEFAULT_CONFIG.comment_overlay_speed),
-  opacity: Number(DEFAULT_CONFIG.comment_overlay_opacity),
-  maxQueueSize: Number(DEFAULT_CONFIG.comment_overlay_max_queue),
-  fetchAllCandidateThreads: DEFAULT_CONFIG.comment_overlay_fetch_all_threads === "on",
+  durationSeconds: 6,
+  opacity: 0.95,
+  maxQueueSize: 64,
+  fetchAllCandidateThreads: false,
 };
 
 /** 設定画面や古いeventから来た値を、schedulerが安全に扱える範囲へ揃える。 */

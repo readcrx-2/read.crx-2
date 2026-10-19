@@ -42,10 +42,10 @@ describe("ConfigからのコメントOverlay設定読み出し", () => {
     runtimeMock.isTauri = false;
   });
 
-  it("文字列の保存値をOverlay設定へ変換する", () => {
+  it("通過時間・不透明度・待機queue上限は保存値を読まず既定値を使う", () => {
     configMock.get.mockImplementation((key: string) => {
       const values: Record<string, string> = {
-        comment_overlay_speed: "6",
+        comment_overlay_speed: "15",
         comment_overlay_opacity: "0.6",
         comment_overlay_max_queue: "120",
       };
@@ -53,37 +53,11 @@ describe("ConfigからのコメントOverlay設定読み出し", () => {
     });
 
     expect(readCommentOverlaySettings()).toEqual({
-      durationSeconds: 6,
-      opacity: 0.6,
-      maxQueueSize: 120,
+      durationSeconds: DEFAULT_COMMENT_OVERLAY_SETTINGS.durationSeconds,
+      opacity: DEFAULT_COMMENT_OVERLAY_SETTINGS.opacity,
+      maxQueueSize: DEFAULT_COMMENT_OVERLAY_SETTINGS.maxQueueSize,
       fetchAllCandidateThreads: false,
     });
-  });
-
-  it("範囲外や数値でない保存値をdomainの範囲へ揃える", () => {
-    configMock.get.mockImplementation((key: string) => {
-      const values: Record<string, string> = {
-        comment_overlay_speed: "15",
-        comment_overlay_opacity: "-1",
-        comment_overlay_max_queue: "12.6",
-      };
-      return values[key] ?? null;
-    });
-
-    expect(readCommentOverlaySettings()).toEqual({
-      durationSeconds: 15,
-      opacity: 0.1,
-      maxQueueSize: 13,
-      fetchAllCandidateThreads: false,
-    });
-  });
-
-  it("旧px/秒設定を通過時間へ変換する", () => {
-    configMock.get.mockImplementation((key: string) => {
-      return key === "comment_overlay_speed" ? "180" : null;
-    });
-
-    expect(readCommentOverlaySettings().durationSeconds).toBe(5);
   });
 
   it("分裂スレ取得設定を読み込む", () => {
@@ -118,7 +92,7 @@ describe("ConfigからのコメントOverlay設定読み出し", () => {
     expect(messageMock.off).not.toHaveBeenCalled();
   });
 
-  it("Tauri版ではOverlay設定キーの変更だけを通知する", () => {
+  it("Tauri版では分裂スレ取得設定の変更だけを通知する", () => {
     runtimeMock.isTauri = true;
     let registeredHandler: ((data: { key?: string }) => void) | undefined;
     messageMock.on.mockImplementationOnce(
@@ -129,7 +103,7 @@ describe("ConfigからのコメントOverlay設定読み出し", () => {
     const listener = vi.fn();
 
     const cleanup = subscribeToCommentOverlaySettings(listener);
-    registeredHandler?.({ key: "comment_overlay_opacity" });
+    registeredHandler?.({ key: "comment_overlay_fetch_all_threads" });
     registeredHandler?.({ key: "theme_id" });
 
     expect(listener).toHaveBeenCalledTimes(1);

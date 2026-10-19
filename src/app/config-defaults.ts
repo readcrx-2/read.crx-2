@@ -1,7 +1,6 @@
 // 変更理由: 保存済み設定がない場合の既定値を一つの一覧に集約し、参照箇所ごとの値ずれを防ぐ。
 export const DEFAULT_CONFIG: Readonly<Record<string, string>> = {
   theme_id: "system",
-  dblclick_reload: "on",
   // 変更理由: 自動更新のON/OFFとは独立した間隔設定で、未変更時の既定間隔は20秒にする。
   auto_load_second: "20000",
   auto_load_second_board: "20000",
@@ -58,9 +57,6 @@ export const DEFAULT_CONFIG: Readonly<Record<string, string>> = {
   // コメントOverlayの設定はTauri版の実況開始時に読み込み、Browser版の既存挙動には影響させない。
   // speedキーは既存設定との互換性のため残し、新規値はコメントの通過時間（秒）として保存する。
   // 文字サイズは表示倍率を含む描画側の共通コード定数で管理し、保存値による実機差を作らない。
-  comment_overlay_speed: "6",
-  comment_overlay_opacity: "0.95",
-  comment_overlay_max_queue: "64",
   comment_overlay_fetch_all_threads: "off",
   // 表示領域は自由な縦横比を既定とし、16:9への固定は実況パネルから明示的に選ぶ。
   comment_overlay_lock_aspect_ratio: "off",

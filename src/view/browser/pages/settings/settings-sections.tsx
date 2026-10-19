@@ -235,16 +235,6 @@ const ALL_SETTINGS_SECTIONS = [
     [
       {
         kind: "divider",
-        id: "operation",
-        title: "操作",
-      },
-      {
-        kind: "boolean",
-        key: "dblclick_reload",
-        title: "空白をダブルクリックで更新する",
-      },
-      {
-        kind: "divider",
         id: "auto-scroll",
         title: "自動スクロール",
       },
@@ -289,7 +279,7 @@ const ALL_SETTINGS_SECTIONS = [
   ),
   defineSection(
     "overlay",
-    "コメントOverlay",
+    "実況",
     "Tauri版のコメント流し表示を調整します。最前面表示と分裂スレ取得は変更時に反映します。",
     <MessageCircle size={20} />,
     [
@@ -303,33 +293,6 @@ const ALL_SETTINGS_SECTIONS = [
         key: "comment_overlay_always_on_top",
         title: "常に最前面に表示する",
         description: "ほかのアプリより手前にコメントOverlayを表示します。",
-      },
-      {
-        kind: "number",
-        key: "comment_overlay_speed",
-        title: "コメント通過時間",
-        description: "コメントがOverlayへ入ってから出るまでの基準時間です（秒）。",
-        minimum: 2,
-        maximum: 15,
-        step: 0.5,
-      },
-      {
-        kind: "number",
-        key: "comment_overlay_opacity",
-        title: "不透明度",
-        description: "コメントの不透明度です。0.1から1.0まで指定できます。",
-        minimum: 0.1,
-        maximum: 1,
-        step: 0.05,
-      },
-      {
-        kind: "number",
-        key: "comment_overlay_max_queue",
-        title: "待機queue上限",
-        description: "strict/queue動作で待機させるコメント数です。0で待機しません。",
-        minimum: 0,
-        maximum: 3_000,
-        step: 1,
       },
       {
         kind: "boolean",

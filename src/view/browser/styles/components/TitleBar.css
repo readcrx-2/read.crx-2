@@ -206,14 +206,14 @@
   padding: 0 var(--sys-space-6);
   border: 1px solid var(--sys-color-border);
   border-radius: var(--sys-radius-md);
-  background: transparent;
+  background: var(--sys-color-surface);
   color: var(--sys-color-text-muted);
   cursor: pointer;
   transition: background var(--sys-duration-fast);
 }
 
 .title-bar__title--omnibar:hover {
-  background: var(--sys-color-title-pill-hover);
+ background-color: color-mix(in srgb, var(--sys-color-surface), #fff 5%);
 }
 
 .title-bar__title--omnibar:focus-visible {

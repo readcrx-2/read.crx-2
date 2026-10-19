@@ -28,6 +28,9 @@
   --sys-color-settings-active-bg: var(--ref-color-blue-50);
   --sys-color-tab-strip: var(--ref-color-neutral-200);
   --sys-color-tab-strip-hover: var(--ref-color-alpha-white-40);
+  /* 変更理由: タイトルバーのピルは通常時を背景なしにし、ホバーは白く明るくせず
+     バーより一段暗い面で示す。 */
+  --sys-color-title-pill-hover: var(--ref-color-neutral-200);
   --sys-color-tab-strip-active-hover: var(--ref-color-neutral-400);
   --sys-color-border: var(--ref-color-neutral-300);
   --sys-color-text: var(--ref-color-neutral-950);
@@ -139,6 +142,9 @@
   --sys-color-settings-active-bg: var(--ref-color-alpha-dark-blue-40);
   --sys-color-tab-strip: var(--ref-color-dark-neutral-200);
   --sys-color-tab-strip-hover: var(--ref-color-alpha-white-08);
+  /* 変更理由: タイトルバーのピルは通常時を背景なしにし、ホバーは白く明るくせず
+     バーより一段暗い面で示す。 */
+  --sys-color-title-pill-hover: var(--ref-color-alpha-white-08);
   --sys-color-tab-strip-active-hover: var(--ref-color-alpha-white-16);
   --sys-color-border: var(--ref-color-dark-neutral-300);
   --sys-color-text: var(--ref-color-dark-neutral-950);

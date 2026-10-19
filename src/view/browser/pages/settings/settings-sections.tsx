@@ -205,14 +205,6 @@ const ALL_SETTINGS_SECTIONS = [
         title: "画像にぼかしを適用する",
       },
       {
-        kind: "number",
-        key: "image_blur_length",
-        title: "ぼかし量",
-        minimum: 1,
-        maximum: 9,
-        step: 1,
-      },
-      {
         kind: "string",
         key: "image_blur_word",
         title: "ぼかし判定ワード",

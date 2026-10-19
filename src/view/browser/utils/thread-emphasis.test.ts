@@ -6,7 +6,6 @@ import {
   buildWrittenResSet,
   compileImageBlurPattern,
   countNewRepliesToWrittenResponses,
-  resolveImageBlurRadius,
 } from "src/view/browser/utils/thread-emphasis";
 import { describe, expect, it } from "vite-plus/test";
 
@@ -67,12 +66,5 @@ describe("thread-emphasis", () => {
     );
 
     expect(Array.from(blurredResNums)).toEqual([1]);
-  });
-
-  it("画像ぼかし半径は扱いやすい範囲へ丸める", () => {
-    expect(resolveImageBlurRadius("0")).toBe(1);
-    expect(resolveImageBlurRadius("9")).toBe(9);
-    expect(resolveImageBlurRadius("99")).toBe(32);
-    expect(resolveImageBlurRadius(null)).toBe(4);
   });
 });

@@ -88,15 +88,6 @@ export function compileImageBlurPattern(pattern: string): RegExp | null {
   }
 }
 
-export function resolveImageBlurRadius(rawValue: string | null): number {
-  const parsed = Number.parseInt(rawValue ?? "", 10);
-  if (!Number.isFinite(parsed)) {
-    return 4;
-  }
-
-  return Math.min(Math.max(parsed, 1), 32);
-}
-
 export function buildBlurredResSet(
   responses: readonly IRes[],
   repIndex: ReadonlyMap<number, ReadonlySet<number>>,

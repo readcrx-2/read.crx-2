@@ -12,7 +12,6 @@ export const DEFAULT_CONFIG: Readonly<Record<string, string>> = {
   // 更新コントロールで選ぶスレッド表示形式。未変更時は従来どおり通常表示にする。
   thread_display_mode: "normal",
   image_blur: "on",
-  image_blur_length: "4",
   image_blur_word: ".{0,5}[^ァ-ヺ^ー]グロ(?:[^ァ-ヺ^ー].{0,5}|$)|.{0,5}死ね.{0,5}",
   expand_short_url: "none",
   expand_short_url_timeout: "3000",

@@ -987,8 +987,37 @@ describe("NavigationBar titlebar slot", () => {
     expect(slot.querySelector(".nav-bar__url-row")).toBeNull();
   });
 
-  it("水平ではフォーカスアウトしてもURL行を開いたままにする", () => {
+  it("水平でもアクティブペインの操作ボタンをタイトルバーの受け口へポータルする", () => {
     orientationHolder.value = "horizontal";
+
+    const { container } = render(
+      <div className="pane-column__chrome">
+        <NavigationBar />
+      </div>,
+    );
+
+    expect(container.querySelector(".pane-column__chrome")).toBeEmptyDOMElement();
+    expect(slot.querySelector('[title="メニュー"]')).not.toBeNull();
+  });
+
+  it("水平で受け口を持たない非アクティブペインはボタンを描画しない", () => {
+    orientationHolder.value = "horizontal";
+    paneHolder.panes = [{ id: "pane-1" }, { id: "pane-2" }];
+    paneHolder.activePaneId = "pane-2";
+    slot.remove();
+
+    const { container } = render(
+      <div className="pane-column__chrome">
+        <NavigationBar />
+      </div>,
+    );
+
+    expect(container.querySelector(".pane-column__chrome .nav-bar")).toBeNull();
+  });
+
+  it("受け口が無い水平のアクティブペインではインラインに描画してURL行を開いたままにする", () => {
+    orientationHolder.value = "horizontal";
+    slot.remove();
 
     const { container } = render(<NavigationBar />);
 

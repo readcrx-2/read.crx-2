@@ -42,12 +42,10 @@ describe("TitleBarButtonSettingsPanel", () => {
     settingsHolder.setRefreshEnabled.mockReset();
   });
 
-  it("設定画面のパネルから専用モーダルを開いて各スイッチを変更できる", () => {
+  it("設定画面で各ボタンのスイッチを直接切り替えられる", () => {
     render(<TitleBarButtonSettingsPanel />);
 
-    fireEvent.click(screen.getByRole("button", { name: "タイトルバーのボタン設定" }));
-
-    expect(screen.getByRole("dialog")).toHaveTextContent("タイトルバーのボタン設定");
+    expect(screen.getByRole("heading", { name: "タイトルバー" })).toBeInTheDocument();
     fireEvent.click(screen.getByRole("switch", { name: "戻る" }));
     fireEvent.click(screen.getByRole("switch", { name: "進む" }));
     fireEvent.click(screen.getByRole("switch", { name: "更新" }));

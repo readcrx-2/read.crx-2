@@ -9,15 +9,9 @@ import {
 } from "src/app/debug/log-persistence";
 import { createLogger } from "src/app/logger";
 import { container } from "src/service-container/index";
+import { SettingsGroup, SettingsGroupActions } from "src/view/browser/pages/settings/SettingsGroup";
 import { Button } from "src/view/browser/ui/Button";
-import {
-  Surface,
-  SurfaceActions,
-  SurfaceBody,
-  SurfaceDescription,
-  SurfaceHeader,
-  SurfaceTitle,
-} from "src/view/browser/ui/Surface";
+import { SettingRow } from "src/view/browser/ui/FormControls";
 import { copyText } from "src/view/browser/utils/clipboard";
 
 const logger = createLogger("view/settings");
@@ -118,37 +112,39 @@ export function DebugLogPanel() {
   }, []);
 
   return (
-    <Surface variant="flat">
-      <SurfaceHeader>
-        <SurfaceTitle>デバッグログ</SurfaceTitle>
-        <SurfaceDescription>
-          エラーや警告などの記録を最大{MAX_PERSISTED_ENTRIES}
-          件まで保存しています。不具合の報告にはコピーか保存をご利用ください。
-        </SurfaceDescription>
-      </SurfaceHeader>
-      <SurfaceBody>
+    <SettingsGroup
+      title="デバッグログ"
+      description={`エラーや警告などの記録を最大${MAX_PERSISTED_ENTRIES}件まで保存しています。不具合の報告にはコピーか保存をご利用ください。`}
+    >
+      <SettingRow
+        htmlFor="settings-debug-log-entries"
+        label={`直近${VISIBLE_ENTRY_COUNT}件`}
+        description="コピーと保存では、保存済みのすべてのログを取り出します。"
+        layout="stacked"
+      >
         <textarea
+          id="settings-debug-log-entries"
           readOnly
           rows={12}
           aria-label="デバッグログ（直近）"
           value={entries.map(formatPersistedLog).join("\n")}
           placeholder={loading ? "読み込み中…" : "保存されたログはありません"}
         />
-        <SurfaceActions>
-          <Button onClick={() => void reload()} loading={loading}>
-            更新
-          </Button>
-          <Button onClick={() => void handleCopy()} disabled={busy}>
-            すべてコピー
-          </Button>
-          <Button onClick={() => void handleSave()} disabled={busy}>
-            ファイルに保存
-          </Button>
-          <Button variant="danger" onClick={() => void handleClear()} disabled={busy}>
-            ログを削除
-          </Button>
-        </SurfaceActions>
-      </SurfaceBody>
-    </Surface>
+      </SettingRow>
+      <SettingsGroupActions>
+        <Button onClick={() => void reload()} loading={loading}>
+          更新
+        </Button>
+        <Button onClick={() => void handleCopy()} disabled={busy}>
+          すべてコピー
+        </Button>
+        <Button onClick={() => void handleSave()} disabled={busy}>
+          ファイルに保存
+        </Button>
+        <Button variant="danger" onClick={() => void handleClear()} disabled={busy}>
+          ログを削除
+        </Button>
+      </SettingsGroupActions>
+    </SettingsGroup>
   );
 }

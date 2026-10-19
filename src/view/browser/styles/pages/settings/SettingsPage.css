@@ -109,6 +109,10 @@
   border-top: 1px solid var(--sys-color-border);
 }
 
+.settings-page__group-note {
+  padding: var(--sys-space-6) var(--sys-space-10);
+}
+
 /* 直前の入力に対する操作なので、線で切り離さず同じ項目の続きとして置く。 */
 .settings-page__group-card > .settings-page__group-actions {
   display: flex;
@@ -332,21 +336,6 @@
   margin: 0 auto;
 }
 
-.settings-page__bookmark-source-value {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: var(--sys-space-6);
-  flex-wrap: wrap;
-  padding: var(--sys-space-6) var(--sys-space-7);
-  border: 1px solid var(--sys-color-border);
-  border-radius: var(--sys-radius-xl);
-  background: var(--sys-color-input-bg);
-  font-size: var(--sys-font-size-md);
-  font-weight: 600;
-  color: var(--sys-color-text);
-}
-
 .settings-page__bookmark-source-label {
   display: inline-flex;
   align-items: center;
@@ -354,24 +343,11 @@
   overflow-wrap: anywhere;
 }
 
-.settings-page__bookmark-source-button {
-  flex-shrink: 0;
-  margin-left: auto;
-}
-
-/* サイト→板の継承を一目で追えるよう、対象選択と上書き項目を同じカード内に置く。 */
 .settings-page__site-board-loading {
   display: flex;
   align-items: center;
   gap: var(--sys-space-4);
   color: var(--sys-color-text-muted);
-}
-
-.settings-page__site-board-selectors {
-  display: grid;
-  grid-template-columns: repeat(2, minmax(0, 1fr));
-  align-items: start;
-  gap: var(--sys-space-6);
 }
 
 .settings-page__site-board-field {
@@ -380,22 +356,6 @@
   min-width: 0;
   color: var(--sys-color-text);
   font-size: var(--sys-font-size-sm);
-  font-weight: 600;
-}
-
-.settings-page__site-board-field-heading {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: var(--sys-space-3);
-  /* 変更理由: 三点ボタンと「板を追加」の高さが違っても、両方の選択欄を同じ位置に揃える。 */
-  min-height: 32px;
-}
-
-.settings-page__site-board-add-button {
-  min-height: auto;
-  padding: 0;
-  font-size: var(--sys-font-size-xs);
   font-weight: 600;
 }
 
@@ -496,9 +456,7 @@
 }
 
 .settings-page__site-board-field input,
-.settings-page__site-board-field select,
-.settings-page__site-board-setting select,
-.settings-page__site-board-interval input {
+.settings-page__site-board-field select {
   width: 100%;
   min-height: 38px;
   border: 1px solid var(--sys-color-border);
@@ -510,9 +468,7 @@
 }
 
 .settings-page__site-board-field input:focus,
-.settings-page__site-board-field select:focus,
-.settings-page__site-board-setting select:focus,
-.settings-page__site-board-interval input:focus {
+.settings-page__site-board-field select:focus {
   outline: 2px solid var(--sys-color-accent);
   outline-offset: 1px;
 }
@@ -528,76 +484,15 @@
   margin-top: var(--sys-space-2);
 }
 
-.settings-page__site-board-empty {
-  margin: var(--sys-space-8) 0 0;
-  color: var(--sys-color-text-muted);
-}
-
-.settings-page__site-board-settings {
-  display: grid;
-  gap: var(--sys-space-6);
-  margin-top: var(--sys-space-10);
-}
-
-.settings-page__site-board-setting {
-  display: grid;
-  gap: var(--sys-space-4);
-  padding: var(--sys-space-6);
-  border: 1px solid var(--sys-color-border);
-  border-radius: var(--sys-radius-lg);
-  background: var(--sys-color-input-bg);
-}
-
-.settings-page__site-board-setting-header {
-  display: flex;
-  align-items: flex-start;
-  justify-content: space-between;
-  gap: var(--sys-space-5);
-}
-
-.settings-page__site-board-setting-header h4 {
-  margin: 0;
-  color: var(--sys-color-text);
-  font-size: var(--sys-font-size-body);
-}
-
-.settings-page__site-board-setting-header p {
-  margin: var(--sys-space-2) 0 0;
-  color: var(--sys-color-text-muted);
-  font-size: var(--sys-font-size-sm);
-  line-height: 1.5;
-}
-
+/* 上書きの有無に関係なく実際に効いている値を、説明の次の行に示す。 */
 .settings-page__site-board-source {
-  flex-shrink: 0;
+  display: block;
+  margin-top: var(--sys-space-1);
   color: var(--sys-color-text-muted);
   font-size: var(--sys-font-size-xs);
 }
 
-.settings-page__site-board-checkbox,
-.settings-page__site-board-interval {
-  display: flex;
-  align-items: center;
-  gap: var(--sys-space-3);
-  color: var(--sys-color-text);
-  font-size: var(--sys-font-size-sm);
-}
-
-.settings-page__site-board-checkbox input {
-  width: 16px;
-  height: 16px;
-  accent-color: var(--sys-color-accent);
-}
-
-.settings-page__site-board-interval input {
-  width: 120px;
-}
-
 @media (max-width: 640px) {
-  .settings-page__site-board-selectors {
-    grid-template-columns: minmax(0, 1fr);
-  }
-
   .settings-page__site-action-controls {
     align-items: stretch;
     flex-direction: column;
@@ -605,10 +500,6 @@
 
   .settings-page__site-action-button {
     width: 100%;
-  }
-
-  .settings-page__site-board-setting-header {
-    flex-direction: column;
   }
 }
 

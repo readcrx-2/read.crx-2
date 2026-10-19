@@ -57,7 +57,7 @@ export function FieldDescription({ children }: FieldDescriptionProps) {
 
 interface SettingRowProps {
   label: string;
-  description?: string;
+  description?: ReactNode;
   /** 操作部品が1つの入力要素なら、その id を渡して label で関連付ける。 */
   htmlFor?: string;
   /** ラジオ群のように label で関連付けられない部品は、この id で aria-labelledby から参照する。 */
@@ -100,16 +100,25 @@ export function SettingRow({
 
 interface SwitchControlProps {
   id: string;
+  /** 行の label で名前が付かない（行の label が別の部品を指す）場合だけ渡す。 */
+  ariaLabel?: string;
   checked: boolean;
   disabled?: boolean;
   onCheckedChange: (checked: boolean) => void;
 }
 
 /** 行の右端に置くオンオフ切り替え。名前は SettingRow の label から htmlFor で付く。 */
-export function SwitchControl({ id, checked, disabled, onCheckedChange }: SwitchControlProps) {
+export function SwitchControl({
+  id,
+  ariaLabel,
+  checked,
+  disabled,
+  onCheckedChange,
+}: SwitchControlProps) {
   return (
     <RadixSwitch.Root
       id={id}
+      aria-label={ariaLabel}
       checked={checked}
       disabled={disabled}
       className="browser-switch"

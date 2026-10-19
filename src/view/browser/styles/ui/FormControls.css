@@ -134,8 +134,16 @@
 
 .browser-setting-row__control {
   display: flex;
+  flex-wrap: wrap;
+  align-items: center;
   justify-content: flex-end;
+  gap: var(--sys-space-4);
   min-width: 0;
+}
+
+.browser-setting-row__unit {
+  color: var(--sys-color-text-muted);
+  font-size: var(--sys-font-size-md);
 }
 
 .browser-setting-row[data-layout="stacked"] .browser-setting-row__control {
@@ -143,6 +151,7 @@
 }
 
 .browser-setting-row__control > input,
+.browser-setting-row__control > select,
 .browser-setting-row__control > textarea {
   width: 100%;
   padding: var(--sys-space-4) var(--sys-space-6);
@@ -152,6 +161,11 @@
   color: var(--sys-color-text);
   font: inherit;
   font-size: var(--sys-font-size-body);
+}
+
+.browser-setting-row[data-layout="inline"] .browser-setting-row__control > select {
+  width: auto;
+  max-width: 100%;
 }
 
 .browser-setting-row__control > input[type="number"] {
@@ -165,6 +179,7 @@
 }
 
 .browser-setting-row__control > input:focus,
+.browser-setting-row__control > select:focus,
 .browser-setting-row__control > textarea:focus,
 .browser-segmented__item:focus-visible {
   border-color: var(--sys-color-focus-ring);

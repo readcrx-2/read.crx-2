@@ -16,16 +16,11 @@ import {
   MIN_THREAD_AUTO_REFRESH_SETTING_MS,
 } from "src/features/auto-refresh/browser/auto-refresh-config";
 import { container } from "src/service-container/index";
+import { SettingsGroup, SettingsGroupNote } from "src/view/browser/pages/settings/SettingsGroup";
 import { Button } from "src/view/browser/ui/Button";
 import { Dialog } from "src/view/browser/ui/Dialog";
+import { SettingRow, SwitchControl } from "src/view/browser/ui/FormControls";
 import { Spinner } from "src/view/browser/ui/Spinner";
-import {
-  Surface,
-  SurfaceBody,
-  SurfaceDescription,
-  SurfaceHeader,
-  SurfaceTitle,
-} from "src/view/browser/ui/Surface";
 import {
   clearAllSiteScopedSettings,
   clearSiteScopedSettings,
@@ -66,14 +61,12 @@ const SETTING_FIELDS = [
     title: "sage",
     description: "メール欄へsageを自動設定して投稿します。",
     kind: "boolean",
-    checkboxLabel: "有効にする",
   },
   {
     key: "write_pre_submit_warnings",
     title: "投稿前に確認する",
     description: "個人情報や危害表現が含まれる場合に確認を表示します。",
     kind: "boolean",
-    checkboxLabel: "有効にする",
   },
   {
     key: "write_sanitize_urls_on_paste",
@@ -81,7 +74,6 @@ const SETTING_FIELDS = [
     description:
       "URLを貼り付けると追跡用パラメータを除去します。Instagramはクエリ全体を除去します。",
     kind: "boolean",
-    checkboxLabel: "有効にする",
   },
   {
     key: "auto_load_second",
@@ -104,7 +96,6 @@ const SETTING_FIELDS = [
   title: string;
   description: string;
   kind: "boolean" | "interval";
-  checkboxLabel?: string;
   min?: number;
   max?: number;
 }[];
@@ -485,385 +476,375 @@ export function SiteBoardSettingsPanel() {
 
   if (!selectedSite && loading) {
     return (
-      <Surface variant="flat">
-        <SurfaceBody className="settings-page__site-board-loading">
-          <Spinner size="sm" />
-          <span>ドメインと板の一覧を読み込み中...</span>
-        </SurfaceBody>
-      </Surface>
+      <SettingsGroup title="設定する対象">
+        <SettingsGroupNote>
+          <div className="settings-page__site-board-loading">
+            <Spinner size="sm" />
+            <span>ドメインと板の一覧を読み込み中...</span>
+          </div>
+        </SettingsGroupNote>
+      </SettingsGroup>
     );
   }
 
+  const selectedBoardTitle = siteBoards.find((board) => board.key === scope?.board)?.title;
+  const targetTitle = !scope
+    ? "全体設定"
+    : scope.board
+      ? `板の設定（${selectedBoardTitle ?? scope.board}）`
+      : `ドメイン共通の設定（${scope.site}）`;
+  const targetDescription = !scope
+    ? "個別設定がないドメイン・板に適用します。"
+    : scope.board
+      ? "この板だけに適用します。指定しない項目はドメイン共通の設定を使います。"
+      : "このドメインのすべての板に適用します。指定しない項目は全体設定を使います。";
+
+  const renderIntervalInput = (
+    id: string,
+    field: Extract<(typeof SETTING_FIELDS)[number], { kind: "interval" }>,
+    value: number,
+    onSave: (milliseconds: string) => void,
+    ariaLabel?: string,
+  ) => (
+    <>
+      <input
+        id={id}
+        type="number"
+        aria-label={ariaLabel}
+        min={field.min}
+        max={field.max}
+        step={1}
+        value={value}
+        onChange={(event) => {
+          const nextValue = Number(event.currentTarget.value);
+          if (!Number.isFinite(nextValue)) {
+            return;
+          }
+          const clamped = Math.max(field.min ?? 1, Math.min(field.max ?? 300, nextValue));
+          onSave(String(Math.round(clamped) * 1000));
+        }}
+      />
+      <span className="browser-setting-row__unit">秒</span>
+    </>
+  );
+
   return (
-    <Surface variant="flat">
-      <SurfaceHeader>
-        <SurfaceTitle>ドメイン共通と、以下各板の設定</SurfaceTitle>
-        <SurfaceDescription>
-          ドメインの「すべて」は全ドメインの一括操作に使います。特定のドメインを選ぶとドメイン共通や板別の設定を編集できます。ドメイン共通の設定はすべての板に適用され、必要な板だけ個別に上書きできます。
-        </SurfaceDescription>
-      </SurfaceHeader>
-      <SurfaceBody>
-        <div className="settings-page__site-board-selectors">
-          <div className="settings-page__site-board-field">
-            <div className="settings-page__site-board-field-heading">
-              <label htmlFor="site-board-site-select">ドメイン</label>
-              {/* 変更理由: ドメイン単位の削除操作を選択欄の近くに置き、対象を分かりやすくする。 */}
-              <Button
-                className="settings-page__site-board-actions-trigger"
-                variant="subtle"
-                aria-label={selectedSite ? "ドメインの操作を開く" : "すべてのドメインの操作を開く"}
-                aria-haspopup="dialog"
-                onClick={() => setIsSiteActionsDialogOpen(true)}
-              >
-                <MoreVertical size={18} aria-hidden="true" />
-              </Button>
-            </div>
-            <select
-              id="site-board-site-select"
-              value={selectedSite}
-              onChange={(event) => {
-                setSelectedSite(event.currentTarget.value);
-                setSelectedBoard(SITE_SHARED_SCOPE);
-              }}
-            >
-              <option value="">すべて</option>
-              {sites.map((site) => (
-                <option key={site} value={site}>
-                  {site}
-                </option>
-              ))}
-            </select>
-          </div>
-          <div className="settings-page__site-board-field">
-            <div className="settings-page__site-board-field-heading">
-              {/* 変更理由: ここでは板だけでなくドメイン共通の設定も選ぶため、選択肢の役割を示す。 */}
-              <label htmlFor="site-board-board-select">設定対象</label>
-              <Button
-                className="settings-page__site-board-add-button"
-                variant="subtle"
-                onClick={() => setIsAddBoardDialogOpen(true)}
-              >
-                ＋ 板を追加
-              </Button>
-            </div>
-            <select
-              id="site-board-board-select"
-              value={selectedBoard}
-              disabled={!selectedSite}
-              onChange={(event) => setSelectedBoard(event.currentTarget.value)}
-            >
-              <option value={SITE_SHARED_SCOPE}>ドメイン共通（すべての板）</option>
-              {siteBoards.map((board) => (
-                <option key={board.key} value={board.key}>
-                  {board.title}
-                </option>
-              ))}
-            </select>
-          </div>
-        </div>
-
-        <Dialog.Root
-          open={isAddBoardDialogOpen}
-          onOpenChange={(open) => {
-            setIsAddBoardDialogOpen(open);
-            if (!open) {
-              setManualBoardUrl("");
-            }
-          }}
+    <>
+      {/* 変更理由: 対象の選び方と、選んだ対象の設定値を別々の枠に分け、
+          どの範囲の設定を編集しているかを見出しで示す。 */}
+      <SettingsGroup
+        title="設定する対象"
+        description="ドメイン共通の設定はその中のすべての板に適用され、必要な板だけ個別に上書きできます。"
+      >
+        <SettingRow
+          htmlFor="site-board-site-select"
+          label="ドメイン"
+          description="「すべて」を選ぶと、全体設定を編集します。"
         >
-          <Dialog.Portal container={dialogPortalContainer ?? undefined}>
-            <Dialog.Overlay className="browser-dialog-overlay" />
-            <Dialog.Content
-              className="browser-dialog-content settings-page__site-board-add-dialog"
-              aria-describedby="site-board-add-dialog-description"
-            >
-              <Dialog.Title className="browser-dialog-title">板を追加</Dialog.Title>
-              <Dialog.Description
-                id="site-board-add-dialog-description"
-                className="browser-dialog-description"
-              >
-                BBSMENUにない板を設定対象へ追加します。URLからドメインと板を判定します。
-              </Dialog.Description>
-              <label className="settings-page__site-board-field">
-                <span>板URL</span>
-                <input
-                  autoFocus
-                  type="url"
-                  value={manualBoardUrl}
-                  placeholder="https://example.com/board/"
-                  onChange={(event) => setManualBoardUrl(event.currentTarget.value)}
-                  onKeyDown={(event) => {
-                    if (event.key === "Enter") {
-                      event.preventDefault();
-                      addManualBoard();
-                    }
-                  }}
-                />
-              </label>
-              <div className="settings-page__site-board-add-dialog-actions">
-                <Dialog.Close asChild>
-                  <Button variant="subtle">キャンセル</Button>
-                </Dialog.Close>
-                <Button variant="light" onClick={addManualBoard} disabled={!manualBoardUrl.trim()}>
-                  追加
-                </Button>
-              </div>
-            </Dialog.Content>
-          </Dialog.Portal>
-        </Dialog.Root>
+          <select
+            id="site-board-site-select"
+            value={selectedSite}
+            onChange={(event) => {
+              setSelectedSite(event.currentTarget.value);
+              setSelectedBoard(SITE_SHARED_SCOPE);
+            }}
+          >
+            <option value="">すべて</option>
+            {sites.map((site) => (
+              <option key={site} value={site}>
+                {site}
+              </option>
+            ))}
+          </select>
+          {/* 変更理由: ドメイン単位の削除操作を選択欄の近くに置き、対象を分かりやすくする。 */}
+          <Button
+            className="settings-page__site-board-actions-trigger"
+            variant="subtle"
+            aria-label={selectedSite ? "ドメインの操作を開く" : "すべてのドメインの操作を開く"}
+            aria-haspopup="dialog"
+            onClick={() => setIsSiteActionsDialogOpen(true)}
+          >
+            <MoreVertical size={18} aria-hidden="true" />
+          </Button>
+        </SettingRow>
+        <SettingRow
+          htmlFor="site-board-board-select"
+          label="設定対象"
+          description="ドメイン共通の設定か、個別に上書きする板を選びます。"
+        >
+          <select
+            id="site-board-board-select"
+            value={selectedBoard}
+            disabled={!selectedSite}
+            onChange={(event) => setSelectedBoard(event.currentTarget.value)}
+          >
+            <option value={SITE_SHARED_SCOPE}>ドメイン共通（すべての板）</option>
+            {siteBoards.map((board) => (
+              <option key={board.key} value={board.key}>
+                {board.title}
+              </option>
+            ))}
+          </select>
+          <Button variant="subtle" onClick={() => setIsAddBoardDialogOpen(true)}>
+            ＋ 板を追加
+          </Button>
+        </SettingRow>
+      </SettingsGroup>
 
-        <Dialog.Root open={isSiteActionsDialogOpen} onOpenChange={setIsSiteActionsDialogOpen}>
-          <Dialog.Portal container={dialogPortalContainer ?? undefined}>
-            <Dialog.Overlay className="browser-dialog-overlay" />
-            <Dialog.Content
-              className="browser-dialog-content settings-page__site-actions-dialog"
-              aria-describedby="site-actions-dialog-description"
+      <Dialog.Root
+        open={isAddBoardDialogOpen}
+        onOpenChange={(open) => {
+          setIsAddBoardDialogOpen(open);
+          if (!open) {
+            setManualBoardUrl("");
+          }
+        }}
+      >
+        <Dialog.Portal container={dialogPortalContainer ?? undefined}>
+          <Dialog.Overlay className="browser-dialog-overlay" />
+          <Dialog.Content
+            className="browser-dialog-content settings-page__site-board-add-dialog"
+            aria-describedby="site-board-add-dialog-description"
+          >
+            <Dialog.Title className="browser-dialog-title">板を追加</Dialog.Title>
+            <Dialog.Description
+              id="site-board-add-dialog-description"
+              className="browser-dialog-description"
             >
-              <Dialog.Title className="browser-dialog-title">
-                {selectedSite ? "このドメインのデータをクリア" : "すべてのドメインのデータをクリア"}
-              </Dialog.Title>
-              <Dialog.Description
-                id="site-actions-dialog-description"
-                className="browser-dialog-description"
-              >
-                対象: <strong>{selectedSite || "すべてのドメイン"}</strong>
-              </Dialog.Description>
-              {/* 変更理由: 削除対象の説明と操作を縦に並べ、各ボタンが消す内容を明確にする。 */}
-              <div className="settings-page__site-actions-list">
-                <section className="settings-page__site-action">
-                  <h3>{selectedSite ? "このドメインのCookie" : "すべてのCookie"}</h3>
-                  <p>
-                    {selectedSite
-                      ? "このドメインの書き込み確認に使うCookieを削除します。保存した名前・メール欄は残ります。"
-                      : "すべてのCookieを削除します。保存した名前・メール欄は残ります。"}
-                  </p>
-                  <div className="settings-page__site-action-controls">
-                    {!isCheckingCookies && !hasSiteCookies && (
-                      <span className="settings-page__site-action-status">
-                        削除するCookieはありません
-                      </span>
-                    )}
-                    <Button
-                      className="settings-page__site-action-button"
-                      variant="danger"
-                      loading={isClearingCookies || isCheckingCookies}
-                      disabled={!hasSiteCookies || isClearingSiteSettings}
-                      onClick={() => void clearSiteCookies()}
-                    >
-                      {selectedSite ? "このドメインのCookieをクリア" : "すべてのCookieをクリア"}
-                    </Button>
-                  </div>
-                </section>
-                <section className="settings-page__site-action">
-                  <h3>{selectedSite ? "ドメイン共通の設定" : "ドメイン・板別の設定"}</h3>
-                  <p>
-                    {selectedSite
-                      ? "このドメイン共通の設定と各板で指定した上書き設定を削除します。削除後は「全体設定」の値が適用されます。"
-                      : "すべてのドメイン共通設定と各板の上書き設定を削除します。削除後は「全体設定」の値が適用されます。"}
-                  </p>
-                  <div className="settings-page__site-action-controls">
-                    {!(selectedSite
-                      ? document.sites[selectedSite]
-                      : Object.keys(document.sites).length > 0) && (
-                      <span className="settings-page__site-action-status">
-                        削除する個別設定はありません
-                      </span>
-                    )}
-                    <Button
-                      className="settings-page__site-action-button"
-                      variant="danger"
-                      loading={isClearingSiteSettings}
-                      disabled={
-                        !(selectedSite
-                          ? document.sites[selectedSite]
-                          : Object.keys(document.sites).length > 0) || isClearingCookies
-                      }
-                      onClick={() => void clearSiteSettings()}
-                    >
-                      {selectedSite
-                        ? "このドメインの設定をクリア"
-                        : "すべてのドメインの設定をクリア"}
-                    </Button>
-                  </div>
-                </section>
-              </div>
-              <div className="settings-page__site-actions-dialog-footer">
-                <Dialog.Close asChild>
-                  <Button variant="subtle">閉じる</Button>
-                </Dialog.Close>
-              </div>
-            </Dialog.Content>
-          </Dialog.Portal>
-        </Dialog.Root>
+              BBSMENUにない板を設定対象へ追加します。URLからドメインと板を判定します。
+            </Dialog.Description>
+            <label className="settings-page__site-board-field">
+              <span>板URL</span>
+              <input
+                autoFocus
+                type="url"
+                value={manualBoardUrl}
+                placeholder="https://example.com/board/"
+                onChange={(event) => setManualBoardUrl(event.currentTarget.value)}
+                onKeyDown={(event) => {
+                  if (event.key === "Enter") {
+                    event.preventDefault();
+                    addManualBoard();
+                  }
+                }}
+              />
+            </label>
+            <div className="settings-page__site-board-add-dialog-actions">
+              <Dialog.Close asChild>
+                <Button variant="subtle">キャンセル</Button>
+              </Dialog.Close>
+              <Button variant="light" onClick={addManualBoard} disabled={!manualBoardUrl.trim()}>
+                追加
+              </Button>
+            </div>
+          </Dialog.Content>
+        </Dialog.Portal>
+      </Dialog.Root>
 
-        {!scope && (
-          <div className="settings-page__site-board-settings">
-            <p className="settings-page__site-board-empty">
-              ここで編集した値は全体設定として保存され、個別設定がないドメイン・板に適用されます。
-            </p>
-            {SETTING_FIELDS.map((field) => {
-              const value = globalValues[field.key];
-              const intervalValue =
-                field.kind === "interval"
-                  ? toIntervalSeconds(value, 20, field.min ?? 1, field.max ?? 300)
-                  : 0;
-              return (
-                <div key={field.key} className="settings-page__site-board-setting">
-                  <div className="settings-page__site-board-setting-header">
-                    <div>
-                      <h4>{field.title}</h4>
-                      <p>{field.description}</p>
-                    </div>
-                    <span className="settings-page__site-board-source">
-                      {savingKey === field.key ? "保存中..." : "全体設定"}
+      <Dialog.Root open={isSiteActionsDialogOpen} onOpenChange={setIsSiteActionsDialogOpen}>
+        <Dialog.Portal container={dialogPortalContainer ?? undefined}>
+          <Dialog.Overlay className="browser-dialog-overlay" />
+          <Dialog.Content
+            className="browser-dialog-content settings-page__site-actions-dialog"
+            aria-describedby="site-actions-dialog-description"
+          >
+            <Dialog.Title className="browser-dialog-title">
+              {selectedSite ? "このドメインのデータをクリア" : "すべてのドメインのデータをクリア"}
+            </Dialog.Title>
+            <Dialog.Description
+              id="site-actions-dialog-description"
+              className="browser-dialog-description"
+            >
+              対象: <strong>{selectedSite || "すべてのドメイン"}</strong>
+            </Dialog.Description>
+            {/* 変更理由: 削除対象の説明と操作を縦に並べ、各ボタンが消す内容を明確にする。 */}
+            <div className="settings-page__site-actions-list">
+              <section className="settings-page__site-action">
+                <h3>{selectedSite ? "このドメインのCookie" : "すべてのCookie"}</h3>
+                <p>
+                  {selectedSite
+                    ? "このドメインの書き込み確認に使うCookieを削除します。保存した名前・メール欄は残ります。"
+                    : "すべてのCookieを削除します。保存した名前・メール欄は残ります。"}
+                </p>
+                <div className="settings-page__site-action-controls">
+                  {!isCheckingCookies && !hasSiteCookies && (
+                    <span className="settings-page__site-action-status">
+                      削除するCookieはありません
                     </span>
-                  </div>
-                  {field.kind === "boolean" ? (
-                    <label className="settings-page__site-board-checkbox">
-                      <input
-                        type="checkbox"
-                        checked={value === "on"}
-                        onChange={(event) =>
-                          void saveGlobalSetting(
-                            field.key,
-                            event.currentTarget.checked ? "on" : "off",
-                          )
-                        }
-                      />
-                      {field.checkboxLabel}
-                    </label>
-                  ) : (
-                    <label className="settings-page__site-board-interval">
-                      <input
-                        type="number"
-                        min={field.min}
-                        max={field.max}
-                        step={1}
-                        value={intervalValue}
-                        onChange={(event) => {
-                          const nextValue = Number(event.currentTarget.value);
-                          if (!Number.isFinite(nextValue)) return;
-                          const clamped = Math.max(
-                            field.min ?? 1,
-                            Math.min(field.max ?? 300, nextValue),
-                          );
-                          void saveGlobalSetting(field.key, String(Math.round(clamped) * 1000));
-                        }}
-                      />
-                      <span>秒</span>
-                    </label>
                   )}
-                </div>
-              );
-            })}
-          </div>
-        )}
-
-        {scope && (
-          <div className="settings-page__site-board-settings">
-            {SETTING_FIELDS.map((field) => {
-              const resolved = resolveScopedSetting(
-                field.key,
-                getScopeUrl(scope.site, scope.board ?? SITE_SHARED_SCOPE),
-              );
-              const override = getOverride(document, scope, field.key);
-              const isCustom = override !== undefined;
-              const fallbackValue = resolved.value ?? getDefaultValue(field.key);
-              const intervalValue =
-                field.kind === "interval"
-                  ? toIntervalSeconds(fallbackValue, 20, field.min ?? 1, field.max ?? 300)
-                  : 0;
-              const effectiveValueLabel =
-                field.kind === "boolean"
-                  ? fallbackValue === "on"
-                    ? "ON"
-                    : "OFF"
-                  : `${intervalValue}秒`;
-
-              return (
-                <div key={field.key} className="settings-page__site-board-setting">
-                  <div className="settings-page__site-board-setting-header">
-                    <div>
-                      <h4>{field.title}</h4>
-                      <p>{field.description}</p>
-                    </div>
-                    <span className="settings-page__site-board-source">
-                      {savingKey === field.key
-                        ? "保存中..."
-                        : `現在: ${SOURCE_LABELS[resolved.source]}（${effectiveValueLabel}）`}
-                    </span>
-                  </div>
-                  <select
-                    value={isCustom ? "custom" : "inherit"}
-                    onChange={(event) => {
-                      if (event.currentTarget.value === "inherit") {
-                        void saveOverride(field.key, undefined);
-                        return;
-                      }
-                      const value =
-                        field.kind === "boolean"
-                          ? fallbackValue === "on"
-                            ? "on"
-                            : "off"
-                          : String(intervalValue * 1000);
-                      void saveOverride(field.key, value);
-                    }}
+                  <Button
+                    className="settings-page__site-action-button"
+                    variant="danger"
+                    loading={isClearingCookies || isCheckingCookies}
+                    disabled={!hasSiteCookies || isClearingSiteSettings}
+                    onClick={() => void clearSiteCookies()}
                   >
-                    <option value="inherit">
-                      {scope.board ? "ドメイン共通の設定を使う" : "全体設定を使う"}
-                    </option>
-                    <option value="custom">
-                      {scope.board ? "この板だけに指定する" : "ドメイン内で共通に指定する"}
-                    </option>
-                  </select>
-
-                  {isCustom && field.kind === "boolean" && (
-                    <label className="settings-page__site-board-checkbox">
-                      <input
-                        type="checkbox"
-                        checked={override === "on"}
-                        onChange={(event) =>
-                          void saveOverride(field.key, event.currentTarget.checked ? "on" : "off")
-                        }
-                      />
-                      {field.checkboxLabel}
-                    </label>
-                  )}
-
-                  {isCustom && field.kind === "interval" && (
-                    <label className="settings-page__site-board-interval">
-                      <input
-                        type="number"
-                        min={field.min}
-                        max={field.max}
-                        step={1}
-                        value={toIntervalSeconds(
-                          override ?? null,
-                          intervalValue,
-                          field.min ?? 1,
-                          field.max ?? 300,
-                        )}
-                        onChange={(event) => {
-                          const nextValue = Number(event.currentTarget.value);
-                          if (!Number.isFinite(nextValue)) {
-                            return;
-                          }
-                          const clamped = Math.max(
-                            field.min ?? 1,
-                            Math.min(field.max ?? 300, nextValue),
-                          );
-                          void saveOverride(field.key, String(Math.round(clamped) * 1000));
-                        }}
-                      />
-                      <span>秒</span>
-                    </label>
-                  )}
+                    {selectedSite ? "このドメインのCookieをクリア" : "すべてのCookieをクリア"}
+                  </Button>
                 </div>
-              );
-            })}
-          </div>
-        )}
-      </SurfaceBody>
-    </Surface>
+              </section>
+              <section className="settings-page__site-action">
+                <h3>{selectedSite ? "ドメイン共通の設定" : "ドメイン・板別の設定"}</h3>
+                <p>
+                  {selectedSite
+                    ? "このドメイン共通の設定と各板で指定した上書き設定を削除します。削除後は「全体設定」の値が適用されます。"
+                    : "すべてのドメイン共通設定と各板の上書き設定を削除します。削除後は「全体設定」の値が適用されます。"}
+                </p>
+                <div className="settings-page__site-action-controls">
+                  {!(selectedSite
+                    ? document.sites[selectedSite]
+                    : Object.keys(document.sites).length > 0) && (
+                    <span className="settings-page__site-action-status">
+                      削除する個別設定はありません
+                    </span>
+                  )}
+                  <Button
+                    className="settings-page__site-action-button"
+                    variant="danger"
+                    loading={isClearingSiteSettings}
+                    disabled={
+                      !(selectedSite
+                        ? document.sites[selectedSite]
+                        : Object.keys(document.sites).length > 0) || isClearingCookies
+                    }
+                    onClick={() => void clearSiteSettings()}
+                  >
+                    {selectedSite ? "このドメインの設定をクリア" : "すべてのドメインの設定をクリア"}
+                  </Button>
+                </div>
+              </section>
+            </div>
+            <div className="settings-page__site-actions-dialog-footer">
+              <Dialog.Close asChild>
+                <Button variant="subtle">閉じる</Button>
+              </Dialog.Close>
+            </div>
+          </Dialog.Content>
+        </Dialog.Portal>
+      </Dialog.Root>
+
+      <SettingsGroup title={targetTitle} description={targetDescription}>
+        {SETTING_FIELDS.map((field) => {
+          const id = `site-board-${field.key}`;
+          const isSaving = savingKey === field.key;
+
+          if (!scope) {
+            const value = globalValues[field.key];
+            return (
+              <SettingRow
+                key={field.key}
+                htmlFor={id}
+                label={field.title}
+                description={field.description}
+              >
+                {isSaving && <span className="browser-setting-row__unit">保存中...</span>}
+                {field.kind === "boolean" ? (
+                  <SwitchControl
+                    id={id}
+                    checked={value === "on"}
+                    onCheckedChange={(checked) =>
+                      void saveGlobalSetting(field.key, checked ? "on" : "off")
+                    }
+                  />
+                ) : (
+                  renderIntervalInput(
+                    id,
+                    field,
+                    toIntervalSeconds(value, 20, field.min ?? 1, field.max ?? 300),
+                    (milliseconds) => void saveGlobalSetting(field.key, milliseconds),
+                  )
+                )}
+              </SettingRow>
+            );
+          }
+
+          const resolved = resolveScopedSetting(
+            field.key,
+            getScopeUrl(scope.site, scope.board ?? SITE_SHARED_SCOPE),
+          );
+          const override = getOverride(document, scope, field.key);
+          const isCustom = override !== undefined;
+          const fallbackValue = resolved.value ?? getDefaultValue(field.key);
+          const intervalValue =
+            field.kind === "interval"
+              ? toIntervalSeconds(fallbackValue, 20, field.min ?? 1, field.max ?? 300)
+              : 0;
+          const effectiveValueLabel =
+            field.kind === "boolean"
+              ? fallbackValue === "on"
+                ? "ON"
+                : "OFF"
+              : `${intervalValue}秒`;
+          const modeId = `${id}-mode`;
+
+          return (
+            <SettingRow
+              key={field.key}
+              htmlFor={modeId}
+              label={field.title}
+              description={
+                <>
+                  {field.description}
+                  <span className="settings-page__site-board-source">
+                    {isSaving
+                      ? "保存中..."
+                      : `現在: ${SOURCE_LABELS[resolved.source]}（${effectiveValueLabel}）`}
+                  </span>
+                </>
+              }
+            >
+              <select
+                id={modeId}
+                value={isCustom ? "custom" : "inherit"}
+                onChange={(event) => {
+                  if (event.currentTarget.value === "inherit") {
+                    void saveOverride(field.key, undefined);
+                    return;
+                  }
+                  const value =
+                    field.kind === "boolean"
+                      ? fallbackValue === "on"
+                        ? "on"
+                        : "off"
+                      : String(intervalValue * 1000);
+                  void saveOverride(field.key, value);
+                }}
+              >
+                <option value="inherit">
+                  {scope.board ? "ドメイン共通の設定を使う" : "全体設定を使う"}
+                </option>
+                <option value="custom">
+                  {scope.board ? "この板だけに指定する" : "ドメイン内で共通に指定する"}
+                </option>
+              </select>
+              {isCustom && field.kind === "boolean" && (
+                <SwitchControl
+                  id={id}
+                  ariaLabel={`${field.title}の値`}
+                  checked={override === "on"}
+                  onCheckedChange={(checked) =>
+                    void saveOverride(field.key, checked ? "on" : "off")
+                  }
+                />
+              )}
+              {isCustom &&
+                field.kind === "interval" &&
+                renderIntervalInput(
+                  id,
+                  field,
+                  toIntervalSeconds(
+                    override ?? null,
+                    intervalValue,
+                    field.min ?? 1,
+                    field.max ?? 300,
+                  ),
+                  (milliseconds) => void saveOverride(field.key, milliseconds),
+                  `${field.title}（秒）`,
+                )}
+            </SettingRow>
+          );
+        })}
+      </SettingsGroup>
+    </>
   );
 }

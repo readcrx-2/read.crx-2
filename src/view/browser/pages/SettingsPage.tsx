@@ -29,6 +29,7 @@ import {
   isSettingsDividerItem,
   isSettingsFieldItem,
 } from "src/view/browser/pages/settings/settings-types";
+import { SettingsGroup, SettingsGroupActions } from "src/view/browser/pages/settings/SettingsGroup";
 import { SettingsSupplementaryPanels } from "src/view/browser/pages/settings/SettingsSupplementaryPanels";
 import { useCompactMenu } from "src/view/browser/pages/settings/use-compact-menu";
 import { useSettingsAutoSave } from "src/view/browser/pages/settings/use-settings-auto-save";
@@ -430,25 +431,15 @@ export const SettingsPage: React.FC<{ tabId: string; page: SettingsPageType }> =
           (field) => field.widget === "ng_editor" || field.widget === "replacement_editor",
         );
         return (
-          <section key={group.divider?.id ?? `group-${index}`} className="settings-page__group">
-            {group.divider && (
-              <div className="settings-page__group-header">
-                <h3 className="settings-page__group-title">{group.divider.title}</h3>
-                {group.divider.description && (
-                  <p className="settings-page__group-description">{group.divider.description}</p>
-                )}
-              </div>
-            )}
-            {group.fields.length > 0 &&
-              // NG・置換のエディタは独自の枠と操作を持つため、行の枠へ入れない。
-              (hasOnlyEditors ? (
-                group.fields.map((field) => renderField(sectionId, field))
-              ) : (
-                <div className="settings-page__group-card">
-                  {group.fields.map((field) => renderField(sectionId, field))}
-                </div>
-              ))}
-          </section>
+          <SettingsGroup
+            key={group.divider?.id ?? `group-${index}`}
+            title={group.divider?.title}
+            description={group.divider?.description}
+            // NG・置換のエディタは独自の枠と操作を持つため、行の枠へ入れない。
+            bare={hasOnlyEditors}
+          >
+            {group.fields.map((field) => renderField(sectionId, field))}
+          </SettingsGroup>
         );
       }),
     [renderField],
@@ -613,36 +604,31 @@ export const SettingsPage: React.FC<{ tabId: string; page: SettingsPageType }> =
                   // 変更理由: 見出し・区切り線・項目名で bbsmenu を3回繰り返していたため、
                   // 見出しは用途（板一覧の取得元）だけにし、項目名で入力内容を示す。
                   // 枠も二重にせず、ほかの項目と同じ「見出しの下に1枚の枠」の形にする。
-                  <section className="settings-page__group">
-                    <div className="settings-page__group-header">
-                      <h3 className="settings-page__group-title">BBSMENU</h3>
-                    </div>
-                    <div className="settings-page__group-card">
-                      {regularSectionItems
-                        .filter(isSettingsFieldItem)
-                        .map((field) => renderField("site-board", field))}
-                      <div className="settings-page__group-actions">
-                        <Button
-                          onClick={() => void maintenanceActions.handleBBSMenuCheck()}
-                          loading={maintenanceActions.isBbsMenuChecking}
-                          disabled={maintenanceActions.isBbsMenuRefreshing}
-                        >
-                          URLチェック
-                        </Button>
-                        <Tooltip label="設定したBBSMENUを強制取得してキャッシュを更新します。「一度開いた板」は明示的な記録だけから再構成し、外部サイトや重複を除外します。">
-                          <span>
-                            <Button
-                              onClick={() => void maintenanceActions.handleBBSMenuRefresh()}
-                              loading={maintenanceActions.isBbsMenuRefreshing}
-                              disabled={maintenanceActions.isBbsMenuChecking}
-                            >
-                              板一覧を再取得
-                            </Button>
-                          </span>
-                        </Tooltip>
-                      </div>
-                    </div>
-                  </section>
+                  <SettingsGroup title="BBSMENU">
+                    {regularSectionItems
+                      .filter(isSettingsFieldItem)
+                      .map((field) => renderField("site-board", field))}
+                    <SettingsGroupActions>
+                      <Button
+                        onClick={() => void maintenanceActions.handleBBSMenuCheck()}
+                        loading={maintenanceActions.isBbsMenuChecking}
+                        disabled={maintenanceActions.isBbsMenuRefreshing}
+                      >
+                        URLチェック
+                      </Button>
+                      <Tooltip label="設定したBBSMENUを強制取得してキャッシュを更新します。「一度開いた板」は明示的な記録だけから再構成し、外部サイトや重複を除外します。">
+                        <span>
+                          <Button
+                            onClick={() => void maintenanceActions.handleBBSMenuRefresh()}
+                            loading={maintenanceActions.isBbsMenuRefreshing}
+                            disabled={maintenanceActions.isBbsMenuChecking}
+                          >
+                            板一覧を再取得
+                          </Button>
+                        </span>
+                      </Tooltip>
+                    </SettingsGroupActions>
+                  </SettingsGroup>
                 )}
               </div>
             )}

@@ -78,9 +78,21 @@ for (const scenario of [
   },
   {
     name: "OSがダークでも保存済みライト設定を優先する",
+    saved: "light",
+    system: "dark",
+    dark: false,
+  },
+  {
+    name: "OSがダークでもライトの旧IDの保存値をライトとして扱う",
     saved: "default",
     system: "dark",
     dark: false,
+  },
+  {
+    name: "未知の保存値ならOSのダーク設定に従う",
+    saved: "unknown-theme",
+    system: "dark",
+    dark: true,
   },
   { name: "未設定ならOSのダーク設定に従う", saved: null, system: "dark", dark: true },
 ] as const) {

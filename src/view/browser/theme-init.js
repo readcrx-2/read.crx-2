@@ -8,7 +8,9 @@ try {
 }
 
 const prefersDark = window.matchMedia("(prefers-color-scheme: dark)").matches;
-const isDark = themeId === "dark" || ((themeId === "system" || themeId === null) && prefersDark);
+// "default" はライトの旧ID。未設定・"system"・未知の値はuse-theme.tsと同じくOSの配色に従う。
+const isLight = themeId === "light" || themeId === "default";
+const isDark = themeId === "dark" || (!isLight && prefersDark);
 
 const theme = isDark ? "dark" : "light";
 document.documentElement.dataset.theme = theme;

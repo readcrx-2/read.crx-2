@@ -82,10 +82,32 @@ describe("useTheme", () => {
     const handleConfigUpdated = mocks.messageOn.mock.calls.find(
       ([type]) => type === "config_updated",
     )?.[1] as (event: { key: string; val: string }) => void;
-    act(() => handleConfigUpdated({ key: "theme_id", val: "default" }));
+    act(() => handleConfigUpdated({ key: "theme_id", val: "light" }));
 
     expect(result.current).toBe("light");
     expect(document.documentElement.dataset.theme).toBe("light");
     expect(meta.content).toBe("light");
+  });
+
+  it("ライトの旧ID defaultもライトとして扱う", () => {
+    mocks.configGet.mockReturnValue("default");
+    vi.stubGlobal(
+      "matchMedia",
+      vi.fn(() => ({ matches: true, addEventListener: vi.fn(), removeEventListener: vi.fn() })),
+    );
+    const { result } = renderHook(() => useTheme());
+
+    expect(result.current).toBe("light");
+  });
+
+  it("未知の値はsystemと同じくOSのダーク配色に従う", () => {
+    mocks.configGet.mockReturnValue("unknown-theme");
+    vi.stubGlobal(
+      "matchMedia",
+      vi.fn(() => ({ matches: true, addEventListener: vi.fn(), removeEventListener: vi.fn() })),
+    );
+    const { result } = renderHook(() => useTheme());
+
+    expect(result.current).toBe("dark");
   });
 });

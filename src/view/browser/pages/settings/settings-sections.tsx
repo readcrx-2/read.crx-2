@@ -36,7 +36,7 @@ import {
 
 const THEME_ID_OPTIONS = [
   { const: "system", title: "システム（OSに合わせる）" },
-  { const: "default", title: "ライト" },
+  { const: "light", title: "ライト" },
   { const: "dark", title: "ダーク" },
 ] as const satisfies readonly SettingsOption[];
 

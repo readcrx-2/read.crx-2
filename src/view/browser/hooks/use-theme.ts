@@ -2,13 +2,18 @@ import { useEffect, useLayoutEffect, useState } from "react";
 import { container } from "src/service-container/index";
 import { useViewSurface } from "src/view/browser/hooks/use-view-surface";
 
-type ThemeId = "default" | "dark" | "system";
+type ThemeId = "light" | "dark" | "system";
 export type ResolvedTheme = "light" | "dark";
 
+/** ライトの旧ID。保存済みの値は起動時に "light" へ移行する（Config.ts）。 */
+const LEGACY_LIGHT_THEME_ID = "default";
+
 function parseThemeId(raw: string | null | undefined): ThemeId {
-  if (raw === "dark" || raw === "system") return raw;
-  // "default" および未知の値はライトとして扱う
-  return "default";
+  if (raw === "light" || raw === "dark") return raw;
+  if (raw === LEGACY_LIGHT_THEME_ID) return "light";
+  // 変更理由: 未設定や未知の値は既定の "system" と同じくOSの配色に従わせる。
+  // 以前はライトに固定していたため、theme-init.js の起動時の配色と食い違っていた。
+  return "system";
 }
 
 function resolveSystemTheme(targetWindow: Window): ResolvedTheme {
@@ -42,8 +47,8 @@ export function useTheme(): ResolvedTheme {
   const [resolved, setResolved] = useState<ResolvedTheme>(() => {
     const id = parseThemeId(container.config.get("theme_id"));
     if (id === "dark") return "dark";
-    if (id === "system") return resolveSystemTheme(viewWindow);
-    return "light";
+    if (id === "light") return "light";
+    return resolveSystemTheme(viewWindow);
   });
 
   useLayoutEffect(() => {
@@ -58,7 +63,7 @@ export function useTheme(): ResolvedTheme {
       setResolved("dark");
       return;
     }
-    if (themeId === "default") {
+    if (themeId === "light") {
       setResolved("light");
       return;
     }

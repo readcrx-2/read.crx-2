@@ -4,6 +4,23 @@ import LocalStorage from "src/app/LocalStorage";
 import { assertArg, log } from "src/app/Log";
 import message from "src/app/Message";
 
+const THEME_ID_STORAGE_KEY = "config_theme_id";
+
+/**
+ * ライトのテーマIDを "default" から "light" に改めたため、保存済みの旧IDを書き換える。
+ *
+ * 読み込み時に変換するだけでは、設定画面のラジオボタンが旧IDに一致せず未選択に見える。
+ */
+async function migrateLegacyThemeId(cache: Map<string, string>): Promise<void> {
+  if (cache.get(THEME_ID_STORAGE_KEY) !== "default") return;
+  cache.set(THEME_ID_STORAGE_KEY, "light");
+  try {
+    await LocalStorage.set(THEME_ID_STORAGE_KEY, "light");
+  } catch (error) {
+    log("error", "テーマ設定の旧IDを移行できませんでした", error);
+  }
+}
+
 export default class Config {
   private readonly _cache = new Map<string, string>();
   private readonly _pendingStorageChanges = new Map<string, string | null>();
@@ -46,6 +63,7 @@ export default class Config {
           this._cache.set(key, val.toString());
         }
       }
+      await migrateLegacyThemeId(this._cache);
       ready.call();
     })();
 

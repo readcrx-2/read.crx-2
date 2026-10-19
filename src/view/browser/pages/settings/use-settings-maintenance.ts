@@ -40,7 +40,7 @@ export function useSettingsMaintenanceActions({
       return;
     }
 
-    const raw = formState.other?.bbsmenu;
+    const raw = formState["site-board"]?.bbsmenu;
     const targets = readBBSMenuUrlsForCheck(typeof raw === "string" ? raw : "");
     if (targets.length === 0) {
       container.toast.error("チェック対象のBBSMENU URLがありません");

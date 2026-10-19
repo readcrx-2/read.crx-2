@@ -218,13 +218,19 @@ describe("設定項目の置き場所", () => {
     expect(keysOf("display")).not.toContain("tab_bar_orientation");
   });
 
-  it("設定の初期化をデータカテゴリへ置く", () => {
-    const sections = getSettingsSections(false);
-    const data = sections.find((section) => section.id === "data");
-    const other = sections.find((section) => section.id === "other");
+  it("ブックマークの保存先と設定の初期化をデータカテゴリへ置く", () => {
+    const data = getSettingsSections(false).find((section) => section.id === "data");
 
-    expect(data?.supplementaryPanelIds).toContain("dangerZone");
-    expect(other?.supplementaryPanelIds ?? []).not.toContain("dangerZone");
+    expect(data?.supplementaryPanelIds).toEqual(
+      expect.arrayContaining(["externalIntegration", "dangerZone"]),
+    );
+  });
+
+  it("板一覧の取得元を、板の候補を選ぶドメイン・板ごとの設定と同じカテゴリへ置く", () => {
+    const board = getSettingsSections(false).find((section) => section.id === "site-board");
+
+    expect(board?.fields.some((field) => "key" in field && field.key === "bbsmenu")).toBe(true);
+    expect(board?.supplementaryPanelIds).toContain("siteBoardSettings");
   });
 
   it("自動更新・次スレから、更新間隔のある板ごとの設定へ案内する", () => {
@@ -235,13 +241,14 @@ describe("設定項目の置き場所", () => {
 });
 
 describe("デバッグ設定のカテゴリ", () => {
-  it("デバッグのログ設定は「その他」ではなく独立したカテゴリに置く", () => {
-    const sections = getSettingsSections(false);
-    const other = sections.find((section) => section.id === "other");
-    const debug = sections.find((section) => section.id === "debug");
+  it("デバッグのログ設定はデバッグカテゴリだけに置く", () => {
+    const sectionIdsWithDebugLog = getSettingsSections(false)
+      .filter((section) =>
+        section.fields.some((field) => "key" in field && field.key === "debug_log"),
+      )
+      .map((section) => section.id);
 
-    expect(other?.fields.some((field) => "key" in field && field.key === "debug_log")).toBe(false);
-    expect(debug?.fields.some((field) => "key" in field && field.key === "debug_log")).toBe(true);
+    expect(sectionIdsWithDebugLog).toEqual(["debug"]);
   });
 });
 
@@ -262,16 +269,15 @@ describe("設定カテゴリの見出しごとのまとめ", () => {
       "自動更新・次スレ",
       "NG",
       "実況",
-      "板ごとの設定",
+      "板",
       "データ",
-      "連携",
       "デバッグ",
     ]);
   });
 
   it("表示するカテゴリが1つもない見出しは出さない", () => {
     const sections = getSettingsSections(false).filter(
-      (section) => !["data", "other", "debug"].includes(section.id),
+      (section) => !["data", "debug"].includes(section.id),
     );
     expect(groupSettingsSections(sections).map((group) => group.title)).toEqual(["基本", "閲覧"]);
   });

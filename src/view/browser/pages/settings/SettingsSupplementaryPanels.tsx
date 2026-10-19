@@ -239,9 +239,9 @@ export function SettingsSupplementaryPanels({
           return (
             <Surface key={panelId} variant="flat">
               <SurfaceHeader>
-                <SurfaceTitle>外部連携</SurfaceTitle>
+                <SurfaceTitle>ブックマークの保存先</SurfaceTitle>
                 <SurfaceDescription>
-                  ブックマーク連携の保存先を確認・変更します。
+                  ブックマークを保存するブラウザのフォルダを確認・変更します。
                 </SurfaceDescription>
               </SurfaceHeader>
 

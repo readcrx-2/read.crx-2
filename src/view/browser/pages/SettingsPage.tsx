@@ -70,10 +70,20 @@ function toBooleanValue(value: SettingsFormValue): boolean {
   return value === true;
 }
 
+// 統合してなくなったカテゴリの古い保存値とページリンクを、移った先のカテゴリへ案内する。
+// サムネイルは表示へ、「その他」の中心だった bbsmenu は板へ移した。
+const LEGACY_SECTION_IDS: Readonly<Record<string, SettingsSectionId>> = {
+  thumbnail: "display",
+  other: "site-board",
+};
+
+function findSectionId(sectionId?: string): SettingsSectionId | undefined {
+  if (!sectionId) return undefined;
+  return isSettingsSectionId(sectionId) ? sectionId : LEGACY_SECTION_IDS[sectionId];
+}
+
 function resolveSectionId(sectionId?: string): SettingsSectionId {
-  // サムネイル設定を表示へ統合したため、古い保存値とページリンクも同じ項目へ案内する。
-  if (sectionId === "thumbnail") return "display";
-  return sectionId && isSettingsSectionId(sectionId) ? sectionId : "general";
+  return findSectionId(sectionId) ?? "general";
 }
 
 /**
@@ -186,10 +196,9 @@ export const SettingsPage: React.FC<{ tabId: string; page: SettingsPageType }> =
     // 再読み込み時は保存済みの選択を優先し、表示中にリンク先が変わった場合だけ切り替える。
     if (previousSectionIdRef.current === page.sectionId) return;
     previousSectionIdRef.current = page.sectionId;
-    if (page.sectionId && isSettingsSectionId(page.sectionId)) {
-      setActiveSectionId(page.sectionId);
-    } else if (page.sectionId === "thumbnail") {
-      setActiveSectionId("display");
+    const linkedSectionId = findSectionId(page.sectionId);
+    if (linkedSectionId) {
+      setActiveSectionId(linkedSectionId);
     }
   }, [page.sectionId]);
 
@@ -421,30 +430,6 @@ export const SettingsPage: React.FC<{ tabId: string; page: SettingsPageType }> =
     return activeSection.fields;
   }, [activeSection]);
 
-  const otherBbsmenuSectionItems = useMemo(() => {
-    if (activeSection.id !== "other") {
-      return [] as SettingsSectionItem[];
-    }
-
-    return activeSection.fields.filter(
-      (item) =>
-        (isSettingsDividerItem(item) && item.id === "external-data") ||
-        (isSettingsFieldItem(item) && item.key.startsWith("bbsmenu")),
-    );
-  }, [activeSection]);
-
-  const otherNonBbsmenuSectionItems = useMemo(() => {
-    if (activeSection.id !== "other") {
-      return [] as SettingsSectionItem[];
-    }
-
-    return activeSection.fields.filter(
-      (item) =>
-        (isSettingsDividerItem(item) && item.id !== "external-data") ||
-        (isSettingsFieldItem(item) && !item.key.startsWith("bbsmenu")),
-    );
-  }, [activeSection]);
-
   const ngPrimarySectionItems = useMemo(() => {
     if (activeSection.id !== "ng") {
       return [] as SettingsSectionItem[];
@@ -592,45 +577,40 @@ export const SettingsPage: React.FC<{ tabId: string; page: SettingsPageType }> =
 
               {activeSection.id !== "ng" && (
                 <div className="settings-page__section-stack">
-                  {activeSection.id !== "other" &&
+                  {activeSection.id !== "site-board" &&
                     renderSectionItems(activeSection.id, regularSectionItems)}
 
-                  {activeSection.id === "other" && (
-                    <>
-                      <Surface as="section" tone="muted" variant="flat">
-                        <SurfaceHeader>
-                          <SurfaceTitle>BBSMenu</SurfaceTitle>
-                          <SurfaceDescription>
-                            掲示板一覧の取得・更新を行います。
-                          </SurfaceDescription>
-                        </SurfaceHeader>
-                        <SurfaceBody>
-                          {renderSectionItems("other", otherBbsmenuSectionItems)}
-                          <SurfaceActions>
-                            <Button
-                              onClick={() => void maintenanceActions.handleBBSMenuCheck()}
-                              loading={maintenanceActions.isBbsMenuChecking}
-                              disabled={maintenanceActions.isBbsMenuRefreshing}
-                            >
-                              URLチェック
-                            </Button>
-                            <Tooltip label="設定したBBSMENUを強制取得してキャッシュを更新します。「一度開いた板」は明示的な記録だけから再構成し、外部サイトや重複を除外します。">
-                              <span>
-                                <Button
-                                  onClick={() => void maintenanceActions.handleBBSMenuRefresh()}
-                                  loading={maintenanceActions.isBbsMenuRefreshing}
-                                  disabled={maintenanceActions.isBbsMenuChecking}
-                                >
-                                  BBSMenuリフレッシュ
-                                </Button>
-                              </span>
-                            </Tooltip>
-                          </SurfaceActions>
-                        </SurfaceBody>
-                      </Surface>
-
-                      {renderSectionItems("other", otherNonBbsmenuSectionItems)}
-                    </>
+                  {activeSection.id === "site-board" && (
+                    // 変更理由: 見出し・区切り線・項目名で bbsmenu を3回繰り返していたため、
+                    // 見出しは用途（板一覧の取得元）だけにし、項目名で入力内容を示す。
+                    <Surface as="section" tone="muted" variant="flat">
+                      <SurfaceHeader>
+                        <SurfaceTitle>板一覧の取得元</SurfaceTitle>
+                      </SurfaceHeader>
+                      <SurfaceBody>
+                        {renderSectionItems("site-board", regularSectionItems)}
+                        <SurfaceActions>
+                          <Button
+                            onClick={() => void maintenanceActions.handleBBSMenuCheck()}
+                            loading={maintenanceActions.isBbsMenuChecking}
+                            disabled={maintenanceActions.isBbsMenuRefreshing}
+                          >
+                            URLチェック
+                          </Button>
+                          <Tooltip label="設定したBBSMENUを強制取得してキャッシュを更新します。「一度開いた板」は明示的な記録だけから再構成し、外部サイトや重複を除外します。">
+                            <span>
+                              <Button
+                                onClick={() => void maintenanceActions.handleBBSMenuRefresh()}
+                                loading={maintenanceActions.isBbsMenuRefreshing}
+                                disabled={maintenanceActions.isBbsMenuChecking}
+                              >
+                                板一覧を再取得
+                              </Button>
+                            </span>
+                          </Tooltip>
+                        </SurfaceActions>
+                      </SurfaceBody>
+                    </Surface>
                   )}
                 </div>
               )}

@@ -363,6 +363,16 @@ describe("設定画面のタブ単位の表示状態", () => {
     expect(screen.getByRole("heading", { name: "NG", level: 2 })).toBeInTheDocument();
   });
 
+  it("なくなった「その他」を保存していたタブは、bbsmenu の移った板カテゴリを開く", async () => {
+    const state = storedState();
+    state.panes[0].tabs[1].viewStates = {
+      settings: { settingsPage: { activeSectionId: "other", linkedSectionId: "general" } },
+    };
+    localStorage.setItem(SESSION_KEY, JSON.stringify(state));
+    await renderViewer();
+    expect(screen.getByRole("heading", { name: "板", level: 2 })).toBeInTheDocument();
+  });
+
   it("旧形式の全タブ共通の表示状態を新しい設定タブへ持ち込まない", async () => {
     const state = storedState();
     state.panes[0].tabs[1].history[1] = { type: "settings", title: "設定" };

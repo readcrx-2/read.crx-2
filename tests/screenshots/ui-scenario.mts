@@ -30,9 +30,8 @@ const SETTINGS = [
   ["自動更新・次スレ", "settings-reload"],
   ["NG", "settings-ng"],
   ["実況", "settings-comment-overlay"],
-  ["板ごとの設定", "settings-site-board"],
+  ["板", "settings-site-board"],
   ["データ", "settings-data"],
-  ["連携", "settings-other"],
   ["デバッグ", "settings-debug"],
 ] as const;
 

@@ -4,7 +4,6 @@ import {
   Bug,
   Eye,
   Globe2,
-  Link2,
   MessageCircle,
   RefreshCw,
   Settings,
@@ -274,7 +273,7 @@ const ALL_SETTINGS_SECTIONS = [
       relatedSection: {
         id: "site-board",
         description: "自動更新の間隔は、ドメインや板ごとに設定します。",
-        label: "板ごとの設定を開く",
+        label: "板の設定を開く",
       },
     },
   ),
@@ -385,12 +384,22 @@ const ALL_SETTINGS_SECTIONS = [
   // 変更理由: ドメイン共通から各板への継承は通常の全体設定フォームとは異なるため、
   // 専用パネルへ閉じ込めて項目追加時のフォーム分岐を増やさない。
   // 必要な板だけを上書きする応用設定なので、よく使う閲覧の設定より後ろに置く。
+  // 板一覧の取得元（bbsmenu）は下の板の候補にもなるため、「その他」から移して同じカテゴリの先頭に置く。
   defineSection(
     "site-board",
-    "板ごとの設定",
-    "自動更新の間隔や書き込みの既定値を、ドメイン共通と板ごとに設定します。必要な板だけ上書きできます。",
+    "板",
+    "板一覧の取得元と、自動更新の間隔や書き込みの既定値をドメイン共通・板ごとに設定します。",
     <Globe2 size={20} />,
-    [],
+    [
+      {
+        kind: "string",
+        key: "bbsmenu",
+        title: "bbsmenu の URL",
+        description: "1行に1つ指定します。",
+        widget: "textarea",
+        rows: 6,
+      },
+    ],
     {
       supplementaryPanelIds: ["siteBoardSettings"],
     },
@@ -398,36 +407,12 @@ const ALL_SETTINGS_SECTIONS = [
   defineSection(
     "data",
     "データ",
-    "設定・履歴のエクスポート / インポートと、設定の初期化を行います。",
+    "設定・履歴のエクスポート / インポート、ブックマークの保存先、設定の初期化を扱います。",
     <Archive size={20} />,
     [],
     {
-      // 変更理由: 設定の初期化もデータを扱う操作なので、「その他」から移して探しやすくする。
-      supplementaryPanelIds: ["dataManagement", "dangerZone"],
-    },
-  ),
-  defineSection(
-    "other",
-    // 変更理由: 「その他」では中身が分からないため、板一覧の取得元とブックマークの保存先という中身で名付ける。
-    "連携",
-    "板一覧（bbsmenu）の取得元と、ブックマークの保存先を設定します。",
-    <Link2 size={20} />,
-    [
-      {
-        kind: "divider",
-        id: "external-data",
-        title: "bbsmenu",
-      },
-      {
-        kind: "string",
-        key: "bbsmenu",
-        title: "URL一覧",
-        widget: "textarea",
-        rows: 6,
-      },
-    ],
-    {
-      supplementaryPanelIds: ["externalIntegration"],
+      // 変更理由: ブックマークの保存先と設定の初期化もデータの扱いなので、「その他」から移して探しやすくする。
+      supplementaryPanelIds: ["dataManagement", "externalIntegration", "dangerZone"],
     },
   ),
   defineSection(
@@ -466,7 +451,6 @@ const SETTINGS_SECTION_GROUP_OF = {
   overlay: "browsing",
   ng: "browsing",
   data: "manage",
-  other: "manage",
   debug: "manage",
 } as const satisfies Record<SettingsSectionId, SettingsSectionGroupId>;
 

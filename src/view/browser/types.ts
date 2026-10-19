@@ -98,13 +98,13 @@ export type SettingsSectionId =
   | "reload"
   | "overlay"
   | "ng"
-  | "other"
   | "debug"
   | "data";
 
 // 設定画面の表示状態。TabViewState.settingsPage としてタブ単位で保存・復元される。
 export interface SettingsPageUiState {
-  activeSectionId?: SettingsSectionId | "thumbnail";
+  // "thumbnail" と "other" は統合前のカテゴリ。古い保存値として読み替える。
+  activeSectionId?: SettingsSectionId | "thumbnail" | "other";
   // 再読み込みと別カテゴリへの明示的なリンク遷移を区別するため、直前のリンク先を残す。
   linkedSectionId?: string;
   mainScrollTop?: number;

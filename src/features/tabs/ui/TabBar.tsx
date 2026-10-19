@@ -686,7 +686,7 @@ export const TabBar: React.FC<{ orientation?: TabBarOrientation }> = ({
       title="新しいタブ"
       aria-label="新しいタブ"
     >
-      <Plus size={16} />
+      <Plus size={13} />
     </button>
   );
 

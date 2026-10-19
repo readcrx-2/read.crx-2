@@ -12,7 +12,8 @@
   align-items: center;
   min-height: var(--sys-space-10);
   padding: 0 var(--sys-space-3);
-  border-bottom: 1px solid var(--sys-color-border);
+  /* 変更理由: タイトルバー・タブバー・フィルタバーの境界に細い線が重なって見えるため、
+     区切りは背景色の差だけで示す。 */
   background: var(--sys-color-surface-muted);
   color: var(--sys-color-text);
   user-select: none;

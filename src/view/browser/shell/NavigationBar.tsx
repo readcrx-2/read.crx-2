@@ -678,7 +678,7 @@ export const NavigationBar: React.FC<NavigationBarProps> = ({
         title={isUrlExpanded ? "URLバーを折りたたむ" : "URLバーを表示"}
         aria-label={isUrlExpanded ? "URLバーを折りたたむ" : "URLバーを表示"}
       >
-        {isUrlExpanded ? <ChevronUp size={17} /> : <ChevronDown size={17} />}
+        {isUrlExpanded ? <ChevronUp size={13} /> : <ChevronDown size={13} />}
       </button>
 
       {isUrlExpanded && (
@@ -744,7 +744,7 @@ export const NavigationBar: React.FC<NavigationBarProps> = ({
           handleMenuClick(e);
         }}
       >
-        <Menu size={18} />
+        <Menu size={13} />
       </button>
 
       {menuPosition && (

@@ -1,5 +1,5 @@
 import { fetchHttpsFirst } from "packages/chlib/src/fetcher/https-first";
-import { type MutableRefObject, useCallback, useState } from "react";
+import { useCallback, useState } from "react";
 import {
   mapWithConcurrency,
   MAX_CONCURRENT_BATCH_REQUESTS,
@@ -13,7 +13,6 @@ import type { SettingsFormState } from "src/view/browser/pages/settings/settings
 
 interface UseSettingsMaintenanceActionsOptions {
   formState: SettingsFormState | null;
-  autoSaveTimerRef: MutableRefObject<number | null>;
   onResetFormState: (nextState: SettingsFormState) => void;
   onResetError: (message: string | null) => void;
 }
@@ -29,7 +28,6 @@ export interface SettingsMaintenanceActions {
 
 export function useSettingsMaintenanceActions({
   formState,
-  autoSaveTimerRef,
   onResetFormState,
   onResetError,
 }: UseSettingsMaintenanceActionsOptions): SettingsMaintenanceActions {
@@ -135,11 +133,6 @@ export function useSettingsMaintenanceActions({
     onResetError(null);
 
     try {
-      if (autoSaveTimerRef.current != null) {
-        window.clearTimeout(autoSaveTimerRef.current);
-        autoSaveTimerRef.current = null;
-      }
-
       const getAll = container.config.getAll;
       const del = container.config.del;
       if (!getAll || !del) {
@@ -165,7 +158,7 @@ export function useSettingsMaintenanceActions({
     } finally {
       setIsResettingAllSettings(false);
     }
-  }, [autoSaveTimerRef, isResettingAllSettings, onResetError, onResetFormState]);
+  }, [isResettingAllSettings, onResetError, onResetFormState]);
 
   return {
     isBbsMenuChecking,

@@ -64,7 +64,6 @@ const AUTO_NEXT_THREAD_MODE_OPTIONS = [
   { const: "aggressive", title: "積極（スレタイ変化を広く許容）" },
 ] as const satisfies readonly SettingsOption[];
 
-export const AUTO_SAVE_DELAY_MS = 350;
 export const NG_PRIMARY_FIELD_KEYS = new Set(["ngwords"]);
 
 function defineSection(

@@ -148,7 +148,7 @@ export const SettingsPage: React.FC<{ tabId: string; page: SettingsPageType }> =
     initialUiState.replacementExamplesOpen === true,
   );
   const [isNgAdvancedOpen, setIsNgAdvancedOpen] = useState(initialUiState.ngAdvancedOpen === true);
-  const { savingSectionId, autoSaveError, setAutoSaveError, autoSaveTimerRef, scheduleAutoSave } =
+  const { savingSectionId, autoSaveError, setAutoSaveError, scheduleAutoSave } =
     useSettingsAutoSave();
   const { isCompactMenuOpen, openCompactMenu, closeCompactMenu, scheduleCompactMenuClose } =
     useCompactMenu(isCompact);
@@ -171,7 +171,6 @@ export const SettingsPage: React.FC<{ tabId: string; page: SettingsPageType }> =
 
   const maintenanceActions = useSettingsMaintenanceActions({
     formState,
-    autoSaveTimerRef,
     onResetFormState: (nextState) => {
       formStateRef.current = nextState;
       setFormState(nextState);

@@ -5,6 +5,7 @@ import {
   type ReactElement,
   type ReactNode,
   useContext,
+  useState,
 } from "react";
 import { useViewSurface } from "src/view/browser/hooks/use-view-surface";
 
@@ -56,8 +57,15 @@ export function Tooltip({
   // pointer captureや仮想スクロールの参照が切れてしまうため、openだけを閉じる。
   const isDisabled = disabled || label == null || label === "";
 
+  // 変更理由: Radix Tooltip 1.4 は open を渡さない（非制御の）場合、開いたことを知らせる
+  // "tooltip.open" イベントを描画後の effect で送る。その時点で同じ描画で出した本体が
+  // 「ほかのTooltipが開いた」通知として受け取り、表示直後に自分を閉じてしまう。
+  // 開閉を常にこちらで制御すると、Radix はポインタ操作の中で先に通知を送るため本体が閉じない。
+  const [uncontrolledOpen, setUncontrolledOpen] = useState(false);
+  const isOpen = isDisabled ? false : (open ?? uncontrolledOpen);
+
   const content = (
-    <RadixTooltip.Root open={isDisabled ? false : open}>
+    <RadixTooltip.Root open={isOpen} onOpenChange={setUncontrolledOpen}>
       <RadixTooltip.Trigger asChild>{children}</RadixTooltip.Trigger>
       <RadixTooltip.Portal container={portalContainer}>
         <RadixTooltip.Content

@@ -32,10 +32,14 @@ let exitCode = await run(process.execPath, [vp, "build"], {
 });
 
 if (exitCode === 0) {
-  exitCode = await run(process.execPath, ["node_modules/@playwright/test/cli.js", "test"], {
-    ...process.env,
-    E2E_COVERAGE: "true",
-  });
+  exitCode = await run(
+    process.execPath,
+    ["node_modules/@playwright/test/cli.js", "test", "--project=chrome"],
+    {
+      ...process.env,
+      E2E_COVERAGE: "true",
+    },
+  );
 }
 
 const reportExit = await run(process.execPath, [

@@ -8,9 +8,19 @@ pnpm run test:e2e
 ```
 
 対話的に実行する場合は `pnpm run test:e2e:ui` を使います。ビルド済みなら、
-`pnpm exec playwright test tests/localboard.spec.mts` で個別に実行できます。
+`pnpm exec playwright test --project=chrome tests/localboard.spec.mts` で個別に実行できます。
+`pnpm run test:e2e tests/localboard.spec.mts` のように、ビルドしてから絞り込むこともできます。
 失敗時のスクリーンショットとトレースは `test-results/`、HTMLレポートは
 `playwright-report/` に保存されます。
+
+`pnpm run test:e2e` は [offstage-windows](https://github.com/LippInc/offstage-windows) 経由で実行し、
+Windowsでは窓を非表示デスクトップに出して作業中の画面やフォーカスを奪わないようにします
+（Windows以外ではそのまま実行します）。窓を見たいときはPowerShellで `$env:OFFSTAGE='0'` を設定し、
+終わったら `Remove-Item Env:OFFSTAGE` で戻します。
+
+実行は `scripts/run-e2e.mjs` が2段階に分けます。テスト名に `@serial` を含むものは、
+並列の段階の後に1 workerで実行します。保存領域や窓のフォーカスを共有して並列では不安定になるテストに付けます。
+2段階のレポートは最後に `playwright-report/` へまとめます。
 
 `localboard.mts` はテストごとにループバックの空きポートで起動し、bbsmenu、
 SETTING.TXT、subject.txt、datをShift_JISで配信します。レス追加もテストから制御できます。

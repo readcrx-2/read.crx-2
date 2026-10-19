@@ -327,7 +327,7 @@ describe("設定画面のタブ単位の表示状態", () => {
       focus: true,
     });
     expect(screen.getByRole("heading", { name: "一般", level: 2 })).toBeInTheDocument();
-    fireEvent.click(screen.getByRole("button", { name: /^表示\s*テーマ/ }));
+    fireEvent.click(screen.getByRole("button", { name: "表示" }));
     expect(settingsUiState()?.activeSectionId).toBe("ng");
     expect(settingsUiState("other-settings")?.activeSectionId).toBe("display");
 
@@ -357,7 +357,7 @@ describe("設定画面のタブ単位の表示状態", () => {
 
   it("同じタブで別カテゴリへのリンクを開くと保存済みの選択よりリンク先を優先する", async () => {
     const dispatch = await renderViewer();
-    fireEvent.click(screen.getByRole("button", { name: /^表示\s*テーマ/ }));
+    fireEvent.click(screen.getByRole("button", { name: "表示" }));
     dispatch({ type: "NAVIGATE", page: { type: "home", title: "ホーム" } });
     dispatch({ type: "NAVIGATE", page: { ...settingsPage, sectionId: "ng" } });
     expect(screen.getByRole("heading", { name: "NG", level: 2 })).toBeInTheDocument();

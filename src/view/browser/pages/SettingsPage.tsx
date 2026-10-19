@@ -75,6 +75,38 @@ function resolveSectionId(sectionId?: string): SettingsSectionId {
   return sectionId && isSettingsSectionId(sectionId) ? sectionId : "general";
 }
 
+/**
+ * 設定カテゴリの一覧。
+ * 変更理由: 説明文まで並べると画面幅の半分程度で一覧が縦に伸びて窮屈になるため、
+ * Obsidian や Discord の設定画面のようにアイコンと名前だけの1行にする。説明文は本文の見出し下に出す。
+ */
+const SettingsSectionNav: React.FC<{
+  activeSectionId: SettingsSectionId;
+  onSelect: (sectionId: SettingsSectionId) => void;
+}> = ({ activeSectionId, onSelect }) => (
+  <>
+    <div className="settings-page__sidebar-title">設定カテゴリ</div>
+    <nav className="settings-page__section-list" aria-label="設定カテゴリ">
+      {SETTINGS_SECTIONS.map((section) => (
+        <button
+          key={section.id}
+          type="button"
+          className={`settings-page__section-btn${
+            activeSectionId === section.id ? " settings-page__section-btn--active" : ""
+          }`}
+          aria-current={activeSectionId === section.id ? "page" : undefined}
+          onClick={() => onSelect(section.id)}
+        >
+          <span className="settings-page__section-icon" aria-hidden="true">
+            {section.icon}
+          </span>
+          <span className="settings-page__section-name">{section.title}</span>
+        </button>
+      ))}
+    </nav>
+  </>
+);
+
 export const SettingsPage: React.FC<{ tabId: string; page: SettingsPageType }> = ({
   tabId,
   page,
@@ -83,7 +115,9 @@ export const SettingsPage: React.FC<{ tabId: string; page: SettingsPageType }> =
   // 全タブ共通の保存値を使うと、閉じて開き直した設定タブにも前回の表示状態が残る。
   // タブセッションから初期値を読み、Chrome側の再読み込みでは同じタブの状態を復元する。
   const [initialUiState] = useState(() => persistedViewState.settingsPage ?? {});
-  const isCompact = useMediaQuery("(max-width: 980px)") ?? false;
+  // カテゴリ一覧をアイコンと名前だけの細い列にしたため、画面幅の半分程度でも常に表示し、
+  // 本文が窮屈になる幅だけ左端のホットゾーンから開くメニューへ切り替える。
+  const isCompact = useMediaQuery("(max-width: 720px)") ?? false;
   const [activeSectionId, setActiveSectionId] = useState<SettingsSectionId>(() =>
     resolveSectionId(
       initialUiState.linkedSectionId === page.sectionId
@@ -450,28 +484,7 @@ export const SettingsPage: React.FC<{ tabId: string; page: SettingsPageType }> =
     <div className={`settings-page__shell${isCompact ? " settings-page__shell--compact" : ""}`}>
       {!isCompact && (
         <aside className="settings-page__sidebar">
-          <div className="settings-page__sidebar-title">設定カテゴリ</div>
-          <nav className="settings-page__section-list" aria-label="設定カテゴリ">
-            {SETTINGS_SECTIONS.map((section) => (
-              <button
-                key={section.id}
-                type="button"
-                className={`settings-page__section-btn${
-                  activeSectionId === section.id ? " settings-page__section-btn--active" : ""
-                }`}
-                aria-current={activeSectionId === section.id ? "page" : undefined}
-                onClick={() => setActiveSectionId(section.id)}
-              >
-                <span className="settings-page__section-icon" aria-hidden="true">
-                  {section.icon}
-                </span>
-                <span className="settings-page__section-content">
-                  <span className="settings-page__section-name">{section.title}</span>
-                  <span className="settings-page__section-desc">{section.description}</span>
-                </span>
-              </button>
-            ))}
-          </nav>
+          <SettingsSectionNav activeSectionId={activeSectionId} onSelect={setActiveSectionId} />
         </aside>
       )}
 
@@ -494,31 +507,13 @@ export const SettingsPage: React.FC<{ tabId: string; page: SettingsPageType }> =
               onMouseLeave={scheduleCompactMenuClose}
             >
               <div className="settings-page__compact-menu-scroll">
-                <div className="settings-page__sidebar-title">設定カテゴリ</div>
-                <nav className="settings-page__section-list" aria-label="設定カテゴリ">
-                  {SETTINGS_SECTIONS.map((section) => (
-                    <button
-                      key={section.id}
-                      type="button"
-                      className={`settings-page__section-btn${
-                        activeSectionId === section.id ? " settings-page__section-btn--active" : ""
-                      }`}
-                      aria-current={activeSectionId === section.id ? "page" : undefined}
-                      onClick={() => {
-                        setActiveSectionId(section.id);
-                        closeCompactMenu();
-                      }}
-                    >
-                      <span className="settings-page__section-icon" aria-hidden="true">
-                        {section.icon}
-                      </span>
-                      <span className="settings-page__section-content">
-                        <span className="settings-page__section-name">{section.title}</span>
-                        <span className="settings-page__section-desc">{section.description}</span>
-                      </span>
-                    </button>
-                  ))}
-                </nav>
+                <SettingsSectionNav
+                  activeSectionId={activeSectionId}
+                  onSelect={(sectionId) => {
+                    setActiveSectionId(sectionId);
+                    closeCompactMenu();
+                  }}
+                />
               </div>
             </aside>
           )}

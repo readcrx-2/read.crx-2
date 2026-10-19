@@ -1,11 +1,10 @@
 /* Settings page shell, section navigation, cards, and action buttons. */
+/* Obsidian や Discord の設定画面のように、細いカテゴリ列を左端に固定し本文だけをスクロールさせる。 */
 .settings-page__shell {
   position: relative;
   display: grid;
-  grid-template-columns: minmax(220px, 280px) minmax(0, 1fr);
-  gap: var(--sys-space-8);
+  grid-template-columns: 200px minmax(0, 1fr);
   height: 100%;
-  padding: var(--sys-space-8);
 }
 
 .settings-page__shell--compact {
@@ -39,10 +38,10 @@
   z-index: var(--sys-z-popup-layer);
   top: var(--sys-space-8);
   left: var(--sys-space-8);
-  width: min(300px, calc(100vw - var(--sys-space-16)));
+  width: min(220px, calc(100vw - var(--sys-space-16)));
   max-height: calc(100% - var(--sys-space-16));
   overflow: hidden;
-  padding: var(--sys-space-8);
+  padding: var(--sys-space-6) var(--sys-space-4);
   border: 1px solid var(--sys-color-border);
   border-radius: var(--sys-radius-xl);
   background: var(--sys-color-settings-card-bg);
@@ -153,56 +152,56 @@
 }
 
 .settings-page__sidebar {
-  width: 280px;
-  flex-shrink: 0;
+  min-height: 0;
+  overflow-y: auto;
   border-right: 1px solid var(--sys-color-border);
   background: var(--sys-color-settings-sidebar-bg);
-  padding: var(--sys-space-10) var(--sys-space-8);
+  padding: var(--sys-space-8) var(--sys-space-4);
 }
 
 .settings-page__sidebar-title {
-  padding: 0 var(--sys-space-6) var(--sys-space-8);
+  padding: 0 var(--sys-space-4) var(--sys-space-3);
   font-size: var(--sys-font-size-xs);
-  font-weight: 800;
-  letter-spacing: 0.1em;
+  font-weight: 700;
+  letter-spacing: 0.05em;
   color: var(--sys-color-text-muted);
-  text-transform: uppercase;
 }
 
 .settings-page__section-list {
   display: flex;
   flex-direction: column;
-  gap: var(--sys-space-4);
+  gap: var(--sys-space-1);
 }
 
+/* 説明文を出さず、アイコンと名前だけの1行で項目を並べる。 */
 .settings-page__section-btn {
   display: flex;
-  align-items: flex-start;
-  gap: var(--sys-space-6);
+  align-items: center;
+  gap: var(--sys-space-4);
   width: 100%;
-  border: 1px solid transparent;
-  border-radius: var(--sys-radius-xl);
+  border: 0;
+  border-radius: var(--sys-radius-lg);
   background: transparent;
-  padding: var(--sys-space-6);
+  padding: var(--sys-space-3) var(--sys-space-4);
+  color: var(--sys-color-text-muted);
+  font-size: var(--sys-font-size-body);
   text-align: left;
   cursor: pointer;
-  transition: background var(--sys-duration-slow) var(--sys-ease-standard);
+  transition:
+    background var(--sys-duration-normal) var(--sys-ease-standard),
+    color var(--sys-duration-normal) var(--sys-ease-standard);
 }
 
 .settings-page__section-btn:hover {
-  background: var(--sys-color-selection);
+  background: var(--sys-color-list-hover-bg);
+  color: var(--sys-color-text);
 }
 
-.settings-page__section-btn--active {
+.settings-page__section-btn--active,
+.settings-page__section-btn--active:hover {
   background: var(--sys-color-settings-active-bg);
-  border-color: var(--sys-color-accent);
-  box-shadow: var(--sys-shadow-focus);
-}
-
-.settings-page__section-btn--active .settings-page__section-icon {
-  background: var(--sys-color-accent);
-  color: var(--sys-color-accent-fg);
-  box-shadow: var(--sys-shadow-focus);
+  color: var(--sys-color-text);
+  font-weight: 600;
 }
 
 .settings-page__section-icon {
@@ -210,33 +209,19 @@
   display: flex;
   align-items: center;
   justify-content: center;
-  width: 36px;
-  height: 36px;
-  border-radius: var(--sys-radius-xl);
-  background: var(--sys-color-surface);
-  color: var(--sys-color-text-muted);
-  box-shadow: var(--sys-shadow-focus);
-  transition: all var(--sys-duration-slow);
 }
 
-.settings-page__section-content {
-  flex: 1;
-  min-width: 0;
+/* カテゴリ定義のアイコンは以前の大きな枠に合わせた大きさのため、1行の項目では文字の高さに揃えて小さくする。 */
+.settings-page__section-icon svg {
+  width: var(--sys-space-8);
+  height: var(--sys-space-8);
 }
 
 .settings-page__section-name {
-  display: block;
-  font-size: var(--sys-font-size-body);
-  font-weight: 600;
-  color: var(--sys-color-text);
-}
-
-.settings-page__section-desc {
-  display: block;
-  margin-top: var(--sys-space-1);
-  font-size: var(--sys-font-size-xs);
-  line-height: 1.4;
-  color: var(--sys-color-text-muted);
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
 }
 
 .settings-page__main {

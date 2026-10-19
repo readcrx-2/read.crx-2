@@ -181,6 +181,8 @@ collapse:
   await expect(panel.getByText("ローカルテストスレッド", { exact: true })).toBeHidden();
   await group.click();
   await expect(panel.getByText("ローカルテストスレッド", { exact: true })).toBeVisible();
+  // URLバーは水平タブではフォーカスが外れると閉じるため、スレを開く前に開き直す。
+  await page.getByTitle("URLバーを表示", { exact: true }).click();
   await input.fill(localBoard.threadUrl);
   await input.press("Enter");
   await expect(panel.locator('[data-res-num="1"]')).toContainText("最初の日本語レス");

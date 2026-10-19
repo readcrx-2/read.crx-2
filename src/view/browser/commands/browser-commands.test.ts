@@ -9,6 +9,8 @@ import {
   resolveBrowserCommands,
 } from "src/view/browser/commands/browser-commands";
 import { TAB_COMMAND_IDS } from "src/view/browser/commands/tab-command-runtime";
+import { getAutoRefreshPageKey } from "src/view/browser/state/tabs/auto-refresh-pages";
+import { tabActions } from "src/view/browser/state/tabs/tab-store-actions";
 import type { ScopedTabAction } from "src/view/browser/state/tabs/use-tab-store";
 import type { Page, Tab } from "src/view/browser/types";
 import { setItestServerMapForTesting } from "src/view/browser/utils/itest-server-map";
@@ -891,6 +893,80 @@ describe("browser commands", () => {
     } finally {
       if (originalConfig === undefined) {
         // 変更理由: もともと未登録だった場合は空に戻し、他のテストへ影響させない。
+        (container as unknown as { _config: unknown })._config = undefined;
+      } else {
+        container.config = originalConfig as typeof container.config;
+      }
+    }
+  });
+
+  it("スレッドのフィルタモード切り替えは表示中タブのIDと選んだモードをイベントで渡す", async () => {
+    const { context } = createContext({
+      type: "thread",
+      title: "テスト",
+      threadUrl: "https://example.com/test/read.cgi/board/1/",
+    });
+    const dispatchEventSpy = vi.spyOn(window, "dispatchEvent");
+
+    try {
+      const ids = resolveBrowserCommands(context).map((command) => command.id);
+      expect(ids).toContain("page.toggle-filter-popular");
+      expect(ids).toContain("page.toggle-filter-image");
+      expect(ids).toContain("page.toggle-filter-video");
+      expect(ids).toContain("page.toggle-filter-link");
+
+      await expect(executeBrowserCommand("page.toggle-filter-image", context)).resolves.toBe(true);
+
+      const event = dispatchEventSpy.mock.calls.at(-1)?.[0] as CustomEvent;
+      expect(event.type).toBe("thread-filter-mode-toggle");
+      expect(event.detail).toEqual({ tabId: "tab-1", filter: "image" });
+    } finally {
+      dispatchEventSpy.mockRestore();
+    }
+  });
+
+  it("自動更新の切り替えは表示中ページの有効状態を反転したactionを送る", async () => {
+    const page: Page = {
+      type: "threadList",
+      title: "板",
+      boardUrl: "https://example.com/board/",
+      boardTitle: "板",
+    };
+    const { context, dispatch } = createContext(page);
+
+    // 停止中の板では「開始」として、有効化のactionを送る。
+    const label = resolveBrowserCommands(context).find(
+      (command) => command.id === "page.toggle-auto-refresh",
+    )?.englishLabel;
+    expect(label).toBe("Start Auto Refresh");
+
+    await expect(executeBrowserCommand("page.toggle-auto-refresh", context)).resolves.toBe(true);
+    expect(dispatch).toHaveBeenCalledWith(
+      tabActions.setAutoRefreshEnabled(true, getAutoRefreshPageKey(page) ?? undefined),
+    );
+  });
+
+  it("画像のぼかし切り替えは保存値を反転して保存する", async () => {
+    const { context } = createContext({ type: "boardList", title: "ホーム" });
+    const configSetMock = vi.fn();
+    let originalConfig: unknown;
+    try {
+      originalConfig = container.config;
+    } catch {
+      originalConfig = undefined;
+    }
+    container.config = {
+      get: vi.fn(() => "on"),
+      set: configSetMock,
+      getAll: () => ({}),
+      ready: (callback: () => void) => callback(),
+    };
+
+    try {
+      await expect(executeBrowserCommand("layout.toggle-image-blur", context)).resolves.toBe(true);
+      expect(configSetMock).toHaveBeenCalledWith("image_blur", "off");
+    } finally {
+      if (originalConfig === undefined) {
         (container as unknown as { _config: unknown })._config = undefined;
       } else {
         container.config = originalConfig as typeof container.config;

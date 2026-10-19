@@ -2,6 +2,7 @@ import { AlertTriangle, MessagesCircle, Move } from "lucide-react";
 import React, { useCallback, useRef, useState } from "react";
 import { createLogger } from "src/app/logger";
 import { isTauriRuntime } from "src/app/platform/runtime";
+import { toggleCommentOverlayFlow } from "src/features/comment-overlay/application/flow-toggle";
 import { useCommentOverlay } from "src/features/comment-overlay/application/use-comment-overlay";
 import { useOpenOverlayPlacementWindow } from "src/features/comment-overlay/ui/OverlayPlacementWindow";
 import { MiniWindow } from "src/view/browser/components/MiniWindow";
@@ -51,12 +52,7 @@ export const CommentOverlayStatusItem: React.FC<CommentOverlayStatusItemProps> =
     setIsFlowChanging(true);
     // 変更理由: Overlay表示と実況開始は利用者にとって同じ操作なので、単一ボタンから
     // controller.startへ渡し、表示だけONで新着が流れない中間状態を作らない。
-    const operation = isFlowing
-      ? controller.stop()
-      : isRunning
-        ? controller.setVisible(true)
-        : controller.start(threadUrl!);
-    void operation
+    void toggleCommentOverlayFlow(controller, snapshot, threadUrl)
       .catch((error: unknown) => {
         logger.error("コメント実況の切り替えに失敗しました:", error);
       })
@@ -64,7 +60,7 @@ export const CommentOverlayStatusItem: React.FC<CommentOverlayStatusItemProps> =
         flowChangingRef.current = false;
         setIsFlowChanging(false);
       });
-  }, [controller, isFlowing, isRunning, threadUrl]);
+  }, [controller, isRunning, snapshot, threadUrl]);
 
   const openPlacementWindow = useCallback(() => {
     // 調整は別窓で行うため小窓は閉じる。切り離したタブの窓から開いた場合も、

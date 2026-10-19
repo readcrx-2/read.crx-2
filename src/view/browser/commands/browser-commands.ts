@@ -12,6 +12,7 @@ import {
   Import,
   List,
   type LucideIcon,
+  MessageSquare,
   PanelLeft,
   PanelRight,
   PenLine,
@@ -21,6 +22,7 @@ import {
   Search,
   Settings,
   Star,
+  Timer,
   X,
 } from "lucide-react";
 import { ChURL } from "packages/chlib/src/index";
@@ -46,10 +48,16 @@ import {
 } from "src/view/browser/commands/response-jump-command";
 import { TAB_COMMAND_IDS, type TabCommandId } from "src/view/browser/commands/tab-command-runtime";
 import type { ViewSurface } from "src/view/browser/hooks/use-view-surface";
+import {
+  getAutoRefreshPageKey,
+  isAutoRefreshEnabledForPage,
+} from "src/view/browser/state/tabs/auto-refresh-pages";
 import { tabActions } from "src/view/browser/state/tabs/tab-store-actions";
 import type { ScopedTabAction } from "src/view/browser/state/tabs/use-tab-store";
-import type { Page, Tab } from "src/view/browser/types";
+import type { Page, Tab, ThreadFilter } from "src/view/browser/types";
 import { getCurrentPage } from "src/view/browser/types";
+import { COMMENT_OVERLAY_FLOW_TOGGLE_EVENT } from "src/view/browser/utils/comment-overlay-flow-events";
+import { persistConfigValue, readConfigValue } from "src/view/browser/utils/config-setting";
 import {
   canQueryExtensionTabs,
   getOpenCompatibleThreadPages,
@@ -58,6 +66,7 @@ import {
 import {
   QUICK_ACCESS_FILTER_TOGGLE_EVENT_BY_PAGE_TYPE,
   type QuickAccessFilterPageType,
+  THREAD_FILTER_MODE_TOGGLE_EVENT,
 } from "src/view/browser/utils/filter-toolbar-events";
 import {
   getBoardUrlFromThreadUrl,
@@ -387,6 +396,41 @@ function toggleFilter(context: BrowserCommandContext): void {
   );
 }
 
+function dispatchThreadFilterModeToggle(
+  context: BrowserCommandContext,
+  filter: Exclude<ThreadFilter, "all">,
+): void {
+  const { window: viewWindow } = getCommandSurface(context);
+  const viewWindowWithConstructors = viewWindow as Window & typeof globalThis;
+  viewWindow.dispatchEvent(
+    new viewWindowWithConstructors.CustomEvent(THREAD_FILTER_MODE_TOGGLE_EVENT, {
+      detail: { tabId: context.viewTab.id, filter },
+    }),
+  );
+}
+
+function dispatchCommentOverlayFlowToggle(context: BrowserCommandContext): void {
+  const { window: viewWindow } = getCommandSurface(context);
+  const viewWindowWithConstructors = viewWindow as Window & typeof globalThis;
+  viewWindow.dispatchEvent(
+    new viewWindowWithConstructors.CustomEvent(COMMENT_OVERLAY_FLOW_TOGGLE_EVENT, {
+      detail: {
+        threadUrl: context.viewPage.type === "thread" ? context.viewPage.threadUrl : null,
+      },
+    }),
+  );
+}
+
+// 変更理由: 設定の真偽値はフック側と同じ "on" / "off" の書式で保存し、
+// 画面と読み替え結果が食い違わないようにする。
+function isConfigSwitchOn(key: string): boolean {
+  return readConfigValue(key) === "on";
+}
+
+function toggleConfigSwitch(key: string): void {
+  persistConfigValue(key, isConfigSwitchOn(key) ? "off" : "on", "コマンドパレット");
+}
+
 async function toggleBookmark(context: BrowserCommandContext): Promise<void> {
   const target = getCommandPageTarget(context.viewPage);
   if (!target) return;
@@ -454,6 +498,54 @@ function getCommandLabel(
 ): string {
   return typeof label === "function" ? label(context) : label;
 }
+
+// 変更理由: フィルタボタンと同じ4モードを、それぞれ選択・解除できるパレット項目として並べる。
+const THREAD_FILTER_MODE_COMMANDS: readonly BrowserCommandDefinition[] = [
+  {
+    id: "page.toggle-filter-popular",
+    label: "人気レスのフィルタを切り替え",
+    englishLabel: "Toggle Popular Filter",
+    description: "人気レスだけに絞り込みます。選択中にもう一度実行すると解除します",
+    keywords: ["人気", "popular", "絞り込み", "フィルタ"],
+    group: "page",
+    icon: Filter,
+    when: ({ viewPage }) => viewPage.type === "thread",
+    run: (context) => dispatchThreadFilterModeToggle(context, "popular"),
+  },
+  {
+    id: "page.toggle-filter-image",
+    label: "画像のフィルタを切り替え",
+    englishLabel: "Toggle Image Filter",
+    description: "画像を含むレスだけに絞り込みます。選択中にもう一度実行すると解除します",
+    keywords: ["画像", "image", "絞り込み", "フィルタ"],
+    group: "page",
+    icon: Filter,
+    when: ({ viewPage }) => viewPage.type === "thread",
+    run: (context) => dispatchThreadFilterModeToggle(context, "image"),
+  },
+  {
+    id: "page.toggle-filter-video",
+    label: "動画のフィルタを切り替え",
+    englishLabel: "Toggle Video Filter",
+    description: "動画を含むレスだけに絞り込みます。選択中にもう一度実行すると解除します",
+    keywords: ["動画", "video", "絞り込み", "フィルタ"],
+    group: "page",
+    icon: Filter,
+    when: ({ viewPage }) => viewPage.type === "thread",
+    run: (context) => dispatchThreadFilterModeToggle(context, "video"),
+  },
+  {
+    id: "page.toggle-filter-link",
+    label: "外部リンクのフィルタを切り替え",
+    englishLabel: "Toggle External Link Filter",
+    description: "外部リンクを含むレスだけに絞り込みます。選択中にもう一度実行すると解除します",
+    keywords: ["外部", "リンク", "link", "絞り込み", "フィルタ"],
+    group: "page",
+    icon: Filter,
+    when: ({ viewPage }) => viewPage.type === "thread",
+    run: (context) => dispatchThreadFilterModeToggle(context, "link"),
+  },
+];
 
 export const BROWSER_COMMAND_DEFINITIONS: readonly BrowserCommandDefinition[] = [
   {
@@ -991,6 +1083,61 @@ export const BROWSER_COMMAND_DEFINITIONS: readonly BrowserCommandDefinition[] = 
         `スレ全体をTOON形式でコピーしました（推定 ${tokenCount.toLocaleString("ja-JP")} トークン）`,
       );
     },
+  },
+  ...THREAD_FILTER_MODE_COMMANDS,
+  {
+    id: "page.toggle-auto-refresh",
+    label: ({ viewPage, viewTab }) =>
+      isAutoRefreshEnabledForPage(viewTab, viewPage) ? "自動更新を停止" : "自動更新を開始",
+    englishLabel: ({ viewPage, viewTab }) =>
+      isAutoRefreshEnabledForPage(viewTab, viewPage) ? "Stop Auto Refresh" : "Start Auto Refresh",
+    description: "表示中のスレッドや板の自動更新を切り替えます",
+    keywords: ["自動更新", "auto refresh", "更新", "実況"],
+    group: "page",
+    icon: Timer,
+    when: ({ viewPage }) => getAutoRefreshPageKey(viewPage) != null,
+    run: ({ dispatch, viewPage, viewTab }) => {
+      const pageKey = getAutoRefreshPageKey(viewPage);
+      if (pageKey == null) return;
+      dispatch(
+        tabActions.setAutoRefreshEnabled(!isAutoRefreshEnabledForPage(viewTab, viewPage), pageKey),
+      );
+    },
+  },
+  {
+    id: "page.toggle-auto-next-thread",
+    label: () =>
+      isConfigSwitchOn("auto_next_thread") ? "自動次スレを無効にする" : "自動次スレを有効にする",
+    englishLabel: () =>
+      isConfigSwitchOn("auto_next_thread") ? "Disable Auto Next Thread" : "Enable Auto Next Thread",
+    description: "スレッドが上限に近づいたときに次スレを自動で探す設定を切り替えます",
+    keywords: ["次スレ", "自動次スレ", "next thread", "自動"],
+    group: "page",
+    icon: Search,
+    run: () => toggleConfigSwitch("auto_next_thread"),
+  },
+  {
+    id: "layout.toggle-image-blur",
+    label: () =>
+      isConfigSwitchOn("image_blur") ? "画像のぼかしを無効にする" : "画像のぼかしを有効にする",
+    englishLabel: () =>
+      isConfigSwitchOn("image_blur") ? "Disable Image Blur" : "Enable Image Blur",
+    description: "NGワードを含む画像などのぼかし表示を切り替えます",
+    keywords: ["ぼかし", "画像", "blur", "モザイク"],
+    group: "layout",
+    icon: Filter,
+    run: () => toggleConfigSwitch("image_blur"),
+  },
+  {
+    id: "page.toggle-comment-overlay",
+    label: "コメント実況を切り替え",
+    englishLabel: "Toggle Comment Overlay",
+    description: "実況中なら表示を切り替え、停止中なら表示中のスレッドの実況を開始します",
+    keywords: ["実況", "コメント", "overlay", "コメント実況"],
+    group: "page",
+    icon: MessageSquare,
+    when: () => isTauriRuntime(),
+    run: dispatchCommentOverlayFlowToggle,
   },
 ];
 

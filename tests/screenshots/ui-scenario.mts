@@ -32,6 +32,7 @@ const SETTINGS = [
   ["コメントOverlay", "settings-comment-overlay"],
   ["NG", "settings-ng"],
   ["その他", "settings-other"],
+  ["デバッグ", "settings-debug"],
   ["データ", "settings-data"],
 ] as const;
 

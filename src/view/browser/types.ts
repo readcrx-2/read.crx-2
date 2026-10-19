@@ -99,6 +99,7 @@ export type SettingsSectionId =
   | "overlay"
   | "ng"
   | "other"
+  | "debug"
   | "data";
 
 // 設定画面の表示状態。TabViewState.settingsPage としてタブ単位で保存・復元される。

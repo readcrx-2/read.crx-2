@@ -1,6 +1,7 @@
 import { validateRuleDsl } from "@chlen/chlib";
 import {
   Archive,
+  Bug,
   Eye,
   Globe2,
   MessageCircle,
@@ -391,6 +392,23 @@ const ALL_SETTINGS_SECTIONS = [
     },
   ),
   defineSection(
+    "debug",
+    "デバッグ",
+    "詳細ログの出力を設定します。",
+    <Bug size={20} />,
+    [
+      {
+        kind: "boolean",
+        key: "debug_log",
+        title: "ログを有効にする",
+        description: "ONで詳細ログを出力します。",
+      },
+    ],
+    {
+      supplementaryPanelIds: ["debugLog"],
+    },
+  ),
+  defineSection(
     "other",
     "その他",
     "書き込み時の既定値や外部データ設定です。",
@@ -408,20 +426,9 @@ const ALL_SETTINGS_SECTIONS = [
         widget: "textarea",
         rows: 6,
       },
-      {
-        kind: "divider",
-        id: "debug",
-        title: "デバッグ",
-      },
-      {
-        kind: "boolean",
-        key: "debug_log",
-        title: "ログを有効にする",
-        description: "ONで詳細ログを出力します。",
-      },
     ],
     {
-      supplementaryPanelIds: ["externalIntegration", "debugLog", "dangerZone"],
+      supplementaryPanelIds: ["externalIntegration", "dangerZone"],
     },
   ),
 ] as const satisfies readonly SettingsSectionDefinition[];
@@ -444,6 +451,7 @@ const SETTINGS_SECTION_GROUP_OF = {
   ng: "browsing",
   data: "manage",
   other: "manage",
+  debug: "manage",
 } as const satisfies Record<SettingsSectionId, SettingsSectionGroupId>;
 
 const SETTINGS_SECTION_GROUP_TITLES = [

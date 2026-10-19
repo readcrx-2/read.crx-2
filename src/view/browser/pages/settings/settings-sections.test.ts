@@ -204,6 +204,17 @@ describe("設定セクションの実行環境フィルター", () => {
   });
 });
 
+describe("デバッグ設定のカテゴリ", () => {
+  it("デバッグのログ設定は「その他」ではなく独立したカテゴリに置く", () => {
+    const sections = getSettingsSections(false);
+    const other = sections.find((section) => section.id === "other");
+    const debug = sections.find((section) => section.id === "debug");
+
+    expect(other?.fields.some((field) => "key" in field && field.key === "debug_log")).toBe(false);
+    expect(debug?.fields.some((field) => "key" in field && field.key === "debug_log")).toBe(true);
+  });
+});
+
 describe("設定カテゴリの見出しごとのまとめ", () => {
   it("全カテゴリを定義順のまま、いずれか1つの見出しの下に並べる", () => {
     const sections = getSettingsSections(true);
@@ -216,7 +227,7 @@ describe("設定カテゴリの見出しごとのまとめ", () => {
 
   it("表示するカテゴリが1つもない見出しは出さない", () => {
     const sections = getSettingsSections(false).filter(
-      (section) => section.id !== "data" && section.id !== "other",
+      (section) => !["data", "other", "debug"].includes(section.id),
     );
     expect(groupSettingsSections(sections).map((group) => group.title)).toEqual(["アプリ", "閲覧"]);
   });

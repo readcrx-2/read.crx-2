@@ -1,3 +1,4 @@
+import type { HttpsMode } from "packages/chlib/src/fetcher/https-first";
 export interface WindowOptions {
   url: string;
   width?: number;
@@ -82,6 +83,8 @@ export interface HttpRequestOptions {
   body?: string | ArrayBuffer;
   timeout?: number;
   mimeType?: string;
+  /** HTTPで指定されたGETをHTTPSへ切り替える方針。未指定ならウィンドウで選んだ設定を使う。 */
+  httpsMode?: HttpsMode;
 }
 
 export interface HttpClient {

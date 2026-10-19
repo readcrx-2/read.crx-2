@@ -1,4 +1,5 @@
 import { fetchHttpsFirst } from "packages/chlib/src/fetcher/https-first";
+import { getHttpsMode } from "src/app/platform/https-mode";
 import type { DownloadManager } from "src/app/platform/types";
 
 /**
@@ -9,7 +10,13 @@ import type { DownloadManager } from "src/app/platform/types";
  */
 export const BrowserDownloadManager: DownloadManager = {
   async save(url: string, fileName: string): Promise<void> {
-    const response = await fetchHttpsFirst(url, "GET", (requestUrl) => fetch(requestUrl));
+    const response = await fetchHttpsFirst(
+      url,
+      "GET",
+      (requestUrl) => fetch(requestUrl),
+      undefined,
+      getHttpsMode(),
+    );
     if (!response.ok) {
       throw new Error(`画像の取得に失敗しました: HTTP ${response.status}`);
     }

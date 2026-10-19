@@ -26,6 +26,7 @@ export function serializeSharedHttpRequest(
           headers: options.headers,
           timeout: options.timeout,
           mimeType: options.mimeType,
+          httpsMode: options.httpsMode,
           ...(typeof options.body === "string"
             ? { body: options.body }
             : options.body instanceof ArrayBuffer

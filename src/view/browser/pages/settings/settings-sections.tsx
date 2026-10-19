@@ -65,6 +65,13 @@ const HOW_TO_JUDGMENT_ID_OPTIONS = [
   { const: "exists_once", title: "1つでも存在する場合" },
 ] as const satisfies readonly SettingsOption[];
 
+// 値は packages/chlib の HttpsMode と同じ。表示名は利用者に依頼された呼び方に合わせる。
+const HTTPS_MODE_OPTIONS = [
+  { const: "https_only", title: "HTTPS only" },
+  { const: "https_first", title: "HTTPS優先" },
+  { const: "auto", title: "自動" },
+] as const satisfies readonly SettingsOption[];
+
 const AUTO_NEXT_THREAD_MODE_OPTIONS = [
   { const: "balanced", title: "標準（精度と追従性のバランス）" },
   { const: "aggressive", title: "積極（スレタイ変化を広く許容）" },
@@ -110,7 +117,7 @@ const ALL_SETTINGS_SECTIONS = [
   defineSection(
     "general",
     "一般",
-    "新しいタブで開くページや、タブバーの配置を設定します。",
+    "新しいタブで開くページや、タブバーの配置、通信の方法を設定します。",
     <Settings size={20} />,
     [
       {
@@ -157,6 +164,20 @@ const ALL_SETTINGS_SECTIONS = [
         key: "tab_bar_collapsed",
         title: "垂直タブバーを簡易表示にする",
         description: "タイトルを隠してアイコンのみの細幅で表示します。",
+      },
+      {
+        kind: "divider",
+        id: "network",
+        title: "通信",
+      },
+      {
+        kind: "string",
+        key: "https_mode",
+        title: "HTTPSへの切り替え",
+        description:
+          "HTTPのURLを読み込むときの扱いです。HTTPS onlyはHTTPSだけで接続し、HTTPS非対応の板は読めません。HTTPS優先はHTTPSで接続できないときだけHTTPで接続します。自動はURLのとおりに接続します。",
+        options: HTTPS_MODE_OPTIONS,
+        widget: "radio",
       },
       // 変更理由: 書き込み設定は書き込みパネルの歯車モーダルに集約し、
       // 全体設定画面で同じ項目を重複表示しない。

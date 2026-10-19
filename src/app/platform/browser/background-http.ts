@@ -57,6 +57,7 @@ const transport: HttpClient = {
         }
       },
       options.headers,
+      options.httpsMode,
     );
   },
   async setupWriteHeaders() {},
@@ -78,6 +79,7 @@ export async function handleSharedHttpRequest(
           headers: serializedOptions.headers,
           timeout: serializedOptions.timeout,
           mimeType: serializedOptions.mimeType,
+          httpsMode: serializedOptions.httpsMode,
           body:
             serializedOptions.bodyBase64 !== undefined
               ? decodeBase64ArrayBuffer(serializedOptions.bodyBase64)

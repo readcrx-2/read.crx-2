@@ -26,6 +26,30 @@ pub struct HttpRequest {
   pub body: Option<String>,
   pub body_base64: Option<String>,
   pub timeout: Option<u64>,
+  /// HTTPで指定されたGETをHTTPSへ切り替える方針。設定を読めるWebView側から要求ごとに渡す。
+  pub https_mode: Option<String>,
+}
+
+/// HTTPで指定されたGETを、HTTPSへ切り替えるかどうかの方針。
+/// 値は packages/chlib の HttpsMode と同じで、未指定・不正な値は従来どおりHTTPS優先にする。
+#[derive(Clone, Copy, Debug, PartialEq, Eq)]
+enum HttpsMode {
+  /// HTTPSだけで接続し、HTTPへは戻さない。
+  HttpsOnly,
+  /// HTTPSを先に試し、接続に失敗した場合だけ元のHTTPへ戻す。
+  HttpsFirst,
+  /// URLのとおりに接続し、HTTPSへ切り替えない。
+  Auto,
+}
+
+impl HttpsMode {
+  fn from_request(value: Option<&str>) -> Self {
+    match value {
+      Some("https_only") => Self::HttpsOnly,
+      Some("auto") => Self::Auto,
+      _ => Self::HttpsFirst,
+    }
+  }
 }
 
 #[derive(Debug, Serialize)]
@@ -134,7 +158,10 @@ impl HttpTransportState {
       .map_err(|error| format!("HTTPメソッドが不正です: {error}"))?;
     let headers = build_headers(request.headers.as_ref())?;
 
-    let response = if method == Method::GET && url.scheme() == "http" {
+    let https_mode = HttpsMode::from_request(request.https_mode.as_deref());
+    let upgrades_to_https =
+      method == Method::GET && url.scheme() == "http" && https_mode != HttpsMode::Auto;
+    let response = if upgrades_to_https {
       let mut secure_url = url.clone();
       secure_url
         .set_scheme("https")
@@ -145,7 +172,8 @@ impl HttpTransportState {
       {
         Ok(response) => response,
         Err(error) => {
-          if has_sensitive_headers(&headers) {
+          // HTTPSだけを使う設定では、平文での再試行をしない。
+          if https_mode == HttpsMode::HttpsOnly || has_sensitive_headers(&headers) {
             return Err(error);
           }
           log::warn!("HTTPS接続に失敗したため、元のHTTP URLで再試行します: {error}");

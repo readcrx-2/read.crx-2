@@ -1,5 +1,6 @@
 import { fetchHttpsFirst } from "packages/chlib/src/fetcher/https-first";
 import { useCallback, useState } from "react";
+import { getHttpsMode } from "src/app/platform/https-mode";
 import {
   mapWithConcurrency,
   MAX_CONCURRENT_BATCH_REQUESTS,
@@ -54,11 +55,16 @@ export function useSettingsMaintenanceActions({
         MAX_CONCURRENT_BATCH_REQUESTS,
         async (targetUrl) => {
           try {
-            const response = await fetchHttpsFirst(targetUrl, "GET", (requestUrl) =>
-              fetch(requestUrl, {
-                method: "GET",
-                cache: "no-store",
-              }),
+            const response = await fetchHttpsFirst(
+              targetUrl,
+              "GET",
+              (requestUrl) =>
+                fetch(requestUrl, {
+                  method: "GET",
+                  cache: "no-store",
+                }),
+              undefined,
+              getHttpsMode(),
             );
             return {
               ok: response.ok,

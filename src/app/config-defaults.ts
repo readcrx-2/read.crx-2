@@ -1,6 +1,8 @@
 // 変更理由: 保存済み設定がない場合の既定値を一つの一覧に集約し、参照箇所ごとの値ずれを防ぐ。
 export const DEFAULT_CONFIG: Readonly<Record<string, string>> = {
   theme_id: "system",
+  // HTTPで指定されたGETは、従来どおりHTTPSを先に試してから必要なときだけHTTPへ戻す。
+  https_mode: "https_first",
   // 変更理由: 自動更新のON/OFFとは独立した間隔設定で、未変更時の既定間隔は20秒にする。
   auto_load_second: "20000",
   auto_load_second_board: "20000",

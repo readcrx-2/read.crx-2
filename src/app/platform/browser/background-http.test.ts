@@ -44,6 +44,25 @@ describe("拡張機能全ウィンドウ共有HTTPキュー", () => {
     });
   });
 
+  it("ウィンドウから渡されたHTTPSのみの方針では、HTTPSに失敗してもHTTPで再試行しない", async () => {
+    const fetchMock = vi.fn(async (_url: string) => {
+      throw new TypeError("TLS接続失敗");
+    });
+    vi.stubGlobal("fetch", fetchMock);
+
+    const result = await handleSharedHttpRequest({
+      type: "shared-http-request",
+      url: "http://example.net/board/",
+      options: { httpsMode: "https_only" },
+    });
+
+    expect(result).toMatchObject({ ok: false });
+    expect(fetchMock).toHaveBeenCalledExactlyOnceWith(
+      "https://example.net/board/",
+      expect.anything(),
+    );
+  });
+
   it("共有対象外のメッセージは処理しない", async () => {
     await expect(
       handleSharedHttpRequest({ type: "open-new-ui", url: "about:blank" }),

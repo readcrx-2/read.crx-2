@@ -1,6 +1,7 @@
 import { invoke } from "@tauri-apps/api/core";
 import { createLogger } from "src/app/logger";
 import { decodeBase64, decodeBase64ArrayBuffer, encodeBase64 } from "src/app/platform/binary";
+import { getHttpsMode } from "src/app/platform/https-mode";
 import type {
   BinaryHttpResponse,
   HttpClient,
@@ -44,6 +45,8 @@ async function request(url: string, options: HttpRequestOptions = {}): Promise<S
           : undefined,
       timeout: options.timeout,
       mimeType: options.mimeType,
+      // Rust側からは設定を読めないため、このウィンドウで選んだ方針を要求に添える。
+      httpsMode: options.httpsMode ?? getHttpsMode(),
     },
   });
 }

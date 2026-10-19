@@ -1,7 +1,7 @@
 // @vitest-environment node
 import { afterEach, describe, expect, it, vi } from "vite-plus/test";
 
-import { fetchHttpsFirst } from "./https-first";
+import { fetchHttpsFirst, normalizeHttpsMode } from "./https-first";
 
 describe("HTTPS優先の読み込み", () => {
   afterEach(() => vi.restoreAllMocks());
@@ -79,5 +79,34 @@ describe("HTTPS優先の読み込み", () => {
     ).rejects.toThrow("TLS接続失敗");
 
     expect(fetchUrl).toHaveBeenCalledExactlyOnceWith("https://example.com/board/");
+  });
+});
+
+describe("HTTPSへの切り替え方針", () => {
+  afterEach(() => vi.restoreAllMocks());
+
+  it("HTTPSのみでは、HTTPSへの通信に失敗してもHTTPで再試行しない", async () => {
+    const fetchUrl = vi.fn().mockRejectedValue(new Error("TLS接続失敗"));
+
+    await expect(
+      fetchHttpsFirst("http://example.com/board/", "GET", fetchUrl, undefined, "https_only"),
+    ).rejects.toThrow("TLS接続失敗");
+
+    expect(fetchUrl).toHaveBeenCalledExactlyOnceWith("https://example.com/board/");
+  });
+
+  it("自動では、HTTPのURLをHTTPSへ切り替えずにそのまま読み込む", async () => {
+    const fetchUrl = vi.fn().mockResolvedValue({ status: 200 });
+
+    await fetchHttpsFirst("http://example.com/board/", "GET", fetchUrl, undefined, "auto");
+
+    expect(fetchUrl).toHaveBeenCalledExactlyOnceWith("http://example.com/board/");
+  });
+
+  it("未設定や不正な保存値は、従来どおりHTTPS優先として扱う", () => {
+    expect(normalizeHttpsMode(null)).toBe("https_first");
+    expect(normalizeHttpsMode("unknown")).toBe("https_first");
+    expect(normalizeHttpsMode("https_only")).toBe("https_only");
+    expect(normalizeHttpsMode("auto")).toBe("auto");
   });
 });

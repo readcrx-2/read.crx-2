@@ -298,6 +298,7 @@ describe("設定項目の区切りごとのまとめ", () => {
       [undefined, ["before"]],
       ["new-tab", ["new_tab_page_mode", "focus_new_tab_on_open", "new_tab_page_board_url"]],
       ["tab-bar", ["tab_bar_orientation", "tab_bar_collapsed"]],
+      ["network", ["https_mode"]],
     ]);
   });
 });

@@ -3,6 +3,7 @@ import {
   serializeSharedHttpRequest,
   type SharedHttpResponseMessage,
 } from "src/app/platform/browser/shared-http-protocol";
+import { getHttpsMode } from "src/app/platform/https-mode";
 import { HttpClient, HttpRequestOptions, HttpResponse } from "src/app/platform/types";
 import browser from "webextension-polyfill";
 
@@ -92,8 +93,12 @@ async function setupWriteHeaders(formAction: string): Promise<void> {
 /** 通信本体はバックグラウンドで共有し、書き込みヘッダー設定だけは各タブで行う。 */
 export const BrowserHttpClient: HttpClient = {
   async fetch(url: string, options: HttpRequestOptions = {}): Promise<HttpResponse> {
+    // バックグラウンドからは設定を読めないため、このウィンドウで選んだ方針を要求に添える。
     const result = (await browser.runtime.sendMessage(
-      serializeSharedHttpRequest(url, options),
+      serializeSharedHttpRequest(url, {
+        ...options,
+        httpsMode: options.httpsMode ?? getHttpsMode(),
+      }),
     )) as SharedHttpResponseMessage;
     if (!result || !result.ok) {
       throw new Error(result?.error ?? "共有HTTPクライアントから応答がありません");

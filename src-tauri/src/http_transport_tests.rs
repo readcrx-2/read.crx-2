@@ -314,6 +314,7 @@ fn getの_http通信結果をヘッダーと_base64本文で返す() {
           body: None,
           body_base64: None,
           timeout: Some(5_000),
+          https_mode: None,
         },
       )
       .await
@@ -348,6 +349,7 @@ fn putは_base64本文と指定ヘッダーを送信する() {
           body: None,
           body_base64: Some("aGVsbG8=".into()),
           timeout: None,
+          https_mode: None,
         },
       )
       .await
@@ -377,6 +379,7 @@ fn postの空本文にはcontent_lengthを設定する() {
           body: None,
           body_base64: None,
           timeout: None,
+          https_mode: None,
         },
       )
       .await
@@ -408,6 +411,7 @@ fn 指定した_http本文と_content_lengthを送信する() {
           body: Some("abc".into()),
           body_base64: Some("ignored".into()),
           timeout: None,
+          https_mode: None,
         },
       )
       .await
@@ -433,6 +437,7 @@ fn http取得は_https失敗後に待機を経て_httpへ再試行する() {
     body: None,
     body_base64: None,
     timeout: Some(5_000),
+    https_mode: None,
   }))
   .unwrap();
   let request = server.join().unwrap();
@@ -463,6 +468,7 @@ fn 認証ヘッダーを含む_http要求は_https失敗時に平文へ切り替
     body: None,
     body_base64: None,
     timeout: Some(5_000),
+    https_mode: None,
   };
   assert!(tauri::async_runtime::block_on(state.request(request)).is_err());
   server.join().unwrap();
@@ -482,6 +488,7 @@ fn 通信失敗時はホストへ待機を設定して待機枠を戻す() {
     body: None,
     body_base64: None,
     timeout: Some(100),
+    https_mode: None,
   }))
   .is_err());
   assert_eq!(state.pending.load(Ordering::Relaxed), 0);
@@ -512,6 +519,7 @@ fn 不正なメソッドと_base64本文を拒否する() {
     body: None,
     body_base64: None,
     timeout: None,
+    https_mode: None,
   };
   let url = Url::parse(&request.url).unwrap();
   assert!(
@@ -546,6 +554,7 @@ fn 不正な_urlや閉じた同時実行枠でも待機数を解放する() {
     body: None,
     body_base64: None,
     timeout: None,
+    https_mode: None,
   };
   assert!(tauri::async_runtime::block_on(state.request(invalid)).is_err());
   assert_eq!(state.pending.load(Ordering::Relaxed), 0);
@@ -558,9 +567,73 @@ fn 不正な_urlや閉じた同時実行枠でも待機数を解放する() {
     body: None,
     body_base64: None,
     timeout: None,
+    https_mode: None,
   };
   assert!(tauri::async_runtime::block_on(state.request(closed))
     .unwrap_err()
     .contains("要求枠を取得できません"));
   assert_eq!(state.pending.load(Ordering::Relaxed), 0);
+}
+
+#[test]
+fn https_onlyでは_https失敗後に_httpへ再試行しない() {
+  let listener = TcpListener::bind("127.0.0.1:0").expect("test server binds");
+  let url = Url::parse(&format!(
+    "http://{}/resource",
+    listener.local_addr().unwrap()
+  ))
+  .expect("test server URL parses");
+  let server = std::thread::spawn(move || {
+    let (mut tls_stream, _) = listener.accept().expect("HTTPS request connects");
+    tls_stream
+      .set_read_timeout(Some(Duration::from_secs(5)))
+      .expect("TLS read timeout is set");
+    let mut tls_hello = [0; 1024];
+    let _ = tls_stream.read(&mut tls_hello).expect("TLS hello is read");
+    drop(tls_stream);
+    listener
+      .set_nonblocking(true)
+      .expect("listener becomes nonblocking");
+    std::thread::sleep(Duration::from_millis(300));
+    // HTTPへ再試行していれば、ここで2本目の接続が来ている。
+    listener.accept().is_ok()
+  });
+  let state = HttpTransportState::new().unwrap();
+  let result = tauri::async_runtime::block_on(state.send_request(
+    &url,
+    &HttpRequest {
+      url: url.to_string(),
+      method: None,
+      headers: None,
+      body: None,
+      body_base64: None,
+      timeout: Some(5_000),
+      https_mode: Some("https_only".to_string()),
+    },
+  ));
+  assert!(result.is_err());
+  assert!(!server.join().unwrap(), "HTTPへ再試行してはいけない");
+}
+
+#[test]
+fn 自動では_httpのurlを_httpsへ切り替えずに取得する() {
+  let (url, server) =
+    start_http_server(b"HTTP/1.1 200 OK\r\nContent-Length: 2\r\nConnection: close\r\n\r\nok");
+  let state = HttpTransportState::new().unwrap();
+  let response = tauri::async_runtime::block_on(state.send_request(
+    &url,
+    &HttpRequest {
+      url: url.to_string(),
+      method: None,
+      headers: None,
+      body: None,
+      body_base64: None,
+      timeout: Some(5_000),
+      https_mode: Some("auto".to_string()),
+    },
+  ))
+  .unwrap();
+  let request = server.join().unwrap();
+  assert!(request.starts_with("GET /resource HTTP/1.1"));
+  assert_eq!(response.status, 200);
 }

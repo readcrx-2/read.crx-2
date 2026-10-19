@@ -285,7 +285,9 @@
   gap: var(--sys-space-2);
   /* 折り返して単独の行になったときも右端へ寄せる。 */
   margin-left: auto;
-  padding: var(--sys-space-1) var(--sys-space-4);
+  /* 変更理由: 左は末尾の「外部」ボタンと検索対象のセレクトが接して見えないよう広めに取り、
+     右は入力欄の外側に余白が残りすぎないよう狭める。 */
+  padding: var(--sys-space-1) var(--sys-space-2) var(--sys-space-1) var(--sys-space-6);
 }
 
 .thread-page__toolbar-search-target {

@@ -52,6 +52,7 @@ import { useImageBlurConfig } from "src/view/browser/pages/thread/use-image-blur
 import { useOwnResTracking } from "src/view/browser/pages/thread/use-own-res-tracking";
 import { useResInteractionHandlers } from "src/view/browser/pages/thread/use-res-interaction-handlers";
 import { useThreadFilterDefaultOpenSetting } from "src/view/browser/pages/thread/use-thread-filter-default-open-setting";
+import { useThreadFilterModeToggle } from "src/view/browser/pages/thread/use-thread-filter-mode-toggle";
 import { useThreadReadState } from "src/view/browser/pages/thread/use-thread-read-state";
 import { useThreadResContextMenu } from "src/view/browser/pages/thread/use-thread-res-context-menu";
 import { useThreadStatusSync } from "src/view/browser/pages/thread/use-thread-status-sync";
@@ -292,6 +293,12 @@ export const ThreadPage: React.FC<ThreadPageProps> = ({
     clearFilter,
     hasActiveFilter: filter !== "all",
     openByDefault: isFilterDefaultOpen,
+  });
+  useThreadFilterModeToggle({
+    tabId,
+    isActive,
+    setFilter,
+    openFilterToolbar,
   });
 
   useMouseGesture(rootRef, viewSurface);

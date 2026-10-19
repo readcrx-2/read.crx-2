@@ -217,6 +217,18 @@ const ALL_SETTINGS_SECTIONS = [
       },
       {
         kind: "divider",
+        id: "thread-filter",
+        title: "フィルタ",
+      },
+      {
+        kind: "boolean",
+        key: "thread_filter_default_open",
+        title: "スレを開いたときフィルタバーを開いたままにする",
+        description:
+          "ONにすると、スレッドを開いた直後からフィルタバーを表示します。入力欄へのフォーカスは移しません。",
+      },
+      {
+        kind: "divider",
         id: "thumbnails",
         title: "サムネイル",
       },

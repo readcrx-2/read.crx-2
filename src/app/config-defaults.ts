@@ -11,6 +11,8 @@ export const DEFAULT_CONFIG: Readonly<Record<string, string>> = {
   // EdgeLiveViewerと同じく候補がまだ立っていない間だけ待ち、subjectの無期限取得を防ぐ。
   next_thread_search_duration: "180",
   pause_auto_scroll_on_popup: "on",
+  // 変更理由: フィルタバーは本文を押し下げるため、スレを開いた直後は閉じておくことを既定にする。
+  thread_filter_default_open: "off",
   // 更新コントロールで選ぶスレッド表示形式。未変更時は従来どおり通常表示にする。
   thread_display_mode: "normal",
   image_blur: "on",

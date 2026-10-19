@@ -42,6 +42,26 @@ describe("ThreadPageTopBar", () => {
     ]);
   });
 
+  it("初回フォーカスを抑える指定のときは入力欄へフォーカスしない", () => {
+    render(
+      <ThreadPageTopBar
+        activeTopBar="filter"
+        filter="all"
+        filterCounts={COUNTS}
+        onClose={vi.fn()}
+        onFilterChange={vi.fn()}
+        onSearchTargetChange={vi.fn()}
+        onSearchQueryChange={vi.fn()}
+        searchFocusKey={0}
+        suppressInitialFocus
+        searchQuery=""
+        searchTarget="all"
+      />,
+    );
+
+    expect(screen.getByPlaceholderText("フィルタする文字を入力")).not.toHaveFocus();
+  });
+
   it("検索対象の変更を親へ通知する", () => {
     const onSearchTargetChange = vi.fn();
     render(

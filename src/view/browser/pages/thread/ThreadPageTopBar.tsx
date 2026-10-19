@@ -12,6 +12,7 @@ interface ThreadPageTopBarProps {
   onSearchTargetChange: (searchTarget: ThreadSearchTarget) => void;
   onSearchQueryChange: (query: string) => void;
   searchFocusKey: number;
+  suppressInitialFocus?: boolean;
   searchQuery: string;
   searchTarget: ThreadSearchTarget;
 }
@@ -40,13 +41,14 @@ export const ThreadPageTopBar: React.FC<ThreadPageTopBarProps> = ({
   onSearchTargetChange,
   onSearchQueryChange,
   searchFocusKey,
+  suppressInitialFocus = false,
   searchQuery,
   searchTarget,
 }) => {
   const inputRef = useRef<HTMLInputElement>(null);
 
   useEffect(() => {
-    if (activeTopBar === "none") {
+    if (activeTopBar === "none" || suppressInitialFocus) {
       return;
     }
 
@@ -56,7 +58,7 @@ export const ThreadPageTopBar: React.FC<ThreadPageTopBarProps> = ({
     } catch {
       inputRef.current?.focus();
     }
-  }, [activeTopBar, searchFocusKey]);
+  }, [activeTopBar, searchFocusKey, suppressInitialFocus]);
 
   // ThreadPage本体は「バーを出すか」だけを判断し、
   // 検索とフィルタの複合UIは専用コンポーネントへ閉じ込めて見通しを保つ。

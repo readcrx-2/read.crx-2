@@ -1,0 +1,70 @@
+name: Tauri E2E
+
+# Tauri版のE2EはRustのビルドを含み、Windowsのrunnerで10分前後かかる。
+# 毎PRではなく、Tauri固有の経路に触れた変更だけで動かし、それ以外の退行は
+# developへのpushと週1回の定期実行で拾う（docs/plans/e2e-plan.md の Phase 4）。
+on:
+  push:
+    branches: [develop]
+  pull_request:
+    paths:
+      - "src-tauri/**"
+      - "src/app/platform/**"
+      - "src/browser-shim.js"
+      - "tests/tauri/**"
+      - "tests/localboard.mts"
+      - "scripts/run-e2e.mjs"
+      - "playwright.config.ts"
+      - ".github/workflows/e2e-tauri.yml"
+  workflow_dispatch:
+  schedule:
+    - cron: "0 0 * * 1"
+
+# 同じブランチへ連続でpushしたとき、古い実行を止めてランナーを無駄にしない。
+concurrency:
+  group: ${{ github.workflow }}-${{ github.event.pull_request.number || github.ref }}
+  cancel-in-progress: true
+
+permissions:
+  contents: read
+
+jobs:
+  e2e-tauri:
+    name: Tauri版E2Eテスト
+    runs-on: windows-latest
+    # 初回はRustの依存を全てビルドするため長めにとる。止まった実行は6時間待たずに打ち切る。
+    timeout-minutes: 40
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v7
+
+      - name: Set up Node.js and install dependencies
+        uses: ./.github/actions/setup-node-pnpm
+
+      - name: Set up Rust
+        uses: dtolnay/rust-toolchain@stable
+
+      - name: Cache Rust build artifacts
+        uses: Swatinem/rust-cache@v2
+        with:
+          workspaces: src-tauri -> target
+
+      # PlaywrightはWebView2のCDPへ接続するだけなので、ブラウザのダウンロードは不要。
+      # WebView2 RuntimeはWindowsのrunnerに入っている。
+      # offstage-windowsはWindows同梱のcsc.exeで補助プログラムを作り、窓を非表示デスクトップに出す。
+      - name: Run Tauri E2E tests
+        run: pnpm run test:e2e:tauri
+        env:
+          CI: true
+
+      # 失敗時にトレースとスクリーンショット、Rust側のログから原因を追えるよう、結果を残す。
+      - name: Upload Playwright report
+        if: ${{ !cancelled() }}
+        uses: actions/upload-artifact@v7
+        with:
+          name: playwright-report-tauri
+          path: |
+            playwright-report/
+            test-results/
+          retention-days: 14
+          if-no-files-found: ignore

@@ -80,7 +80,7 @@ Chrome拡張版だけを検証している現在のE2Eを広げ、Tauri版の実
 - [x] Phase 1
 - [x] Phase 2
 - [x] Phase 3
-- [ ] Phase 4
+- [x] Phase 4（`.github/workflows/e2e-tauri.yml`。GitHub上での実行はまだ確認していない）
 
 ### Phase 0〜3で分かったこと
 

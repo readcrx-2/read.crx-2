@@ -36,7 +36,6 @@ import {
 import { useBrowserCommandRunner } from "src/view/browser/hooks/use-browser-command-runner";
 import { useOmnibar } from "src/view/browser/hooks/use-omnibar";
 import { useToast } from "src/view/browser/hooks/use-toast";
-import { useUrlBarVisibility } from "src/view/browser/hooks/use-url-bar-visibility";
 import { useViewSurface } from "src/view/browser/hooks/use-view-surface";
 import {
   getAutoRefreshPageKey,
@@ -117,7 +116,6 @@ export const NavigationBar: React.FC<NavigationBarProps> = ({
   const isTwoPane = panes.length >= 2;
   const isActivePane = activePaneId === paneId;
   const { isOpen: isPanelOpen, activePanelTabId, togglePanel } = useBottomPanel();
-  const { setExpanded: setUrlBarExpanded } = useUrlBarVisibility(paneId);
 
   const back = canGoBack(viewTab);
   const forward = canGoForward(viewTab);
@@ -172,15 +170,6 @@ export const NavigationBar: React.FC<NavigationBarProps> = ({
   // 非アクティブペインのボタンをタブバー横へインライン表示すると位置が変わるため描画しない。
   const hideInactiveChrome =
     tabBarOrientation === "horizontal" && !isActivePane && !useTitleBarSlot;
-
-  useEffect(() => {
-    // 変更理由: グローバルなトーストはペイン内のURLバーと別階層にあるため、
-    // 展開中のペインを共有してURLバーの有無に応じた位置へ表示する。
-    setUrlBarExpanded(isUrlEditing);
-    return () => {
-      setUrlBarExpanded(false);
-    };
-  }, [isUrlEditing, setUrlBarExpanded]);
 
   const currentAutoRefreshPageKey = getAutoRefreshPageKey(viewPage);
   const isCurrentPageAutoRefreshEnabled = isAutoRefreshEnabledForPage(viewTab, viewPage);

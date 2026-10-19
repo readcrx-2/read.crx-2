@@ -29,10 +29,6 @@ import { BottomPanelProvider } from "src/view/browser/hooks/use-bottom-panel";
 import { useNotificationListener } from "src/view/browser/hooks/use-notification-listener";
 import { PageCountStatusProvider } from "src/view/browser/hooks/use-page-count-status";
 import { useTheme } from "src/view/browser/hooks/use-theme";
-import {
-  UrlBarVisibilityProvider,
-  useUrlBarVisibility,
-} from "src/view/browser/hooks/use-url-bar-visibility";
 import { BottomPanel } from "src/view/browser/shell/BottomPanel";
 import { ContentArea } from "src/view/browser/shell/ContentArea";
 import { NavigationBar } from "src/view/browser/shell/NavigationBar";
@@ -229,12 +225,11 @@ const PaneRow: React.FC = () => {
   );
 };
 
-const BrowserAppContent: React.FC = () => {
+export const BrowserApp: React.FC = () => {
   const theme = useTheme();
   // 変更理由: 垂直モードではタイトルバーをペイン単位にするため、シェル側の共通表示を切り替える。
   const shellTabBarOrientation = useTabBarOrientation();
   useNotificationListener();
-  const { isAnyExpanded: isUrlBarExpanded } = useUrlBarVisibility();
 
   useEffect(() => {
     if (!/^(?:chrome|moz)-extension:$/.test(location.protocol)) return;
@@ -288,15 +283,10 @@ const BrowserAppContent: React.FC = () => {
                 data-tab-orientation={shellTabBarOrientation}
               >
                 <WindowNavigationBridge />
-                {/* 変更理由: 本文を覆う範囲を減らし、通知を上部バー直下の右端へ寄せる。 */}
-                <ToastProvider
-                  topOffset={
-                    isUrlBarExpanded
-                      ? "calc(var(--sys-space-13) + var(--sys-space-10))"
-                      : "var(--sys-space-13)"
-                  }
-                  rightOffset="var(--sys-space-4)"
-                />
+                {/* 変更理由: 本文を覆う範囲を減らし、通知を上部バー直下の右端へ寄せる。
+                    URL入力はタイトルバー内でピルと入れ替わるだけで行が増えないため、
+                    入力中でも通知の位置は変えない。 */}
+                <ToastProvider topOffset="var(--sys-space-13)" rightOffset="var(--sys-space-4)" />
                 {/*
                 水平モードではタイトルと必須のレイアウト操作はペインの外に置く。
                 これにより2ペイン時も操作が重複せず、アクティブペインのタイトルだけを表示できる。
@@ -318,9 +308,3 @@ const ArchiveReplayMainThreadSyncBridge: React.FC = () => {
   useArchiveReplayMainThreadSync();
   return null;
 };
-
-export const BrowserApp: React.FC = () => (
-  <UrlBarVisibilityProvider>
-    <BrowserAppContent />
-  </UrlBarVisibilityProvider>
-);

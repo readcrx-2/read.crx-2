@@ -1,6 +1,10 @@
 import "@testing-library/jest-dom/vitest";
 
 import { cleanup, fireEvent, render, screen } from "@testing-library/react";
+import {
+  commandPalette,
+  commandPaletteStore,
+} from "src/view/browser/commands/command-palette-store";
 import { TitleBar } from "src/view/browser/shell/TitleBar";
 import type { Page } from "src/view/browser/types";
 import {
@@ -90,6 +94,7 @@ describe("TitleBar", () => {
   let refreshClock = Date.now();
   afterEach(() => {
     cleanup();
+    commandPalette.close();
     consumeManualRefresh(getManualRefreshScopeKey("tab-1", mocks.viewPage));
     vi.restoreAllMocks();
   });
@@ -273,5 +278,37 @@ describe("TitleBar", () => {
     expect(menu).toHaveAttribute("data-tab-id", "tab-1");
     expect(menu).toHaveAttribute("data-x", "120");
     expect(menu).toHaveAttribute("data-y", "10");
+  });
+
+  it("タイトルは検索アイコン付きのボタンで、クリックするとURL入力を開く", () => {
+    render(<TitleBar />);
+
+    const title = screen.getByRole("button", { name: "Current Thread" });
+    expect(title).toBe(screen.getByTestId("title-bar-title"));
+    expect(title.querySelector("svg")).not.toBeNull();
+
+    fireEvent.click(title);
+
+    expect(commandPaletteStore.getState()).toMatchObject({ opened: true, mode: "navigation" });
+  });
+
+  it("オムニバーの受け口を中央に持ち、自ペインのIDを持つ", () => {
+    render(<TitleBar />);
+
+    const slot = screen.getByTestId("title-bar-omnibar-slot");
+    expect(slot).toHaveAttribute("data-pane-id", "pane-1");
+    expect(screen.getByTestId("title-bar-center")).toContainElement(slot);
+  });
+
+  it("オムニバーを使えない画面ではタイトルを表示だけにする", () => {
+    render(<TitleBar omnibarEnabled={false} />);
+
+    const title = screen.getByTestId("title-bar-title");
+    expect(title).toHaveTextContent("Current Thread");
+    expect(screen.queryByRole("button", { name: "Current Thread" })).toBeNull();
+
+    fireEvent.click(title);
+
+    expect(commandPaletteStore.getState().opened).toBe(false);
   });
 });

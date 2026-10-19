@@ -47,7 +47,8 @@ export const DetachedTabWindowContent: React.FC<{
                   {/* 別窓内の返信・別窓生成失敗などの通知を、表示中の窓へ出す。 */}
                   <ToastProvider topOffset="16px" rightOffset="16px" />
                   {/* 表示タブをContextで固定し、元ペインの選択変更に影響されない共通タイトルを出す。 */}
-                  <TitleBar />
+                  {/* 別窓には NavigationBar（オムニバー）がないため、タイトルは表示だけにする。 */}
+                  <TitleBar omnibarEnabled={false} />
                   <div className="content-area">
                     <TabPanel tab={tab} isActive isOverlayTarget={false} viewSurface={surface} />
                   </div>

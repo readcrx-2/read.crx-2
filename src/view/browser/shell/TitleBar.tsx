@@ -1,7 +1,8 @@
-import { ArrowLeft, ArrowRight, RotateCw } from "lucide-react";
+import { ArrowLeft, ArrowRight, RotateCw, Search } from "lucide-react";
 import React, { useCallback, useState } from "react";
 import { useTabCommandRunner } from "src/features/tabs/browser/use-tab-command-runner";
 import { TabContextMenu } from "src/features/tabs/ui/TabContextMenu";
+import { commandPalette } from "src/view/browser/commands/command-palette-store";
 import { TAB_COMMAND_IDS } from "src/view/browser/commands/tab-command-runtime";
 import { useTitleBarButtonSettings } from "src/view/browser/hooks/use-title-bar-navigation-setting";
 import { useTabStore } from "src/view/browser/state/tabs/use-tab-store";
@@ -21,9 +22,18 @@ interface TitleBarMenuPosition {
 export interface TitleBarProps {
   /** タイトルバー左端の戻る・進む・更新を表示するかどうか。 */
   showNavigationButtons?: boolean;
+  /**
+   * タイトルをクリックでURL入力へ切り替えるピルにするかどうか。
+   * 変更理由: オムニバーの状態を持つ NavigationBar がない画面（切り離したタブの別窓）では、
+   * 共有のコマンドパレットを本窓側で開いてしまうため、タイトルを表示だけにできるようにする。
+   */
+  omnibarEnabled?: boolean;
 }
 
-export const TitleBar: React.FC<TitleBarProps> = ({ showNavigationButtons = true }) => {
+export const TitleBar: React.FC<TitleBarProps> = ({
+  showNavigationButtons = true,
+  omnibarEnabled = true,
+}) => {
   const { viewTab, viewPage, paneId } = useTabStore();
   const title = viewPage.title || "read.crx 2";
   const runTabCommand = useTabCommandRunner(viewTab.id);
@@ -94,14 +104,39 @@ export const TitleBar: React.FC<TitleBarProps> = ({ showNavigationButtons = true
           </>
         )}
       </div>
-      <div
-        className="title-bar__title"
-        data-testid="title-bar-title"
-        data-page-type={viewPage.type}
-        title={title}
-        onContextMenu={handleTitleContextMenu}
-      >
-        {title}
+      <div className="title-bar__center" data-testid="title-bar-center">
+        {/* 変更理由: VS Codeのコマンドセンターと同様に、通常時は検索アイコンとタイトルだけを
+            見せ、クリックでURL入力（オムニバー）へ切り替える。入力欄の実体は NavigationBar が
+            受け口へポータルする。入力中は受け口が空でなくなり、CSSでピルを隠す。 */}
+        {omnibarEnabled ? (
+          <button
+            type="button"
+            className="title-bar__title title-bar__title--omnibar"
+            data-testid="title-bar-title"
+            data-page-type={viewPage.type}
+            title={title}
+            onClick={() => commandPalette.open("navigation")}
+            onContextMenu={handleTitleContextMenu}
+          >
+            <Search size={14} aria-hidden="true" className="title-bar__title-icon" />
+            <span className="title-bar__title-text">{title}</span>
+          </button>
+        ) : (
+          <div
+            className="title-bar__title"
+            data-testid="title-bar-title"
+            data-page-type={viewPage.type}
+            title={title}
+            onContextMenu={handleTitleContextMenu}
+          >
+            <span className="title-bar__title-text">{title}</span>
+          </div>
+        )}
+        <div
+          className="title-bar__omnibar-slot"
+          data-pane-id={paneId}
+          data-testid="title-bar-omnibar-slot"
+        />
       </div>
       <div
         className="title-bar__actions action-toolbar-container"

@@ -164,22 +164,84 @@
   padding-right: 6px;
 }
 
-.title-bar__title {
+/* 変更理由: タイトルのピルとオムニバーの入力欄を同じ列・同じ位置に重ねるための外枠。
+   入力欄のドロップダウンはこの枠を基準に配置する。 */
+.title-bar__center {
+  position: relative;
+  display: flex;
   grid-column: 2;
+  justify-content: center;
+  min-width: 0;
+}
+
+.title-bar__title {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: var(--sys-space-3);
   min-width: 0;
   /* 変更理由: 70vw基準では狭いペインで中央列が左右を押し出すため、列幅いっぱいまでに抑えて
-     省略表示へ任せる。justify-self で中央寄せを保つ。 */
-  max-width: 100%;
-  justify-self: center;
+     省略表示へ任せる。広い画面ではピルが間延びしないよう上限を設ける。 */
   width: 100%;
+  max-width: calc(var(--sys-space-16) * 12);
   overflow: hidden;
   color: var(--sys-color-text);
   font-size: var(--sys-font-size-xs);
   font-weight: 600;
   line-height: var(--sys-space-12);
   text-align: center;
+}
+
+.title-bar__title-text {
+  min-width: 0;
+  overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
+}
+
+/* 変更理由: VS Codeのコマンドセンターのように、検索アイコン付きの角丸ピルにして
+   「クリックするとここで検索・URL入力ができる」ことを示す。 */
+.title-bar__title--omnibar {
+  height: var(--sys-space-11);
+  padding: 0 var(--sys-space-6);
+  border: 1px solid var(--sys-color-border);
+  border-radius: var(--sys-radius-md);
+  background: var(--sys-color-surface);
+  cursor: pointer;
+  transition:
+    background var(--sys-duration-fast),
+    border-color var(--sys-duration-fast);
+}
+
+.title-bar__title--omnibar:hover {
+  background: var(--sys-color-tab-strip-hover);
+}
+
+.title-bar__title--omnibar:focus-visible {
+  outline: 2px solid var(--sys-color-focus-ring);
+  outline-offset: -2px;
+}
+
+.title-bar__title-icon {
+  flex-shrink: 0;
+  color: var(--sys-color-text-muted);
+}
+
+/* 変更理由: 入力中は NavigationBar が受け口へオムニバーを描画する。その間だけ
+   ピルを隠して入力欄と置き換える（空のときは幅を持たず、ピルの見た目を変えない）。 */
+.title-bar__omnibar-slot {
+  display: none;
+  width: 100%;
+  max-width: calc(var(--sys-space-16) * 12);
+  min-width: 0;
+}
+
+.title-bar__omnibar-slot:not(:empty) {
+  display: block;
+}
+
+.title-bar__center:has(.title-bar__omnibar-slot:not(:empty)) > .title-bar__title {
+  display: none;
 }
 
 .title-bar__actions {

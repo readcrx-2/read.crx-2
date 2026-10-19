@@ -65,25 +65,24 @@ pnpm run test:e2e:tauri
 
 ## UIスクリーンショット
 
-`pnpm run ui:shots` でChrome拡張版をビルドし、架空の板・スレ・レスを使ってUIを撮影します。
-撮影は時間がかかるため `pnpm run test:e2e` には含めず、`ui:shots` のときだけ実行します。
-出力先は `screenshots/ui/<実行日時>/` です。ホーム、板一覧、スレ一覧、レス表示、
-ブックマーク・閲覧履歴・ログ・書き込み履歴、ステータスバーの各ミニウィンドウを保存します。
-設定画面は各カテゴリを縦スクロールで分割し、NG記法例・高度なNG設定・文字列置換も開いて撮影します。
-出力先を変える場合はPowerShellで `$env:UI_SHOT_DIR='V:\temp\chlens-shots'; pnpm run ui:shots` と指定します。
-
-Tauri版はリモートデバッグを有効にして起動し、別のターミナルで撮影します。
+架空の板・スレ・レスを使い、全画面をライトとダークの両テーマで撮影します。
+撮影は時間がかかるため `pnpm run test:e2e` には含めず、次のコマンドのときだけ実行します。
+E2Eと同じく非表示デスクトップで動くため、撮影中も画面やフォーカスを奪いません。
 
 ```powershell
-# ターミナル1
-pnpm run dev:tauri:debug
-
-# ターミナル2
-pnpm run ui:shots:tauri
+pnpm run ui:shots        # Chrome版
+pnpm run ui:shots:tauri  # Tauri版（Windowsだけ）
+pnpm run ui:shots:all    # 両方
 ```
 
-Tauri側も架空の板・スレ・レスを使い、ブックマーク・閲覧履歴・ログ・書き込み履歴、
-ステータスバーの各ミニウィンドウ、コメントOverlayの操作窓と流れている状態、
-Tauri版の設定全カテゴリ・全セクションを保存します。接続先は既定で `127.0.0.1:9222` です。
-撮影には一時タブを使い、テーマ・表示形式・bbsmenuの設定は終了時に復元します。
-別ポートを使う場合は `$env:CHLENS_CDP_URL='http://127.0.0.1:9333'` を指定します。
+出力先は `screenshots/ui/<実行日時>/<chrome|tauri>/<light|dark>/` です。
+ホーム、板一覧、スレ一覧、レス表示（実況表示・新着）、ブックマーク・閲覧履歴・ログ・書き込み履歴、
+ステータスバーの各ミニウィンドウを保存します。設定画面は各カテゴリを縦スクロールで分割し、
+NG記法例・高度なNG設定・文字列置換・エクスポートのダイアログも開いて撮影します。
+Tauri版はさらに、コメントOverlayの操作窓・空の状態・流れている状態と、過去実況再生の窓を撮ります。
+
+撮影手順は `tests/screenshots/ui-scenario.mts` に共通化しています。各版のspec
+（`tests/ui-screenshots.spec.mts`・`tests/tauri/ui-screenshots.spec.mts`）は起動方法と固有の画面だけを持ちます。
+Tauri版はE2E用の保存先で起動するため、普段使いのデータや設定は変わりません。
+`<実行日時>` の部分を変える場合はPowerShellで `$env:UI_SHOT_DIR='V:\temp\chlens-shots'` を指定し、
+Playwrightの引数は `pnpm run ui:shots -- --grep dark` のように後ろへ付けます。

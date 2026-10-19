@@ -22,6 +22,7 @@ export default defineConfig({
       use: { ...devices["Desktop Chrome"] },
       // UIスクリーンショットは画面の検証ではなく撮影用で、1件で通常のE2E全体の約4割の時間を使う。
       // そのため通常の実行からは外し、pnpm run ui:shots（CHLENS_UI_SHOTS=true）のときだけ実行する。
+      // 撮影手順は tests/screenshots/ui-scenario.mts にあり、.spec ではないので実行対象にはならない。
       testIgnore: [
         "tauri/**",
         ...(process.env.CHLENS_UI_SHOTS === "true" ? [] : ["**/ui-screenshots.spec.mts"]),
@@ -30,6 +31,8 @@ export default defineConfig({
     {
       name: "tauri",
       testDir: "./tests/tauri",
+      // Chrome版と同じく、撮影は pnpm run ui:shots:tauri のときだけ実行する。
+      testIgnore: process.env.CHLENS_UI_SHOTS === "true" ? [] : ["**/ui-screenshots.spec.mts"],
       // offstage-windowsは1回の実行につき非表示デスクトップを1つだけ使い、全窓がそこへ出る。
       // Tauri版はメイン・Overlay・過去実況の窓を持つため、複数起動するとフォーカスを奪い合う。
       workers: 1,

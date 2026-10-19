@@ -79,6 +79,14 @@ export interface SettingsSectionDefinition {
   schema: RJSFSchema;
   uiSchema: UiSchema<SettingsSectionFormData>;
   supplementaryPanelIds?: readonly SettingsSupplementaryPanelId[];
+  relatedSection?: SettingsRelatedSection;
+}
+
+/** 関連する設定が別カテゴリにあるとき、見出しの下に出す案内と移動先。 */
+export interface SettingsRelatedSection {
+  id: SettingsSectionId;
+  description: string;
+  label: string;
 }
 
 export type SettingsSectionGroupId = "app" | "browsing" | "manage";

@@ -262,6 +262,20 @@
   color: var(--sys-color-text-muted);
 }
 
+.settings-page__related {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--sys-space-4);
+  margin-top: var(--sys-space-4);
+  font-size: var(--sys-font-size-sm);
+  color: var(--sys-color-text-muted);
+}
+
+.settings-page__related-link {
+  color: var(--sys-color-accent);
+}
+
 .settings-page__note {
   display: inline-flex;
   align-items: center;

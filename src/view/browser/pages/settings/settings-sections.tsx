@@ -4,8 +4,8 @@ import {
   Bug,
   Eye,
   Globe2,
+  Link2,
   MessageCircle,
-  MoreHorizontal,
   RefreshCw,
   Settings,
   ShieldAlert,
@@ -22,6 +22,7 @@ import type {
   SettingsFormState,
   SettingsFormValue,
   SettingsOption,
+  SettingsRelatedSection,
   SettingsSectionDefinition,
   SettingsSectionFormData,
   SettingsSectionGroup,
@@ -75,6 +76,7 @@ function defineSection(
   fields: readonly SettingsSectionItem[],
   options?: {
     supplementaryPanelIds?: readonly SettingsSupplementaryPanelId[];
+    relatedSection?: SettingsRelatedSection;
   },
 ): SettingsSectionDefinition {
   const fieldItems = fields.filter(isSettingsFieldItem);
@@ -96,6 +98,7 @@ function defineSection(
     },
     uiSchema: buildUiSchema(fieldItems),
     supplementaryPanelIds: options?.supplementaryPanelIds,
+    relatedSection: options?.relatedSection,
   };
 }
 
@@ -103,7 +106,7 @@ const ALL_SETTINGS_SECTIONS = [
   defineSection(
     "general",
     "一般",
-    "新しいタブの動作や、開くページを設定します。",
+    "新しいタブで開くページや、タブバーの配置を設定します。",
     <Settings size={20} />,
     [
       {
@@ -132,29 +135,6 @@ const ALL_SETTINGS_SECTIONS = [
         description:
           "『指定の板（入力）』を選んだ時に開く板URLです（例: https://example.com/test/read.cgi/software/）。",
       },
-      // 変更理由: 書き込み設定は書き込みパネルの歯車モーダルに集約し、
-      // 全体設定画面で同じ項目を重複表示しない。
-      // {
-      //   kind: "divider",
-      //   id: "network",
-      //   title: "通信",
-      // },
-      // {
-      //   kind: "string",
-      //   key: "format_2chnet",
-      //   title: "2chnetの取得形式",
-      //   options: FORMAT_2CH_OPTIONS,
-      //   widget: "radio",
-      // },
-    ],
-  ),
-  // 変更理由: 一般とサムネイルに分かれていた見た目の設定をまとめ、探しやすくする。
-  defineSection(
-    "display",
-    "表示",
-    "テーマやタブバー、タイトルバー、サムネイルなど画面の見た目を調整します。",
-    <Eye size={20} />,
-    [
       {
         kind: "divider",
         id: "tab-bar",
@@ -174,6 +154,30 @@ const ALL_SETTINGS_SECTIONS = [
         title: "垂直タブバーを簡易表示にする",
         description: "タイトルを隠してアイコンのみの細幅で表示します。",
       },
+      // 変更理由: 書き込み設定は書き込みパネルの歯車モーダルに集約し、
+      // 全体設定画面で同じ項目を重複表示しない。
+      // {
+      //   kind: "divider",
+      //   id: "network",
+      //   title: "通信",
+      // },
+      // {
+      //   kind: "string",
+      //   key: "format_2chnet",
+      //   title: "2chnetの取得形式",
+      //   options: FORMAT_2CH_OPTIONS,
+      //   widget: "radio",
+      // },
+    ],
+  ),
+  // 変更理由: 一般とサムネイルに分かれていた見た目の設定をまとめ、探しやすくする。
+  // タブバーはタブの操作と一緒に探されるため、一般へ置く。
+  defineSection(
+    "display",
+    "表示",
+    "テーマやタイトルバー、サムネイルなど画面の見た目を調整します。",
+    <Eye size={20} />,
+    [
       {
         kind: "divider",
         id: "appearance",
@@ -215,22 +219,10 @@ const ALL_SETTINGS_SECTIONS = [
       supplementaryPanelIds: ["titleBarButtonSettings"],
     },
   ),
-  // 変更理由: ドメイン共通から各板への継承は通常の全体設定フォームとは異なるため、
-  // 専用パネルへ閉じ込めて項目追加時のフォーム分岐を増やさない。
-  defineSection(
-    "site-board",
-    "ドメイン共通と各板",
-    "ドメイン以下の各板に共通する設定。必要な板だけ上書きできます。",
-    <Globe2 size={20} />,
-    [],
-    {
-      supplementaryPanelIds: ["siteBoardSettings"],
-    },
-  ),
   defineSection(
     "reload",
-    "更新関連",
-    "自動更新と次スレ追従、更新後のスクロール挙動を調整します。",
+    "自動更新・次スレ",
+    "次スレ追従と、更新後のスクロール挙動を調整します。",
     <RefreshCw size={20} />,
     [
       {
@@ -276,32 +268,15 @@ const ALL_SETTINGS_SECTIONS = [
         widget: "radio",
       },
     ],
-  ),
-  defineSection(
-    "overlay",
-    "実況",
-    "Tauri版のコメント流し表示を調整します。最前面表示と分裂スレ取得は変更時に反映します。",
-    <MessageCircle size={20} />,
-    [
-      {
-        kind: "divider",
-        id: "display",
-        title: "表示",
+    {
+      // 変更理由: 更新間隔は板ごとに上書きするため「板ごとの設定」に置いている。
+      // 名前から探してここへ来た利用者が迷わないよう、置き場所へ案内する。
+      relatedSection: {
+        id: "site-board",
+        description: "自動更新の間隔は、ドメインや板ごとに設定します。",
+        label: "板ごとの設定を開く",
       },
-      {
-        kind: "boolean",
-        key: "comment_overlay_always_on_top",
-        title: "常に最前面に表示する",
-        description: "ほかのアプリより手前にコメントOverlayを表示します。",
-      },
-      {
-        kind: "boolean",
-        key: "comment_overlay_fetch_all_threads",
-        title: "分裂スレを本流判定中はすべて取得する",
-        description:
-          "コメントOverlay限定で同じ番組の候補スレを並行取得し、本流が決まった後に非本流の待機コメントを除外します。",
-      },
-    ],
+    },
   ),
   defineSection(
     "ng",
@@ -382,13 +357,77 @@ const ALL_SETTINGS_SECTIONS = [
     ],
   ),
   defineSection(
+    "overlay",
+    "実況",
+    "Tauri版のコメント流し表示を調整します。最前面表示と分裂スレ取得は変更時に反映します。",
+    <MessageCircle size={20} />,
+    [
+      {
+        kind: "divider",
+        id: "display",
+        title: "表示",
+      },
+      {
+        kind: "boolean",
+        key: "comment_overlay_always_on_top",
+        title: "常に最前面に表示する",
+        description: "ほかのアプリより手前にコメントOverlayを表示します。",
+      },
+      {
+        kind: "boolean",
+        key: "comment_overlay_fetch_all_threads",
+        title: "分裂スレを本流判定中はすべて取得する",
+        description:
+          "コメントOverlay限定で同じ番組の候補スレを並行取得し、本流が決まった後に非本流の待機コメントを除外します。",
+      },
+    ],
+  ),
+  // 変更理由: ドメイン共通から各板への継承は通常の全体設定フォームとは異なるため、
+  // 専用パネルへ閉じ込めて項目追加時のフォーム分岐を増やさない。
+  // 必要な板だけを上書きする応用設定なので、よく使う閲覧の設定より後ろに置く。
+  defineSection(
+    "site-board",
+    "板ごとの設定",
+    "自動更新の間隔や書き込みの既定値を、ドメイン共通と板ごとに設定します。必要な板だけ上書きできます。",
+    <Globe2 size={20} />,
+    [],
+    {
+      supplementaryPanelIds: ["siteBoardSettings"],
+    },
+  ),
+  defineSection(
     "data",
     "データ",
-    "設定・履歴のエクスポート / インポートを行います。",
+    "設定・履歴のエクスポート / インポートと、設定の初期化を行います。",
     <Archive size={20} />,
     [],
     {
-      supplementaryPanelIds: ["dataManagement"],
+      // 変更理由: 設定の初期化もデータを扱う操作なので、「その他」から移して探しやすくする。
+      supplementaryPanelIds: ["dataManagement", "dangerZone"],
+    },
+  ),
+  defineSection(
+    "other",
+    // 変更理由: 「その他」では中身が分からないため、板一覧の取得元とブックマークの保存先という中身で名付ける。
+    "連携",
+    "板一覧（bbsmenu）の取得元と、ブックマークの保存先を設定します。",
+    <Link2 size={20} />,
+    [
+      {
+        kind: "divider",
+        id: "external-data",
+        title: "bbsmenu",
+      },
+      {
+        kind: "string",
+        key: "bbsmenu",
+        title: "URL一覧",
+        widget: "textarea",
+        rows: 6,
+      },
+    ],
+    {
+      supplementaryPanelIds: ["externalIntegration"],
     },
   ),
   defineSection(
@@ -406,29 +445,6 @@ const ALL_SETTINGS_SECTIONS = [
     ],
     {
       supplementaryPanelIds: ["debugLog"],
-    },
-  ),
-  defineSection(
-    "other",
-    "その他",
-    "書き込み時の既定値や外部データ設定です。",
-    <MoreHorizontal size={20} />,
-    [
-      {
-        kind: "divider",
-        id: "external-data",
-        title: "bbsmenu",
-      },
-      {
-        kind: "string",
-        key: "bbsmenu",
-        title: "URL一覧",
-        widget: "textarea",
-        rows: 6,
-      },
-    ],
-    {
-      supplementaryPanelIds: ["externalIntegration", "dangerZone"],
     },
   ),
 ] as const satisfies readonly SettingsSectionDefinition[];
@@ -455,7 +471,8 @@ const SETTINGS_SECTION_GROUP_OF = {
 } as const satisfies Record<SettingsSectionId, SettingsSectionGroupId>;
 
 const SETTINGS_SECTION_GROUP_TITLES = [
-  { id: "app", title: "アプリ" },
+  // 「アプリ」では「閲覧」と役割の違いが伝わらないため、最初に見る基本の設定として示す。
+  { id: "app", title: "基本" },
   { id: "browsing", title: "閲覧" },
   { id: "manage", title: "管理" },
 ] as const satisfies readonly { id: SettingsSectionGroupId; title: string }[];

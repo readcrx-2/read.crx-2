@@ -204,6 +204,36 @@ describe("設定セクションの実行環境フィルター", () => {
   });
 });
 
+describe("設定項目の置き場所", () => {
+  it("タブバーの設定を新しいタブの設定と同じ一般カテゴリへ置く", () => {
+    const sections = getSettingsSections(false);
+    const keysOf = (id: string) =>
+      sections
+        .find((section) => section.id === id)
+        ?.fields.flatMap((field) => ("key" in field ? [field.key] : []));
+
+    expect(keysOf("general")).toEqual(
+      expect.arrayContaining(["new_tab_page_mode", "tab_bar_orientation", "tab_bar_collapsed"]),
+    );
+    expect(keysOf("display")).not.toContain("tab_bar_orientation");
+  });
+
+  it("設定の初期化をデータカテゴリへ置く", () => {
+    const sections = getSettingsSections(false);
+    const data = sections.find((section) => section.id === "data");
+    const other = sections.find((section) => section.id === "other");
+
+    expect(data?.supplementaryPanelIds).toContain("dangerZone");
+    expect(other?.supplementaryPanelIds ?? []).not.toContain("dangerZone");
+  });
+
+  it("自動更新・次スレから、更新間隔のある板ごとの設定へ案内する", () => {
+    const reload = getSettingsSections(false).find((section) => section.id === "reload");
+
+    expect(reload?.relatedSection?.id).toBe("site-board");
+  });
+});
+
 describe("デバッグ設定のカテゴリ", () => {
   it("デバッグのログ設定は「その他」ではなく独立したカテゴリに置く", () => {
     const sections = getSettingsSections(false);
@@ -219,16 +249,30 @@ describe("設定カテゴリの見出しごとのまとめ", () => {
   it("全カテゴリを定義順のまま、いずれか1つの見出しの下に並べる", () => {
     const sections = getSettingsSections(true);
     const groups = groupSettingsSections(sections);
-    expect(groups.map((group) => group.title)).toEqual(["アプリ", "閲覧", "管理"]);
+    expect(groups.map((group) => group.title)).toEqual(["基本", "閲覧", "管理"]);
     expect(groups.flatMap((group) => group.sections.map((section) => section.id))).toEqual(
       sections.map((section) => section.id),
     );
+  });
+
+  it("よく使う設定を先に、応用と管理の設定を後ろに並べる", () => {
+    expect(getSettingsSections(true).map((section) => section.title)).toEqual([
+      "一般",
+      "表示",
+      "自動更新・次スレ",
+      "NG",
+      "実況",
+      "板ごとの設定",
+      "データ",
+      "連携",
+      "デバッグ",
+    ]);
   });
 
   it("表示するカテゴリが1つもない見出しは出さない", () => {
     const sections = getSettingsSections(false).filter(
       (section) => !["data", "other", "debug"].includes(section.id),
     );
-    expect(groupSettingsSections(sections).map((group) => group.title)).toEqual(["アプリ", "閲覧"]);
+    expect(groupSettingsSections(sections).map((group) => group.title)).toEqual(["基本", "閲覧"]);
   });
 });

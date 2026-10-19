@@ -27,13 +27,13 @@ const SCREENSHOT_RESPONSE_COUNT = 24;
 const SETTINGS = [
   ["一般", "settings-general"],
   ["表示", "settings-display"],
-  ["ドメイン共通と各板", "settings-site-board"],
-  ["更新関連", "settings-reload"],
-  ["コメントOverlay", "settings-comment-overlay"],
+  ["自動更新・次スレ", "settings-reload"],
   ["NG", "settings-ng"],
-  ["その他", "settings-other"],
-  ["デバッグ", "settings-debug"],
+  ["実況", "settings-comment-overlay"],
+  ["板ごとの設定", "settings-site-board"],
   ["データ", "settings-data"],
+  ["連携", "settings-other"],
+  ["デバッグ", "settings-debug"],
 ] as const;
 
 /**

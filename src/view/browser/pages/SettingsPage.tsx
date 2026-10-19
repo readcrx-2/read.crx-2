@@ -491,6 +491,8 @@ export const SettingsPage: React.FC<{ tabId: string; page: SettingsPageType }> =
     );
   }
 
+  const relatedSection = activeSection.relatedSection;
+
   return (
     <div className={`settings-page__shell${isCompact ? " settings-page__shell--compact" : ""}`}>
       {!isCompact && (
@@ -543,6 +545,18 @@ export const SettingsPage: React.FC<{ tabId: string; page: SettingsPageType }> =
                 <div className="settings-page__eyebrow">SETTINGS</div>
                 <h2 className="settings-page__title">{activeSection.title}</h2>
                 <p className="settings-page__description">{activeSection.description}</p>
+                {relatedSection && (
+                  <p className="settings-page__related">
+                    {relatedSection.description}
+                    <Button
+                      className="settings-page__related-link"
+                      variant="subtle"
+                      onClick={() => setActiveSectionId(relatedSection.id)}
+                    >
+                      {relatedSection.label}
+                    </Button>
+                  </p>
+                )}
               </div>
               <div className="settings-page__status-row">
                 <span className="settings-page__note">自動保存</span>

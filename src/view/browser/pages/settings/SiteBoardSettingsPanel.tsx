@@ -534,61 +534,68 @@ export function SiteBoardSettingsPanel() {
           どの範囲の設定を編集しているかを見出しで示す。 */}
       <SettingsGroup
         title="設定する対象"
-        description="ドメイン共通の設定はその中のすべての板に適用され、必要な板だけ個別に上書きできます。"
+        description="ドメインの「すべて」では全体設定を編集します。ドメイン共通の設定はその中のすべての板に適用され、必要な板だけ個別に上書きできます。"
       >
-        <SettingRow
-          htmlFor="site-board-site-select"
-          label="ドメイン"
-          description="「すべて」を選ぶと、全体設定を編集します。"
-        >
-          <select
-            id="site-board-site-select"
-            value={selectedSite}
-            onChange={(event) => {
-              setSelectedSite(event.currentTarget.value);
-              setSelectedBoard(SITE_SHARED_SCOPE);
-            }}
-          >
-            <option value="">すべて</option>
-            {sites.map((site) => (
-              <option key={site} value={site}>
-                {site}
-              </option>
-            ))}
-          </select>
-          {/* 変更理由: ドメイン単位の削除操作を選択欄の近くに置き、対象を分かりやすくする。 */}
-          <Button
-            className="settings-page__site-board-actions-trigger"
-            variant="subtle"
-            aria-label={selectedSite ? "ドメインの操作を開く" : "すべてのドメインの操作を開く"}
-            aria-haspopup="dialog"
-            onClick={() => setIsSiteActionsDialogOpen(true)}
-          >
-            <MoreVertical size={18} aria-hidden="true" />
-          </Button>
-        </SettingRow>
-        <SettingRow
-          htmlFor="site-board-board-select"
-          label="設定対象"
-          description="ドメイン共通の設定か、個別に上書きする板を選びます。"
-        >
-          <select
-            id="site-board-board-select"
-            value={selectedBoard}
-            disabled={!selectedSite}
-            onChange={(event) => setSelectedBoard(event.currentTarget.value)}
-          >
-            <option value={SITE_SHARED_SCOPE}>ドメイン共通（すべての板）</option>
-            {siteBoards.map((board) => (
-              <option key={board.key} value={board.key}>
-                {board.title}
-              </option>
-            ))}
-          </select>
-          <Button variant="subtle" onClick={() => setIsAddBoardDialogOpen(true)}>
-            ＋ 板を追加
-          </Button>
-        </SettingRow>
+        {/* 変更理由: ドメインと設定対象は左右に並べて選ぶ方が、継承の流れ（ドメイン→板）を追いやすい。
+            枠と見出しだけをほかの項目に揃え、選択欄の配置は以前の2列のままにする。 */}
+        <div className="settings-page__site-board-selectors">
+          <div className="settings-page__site-board-field">
+            <div className="settings-page__site-board-field-heading">
+              <label htmlFor="site-board-site-select">ドメイン</label>
+              {/* 変更理由: ドメイン単位の削除操作を選択欄の近くに置き、対象を分かりやすくする。 */}
+              <Button
+                className="settings-page__site-board-actions-trigger"
+                variant="subtle"
+                aria-label={selectedSite ? "ドメインの操作を開く" : "すべてのドメインの操作を開く"}
+                aria-haspopup="dialog"
+                onClick={() => setIsSiteActionsDialogOpen(true)}
+              >
+                <MoreVertical size={18} aria-hidden="true" />
+              </Button>
+            </div>
+            <select
+              id="site-board-site-select"
+              value={selectedSite}
+              onChange={(event) => {
+                setSelectedSite(event.currentTarget.value);
+                setSelectedBoard(SITE_SHARED_SCOPE);
+              }}
+            >
+              <option value="">すべて</option>
+              {sites.map((site) => (
+                <option key={site} value={site}>
+                  {site}
+                </option>
+              ))}
+            </select>
+          </div>
+          <div className="settings-page__site-board-field">
+            <div className="settings-page__site-board-field-heading">
+              {/* 変更理由: ここでは板だけでなくドメイン共通の設定も選ぶため、選択肢の役割を示す。 */}
+              <label htmlFor="site-board-board-select">設定対象</label>
+              <Button
+                className="settings-page__site-board-add-button"
+                variant="subtle"
+                onClick={() => setIsAddBoardDialogOpen(true)}
+              >
+                ＋ 板を追加
+              </Button>
+            </div>
+            <select
+              id="site-board-board-select"
+              value={selectedBoard}
+              disabled={!selectedSite}
+              onChange={(event) => setSelectedBoard(event.currentTarget.value)}
+            >
+              <option value={SITE_SHARED_SCOPE}>ドメイン共通（すべての板）</option>
+              {siteBoards.map((board) => (
+                <option key={board.key} value={board.key}>
+                  {board.title}
+                </option>
+              ))}
+            </select>
+          </div>
+        </div>
       </SettingsGroup>
 
       <Dialog.Root

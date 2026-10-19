@@ -39,6 +39,10 @@
   --sys-color-accent-hover: var(--ref-color-blue-700);
   --sys-color-evidence: var(--ref-color-blue-700);
   --sys-color-accent-fg: var(--ref-color-neutral-0);
+  /* 背景ではなく文字として使う強調色。ダークでは背景用の濃い青だと読みにくいため明るい青にする。 */
+  --sys-color-accent-text: var(--ref-color-blue-600);
+  /* 危険色の背景に載せる文字。ダークの危険色は明るい赤なので、白ではなく暗い文字にする。 */
+  --sys-color-error-fg: var(--ref-color-neutral-0);
   --sys-color-link-visited: var(--ref-color-purple-700);
   --sys-color-focus-ring: var(--ref-color-blue-600);
   --sys-color-hover-overlay: var(--ref-color-alpha-black-12);
@@ -146,6 +150,8 @@
   --sys-color-accent-hover: var(--ref-color-dark-blue-700);
   --sys-color-evidence: var(--ref-color-dark-blue-300);
   --sys-color-accent-fg: var(--ref-color-neutral-0);
+  --sys-color-accent-text: var(--ref-color-dark-blue-300);
+  --sys-color-error-fg: var(--ref-color-dark-neutral-0);
   --sys-color-link-visited: var(--ref-color-dark-purple-300);
   --sys-color-focus-ring: var(--ref-color-dark-blue-300);
   --sys-color-hover-overlay: var(--ref-color-alpha-white-14);

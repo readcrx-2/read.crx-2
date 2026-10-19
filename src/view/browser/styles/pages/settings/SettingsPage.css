@@ -297,7 +297,7 @@
 }
 
 .settings-page__related-link {
-  color: var(--sys-color-accent);
+  color: var(--sys-color-accent-text);
 }
 
 .settings-page__saving {
@@ -305,7 +305,7 @@
   align-items: center;
   gap: var(--sys-space-3);
   font-size: var(--sys-font-size-sm);
-  color: var(--sys-color-accent);
+  color: var(--sys-color-accent-text);
   font-weight: 600;
 }
 
@@ -520,7 +520,7 @@
   display: block;
   margin-top: var(--sys-space-1);
   color: var(--sys-color-text-muted);
-  font-size: var(--sys-font-size-xs);
+  font-size: var(--sys-font-size-sm);
 }
 
 @media (max-width: 640px) {

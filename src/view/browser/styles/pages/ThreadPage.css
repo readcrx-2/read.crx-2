@@ -155,20 +155,24 @@
   color: var(--sys-color-accent);
 }
 
+/*
+ * 変更理由: 自動更新中は最終レスの下に固定の高さ（120px）を予約していたため、
+ * 本文の末尾と追従判定の破線の間が大きく空いていた。高さの予約をやめ、
+ * ラベルと破線だけが入る最小限の余白にする。追従判定は破線の実位置で行うため、高さに依存しない。
+ */
 .thread-page__auto-scroll-threshold {
   position: relative;
   display: flex;
   align-items: flex-end;
   justify-content: flex-end;
-  min-height: 120px;
-  padding: 0 var(--sys-space-8) var(--sys-space-11);
+  padding: 0 var(--sys-space-8) var(--sys-space-6);
   color: var(--sys-color-text-muted);
 }
 
 .thread-page__auto-scroll-threshold-line {
   position: absolute;
   right: var(--sys-space-8);
-  bottom: var(--sys-space-8);
+  bottom: var(--sys-space-4);
   left: var(--sys-space-8);
   height: 0;
   border-top: 2px dashed var(--sys-color-auto-scroll-border);

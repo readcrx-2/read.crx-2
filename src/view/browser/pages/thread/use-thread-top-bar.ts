@@ -4,6 +4,7 @@ import {
   THREAD_FILTER_TOOLBAR_TOGGLE_EVENT,
   type ThreadFilterToolbarToggleDetail,
 } from "src/view/browser/utils/filter-toolbar-events";
+import { setFilterToolbarOpen } from "src/view/browser/utils/filter-toolbar-open-state";
 
 const TOP_BAR_EVENT_BY_MODE = {
   search: "thread-search-toggle",
@@ -42,6 +43,13 @@ export function useThreadTopBar({
     searchQuery.trim() !== "" || hasActiveFilter ? "filter" : "none",
   );
   const [searchFocusKey, setSearchFocusKey] = useState(0);
+
+  useEffect(() => {
+    setFilterToolbarOpen(tabId, activeTopBar === "filter");
+    return () => {
+      setFilterToolbarOpen(tabId, false);
+    };
+  }, [activeTopBar, tabId]);
 
   const closeTopBar = useCallback(() => {
     if (searchQuery) {

@@ -54,6 +54,7 @@ import {
   QUICK_ACCESS_FILTER_TOGGLE_EVENT_BY_PAGE_TYPE,
   type QuickAccessFilterPageType,
 } from "src/view/browser/utils/filter-toolbar-events";
+import { useFilterToolbarOpen } from "src/view/browser/utils/filter-toolbar-open-state";
 import {
   getManualRefreshScopeKey,
   runManualRefresh,
@@ -109,6 +110,7 @@ export const NavigationBar: React.FC<NavigationBarProps> = ({
   const { state, viewTab, viewPage, dispatch, paneId } = useTabStore();
   const manualRefreshScopeKey = getManualRefreshScopeKey(viewTab.id, viewPage);
   const refreshCoolingDown = useManualRefreshCooldown(manualRefreshScopeKey);
+  const isFilterToolbarOpen = useFilterToolbarOpen(viewTab.id);
   const viewSurface = useViewSurface();
   const toast = useToast();
   const runTabCommand = useTabCommandRunner(viewTab.id);
@@ -667,7 +669,10 @@ export const NavigationBar: React.FC<NavigationBarProps> = ({
         // URLバーの開閉ボタンの左へ置き、メニュー項目と同じ切り替え処理を使う。
         <button
           type="button"
-          className="nav-bar__filter-toggle"
+          className={`nav-bar__filter-toggle${
+            isFilterToolbarOpen ? " nav-bar__filter-toggle--active" : ""
+          }`}
+          aria-pressed={isFilterToolbarOpen}
           onClick={toggleFilterFromMenu}
           title="フィルターを開閉"
           aria-label="フィルターを開閉"

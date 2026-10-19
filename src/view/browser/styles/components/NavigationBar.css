@@ -95,6 +95,10 @@
 .nav-bar__url-toggle:hover {
   background: var(--sys-color-tab-strip-hover);
 }
+/* 変更理由: フィルタバーが開いている間は、ボタンの色を変えて開閉状態を示す。 */
+.nav-bar__filter-toggle--active {
+  color: var(--sys-color-accent);
+}
 .nav-bar__btn--active {
   color: var(--sys-color-accent);
 }

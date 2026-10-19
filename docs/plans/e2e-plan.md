@@ -76,8 +76,23 @@ Chrome拡張版だけを検証している現在のE2Eを広げ、Tauri版の実
 
 ## 進捗
 
-- [ ] Phase 0
-- [ ] Phase 1
-- [ ] Phase 2
-- [ ] Phase 3
+- [x] Phase 0
+- [x] Phase 1
+- [x] Phase 2
+- [x] Phase 3
 - [ ] Phase 4
+
+### Phase 0〜3で分かったこと
+
+- `WEBVIEW2_USER_DATA_FOLDER` は、Tauriが渡す保存先より優先される。プロセス起動時に設定すれば、
+  設定から自動生成される窓も含めてすべての窓の保存先が切り替わる。
+- 非表示のTauri窓もCDPにはページとして残り、`document.visibilityState` も `"visible"` のまま。
+  窓の表示状態は `plugin:window|is_visible` でネイティブの窓に問い合わせる。
+- 終了は `/F` なしの `taskkill`（WM_CLOSE）で行う。メイン窓を閉じるとアプリ全体が終了し、
+  強制終了と違ってlocalStorageとSQLiteを書き終えてから終わる。
+- cargoの出力先は `.cargo/config.toml` の `build.target-dir` でも変わるため、fixtureは
+  `cargo metadata` で探す。
+- 起動のたびに次のコンソールエラーが出る。テストは失敗させていないが、別途直したい。
+  - `manifest.json` の取得がCSPの `connect-src` に阻まれる
+  - 埋め込みフォントのdata URIがCSPの `default-src` に阻まれる（`font-src` 未指定）
+  - `favicon.ico` が見つからない

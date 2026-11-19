@@ -510,10 +510,17 @@ URLが間違っているか過去ログに移動せずに削除されていま�
       reg =
         /<div class="post"[^<>]*><div class="meta"><span class="number">\d+<\/span><span class="name"><b>(?:<a [^<>]*href="(?:mailto:|\/cdn-cgi\/l\/email-protection#)([^<>"]*)">|<font [^<>]*>)?(.*?)(?:<\/(?:a|font)>)?<\/b><\/span><span class="date">(.*)<\/span><\/div><div class="message">(?:<span class="escaped">)? ?(.*)(?:<\/span>)/;
       separator = "</div></div><br>";
-    } else if (text.match(/<footer[^<>]*><br>read\.cgi ver 07\.([6-9]|\d+)/)) {
+    } else if (text.match(/<footer[^<>]*><br>read\.cgi ver 07\.([6-7])/)) {
       titleReg = /<(?:div|h1) id="threadtitle">(.*)\n?<\/(?:div|h1)>/;
       reg =
         /<span class="postid">\d+<\/span><span class="postusername"><b>(?:<a [^<>]*href="(?:mailto:|\/cdn-cgi\/l\/email-protection#)([^<>"]*)">|<font [^<>]*>)?(.*?)(?:<\/(?:a|font)>)?<\/b><\/span>(?:<span style=".*">.*<\/span>)?<\/div>(?:<span style=".*">)?<span class="date">(.*)<\/span><\/div><div class="post-content"> ?(.*)/;
+      separator = "</div></div>";
+    } else if (
+      text.match(/<footer[^<>]*><br>read\.cgi ver 07\.([8-9]|\d{2,})/)
+    ) {
+      titleReg = /<(?:div|h1) id="threadtitle"[^<>]*>(.*)\r?\n?<\/(?:div|h1)>/;
+      reg =
+        /<button [^<>]*class="postid"[^<>]*>\d+<\/button><span class="postusername"[^<>]*><b[^<>]*>(?:<a [^<>]*href="(?:mailto:|\/cdn-cgi\/l\/email-protection#)([^<>"]*)">|<font [^<>]*>)?(.*?)(?:<\/(?:a|font)>)?<\/b><\/span>(?:<span style=".*">.*<\/span>)?<\/div><span class="post-meta">(.*)<\/span><\/div><div class="post-content"[^<>]*> ?(.*)/;
       separator = "</div></div>";
     } else if (text.match(/<footer[^<>]*><br>read\.cgi ver 0(7|8)/)) {
       titleReg = /<(?:div|h1) id="threadtitle">(.*)\n?<\/(?:div|h1)>/;

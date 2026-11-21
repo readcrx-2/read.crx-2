@@ -8,4 +8,4 @@ onlyBuiltDependencies:
 
 overrides:
   uuid: "^11.1.1"
-  "multimatch>minimatch": "^11.0.1"
+  "minimatch@^10.2.2": "^11.0.1"

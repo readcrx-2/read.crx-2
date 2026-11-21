@@ -11,6 +11,8 @@ export * from "./app/Util";
 export let config: Config;
 if (!frameElement) {
   config = new Config();
+} else {
+  config = parent?.app?.config;
 }
 
 export const manifest = (async () => {

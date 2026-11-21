@@ -28,7 +28,7 @@ class Timer {
 }
 Timer.initClass();
 
-export default Write = (function () {
+export default (Write = (function () {
   Write = class Write {
     static initClass() {
       this.prototype.url = null;
@@ -88,7 +88,7 @@ export default Write = (function () {
         const isSameOrigin =
           requestHeaders.some(
             ({ name, value }) =>
-              name === "Origin" && (value === origin || value === "null")
+              name === "Origin" && (value === origin || value === "null"),
           ) || !requestHeaders.includes("Origin");
         if (method !== "POST" || !isSameOrigin) {
           return;
@@ -141,7 +141,7 @@ export default Write = (function () {
       const formData = this._getFormData();
       browser.declarativeNetRequest.getSessionRules((rules) => {
         const oldRule = rules.find(
-          (rule) => rule.condition?.urlFilter === formData?.action
+          (rule) => rule.condition?.urlFilter === formData?.action,
         );
 
         const rule = {
@@ -244,9 +244,8 @@ export default Write = (function () {
 
       this.$view.C("message")[0].on("keyup", ({ target }) => {
         const line = target.value.split(/\n/).length;
-        this.$view.C(
-          "notice"
-        )[0].textContent = `${target.value.length}文字 ${line}行`;
+        this.$view.C("notice")[0].textContent =
+          `${target.value.length}文字 ${line}行`;
       });
     }
 
@@ -417,7 +416,7 @@ export default Write = (function () {
             iframeDoc.body.appendChild(form);
             Object.getPrototypeOf(form).submit.call(form);
           },
-          { once: true }
+          { once: true },
         );
         $$.C("iframe_container")[0].addLast($iframe);
 
@@ -428,4 +427,4 @@ export default Write = (function () {
   };
   Write.initClass();
   return Write;
-})();
+})());

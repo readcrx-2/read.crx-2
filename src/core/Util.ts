@@ -1,7 +1,7 @@
 export function levenshteinDistance(
   a: string,
   b: string,
-  allowReplace = true
+  allowReplace = true,
 ): number {
   const repCost = allowReplace ? 1 : 2;
   const table: Uint16Array[] = [];
@@ -21,7 +21,7 @@ export function levenshteinDistance(
       table[ac][bc] = Math.min(
         table[ac - 1][bc] + 1,
         table[ac][bc - 1] + 1,
-        table[ac - 1][bc - 1] + (a[ac - 1] === b[bc - 1] ? 0 : repCost)
+        table[ac - 1][bc - 1] + (a[ac - 1] === b[bc - 1] ? 0 : repCost),
       );
     }
   }

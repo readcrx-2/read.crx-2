@@ -4,7 +4,7 @@
 @param {Element} table
 */
 let TableSorter;
-export default TableSorter = (function () {
+export default (TableSorter = (function () {
   TableSorter = class TableSorter {
     static initClass() {
       this.collator = new Intl.Collator("ja", { numeric: true });
@@ -121,7 +121,7 @@ export default TableSorter = (function () {
       }
 
       this.table.emit(
-        new CustomEvent("table_sort_updated", { detail: exparam })
+        new CustomEvent("table_sort_updated", { detail: exparam }),
       );
     }
 
@@ -163,4 +163,4 @@ export default TableSorter = (function () {
   };
   TableSorter.initClass();
   return TableSorter;
-})();
+})());

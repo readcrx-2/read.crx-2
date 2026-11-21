@@ -6,7 +6,7 @@ import { indexedDBRequestToPromise } from "./jsutil.js";
 @constructor
 @param {String} key
 */
-export default Cache = (function () {
+export default (Cache = (function () {
   Cache = class Cache {
     static initClass() {
       /**
@@ -145,7 +145,7 @@ export default Cache = (function () {
           keys.map(async function (key) {
             req = store.delete(key);
             await indexedDBRequestToPromise(req);
-          })
+          }),
         );
       } catch (e) {
         app.log("error", "Cache.clearRange: トランザクション中断");
@@ -265,4 +265,4 @@ export default Cache = (function () {
   };
   Cache.initClass();
   return Cache;
-})();
+})());

@@ -1,3 +1,5 @@
+const rolldown = require("rolldown");
+const { replacePlugin } = require("rolldown/plugins");
 const sassCompiler = require("sass");
 const sass = require("gulp-sass")(sassCompiler);
 const webExt = (async () => {
@@ -6,14 +8,13 @@ const webExt = (async () => {
 
 module.exports = {
   compiler: {
-    ts: require("typescript"),
     sass: sassCompiler,
     pug: require("pug"),
   },
   gulp: {
     gulp: require("gulp"),
     plumber: require("gulp-plumber"),
-    filter: require("gulp-filter"),
+    filter: require("gulp-filter").default ?? require("gulp-filter"),
     concat: require("gulp-concat"),
     notify: require("gulp-notify"),
     merge: require("merge2"),
@@ -23,10 +24,10 @@ module.exports = {
     postcss: require("gulp-postcss"),
     pug: require("gulp-pug"),
   },
-  rollup: {
-    rollup: require("rollup"),
-    ts: require("@rollup/plugin-typescript"),
-    replace: require("@rollup/plugin-replace"),
+  rolldown: {
+    rolldown: rolldown.rolldown,
+    watch: rolldown.watch,
+    replace: replacePlugin,
   },
   postcss: {
     autoprefixer: require("autoprefixer"),

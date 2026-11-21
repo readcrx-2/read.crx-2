@@ -6,7 +6,10 @@ export default class VirtualNotch {
   private wheelDelta = 0;
   private lastMouseWheel = Date.now();
 
-  constructor(private element: Element, private threshold = 100) {
+  constructor(
+    private element: Element,
+    private threshold = 100,
+  ) {
     this.element.on("wheel", this.onMouseWheel.bind(this), { passive: true });
     setInterval(this.onInterval.bind(this), 500);
   }

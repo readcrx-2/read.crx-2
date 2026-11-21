@@ -40,7 +40,7 @@ export function assertArg(name: string, rules: Assertion[]): boolean {
       log(
         "error",
         `${name}: 不正な引数(予期していた型: ${type}, 受け取った型: ${typeof val})`,
-        deepCopy(val)
+        deepCopy(val),
       );
       isError = true;
     }

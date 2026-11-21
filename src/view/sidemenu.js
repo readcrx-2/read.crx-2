@@ -116,7 +116,7 @@ app.boot("/view/sidemenu.html", ["BBSMenu"], function (BBSMenu) {
             app.bookmark.remove(url);
           }
           this.remove();
-        })
+        }),
       );
       UI.ContextMenu($menu, e.clientX, e.clientY);
     });
@@ -126,7 +126,7 @@ app.boot("/view/sidemenu.html", ["BBSMenu"], function (BBSMenu) {
   (function () {
     const setupDOM = function ({ status, menu, message }) {
       for (let dom of $view.$$(
-        "h3:not(:first-of-type), ul:not(:first-of-type)"
+        "h3:not(:first-of-type), ul:not(:first-of-type)",
       )) {
         dom.remove();
       }

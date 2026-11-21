@@ -302,7 +302,7 @@ export default class PopupView {
     // 末端ノードの非アクティブ化
     if (this._popupStack.length - 1 > stackIndex) {
       this._popupStack[this._popupStack.length - 1].source.removeClass(
-        "active"
+        "active",
       );
       this._popupStack[this._popupStack.length - 1].popup.removeClass("active");
       this._delayRemove(false);
@@ -387,7 +387,7 @@ export default class PopupView {
         const { boxShadow } = this._popupStyle;
         const tmp =
           /rgba?\(.*\) (-?[\d]+)px (-?[\d]+)px ([\d]+)px (-?[\d]+)px/.exec(
-            boxShadow
+            boxShadow,
           );
         this._popupMarginHeight += Math.abs(parseInt(tmp[2]));
         this._popupMarginHeight += Math.abs(parseInt(tmp[4]));

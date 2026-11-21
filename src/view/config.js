@@ -137,7 +137,7 @@ class HistoryIO extends SettingIO {
         await this.clearFunc();
         this.$status.textContent = ":削除完了";
         __guard__(parent.$$.$(`iframe[src=\"/view/${this.name}.html\"]`), (x) =>
-          x.contentDocument.C("view")[0].emit(new Event("request_reload"))
+          x.contentDocument.C("view")[0].emit(new Event("request_reload")),
         );
       } catch (error) {
         this.$status.textContent = ":削除失敗";
@@ -164,11 +164,11 @@ class HistoryIO extends SettingIO {
 
       try {
         await this.clearRangeFunc(
-          parseInt($$.C(`${this.name}_date_range`)[0].value)
+          parseInt($$.C(`${this.name}_date_range`)[0].value),
         );
         this.$status.textContent = ":範囲指定削除完了";
         __guard__(parent.$$.$(`iframe[src=\"/view/${this.name}.html\"]`), (x) =>
-          x.contentDocument.C("view")[0].emit(new Event("request_reload"))
+          x.contentDocument.C("view")[0].emit(new Event("request_reload")),
         );
       } catch (error) {
         this.$status.textContent = ":範囲指定削除失敗";
@@ -407,7 +407,7 @@ var _checkExcute = function (procId, funcId) {
       "現在この機能は使用できません",
       message,
       "",
-      "invalid"
+      "invalid",
     );
   }
 
@@ -517,7 +517,7 @@ app.boot("/view/config.html", ["Cache", "BBSMenu"], function (Cache, BBSMenu) {
     dom.on("input", function () {
       app.config.set(
         this.name,
-        Number.isNaN(this.valueAsNumber) ? "0" : this.value
+        Number.isNaN(this.valueAsNumber) ? "0" : this.value,
       );
     });
   }
@@ -558,9 +558,8 @@ app.boot("/view/config.html", ["Cache", "BBSMenu"], function (Cache, BBSMenu) {
   //バージョン情報表示
   (async function () {
     const { name, version } = await app.manifest;
-    $view.C(
-      "version_text"
-    )[0].textContent = `${name} v${version} + ${navigator.userAgent}`;
+    $view.C("version_text")[0].textContent =
+      `${name} v${version} + ${navigator.userAgent}`;
   })();
 
   $view.C("version_copy")[0].on("click", function () {
@@ -613,7 +612,7 @@ app.boot("/view/config.html", ["Cache", "BBSMenu"], function (Cache, BBSMenu) {
         historyVersion = 1,
         readstateVersion = 1,
       },
-      $progress
+      $progress,
     ) {
       const total = history.length + readState.length;
       let count = 0;
@@ -822,7 +821,7 @@ app.boot("/view/config.html", ["Cache", "BBSMenu"], function (Cache, BBSMenu) {
     //ブックマークフォルダ表示
     (updateName = async function () {
       const [folder] = await parent.browser.bookmarks.get(
-        app.config.get("bookmark_id")
+        app.config.get("bookmark_id"),
       );
       $$.I("bookmark_source_name").textContent = folder.title;
     })();

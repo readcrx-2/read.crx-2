@@ -37,11 +37,10 @@ app.boot("/view/search.html", ["ThreadSearch"], async function (ThreadSearch) {
     app.History.add($view.dataset.url, document.title, openedAt, "");
   }
 
-  $view.$(
-    ".button_link > a"
-  ).href = `${scheme}://dig.5ch.io/search?maxResult=500&keywords=${encodeURIComponent(
-    query
-  )}`;
+  $view.$(".button_link > a").href =
+    `${scheme}://dig.5ch.io/search?maxResult=500&keywords=${encodeURIComponent(
+      query,
+    )}`;
 
   let threadSearch = new ThreadSearch(query, `${scheme}:`);
   const $tbody = $view.T("tbody")[0];

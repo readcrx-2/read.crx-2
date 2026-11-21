@@ -38,7 +38,7 @@ app.boot("/view/board.html", ["Board"], function (Board) {
       open(
         openUrl,
         undefined,
-        `width=600,height=300,left=${windowX},top=${windowY}`
+        `width=600,height=300,left=${windowX},top=${windowY}`,
       );
     } else if ("&[BROWSER]" === "chrome") {
       parent.browser.windows.create({
@@ -99,7 +99,7 @@ app.boot("/view/board.html", ["Board"], function (Board) {
             sortOrder: "asc",
           });
         },
-        { once: true }
+        { once: true },
       );
     });
   })();
@@ -162,7 +162,7 @@ app.boot("/view/board.html", ["Board"], function (Board) {
         if (
           __guard__(
             (bookmark = app.bookmark.get(thread.url)),
-            (x) => x.readState
+            (x) => x.readState,
           ) != null
         ) {
           if (app.util.isNewerReadState(readState, bookmark.readState)) {

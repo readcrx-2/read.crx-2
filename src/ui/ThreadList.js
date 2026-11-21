@@ -18,7 +18,7 @@ import TableSearch from "./TableSearch.js";
   @param {Boolean} [option.bookmarkAddRm=false]
   @param {Element} [option.searchbox]
 */
-export default ThreadList = (function () {
+export default (ThreadList = (function () {
   ThreadList = class ThreadList {
     static initClass() {
       /**
@@ -99,7 +99,7 @@ export default ThreadList = (function () {
             target.title = target.textContent;
           }
         },
-        true
+        true,
       );
       $table.on(
         "mouseleave",
@@ -108,7 +108,7 @@ export default ThreadList = (function () {
             target.removeAttr("title");
           }
         },
-        true
+        true,
       );
 
       const $cols = $_F();
@@ -121,7 +121,7 @@ export default ThreadList = (function () {
           i++;
           const className = key.replace(
             /([A-Z])/g,
-            ($0, $1) => "_" + $1.toLowerCase()
+            ($0, $1) => "_" + $1.toLowerCase(),
           );
           const $th = $__("th").addClass(className);
           $th.textContent = val;
@@ -237,7 +237,7 @@ export default ThreadList = (function () {
               td.textContent = ThreadList._calcHeat(
                 Date.now(),
                 /\/(\d+)\/$/.exec(bookmark.url)[1] * 1000,
-                bookmark.resCount
+                bookmark.resCount,
               );
             }
           }
@@ -378,26 +378,26 @@ export default ThreadList = (function () {
                 const threadURL = $tr.dataset.href;
                 const threadTitle = __guard__(
                   $tr.$(selector.title),
-                  (x3) => x3.textContent
+                  (x3) => x3.textContent,
                 );
                 const threadRes = parseInt(
                   (left = __guard__(
                     $tr.$(selector.res),
-                    (x4) => x4.textContent
+                    (x4) => x4.textContent,
                   )) != null
                     ? left
-                    : 0
+                    : 0,
                 );
                 const threadWrittenRes = parseInt(
                   (left1 = __guard__(
                     $tr.$(selector.writtenRes),
-                    (x5) => x5.textContent
+                    (x5) => x5.textContent,
                   )) != null
                     ? left1
-                    : 0
+                    : 0,
                 );
                 const dateValue = __guard__($tr.$(selector.viewedDate), (x6) =>
-                  x6.getAttr("date-value")
+                  x6.getAttr("date-value"),
                 );
 
                 switch (false) {
@@ -425,7 +425,7 @@ export default ThreadList = (function () {
                 }
 
                 this.remove();
-              })
+              }),
             );
             ContextMenu($menu, e.clientX, e.clientY);
           });
@@ -565,7 +565,7 @@ export default ThreadList = (function () {
           $td.textContent = ThreadList._calcHeat(
             now,
             item.createdAt,
-            item.resCount
+            item.resCount,
           );
           $tr.addLast($td);
         }
@@ -643,7 +643,7 @@ export default ThreadList = (function () {
 
       if (typeof target === "number") {
         target = this.table.$(
-          `tbody > tr:nth-child(${target}), tbody > tr:last-child`
+          `tbody > tr:nth-child(${target}), tbody > tr:last-child`,
         );
       }
 
@@ -742,7 +742,7 @@ export default ThreadList = (function () {
   };
   ThreadList.initClass();
   return ThreadList;
-})();
+})());
 
 function __guard__(value, transform) {
   return typeof value !== "undefined" && value !== null

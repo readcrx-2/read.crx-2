@@ -69,7 +69,7 @@ export default class SikiGuard {
           if (hasCache) {
             if (cache.lastModified != null) {
               request.headers["If-Modified-Since"] = new Date(
-                cache.lastModified
+                cache.lastModified,
               ).toUTCString();
             }
             if (cache.etag != null) {
@@ -112,7 +112,7 @@ export default class SikiGuard {
           cache.lastUpdated = Date.now();
 
           const lastModified = new Date(
-            response.headers["Last-Modified"] || "dummy"
+            response.headers["Last-Modified"] || "dummy",
           ).getTime();
 
           if (Number.isFinite(lastModified)) {
@@ -198,7 +198,7 @@ export default class SikiGuard {
       Object.keys(result).forEach((key) => {
         idMap.set(
           `20${key.slice(0, 2)}/${key.slice(2, 4)}/${key.slice(4)}`,
-          new Set(result[key].map((id) => `ID:${id}`))
+          new Set(result[key].map((id) => `ID:${id}`)),
         );
       });
 

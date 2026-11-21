@@ -39,7 +39,7 @@ export var fadeIn = async function (ele) {
     function () {
       _animatingMap.delete(ele);
     },
-    { once: true }
+    { once: true },
   );
   return ani;
 };
@@ -55,7 +55,7 @@ export var fadeOut = function (ele) {
     function () {
       invalided = true;
     },
-    { once: true }
+    { once: true },
   );
   ani.on(
     "finish",
@@ -66,7 +66,7 @@ export var fadeOut = function (ele) {
         _animatingMap.delete(ele);
       }
     },
-    { once: true }
+    { once: true },
   );
   return Promise.resolve(ani);
 };
@@ -86,7 +86,7 @@ export var slideDown = async function (ele) {
     function () {
       _animatingMap.delete(ele);
     },
-    { once: true }
+    { once: true },
   );
   return ani;
 };
@@ -109,7 +109,7 @@ export var slideUp = async function (ele) {
     function () {
       invalided = true;
     },
-    { once: true }
+    { once: true },
   );
   ani.on(
     "finish",
@@ -121,7 +121,7 @@ export var slideUp = async function (ele) {
         _animatingMap.delete(ele);
       }
     },
-    { once: true }
+    { once: true },
   );
   return ani;
 };

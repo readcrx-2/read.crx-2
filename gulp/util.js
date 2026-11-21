@@ -74,7 +74,7 @@ const toTwoDigit = function (str) {
 const getTimeString = function () {
   const date = new Date();
   return `${toTwoDigit(date.getHours())}:${toTwoDigit(
-    date.getMinutes()
+    date.getMinutes(),
   )}:${toTwoDigit(date.getSeconds())}`;
 };
 
@@ -129,7 +129,7 @@ exports.onRollupWatch = (filename) =>
         break;
       case "BUNDLE_END":
         console.log(
-          prefix + `Finished '${CYAN}${filename}${RESET}' in ${e.duration}ms`
+          prefix + `Finished '${CYAN}${filename}${RESET}' in ${e.duration}ms`,
         );
         break;
       case "FATAL":

@@ -20,12 +20,12 @@
           key: `${jumpUrl}`,
           message: `${moveMs}`,
         },
-        `${origin}`
+        `${origin}`,
       );
     } else {
       parent.postMessage(
         { type: "success", message: `${moveMs}` },
-        `${origin}`
+        `${origin}`,
       );
     }
   };
@@ -39,9 +39,9 @@
       parent.postMessage(
         {
           type: "error",
-          message: `${message.replace(/\"/g, "&quot;")}`,
+          message: `${message.replace(/"/g, "&quot;")}`,
         },
-        `${origin}`
+        `${origin}`,
       );
     } else {
       parent.postMessage({ type: "error" }, `${origin}`);
@@ -103,9 +103,9 @@
 
     //したらば投稿確認
     if (
-      new RegExp(
-        `^https?://jbbs\\.shitaraba\\.net/bbs/write.cgi/\\w+/\\d+/(?:\\d+|new)/$`
-      ).test(url)
+      /^https?:\/\/jbbs\.shitaraba\.net\/bbs\/write.cgi\/\w+\/\d+\/(?:\d+|new)\/$/.test(
+        url,
+      )
     ) {
       if (title.includes("書きこみました")) {
         sendMessageSuccess(3 * 1000);
@@ -117,19 +117,15 @@
       }
 
       // まちBBS投稿確認
-    } else if (
-      new RegExp(`^https?://(?:\\w+\\.)?machi\\.to/bbs/write\\.cgi`).test(url)
-    ) {
+    } else if (/^https?:\/\/(?:\w+\.)?machi\.to\/bbs\/write\.cgi/.test(url)) {
       if (title.includes("ＥＲＲＯＲ")) {
         sendMessageError();
       }
-    } else if (new RegExp(`^https?://(?:\\w+\\.)?machi\\.to`).test(url)) {
+    } else if (/^https?:\/\/(?:\w+\.)?machi\.to/.test(url)) {
       sendMessageSuccess(1 * 1000);
 
       //open2ch投稿確認
-    } else if (
-      new RegExp(`^https?://\\w+\\.open2ch\\.net/test/bbs\\.cgi`).test(url)
-    ) {
+    } else if (/^https?:\/\/\w+\.open2ch\.net\/test\/bbs\.cgi/.test(url)) {
       const font = document.getElementsByTagName("font");
       let text = title;
       if (font.length > 0) {
@@ -144,9 +140,7 @@
       }
 
       //2ch型投稿確認
-    } else if (
-      new RegExp(`^https?://\\w+\\.\\w+\\.\\w+/test/bbs\\.cgi`).test(url)
-    ) {
+    } else if (/^https?:\/\/\w+\.\w+\.\w+\/test\/bbs\.cgi/.test(url)) {
       if (title.includes("書きこみました")) {
         sendMessageSuccess(getMoveSec() * 1000);
       } else if (title.includes("確認")) {

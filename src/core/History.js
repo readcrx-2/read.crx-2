@@ -109,14 +109,14 @@ export var remove = async function (url, date = null) {
           }
           req = store.delete(datum.id);
           await indexedDBRequestToPromise(req);
-        })
+        }),
       );
     } else {
       await Promise.all(
         data.map(async function (datum) {
           req = store.delete(datum);
           await indexedDBRequestToPromise(req);
-        })
+        }),
       );
     }
   } catch (e) {
@@ -178,7 +178,7 @@ export var get = function (offset, limit) {
           app.log("error", "History.get: トランザクション中断");
           reject(e);
         };
-      })
+      }),
   );
 };
 
@@ -239,7 +239,7 @@ export var getUnique = function (offset, limit) {
           app.log("error", "History.getUnique: トランザクション中断");
           reject(e);
         };
-      })
+      }),
   );
 };
 
@@ -317,7 +317,7 @@ export var clear = function (offset) {
           app.log("error", "History.clear: トランザクション中断");
           reject(e);
         };
-      })
+      }),
   );
 };
 
@@ -346,7 +346,7 @@ export var clearRange = async function (day) {
       keys.map(async function (key) {
         req = store.delete(key);
         await indexedDBRequestToPromise(req);
-      })
+      }),
     );
   } catch (e) {
     app.log("error", "History.clearRange: トランザクション中断");

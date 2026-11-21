@@ -76,7 +76,7 @@ export var fetch = async function (url, force) {
     });
     if (cache.lastModified != null) {
       request.headers["If-Modified-Since"] = new Date(
-        cache.lastModified
+        cache.lastModified,
       ).toUTCString();
     }
 
@@ -94,7 +94,7 @@ export var fetch = async function (url, force) {
     cache.lastUpdated = Date.now();
 
     const lastModified = new Date(
-      response.headers["Last-Modified"] || "dummy"
+      response.headers["Last-Modified"] || "dummy",
     ).getTime();
 
     if (Number.isFinite(lastModified)) {
@@ -161,12 +161,12 @@ var parse = function (html) {
   let regCategoryRes;
   const regCategory = new RegExp(
     `<b>(.+?)</b>(?:.*[\\r\\n]+<a\\s.*?>.+?</a>)+`,
-    "gi"
+    "gi",
   );
   const regBoard = new RegExp(
     `<a\\shref="?((?:https?:)?//(?!info\\.(?:[25]ch\\.net|5ch\\.io)/|headline\\.bbspink\\.(?:com|org))\
 (?:(?:\\w+\\.)?(?:[25]ch\\.net|5ch\\.io|open2ch\\.net|2ch\\.sc|bbspink\\.com|bbspink\\.org)|(?:\\w+\\.)?machi\\.to)/(?:ex0ch/)?\\w+/)"?(?:\\s.*?)?>(.+?)</a>`,
-    "gi"
+    "gi",
   );
   const menu = [];
   const bbspinkException =

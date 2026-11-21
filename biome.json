@@ -1,0 +1,64 @@
+{
+  "$schema": "https://biomejs.dev/schemas/2.6.8/schema.json",
+  "vcs": {
+    "enabled": true,
+    "clientKind": "git",
+    "useIgnoreFile": true
+  },
+  "files": {
+    "includes": [
+      "src/**/*.ts",
+      "src/**/*.js",
+      "src/**/*.json",
+      "gulp/**/*.js",
+      "gulpfile.js",
+      "package.json",
+      "tsconfig.json",
+      "biome.json"
+    ]
+  },
+  "formatter": {
+    "enabled": true,
+    "indentStyle": "space",
+    "indentWidth": 2
+  },
+  "linter": {
+    "enabled": true,
+    "rules": {
+      "preset": "recommended",
+      "complexity": {
+        "noArguments": "off",
+        "noBannedTypes": "off",
+        "useArrowFunction": "off",
+        "useRegexLiterals": "off"
+      },
+      "correctness": {
+        "noConstantCondition": "off",
+        "noInnerDeclarations": "off",
+        "noInvalidUseBeforeDeclaration": "off",
+        "noUnreachable": "off",
+        "noUnusedFunctionParameters": "off",
+        "noUnusedVariables": "off"
+      },
+      "style": {
+        "useConst": "off"
+      },
+      "suspicious": {
+        "noAssignInExpressions": "off",
+        "noAsyncPromiseExecutor": "off",
+        "noExplicitAny": "off",
+        "noImplicitAnyLet": "off",
+        "noPrototypeBuiltins": "off",
+        "noUselessEscapeInString": "off"
+      }
+    }
+  },
+  "javascript": {
+    "formatter": {
+      "quoteStyle": "double"
+    }
+  },
+  "assist": {
+    "enabled": false
+  }
+}

@@ -100,7 +100,7 @@ export class EntryList {
     }
 
     const tmp = new URL(to).origin;
-    const reg = /^https?:\/\/[\w\.]+\//;
+    const reg = /^https?:\/\/[\w.]+\//;
     // スレブックマーク移行
     for (const entry of this.getThreadsByBoardURL(from)) {
       this.remove(entry.url);

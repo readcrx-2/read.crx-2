@@ -1,5 +1,5 @@
 const fs = require("fs-extra");
-const { compiler: c, rollup: _, postcss: p } = require("./plugins");
+const { compiler: c, gulp: _, postcss: p } = require("./plugins");
 const util = require("./util");
 
 const browsers = ["chrome", "firefox"];
@@ -97,11 +97,8 @@ const defaultOptions = {
   plumber: {
     errorHandler: util.plumberHandler,
   },
-  rollupTs: {
-    typescript: c.ts,
-  },
   sass: {
-    outputStyle: "compressed",
+    style: "compressed",
   },
   postcss: [p.autoprefixer()],
   pug: {
@@ -115,10 +112,9 @@ const defaultOptions = {
   },
 };
 
-defaultOptions.rollup = {
+defaultOptions.rolldown = {
   in: {
     plugins: [],
-    context: "window",
     onwarn: util.rollupOnWarn,
   },
   out: {

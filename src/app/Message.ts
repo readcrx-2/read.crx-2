@@ -17,7 +17,7 @@ class Message {
         data: { type: string; message: any };
       }) => {
         this._fire(type, message);
-      }
+      },
     );
   }
 

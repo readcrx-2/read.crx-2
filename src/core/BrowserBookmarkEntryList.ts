@@ -229,7 +229,7 @@ export default class BrowserBookmarkEntryList extends SyncableEntryList {
         } else if (oldParentId === this.rootNodeId) {
           this.applyNodeRemoveToEntryList(nodeId);
         }
-      }
+      },
     );
   }
 
@@ -355,7 +355,7 @@ export default class BrowserBookmarkEntryList extends SyncableEntryList {
         return browser.bookmarks.remove(id).catch((e) => {
           return;
         });
-      })
+      }),
     );
     return true;
   }

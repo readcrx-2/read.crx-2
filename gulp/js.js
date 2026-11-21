@@ -1,4 +1,5 @@
 const path = require("path");
+const fs = require("fs-extra");
 const gulp = require("gulp");
 const { gulp: $, rollup: _ } = require("./plugins");
 const { browsers, paths, defaultOptions } = require("./config");
@@ -16,7 +17,7 @@ const cache = {};
 
 const makeInOut = function (
   browser,
-  { output, pathname, plugins, outObj = {} }
+  { output, pathname, plugins, outObj = {} },
 ) {
   const i = Object.assign({}, defaultOptions.rollup.in);
   i.input = paths.js[pathname];
@@ -26,7 +27,7 @@ const makeInOut = function (
   const tsPlugin = _.ts(
     Object.assign({}, defaultOptions.rollupTs, {
       outDir: paths.output[browser],
-    })
+    }),
   );
   i.plugins = (plugins || []).concat([tsPlugin]);
 
@@ -128,13 +129,18 @@ const makeReplaceOptions = function (browser) {
 const background = function (browser) {
   const output = paths.output[browser];
   const ro = makeReplaceOptions(browser);
-  return () =>
-    $.merge(
-      gulp.src(paths.lib.webExtPolyfill),
-      gulp.src(paths.js.background).pipe($.replace(rr, ro))
-    )
-      .pipe($.concat("background.js"))
-      .pipe(gulp.dest(output));
+  return async function () {
+    const [polyfill, bg] = await Promise.all([
+      fs.readFile(paths.lib.webExtPolyfill, "utf8"),
+      fs.readFile(paths.js.background, "utf8"),
+    ]);
+    await fs.ensureDir(output);
+    await fs.writeFile(
+      path.join(output, "background.js"),
+      `${polyfill}\n${bg.replace(rr, ro)}`,
+      "utf8",
+    );
+  };
 };
 
 var csAddlink = function (browser) {
@@ -199,8 +205,8 @@ for (let browser of browsers) {
       `js:cs_addlink.js:${browser}`,
       `js:view:${browser}`,
       `js:zombie.js:${browser}`,
-      `js:cs_write.js:${browser}`
-    )
+      `js:cs_write.js:${browser}`,
+    ),
   );
 }
 

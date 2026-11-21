@@ -45,7 +45,7 @@ export class URL extends window.URL {
   private fixPathAndSetType(
     reg: RegExp,
     replace: (res: string[]) => string,
-    type: GuessResult
+    type: GuessResult,
   ): boolean {
     const res = reg.exec(this.pathname);
     if (res) {
@@ -92,7 +92,7 @@ export class URL extends window.URL {
       const isThread = this.fixPathAndSetType(
         URL.MACHI_THREAD_REG,
         (res) => `/bbs/read.cgi/${res[1]}/`,
-        { type: "thread", bbsType: "machi" }
+        { type: "thread", bbsType: "machi" },
       );
       if (isThread) return;
 
@@ -107,7 +107,7 @@ export class URL extends window.URL {
       const isThread = this.fixPathAndSetType(
         URL.SHITARABA_THREAD_REG,
         (res) => `/bbs/${res[1]}/`,
-        { type: "thread", bbsType: "jbbs" }
+        { type: "thread", bbsType: "jbbs" },
       );
       if (isThread) {
         if (this.pathname.includes("read_archive")) {
@@ -119,7 +119,7 @@ export class URL extends window.URL {
       const isArchive = this.fixPathAndSetType(
         URL.SHITARABA_ARCHIVE_REG,
         (res) => `/bbs/read_archive.cgi/${res[1]}/${res[2]}/`,
-        { type: "thread", bbsType: "jbbs" }
+        { type: "thread", bbsType: "jbbs" },
       );
       if (isArchive) {
         this.archive = true;
@@ -138,7 +138,7 @@ export class URL extends window.URL {
       const isThread = this.fixPathAndSetType(
         URL.CH_THREAD_REG,
         (res) => `/${res[1]}/`,
-        { type: "thread", bbsType: "2ch" }
+        { type: "thread", bbsType: "2ch" },
       );
       if (isThread) return;
 
@@ -245,14 +245,14 @@ export class URL extends window.URL {
     const { type, bbsType } = this.guessedType;
     if (type !== "thread") {
       throw new Error(
-        "app.URL.URL.toBoard: toBoard()はThreadでのみ呼び出せます"
+        "app.URL.URL.toBoard: toBoard()はThreadでのみ呼び出せます",
       );
     }
 
     if (bbsType === "jbbs") {
       const pathname = this.pathname.replace(
         URL.SHITARABA_TO_BOARD_REG,
-        "/$1/"
+        "/$1/",
       );
       return new URL(`${this.origin}${pathname}`);
     }
@@ -551,7 +551,7 @@ export function getExtType(
     video: boolean;
     oggIsAudio: boolean;
     oggIsVideo: boolean;
-  }> = {}
+  }> = {},
 ): "audio" | "video" | null {
   if (audio && AUDIO_REG.test(filename)) {
     return "audio";
@@ -593,7 +593,7 @@ function applyServerInfo(menu: any[]): ResInfo {
       if (
         !res.net &&
         (tmp = /https?:\/\/(\w+)\.5ch\.(net|io)\/(\w+)\/.*?/.exec(
-          board.url
+          board.url,
         )) !== null
       ) {
         boardNet.set(tmp[3], tmp[1]);

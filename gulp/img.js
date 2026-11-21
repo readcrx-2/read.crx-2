@@ -18,7 +18,7 @@ const imgs = function (browser) {
           img = img.replace(".webp", ".png");
         }
         const m = img.match(
-          /^(.+)_(\d+)x(\d+)(?:_([a-fA-F0-9]*))?(?:_r(\-?\d+))?\.(webp|png)$/
+          /^(.+)_(\d+)x(\d+)(?:_([a-fA-F0-9]*))?(?:_r(\-?\d+))?\.(webp|png)$/,
         );
         const src = `${paths.img.imgsSrc}/${m[1]}.svg`;
         const bin = `${output}/${img}`;
@@ -42,7 +42,7 @@ const imgs = function (browser) {
           sh.webp(defaultOptions.sharp.webp);
         }
         await sh.toFile(bin);
-      })
+      }),
     );
   };
   func.displayName = `img:imgs:${browser}`;
@@ -122,8 +122,8 @@ for (let browser of browsers) {
       imgs(browser),
       logoBig(browser, 96),
       logoBig(browser, 128),
-      loading(browser)
-    )
+      loading(browser),
+    ),
   );
 }
 

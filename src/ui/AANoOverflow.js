@@ -1,5 +1,5 @@
 let AANoOverflow;
-export default AANoOverflow = (function () {
+export default (AANoOverflow = (function () {
   let _AA_CLASS_NAME = undefined;
   let _MINI_AA_CLASS_NAME = undefined;
   let _SCROLL_AA_CLASS_NAME = undefined;
@@ -102,4 +102,4 @@ export default AANoOverflow = (function () {
   };
   AANoOverflow.initClass();
   return AANoOverflow;
-})();
+})());

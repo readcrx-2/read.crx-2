@@ -31,13 +31,13 @@ export function escapeHtml(str: string): string {
       replaceAll(
         replaceAll(replaceAll(str, "&", "&amp;"), "<", "&lt;"),
         ">",
-        "&gt;"
+        "&gt;",
       ),
       '"',
-      "&quot;"
+      "&quot;",
     ),
     "'",
-    "&apos;"
+    "&apos;",
   );
 }
 

@@ -22,7 +22,7 @@ export class Request {
       headers: headerList;
       timeout: number;
       preventCache: boolean;
-    }> = {}
+    }> = {},
   ) {
     this.method = method;
     this.url = url;
@@ -58,7 +58,7 @@ export class Request {
 
       xhr.on("loadend", () => {
         const resonseHeaders = Request.parseHTTPHeader(
-          xhr.getAllResponseHeaders()
+          xhr.getAllResponseHeaders(),
         );
 
         resolve(
@@ -66,8 +66,8 @@ export class Request {
             xhr.status,
             resonseHeaders,
             xhr.responseText,
-            xhr.responseURL
-          )
+            xhr.responseURL,
+          ),
         );
       });
 
@@ -114,6 +114,6 @@ export class Response {
     public status: number,
     public headers: headerList = {},
     public body: string,
-    public responseURL: string
+    public responseURL: string,
   ) {}
 }

@@ -29,7 +29,7 @@ export default class Callbacks {
     } else {
       log(
         "error",
-        "app.Callbacks: 存在しないコールバックを削除しようとしました。"
+        "app.Callbacks: 存在しないコールバックを削除しようとしました。",
       );
     }
   }
@@ -38,7 +38,7 @@ export default class Callbacks {
     if (!this._config.persistent && this._latestCallArg) {
       log(
         "error",
-        "app.Callbacks: persistentでないCallbacksが複数回callされました。"
+        "app.Callbacks: persistentでないCallbacksが複数回callされました。",
       );
       return;
     }

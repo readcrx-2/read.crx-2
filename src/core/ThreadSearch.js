@@ -79,7 +79,7 @@ export default (function () {
       const { status, body } = await new Request(
         "GET",
         `https://ff5ch.syoboi.jp/?q=${encodeURIComponent(this.query)}&alt=rss`,
-        { cache: false }
+        { cache: false },
       ).send();
       if (status !== 200) {
         throw new Error("検索の通信に失敗しました");

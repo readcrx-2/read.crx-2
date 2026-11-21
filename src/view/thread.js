@@ -10,7 +10,7 @@
     }
   } catch (error) {
     const response = await fetch(
-      "https://readcrx-2.github.io/read.crx-2/textar-min.woff2"
+      "https://readcrx-2.github.io/read.crx-2/textar-min.woff2",
     );
     const blob = await response.blob();
     font = await new Promise(function (resolve) {
@@ -53,7 +53,7 @@ app.boot("/view/thread.html", async function () {
   new app.view.TabContentView($view);
 
   const searchNextThread = new UI.SearchNextThread(
-    $view.C("next_thread_list")[0]
+    $view.C("next_thread_list")[0],
   );
   const popupView = new UI.PopupView($view);
 
@@ -70,7 +70,7 @@ app.boot("/view/thread.html", async function () {
       parent.postMessage({ type: "became_expired" }, location.origin);
       return $view.addClass("expired");
     },
-    { once: true }
+    { once: true },
   );
   $view.on(
     "became_over1000",
@@ -78,7 +78,7 @@ app.boot("/view/thread.html", async function () {
       parent.postMessage({ type: "became_over1000" }, location.origin);
       return $view.addClass("over1000");
     },
-    { once: true }
+    { once: true },
   );
 
   const write = function (param) {
@@ -94,7 +94,7 @@ app.boot("/view/thread.html", async function () {
       open(
         openUrl,
         undefined,
-        `width=600,height=300,left=${windowX},top=${windowY}`
+        `width=600,height=300,left=${windowX},top=${windowY}`,
       );
     } else if ("&[BROWSER]" === "chrome") {
       parent.browser.windows.create({
@@ -220,7 +220,7 @@ app.boot("/view/thread.html", async function () {
           function () {
             onScroll = true;
           },
-          { once: true }
+          { once: true },
         );
 
         (defaultScroll = function () {
@@ -270,7 +270,7 @@ app.boot("/view/thread.html", async function () {
               case "new":
                 var lastNum = +__guard__(
                   $content.$(":scope > article:last-child"),
-                  (x) => x.C("num")[0].textContent
+                  (x) => x.C("num")[0].textContent,
                 );
                 if (0 < jumpResNum && jumpResNum <= lastNum) {
                   threadContent.select(jumpResNum, false, true, -60);
@@ -319,11 +319,11 @@ app.boot("/view/thread.html", async function () {
               case "latest50":
                 var lastResNum = +__guard__(
                   $content.$(":scope > article.last"),
-                  (x1) => x1.C("num")[0].textContent
+                  (x1) => x1.C("num")[0].textContent,
                 );
                 var latest50ResNum = +__guard__(
                   $content.$(":scope > article.latest50"),
-                  (x2) => x2.C("num")[0].textContent
+                  (x2) => x2.C("num")[0].textContent,
                 );
                 if (latest50ResNum > lastResNum) {
                   threadContent.scrollTo(latest50ResNum, true);
@@ -336,10 +336,10 @@ app.boot("/view/thread.html", async function () {
                 }
                 break;
             }
-          }
+          },
         );
       },
-      { once: true }
+      { once: true },
     );
 
     let jumpResNum = -1;
@@ -380,7 +380,7 @@ app.boot("/view/thread.html", async function () {
       e.type === "click" &&
       app.config.get("popup_trigger") === "click" &&
       e.target.matches(
-        ".id.link, .id.freq, .anchor_id, .slip.link, .slip.freq, .trip.link, .trip.freq, .rep.link, .rep.freq"
+        ".id.link, .id.freq, .anchor_id, .slip.link, .slip.freq, .trip.link, .trip.freq, .rep.link, .rep.freq",
       )
     ) {
       return;
@@ -450,7 +450,7 @@ app.boot("/view/thread.html", async function () {
     } else {
       if (
         $article.$(
-          ".thumbnail.image_blur[media-type='image'], .thumbnail.image_blur[media-type='video']"
+          ".thumbnail.image_blur[media-type='image'], .thumbnail.image_blur[media-type='video']",
         ) != null
       ) {
         $menu.C("set_image_blur")[0].remove();
@@ -644,7 +644,7 @@ ${$res.C("message")[0].innerText.replace(/^/gm, ">")}\n\
         return $popup;
       });
     },
-    true
+    true,
   );
 
   //アンカーリンク
@@ -790,7 +790,7 @@ ${$res.C("message")[0].innerText.replace(/^/gm, ">")}\n\
         });
       } catch (error1) {}
     },
-    true
+    true,
   );
 
   //IDポップアップ
@@ -800,7 +800,7 @@ ${$res.C("message")[0].innerText.replace(/^/gm, ">")}\n\
       const { target } = e;
       if (
         !target.matches(
-          ".id.link, .id.freq, .anchor_id, .slip.link, .slip.freq, .trip.link, .trip.freq"
+          ".id.link, .id.freq, .anchor_id, .slip.link, .slip.freq, .trip.link, .trip.freq",
         )
       ) {
         return;
@@ -895,7 +895,7 @@ ${$res.C("message")[0].innerText.replace(/^/gm, ">")}\n\
         return $popup;
       });
     },
-    true
+    true,
   );
 
   //リプライポップアップ
@@ -939,7 +939,7 @@ ${$res.C("message")[0].innerText.replace(/^/gm, ">")}\n\
         return $popup;
       });
     },
-    true
+    true,
   );
 
   // 展開済みURLのポップアップ
@@ -975,7 +975,7 @@ ${$res.C("message")[0].innerText.replace(/^/gm, ">")}\n\
         return $popup;
       });
     },
-    true
+    true,
   );
 
   // リンクのコンテキストメニュー
@@ -1235,7 +1235,7 @@ ${$res.C("message")[0].innerText.replace(/^/gm, ">")}\n\
         }
 
         $content.emit(new Event("searchfinish"));
-      }
+      },
     );
 
     $searchbox.on("keydown", function ({ key }) {
@@ -1273,7 +1273,7 @@ ${$res.C("message")[0].innerText.replace(/^/gm, ">")}\n\
         }
         return updateThreadFooter();
       },
-      { root: $content, threshold: [0, 0.05, 0.5, 0.95, 1.0] }
+      { root: $content, threshold: [0, 0.05, 0.5, 0.95, 1.0] },
     );
     const setObserve = function () {
       observer.disconnect();
@@ -1319,7 +1319,7 @@ ${$res.C("message")[0].innerText.replace(/^/gm, ">")}\n\
               read = __guardMethod__(
                 iframe.contentWindow,
                 "$$",
-                (o) => o.$$(".content > article").length
+                (o) => o.$$(".content > article").length,
               );
             }
 
@@ -1417,14 +1417,14 @@ ${$res.C("message")[0].innerText.replace(/^/gm, ">")}\n\
 
     //次スレ検索
     for (let dom of $view.$$(
-      ".button_tool_search_next_thread, .search_next_thread"
+      ".button_tool_search_next_thread, .search_next_thread",
     )) {
       dom.on("click", function () {
         searchNextThread.show();
         searchNextThread.search(
           viewUrlStr,
           document.title,
-          $content.textContent
+          $content.textContent,
         );
       });
     }
@@ -1451,7 +1451,7 @@ ${$res.C("message")[0].innerText.replace(/^/gm, ">")}\n\
 
 app.viewThread._draw = async function (
   $view,
-  { forceUpdate = false, jumpResNum = -1 } = {}
+  { forceUpdate = false, jumpResNum = -1 } = {},
 ) {
   let ok;
   const threadContent = app.DOMData.get($view, "threadContent");
@@ -1479,7 +1479,7 @@ app.viewThread._draw = async function (
 
     await threadContent.addItem(
       thread.res.slice($view.C("content")[0].child().length),
-      thread.title
+      thread.title,
     );
     loadCount++;
     const lazyLoad = app.DOMData.get($view, "lazyload");
@@ -1500,7 +1500,7 @@ app.viewThread._draw = async function (
     }
 
     $view.emit(
-      new CustomEvent("view_loaded", { detail: { jumpResNum, loadCount } })
+      new CustomEvent("view_loaded", { detail: { jumpResNum, loadCount } }),
     );
     return thread;
   };
@@ -1513,7 +1513,7 @@ app.viewThread._draw = async function (
       if (!threadGetPromise.isResolved()) {
         threadSetFromCacheBeforeHTTPPromise = fn(thread, false);
       }
-    })
+    }),
   );
   try {
     await threadGetPromise.promise;
@@ -1568,7 +1568,7 @@ app.viewThread._readStateManager = async function ($view) {
     if (
       __guard__(
         (bookmark = app.bookmark.get(viewUrlStr)),
-        (x) => x.readState
+        (x) => x.readState,
       ) != null
     ) {
       ({ readState } = bookmark);
@@ -1593,20 +1593,20 @@ app.viewThread._readStateManager = async function ($view) {
         __guard__($content.C("last")[0], (x) => x.removeClass("last"));
         __guard__($content.C("read")[0], (x1) => x1.removeClass("read"));
         __guard__($content.C("received")[0], (x2) =>
-          x2.removeClass("received")
+          x2.removeClass("received"),
         );
         __guard__($content.C("latest50")[0], (x3) =>
-          x3.removeClass("latest50")
+          x3.removeClass("latest50"),
         );
 
         // キャッシュの内容が古い場合にreadStateの内容の方が大きくなることがあるので
         // その場合は次回の処理に委ねる
         if (readState.last <= contentLength) {
           __guard__(contentChild[readState.last - 1], (x4) =>
-            x4.addClass("last")
+            x4.addClass("last"),
           );
           __guard__(contentChild[readState.last - 1], (x5) =>
-            x5.attr("last-offset", readState.offset)
+            x5.attr("last-offset", readState.offset),
           );
           attachedReadState.last = -1;
         } else {
@@ -1615,7 +1615,7 @@ app.viewThread._readStateManager = async function ($view) {
         }
         if (readState.read <= contentLength) {
           __guard__(contentChild[readState.read - 1], (x6) =>
-            x6.addClass("read")
+            x6.addClass("read"),
           );
           attachedReadState.read = -1;
         } else {
@@ -1623,7 +1623,7 @@ app.viewThread._readStateManager = async function ($view) {
         }
         if (readState.received <= contentLength) {
           __guard__(contentChild[readState.received - 1], (x7) =>
-            x7.addClass("received")
+            x7.addClass("received"),
           );
           attachedReadState.received = -1;
         } else {
@@ -1631,14 +1631,14 @@ app.viewThread._readStateManager = async function ($view) {
         }
         if (contentLength > 50) {
           __guard__(contentChild[contentLength - 51], (x8) =>
-            x8.addClass("latest50")
+            x8.addClass("latest50"),
           );
         }
 
         $view.emit(
           new CustomEvent("read_state_attached", {
             detail: { jumpResNum, requestReloadFlag, loadCount },
-          })
+          }),
         );
         if (attachedReadState.read > 0 && attachedReadState.received > 0) {
           app.message.send("read_state_updated", {
@@ -1661,41 +1661,41 @@ app.viewThread._readStateManager = async function ($view) {
       if (attachedReadState.last > 0) {
         __guard__($content.C("last")[0], (x9) => x9.removeClass("last"));
         __guard__(contentChild[attachedReadState.last - 1], (x10) =>
-          x10.addClass("last")
+          x10.addClass("last"),
         );
         __guard__(contentChild[attachedReadState.last - 1], (x11) =>
-          x11.attr("last-offset", attachedReadState.offset)
+          x11.attr("last-offset", attachedReadState.offset),
         );
       }
       if (attachedReadState.read > 0) {
         __guard__($content.C("read")[0], (x12) => x12.removeClass("read"));
         __guard__(contentChild[attachedReadState.read - 1], (x13) =>
-          x13.addClass("read")
+          x13.addClass("read"),
         );
         tmpReadState.read = attachedReadState.read;
       }
       if (attachedReadState.received > 0) {
         __guard__($content.C("received")[0], (x14) =>
-          x14.removeClass("received")
+          x14.removeClass("received"),
         );
         __guard__(contentChild[attachedReadState.received - 1], (x15) =>
-          x15.addClass("received")
+          x15.addClass("received"),
         );
         tmpReadState.received = attachedReadState.received;
       }
       if (contentLength > 50) {
         __guard__($content.C("latest50")[0], (x16) =>
-          x16.removeClass("latest50")
+          x16.removeClass("latest50"),
         );
         __guard__(contentChild[contentLength - 51], (x17) =>
-          x17.addClass("latest50")
+          x17.addClass("latest50"),
         );
       }
 
       $view.emit(
         new CustomEvent("read_state_attached", {
           detail: { jumpResNum, requestReloadFlag, loadCount },
-        })
+        }),
       );
       if (tmpReadState.read && tmpReadState.received) {
         app.message.send("read_state_updated", {
@@ -1711,7 +1711,7 @@ app.viewThread._readStateManager = async function ($view) {
         }
       }
       requestReloadFlag = false;
-    }
+    },
   );
 
   ({ readState, readStateUpdated } = await getReadState);
@@ -1845,7 +1845,7 @@ app.viewThread._readStateManager = async function ($view) {
     function () {
       doneScroll = true;
     },
-    { passive: true }
+    { passive: true },
   );
   $view.on("request_reload", function () {
     requestReloadFlag = true;

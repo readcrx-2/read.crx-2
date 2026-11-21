@@ -38,6 +38,8 @@ export default tseslint.config(
       "no-async-promise-executor": "off",
       "no-prototype-builtins": "off",
       "no-constant-binary-expression": "off",
+      "preserve-caught-error": "off",
+      "no-useless-assignment": "off",
     },
   },
   {

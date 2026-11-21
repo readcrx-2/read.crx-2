@@ -82,7 +82,7 @@ browser.contextMenus.create({
 // コンテキストメニューのクリック時の動作
 browser.contextMenus.onClicked.addListener(async function (
   { menuItemId, linkUrl: url },
-  tab
+  tab,
 ) {
   if (menuItemId !== "open_link_in_rcrx") {
     return;

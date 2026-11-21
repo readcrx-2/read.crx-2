@@ -6,6 +6,7 @@
       "esnext",
     ],
     "module": "esnext",
+    "moduleResolution": "bundler",
     "typeRoots": [
       "node_modules/web-ext-types",
       "src/global.d.ts"

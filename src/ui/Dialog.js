@@ -15,7 +15,7 @@ const templateConfirm = ({
 <div class="dialog_spacer"></div>\
 `;
 
-export default Dialog = (method, prop) =>
+export default (Dialog = (method, prop) =>
   new Promise(function (resolve, reject) {
     //prop.message, prop.labelOk, prop.labelNo
     if (method === "confirm") {
@@ -35,4 +35,4 @@ export default Dialog = (method, prop) =>
     } else {
       reject();
     }
-  });
+  }));

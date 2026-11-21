@@ -26,7 +26,7 @@ export const manifest = (async () => {
 export async function boot(
   path: string,
   requirements: Function | string[] | null,
-  fn: Function
+  fn: Function,
 ) {
   if (!fn && typeof requirements === "function") {
     fn = requirements;

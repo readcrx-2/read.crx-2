@@ -1,5 +1,5 @@
 let Notification;
-export default Notification = (function () {
+export default (Notification = (function () {
   let createNotification = undefined;
   Notification = class Notification {
     static initClass() {
@@ -24,7 +24,7 @@ export default Notification = (function () {
             return (this.notify = createNotification(
               this.title,
               this.message,
-              this.tag
+              this.tag,
             ));
           }
         });
@@ -41,4 +41,4 @@ export default Notification = (function () {
   };
   Notification.initClass();
   return Notification;
-})();
+})());

@@ -13,7 +13,7 @@ module.exports = {
   gulp: {
     gulp: require("gulp"),
     plumber: require("gulp-plumber"),
-    filter: require("gulp-filter"),
+    filter: require("gulp-filter").default ?? require("gulp-filter"),
     concat: require("gulp-concat"),
     notify: require("gulp-notify"),
     merge: require("merge2"),

@@ -7,6 +7,5 @@ onlyBuiltDependencies:
   - spawn-sync
 
 overrides:
-  braces: "^3.0.3"
-  micromatch: "^4.0.8"
   uuid: "^11.1.1"
+  "multimatch>minimatch": "^11.0.1"

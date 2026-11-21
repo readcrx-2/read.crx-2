@@ -216,7 +216,7 @@ const Cls = (app.view.IframeView = class IframeView extends app.view.View {
     open(
       `/write/${htmlname}.html?${app.URL.buildQuery(param)}`,
       undefined,
-      `width=600,height=${height},left=${windowX},top=${windowY}`
+      `width=600,height=${height},left=${windowX},top=${windowY}`,
     );
   }
 
@@ -234,7 +234,7 @@ const Cls = (app.view.IframeView = class IframeView extends app.view.View {
     }
     if (/^\d+$/.test(command)) {
       __guard__(app.DOMData.get(this.$element, "selectableItemList"), (x) =>
-        x.select(+command)
+        x.select(+command),
       );
     }
 
@@ -274,12 +274,12 @@ ${this.$element
     switch (command) {
       case "up":
         __guard__(app.DOMData.get(this.$element, "selectableItemList"), (x1) =>
-          x1.selectPrev(repeatCount)
+          x1.selectPrev(repeatCount),
         );
         break;
       case "down":
         __guard__(app.DOMData.get(this.$element, "selectableItemList"), (x2) =>
-          x2.selectNext(repeatCount)
+          x2.selectNext(repeatCount),
         );
         break;
       case "left":
@@ -287,7 +287,7 @@ ${this.$element
           $a = this.$element.$("li > a.selected");
           if ($a != null) {
             app.DOMData.get(this.$element, "accordion").select(
-              $a.closest("ul").prev()
+              $a.closest("ul").prev(),
             );
           }
         }
@@ -302,7 +302,7 @@ ${this.$element
         break;
       case "clearSelect":
         __guard__(app.DOMData.get(this.$element, "selectableItemList"), (x3) =>
-          x3.clearSelect()
+          x3.clearSelect(),
         );
         break;
       case "focusUpFrame":
@@ -322,20 +322,20 @@ ${this.$element
         break;
       case "enter":
         __guard__(this.$element.C("selected")[0], (x4) =>
-          x4.emit(new Event("mousedown", { bubbles: true }))
+          x4.emit(new Event("mousedown", { bubbles: true })),
         );
         __guard__(this.$element.C("selected")[0], (x5) =>
-          x5.emit(new Event("mouseup", { bubbles: true }))
+          x5.emit(new Event("mouseup", { bubbles: true })),
         );
         break;
       case "shift+enter":
         __guard__(this.$element.C("selected")[0], (x6) =>
           x6.emit(
-            new MouseEvent("mousedown", { shiftKey: true, bubbles: true })
-          )
+            new MouseEvent("mousedown", { shiftKey: true, bubbles: true }),
+          ),
         );
         __guard__(this.$element.C("selected")[0], (x7) =>
-          x7.emit(new MouseEvent("mouseup", { shiftKey: true, bubbles: true }))
+          x7.emit(new MouseEvent("mouseup", { shiftKey: true, bubbles: true })),
         );
         break;
       case "help":
@@ -497,7 +497,7 @@ app.view.PaneContentView = class PaneContentView extends app.view.IframeView {
               param_res_num:
                 message.param_res_num != null ? message.param_res_num : null,
             },
-          })
+          }),
         );
 
         // tab_selected(postMessage) -> tab_selected(event) 翻訳処理
@@ -513,7 +513,7 @@ app.view.PaneContentView = class PaneContentView extends app.view.IframeView {
           type: "request_focus",
           focus: !["INPUT", "TEXTAREA"].includes(target.tagName),
         },
-        location.origin
+        location.origin,
       );
     });
 
@@ -559,7 +559,7 @@ app.view.TabContentView = class TabContentView extends (
           type: "title_updated",
           title: this.$element.T("title")[0].textContent,
         },
-        location.origin
+        location.origin,
       );
     };
 
@@ -583,7 +583,7 @@ app.view.TabContentView = class TabContentView extends (
         if (!currentTarget.hasClass("disabled")) {
           this.$element.emit(new Event("request_reload"));
         }
-      })
+      }),
     );
   }
 
@@ -613,7 +613,7 @@ app.view.TabContentView = class TabContentView extends (
           this.$element.C("button_back")[0].remove();
           this.$element.C("button_forward")[0].remove();
         }
-      }
+      },
     );
 
     for (let dom of this.$element.$$(".button_back, .button_forward")) {
@@ -630,7 +630,7 @@ app.view.TabContentView = class TabContentView extends (
           const tmp = this.hasClass("button_back") ? "Back" : "Forward";
           parent.postMessage(
             { type: `requestTab${tmp}`, newTab, background },
-            location.origin
+            location.origin,
           );
         }
       });
@@ -819,7 +819,7 @@ app.view.TabContentView = class TabContentView extends (
         if (this.$element.hasClass("view_bookmark")) {
           return setInterval(() => {
             this.$element.emit(
-              new CustomEvent("request_reload", { detail: true })
+              new CustomEvent("request_reload", { detail: true }),
             );
           }, second);
         } else {
@@ -828,7 +828,7 @@ app.view.TabContentView = class TabContentView extends (
             if (
               app.config.isOn("auto_load_all") ||
               parent.$$.$(
-                `.tab_container > iframe[data-url=\"${url}\"]`
+                `.tab_container > iframe[data-url=\"${url}\"]`,
               ).hasClass("tab_selected")
             ) {
               this.$element.emit(new Event("request_reload"));
@@ -915,7 +915,7 @@ app.view.TabContentView = class TabContentView extends (
               this.$element.$(".button_tool > ul").addClass("hidden");
             }
           },
-          { once: true }
+          { once: true },
         );
         this.$element.on(
           "contextmenu",
@@ -924,14 +924,14 @@ app.view.TabContentView = class TabContentView extends (
               this.$element.$(".button_tool > ul").addClass("hidden");
             }
           },
-          { once: true }
+          { once: true },
         );
-      })
+      }),
     );
 
     window.on("blur", () => {
       __guard__(this.$element.$(".button_tool > ul"), (x1) =>
-        x1.addClass("hidden")
+        x1.addClass("hidden"),
       );
     });
 
@@ -956,7 +956,7 @@ app.view.TabContentView = class TabContentView extends (
           e.preventDefault();
 
           parent.browser.tabs.create({ url });
-        })
+        }),
       );
     })();
 
@@ -966,7 +966,7 @@ app.view.TabContentView = class TabContentView extends (
         for (let dom of this.$element.C("expired")) {
           dom.toggleClass("hidden");
         }
-      })
+      }),
     );
 
     // 未読スレッドを全て開く
@@ -979,28 +979,28 @@ app.view.TabContentView = class TabContentView extends (
 
           app.message.send("open", { url, title, new_tab: true, lazy });
         }
-      })
+      }),
     );
 
     // タイトルをコピー
     __guard__(this.$element.C("button_copy_title")[0], (x3) =>
       x3.on("click", () => {
         app.clipboardWrite(document.title);
-      })
+      }),
     );
 
     // URLをコピー
     __guard__(this.$element.C("button_copy_url")[0], (x4) =>
       x4.on("click", () => {
         app.clipboardWrite(this.$element.dataset.url);
-      })
+      }),
     );
 
     // タイトルとURLをコピー
     __guard__(this.$element.C("button_copy_title_and_url")[0], (x5) =>
       x5.on("click", () => {
         app.clipboardWrite(document.title + " " + this.$element.dataset.url);
-      })
+      }),
     );
 
     return (() => {
@@ -1029,14 +1029,14 @@ app.view.TabContentView = class TabContentView extends (
                 "現在この機能は使用できません",
                 msg,
                 "",
-                "invalid"
+                "invalid",
               );
             }
-          })
+          }),
         );
       } else {
         __guard__(this.$element.C("button_change_netsc")[0], (x7) =>
-          x7.remove()
+          x7.remove(),
         );
       }
 
@@ -1047,7 +1047,7 @@ app.view.TabContentView = class TabContentView extends (
             for (let dom of this.$element.C("net")) {
               dom.toggleClass("hidden");
             }
-          })
+          }),
         );
       } else {
         __guard__(this.$element.C("button_only_sc")[0], (x9) => x9.remove());

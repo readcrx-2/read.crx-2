@@ -1,5 +1,5 @@
 let TableSearch;
-export default TableSearch = function ($table, method, prop) {
+export default (TableSearch = function ($table, method, prop) {
   let dom;
   $table.addClass("hidden");
   $table.removeAttr("data-table-search-hit-count");
@@ -38,4 +38,4 @@ export default TableSearch = function ($table, method, prop) {
 
   $table.removeClass("hidden");
   return $table;
-};
+});

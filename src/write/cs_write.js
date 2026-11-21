@@ -20,12 +20,12 @@
           key: `${jumpUrl}`,
           message: `${moveMs}`,
         },
-        `${origin}`
+        `${origin}`,
       );
     } else {
       parent.postMessage(
         { type: "success", message: `${moveMs}` },
-        `${origin}`
+        `${origin}`,
       );
     }
   };
@@ -41,7 +41,7 @@
           type: "error",
           message: `${message.replace(/\"/g, "&quot;")}`,
         },
-        `${origin}`
+        `${origin}`,
       );
     } else {
       parent.postMessage({ type: "error" }, `${origin}`);
@@ -104,7 +104,7 @@
     //したらば投稿確認
     if (
       new RegExp(
-        `^https?://jbbs\\.shitaraba\\.net/bbs/write.cgi/\\w+/\\d+/(?:\\d+|new)/$`
+        `^https?://jbbs\\.shitaraba\\.net/bbs/write.cgi/\\w+/\\d+/(?:\\d+|new)/$`,
       ).test(url)
     ) {
       if (title.includes("書きこみました")) {

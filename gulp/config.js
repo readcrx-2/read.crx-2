@@ -101,7 +101,7 @@ const defaultOptions = {
     typescript: c.ts,
   },
   sass: {
-    outputStyle: "compressed",
+    style: "compressed",
   },
   postcss: [p.autoprefixer()],
   pug: {

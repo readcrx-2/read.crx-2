@@ -36,13 +36,13 @@ const watch = function (browser) {
     rollupWatch(submitThreadjsConfig);
     gulp.watch(
       [paths.lib.webExtPolyfill, paths.js.background],
-      gulp.task(`js:background.js:${browser}`)
+      gulp.task(`js:background.js:${browser}`),
     );
     gulp.watch(paths.js.csAddlink, gulp.task(`js:cs_addlink.js:${browser}`));
     gulp.watch(paths.js.view, gulp.task(`js:view:${browser}`));
     gulp.watch(
       [paths.lib.webExtPolyfill, paths.js.zombie],
-      gulp.task(`js:zombie.js:${browser}`)
+      gulp.task(`js:zombie.js:${browser}`),
     );
     gulp.watch(paths.js.csWrite, gulp.task(`js:cs_write.js:${browser}`));
     gulp.watch(paths.css.ui, gulp.task(`css:ui.css:${browser}`));
@@ -57,7 +57,7 @@ const watch = function (browser) {
     gulp.watch(paths.lib.shortQuery, gulp.task(`lib:shortQuery:${browser}`));
     gulp.watch(
       paths.lib.webExtPolyfill,
-      gulp.task(`lib:webExtPolyfill:${browser}`)
+      gulp.task(`lib:webExtPolyfill:${browser}`),
     );
   };
 };

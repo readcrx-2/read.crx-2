@@ -62,8 +62,8 @@ for (browser of browsers) {
     gulp.parallel(
       `html:view:${browser}`,
       `html:zombie.html:${browser}`,
-      `html:write:${browser}`
-    )
+      `html:write:${browser}`,
+    ),
   );
 }
 

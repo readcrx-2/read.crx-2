@@ -16,7 +16,7 @@ class SubmitThread extends Write {
     const extraInfoSpec = ["requestHeaders", "blocking"];
     if (
       browser.webRequest.OnBeforeSendHeadersOptions.hasOwnProperty(
-        "EXTRA_HEADERS"
+        "EXTRA_HEADERS",
       )
     ) {
       extraInfoSpec.push("extraHeaders");
@@ -29,7 +29,7 @@ class SubmitThread extends Write {
         types: ["sub_frame"],
         urls: ["*://*/test/bbs.cgi*", "*://jbbs.shitaraba.net/bbs/write.cgi/*"],
       },
-      extraInfoSpec
+      extraInfoSpec,
     );
   }
 

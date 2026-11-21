@@ -172,7 +172,7 @@ app.boot("/view/thread.html", async function () {
       forceUpdate: ex.force_update,
       jumpResNum,
     });
-    if (ex.mes == null || !!app.config.isOn("no_writehistory")) {
+    if (ex.mes == null || app.config.isOn("no_writehistory")) {
       return;
     }
     const postMes = ex.mes.replace(/\s/g, "");

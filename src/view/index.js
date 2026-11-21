@@ -582,15 +582,13 @@ app.main = function () {
 
   const iframeSrcToUrl = function (src) {
     let res;
-    if ((res = new RegExp(`^/view/(\\w+)\\.html$`).exec(src))) {
+    if ((res = /^\/view\/(\w+)\.html$/.exec(src))) {
       return res[1];
     }
-    if ((res = new RegExp(`^/view/search\\.html(\\?.+)$`).exec(src))) {
+    if ((res = /^\/view\/search\.html(\?.+)$/.exec(src))) {
       return app.URL.parseQuery(res[1], true).get("query");
     }
-    if (
-      (res = new RegExp(`^/view/(?:thread|board)\\.html(\\?.+)$`).exec(src))
-    ) {
+    if ((res = /^\/view\/(?:thread|board)\.html(\?.+)$/.exec(src))) {
       return app.URL.parseQuery(res[1], true).get("q");
     }
     return null;

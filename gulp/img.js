@@ -18,7 +18,7 @@ const imgs = function (browser) {
           img = img.replace(".webp", ".png");
         }
         const m = img.match(
-          /^(.+)_(\d+)x(\d+)(?:_([a-fA-F0-9]*))?(?:_r(\-?\d+))?\.(webp|png)$/,
+          /^(.+)_(\d+)x(\d+)(?:_([a-fA-F0-9]*))?(?:_r(-?\d+))?\.(webp|png)$/,
         );
         const src = `${paths.img.imgsSrc}/${m[1]}.svg`;
         const bin = `${output}/${img}`;

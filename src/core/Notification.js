@@ -1,6 +1,6 @@
 let Notification;
 export default (Notification = (function () {
-  let createNotification = undefined;
+  let createNotification;
   Notification = class Notification {
     static initClass() {
       createNotification = (title, message, tag) =>

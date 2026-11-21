@@ -11,7 +11,7 @@ import { levenshteinDistance } from "./Util.ts";
 export var Anchor = {
   reg: {
     ANCHOR:
-      /(?:&gt;|＞){1,2}[\d\uff10-\uff19]+(?:[\-\u30fc][\d\uff10-\uff19]+)?(?:\s*[,、]\s*[\d\uff10-\uff19]+(?:[\-\u30fc][\d\uff10-\uff19]+)?)*/g,
+      /(?:&gt;|＞){1,2}[\d\uff10-\uff19]+(?:[-\u30fc][\d\uff10-\uff19]+)?(?:\s*[,、]\s*[\d\uff10-\uff19]+(?:[-\u30fc][\d\uff10-\uff19]+)?)*/g,
     _FW_NUMBER: /[\uff10-\uff19]/g,
   },
 
@@ -146,7 +146,7 @@ export var chServerMoveDetect = async function (oldBoardUrl, html) {
 const $span = $__("span");
 export var decodeCharReference = (str) =>
   str.replace(
-    /\&(?:#(\d+)|#x([\dA-Fa-f]+)|([\da-zA-Z]+));/g,
+    /&(?:#(\d+)|#x([\dA-Fa-f]+)|([\da-zA-Z]+));/g,
     function ($0, $1, $2, $3) {
       //数値文字参照 - 10進数
       if ($1 != null) {

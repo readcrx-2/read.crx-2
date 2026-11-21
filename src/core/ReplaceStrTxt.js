@@ -36,7 +36,7 @@ const _setupReg = function () {
             return new RegExp(d.before, "ig");
           case "ex":
             return new RegExp(
-              d.before.replace(/[-\/\\^$*+?.()|[\]{}]/g, "\\$&"),
+              d.before.replace(/[-/\\^$*+?.()|[\]{}]/g, "\\$&"),
               "ig",
             );
         }

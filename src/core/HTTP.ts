@@ -91,7 +91,7 @@ export class Request {
   }
 
   static parseHTTPHeader(str: string): headerList {
-    const reg = /^(?:([a-z\-]+):\s*|([ \t]+))(.+)\s*$/gim;
+    const reg = /^(?:([a-z-]+):\s*|([ \t]+))(.+)\s*$/gim;
     const headers: headerList = {};
     let last: string | undefined;
     let res: RegExpExecArray | null;

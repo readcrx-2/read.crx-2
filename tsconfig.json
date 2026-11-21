@@ -1,16 +1,10 @@
 {
   "compilerOptions": {
     "target": "esnext",
-    "lib": [
-      "dom",
-      "esnext",
-    ],
+    "lib": ["dom", "esnext"],
     "module": "esnext",
     "moduleResolution": "bundler",
-    "typeRoots": [
-      "node_modules/web-ext-types",
-      "src/global.d.ts"
-    ],
+    "typeRoots": ["node_modules/web-ext-types", "src/global.d.ts"],
     "allowJs": true,
     "checkJs": false,
     "sourceMap": true,

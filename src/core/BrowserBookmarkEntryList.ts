@@ -1,4 +1,4 @@
-import { Entry, SyncableEntryList, newerEntry } from "./BookmarkEntryList";
+import { type Entry, SyncableEntryList, newerEntry } from "./BookmarkEntryList";
 import { URL } from "./URL";
 
 export default class BrowserBookmarkEntryList extends SyncableEntryList {

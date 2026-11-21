@@ -401,9 +401,10 @@ URLが間違っているか過去ログに移動せずに削除されていま�
   @return {null|Object}
   */
   static _getXhrInfo(url) {
-    const tmp = new RegExp(
-      `^/(?:test|bbs)/read(?:_archive)?\\.cgi/(\\w+)/(\\d+)/(?:(\\d+)/)?$`,
-    ).exec(url.pathname);
+    const tmp =
+      /^\/(?:test|bbs)\/read(?:_archive)?\.cgi\/(\w+)\/(\d+)\/(?:(\d+)\/)?$/.exec(
+        url.pathname,
+      );
     if (!tmp) {
       return null;
     }
@@ -789,7 +790,7 @@ URLが間違っているか過去ログに移動せずに削除されていま�
     if (text.includes('<div class="footer push">read.cgi ver 06')) {
       text = text.replace(/<\/h1>/, "</h1></dd></dl>");
       reg =
-        /^.*?<dl class="post".*><dt class=\"\"><span class="number">(\d+).* : <\/span><span class="name"><b>(?:<a [^<>]*href="(?:mailto:|\/cdn-cgi\/l\/email-protection#)([^<>"]*)">|<font [^>]*>)?(.*?)(?:<\/a>|<\/font>)?<\/b><\/span><span class="date">(.*)<\/span><\/dt><dd class="thread_in"> ?(.*)$/;
+        /^.*?<dl class="post".*><dt class=""><span class="number">(\d+).* : <\/span><span class="name"><b>(?:<a [^<>]*href="(?:mailto:|\/cdn-cgi\/l\/email-protection#)([^<>"]*)">|<font [^>]*>)?(.*?)(?:<\/a>|<\/font>)?<\/b><\/span><span class="date">(.*)<\/span><\/dt><dd class="thread_in"> ?(.*)$/;
       separator = "</dd></dl>";
     } else if (text.includes('<div class="footer push">read.cgi ver 07')) {
       text = text.replace("</h1>", "</h1></div></div><br>");

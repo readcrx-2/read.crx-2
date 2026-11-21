@@ -1,6 +1,6 @@
 const gulp = require("gulp");
 const path = require("path");
-const { gulp: $, rollup: _ } = require("./plugins");
+const { gulp: $, rolldown: _ } = require("./plugins");
 const { browsers, paths, defaultOptions } = require("./config");
 const { makeInOut, getRollupIOConfigs } = require("./js");
 const util = require("./util");
@@ -16,7 +16,7 @@ const makeRollupConfig = function (browser, configName) {
 
 const rollupWatch = function (config) {
   const filename = path.basename(config.output.file);
-  _.rollup.watch(config).on("event", util.onRollupWatch(filename));
+  _.watch(config).on("event", util.onRollupWatch(filename));
 };
 
 /*

@@ -1,7 +1,7 @@
 const path = require("path");
 const fs = require("fs-extra");
 const gulp = require("gulp");
-const { gulp: $, rollup: _ } = require("./plugins");
+const { gulp: $, rolldown: _ } = require("./plugins");
 const { browsers, paths, defaultOptions } = require("./config");
 const util = require("./util");
 
@@ -13,35 +13,27 @@ const getReplaceMap = (browser) => ({
 /*
   rollup
 */
-const cache = {};
-
 const makeInOut = function (
   browser,
   { output, pathname, plugins, outObj = {} },
 ) {
-  const i = Object.assign({}, defaultOptions.rollup.in);
+  const i = Object.assign({}, defaultOptions.rolldown.in);
   i.input = paths.js[pathname];
-  cache[pathname] = null;
-  i.cache = cache[pathname];
+  i.plugins = plugins || [];
 
-  const tsPlugin = _.ts(
-    Object.assign({}, defaultOptions.rollupTs, {
-      outDir: paths.output[browser],
-    }),
-  );
-  i.plugins = (plugins || []).concat([tsPlugin]);
-
-  const o = Object.assign({}, defaultOptions.rollup.out, outObj);
+  const o = Object.assign({}, defaultOptions.rolldown.out, outObj);
   o.file = `${paths.output[browser]}/${output}`;
   return { input: i, output: o };
 };
 exports.makeInOut = makeInOut;
 
 const getRollupIOConfigs = function (name, browser) {
-  const replace = _.replace({
-    delimiters: ["&\\[", "\\]"],
+  const replaceMap = Object.fromEntries(
+    Object.entries(getReplaceMap(browser)).map(([k, v]) => [`&[${k}]`, v]),
+  );
+  const replace = _.replace(replaceMap, {
+    delimiters: ["", ""],
     preventAssignment: true,
-    values: getReplaceMap(browser),
   });
   switch (name) {
     case "app":
@@ -100,9 +92,9 @@ const makeFunc = function (browser, configName) {
   const { input: i, output: o } = makeInOut(browser, args);
   const func = async function () {
     try {
-      const bundle = await _.rollup.rollup(i);
-      cache[args.pathname] = bundle;
+      const bundle = await _.rolldown(i);
       await bundle.write(o);
+      await bundle.close();
     } catch (e) {
       util.onRollupError(filename)(e);
     }

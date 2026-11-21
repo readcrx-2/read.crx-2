@@ -649,7 +649,7 @@ app.view.TabContentView = class TabContentView extends (
     }
     const { url } = this.$element.dataset;
 
-    if (new RegExp(`^https?://\\w`).test(url)) {
+    if (/^https?:\/\/\w/.test(url)) {
       if (app.bookmark.get(url)) {
         $button.addClass("bookmarked");
       } else {

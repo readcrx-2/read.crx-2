@@ -8,7 +8,7 @@ import MediaContainer from "./MediaContainer.js";
 @param {Element} container
 */
 export default (ThreadContent = (function () {
-  let _OVER1000_DATA = undefined;
+  let _OVER1000_DATA;
   ThreadContent = class ThreadContent {
     static initClass() {
       _OVER1000_DATA = "Over 1000";
@@ -594,9 +594,9 @@ export default (ThreadContent = (function () {
         return null;
       }
       const readTop = $read.offsetTop;
-      if (!(
-        readTop < containerTop && containerTop < readTop + $read.offsetHeight
-      )) {
+      if (
+        !(readTop < containerTop && containerTop < readTop + $read.offsetHeight)
+      ) {
         // 直近に読んでいたレスの上下を順番に調べる
         let $next = $read.next();
         let $prev = $read.prev();
@@ -886,7 +886,7 @@ export default (ThreadContent = (function () {
         //.name
         const $name = $__("span").addClass("name");
         if (
-          /^\s*(?:&gt;|\uff1e){0,2}([\d\uff10-\uff19]+(?:[\-\u30fc][\d\uff10-\uff19]+)?(?:\s*,\s*[\d\uff10-\uff19]+(?:[\-\u30fc][\d\uff10-\uff19]+)?)*)\s*$/.test(
+          /^\s*(?:&gt;|\uff1e){0,2}([\d\uff10-\uff19]+(?:[-\u30fc][\d\uff10-\uff19]+)?(?:\s*,\s*[\d\uff10-\uff19]+(?:[-\u30fc][\d\uff10-\uff19]+)?)*)\s*$/.test(
             res.name,
           )
         ) {
@@ -983,7 +983,7 @@ export default (ThreadContent = (function () {
           )
           //.beid
           .replace(
-            /(?:^| )(BE:(\d+)\-[A-Z\d]+\(\d+\))/,
+            /(?:^| )(BE:(\d+)-[A-Z\d]+\(\d+\))/,
             `<a class="beid" href="${protocol}//be.5ch.io/test/p.php?i=$3" target="_blank">$1</a>`,
           )
           //.date
@@ -1046,14 +1046,12 @@ export default (ThreadContent = (function () {
           .replace(/<(\/)?div-block([^<>]*)>/g, "<$1div$2>")
           //URLリンク
           .replace(
-            /(h)?(ttps?:\/\/(?!img\.(?:[25]ch)\.net\/(?:ico|emoji|premium)\/[\w\-_]+\.gif)(?:[a-hj-zA-HJ-Z\d_\-.!~*'();\/?:@=+$,%#]|\&(?!gt;)|[iI](?![dD]:)+)+)/g,
+            /(h)?(ttps?:\/\/(?!img\.(?:[25]ch)\.net\/(?:ico|emoji|premium)\/[\w\-_]+\.gif)(?:[a-hj-zA-HJ-Z\d_\-.!~*'();/?:@=+$,%#]|&(?!gt;)|[iI](?![dD]:)+)+)/g,
             '<a href="h$2" target="_blank">$1$2</a>',
           )
           //Beアイコン埋め込み表示
           .replace(
-            new RegExp(
-              `^(?:\\s*sssp|https?)://(img\\.(?:[25]ch\\.net|5ch\\.io)/(?:ico|premium)/[\\w\\-_]+\\.gif)\\s*<br>`,
-            ),
+            /^(?:\s*sssp|https?):\/\/(img\.(?:[25]ch\.net|5ch\.io)\/(?:ico|premium)\/[\w\-_]+\.gif)\s*<br>/,
             ($0, $1) => {
               let needle;
               if (
@@ -1069,10 +1067,7 @@ export default (ThreadContent = (function () {
           )
           //エモーティコン埋め込み表示
           .replace(
-            new RegExp(
-              `(?:\\s*sssp|https?)://(img\\.(?:[25]ch\\.net|5ch\\.io)/emoji/[\\w\\-_]+\\.gif)\\s*`,
-              "g",
-            ),
+            /(?:\s*sssp|https?):\/\/(img\.(?:[25]ch\.net|5ch\.io)\/emoji\/[\w\-_]+\.gif)\s*/g,
             ($0, $1) => {
               let needle;
               if (
@@ -1140,7 +1135,7 @@ export default (ThreadContent = (function () {
           })
           //IDリンク
           .replace(
-            /id:(?:[a-hj-z\d_\+\/\.\!]|i(?!d:))+/gi,
+            /id:(?:[a-hj-z\d_+/.!]|i(?!d:))+/gi,
             '<a href="javascript:undefined;" class="anchor_id">$&</a>',
           );
 

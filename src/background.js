@@ -49,14 +49,8 @@ browser.runtime.onMessage.addListener(async function ({ type }) {
 });
 
 // 対応URLのチェック
-const supportedURL = new RegExp(`https?:\\/\\/(?:\
-(?:[\\w\\.]+\\/test\\/read\\.cgi\\/\\w+\\/\\d+\\/.*?)|\
-(?:(?:\\w+\\.)?machi\\.to\\/bbs\\/read\\.cgi\\/\\w+\\/\\d+\\/.*?)|\
-(?:jbbs\\.(?:livedoor\\.jp|shitaraba\\.net)\\/bbs\\/read(?:_archive)?\\.cgi\\/\\w+\\/\\d+\\/\\d+\\/.*?)|\
-(?:jbbs\\.(?:livedoor\\.jp|shitaraba\\.net)\\/\\w+\\/\\d+\\/storage\\/\\d+\\.html$)|\
-(?:[\\w\\.]+\\/\\w+\\/(?:\\#.*)?)|\
-(?:jbbs\\.(?:livedoor\\.jp|shitaraba\\.net)\\/\\w+\\/\\d+\\/(?:\\#.*)?)\
-)`);
+const supportedURL =
+  /https?:\/\/(?:(?:[\w.]+\/test\/read\.cgi\/\w+\/\d+\/.*?)|(?:(?:\w+\.)?machi\.to\/bbs\/read\.cgi\/\w+\/\d+\/.*?)|(?:jbbs\.(?:livedoor\.jp|shitaraba\.net)\/bbs\/read(?:_archive)?\.cgi\/\w+\/\d+\/\d+\/.*?)|(?:jbbs\.(?:livedoor\.jp|shitaraba\.net)\/\w+\/\d+\/storage\/\d+\.html$)|(?:[\w.]+\/\w+\/(?:#.*)?)|(?:jbbs\.(?:livedoor\.jp|shitaraba\.net)\/\w+\/\d+\/(?:#.*)?))/;
 
 // コンテキストメニューの作成
 browser.contextMenus.create({

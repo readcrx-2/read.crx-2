@@ -1,4 +1,4 @@
-import { Entry } from "./BookmarkEntryList";
+import type { Entry } from "./BookmarkEntryList";
 import BrowserBookmarkEntryList from "./BrowserBookmarkEntryList";
 import { threadToBoard } from "./URL";
 import { get as getReadState } from "./ReadState.js";

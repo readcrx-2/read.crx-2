@@ -40,10 +40,8 @@ interface ReadonlyMap<K, V> {
     key: CheckedString,
   ): this is ReadonlyMapWith<K, V, CheckedString>;
 }
-interface ReadonlyMapWith<K, V, DefiniteKey extends K> extends ReadonlyMap<
-  K,
-  V
-> {
+interface ReadonlyMapWith<K, V, DefiniteKey extends K>
+  extends ReadonlyMap<K, V> {
   get(k: DefiniteKey): V;
   get(k: K): V | undefined;
 }

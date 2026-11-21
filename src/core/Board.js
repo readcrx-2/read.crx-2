@@ -247,7 +247,7 @@ class="open_in_rcrx">${app.escapeHtml(newBoardUrl)}
   @return {Object | null} xhrInfo
   */
   static _getXhrInfo(boardUrl) {
-    const tmp = new RegExp(`^/(\\w+)(?:/(\\d+)/|/?)$`).exec(boardUrl.pathname);
+    const tmp = /^\/(\w+)(?:\/(\d+)\/|\/?)$/.exec(boardUrl.pathname);
     if (!tmp) {
       return null;
     }

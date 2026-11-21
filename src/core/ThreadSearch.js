@@ -4,8 +4,8 @@ import { stampToDate, decodeCharReference } from "./jsutil.js";
 import { getProtocol, setProtocol } from "./URL.ts";
 
 export default (function () {
-  let _parse = undefined;
-  let _getDiff = undefined;
+  let _parse;
+  let _getDiff;
   const Cls = class {
     static initClass() {
       this.prototype.loaded = "None";

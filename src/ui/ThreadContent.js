@@ -7,8 +7,8 @@ import MediaContainer from "./MediaContainer.js";
 @param {String} URL
 @param {Element} container
 */
-export default ThreadContent = (function () {
-  let _OVER1000_DATA = undefined;
+export default (ThreadContent = (function () {
+  let _OVER1000_DATA;
   ThreadContent = class ThreadContent {
     static initClass() {
       _OVER1000_DATA = "Over 1000";
@@ -249,7 +249,7 @@ export default ThreadContent = (function () {
         this._lastScrollInfo.resNum,
         this._lastScrollInfo.animate,
         this._lastScrollInfo.offset,
-        true
+        true,
       );
     }
 
@@ -496,7 +496,7 @@ export default ThreadContent = (function () {
                   return;
                 }
                 this._scrollRequestID = requestAnimationFrame(_scrollInterval);
-              })
+              }),
             ));
           })();
         } else {
@@ -662,12 +662,12 @@ export default ThreadContent = (function () {
         offset = 0;
       }
       __guard__(this.container.$("article.selected"), (x) =>
-        x.removeClass("selected")
+        x.removeClass("selected"),
       );
 
       if (typeof target === "number") {
         target = this.container.$(
-          `article:nth-child(${target}), article:last-child`
+          `article:nth-child(${target}), article:last-child`,
         );
       }
 
@@ -862,7 +862,7 @@ export default ThreadContent = (function () {
 
         if (
           /(?:\u3000{5}|\u3000\u0020|[^>]\u0020\u3000)(?!<br>|$)/i.test(
-            res.message
+            res.message,
           )
         ) {
           res.class.push("aa");
@@ -886,8 +886,8 @@ export default ThreadContent = (function () {
         //.name
         const $name = $__("span").addClass("name");
         if (
-          /^\s*(?:&gt;|\uff1e){0,2}([\d\uff10-\uff19]+(?:[\-\u30fc][\d\uff10-\uff19]+)?(?:\s*,\s*[\d\uff10-\uff19]+(?:[\-\u30fc][\d\uff10-\uff19]+)?)*)\s*$/.test(
-            res.name
+          /^\s*(?:&gt;|\uff1e){0,2}([\d\uff10-\uff19]+(?:[-\u30fc][\d\uff10-\uff19]+)?(?:\s*,\s*[\d\uff10-\uff19]+(?:[-\u30fc][\d\uff10-\uff19]+)?)*)\s*$/.test(
+            res.name,
           )
         ) {
           $name.addClass("name_anchor");
@@ -896,7 +896,7 @@ export default ThreadContent = (function () {
           .replace(/<\/?a[^>]*>/g, "")
           .replace(
             /<(?!\/?(?:b|small|font(?: color="?[#a-zA-Z0-9]+"?)?)>)/g,
-            "&lt;"
+            "&lt;",
           )
           .replace(/<\/b>\(([^<>]+? [^<>]+?)\)<b>$/, ($0, $1) => {
             res.slip = $1;
@@ -923,7 +923,7 @@ export default ThreadContent = (function () {
           .replace(/<\/b>(.*?)<b>/g, '<span class="ob">$1</span>')
           .replace(
             /&lt;span[^>]*?>(.*?)&lt;\/span>/g,
-            '<span class="ob">$1</span>'
+            '<span class="ob">$1</span>',
           );
         $header.addLast($name);
 
@@ -938,7 +938,7 @@ export default ThreadContent = (function () {
           //be
           .replace(
             /<\/div><div class="be[^>]*?"><a href="(https?:\/\/be\.(?:[25]ch\.net|5ch\.io)\/user\/\d+?)"[^>]*>(.*?)<\/a>/,
-            '<a class="beid" href="$1" target="_blank">$2</a>'
+            '<a class="beid" href="$1" target="_blank">$2</a>',
           )
           //タグ除去
           .replace(/<(?!(?:a class="beid"[^>]*|\/a)>).*?(?:>|$)/g, "")
@@ -979,17 +979,17 @@ export default ThreadContent = (function () {
               }
               str += `<span class="id">${$2}</span>`;
               return str;
-            }
+            },
           )
           //.beid
           .replace(
-            /(?:^| )(BE:(\d+)\-[A-Z\d]+\(\d+\))/,
-            `<a class="beid" href="${protocol}//be.5ch.io/test/p.php?i=$3" target="_blank">$1</a>`
+            /(?:^| )(BE:(\d+)-[A-Z\d]+\(\d+\))/,
+            `<a class="beid" href="${protocol}//be.5ch.io/test/p.php?i=$3" target="_blank">$1</a>`,
           )
           //.date
           .replace(
             /\d{4}\/\d{1,2}\/\d{1,2}\(.\)\s\d{1,2}:\d\d(?::\d\d(?:\.\d+)?)?/,
-            '<time class="date">$&</time>'
+            '<time class="date">$&</time>',
           );
         // slip追加(IDが存在していないとき)
         if (res.slip != null && res.id == null) {
@@ -1011,7 +1011,7 @@ export default ThreadContent = (function () {
         //文字色
         const color = __guard__(
           res.message.match(/<font color="(.*?)">/i),
-          (x) => x[1]
+          (x) => x[1],
         );
 
         // id, slip, tripが取り終わったタイミングでNG判定を行う
@@ -1034,57 +1034,52 @@ export default ThreadContent = (function () {
           //Rock54
           .replace(
             /(?:<small[^>]*>&#128064;|<i>&#128064;<\/i>)<br>Rock54: (Caution|Warning)\(([^<>()]+)\) ?.*?(?:<\/small>)?/gi,
-            '<br><div-block class="rock54">&#128064; Rock54: $1($2)</div-block>'
+            '<br><div-block class="rock54">&#128064; Rock54: $1($2)</div-block>',
           )
           //SLIPが変わったという表示
           .replace(
             /<hr>VIPQ2_EXTDAT: ([^<>]+): EXT was configured /i,
-            '<br><div-block class="slipchange">VIPQ2_EXTDAT: $1: EXT configure</div-block>'
+            '<br><div-block class="slipchange">VIPQ2_EXTDAT: $1: EXT configure</div-block>',
           )
           //タグ除去
           .replace(/<(?!(?:br|hr|\/?div-block[^<>]*|\/?b)>).*?(?:>|$)/gi, "")
           .replace(/<(\/)?div-block([^<>]*)>/g, "<$1div$2>")
           //URLリンク
           .replace(
-            /(h)?(ttps?:\/\/(?!img\.(?:[25]ch)\.net\/(?:ico|emoji|premium)\/[\w\-_]+\.gif)(?:[a-hj-zA-HJ-Z\d_\-.!~*'();\/?:@=+$,%#]|\&(?!gt;)|[iI](?![dD]:)+)+)/g,
-            '<a href="h$2" target="_blank">$1$2</a>'
+            /(h)?(ttps?:\/\/(?!img\.(?:[25]ch)\.net\/(?:ico|emoji|premium)\/[\w\-_]+\.gif)(?:[a-hj-zA-HJ-Z\d_\-.!~*'();/?:@=+$,%#]|&(?!gt;)|[iI](?![dD]:)+)+)/g,
+            '<a href="h$2" target="_blank">$1$2</a>',
           )
           //Beアイコン埋め込み表示
           .replace(
-            new RegExp(
-              `^(?:\\s*sssp|https?)://(img\\.(?:[25]ch\\.net|5ch\\.io)/(?:ico|premium)/[\\w\\-_]+\\.gif)\\s*<br>`
-            ),
+            /^(?:\s*sssp|https?):\/\/(img\.(?:[25]ch\.net|5ch\.io)\/(?:ico|premium)\/[\w\-_]+\.gif)\s*<br>/,
             ($0, $1) => {
               let needle;
               if (
                 ((needle = this.url.getTsld()),
                 ["5ch.io", "bbspink.com", "bbspink.org", "2ch.sc"].includes(
-                  needle
+                  needle,
                 ))
               ) {
                 return `<img class="beicon" src="/img/dummy_1x1.&[IMG_EXT]" data-src="${protocol}//${$1}"><br>`;
               }
               return $0;
-            }
+            },
           )
           //エモーティコン埋め込み表示
           .replace(
-            new RegExp(
-              `(?:\\s*sssp|https?)://(img\\.(?:[25]ch\\.net|5ch\\.io)/emoji/[\\w\\-_]+\\.gif)\\s*`,
-              "g"
-            ),
+            /(?:\s*sssp|https?):\/\/(img\.(?:[25]ch\.net|5ch\.io)\/emoji\/[\w\-_]+\.gif)\s*/g,
             ($0, $1) => {
               let needle;
               if (
                 ((needle = this.url.getTsld()),
                 ["5ch.io", "bbspink.com", "bbspink.org", "2ch.sc"].includes(
-                  needle
+                  needle,
                 ))
               ) {
                 return `<img class="beicon emoticon" src="/img/dummy_1x1.&[IMG_EXT]" data-src="${protocol}//${$1}">`;
               }
               return $0;
-            }
+            },
           )
           //アンカーリンク
           .replace(app.util.Anchor.reg.ANCHOR, ($0) => {
@@ -1140,8 +1135,8 @@ export default ThreadContent = (function () {
           })
           //IDリンク
           .replace(
-            /id:(?:[a-hj-z\d_\+\/\.\!]|i(?!d:))+/gi,
-            '<a href="javascript:undefined;" class="anchor_id">$&</a>'
+            /id:(?:[a-hj-z\d_+/.!]|i(?!d:))+/gi,
+            '<a href="javascript:undefined;" class="anchor_id">$&</a>',
           );
 
         const $message = $__("div").addClass("message");
@@ -1195,8 +1190,8 @@ export default ThreadContent = (function () {
         await Promise.all(
           Array.from(
             this.container.$$(
-              ".message > a:not(.anchor):not(.thumbnail):not(.has_thumbnail):not(.expandedURL):not(.has_expandedURL)"
-            )
+              ".message > a:not(.anchor):not(.thumbnail):not(.has_thumbnail):not(.expandedURL):not(.has_expandedURL)",
+            ),
           ).map(async (a) => {
             let err, href, link;
             ({ a, link } = await this.checkUrlExpand(a));
@@ -1221,7 +1216,7 @@ export default ThreadContent = (function () {
             if (mediaType) {
               this.addThumbnail(a, href, mediaType, res);
             }
-          })
+          }),
         );
         // harmImg更新
         this.updateHarmImages();
@@ -1268,7 +1263,7 @@ export default ThreadContent = (function () {
         { startRes, dom: $fragment },
         "slip",
         this.slipIndex,
-        "SLIP:"
+        "SLIP:",
       );
       this.updateId({ startRes, dom: $fragment }, "trip", this.tripIndex, "");
     }
@@ -1283,13 +1278,13 @@ export default ThreadContent = (function () {
         { endRes, dom: this.container },
         "slip",
         this.slipIndex,
-        "SLIP:"
+        "SLIP:",
       );
       this.updateId(
         { endRes, dom: this.container },
         "trip",
         this.tripIndex,
-        ""
+        "",
       );
 
       //参照関係再構築
@@ -1398,7 +1393,7 @@ export default ThreadContent = (function () {
             this._rawResData[rn],
             this._threadTitle,
             this.urlStr,
-            app.NG.TYPE.AUTO_CHAIN
+            app.NG.TYPE.AUTO_CHAIN,
           )
         ) {
           continue;
@@ -1454,7 +1449,7 @@ export default ThreadContent = (function () {
             this._rawResData[rn],
             this._threadTitle,
             this.urlStr,
-            app.NG.TYPE.AUTO_CHAIN_ID
+            app.NG.TYPE.AUTO_CHAIN_ID,
           )
         ) {
           continue;
@@ -1487,7 +1482,7 @@ export default ThreadContent = (function () {
             this._rawResData[rn],
             this._threadTitle,
             this.urlStr,
-            app.NG.TYPE.AUTO_CHAIN_SLIP
+            app.NG.TYPE.AUTO_CHAIN_SLIP,
           )
         ) {
           continue;
@@ -1554,7 +1549,7 @@ export default ThreadContent = (function () {
           objRes,
           this._threadTitle,
           this.urlStr,
-          ngObj.type
+          ngObj.type,
         )
       ) {
         return ngObj;
@@ -1570,13 +1565,13 @@ export default ThreadContent = (function () {
             (judgementIdType === "exists_once" && this.idIndex.size !== 0)) &&
           !app.NG.isIgnoreResNumForAuto(
             objRes.num,
-            app.NG.TYPE.AUTO_NOTHING_ID
+            app.NG.TYPE.AUTO_NOTHING_ID,
           ) &&
           !app.NG.isThreadIgnoreNgType(
             objRes,
             this._threadTitle,
             this.urlStr,
-            app.NG.TYPE.AUTO_NOTHING_ID
+            app.NG.TYPE.AUTO_NOTHING_ID,
           )
         ) {
           return { type: app.NG.TYPE.AUTO_NOTHING_ID };
@@ -1589,13 +1584,13 @@ export default ThreadContent = (function () {
             (judgementIdType === "exists_once" && this.slipIndex.size !== 0)) &&
           !app.NG.isIgnoreResNumForAuto(
             objRes.num,
-            app.NG.TYPE.AUTO_NOTHING_SLIP
+            app.NG.TYPE.AUTO_NOTHING_SLIP,
           ) &&
           !app.NG.isThreadIgnoreNgType(
             objRes,
             this._threadTitle,
             this.urlStr,
-            app.NG.TYPE.AUTO_NOTHING_SLIP
+            app.NG.TYPE.AUTO_NOTHING_SLIP,
           )
         ) {
           return { type: app.NG.TYPE.AUTO_NOTHING_SLIP };
@@ -1621,7 +1616,7 @@ export default ThreadContent = (function () {
           objRes,
           this._threadTitle,
           this.urlStr,
-          app.NG.TYPE.AUTO_CHAIN_ID
+          app.NG.TYPE.AUTO_CHAIN_ID,
         )
       ) {
         return { type: app.NG.TYPE.AUTO_CHAIN_ID };
@@ -1633,13 +1628,13 @@ export default ThreadContent = (function () {
         this._ngSlipForChain.has(objRes.slip) &&
         !app.NG.isIgnoreResNumForAuto(
           objRes.num,
-          app.NG.TYPE.AUTO_CHAIN_SLIP
+          app.NG.TYPE.AUTO_CHAIN_SLIP,
         ) &&
         !app.NG.isThreadIgnoreNgType(
           objRes,
           this._threadTitle,
           this.urlStr,
-          app.NG.TYPE.AUTO_CHAIN_SLIP
+          app.NG.TYPE.AUTO_CHAIN_SLIP,
         )
       ) {
         return { type: app.NG.TYPE.AUTO_CHAIN_SLIP };
@@ -1668,13 +1663,13 @@ export default ThreadContent = (function () {
             +app.config.get("repeat_message_ng_count") &&
           !app.NG.isIgnoreResNumForAuto(
             objRes.num,
-            app.NG.TYPE.AUTO_REPEAT_MESSAGE
+            app.NG.TYPE.AUTO_REPEAT_MESSAGE,
           ) &&
           !app.NG.isThreadIgnoreNgType(
             objRes,
             this._threadTitle,
             this.urlStr,
-            app.NG.TYPE.AUTO_REPEAT_MESSAGE
+            app.NG.TYPE.AUTO_REPEAT_MESSAGE,
           )
         ) {
           return { type: app.NG.TYPE.AUTO_REPEAT_MESSAGE };
@@ -1686,13 +1681,13 @@ export default ThreadContent = (function () {
         app.config.isOn("forward_link_ng") &&
         !app.NG.isIgnoreResNumForAuto(
           objRes.num,
-          app.NG.TYPE.AUTO_FORWARD_LINK
+          app.NG.TYPE.AUTO_FORWARD_LINK,
         ) &&
         !app.NG.isThreadIgnoreNgType(
           objRes,
           this._threadTitle,
           this.urlStr,
-          app.NG.TYPE.AUTO_FORWARD_LINK
+          app.NG.TYPE.AUTO_FORWARD_LINK,
         )
       ) {
         let ngFlag = false;
@@ -1911,10 +1906,10 @@ export default ThreadContent = (function () {
             case "video":
               thumbnailLink.style.WebkitFilter = webkitFilter;
               thumbnailLink.style.maxWidth = `${app.config.get(
-                "video_width"
+                "video_width",
               )}px`;
               thumbnailLink.style.maxHeight = `${app.config.get(
-                "video_height"
+                "video_height",
               )}px`;
               if (app.config.isOn("video_controls")) {
                 thumbnailLink.controls = true;
@@ -1949,7 +1944,7 @@ export default ThreadContent = (function () {
         if (sib == null || sib.tagName === "BR") {
           if (
             __guard__(sib != null ? sib.next() : undefined, (x) =>
-              x.hasClass("thumbnail")
+              x.hasClass("thumbnail"),
             )
           ) {
             continue;
@@ -1996,7 +1991,7 @@ export default ThreadContent = (function () {
         if (sib == null || sib.tagName === "BR") {
           if (
             __guard__(sib != null ? sib.next() : undefined, (x) =>
-              x.hasClass("expandedURL")
+              x.hasClass("expandedURL"),
             )
           ) {
             continue;
@@ -2084,7 +2079,7 @@ export default ThreadContent = (function () {
   };
   ThreadContent.initClass();
   return ThreadContent;
-})();
+})());
 
 function __guard__(value, transform) {
   return typeof value !== "undefined" && value !== null

@@ -136,7 +136,7 @@ export var remove = async function (url, res) {
           req = store.delete(datum.id);
           await indexedDBRequestToPromise(req);
         }
-      })
+      }),
     );
   } catch (e) {
     app.log("error", "WriteHistory.remove: トランザクション中断");
@@ -197,7 +197,7 @@ export var get = function (offset, limit) {
           app.log("error", "WriteHistory.get: トランザクション中断");
           reject(e);
         };
-      })
+      }),
   );
 };
 
@@ -307,7 +307,7 @@ export var clear = function (offset) {
           app.log("error", "WriteHistory.clear: トランザクション中断");
           reject(e);
         };
-      })
+      }),
   );
 };
 
@@ -338,7 +338,7 @@ export var clearRange = async function (day) {
       keys.map(async function (key) {
         req = store.delete(key);
         await indexedDBRequestToPromise(req);
-      })
+      }),
     );
   } catch (error) {
     app.log("error", "WriteHistory.clearRange: トランザクション中断");

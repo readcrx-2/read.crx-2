@@ -170,35 +170,33 @@ app.boot("/view/bookmark.html", ["Board"], function (Board) {
     fn();
   });
 
-  const getPromises = app.bookmark
-    .getAllThreads()
-    .map(async function ({
+  const getPromises = app.bookmark.getAllThreads().map(async function ({
+    title,
+    url,
+    resCount = 0,
+    readState = { url, read: 0, received: 0, last: 0 },
+    expired,
+  }) {
+    let boardTitle;
+    const urlObj = new app.URL.URL(url);
+    const boardUrlObj = urlObj.toBoard();
+    try {
+      boardTitle = await app.BoardTitleSolver.ask(boardUrlObj);
+    } catch (error) {
+      boardTitle = "";
+    }
+    threadList.addItem({
       title,
       url,
-      resCount = 0,
-      readState = { url, read: 0, received: 0, last: 0 },
+      resCount,
+      readState,
+      createdAt: /\/(\d+)\/$/.exec(urlObj.pathname)[1] * 1000,
       expired,
-    }) {
-      let boardTitle;
-      const urlObj = new app.URL.URL(url);
-      const boardUrlObj = urlObj.toBoard();
-      try {
-        boardTitle = await app.BoardTitleSolver.ask(boardUrlObj);
-      } catch (error) {
-        boardTitle = "";
-      }
-      threadList.addItem({
-        title,
-        url,
-        resCount,
-        readState,
-        createdAt: /\/(\d+)\/$/.exec(urlObj.pathname)[1] * 1000,
-        expired,
-        boardUrl: boardUrlObj.href,
-        boardTitle,
-        isHttps: urlObj.isHttps(),
-      });
+      boardUrl: boardUrlObj.href,
+      boardTitle,
+      isHttps: urlObj.isHttps(),
     });
+  });
 
   (async function () {
     await Promise.all(getPromises);
@@ -234,7 +232,7 @@ app.boot("/view/bookmark.html", ["Board"], function (Board) {
         "ブックマークの更新",
         notifyStr,
         "bookmark",
-        "bookmark"
+        "bookmark",
       );
     }
   };

@@ -82,7 +82,7 @@ app.boot("/view/writehistory.html", function () {
         isInLoadArea = false;
       }
     },
-    { passive: true }
+    { passive: true },
   );
 
   $view.C("button_history_clear")[0].on("click", async function () {

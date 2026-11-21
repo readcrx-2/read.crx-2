@@ -11,6 +11,8 @@ export * from "./app/Util";
 export let config: Config;
 if (!frameElement) {
   config = new Config();
+} else {
+  config = parent?.app?.config;
 }
 
 export const manifest = (async () => {
@@ -26,7 +28,7 @@ export const manifest = (async () => {
 export async function boot(
   path: string,
   requirements: Function | string[] | null,
-  fn: Function
+  fn: Function,
 ) {
   if (!fn && typeof requirements === "function") {
     fn = requirements;

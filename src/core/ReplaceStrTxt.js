@@ -36,8 +36,8 @@ const _setupReg = function () {
             return new RegExp(d.before, "ig");
           case "ex":
             return new RegExp(
-              d.before.replace(/[-\/\\^$*+?.()|[\]{}]/g, "\\$&"),
-              "ig"
+              d.before.replace(/[-/\\^$*+?.()|[\]{}]/g, "\\$&"),
+              "ig",
             );
         }
       })();
@@ -116,7 +116,7 @@ const parse = function (string) {
     }
     const s =
       /(?:<(\w{2,3})>)?(.*)\t(.+)\t(name|mail|date|msg|all)(?:\t(?:<(\d)>)?(.+))?/.exec(
-        r
+        r,
       );
     if (s == null) {
       continue;
@@ -181,7 +181,7 @@ export var replace = function (url, title, res) {
       }
       if (
         [_URL_PATTERN.DONTCONTAIN, _URL_PATTERN.DONTMATCH].includes(
-          d.urlPattern
+          d.urlPattern,
         )
       ) {
         flag = !flag;

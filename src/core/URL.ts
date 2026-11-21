@@ -31,7 +31,7 @@ export class URL extends window.URL {
     /^\/((?:\w+\/)?test\/(?:read\.cgi|-)\/\w+\/\d+).*$/;
   //private static readonly CH_THREAD_REG2 = /^\/(\w+)\/?(?!test)$/;
   private static readonly CH_THREAD_ULA_REG =
-    /^\/2ch\/(\w+)\/([\w\.]+)\/(\d+).*$/;
+    /^\/2ch\/(\w+)\/([\w.]+)\/(\d+).*$/;
   private static readonly CH_BOARD_REG =
     /^\/((?:subback\/|test\/-\/)?\w+\/)(?:#.*)?$/;
   private static readonly MACHI_THREAD_REG = /^\/bbs\/read\.cgi\/(\w+\/\d+).*$/;
@@ -45,7 +45,7 @@ export class URL extends window.URL {
   private fixPathAndSetType(
     reg: RegExp,
     replace: (res: string[]) => string,
-    type: GuessResult
+    type: GuessResult,
   ): boolean {
     const res = reg.exec(this.pathname);
     if (res) {
@@ -92,7 +92,7 @@ export class URL extends window.URL {
       const isThread = this.fixPathAndSetType(
         URL.MACHI_THREAD_REG,
         (res) => `/bbs/read.cgi/${res[1]}/`,
-        { type: "thread", bbsType: "machi" }
+        { type: "thread", bbsType: "machi" },
       );
       if (isThread) return;
 
@@ -107,7 +107,7 @@ export class URL extends window.URL {
       const isThread = this.fixPathAndSetType(
         URL.SHITARABA_THREAD_REG,
         (res) => `/bbs/${res[1]}/`,
-        { type: "thread", bbsType: "jbbs" }
+        { type: "thread", bbsType: "jbbs" },
       );
       if (isThread) {
         if (this.pathname.includes("read_archive")) {
@@ -119,7 +119,7 @@ export class URL extends window.URL {
       const isArchive = this.fixPathAndSetType(
         URL.SHITARABA_ARCHIVE_REG,
         (res) => `/bbs/read_archive.cgi/${res[1]}/${res[2]}/`,
-        { type: "thread", bbsType: "jbbs" }
+        { type: "thread", bbsType: "jbbs" },
       );
       if (isArchive) {
         this.archive = true;
@@ -138,7 +138,7 @@ export class URL extends window.URL {
       const isThread = this.fixPathAndSetType(
         URL.CH_THREAD_REG,
         (res) => `/${res[1]}/`,
-        { type: "thread", bbsType: "2ch" }
+        { type: "thread", bbsType: "2ch" },
       );
       if (isThread) return;
 
@@ -194,9 +194,8 @@ export class URL extends window.URL {
   }
 
   private static readonly CH_RESNUM_REG =
-    /^https?:\/\/[\w\.]+\/(?:\w+\/)?test\/(?:read\.cgi|-)\/\w+\/\d+\/(?:i|g\?g=)?(\d+).*$/;
-  private static readonly CH_RESNUM_REG2 =
-    /^\/2ch\/\w+\/[\w\.]+\/\d+\/(\d+).*$/;
+    /^https?:\/\/[\w.]+\/(?:\w+\/)?test\/(?:read\.cgi|-)\/\w+\/\d+\/(?:i|g\?g=)?(\d+).*$/;
+  private static readonly CH_RESNUM_REG2 = /^\/2ch\/\w+\/[\w.]+\/\d+\/(\d+).*$/;
   private static readonly MACHI_RESNUM_REG =
     /^\/bbs\/read\.cgi\/\w+\/\d+\/(\d+).*$/;
   private static readonly SHITARABA_RESNUM_REG =
@@ -245,14 +244,14 @@ export class URL extends window.URL {
     const { type, bbsType } = this.guessedType;
     if (type !== "thread") {
       throw new Error(
-        "app.URL.URL.toBoard: toBoard()はThreadでのみ呼び出せます"
+        "app.URL.URL.toBoard: toBoard()はThreadでのみ呼び出せます",
       );
     }
 
     if (bbsType === "jbbs") {
       const pathname = this.pathname.replace(
         URL.SHITARABA_TO_BOARD_REG,
-        "/$1/"
+        "/$1/",
       );
       return new URL(`${this.origin}${pathname}`);
     }
@@ -536,9 +535,9 @@ export async function expandShortURL(shortUrl: string): Promise<string> {
   return finalUrl;
 }
 
-const AUDIO_REG = /\.(?:mp3|m4a|wav|oga|spx)(?:[\?#:&].*)?$/;
-const VIDEO_REG = /\.(?:mp4|m4v|webm|ogv)(?:[\?#:&].*)?$/;
-const OGG_REG = /\.(?:ogg|ogx)(?:[\?#:&].*)?$/;
+const AUDIO_REG = /\.(?:mp3|m4a|wav|oga|spx)(?:[?#:&].*)?$/;
+const VIDEO_REG = /\.(?:mp4|m4v|webm|ogv)(?:[?#:&].*)?$/;
+const OGG_REG = /\.(?:ogg|ogx)(?:[?#:&].*)?$/;
 export function getExtType(
   filename: string,
   {
@@ -551,7 +550,7 @@ export function getExtType(
     video: boolean;
     oggIsAudio: boolean;
     oggIsVideo: boolean;
-  }> = {}
+  }> = {},
 ): "audio" | "video" | null {
   if (audio && AUDIO_REG.test(filename)) {
     return "audio";
@@ -593,7 +592,7 @@ function applyServerInfo(menu: any[]): ResInfo {
       if (
         !res.net &&
         (tmp = /https?:\/\/(\w+)\.5ch\.(net|io)\/(\w+)\/.*?/.exec(
-          board.url
+          board.url,
         )) !== null
       ) {
         boardNet.set(tmp[3], tmp[1]);

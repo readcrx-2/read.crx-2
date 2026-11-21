@@ -33,7 +33,7 @@ url += `?q=${encodeURIComponent(location.href)}`;
       } else if (target.id === closeButtonId) {
         this.removeChild(target.parentElement);
       }
-    }
+    },
   );
 
   const container = document.createElement("div");

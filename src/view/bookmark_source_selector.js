@@ -9,7 +9,7 @@ app.boot("/view/bookmark_source_selector.html", async function () {
     }
     const sourceSelector = target.closest(".view_bookmark_source_selector");
     __guard__(sourceSelector.C("selected")[0], (x) =>
-      x.removeClass("selected")
+      x.removeClass("selected"),
     );
     __guard__(sourceSelector.C("submit")[0], (x1) => (x1.disabled = false));
     target.addClass("selected");

@@ -4,8 +4,8 @@ import { stampToDate, decodeCharReference } from "./jsutil.js";
 import { getProtocol, setProtocol } from "./URL.ts";
 
 export default (function () {
-  let _parse = undefined;
-  let _getDiff = undefined;
+  let _parse;
+  let _getDiff;
   const Cls = class {
     static initClass() {
       this.prototype.loaded = "None";
@@ -79,7 +79,7 @@ export default (function () {
       const { status, body } = await new Request(
         "GET",
         `https://ff5ch.syoboi.jp/?q=${encodeURIComponent(this.query)}&alt=rss`,
-        { cache: false }
+        { cache: false },
       ).send();
       if (status !== 200) {
         throw new Error("検索の通信に失敗しました");

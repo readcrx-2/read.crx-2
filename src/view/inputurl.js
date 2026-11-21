@@ -7,8 +7,8 @@ app.boot("/view/inputurl.html", function () {
     e.preventDefault();
 
     let urlStr = this.url.value;
-    urlStr = urlStr.replace(new RegExp(`^(ttps?)://`), "h$1://");
-    if (!new RegExp(`^https?://`).test(urlStr)) {
+    urlStr = urlStr.replace(/^(ttps?):\/\//, "h$1://");
+    if (!/^https?:\/\//.test(urlStr)) {
       urlStr = `http://${urlStr}`;
     }
     const url = new app.URL.URL(urlStr);

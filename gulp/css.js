@@ -7,13 +7,13 @@ const util = require("./util");
 const transform = function (browser) {
   const ext = util.getExt(browser);
   return {
-    "img($name)"(name) {
-      const nameVal = name.getValue();
+    "img($name)"(args) {
+      const nameVal = args[0].assertString("name").text;
       const transformedStr = `url(/img/${nameVal}.${ext})`;
       return new c.sass.SassString(transformedStr, { quotes: false });
     },
-    "vals($name)"(name) {
-      const nameVal = name.getValue();
+    "vals($name)"(args) {
+      const nameVal = args[0].assertString("name").text;
       let str = "";
       switch (nameVal) {
         case "scroll":
@@ -21,7 +21,7 @@ const transform = function (browser) {
           break;
         default:
           console.error(
-            `Error: Scss vals not found. Unknown val name: ${nameVal}`
+            `Error: Scss vals not found. Unknown val name: ${nameVal}`,
           );
       }
       return new c.sass.SassString(str, { quotes: false });
@@ -85,8 +85,8 @@ for (browser of browsers) {
     gulp.parallel(
       `css:ui.css:${browser}`,
       `css:view:${browser}`,
-      `css:write:${browser}`
-    )
+      `css:write:${browser}`,
+    ),
   );
 }
 

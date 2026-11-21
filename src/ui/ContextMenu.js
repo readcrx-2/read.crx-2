@@ -14,7 +14,7 @@ const eventFn = function (e) {
   if (
     (e.target != null ? e.target.hasClass("contextmenu_menu") : undefined) ||
     __guard__(e.target != null ? e.target.parent() : undefined, (x) =>
-      x.hasClass("contextmenu_menu")
+      x.hasClass("contextmenu_menu"),
     )
   ) {
     return;

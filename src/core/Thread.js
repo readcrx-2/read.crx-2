@@ -115,7 +115,7 @@ export default class Thread {
           if (hasCache) {
             if (cache.lastModified != null) {
               request.headers["If-Modified-Since"] = new Date(
-                cache.lastModified
+                cache.lastModified,
               ).toUTCString();
             }
             if (cache.etag != null) {
@@ -146,7 +146,7 @@ export default class Thread {
                 const threadResponse = Thread.parse(
                   this.url,
                   response.body,
-                  +cache.resLength
+                  +cache.resLength,
                 );
                 // 新しいレスがない場合は最後のレスのみ表示されるのでその場合はキャッシュを送る
                 if (readcgiVer < 6 && threadResponse.res.length === 1) {
@@ -249,7 +249,7 @@ export default class Thread {
 
           if (isHtml) {
             const readcgiPlace = response.body.indexOf(
-              '<div class="footer push">read.cgi ver '
+              '<div class="footer push">read.cgi ver ',
             );
             if (readcgiPlace !== -1) {
               readcgiVer = parseInt(response.body.substr(readcgiPlace + 38, 2));
@@ -282,7 +282,7 @@ export default class Thread {
           }
 
           const lastModified = new Date(
-            response.headers["Last-Modified"] || "dummy"
+            response.headers["Last-Modified"] || "dummy",
           ).getTime();
 
           if (Number.isFinite(lastModified)) {
@@ -360,7 +360,7 @@ URLが間違っているか過去ログに移動せずに削除されていま�
               case "STORAGE IN":
                 var newURL = this.url.href.replace(
                   "/read.cgi/",
-                  "/read_archive.cgi/"
+                  "/read_archive.cgi/",
                 );
                 this.message += `\
 過去ログが存在します
@@ -401,9 +401,10 @@ URLが間違っているか過去ログに移動せずに削除されていま�
   @return {null|Object}
   */
   static _getXhrInfo(url) {
-    const tmp = new RegExp(
-      `^/(?:test|bbs)/read(?:_archive)?\\.cgi/(\\w+)/(\\d+)/(?:(\\d+)/)?$`
-    ).exec(url.pathname);
+    const tmp =
+      /^\/(?:test|bbs)\/read(?:_archive)?\.cgi\/(\w+)\/(\d+)\/(?:(\d+)\/)?$/.exec(
+        url.pathname,
+      );
     if (!tmp) {
       return null;
     }
@@ -789,7 +790,7 @@ URLが間違っているか過去ログに移動せずに削除されていま�
     if (text.includes('<div class="footer push">read.cgi ver 06')) {
       text = text.replace(/<\/h1>/, "</h1></dd></dl>");
       reg =
-        /^.*?<dl class="post".*><dt class=\"\"><span class="number">(\d+).* : <\/span><span class="name"><b>(?:<a [^<>]*href="(?:mailto:|\/cdn-cgi\/l\/email-protection#)([^<>"]*)">|<font [^>]*>)?(.*?)(?:<\/a>|<\/font>)?<\/b><\/span><span class="date">(.*)<\/span><\/dt><dd class="thread_in"> ?(.*)$/;
+        /^.*?<dl class="post".*><dt class=""><span class="number">(\d+).* : <\/span><span class="name"><b>(?:<a [^<>]*href="(?:mailto:|\/cdn-cgi\/l\/email-protection#)([^<>"]*)">|<font [^>]*>)?(.*?)(?:<\/a>|<\/font>)?<\/b><\/span><span class="date">(.*)<\/span><\/dt><dd class="thread_in"> ?(.*)$/;
       separator = "</dd></dl>";
     } else if (text.includes('<div class="footer push">read.cgi ver 07')) {
       text = text.replace("</h1>", "</h1></div></div><br>");

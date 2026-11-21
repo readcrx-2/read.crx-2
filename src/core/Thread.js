@@ -520,7 +520,7 @@ URLが間違っているか過去ログに移動せずに削除されていま�
     ) {
       titleReg = /<(?:div|h1) id="threadtitle"[^<>]*>(.*)\r?\n?<\/(?:div|h1)>/;
       reg =
-        /<button [^<>]*class="postid"[^<>]*>\d+<\/button><span class="postusername"[^<>]*><b[^<>]*>(?:<a [^<>]*href="(?:mailto:|\/cdn-cgi\/l\/email-protection#)([^<>"]*)">|<font [^<>]*>)?(.*?)(?:<\/(?:a|font)>)?<\/b><\/span>(?:<span style=".*">.*<\/span>)?<\/div><span class="post-meta">(.*)<\/span>(?:<details [^<>]*class="post-replies"[^<>]*>[\s\S]*?<\/details>)?<\/div><div class="post-content"[^<>]*> ?(.*)/;
+        /<button [^<>]*class="postid"[^<>]*>\d+<\/button><span class="postusername"[^<>]*>(?:<meta [^<>]*>)*<b[^<>]*>(?:<a [^<>]*href="(?:mailto:|\/cdn-cgi\/l\/email-protection#)([^<>"]*)">|<font [^<>]*>)?(.*?)(?:<\/(?:a|font)>)?<\/b><\/span>(?:<span style=".*">.*<\/span>)?<\/div><span class="post-meta">(.*)<\/span>(?:<details [^<>]*class="post-replies"[^<>]*>[\s\S]*?<\/details>)?<\/div><div class="post-content"[^<>]*> ?(.*)/;
       separator = "</div></div>";
     } else if (text.match(/<footer[^<>]*><br>read\.cgi ver 0(7|8)/)) {
       titleReg = /<(?:div|h1) id="threadtitle">(.*)\n?<\/(?:div|h1)>/;

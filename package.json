@@ -7,7 +7,7 @@
   "devEngines": {
     "packageManager": {
       "name": "pnpm",
-      "version": "11.5.2"
+      "version": "12.21.0"
     }
   },
   "browserslist": [

@@ -1,4 +1,4 @@
-@import "../_common.scss";
+@use "../_common.scss" as *;
 
 @include common;
 @include tab-content;

@@ -1,3 +1,5 @@
+@use "../_common.scss" as *;
+
 .dialog_overlay {
   position: fixed;
   contain: strict;

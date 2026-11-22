@@ -1,5 +1,5 @@
-@import "../_common.scss";
-@import "_write.scss";
+@use "../_common.scss" as *;
+@use "_write.scss";
 
 @include common;
 

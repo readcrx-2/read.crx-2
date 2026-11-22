@@ -473,6 +473,16 @@ header {
       }
     }
   }
+
+  > .replace_bookmark_label {
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+    margin-top: 8px;
+    font-size: 12px;
+    cursor: pointer;
+    user-select: none;
+  }
 }
 
 .view.loading {

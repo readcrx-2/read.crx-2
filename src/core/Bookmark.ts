@@ -111,6 +111,27 @@ export default class Bookmark {
     return this.bel.remove(url);
   }
 
+  async replace(
+    oldUrl: string,
+    newUrl: string,
+    newTitle: string,
+    newResCount?: number,
+  ): Promise<boolean> {
+    if (!this.get(oldUrl)) {
+      return false;
+    }
+
+    const removed = await this.remove(oldUrl);
+    if (!removed) {
+      return false;
+    }
+
+    if (this.get(newUrl)) {
+      return true;
+    }
+    return this.add(newUrl, newTitle, newResCount);
+  }
+
   async removeAll(): Promise<boolean> {
     const bookmarkData: Promise<boolean>[] = [];
 

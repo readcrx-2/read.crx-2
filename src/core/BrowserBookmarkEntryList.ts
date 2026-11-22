@@ -141,6 +141,7 @@ export default class BrowserBookmarkEntryList extends SyncableEntryList {
     if (!url) return;
 
     const entry = this.get(url);
+    if (!entry) return;
 
     if (typeof changes.url === "string") {
       const newEntry = BrowserBookmarkEntryList.URLToEntry(changes.url);

@@ -116,7 +116,7 @@ export class EntryList {
     }
   }
 
-  get(url: string): Entry {
+  get(url: string): Entry | null {
     url = fixUrl(url);
 
     return this.cache.has(url) ? app.deepCopy(this.cache.get(url)) : null;
@@ -140,7 +140,10 @@ export class EntryList {
 
     if (this.boardURLIndex.has(url)) {
       for (const threadURL of this.boardURLIndex.get(url)) {
-        res.push(this.get(threadURL));
+        const entry = this.get(threadURL);
+        if (entry) {
+          res.push(entry);
+        }
       }
     }
 
@@ -178,7 +181,7 @@ export class SyncableEntryList extends EntryList {
   async update(entry: Entry): Promise<boolean> {
     const before = this.get(entry.url);
 
-    if (!(await super.update(entry))) return false;
+    if (!(await super.update(entry)) || !before) return false;
 
     if (before.title !== entry.title) {
       this.onChanged.call({

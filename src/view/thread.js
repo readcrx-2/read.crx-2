@@ -1194,7 +1194,7 @@ ${
         }
 
         $content.emit(new Event("searchstart"));
-        UI.SearchHighlight.clear($content);
+        UI.SearchHighlight.clear($view);
         if (this.value !== "") {
           if (typeof searchStoredScrollTop !== "number") {
             searchStoredScrollTop = $content.scrollTop;
@@ -1202,21 +1202,26 @@ ${
 
           let hitCount = 0;
           const query = app.util.normalize(this.value);
-          const highlightQuery = searchRegExp
+          const highlightRegExp = searchRegExp
             ? new RegExp(searchRegExp.source, "gi")
-            : query;
+            : null;
 
           ({ scrollTop } = $content);
 
           $content.addClass("searching");
           for (dom of $content.child()) {
+            const regExpHit = Boolean(searchRegExp?.test(dom.textContent));
+            const literalHit =
+              !regExpHit && app.util.normalize(dom.textContent).includes(query);
             if (
-              (searchRegExp?.test(dom.textContent) ||
-                app.util.normalize(dom.textContent).includes(query)) &&
+              (regExpHit || literalHit) &&
               (!dom.hasClass("ng") || dom.hasClass("disp_ng"))
             ) {
               dom.addClass("search_hit");
-              UI.SearchHighlight.highlight(dom, highlightQuery);
+              UI.SearchHighlight.highlight(
+                dom,
+                regExpHit ? highlightRegExp : query,
+              );
               hitCount++;
             } else {
               dom.removeClass("search_hit");

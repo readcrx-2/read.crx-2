@@ -6,6 +6,12 @@ interface CharSource {
   end: number;
 }
 
+interface TextSegment {
+  node: Text;
+  start: number;
+  end: number;
+}
+
 type NodeRangeMap = Map<Text, Array<[number, number]>>;
 
 /**
@@ -22,6 +28,55 @@ function collectTextNodes(root: HTMLElement): Text[] {
     }
   }
   return nodes;
+}
+
+/**
+ * Builds contiguous offset segments and concatenated text from Text nodes.
+ */
+function buildTextSegments(textNodes: Text[]): {
+  segments: TextSegment[];
+  fullText: string;
+} {
+  const segments: TextSegment[] = [];
+  let totalLength = 0;
+
+  for (const node of textNodes) {
+    const len = node.data.length;
+    segments.push({ node, start: totalLength, end: totalLength + len });
+    totalLength += len;
+  }
+
+  return {
+    segments,
+    fullText: textNodes.map((n) => n.data).join(""),
+  };
+}
+
+/**
+ * Maps a `[matchStart, matchEnd)` range in `fullText` onto `nodeRanges` using `segments`.
+ */
+function pushFullTextRange(
+  nodeRanges: NodeRangeMap,
+  segments: TextSegment[],
+  matchStart: number,
+  matchEnd: number,
+  segIdxHint = 0,
+): number {
+  let segIdx = segIdxHint;
+  while (segIdx < segments.length && segments[segIdx].end <= matchStart) {
+    segIdx++;
+  }
+
+  for (let i = segIdx; i < segments.length; i++) {
+    const seg = segments[i];
+    if (seg.start >= matchEnd) break;
+    const localStart = Math.max(0, matchStart - seg.start);
+    const localEnd = Math.min(seg.end - seg.start, matchEnd - seg.start);
+    if (localEnd > localStart) {
+      pushNodeRange(nodeRanges, seg.node, localStart, localEnd);
+    }
+  }
+  return segIdx;
 }
 
 /**
@@ -77,12 +132,105 @@ function applyRanges(nodeRanges: NodeRangeMap): void {
 }
 
 /**
+ * Finds all `[start, end)` match ranges of `query` in `fullNorm`.
+ */
+function findMatchRanges(
+  fullNorm: string,
+  query: string,
+): Array<[number, number]> {
+  const matches: Array<[number, number]> = [];
+  let pos = 0;
+  while ((pos = fullNorm.indexOf(query, pos)) !== -1) {
+    const matchEnd = pos + query.length;
+    matches.push([pos, matchEnd]);
+    pos = matchEnd;
+  }
+  return matches;
+}
+
+/**
+ * Maps normalized match ranges to `fullText` offsets when per-code-point normalization
+ * differs from whole-text normalization (e.g. context-sensitive casing or combining marks).
+ */
+function mapContextSensitiveMatches(
+  fullText: string,
+  matches: Array<[number, number]>,
+  segments: TextSegment[],
+  nodeRanges: NodeRangeMap,
+): void {
+  const cpBounds: number[] = [0];
+  for (let i = 0; i < fullText.length; ) {
+    const cp = fullText.codePointAt(i) ?? 0;
+    i += cp > 0xffff ? 2 : 1;
+    cpBounds.push(i);
+  }
+
+  const cpCount = cpBounds.length - 1;
+  let searchLow = 0;
+  let segIdx = 0;
+
+  for (const [matchStart, matchEnd] of matches) {
+    let low = searchLow;
+    let high = cpCount - 1;
+    let startCp = cpCount;
+    while (low <= high) {
+      const mid = (low + high) >> 1;
+      const normLen: number = app.util.normalize(
+        fullText.slice(0, cpBounds[mid + 1]),
+      ).length;
+      if (normLen > matchStart) {
+        startCp = mid;
+        high = mid - 1;
+      } else {
+        low = mid + 1;
+      }
+    }
+    if (startCp >= cpCount) break;
+
+    let endCp = startCp + 1;
+    let prevNorm: string = app.util.normalize(
+      fullText.slice(0, cpBounds[endCp]),
+    );
+    while (endCp < cpCount && prevNorm.length < matchEnd) {
+      endCp++;
+      prevNorm = app.util.normalize(fullText.slice(0, cpBounds[endCp]));
+    }
+    // Include trailing combining characters that alter the matched character without adding length
+    while (endCp < cpCount) {
+      const nextNorm: string = app.util.normalize(
+        fullText.slice(0, cpBounds[endCp + 1]),
+      );
+      if (nextNorm.length === matchEnd && nextNorm !== prevNorm) {
+        endCp++;
+        prevNorm = nextNorm;
+      } else {
+        break;
+      }
+    }
+
+    segIdx = pushFullTextRange(
+      nodeRanges,
+      segments,
+      cpBounds[startCp],
+      cpBounds[endCp],
+      segIdx,
+    );
+    searchLow = endCp;
+  }
+}
+
+/**
  * Highlights matches of a normalized query string inside an article element.
  */
 function highlightNormalized(article: HTMLElement, query: string): void {
   if (!query) return;
 
   const textNodes = collectTextNodes(article);
+  const { segments, fullText } = buildTextSegments(textNodes);
+  const fullNorm: string = app.util.normalize(fullText);
+  const matches = findMatchRanges(fullNorm, query);
+  if (matches.length === 0) return;
+
   const normChunks: string[] = [];
   const charMap: CharSource[] = [];
 
@@ -102,17 +250,16 @@ function highlightNormalized(article: HTMLElement, query: string): void {
     }
   }
 
-  const fullNorm = normChunks.join("");
   const nodeRanges: NodeRangeMap = new Map();
-  let pos = 0;
-
-  while ((pos = fullNorm.indexOf(query, pos)) !== -1) {
-    const matchEnd = pos + query.length;
-    for (let i = pos; i < matchEnd; i++) {
-      const src = charMap[i];
-      pushNodeRange(nodeRanges, src.node, src.start, src.end);
+  if (normChunks.join("") === fullNorm) {
+    for (const [matchStart, matchEnd] of matches) {
+      for (let i = matchStart; i < matchEnd; i++) {
+        const src = charMap[i];
+        pushNodeRange(nodeRanges, src.node, src.start, src.end);
+      }
     }
-    pos = matchEnd;
+  } else {
+    mapContextSensitiveMatches(fullText, matches, segments, nodeRanges);
   }
 
   applyRanges(nodeRanges);
@@ -123,16 +270,7 @@ function highlightNormalized(article: HTMLElement, query: string): void {
  */
 function highlightRegExp(article: HTMLElement, pattern: RegExp): void {
   const textNodes = collectTextNodes(article);
-  const segments: Array<{ node: Text; start: number; end: number }> = [];
-  let totalLength = 0;
-
-  for (const node of textNodes) {
-    const len = node.data.length;
-    segments.push({ node, start: totalLength, end: totalLength + len });
-    totalLength += len;
-  }
-
-  const fullText = textNodes.map((n) => n.data).join("");
+  const { segments, fullText } = buildTextSegments(textNodes);
   const flags = pattern.flags.includes("g")
     ? pattern.flags
     : `${pattern.flags}g`;
@@ -150,20 +288,13 @@ function highlightRegExp(article: HTMLElement, pattern: RegExp): void {
 
     const matchStart = match.index;
     const matchEnd = matchStart + match[0].length;
-
-    while (segIdx < segments.length && segments[segIdx].end <= matchStart) {
-      segIdx++;
-    }
-
-    for (let i = segIdx; i < segments.length; i++) {
-      const seg = segments[i];
-      if (seg.start >= matchEnd) break;
-      const localStart = Math.max(0, matchStart - seg.start);
-      const localEnd = Math.min(seg.end - seg.start, matchEnd - seg.start);
-      if (localEnd > localStart) {
-        pushNodeRange(nodeRanges, seg.node, localStart, localEnd);
-      }
-    }
+    segIdx = pushFullTextRange(
+      nodeRanges,
+      segments,
+      matchStart,
+      matchEnd,
+      segIdx,
+    );
   }
 
   applyRanges(nodeRanges);

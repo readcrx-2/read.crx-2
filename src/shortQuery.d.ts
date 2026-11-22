@@ -85,7 +85,7 @@ interface Element {
   removeAttr: Element.removeAttribute;
   rmvAttr: Element.removeAttribute;
   hasAttr: boolean;
-  attr(name: string, value?: string): string | null | void;
+  attr(name: string, value?: string): string | null | undefined;
   getClass(): DOMTokenList;
   setClass(value: string | Array): Element;
   class(value?: string): DOMTokenList | Element;

@@ -473,7 +473,7 @@ app.view_setup_resizer = function () {
 
   const tmp = app.config.get(`tab_a_${val}`);
   if (tmp) {
-    $tabA.style[val] = Math.max(Math.min(tmp, max), min) + "px";
+    $tabA.style[val] = `${Math.max(Math.min(tmp, max), min)}px`;
   }
 
   $$.I("tab_resizer").on("mousedown", function (e) {
@@ -493,11 +493,11 @@ cursor: ${valAxis === "X" ? "col-resize" : "row-resize"}\
 `;
     $div.on("mousemove", (e) => {
       $tabA.style[val] =
-        Math.max(Math.min(e[`page${valAxis}`] - offset, max), min) + "px";
+        `${Math.max(Math.min(e[`page${valAxis}`] - offset, max), min)}px`;
     });
     $div.on("mouseup", function () {
       this.remove();
-      app.config.set(`tab_a_${val}`, "" + parseInt($tabA.style[val], 10));
+      app.config.set(`tab_a_${val}`, `${parseInt($tabA.style[val], 10)}`);
     });
     document.body.addLast($div);
   });
@@ -1015,8 +1015,8 @@ ${name} の ${newVer} が利用可能です\
     if (type !== "write_position") {
       return;
     }
-    app.config.set("write_window_x", "" + x);
-    app.config.set("write_window_y", "" + y);
+    app.config.set("write_window_x", `${x}`);
+    app.config.set("write_window_y", `${y}`);
   });
 
   // リクエスト・ヘッダーの監視

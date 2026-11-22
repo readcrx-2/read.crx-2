@@ -130,7 +130,7 @@ export default class Board {
             cache.lastModified = lastModified;
           }
 
-          if ((etag = response.headers["ETag"])) {
+          if ((etag = response.headers.ETag)) {
             cache.etag = etag;
           }
 
@@ -308,7 +308,7 @@ class="open_in_rcrx">${app.escapeHtml(newBoardUrl)}
       const resCount = +regRes[3];
 
       board.push({
-        url: baseUrl + regRes[1] + "/",
+        url: `${baseUrl + regRes[1]}/`,
         title,
         resCount,
         createdAt: +regRes[1] * 1000,

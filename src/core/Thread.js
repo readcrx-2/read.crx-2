@@ -91,7 +91,7 @@ export default class Thread {
           ) {
             if (hasCache) {
               deltaFlg = true;
-              xhrPath += +cache.resLength + 1 + "-";
+              xhrPath += `${+cache.resLength + 1}-`;
             }
             // 2ch.netは差分を-nで取得
           } else if (isHtml) {
@@ -99,9 +99,9 @@ export default class Thread {
               deltaFlg = true;
               ({ readcgiVer } = cache);
               if (readcgiVer >= 6) {
-                xhrPath += +cache.resLength + 1 + "-n";
+                xhrPath += `${+cache.resLength + 1}-n`;
               } else {
-                xhrPath += +cache.resLength + "-n";
+                xhrPath += `${+cache.resLength}-n`;
               }
             }
             xhrPath += "?v=pc";
@@ -252,7 +252,10 @@ export default class Thread {
               '<div class="footer push">read.cgi ver ',
             );
             if (readcgiPlace !== -1) {
-              readcgiVer = parseInt(response.body.substr(readcgiPlace + 38, 2));
+              readcgiVer = parseInt(
+                response.body.substr(readcgiPlace + 38, 2),
+                10,
+              );
             } else {
               readcgiVer = 5;
             }
@@ -289,7 +292,7 @@ export default class Thread {
             cache.lastModified = lastModified;
           }
 
-          const etag = response.headers["ETag"];
+          const etag = response.headers.ETag;
           if (etag) {
             cache.etag = etag;
           }

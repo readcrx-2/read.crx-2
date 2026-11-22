@@ -37,7 +37,7 @@ export class Request {
     const url = this.url;
 
     if (this.preventCache) {
-      this.headers["Pragma"] = "no-cache";
+      this.headers.Pragma = "no-cache";
       this.headers["Cache-Control"] = "no-cache";
     }
 

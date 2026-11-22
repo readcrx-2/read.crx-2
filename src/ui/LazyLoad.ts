@@ -85,7 +85,8 @@ export default class LazyLoad {
     const faviconFlg = $media.hasClass("favicon");
 
     // immediateLoadにて処理済みのものを除外する
-    if ($media.dataset.src === undefined) return;
+    const src = $media.dataset.src;
+    if (src === undefined) return;
 
     const $newImg = <HTMLImageElement>$__("img");
 
@@ -131,23 +132,23 @@ export default class LazyLoad {
       $media.src = "/img/loading.&[IMG_EXT]";
       switch (mdata.type) {
         case "default":
-          $newImg.src = mdata.src!;
+          $newImg.src = src;
           break;
         case "referrer":
           $newImg.src = this.getWithReferrer(
-            mdata.src!,
-            mdata.referrer!,
-            mdata.userAgent!,
+            src,
+            mdata.referrer ?? "",
+            mdata.userAgent ?? "",
           );
           break;
         case "extract":
           try {
             $newImg.src = await this.getWithExtract(
-              mdata.src!,
-              mdata.extract!,
-              mdata.pattern!,
-              mdata.extractReferrer!,
-              mdata.userAgent!,
+              src,
+              mdata.extract ?? "",
+              mdata.pattern ?? "",
+              mdata.extractReferrer ?? "",
+              mdata.userAgent ?? "",
             );
           } catch {
             $newImg.src = "";
@@ -156,20 +157,20 @@ export default class LazyLoad {
         case "cookie":
           try {
             $newImg.src = await this.getWithCookie(
-              mdata.src!,
-              mdata.cookie!,
-              mdata.cookieReferrer!,
-              mdata.userAgent!,
+              src,
+              mdata.cookie ?? "",
+              mdata.cookieReferrer ?? "",
+              mdata.userAgent ?? "",
             );
           } catch {
             $newImg.src = "";
           }
           break;
         default:
-          $newImg.src = mdata.src!;
+          $newImg.src = src;
       }
     } else {
-      $media.src = $media.dataset.src!;
+      $media.src = src;
     }
     $media.removeAttr("data-src");
     if (!this.isManualLoad) {
@@ -238,7 +239,7 @@ export default class LazyLoad {
         const m = res.body.match(new RegExp(pattern));
         if (m !== null) {
           return link.replace(/\$EXTRACT(\d+)?/g, (str, n) => {
-            return n === null ? m![1] : m![n];
+            return n === null ? m[1] : m[n];
           });
         }
       }

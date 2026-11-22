@@ -36,10 +36,12 @@ class Message {
   }
 
   on(type: string, listener: Function) {
-    if (!this._listenerStore.has(type)) {
-      this._listenerStore.set(type, new Callbacks({ persistent: true }));
+    let store = this._listenerStore.get(type);
+    if (!store) {
+      store = new Callbacks({ persistent: true });
+      this._listenerStore.set(type, store);
     }
-    this._listenerStore.get(type)!.add(listener);
+    store.add(listener);
   }
 
   off(type: string, listener: Function) {

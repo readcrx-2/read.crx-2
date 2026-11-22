@@ -209,7 +209,7 @@ export var getHowToOpen = function ({
   }
   const def = { newTab: false, newWindow: false, background: false };
   if (type === "mousedown") {
-    const key = "" + button + shiftKey + ctrlKey;
+    const key = `${button}${shiftKey}${ctrlKey}`;
     if (openMap.has(key)) {
       return openMap.get(key);
     }

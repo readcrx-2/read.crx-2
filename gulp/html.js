@@ -17,7 +17,7 @@ for (browser of browsers) {
   tasks
 */
 var view = function (browser) {
-  const output = paths.output[browser] + "/view";
+  const output = `${paths.output[browser]}/view`;
   return () =>
     gulp
       .src(paths.html.view, { since: gulp.lastRun(view) })
@@ -39,7 +39,7 @@ var zombie = function (browser) {
 };
 
 var write = function (browser) {
-  const output = paths.output[browser] + "/write";
+  const output = `${paths.output[browser]}/write`;
   return () =>
     gulp
       .src(paths.html.write, { since: gulp.lastRun(write) })

@@ -119,7 +119,7 @@ export default class SikiGuard {
             cache.lastModified = lastModified;
           }
 
-          if ((etag = response.headers["ETag"])) {
+          if ((etag = response.headers.ETag)) {
             cache.etag = etag;
           }
 

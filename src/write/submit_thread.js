@@ -4,11 +4,7 @@ Write.setFont();
 
 class SubmitThread extends Write {
   static initClass() {
-    this.prototype._PONG_MSG = "write_iframe_pong:thread";
-  }
-
-  constructor() {
-    super();
+    SubmitThread.prototype._PONG_MSG = "write_iframe_pong:thread";
   }
 
   async _setHeaderModifierWebRequest() {
@@ -34,7 +30,7 @@ class SubmitThread extends Write {
   }
 
   _setTitle() {
-    const title = this.title + "板";
+    const title = `${this.title}板`;
     const $h1 = this.$view.T("h1")[0];
     document.title = title;
     $h1.textContent = title;
@@ -52,14 +48,13 @@ class SubmitThread extends Write {
     const { url } = this;
 
     if (
-      ((needle = url.getTsld()),
       [
         "5ch.io",
         "2ch.sc",
         "bbspink.com",
         "bbspink.org",
         "open2ch.net",
-      ].includes(needle))
+      ].includes(url.getTsld())
     ) {
       const keys = key.match(/.*\/test\/read\.cgi\/(\w+?)\/(\d+)\/l\d+/);
       if (keys == null) {

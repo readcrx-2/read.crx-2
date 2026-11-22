@@ -1,4 +1,4 @@
-const path = require("path");
+const path = require("node:path");
 const fs = require("fs-extra");
 const gulp = require("gulp");
 const { gulp: $, rolldown: _ } = require("./plugins");
@@ -146,7 +146,7 @@ var csAddlink = function (browser) {
 };
 
 var view = function (browser) {
-  const output = paths.output[browser] + "/view";
+  const output = `${paths.output[browser]}/view`;
   const ro = makeReplaceOptions(browser);
   return () =>
     gulp
@@ -166,7 +166,7 @@ var zombie = function (browser) {
 };
 
 var csWrite = function (browser) {
-  const output = paths.output[browser] + "/write";
+  const output = `${paths.output[browser]}/write`;
   const ro = makeReplaceOptions(browser);
   return () =>
     gulp

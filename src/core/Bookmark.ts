@@ -194,6 +194,7 @@ export default class Bookmark {
       await this.add(newEntry.url, newEntry.title);
       entry = this.bel.get(newEntry.url);
     }
+    if (!entry) return false;
 
     if (
       newEntry.readState &&

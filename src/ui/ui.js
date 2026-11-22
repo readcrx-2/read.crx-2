@@ -5,6 +5,7 @@ import Dialog from "./Dialog.js";
 import LazyLoad from "./LazyLoad.ts";
 import MediaContainer from "./MediaContainer.js";
 import PopupView from "./PopupView.js";
+import * as SearchHighlight from "./SearchHighlight.ts";
 import SearchNextThread from "./SearchNextThread.ts";
 import SelectableAccordion from "./SelectableAccordion.ts";
 import Sortable from "./Sortable.ts";
@@ -23,6 +24,7 @@ export {
   LazyLoad,
   MediaContainer,
   PopupView,
+  SearchHighlight,
   SearchNextThread,
   SelectableAccordion,
   Sortable,

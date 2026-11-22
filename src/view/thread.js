@@ -56,6 +56,7 @@ app.boot("/view/thread.html", async function () {
     $view.C("next_thread_list")[0],
   );
   const popupView = new UI.PopupView($view);
+  let searchVersion = 0;
 
   if (app.config.get("aa_font") === "aa") {
     $content.addClass("config_use_aa_font");
@@ -110,6 +111,7 @@ app.boot("/view/thread.html", async function () {
 
   const popupHelper = async function (that, e, fn) {
     let dom;
+    const currentSearchVersion = searchVersion;
     const $popup = fn();
     if ($popup.child().length === 0) {
       return;
@@ -124,6 +126,9 @@ app.boot("/view/thread.html", async function () {
       }
     }
     await app.defer();
+    if (currentSearchVersion !== searchVersion) {
+      return;
+    }
     // popupの表示
     popupView.show($popup, e.clientX, e.clientY, that);
   };
@@ -588,7 +593,7 @@ ${
         return;
       }
 
-      let anchor = target.innerHTML;
+      let anchor = target.innerHTML.replace(/<\/?mark[^>]*>/gi, "");
       if (!target.hasClass("anchor")) {
         anchor = anchor.trim();
       }
@@ -661,7 +666,9 @@ ${
       return;
     }
 
-    const tmp = app.util.Anchor.parseAnchor(target.innerHTML);
+    const tmp = app.util.Anchor.parseAnchor(
+      target.innerHTML.replace(/<\/?mark[^>]*>/gi, ""),
+    );
     const targetResNum =
       tmp.segments[0] != null ? tmp.segments[0][0] : undefined;
     if (targetResNum != null) {
@@ -1162,6 +1169,7 @@ ${
   //検索ボックス
   (function () {
     let searchStoredScrollTop = null;
+    let submittedRegExpValue = "";
     const $searchbox = $view.C("searchbox")[0];
 
     $searchbox.on("compositionend", function () {
@@ -1169,19 +1177,24 @@ ${
     });
     $searchbox.on(
       "input",
-      function ({ isComposing, detail: { isEnter = false } = {} }) {
+      function ({
+        isComposing,
+        detail: { isEnter = false, isRefresh = false } = {},
+      }) {
         let dom, scrollTop;
         if (isComposing) {
           return;
         }
         const searchRegExpMode = $content.hasClass("search_regexp");
-        if (searchRegExpMode && !isEnter) {
+        if (searchRegExpMode && !isEnter && !isRefresh) {
           return;
         }
+        const searchValue =
+          searchRegExpMode && isRefresh ? submittedRegExpValue : this.value;
         let searchRegExp = null;
-        if (searchRegExpMode && this.value !== "") {
+        if (searchRegExpMode && searchValue !== "") {
           try {
-            searchRegExp = new RegExp(this.value, "i");
+            searchRegExp = new RegExp(searchValue, "i");
           } catch (e) {
             app.message.send("notify", {
               message: "正規表現が正しくありません。",
@@ -1190,26 +1203,41 @@ ${
             return;
           }
         }
+        if (searchRegExpMode && isEnter) {
+          submittedRegExpValue = searchValue;
+        }
 
         $content.emit(new Event("searchstart"));
-        if (this.value !== "") {
+        searchVersion++;
+        popupView.cancelPending();
+        UI.SearchHighlight.clear($view);
+        if (searchValue !== "") {
           if (typeof searchStoredScrollTop !== "number") {
             searchStoredScrollTop = $content.scrollTop;
           }
 
           let hitCount = 0;
-          const query = app.util.normalize(this.value);
+          const query = app.util.normalize(searchValue);
+          const highlightRegExp = searchRegExp
+            ? new RegExp(searchRegExp.source, "gi")
+            : null;
 
           ({ scrollTop } = $content);
 
           $content.addClass("searching");
           for (dom of $content.child()) {
+            const regExpHit = Boolean(searchRegExp?.test(dom.textContent));
+            const literalHit =
+              !regExpHit && app.util.normalize(dom.textContent).includes(query);
             if (
-              (searchRegExp?.test(dom.textContent) ||
-                app.util.normalize(dom.textContent).includes(query)) &&
+              (regExpHit || literalHit) &&
               (!dom.hasClass("ng") || dom.hasClass("disp_ng"))
             ) {
               dom.addClass("search_hit");
+              UI.SearchHighlight.highlight(
+                dom,
+                regExpHit ? highlightRegExp : query,
+              );
               hitCount++;
             } else {
               dom.removeClass("search_hit");
@@ -1499,7 +1527,9 @@ app.viewThread._draw = async function (
     }
 
     if ($view.C("content")[0].hasClass("searching")) {
-      $view.C("searchbox")[0].emit(new Event("input"));
+      $view
+        .C("searchbox")[0]
+        .emit(new CustomEvent("input", { detail: { isRefresh: true } }));
     }
 
     $view.emit(

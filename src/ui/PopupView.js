@@ -106,10 +106,7 @@ export default class PopupView {
     }
 
     // 待機中の処理があればキャンセルする
-    if (this._delayTimeoutID !== 0) {
-      clearTimeout(this._delayTimeoutID);
-      this._delayTimeoutID = 0;
-    }
+    this.cancelPending();
 
     // コンテキストメニューの破棄
     ContextMenu.remove();
@@ -230,6 +227,16 @@ export default class PopupView {
           }
         }, this._delayTime);
       })(this.source, this.popup);
+    }
+  }
+
+  /**
+  @method cancelPending
+  */
+  cancelPending() {
+    if (this._delayTimeoutID !== 0) {
+      clearTimeout(this._delayTimeoutID);
+      this._delayTimeoutID = 0;
     }
   }
 

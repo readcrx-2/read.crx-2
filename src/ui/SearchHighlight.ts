@@ -149,88 +149,12 @@ function findMatchRanges(
 }
 
 /**
- * 1コードポイントごとの正規化結果が全体テキストの正規化結果と異なる場合
- * （文脈依存の大文字・小文字変換や結合文字など）に、正規化済み一致範囲を `fullText` のオフセットへ対応付ける。
- */
-function mapContextSensitiveMatches(
-  fullText: string,
-  matches: Array<[number, number]>,
-  segments: TextSegment[],
-  nodeRanges: NodeRangeMap,
-): void {
-  const cpBounds: number[] = [0];
-  for (let i = 0; i < fullText.length; ) {
-    const cp = fullText.codePointAt(i) ?? 0;
-    i += cp > 0xffff ? 2 : 1;
-    cpBounds.push(i);
-  }
-
-  const cpCount = cpBounds.length - 1;
-  let searchLow = 0;
-  let segIdx = 0;
-
-  for (const [matchStart, matchEnd] of matches) {
-    let low = searchLow;
-    let high = cpCount - 1;
-    let startCp = cpCount;
-    while (low <= high) {
-      const mid = (low + high) >> 1;
-      const normLen: number = app.util.normalize(
-        fullText.slice(0, cpBounds[mid + 1]),
-      ).length;
-      if (normLen > matchStart) {
-        startCp = mid;
-        high = mid - 1;
-      } else {
-        low = mid + 1;
-      }
-    }
-    if (startCp >= cpCount) break;
-
-    let endCp = startCp + 1;
-    let prevNorm: string = app.util.normalize(
-      fullText.slice(0, cpBounds[endCp]),
-    );
-    while (endCp < cpCount && prevNorm.length < matchEnd) {
-      endCp++;
-      prevNorm = app.util.normalize(fullText.slice(0, cpBounds[endCp]));
-    }
-    // 長さを増やさずに直前の文字を変化させる後続の結合文字（濁点など）を含める
-    while (endCp < cpCount) {
-      const nextNorm: string = app.util.normalize(
-        fullText.slice(0, cpBounds[endCp + 1]),
-      );
-      if (nextNorm.length === matchEnd && nextNorm !== prevNorm) {
-        endCp++;
-        prevNorm = nextNorm;
-      } else {
-        break;
-      }
-    }
-
-    segIdx = pushFullTextRange(
-      nodeRanges,
-      segments,
-      cpBounds[startCp],
-      cpBounds[endCp],
-      segIdx,
-    );
-    searchLow = endCp;
-  }
-}
-
-/**
  * 記事要素内で正規化済み検索クエリ文字列に一致する箇所をハイライトする。
  */
 function highlightNormalized(article: HTMLElement, query: string): void {
   if (!query) return;
 
   const textNodes = collectTextNodes(article);
-  const { segments, fullText } = buildTextSegments(textNodes);
-  const fullNorm: string = app.util.normalize(fullText);
-  const matches = findMatchRanges(fullNorm, query);
-  if (matches.length === 0) return;
-
   const normChunks: string[] = [];
   const charMap: CharSource[] = [];
 
@@ -250,16 +174,15 @@ function highlightNormalized(article: HTMLElement, query: string): void {
     }
   }
 
+  const matches = findMatchRanges(normChunks.join(""), query);
+  if (matches.length === 0) return;
+
   const nodeRanges: NodeRangeMap = new Map();
-  if (normChunks.join("") === fullNorm) {
-    for (const [matchStart, matchEnd] of matches) {
-      for (let i = matchStart; i < matchEnd; i++) {
-        const src = charMap[i];
-        pushNodeRange(nodeRanges, src.node, src.start, src.end);
-      }
+  for (const [matchStart, matchEnd] of matches) {
+    for (let i = matchStart; i < matchEnd; i++) {
+      const src = charMap[i];
+      pushNodeRange(nodeRanges, src.node, src.start, src.end);
     }
-  } else {
-    mapContextSensitiveMatches(fullText, matches, segments, nodeRanges);
   }
 
   applyRanges(nodeRanges);

@@ -388,6 +388,13 @@ header {
   }
 }
 
+mark.search_highlight {
+  background-color: #ff0;
+  color: #000;
+  pointer-events: none;
+  border-radius: 2px;
+}
+
 .thread_footer {
   contain: content;
   position: absolute;

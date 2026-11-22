@@ -588,7 +588,7 @@ ${
         return;
       }
 
-      let anchor = target.innerHTML;
+      let anchor = target.innerHTML.replace(/<\/?mark[^>]*>/gi, "");
       if (!target.hasClass("anchor")) {
         anchor = anchor.trim();
       }
@@ -661,7 +661,9 @@ ${
       return;
     }
 
-    const tmp = app.util.Anchor.parseAnchor(target.innerHTML);
+    const tmp = app.util.Anchor.parseAnchor(
+      target.innerHTML.replace(/<\/?mark[^>]*>/gi, ""),
+    );
     const targetResNum =
       tmp.segments[0] != null ? tmp.segments[0][0] : undefined;
     if (targetResNum != null) {
@@ -1192,6 +1194,7 @@ ${
         }
 
         $content.emit(new Event("searchstart"));
+        UI.SearchHighlight.clear($content);
         if (this.value !== "") {
           if (typeof searchStoredScrollTop !== "number") {
             searchStoredScrollTop = $content.scrollTop;
@@ -1199,6 +1202,9 @@ ${
 
           let hitCount = 0;
           const query = app.util.normalize(this.value);
+          const highlightQuery = searchRegExp
+            ? new RegExp(searchRegExp.source, "gi")
+            : query;
 
           ({ scrollTop } = $content);
 
@@ -1210,6 +1216,7 @@ ${
               (!dom.hasClass("ng") || dom.hasClass("disp_ng"))
             ) {
               dom.addClass("search_hit");
+              UI.SearchHighlight.highlight(dom, highlightQuery);
               hitCount++;
             } else {
               dom.removeClass("search_hit");

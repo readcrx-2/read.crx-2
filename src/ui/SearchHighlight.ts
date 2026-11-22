@@ -15,7 +15,7 @@ interface TextSegment {
 type NodeRangeMap = Map<Text, Array<[number, number]>>;
 
 /**
- * Collects all non-empty Text nodes within a root element.
+ * ルート要素内の空でない Text ノードをすべて収集する。
  */
 function collectTextNodes(root: HTMLElement): Text[] {
   const nodes: Text[] = [];
@@ -31,7 +31,7 @@ function collectTextNodes(root: HTMLElement): Text[] {
 }
 
 /**
- * Builds contiguous offset segments and concatenated text from Text nodes.
+ * Text ノード配列から連結テキストと連続オフセット区間を構築する。
  */
 function buildTextSegments(textNodes: Text[]): {
   segments: TextSegment[];
@@ -53,7 +53,7 @@ function buildTextSegments(textNodes: Text[]): {
 }
 
 /**
- * Maps a `[matchStart, matchEnd)` range in `fullText` onto `nodeRanges` using `segments`.
+ * `fullText` 上の `[matchStart, matchEnd)` 範囲を `segments` を使って `nodeRanges` に割り当てる。
  */
 function pushFullTextRange(
   nodeRanges: NodeRangeMap,
@@ -80,7 +80,7 @@ function pushFullTextRange(
 }
 
 /**
- * Adds a range for a given Text node, merging with the previous range if contiguous.
+ * 指定した Text ノードの範囲を追加する。直前の範囲と連続・重複する場合はマージする。
  */
 function pushNodeRange(
   nodeRanges: NodeRangeMap,
@@ -102,7 +102,7 @@ function pushNodeRange(
 }
 
 /**
- * Replaces matched slices of Text nodes with `<mark class="search_highlight">`.
+ * Text ノードの一致部分を `<mark class="search_highlight">` に置き換える。
  */
 function applyRanges(nodeRanges: NodeRangeMap): void {
   for (const [node, ranges] of nodeRanges) {
@@ -132,7 +132,7 @@ function applyRanges(nodeRanges: NodeRangeMap): void {
 }
 
 /**
- * Finds all `[start, end)` match ranges of `query` in `fullNorm`.
+ * `fullNorm` 内で `query` が一致するすべての `[start, end)` 範囲を検索する。
  */
 function findMatchRanges(
   fullNorm: string,
@@ -149,8 +149,8 @@ function findMatchRanges(
 }
 
 /**
- * Maps normalized match ranges to `fullText` offsets when per-code-point normalization
- * differs from whole-text normalization (e.g. context-sensitive casing or combining marks).
+ * 1コードポイントごとの正規化結果が全体テキストの正規化結果と異なる場合
+ * （文脈依存の大文字・小文字変換や結合文字など）に、正規化済み一致範囲を `fullText` のオフセットへ対応付ける。
  */
 function mapContextSensitiveMatches(
   fullText: string,
@@ -195,7 +195,7 @@ function mapContextSensitiveMatches(
       endCp++;
       prevNorm = app.util.normalize(fullText.slice(0, cpBounds[endCp]));
     }
-    // Include trailing combining characters that alter the matched character without adding length
+    // 長さを増やさずに直前の文字を変化させる後続の結合文字（濁点など）を含める
     while (endCp < cpCount) {
       const nextNorm: string = app.util.normalize(
         fullText.slice(0, cpBounds[endCp + 1]),
@@ -220,7 +220,7 @@ function mapContextSensitiveMatches(
 }
 
 /**
- * Highlights matches of a normalized query string inside an article element.
+ * 記事要素内で正規化済み検索クエリ文字列に一致する箇所をハイライトする。
  */
 function highlightNormalized(article: HTMLElement, query: string): void {
   if (!query) return;
@@ -266,7 +266,7 @@ function highlightNormalized(article: HTMLElement, query: string): void {
 }
 
 /**
- * Highlights matches of a RegExp inside an article element.
+ * 記事要素内で正規表現に一致する箇所をハイライトする。
  */
 function highlightRegExp(article: HTMLElement, pattern: RegExp): void {
   const textNodes = collectTextNodes(article);
@@ -301,7 +301,7 @@ function highlightRegExp(article: HTMLElement, pattern: RegExp): void {
 }
 
 /**
- * Removes all search highlight `<mark>` elements under `container` and merges adjacent Text nodes.
+ * `container` 配下の検索ハイライト用 `<mark>` 要素をすべて除去し、隣接する Text ノードを結合する。
  */
 export function clear(container: HTMLElement): void {
   const marks = container.getElementsByClassName(HIGHLIGHT_CLASS);
@@ -322,7 +322,7 @@ export function clear(container: HTMLElement): void {
 }
 
 /**
- * Highlights all occurrences of `query` (normalized string or RegExp) inside `article`.
+ * `article` 内で `query`（正規化済み文字列または正規表現）に一致するすべての箇所をハイライトする。
  */
 export function highlight(article: HTMLElement, query: string | RegExp): void {
   if (typeof query === "string") {

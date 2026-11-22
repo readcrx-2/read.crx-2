@@ -216,10 +216,10 @@ app.boot("/view/bookmark.html", ["Board"], function (Board) {
       const tds = tr.T("td");
       let title = tds[titleIndex].textContent;
       if (title.length >= 10) {
-        title = title.slice(0, 15 - 3) + "...";
+        title = `${title.slice(0, 15 - 3)}...`;
       }
-      const before = parseInt(tds[resIndex].dataset.beforeres);
-      const after = parseInt(tds[resIndex].textContent);
+      const before = parseInt(tds[resIndex].dataset.beforeres, 10);
+      const after = parseInt(tds[resIndex].textContent, 10);
       const unreadRes = tds[unreadIndex].textContent;
       if (after > before) {
         notifyStr += `タイトル: ${title}  新規: ${

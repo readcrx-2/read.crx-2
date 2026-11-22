@@ -342,7 +342,10 @@ export default (ThreadContent = (function () {
         if (this._timeoutID !== 0) {
           clearTimeout(this._timeoutID);
         }
-        const delayScrollTime = parseInt(app.config.get("delay_scroll_time"));
+        const delayScrollTime = parseInt(
+          app.config.get("delay_scroll_time"),
+          10,
+        );
         this._timeoutID = setTimeout(() => {
           this._timeoutID = 0;
           return this._reScrollTo();
@@ -570,7 +573,7 @@ export default (ThreadContent = (function () {
         return 1;
       }
 
-      return parseInt(read);
+      return parseInt(read, 10);
     }
 
     /**
@@ -630,7 +633,7 @@ export default (ThreadContent = (function () {
         }
       }
 
-      resRead.resNum = parseInt($read.C("num")[0].textContent);
+      resRead.resNum = parseInt($read.C("num")[0].textContent, 10);
       resRead.offset = (containerTop - $read.offsetTop) / $read.offsetHeight;
 
       return resRead;
@@ -1020,7 +1023,7 @@ export default (ThreadContent = (function () {
           res.class.push("ng");
           ngType = ngObj.type;
           if (ngObj.name != null) {
-            ngType += ":" + ngObj.name;
+            ngType += `:${ngObj.name}`;
           }
         }
 
@@ -1053,12 +1056,10 @@ export default (ThreadContent = (function () {
           .replace(
             /^(?:\s*sssp|https?):\/\/(img\.(?:[25]ch\.net|5ch\.io)\/(?:ico|premium)\/[\w\-_]+\.gif)\s*<br>/,
             ($0, $1) => {
-              let needle;
               if (
-                ((needle = this.url.getTsld()),
                 ["5ch.io", "bbspink.com", "bbspink.org", "2ch.sc"].includes(
-                  needle,
-                ))
+                  this.url.getTsld(),
+                )
               ) {
                 return `<img class="beicon" src="/img/dummy_1x1.&[IMG_EXT]" data-src="${protocol}//${$1}"><br>`;
               }
@@ -1069,12 +1070,10 @@ export default (ThreadContent = (function () {
           .replace(
             /(?:\s*sssp|https?):\/\/(img\.(?:[25]ch\.net|5ch\.io)\/emoji\/[\w\-_]+\.gif)\s*/g,
             ($0, $1) => {
-              let needle;
               if (
-                ((needle = this.url.getTsld()),
                 ["5ch.io", "bbspink.com", "bbspink.org", "2ch.sc"].includes(
-                  needle,
-                ))
+                  this.url.getTsld(),
+                )
               ) {
                 return `<img class="beicon emoticon" src="/img/dummy_1x1.&[IMG_EXT]" data-src="${protocol}//${$1}">`;
               }
@@ -1601,7 +1600,7 @@ export default (ThreadContent = (function () {
       if (app.config.isOn("use_siki_guard")) {
         const sikiGuardNgKey = objRes.other.slice(0, 10);
         const sikiGuardIdSet = this._sikiGuardNgIdMap.get(sikiGuardNgKey);
-        if (sikiGuardIdSet && sikiGuardIdSet.has(objRes.id)) {
+        if (sikiGuardIdSet?.has(objRes.id)) {
           return { type: app.NG.TYPE.SIKI_GUARD };
         }
       }
@@ -1749,7 +1748,7 @@ export default (ThreadContent = (function () {
         if ((ngObj = this._checkNG(this._rawResData[resNum], bbsType))) {
           let ngType = ngObj.type;
           if (ngObj.name != null) {
-            ngType += ":" + ngObj.name;
+            ngType += `:${ngObj.name}`;
           }
           this.setNG(res, ngType);
           // 連鎖NG
@@ -1926,10 +1925,10 @@ export default (ThreadContent = (function () {
         let h;
         switch (mediaType) {
           case "image":
-            h = parseInt(app.config.get("image_height"));
+            h = parseInt(app.config.get("image_height"), 10);
             break;
           case "video":
-            h = parseInt(app.config.get("video_height"));
+            h = parseInt(app.config.get("video_height"), 10);
             break;
           default:
             h = 100; // 最低高
@@ -2032,7 +2031,7 @@ export default (ThreadContent = (function () {
     */
     addClassWithOrg($res, className) {
       $res.addClass(className);
-      const resnum = parseInt($res.C("num")[0].textContent);
+      const resnum = parseInt($res.C("num")[0].textContent, 10);
       this.container.child()[resnum - 1].addClass(className);
     }
 
@@ -2043,7 +2042,7 @@ export default (ThreadContent = (function () {
     */
     removeClassWithOrg($res, className) {
       $res.removeClass(className);
-      const resnum = parseInt($res.C("num")[0].textContent);
+      const resnum = parseInt($res.C("num")[0].textContent, 10);
       this.container.child()[resnum - 1].removeClass(className);
     }
 
@@ -2058,7 +2057,7 @@ export default (ThreadContent = (function () {
       if (date != null) {
         app.WriteHistory.add({
           url: this.urlStr,
-          res: parseInt($res.C("num")[0].textContent),
+          res: parseInt($res.C("num")[0].textContent, 10),
           title: document.title,
           name: $res.C("name")[0].textContent,
           mail: $res.C("mail")[0].textContent,
@@ -2073,7 +2072,7 @@ export default (ThreadContent = (function () {
     @param {Element} $res
     */
     removeWriteHistory($res) {
-      const resnum = parseInt($res.C("num")[0].textContent);
+      const resnum = parseInt($res.C("num")[0].textContent, 10);
       app.WriteHistory.remove(this.urlStr, resnum);
     }
   };

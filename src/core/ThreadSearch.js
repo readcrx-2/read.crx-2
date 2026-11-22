@@ -1,15 +1,15 @@
 import { ask as askBoardTitleSolver } from "./BoardTitleSolver.js";
 import { Request } from "./HTTP.ts";
-import { stampToDate, decodeCharReference } from "./jsutil.js";
-import { getProtocol, setProtocol } from "./URL.ts";
+import { decodeCharReference } from "./jsutil.js";
+import { setProtocol } from "./URL.ts";
 
 export default (function () {
   let _parse;
   let _getDiff;
   const Cls = class {
     static initClass() {
-      this.prototype.loaded = "None";
-      this.prototype.loaded20 = null;
+      Cls.prototype.loaded = "None";
+      Cls.prototype.loaded20 = null;
 
       _parse = (protocol) =>
         async function (item) {

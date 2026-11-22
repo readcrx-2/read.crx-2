@@ -60,18 +60,19 @@ export default class Sortable {
   }
 
   private changeStart(func: Function) {
-    const beforeLeft = this.target!.offsetLeft;
-    const beforeTop = this.target!.offsetTop;
+    if (!this.target || !this.start || !this.targetCenter) return;
+    const beforeLeft = this.target.offsetLeft;
+    const beforeTop = this.target.offsetTop;
     func();
-    const diffX = this.target!.offsetLeft - beforeLeft;
-    const diffY = this.target!.offsetTop - beforeTop;
+    const diffX = this.target.offsetLeft - beforeLeft;
+    const diffY = this.target.offsetTop - beforeTop;
     this.start = {
-      x: this.start!.x + diffX,
-      y: this.start!.y + diffY,
+      x: this.start.x + diffX,
+      y: this.start.y + diffY,
     };
     this.targetCenter = {
-      x: this.targetCenter!.x + diffX,
-      y: this.targetCenter!.y + diffY,
+      x: this.targetCenter.x + diffX,
+      y: this.targetCenter.y + diffY,
     };
   }
 
@@ -84,7 +85,7 @@ export default class Sortable {
   }) {
     if (target === this.container) return;
     if (button !== 0) return;
-    if (this.option.exclude && target!.matches(this.option.exclude)) return;
+    if (this.option.exclude && target.matches(this.option.exclude)) return;
 
     if (this.clickTimer !== 0) {
       clearTimeout(this.clickTimer);
@@ -136,13 +137,16 @@ export default class Sortable {
   }
 
   private _animate() {
+    if (!this.target || !this.last || !this.start || !this.targetCenter) return;
+    const target = this.target;
+    const last = this.last;
     let tmp = <HTMLElement>this.container.first();
-    let diffX = this.last!.x - this.start!.x;
-    let diffY = this.last!.y - this.start!.y;
+    let diffX = last.x - this.start.x;
+    let diffY = last.y - this.start.y;
 
     // もっているものの中央座標
-    const x = this.targetCenter!.x + diffX;
-    const y = this.targetCenter!.y + diffY;
+    const x = this.targetCenter.x + diffX;
+    const y = this.targetCenter.y + diffY;
 
     while (tmp) {
       const {
@@ -153,29 +157,29 @@ export default class Sortable {
       } = tmp;
 
       if (
-        tmp !== this.target &&
+        tmp !== target &&
         !(x < tLeft || y < tTop || x > tLeft + tWidth || y > tTop + tHeight)
       ) {
         if (
-          this.target!.compareDocumentPosition(tmp) === 4 &&
+          target.compareDocumentPosition(tmp) === 4 &&
           (x > tLeft + tWidth / 2 || y > tTop + tHeight / 2)
         ) {
           this.changeStart(() => {
-            tmp.addAfter(this.target);
+            tmp.addAfter(target);
           });
         } else if (x < tLeft + tWidth / 2 || y < tTop + tHeight / 2) {
           this.changeStart(() => {
-            tmp.addBefore(this.target);
+            tmp.addBefore(target);
           });
         }
-        diffX = this.last!.x - this.start!.x;
-        diffY = this.last!.y - this.start!.y;
+        diffX = last.x - this.start.x;
+        diffY = last.y - this.start.y;
         break;
       }
       tmp = <HTMLElement>tmp.next();
     }
 
-    this.target!.style.transform = `translate(${diffX}px, ${diffY}px)`;
+    target.style.transform = `translate(${diffX}px, ${diffY}px)`;
 
     this.rAFId = requestAnimationFrame(<any>this.animate);
   }

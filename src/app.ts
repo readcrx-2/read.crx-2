@@ -42,7 +42,7 @@ export async function boot(
   }
 
   if (location.pathname === path) {
-    const htmlVersion = document.documentElement.dataset.appVersion!;
+    const htmlVersion = document.documentElement.dataset.appVersion;
     if ((await manifest).version !== htmlVersion) {
       location.reload();
       return;

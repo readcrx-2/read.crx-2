@@ -40,10 +40,12 @@ export class EntryList {
 
     if (entry.type === "thread") {
       const boardURL = threadToBoard(entry.url);
-      if (!this.boardURLIndex.has(boardURL)) {
-        this.boardURLIndex.set(boardURL, new Set());
+      let set = this.boardURLIndex.get(boardURL);
+      if (!set) {
+        set = new Set();
+        this.boardURLIndex.set(boardURL, set);
       }
-      this.boardURLIndex.get(boardURL)!.add(entry.url);
+      set.add(entry.url);
     }
     return true;
   }

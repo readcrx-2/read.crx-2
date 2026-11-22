@@ -86,7 +86,8 @@ export default class Bookmark {
   }
 
   async add(url: string, title: string, resCount?: number): Promise<boolean> {
-    const entry = BrowserBookmarkEntryList.URLToEntry(url)!;
+    const entry = BrowserBookmarkEntryList.URLToEntry(url);
+    if (!entry) return false;
 
     entry.title = title;
 

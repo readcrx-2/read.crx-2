@@ -57,7 +57,7 @@ const rules = function (browser) {
 };
 
 var shortQuery = function (browser) {
-  const output = paths.output[browser] + "/lib";
+  const output = `${paths.output[browser]}/lib`;
   return () =>
     gulp
       .src(paths.lib.shortQuery, { since: gulp.lastRun(shortQuery) })
@@ -66,7 +66,7 @@ var shortQuery = function (browser) {
 };
 
 var webExtPolyfill = function (browser) {
-  const output = paths.output[browser] + "/lib";
+  const output = `${paths.output[browser]}/lib`;
   return () =>
     gulp
       .src(paths.lib.webExtPolyfill, { since: gulp.lastRun(webExtPolyfill) })

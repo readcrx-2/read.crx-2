@@ -46,15 +46,14 @@ app.boot("/view/board.html", ["Board"], function (Board) {
         url: openUrl,
         width: 600,
         height: 300,
-        left: parseInt(windowX),
-        top: parseInt(windowY),
+        left: parseInt(windowX, 10),
+        top: parseInt(windowY, 10),
       });
     }
   };
 
   const $writeButton = $view.C("button_write")[0];
   if (
-    ((needle = url.getTsld()),
     [
       "5ch.io",
       "shitaraba.net",
@@ -62,7 +61,7 @@ app.boot("/view/board.html", ["Board"], function (Board) {
       "bbspink.org",
       "2ch.sc",
       "open2ch.net",
-    ].includes(needle))
+    ].includes(url.getTsld())
   ) {
     $writeButton.on("click", function () {
       write();

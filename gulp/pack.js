@@ -1,7 +1,7 @@
 const gulp = require("gulp");
 const fs = require("fs-extra");
-const os = require("os");
-const path = require("path");
+const os = require("node:os");
+const path = require("node:path");
 const { other: o } = require("./plugins");
 const { browsers, paths, manifest } = require("./config");
 const util = require("./util");
@@ -18,7 +18,7 @@ const createXpi = async function (tmpDir, apicrePath) {
   const webExt = await o.webExt;
   await webExt.cmd.sign({
     sourceDir: tmpDir,
-    artifactsDir: process.cwd() + "/build",
+    artifactsDir: `${process.cwd()}/build`,
     apiKey: apicre.issuer,
     apiSecret: apicre.secret,
     channel: "unlisted",

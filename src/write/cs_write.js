@@ -129,7 +129,7 @@
       const font = document.getElementsByTagName("font");
       let text = title;
       if (font.length > 0) {
-        text += font[0].innerText;
+        text += font[0].textContent;
       }
       if (text.includes("書きこみました")) {
         sendMessageSuccess(getMoveSec() * 1000);

@@ -102,8 +102,8 @@ app.boot("/view/thread.html", async function () {
         url: openUrl,
         width: 600,
         height: 300,
-        left: parseInt(windowX),
-        top: parseInt(windowY),
+        left: parseInt(windowX, 10),
+        top: parseInt(windowY, 10),
       });
     }
   };
@@ -531,7 +531,7 @@ app.boot("/view/thread.html", async function () {
       app.NG.add(addString);
       threadContent.refreshNG();
     } else if (target.hasClass("add_slip_to_ngwords")) {
-      addString = "Slip:" + $res.dataset.slip;
+      addString = `Slip:${$res.dataset.slip}`;
       exDate = _getExpireDateString("slip");
       if (exDate) {
         addString = `expireDate:${exDate},${addString}`;
@@ -546,7 +546,10 @@ app.boot("/view/thread.html", async function () {
       write({
         message: `\
 >>${$res.C("num")[0].textContent}
-${$res.C("message")[0].innerText.replace(/^/gm, ">")}\n\
+${
+  // biome-ignore lint/performance/useDomNodeTextContent: <br>を改行として扱うためinnerTextが必要
+  $res.C("message")[0].innerText.replace(/^/gm, ">")
+}\n\
 `,
       });
     } else if (target.hasClass("add_writehistory")) {
@@ -1202,7 +1205,7 @@ ${$res.C("message")[0].innerText.replace(/^/gm, ">")}\n\
           $content.addClass("searching");
           for (dom of $content.child()) {
             if (
-              ((searchRegExp && searchRegExp.test(dom.textContent)) ||
+              (searchRegExp?.test(dom.textContent) ||
                 app.util.normalize(dom.textContent).includes(query)) &&
               (!dom.hasClass("ng") || dom.hasClass("disp_ng"))
             ) {
@@ -1779,13 +1782,13 @@ app.viewThread._readStateManager = async function ($view) {
     if (readStateUpdated) {
       let data;
       if (localStorage.zombie_read_state != null) {
-        data = JSON.parse(localStorage["zombie_read_state"]);
+        data = JSON.parse(localStorage.zombie_read_state);
       } else {
         data = [];
       }
       readState.date = Date.now();
       data.push(readState);
-      localStorage["zombie_read_state"] = JSON.stringify(data);
+      localStorage.zombie_read_state = JSON.stringify(data);
     }
   };
 

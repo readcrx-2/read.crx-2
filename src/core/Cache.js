@@ -15,7 +15,7 @@ export default (Cache = (function () {
       @static
       @private
       */
-      this._dbOpen = new Promise(function (resolve, reject) {
+      Cache._dbOpen = new Promise(function (resolve, reject) {
         const req = indexedDB.open("Cache", 1);
         req.onerror = reject;
         req.onupgradeneeded = function ({
@@ -94,7 +94,7 @@ export default (Cache = (function () {
     static async count() {
       let res;
       try {
-        const db = await this._dbOpen;
+        const db = await Cache._dbOpen;
         const req = db.transaction("Cache").objectStore("Cache").count();
         res = await indexedDBRequestToPromise(req);
       } catch (e) {
@@ -111,7 +111,7 @@ export default (Cache = (function () {
     */
     static async delete() {
       try {
-        const db = await this._dbOpen;
+        const db = await Cache._dbOpen;
         const req = db
           .transaction("Cache", "readwrite")
           .objectStore("Cache")
@@ -132,7 +132,7 @@ export default (Cache = (function () {
     static async clearRange(day) {
       const dayUnix = Date.now() - day * 24 * 60 * 60 * 1000;
       try {
-        const db = await this._dbOpen;
+        const db = await Cache._dbOpen;
         const store = db.transaction("Cache", "readwrite").objectStore("Cache");
         let req = store
           .index("last_updated")

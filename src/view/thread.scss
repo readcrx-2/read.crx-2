@@ -277,8 +277,10 @@ header {
   }
 
   .popup & {
-    display: block;
-    padding: 5px;
+    &:not(.hide_data) {
+      display: block;
+      padding: 5px;
+    }
   }
 }
 

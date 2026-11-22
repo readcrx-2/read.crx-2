@@ -209,7 +209,7 @@ export var getHowToOpen = function ({
   }
   const def = { newTab: false, newWindow: false, background: false };
   if (type === "mousedown") {
-    const key = "" + button + shiftKey + ctrlKey;
+    const key = `${button}${shiftKey}${ctrlKey}`;
     if (openMap.has(key)) {
       return openMap.get(key);
     }
@@ -232,7 +232,7 @@ export var searchNextThread = async function (
   }
   threads = threads
     .filter(({ url, resCount }) => url !== threadUrl.href && resCount < 1001)
-    .map(function ({ title, url }) {
+    .map(function ({ title, url, resCount }) {
       let left;
       let score = levenshteinDistance(threadTitle, normalize(title), false);
       const m = url.match(
@@ -245,7 +245,7 @@ export var searchNextThread = async function (
       ) {
         score -= 3;
       }
-      return { score, title, url };
+      return { score, title, url, resCount };
     })
     .sort((a, b) => a.score - b.score);
   return threads.slice(0, 5);

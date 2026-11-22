@@ -41,6 +41,7 @@ export default (AANoOverflow = (function () {
 
     _setFontSize($article, width) {
       const $message = $article.C("message")[0];
+      // biome-ignore lint/performance/useDomNodeTextContent: <br>を改行として扱うためinnerTextが必要
       const charCountInLine = $message.innerText
         .split("\n")
         .map(this._getStrLength.bind(this));

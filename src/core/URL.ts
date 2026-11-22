@@ -501,7 +501,7 @@ export async function expandShortURL(shortUrl: string): Promise<string> {
       return { data: cache.data, url: null };
     } catch {
       const req = new Request("HEAD", shortUrl, {
-        timeout: parseInt(app.config.get("expand_short_url_timeout")!),
+        timeout: parseInt(app.config.get("expand_short_url_timeout") ?? "", 10),
       });
 
       const { status, responseURL } = await req.send();

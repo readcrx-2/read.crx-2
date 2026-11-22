@@ -8,7 +8,7 @@ const util = require("./util");
   tasks
 */
 const imgs = function (browser) {
-  const output = paths.output[browser] + "/img";
+  const output = `${paths.output[browser]}/img`;
   const isChrome = browser === "chrome";
   const func = async function () {
     await fs.ensureDir(output);
@@ -35,9 +35,9 @@ const imgs = function (browser) {
         const sh = o.sharp(buf);
         // 回転
         if (m[5] != null) {
-          sh.rotate(parseInt(m[5]));
+          sh.rotate(parseInt(m[5], 10));
         }
-        sh.resize(parseInt(m[2]), parseInt(m[3]));
+        sh.resize(parseInt(m[2], 10), parseInt(m[3], 10));
         if (m[6] === "webp") {
           sh.webp(defaultOptions.sharp.webp);
         }
@@ -50,7 +50,7 @@ const imgs = function (browser) {
 };
 
 const logoBig = function (browser, size) {
-  const output = paths.output[browser] + "/img";
+  const output = `${paths.output[browser]}/img`;
   const src = paths.img.logoBig;
   const bin = `${output}/read.crx_${size}x${size}.png`;
   const margin = size / 8;
@@ -83,7 +83,7 @@ const logoBig = function (browser, size) {
 
 const loading = function (browser) {
   let bin, func;
-  const output = paths.output[browser] + "/img";
+  const output = `${paths.output[browser]}/img`;
   const src = paths.img.loading;
   if (browser === "chrome") {
     bin = `${output}/loading.webp`;

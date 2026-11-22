@@ -203,7 +203,7 @@ const parse = function (string) {
         break;
       case !ngWord.startsWith("ResCount:"):
         ngElement.type = TYPE.RES_COUNT;
-        ngElement.word = parseInt(ngWord.substr(9));
+        ngElement.word = parseInt(ngWord.substr(9), 10);
         break;
       case !ngWord.startsWith("Auto:"):
         ngElement.type = TYPE.AUTO;
@@ -330,7 +330,7 @@ export var set = function (string) {
 @param {String} string
 */
 export var add = function (string) {
-  _config.setString(string + "\n" + _config.getString());
+  _config.setString(`${string}\n${_config.getString()}`);
   const addNg = parse(string);
   _config.set([..._config.get()].concat([...addNg]));
 
@@ -383,7 +383,7 @@ const _checkWord = function (
 const _checkResNum = ({ start, finish }, resNum) =>
   start != null &&
   ((finish != null && start <= resNum && resNum <= finish) ||
-    parseInt(start) === resNum);
+    parseInt(start, 10) === resNum);
 
 /**
 @method isNGBoard
@@ -483,7 +483,7 @@ export var isNGThread = function (
   const mail = decodeCharReference(res.mail);
   const other = decodeCharReference(res.other);
   const mes = decodeCharReference(res.message);
-  const all = name + " " + mail + " " + other + " " + mes;
+  const all = `${name} ${mail} ${other} ${mes}`;
   const resObj = {
     all,
     name,
@@ -583,7 +583,7 @@ export var execExpire = function () {
     // 有効期限の確認
     if (_expireDate.test(ngWord)) {
       const m = ngWord.match(_expireDate);
-      const expire = stringToDate(m[1] + " 23:59:59");
+      const expire = stringToDate(`${m[1]} 23:59:59`);
       if (expire.valueOf() + 1000 < now) {
         updateFlag = true;
         continue;

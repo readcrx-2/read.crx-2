@@ -1,6 +1,6 @@
 class SettingIO {
   static initClass() {
-    this.prototype.importFile = "";
+    SettingIO.prototype.importFile = "";
   }
   constructor({ name, importFunc, exportFunc }) {
     this.name = name;
@@ -164,7 +164,7 @@ class HistoryIO extends SettingIO {
 
       try {
         await this.clearRangeFunc(
-          parseInt($$.C(`${this.name}_date_range`)[0].value),
+          parseInt($$.C(`${this.name}_date_range`)[0].value, 10),
         );
         this.$status.textContent = ":範囲指定削除完了";
         __guard__(parent.$$.$(`iframe[src=\"/view/${this.name}.html\"]`), (x) =>
@@ -799,7 +799,9 @@ app.boot("/view/config.html", ["Cache", "BBSMenu"], function (Cache, BBSMenu) {
       $status.textContent = ":範囲指定削除中";
 
       try {
-        await Cache.clearRange(parseInt($view.C("cache_date_range")[0].value));
+        await Cache.clearRange(
+          parseInt($view.C("cache_date_range")[0].value, 10),
+        );
         $status.textContent = ":削除完了";
       } catch (error) {
         $status.textContent = ":削除失敗";
@@ -1007,12 +1009,12 @@ app.boot("/view/config.html", ["Cache", "BBSMenu"], function (Cache, BBSMenu) {
 
   const formatBytes = function (bytes) {
     if (bytes < 1048576) {
-      return (bytes / 1024).toFixed(2) + "KB";
+      return `${(bytes / 1024).toFixed(2)}KB`;
     }
     if (bytes < 1073741824) {
-      return (bytes / 1048576).toFixed(2) + "MB";
+      return `${(bytes / 1048576).toFixed(2)}MB`;
     }
-    return (bytes / 1073741824).toFixed(2) + "GB";
+    return `${(bytes / 1073741824).toFixed(2)}GB`;
   };
 
   // indexeddbの使用状況

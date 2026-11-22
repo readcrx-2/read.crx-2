@@ -4,8 +4,8 @@ import { fadeIn, fadeOut } from "../ui/Animate.js";
 
 class Timer {
   static initClass() {
-    this.prototype._timeout = null;
-    this.prototype._MSEC = 30 * 1000;
+    Timer.prototype._timeout = null;
+    Timer.prototype._MSEC = 30 * 1000;
   }
 
   constructor(onFinish) {
@@ -31,15 +31,15 @@ Timer.initClass();
 export default (Write = (function () {
   Write = class Write {
     static initClass() {
-      this.prototype.url = null;
-      this.prototype.title = null;
-      this.prototype.name = null;
-      this.prototype.mail = null;
-      this.prototype.message = null;
+      Write.prototype.url = null;
+      Write.prototype.title = null;
+      Write.prototype.name = null;
+      Write.prototype.mail = null;
+      Write.prototype.message = null;
 
-      this.prototype.$view = $$.C("view_write")[0];
-      this.prototype.timer = null;
-      this.prototype._PONG_MSG = "write_iframe_pong";
+      Write.prototype.$view = $$.C("view_write")[0];
+      Write.prototype.timer = null;
+      Write.prototype._PONG_MSG = "write_iframe_pong";
     }
 
     static setFont() {

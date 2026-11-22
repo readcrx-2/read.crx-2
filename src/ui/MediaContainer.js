@@ -34,7 +34,7 @@ export default class MediaContainer {
           return;
         }
         if (isImageOn && target.tagName === "IMG") {
-          zoomWidth = parseInt(target.offsetWidth * imageRatio);
+          zoomWidth = parseInt(target.offsetWidth * imageRatio, 10);
         } else if (isVideoOn && target.tagName === "VIDEO") {
           // Chromeでmouseenterイベントが複数回発生するのを回避するため
           if ("&[BROWSER]" === "chrome") {
@@ -42,7 +42,7 @@ export default class MediaContainer {
               return;
             }
           }
-          zoomWidth = parseInt(target.offsetWidth * videoRatio);
+          zoomWidth = parseInt(target.offsetWidth * videoRatio, 10);
         } else {
           return;
         }

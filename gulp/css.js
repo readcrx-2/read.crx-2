@@ -47,7 +47,7 @@ var ui = function (browser) {
 };
 
 var view = function (browser) {
-  const output = paths.output[browser] + "/view";
+  const output = `${paths.output[browser]}/view`;
   const sassOptions = Object.assign({}, defaultOptions.sass, {
     functions: transforms[browser],
   });
@@ -60,7 +60,7 @@ var view = function (browser) {
 };
 
 var write = function (browser) {
-  const output = paths.output[browser] + "/write";
+  const output = `${paths.output[browser]}/write`;
   const sassOptions = Object.assign({}, defaultOptions.sass, {
     functions: transforms[browser],
   });

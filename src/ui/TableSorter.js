@@ -7,7 +7,7 @@ let TableSorter;
 export default (TableSorter = (function () {
   TableSorter = class TableSorter {
     static initClass() {
-      this.collator = new Intl.Collator("ja", { numeric: true });
+      TableSorter.collator = new Intl.Collator("ja", { numeric: true });
     }
 
     constructor(table) {

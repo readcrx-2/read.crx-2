@@ -44,17 +44,13 @@ export default class Tab {
   private readonly historyStore: Map<string, TabHistory> = new Map();
 
   private static genId(): string {
-    return "tabId" + ++Tab.idSeed;
+    return `tabId${++Tab.idSeed}`;
   }
 
   public static saveTabs() {
     const data: SavedTabInfo[] = [];
-    for (const {
-      formatedUrl,
-      title,
-      selected,
-      locked,
-    } of this.tabA!.getAll().concat(this.tabB!.getAll())) {
+    const tabs = (Tab.tabA?.getAll() ?? []).concat(Tab.tabB?.getAll() ?? []);
+    for (const { formatedUrl, title, selected, locked } of tabs) {
       data.push({
         url: formatedUrl,
         title,
@@ -73,10 +69,10 @@ export default class Tab {
         e.preventDefault();
 
         const tmp = e.wheelDelta < 0 ? "prev" : "next";
-        const next = (this.$element.$("li.tab_selected") || {})[tmp]();
+        const next = this.$element.$("li.tab_selected")?.[tmp]();
 
-        if (next) {
-          this.update(next.dataset.tabid!, { selected: true });
+        if (next?.dataset.tabid) {
+          this.update(next.dataset.tabid, { selected: true });
         }
       }
     });
@@ -89,10 +85,13 @@ export default class Tab {
       if (target === null) return;
       if (e.button === 2) return;
 
+      const tabId = target.dataset.tabid;
+      if (!tabId) return;
+
       if (e.button === 1 && !target.hasClass("tab_locked")) {
-        this.remove(target.dataset.tabid!);
+        this.remove(tabId);
       } else {
-        this.update(target.dataset.tabid!, { selected: true });
+        this.update(tabId, { selected: true });
       }
     });
     $ul.on("click", ({ target }: { target: HTMLElement }) => {
@@ -132,8 +131,10 @@ export default class Tab {
           return;
         }
 
-        const tabId = source.frameElement.dataset.tabid!;
-        const history = this.historyStore.get(tabId)!;
+        const tabId = source.frameElement.dataset.tabid;
+        if (!tabId) return;
+        const history = this.historyStore.get(tabId);
+        if (!history) return;
 
         switch (message.type) {
           case "requestTabHistory":
@@ -190,11 +191,11 @@ export default class Tab {
     const res: FormatedUrlTabInfo[] = [];
 
     for (const li of this.$element.$$("li")) {
+      const tabId = li.dataset.tabid ?? "";
       res.push({
-        tabId: li.dataset.tabid!,
-        url: li.dataset.tabsrc!,
-        formatedUrl: this.$element.$(`iframe[data-tabid=${li.dataset.tabid!}]`)
-          .dataset.url,
+        tabId,
+        url: li.dataset.tabsrc ?? "",
+        formatedUrl: this.$element.$(`iframe[data-tabid=${tabId}]`).dataset.url,
         title: li.title,
         selected: li.hasClass("tab_selected"),
         locked: li.hasClass("tab_locked"),
@@ -264,10 +265,12 @@ export default class Tab {
   async update(tabId: string, param: Partial<UpdateTabInfo>) {
     if (typeof param.url === "string") {
       if (!param._internal) {
-        const history = this.historyStore.get(tabId)!;
-        history.stack.splice(history.current + 1);
-        history.stack.push({ url: param.url, title: param.url });
-        history.current++;
+        const history = this.historyStore.get(tabId);
+        if (history) {
+          history.stack.splice(history.current + 1);
+          history.stack.push({ url: param.url, title: param.url });
+          history.current++;
+        }
       }
 
       this.$element.$(`li[data-tabid="${tabId}"]`).dataset.tabsrc = param.url;
@@ -278,8 +281,10 @@ export default class Tab {
     }
 
     if (typeof param.title === "string") {
-      const history = this.historyStore.get(tabId)!;
-      history.stack[history.current].title = param.title;
+      const history = this.historyStore.get(tabId);
+      if (history) {
+        history.stack[history.current].title = param.title;
+      }
 
       const $tmptab = this.$element.$(`li[data-tabid="${tabId}"]`);
       $tmptab.title = param.title;
@@ -348,8 +353,10 @@ export default class Tab {
     });
 
     if (this.recentClosed.length > 50) {
-      const tmp = this.recentClosed.shift()!;
-      this.historyStore.delete(tmp.tabId);
+      const tmp = this.recentClosed.shift();
+      if (tmp) {
+        this.historyStore.delete(tmp.tabId);
+      }
     }
 
     if ($tmptab.hasClass("tab_selected")) {
@@ -383,6 +390,6 @@ export default class Tab {
 
   isLocked(tabId: string): boolean {
     const tab = this.$element.$(`li[data-tabid="${tabId}"]`);
-    return tab !== null && tab.hasClass("tab_locked");
+    return tab?.hasClass("tab_locked");
   }
 }

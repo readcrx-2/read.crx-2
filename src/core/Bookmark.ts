@@ -86,7 +86,8 @@ export default class Bookmark {
   }
 
   async add(url: string, title: string, resCount?: number): Promise<boolean> {
-    const entry = BrowserBookmarkEntryList.URLToEntry(url)!;
+    const entry = BrowserBookmarkEntryList.URLToEntry(url);
+    if (!entry) return false;
 
     entry.title = title;
 
@@ -109,6 +110,27 @@ export default class Bookmark {
 
   async remove(url: string): Promise<boolean> {
     return this.bel.remove(url);
+  }
+
+  async replace(
+    oldUrl: string,
+    newUrl: string,
+    newTitle: string,
+    newResCount?: number,
+  ): Promise<boolean> {
+    if (!this.get(oldUrl)) {
+      return false;
+    }
+
+    const removed = await this.remove(oldUrl);
+    if (!removed) {
+      return false;
+    }
+
+    if (this.get(newUrl)) {
+      return true;
+    }
+    return this.add(newUrl, newTitle, newResCount);
   }
 
   async removeAll(): Promise<boolean> {
@@ -172,6 +194,7 @@ export default class Bookmark {
       await this.add(newEntry.url, newEntry.title);
       entry = this.bel.get(newEntry.url);
     }
+    if (!entry) return false;
 
     if (
       newEntry.readState &&

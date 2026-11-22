@@ -59,7 +59,7 @@ export default class PopupView {
     @type Number
     @private
     */
-    this._delayTime = parseInt(app.config.get("popup_delay_time"));
+    this._delayTime = parseInt(app.config.get("popup_delay_time"), 10);
 
     /**
     @property _delayTimeoutID
@@ -106,10 +106,7 @@ export default class PopupView {
     }
 
     // 待機中の処理があればキャンセルする
-    if (this._delayTimeoutID !== 0) {
-      clearTimeout(this._delayTimeoutID);
-      this._delayTimeoutID = 0;
-    }
+    this.cancelPending();
 
     // コンテキストメニューの破棄
     ContextMenu.remove();
@@ -230,6 +227,16 @@ export default class PopupView {
           }
         }, this._delayTime);
       })(this.source, this.popup);
+    }
+  }
+
+  /**
+  @method cancelPending
+  */
+  cancelPending() {
+    if (this._delayTimeoutID !== 0) {
+      clearTimeout(this._delayTimeoutID);
+      this._delayTimeoutID = 0;
     }
   }
 
@@ -382,15 +389,15 @@ export default class PopupView {
     if (margin && this._popupStyle !== null) {
       if (this._popupMarginHeight < 0) {
         this._popupMarginHeight = 0;
-        this._popupMarginHeight += parseInt(this._popupStyle.marginTop);
-        this._popupMarginHeight += parseInt(this._popupStyle.marginBottom);
+        this._popupMarginHeight += parseInt(this._popupStyle.marginTop, 10);
+        this._popupMarginHeight += parseInt(this._popupStyle.marginBottom, 10);
         const { boxShadow } = this._popupStyle;
         const tmp =
           /rgba?\(.*\) (-?[\d]+)px (-?[\d]+)px ([\d]+)px (-?[\d]+)px/.exec(
             boxShadow,
           );
-        this._popupMarginHeight += Math.abs(parseInt(tmp[2]));
-        this._popupMarginHeight += Math.abs(parseInt(tmp[4]));
+        this._popupMarginHeight += Math.abs(parseInt(tmp[2], 10));
+        this._popupMarginHeight += Math.abs(parseInt(tmp[4], 10));
       }
       outerHeight += this._popupMarginHeight;
     }

@@ -1,6 +1,6 @@
-@import "../_common.scss";
-@import "_ContextMenu.scss";
-@import "_Dialog.scss";
-@import "_Tab.scss";
-@import "_TableSearch.scss";
-@import "_Sortable.scss";
+@use "../_common.scss" as *;
+@use "_ContextMenu.scss";
+@use "_Dialog.scss";
+@use "_Tab.scss";
+@use "_TableSearch.scss";
+@use "_Sortable.scss";

@@ -13,18 +13,18 @@ export default class BrowserBookmarkEntryList extends SyncableEntryList {
     const param: Record<string, string> = {};
 
     if (entry.resCount !== null && Number.isFinite(entry.resCount)) {
-      param.res_count = "" + entry.resCount;
+      param.res_count = `${entry.resCount}`;
     }
 
     if (entry.readState) {
-      param.last = "" + entry.readState.last;
-      param.read = "" + entry.readState.read;
-      param.received = "" + entry.readState.received;
+      param.last = `${entry.readState.last}`;
+      param.read = `${entry.readState.read}`;
+      param.received = `${entry.readState.received}`;
       if (entry.readState.offset) {
-        param.offset = "" + entry.readState.offset;
+        param.offset = `${entry.readState.offset}`;
       }
       if (entry.readState.date) {
-        param.date = "" + entry.readState.date;
+        param.date = `${entry.readState.date}`;
       }
     }
 
@@ -56,22 +56,31 @@ export default class BrowserBookmarkEntryList extends SyncableEntryList {
     };
     const reg = /^\d+$/;
 
-    if (reg.test(arg.get("res_count")!)) {
-      entry.resCount = +arg.get("res_count")!;
+    const resCount = arg.get("res_count");
+    if (resCount && reg.test(resCount)) {
+      entry.resCount = +resCount;
     }
 
+    const received = arg.get("received");
+    const read = arg.get("read");
+    const last = arg.get("last");
     if (
-      reg.test(arg.get("received")!) &&
-      reg.test(arg.get("read")!) &&
-      reg.test(arg.get("last")!)
+      received &&
+      reg.test(received) &&
+      read &&
+      reg.test(read) &&
+      last &&
+      reg.test(last)
     ) {
+      const offset = arg.get("offset");
+      const date = arg.get("date");
       entry.readState = {
         url: urlStr,
-        received: +arg.get("received")!,
-        read: +arg.get("read")!,
-        last: +arg.get("last")!,
-        offset: arg.get("offset") ? +arg.get("offset")! : null,
-        date: arg.get("date") ? +arg.get("date")! : null,
+        received: +received,
+        read: +read,
+        last: +last,
+        offset: offset ? +offset : null,
+        date: date ? +date : null,
       };
     }
 
@@ -132,9 +141,11 @@ export default class BrowserBookmarkEntryList extends SyncableEntryList {
     if (!url) return;
 
     const entry = this.get(url);
+    if (!entry) return;
 
     if (typeof changes.url === "string") {
-      const newEntry = BrowserBookmarkEntryList.URLToEntry(changes.url)!;
+      const newEntry = BrowserBookmarkEntryList.URLToEntry(changes.url);
+      if (!newEntry) return;
       newEntry.title =
         typeof changes.title === "string" ? changes.title : entry.title;
 
@@ -300,9 +311,8 @@ export default class BrowserBookmarkEntryList extends SyncableEntryList {
   }
 
   private async updateBrowserBookmark(newEntry: Entry): Promise<boolean> {
-    if (!this.nodeIdStore.has(newEntry.url)) return false;
-
-    const id = this.nodeIdStore.get(newEntry.url)!;
+    const id = this.nodeIdStore.get(newEntry.url);
+    if (!id) return false;
     const res = await browser.bookmarks.get(id);
 
     const changes: Partial<{ title: string; url: string }> = {};

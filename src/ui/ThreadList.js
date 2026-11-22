@@ -28,7 +28,7 @@ export default (ThreadList = (function () {
       @param {Date}
       @return {String}
       */
-      this._dateToString = (function () {
+      ThreadList._dateToString = (function () {
         const fn = (a) => (a < 10 ? "0" : "") + a;
         return (date) =>
           date.getFullYear() +
@@ -121,7 +121,7 @@ export default (ThreadList = (function () {
           i++;
           const className = key.replace(
             /([A-Z])/g,
-            ($0, $1) => "_" + $1.toLowerCase(),
+            ($0, $1) => `_${$1.toLowerCase()}`,
           );
           const $th = $__("th").addClass(className);
           $th.textContent = val;
@@ -301,7 +301,7 @@ export default (ThreadList = (function () {
             const hitCount = $table.dataset.tableSearchHitCount;
             for (dom of this.parent().child()) {
               if (dom.hasClass("hit_count")) {
-                dom.textContent = hitCount + "hit";
+                dom.textContent = `${hitCount}hit`;
               }
             }
           } else {
@@ -387,6 +387,7 @@ export default (ThreadList = (function () {
                   )) != null
                     ? left
                     : 0,
+                  10,
                 );
                 const threadWrittenRes = parseInt(
                   (left1 = __guard__(
@@ -395,6 +396,7 @@ export default (ThreadList = (function () {
                   )) != null
                     ? left1
                     : 0,
+                  10,
                 );
                 const dateValue = __guard__($tr.$(selector.viewedDate), (x6) =>
                   x6.getAttr("date-value"),
@@ -502,7 +504,7 @@ export default (ThreadList = (function () {
         $tr.dataset.title = app.escapeHtml(item.title);
 
         if (item.threadNumber != null) {
-          $tr.dataset.threadNumber = app.escapeHtml("" + item.threadNumber);
+          $tr.dataset.threadNumber = app.escapeHtml(`${item.threadNumber}`);
         }
         if (this._flg.writtenRes && item.res > 0) {
           $tr.dataset.writtenResNum = item.res;

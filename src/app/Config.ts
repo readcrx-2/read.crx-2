@@ -16,6 +16,7 @@ export default class Config {
     ["open_all_unread_lazy", "on"],
     ["enable_link_with_res_number", "on"],
     ["bookmark_sort_save_type", "none"],
+    ["replace_bookmark_on_next_thread", "off"],
     ["dblclick_reload", "on"],
     ["auto_load_second", "0"],
     ["auto_load_second_board", "0"],

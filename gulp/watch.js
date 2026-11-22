@@ -1,5 +1,5 @@
 const gulp = require("gulp");
-const path = require("path");
+const path = require("node:path");
 const { gulp: $, rolldown: _ } = require("./plugins");
 const { browsers, paths, defaultOptions } = require("./config");
 const { makeInOut, getRollupIOConfigs } = require("./js");

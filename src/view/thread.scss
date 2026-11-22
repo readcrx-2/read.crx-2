@@ -1,4 +1,4 @@
-@import "../_common.scss";
+@use "../_common.scss" as *;
 
 @include common;
 @include tab-content;
@@ -277,8 +277,10 @@ header {
   }
 
   .popup & {
-    display: block;
-    padding: 5px;
+    &:not(.hide_data) {
+      display: block;
+      padding: 5px;
+    }
   }
 }
 
@@ -388,6 +390,13 @@ header {
   }
 }
 
+mark.search_highlight {
+  background-color: #ff0;
+  color: #000;
+  pointer-events: none;
+  border-radius: 2px;
+}
+
 .thread_footer {
   contain: content;
   position: absolute;
@@ -472,6 +481,16 @@ header {
         color: #f93;
       }
     }
+  }
+
+  > .replace_bookmark_label {
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+    margin-top: 8px;
+    font-size: 12px;
+    cursor: pointer;
+    user-select: none;
   }
 }
 

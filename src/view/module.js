@@ -167,7 +167,7 @@ app.view.View = class View {
 */
 const Cls = (app.view.IframeView = class IframeView extends app.view.View {
   static initClass() {
-    this.prototype._keyboardCommandMap = new Map([
+    IframeView.prototype._keyboardCommandMap = new Map([
       ["Escape", "clearSelect"],
       ["h", "left"],
       ["H", "focusLeftFrame"],
@@ -753,7 +753,7 @@ app.view.TabContentView = class TabContentView extends (
     if (isViewSearch) {
       let left;
       protocol =
-        (left = this.$element.getAttr("scheme") + ":") != null ? left : "http:";
+        (left = `${this.$element.getAttr("scheme")}:`) != null ? left : "http:";
     } else {
       urlObj = new app.URL.URL(url);
       ({ protocol } = urlObj);
@@ -812,7 +812,7 @@ app.view.TabContentView = class TabContentView extends (
     }
 
     const autoLoad = () => {
-      const second = parseInt(app.config.get(`auto_load_second${cfgName}`));
+      const second = parseInt(app.config.get(`auto_load_second${cfgName}`), 10);
       if (second >= minSeconds) {
         this.$element.addClass("autoload");
         $button.removeClass("hidden");
@@ -999,7 +999,7 @@ app.view.TabContentView = class TabContentView extends (
     // タイトルとURLをコピー
     __guard__(this.$element.C("button_copy_title_and_url")[0], (x5) =>
       x5.on("click", () => {
-        app.clipboardWrite(document.title + " " + this.$element.dataset.url);
+        app.clipboardWrite(`${document.title} ${this.$element.dataset.url}`);
       }),
     );
 
@@ -1012,7 +1012,7 @@ app.view.TabContentView = class TabContentView extends (
       const url = new app.URL.URL(urlStr);
 
       // 2ch.net/2ch.scに切り替え
-      if (((needle = url.getTsld()), ["5ch.io", "2ch.sc"].includes(needle))) {
+      if (["5ch.io", "2ch.sc"].includes(url.getTsld())) {
         __guard__(this.$element.C("button_change_netsc")[0], (x6) =>
           x6.on("click", async () => {
             try {
